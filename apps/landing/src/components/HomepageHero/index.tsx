@@ -1,58 +1,82 @@
-"use client";
+'use client'
 
-import React, {useCallback, useMemo, useState} from "react";
-import Link from "next/link";
-import {Copy, Check, Play, Github, ExternalLink, ArrowRight, ChevronDown} from "lucide-react";
-import {motion, AnimatePresence} from "framer-motion";
-import GradientText from "@/components/TextAnimation/GradientText";
-import BlurText from "@/components/TextAnimation/BlurText";
+import React, { useCallback, useMemo, useState } from 'react'
+import Link from 'next/link'
+import {
+    Copy,
+    Check,
+    Play,
+    Github,
+    ExternalLink,
+    ArrowRight,
+    ChevronDown,
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import GradientText from '@/components/TextAnimation/GradientText'
+import BlurText from '@/components/TextAnimation/BlurText'
+import FrameworkSnippets from '@/components/FrameworkSnippets'
 
 export default function HeroSection() {
-    const [copied, setCopied] = useState(false);
-    const [isOpen, setIsOpen] = useState(false);
-    const [selectedManager, setSelectedManager] = useState("npm");
+    const [copied, setCopied] = useState(false)
+    const [isOpen, setIsOpen] = useState(false)
+    const [selectedManager, setSelectedManager] = useState('npm')
 
-    const packageManagers = useMemo(() => [
-        {id: "npm", name: "npm", command: "npm install upup-react-file-uploader"},
-        {id: "pnpm", name: "pnpm", command: "pnpm add upup-react-file-uploader"},
-        {id: "yarn", name: "Yarn", command: "yarn add upup-react-file-uploader"},
-        {id: "bun", name: "Bun", command: "bun add upup-react-file-uploader"},
-    ], []);
+    const packageManagers = useMemo(
+        () => [
+            { id: 'npm', name: 'npm', command: 'npm install @upupjs/react' },
+            { id: 'pnpm', name: 'pnpm', command: 'pnpm add @upupjs/react' },
+            { id: 'yarn', name: 'Yarn', command: 'yarn add @upupjs/react' },
+            { id: 'bun', name: 'Bun', command: 'bun add @upupjs/react' },
+        ],
+        [],
+    )
 
     const currentCommand = useMemo(() => {
-        return packageManagers.find(pm => pm.id === selectedManager)?.command || packageManagers[0].command;
-    }, [selectedManager, packageManagers]);
+        return (
+            packageManagers.find(pm => pm.id === selectedManager)?.command ||
+            packageManagers[0].command
+        )
+    }, [selectedManager, packageManagers])
 
-    const handleSelectManager = useCallback((managerId: any) => {
-        setSelectedManager(managerId);
-        setIsOpen(false);
+    const handleSelectManager = useCallback(
+        (managerId: any) => {
+            setSelectedManager(managerId)
+            setIsOpen(false)
 
-        // Auto-copy when selection changes
-        const command = packageManagers.find(pm => pm.id === managerId)?.command;
-        if (command && typeof window !== "undefined" && navigator.clipboard) {
-            navigator.clipboard
-                .writeText(command)
-                .then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                })
-                .catch(() => console.warn("Please copy text manually!"));
-        }
-    }, [packageManagers]);
+            // Auto-copy when selection changes
+            const command = packageManagers.find(
+                pm => pm.id === managerId,
+            )?.command
+            if (
+                command &&
+                typeof window !== 'undefined' &&
+                navigator.clipboard
+            ) {
+                navigator.clipboard
+                    .writeText(command)
+                    .then(() => {
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                    })
+                    .catch(() => console.warn('Please copy text manually!'))
+            }
+        },
+        [packageManagers],
+    )
 
     const handleCopy = useCallback(() => {
-        if (typeof window !== "undefined" && navigator.clipboard) {
+        if (typeof window !== 'undefined' && navigator.clipboard) {
             navigator.clipboard
                 .writeText(currentCommand)
                 .then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
                 })
-                .catch(() => console.warn("Please copy text manually!"));
+                .catch(() => console.warn('Please copy text manually!'))
         }
-    }, [currentCommand]);
+    }, [currentCommand])
 
-    const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94];
+    const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
     // Animation variants
     const containerVariants = {
@@ -61,10 +85,10 @@ export default function HeroSection() {
             opacity: 1,
             transition: {
                 staggerChildren: 0.15,
-                delayChildren: 0.2
-            }
-        }
-    };
+                delayChildren: 0.2,
+            },
+        },
+    }
 
     const itemVariants = {
         hidden: { opacity: 0, y: 30, scale: 0.95 },
@@ -74,10 +98,10 @@ export default function HeroSection() {
             scale: 1,
             transition: {
                 duration: 0.7,
-                ease: easeCurve
-            }
-        }
-    };
+                ease: easeCurve,
+            },
+        },
+    }
 
     const badgeVariants = {
         hidden: { opacity: 0, y: -20, scale: 0.8 },
@@ -87,10 +111,10 @@ export default function HeroSection() {
             scale: 1,
             transition: {
                 duration: 0.6,
-                ease: easeCurve
-            }
-        }
-    };
+                ease: easeCurve,
+            },
+        },
+    }
 
     const headingVariants = {
         hidden: { opacity: 0, y: 40 },
@@ -100,10 +124,10 @@ export default function HeroSection() {
             transition: {
                 duration: 0.8,
                 ease: easeCurve,
-                delay: 0.2
-            }
-        }
-    };
+                delay: 0.2,
+            },
+        },
+    }
 
     const subtitleVariants = {
         hidden: { opacity: 0, y: 30 },
@@ -113,10 +137,10 @@ export default function HeroSection() {
             transition: {
                 duration: 0.7,
                 ease: easeCurve,
-                delay: 0.4
-            }
-        }
-    };
+                delay: 0.4,
+            },
+        },
+    }
 
     const buttonVariants = {
         hidden: { opacity: 0, y: 20, scale: 0.95 },
@@ -126,10 +150,10 @@ export default function HeroSection() {
             scale: 1,
             transition: {
                 duration: 0.6,
-                ease: easeCurve
-            }
-        }
-    };
+                ease: easeCurve,
+            },
+        },
+    }
 
     const installBoxVariants = {
         hidden: { opacity: 0, y: 30, scale: 0.9 },
@@ -140,15 +164,14 @@ export default function HeroSection() {
             transition: {
                 duration: 0.7,
                 ease: easeCurve,
-                delay: 0.8
-            }
-        }
-    };
+                delay: 0.8,
+            },
+        },
+    }
 
     return (
         <section className="relative pt-20 pb-12 px-6 rounded-xl mt-28">
             {/* Background Elements */}
-         
 
             <div className="relative max-w-7xl mx-auto">
                 <motion.div
@@ -171,7 +194,7 @@ export default function HeroSection() {
                         >
                             <div className="w-2 h-2 bg-primary dark:bg-primary-dark rounded-full animate-pulse"></div>
                         </motion.div>
-                        <span>Open Source & Active</span>
+                        <span>Open source · One core, six frameworks</span>
                     </motion.div>
 
                     {/* Main Heading */}
@@ -180,7 +203,7 @@ export default function HeroSection() {
                         variants={headingVariants}
                     >
                         <BlurText
-                            text="File Uploads For"
+                            text="One File Uploader,"
                             delay={150}
                             animateBy="words"
                             direction="top"
@@ -189,12 +212,18 @@ export default function HeroSection() {
 
                         <span className="relative">
                             <GradientText
-                                colors={["#1849d6", "#4079ff", "#37c4f5", "#1849d6", "#40ffaa"]}
+                                colors={[
+                                    '#1849d6',
+                                    '#4079ff',
+                                    '#37c4f5',
+                                    '#1849d6',
+                                    '#40ffaa',
+                                ]}
                                 animationSpeed={10}
                                 showBorder={false}
                                 className="font-bold"
                             >
-                             Modern Web
+                                Every Framework
                             </GradientText>
                         </span>
                     </motion.h1>
@@ -204,17 +233,18 @@ export default function HeroSection() {
                         className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto"
                         variants={subtitleVariants}
                     >
-                        Open-source React & TypeScript file upload library with{" "}
+                        One open-source, drag-and-drop file uploader with a
+                        headless core and native UI for{' '}
                         <motion.span
                             className="font-semibold text-gray-900 dark:text-white"
                             initial={{ opacity: 0.7 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.8, duration: 0.5 }}
                         >
-                            cloud integrations
+                            React, Vue, Svelte, Angular, Vanilla JS &amp; Preact
                         </motion.span>
-                        ,{" "}
-                        customizable drag & drop UI, progress bar, and retry logic. Works with Next.js, Vite, Remix, Gatsby & more.
+                        . Cloud drives, camera, screen capture, and secure
+                        server-mode uploads to any S3-compatible storage.
                     </motion.p>
 
                     {/* CTA Buttons */}
@@ -232,9 +262,9 @@ export default function HeroSection() {
                                 href="#demo"
                                 className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
                             >
-                                <Play className="w-5 h-5"/>
+                                <Play className="w-5 h-5" />
                                 Try Live Demo
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform"/>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                             </Link>
                         </motion.div>
 
@@ -250,9 +280,9 @@ export default function HeroSection() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-2 px-8 py-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-200"
                             >
-                                <Github className="w-5 h-5"/>
+                                <Github className="w-5 h-5" />
                                 View Source
-                                <ExternalLink className="w-4 h-4"/>
+                                <ExternalLink className="w-4 h-4" />
                             </a>
                         </motion.div>
                     </motion.div>
@@ -266,7 +296,8 @@ export default function HeroSection() {
                             className="relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl p-4 transition-all duration-200"
                             whileHover={{
                                 scale: 1.02,
-                                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                                boxShadow:
+                                    '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                             }}
                         >
                             <div className="flex items-center justify-between">
@@ -296,22 +327,44 @@ export default function HeroSection() {
                                             {copied ? (
                                                 <motion.div
                                                     key="check"
-                                                    initial={{ scale: 0, rotate: -180 }}
-                                                    animate={{ scale: 1, rotate: 0 }}
-                                                    exit={{ scale: 0, rotate: 180 }}
-                                                    transition={{ duration: 0.3 }}
+                                                    initial={{
+                                                        scale: 0,
+                                                        rotate: -180,
+                                                    }}
+                                                    animate={{
+                                                        scale: 1,
+                                                        rotate: 0,
+                                                    }}
+                                                    exit={{
+                                                        scale: 0,
+                                                        rotate: 180,
+                                                    }}
+                                                    transition={{
+                                                        duration: 0.3,
+                                                    }}
                                                 >
-                                                    <Check className="w-4 h-4 text-green-600"/>
+                                                    <Check className="w-4 h-4 text-green-600" />
                                                 </motion.div>
                                             ) : (
                                                 <motion.div
                                                     key="copy"
-                                                    initial={{ scale: 0, rotate: -180 }}
-                                                    animate={{ scale: 1, rotate: 0 }}
-                                                    exit={{ scale: 0, rotate: 180 }}
-                                                    transition={{ duration: 0.3 }}
+                                                    initial={{
+                                                        scale: 0,
+                                                        rotate: -180,
+                                                    }}
+                                                    animate={{
+                                                        scale: 1,
+                                                        rotate: 0,
+                                                    }}
+                                                    exit={{
+                                                        scale: 0,
+                                                        rotate: 180,
+                                                    }}
+                                                    transition={{
+                                                        duration: 0.3,
+                                                    }}
                                                 >
-                                                    <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400"/>
+                                                    <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -325,45 +378,92 @@ export default function HeroSection() {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                         >
-                                            <span>{packageManagers.find(pm => pm.id === selectedManager)?.name}</span>
+                                            <span>
+                                                {
+                                                    packageManagers.find(
+                                                        pm =>
+                                                            pm.id ===
+                                                            selectedManager,
+                                                    )?.name
+                                                }
+                                            </span>
                                             <motion.div
-                                                animate={{ rotate: isOpen ? 180 : 0 }}
-                                                transition={{ duration: 0.3, ease: easeCurve }}
+                                                animate={{
+                                                    rotate: isOpen ? 180 : 0,
+                                                }}
+                                                transition={{
+                                                    duration: 0.3,
+                                                    ease: easeCurve,
+                                                }}
                                             >
-                                                <ChevronDown className="w-4 h-4"/>
+                                                <ChevronDown className="w-4 h-4" />
                                             </motion.div>
                                         </motion.button>
 
                                         <AnimatePresence>
                                             {isOpen && (
                                                 <motion.div
-                                                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                                                    transition={{ duration: 0.2 }}
+                                                    initial={{
+                                                        opacity: 0,
+                                                        y: -10,
+                                                        scale: 0.95,
+                                                    }}
+                                                    animate={{
+                                                        opacity: 1,
+                                                        y: 0,
+                                                        scale: 1,
+                                                    }}
+                                                    exit={{
+                                                        opacity: 0,
+                                                        y: -10,
+                                                        scale: 0.95,
+                                                    }}
+                                                    transition={{
+                                                        duration: 0.2,
+                                                    }}
                                                     className="absolute z-50 top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]"
                                                 >
-                                                    {packageManagers.map((manager, index) => (
-                                                        <motion.button
-                                                            key={manager.id}
-                                                            onClick={() => handleSelectManager(manager.id)}
-                                                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                                                                selectedManager === manager.id
-                                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium'
-                                                                    : 'text-gray-700 dark:text-gray-300'
-                                                            }`}
-                                                            initial={{ opacity: 0, x: -10 }}
-                                                            animate={{ opacity: 1, x: 0 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            whileHover={{
-                                                                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                                                                x: 4
-                                                            }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                        >
-                                                            {manager.name}
-                                                        </motion.button>
-                                                    ))}
+                                                    {packageManagers.map(
+                                                        (manager, index) => (
+                                                            <motion.button
+                                                                key={manager.id}
+                                                                onClick={() =>
+                                                                    handleSelectManager(
+                                                                        manager.id,
+                                                                    )
+                                                                }
+                                                                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                                                                    selectedManager ===
+                                                                    manager.id
+                                                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium'
+                                                                        : 'text-gray-700 dark:text-gray-300'
+                                                                }`}
+                                                                initial={{
+                                                                    opacity: 0,
+                                                                    x: -10,
+                                                                }}
+                                                                animate={{
+                                                                    opacity: 1,
+                                                                    x: 0,
+                                                                }}
+                                                                transition={{
+                                                                    delay:
+                                                                        index *
+                                                                        0.05,
+                                                                }}
+                                                                whileHover={{
+                                                                    backgroundColor:
+                                                                        'rgba(0, 0, 0, 0.05)',
+                                                                    x: 4,
+                                                                }}
+                                                                whileTap={{
+                                                                    scale: 0.98,
+                                                                }}
+                                                            >
+                                                                {manager.name}
+                                                            </motion.button>
+                                                        ),
+                                                    )}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
@@ -373,7 +473,9 @@ export default function HeroSection() {
                         </motion.div>
                     </motion.div>
                 </motion.div>
+
+                <FrameworkSnippets />
             </div>
         </section>
-    );
+    )
 }

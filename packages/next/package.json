@@ -1,0 +1,98 @@
+{
+    "name": "@upupjs/next",
+    "version": "3.0.0",
+    "description": "Next.js integration for the upup uploader — App Router + Pages Router handlers, client UI, and serverless-correct config helpers.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "uploader",
+        "nextjs",
+        "next",
+        "app-router",
+        "react",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/next"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./server": {
+            "types": "./dist/server.d.ts",
+            "import": "./dist/server.js",
+            "require": "./dist/server.cjs"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
+        "build:css": "node scripts/copy-styles.mjs",
+        "dev": "tsup --watch",
+        "lint": "eslint . --max-warnings 0",
+        "pretest": "pnpm run build",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@upupjs/core": "workspace:*",
+        "@upupjs/react": "workspace:*",
+        "@upupjs/server": "workspace:*"
+    },
+    "peerDependencies": {
+        "next": ">=15.0.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@types/react": ">=18.0.0",
+        "@types/react-dom": ">=18.0.0",
+        "@upupjs/eslint-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "jsdom": "22.1.0",
+        "next": "16.1.6",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
+}

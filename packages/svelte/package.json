@@ -1,0 +1,91 @@
+{
+    "name": "@upupjs/svelte",
+    "version": "3.0.0",
+    "description": "Svelte 5 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "upload",
+        "uploader",
+        "svelte",
+        "sveltekit",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/svelte"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "svelte": "./dist/index.js",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "svelte": "./dist/index.js",
+            "default": "./dist/index.js"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "svelte-package --input src --output dist && pnpm run build:css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "dev": "svelte-package --input src --output dist --watch",
+        "lint": "eslint . --max-warnings 0",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "svelte-check --tsconfig ./tsconfig.json && svelte-check --tsconfig ./tsconfig.test.json"
+    },
+    "dependencies": {
+        "@tanstack/svelte-virtual": "^3.13.0",
+        "@upupjs/core": "workspace:*"
+    },
+    "peerDependencies": {
+        "svelte": "^5.0.0"
+    },
+    "devDependencies": {
+        "@sveltejs/package": "^2.3.0",
+        "@sveltejs/vite-plugin-svelte": "^6.0.0",
+        "@testing-library/svelte": "^5.2.0",
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "jsdom": "22.1.0",
+        "postcss": "^8.5.2",
+        "postcss-cli": "^11.0.1",
+        "svelte": "^5.0.0",
+        "svelte-check": "^4.1.0",
+        "typescript": "^5.3.2",
+        "vite": "^7",
+        "vitest": "^4.1.2"
+    }
+}

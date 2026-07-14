@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "strict": true, "moduleResolution": "bundler", "module": "ESNext", "target": "ES2022",
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "experimentalDecorators": true, "useDefineForClassFields": false,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], "skipLibCheck": true
+  },
+  "angularCompilerOptions": { "strictTemplates": true },
+  "include": ["src/**/*.ts"]
+}

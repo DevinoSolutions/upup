@@ -1,0 +1,92 @@
+{
+    "name": "@upupjs/vanilla",
+    "version": "3.0.0",
+    "description": "Framework-free DOM file uploader (lit-html) with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "upload",
+        "uploader",
+        "vanilla-js",
+        "web-components",
+        "javascript",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/vanilla"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "type": "module",
+    "sideEffects": [
+        "./dist/element.js",
+        "./dist/element.cjs",
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./element": {
+            "types": "./dist/element.d.ts",
+            "import": "./dist/element.js",
+            "require": "./dist/element.cjs"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup && pnpm run build:css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "dev": "tsup --watch",
+        "lint": "eslint . --max-warnings 0",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
+    },
+    "dependencies": {
+        "@tanstack/virtual-core": "^3.13.0",
+        "@upupjs/core": "workspace:*",
+        "lit-html": "^3.2.0"
+    },
+    "devDependencies": {
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "jsdom": "22.1.0",
+        "postcss": "^8.5.2",
+        "postcss-cli": "^11.0.1",
+        "tsup": "^8.4.0",
+        "@types/node": "^20.19.37",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
+}

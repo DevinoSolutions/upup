@@ -1,3 +1,15 @@
 packages:
   - apps/*
-  - packages/*
+  - packages/core
+  - packages/react
+  - packages/vue
+  - packages/svelte
+  - packages/vanilla
+  - packages/angular
+  - packages/server
+  - packages/interactive-example
+  - packages/storybook-config
+  - packages/tailwind-config
+  - packages/eslint-config
+  - packages/preact
+  - packages/next

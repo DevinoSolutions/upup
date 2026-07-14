@@ -1,41 +1,84 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "tasks": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": [
-        "dist/**",
-        "dist-node/**",
-        ".next/**",
-        "build/**",
-        "!.next/cache/**"
-      ]
-    },
-    "docs#build": {
-      "outputs": [
-        "build/**",
-        "../landing/public/documentation/**"
-      ]
-    },
-    "landing#build": {
-      "dependsOn": ["docs#build"]
-    },
-    "playground#build": {},
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
-    "test": {
-      "dependsOn": ["^test"]
-    },
-    "typecheck": {
-      "dependsOn": ["^typecheck"]
-    },
-    "clean": {
-      "cache": false
+    "$schema": "https://turbo.build/schema.json",
+    "globalPassThroughEnv": [
+        "MINIO_ROOT_USER",
+        "MINIO_ROOT_PASSWORD",
+        "UPUP_UPLOAD_TOKEN_SECRET",
+        "UPUP_E2E_BUCKET",
+        "UPUP_E2E_REGION",
+        "UPUP_E2E_ENDPOINT",
+        "S3_BUCKET",
+        "S3_REGION",
+        "S3_KEY_ID",
+        "S3_SECRET",
+        "S3_ENDPOINT",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "DROPBOX_CLIENT_ID",
+        "DROPBOX_APP_SECRET",
+        "ONEDRIVE_CLIENT_ID",
+        "ONEDRIVE_CLIENT_SECRET",
+        "DANGEROUSLY_BOOT_WITH_MISSING_REQUIRED_ENV_AND_SKIP_VALIDATION"
+    ],
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": [
+                "dist/**",
+                "dist-node/**",
+                ".next/**",
+                "build/**",
+                "!.next/cache/**"
+            ]
+        },
+        "@upupjs/docs#build": {
+            "dependsOn": ["^build"],
+            "outputs": ["build/**", "../landing/public/documentation/**"]
+        },
+        "@upupjs/landing#build": {
+            "dependsOn": ["^build", "@upupjs/docs#build"]
+        },
+        "@upupjs/playground#build": {
+            "dependsOn": ["^build"]
+        },
+        "build-storybook": {
+            "dependsOn": ["^build"],
+            "outputs": ["storybook-static/**"]
+        },
+        "@upupjs/storybook-vanilla#build-storybook": {
+            "dependsOn": ["^build"],
+            "outputs": ["storybook-static/**"]
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "lint": {
+            "dependsOn": ["^build"]
+        },
+        "test": {
+            "dependsOn": ["^test", "^build"]
+        },
+        "@upupjs/vanilla#test": {
+            "dependsOn": ["^test", "^build", "build"]
+        },
+        "@upupjs/preact#test": {
+            "dependsOn": ["^test", "^build", "build"]
+        },
+        "test:coverage": {
+            "dependsOn": ["^build"]
+        },
+        "@upupjs/vanilla#test:coverage": {
+            "dependsOn": ["^build", "build"]
+        },
+        "@upupjs/preact#test:coverage": {
+            "dependsOn": ["^build", "build"]
+        },
+        "typecheck": {
+            "dependsOn": ["^typecheck", "^build"]
+        },
+        "clean": {
+            "cache": false
+        }
     }
-  }
 }

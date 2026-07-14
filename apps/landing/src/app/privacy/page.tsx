@@ -1,7 +1,4 @@
-// src/pages/privacy.tsx
-import React from "react";
-
-const Privacy: React.FC = () => {
+export default function Privacy() {
     return (
         <main className="
         min-h-screen
@@ -89,6 +86,4 @@ const Privacy: React.FC = () => {
             </div>
         </main>
     );
-};
-
-export default Privacy;
+}

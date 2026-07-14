@@ -1,0 +1,35 @@
+import { defineComponent, h, type PropType } from 'vue'
+import { ICONS, type IconName } from '@upupjs/core'
+import { cn } from '@upupjs/core/internal'
+
+export const Icon = defineComponent({
+    name: 'UpupIcon',
+    props: {
+        name: { type: String as PropType<IconName>, required: true },
+        size: {
+            type: Number as PropType<number | undefined>,
+            default: undefined,
+        },
+        class: {
+            type: String as PropType<string | undefined>,
+            default: undefined,
+        },
+    },
+    setup(props) {
+        return () => {
+            const def = ICONS[props.name]
+            const px = props.size ?? def.defaultSize
+            return h('svg', {
+                xmlns: 'http://www.w3.org/2000/svg',
+                viewBox: def.viewBox,
+                width: px,
+                height: px,
+                ...def.attrs,
+                class: cn(def.className, props.class),
+                innerHTML: def.inner,
+            })
+        }
+    },
+})
+
+export default Icon

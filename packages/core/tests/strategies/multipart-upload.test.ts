@@ -1,0 +1,204 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { MultipartUpload } from '../../src/strategies/multipart-upload'
+import type { CredentialStrategy } from '../../src/contracts-strategies'
+import type {
+    MultipartInitResponse,
+    MultipartCompleteResponse,
+    PresignedUrlResponse,
+} from '@upupjs/core'
+
+describe('MultipartUpload', () => {
+    const mockCredentials: CredentialStrategy = {
+        getPresignedUrl: vi.fn(),
+        initMultipartUpload: vi.fn(),
+        signPart: vi.fn(),
+        completeMultipartUpload: vi.fn(),
+        abortMultipartUpload: vi.fn(),
+    }
+
+    // MultipartUpload never reads its `credentials` param (see the `_credentials`
+    // name in src/strategies/multipart-upload.ts) — a minimal, type-correct
+    // stand-in satisfies the UploadStrategy#upload signature.
+    const unusedCredentials: PresignedUrlResponse = {
+        key: '',
+        uploadUrl: '',
+        expiresIn: 0,
+    }
+
+    const mockFetch = vi.fn()
+    vi.stubGlobal('fetch', mockFetch)
+
+    let strategy: MultipartUpload
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+        strategy = new MultipartUpload({
+            credentials: mockCredentials,
+            chunkSizeBytes: 5 * 1024 * 1024, // 5 MiB
+            maxConcurrentParts: 3,
+        })
+    })
+
+    it('uploads a file in multiple parts', async () => {
+        const fileSize = 12 * 1024 * 1024 // 12 MiB => 3 parts at 5 MiB chunk
+        const file = new File([new ArrayBuffer(fileSize)], 'big.zip', {
+            type: 'application/zip',
+        })
+
+        const initResponse: MultipartInitResponse = {
+            key: 'uploads/big.zip',
+            uploadId: 'upload-123',
+            partSize: 5 * 1024 * 1024,
+            expiresIn: 3600,
+            token: 'tok-abc',
+        }
+        vi.mocked(mockCredentials.initMultipartUpload!).mockResolvedValue(
+            initResponse,
+        )
+
+        vi.mocked(mockCredentials.signPart!).mockImplementation(
+            async ({ partNumber }) => ({
+                uploadUrl: `https://s3/part${partNumber}?signed`,
+                expiresIn: 3600,
+            }),
+        )
+
+        mockFetch.mockImplementation(
+            async (url: string, _init: RequestInit) => ({
+                ok: true,
+                status: 200,
+                headers: new Headers({
+                    ETag: `"etag-${url.match(/part(\d)/)?.[1]}"`,
+                }),
+            }),
+        )
+
+        const completeResponse: MultipartCompleteResponse = {
+            key: 'uploads/big.zip',
+            publicUrl: 'https://cdn.example.com/big.zip',
+            etag: '"final-etag"',
+        }
+        vi.mocked(mockCredentials.completeMultipartUpload!).mockResolvedValue(
+            completeResponse,
+        )
+
+        const onProgress = vi.fn()
+        const result = await strategy.upload(file, unusedCredentials, {
+            onProgress,
+            signal: new AbortController().signal,
+        })
+
+        expect(mockCredentials.initMultipartUpload).toHaveBeenCalledWith({
+            name: 'big.zip',
+            size: fileSize,
+            type: 'application/zip',
+        })
+        expect(mockCredentials.signPart).toHaveBeenCalledTimes(3)
+        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(mockCredentials.completeMultipartUpload).toHaveBeenCalledWith({
+            token: 'tok-abc',
+            parts: expect.arrayContaining([
+                expect.objectContaining({ partNumber: 1 }),
+                expect.objectContaining({ partNumber: 2 }),
+                expect.objectContaining({ partNumber: 3 }),
+            ]),
+        })
+        expect(result).toEqual({
+            key: 'uploads/big.zip',
+            publicUrl: 'https://cdn.example.com/big.zip',
+            etag: '"final-etag"',
+        })
+        expect(onProgress).toHaveBeenCalled()
+    })
+
+    it('aborts multipart upload on signal abort', async () => {
+        const file = new File([new ArrayBuffer(12 * 1024 * 1024)], 'big.zip', {
+            type: 'application/zip',
+        })
+        const controller = new AbortController()
+
+        vi.mocked(mockCredentials.initMultipartUpload!).mockResolvedValue({
+            key: 'uploads/big.zip',
+            uploadId: 'upload-123',
+            partSize: 5 * 1024 * 1024,
+            expiresIn: 3600,
+            token: 'tok-abc',
+        })
+
+        vi.mocked(mockCredentials.signPart!).mockImplementation(async () => {
+            controller.abort()
+            return { uploadUrl: 'https://s3/part?signed', expiresIn: 3600 }
+        })
+
+        mockFetch.mockRejectedValue(new DOMException('Aborted', 'AbortError'))
+
+        await expect(
+            strategy.upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: controller.signal,
+            }),
+        ).rejects.toThrow()
+
+        expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({
+            token: 'tok-abc',
+        })
+    })
+
+    it('surfaces the S3 error code when a part PUT fails (P4/C6)', async () => {
+        const file = new File([new ArrayBuffer(1024)], 'small.zip', {
+            type: 'application/zip',
+        })
+
+        vi.mocked(mockCredentials.initMultipartUpload!).mockResolvedValue({
+            key: 'uploads/small.zip',
+            uploadId: 'upload-999',
+            partSize: 5 * 1024 * 1024,
+            expiresIn: 3600,
+            token: 'tok-xyz',
+        })
+        vi.mocked(mockCredentials.signPart!).mockResolvedValue({
+            uploadUrl: 'https://s3/part1?signed',
+            expiresIn: 3600,
+        })
+        vi.mocked(mockCredentials.abortMultipartUpload!).mockResolvedValue(
+            undefined,
+        )
+        mockFetch.mockResolvedValue({
+            ok: false,
+            status: 403,
+            statusText: 'Forbidden',
+            text: () =>
+                Promise.resolve(
+                    '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>',
+                ),
+            headers: new Headers(),
+        })
+
+        const err = await strategy
+            .upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+            .catch(e => e)
+
+        expect(err.code).toBe('SignatureDoesNotMatch')
+        expect(mockCredentials.abortMultipartUpload).toHaveBeenCalledWith({
+            token: 'tok-xyz',
+        })
+    })
+
+    it('throws if credentials lack multipart methods', () => {
+        const bareCredentials: CredentialStrategy = {
+            getPresignedUrl: vi.fn(),
+        }
+
+        expect(
+            () =>
+                new MultipartUpload({
+                    credentials: bareCredentials,
+                    chunkSizeBytes: 5 * 1024 * 1024,
+                    maxConcurrentParts: 3,
+                }),
+        ).toThrow('CredentialStrategy must implement multipart methods')
+    })
+})

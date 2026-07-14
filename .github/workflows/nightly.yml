@@ -1,0 +1,358 @@
+name: Nightly
+
+permissions:
+    contents: read
+
+# Deep suites too slow or too external for every PR: the full e2e gate plus
+# the a11y/overflow sweep, static storybook builds, the tarball consumer, and
+# the mastra LLM evals (paid key; loudly skipped when the secret is absent —
+# never a silent green). PR routing lives in e2e.yml via
+# scripts/ci/resolve-affected-tests.mjs; nightly always runs everything.
+# Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
+# setup-node cache:pnpm (F-787) — same mechanism as main.yml / e2e.yml.
+
+on:
+    schedule:
+        - cron: '17 3 * * *' # 03:17 UTC daily
+    workflow_dispatch:
+
+jobs:
+    E2E-Full:
+        name: Full E2E + a11y sweep (Playwright + MinIO)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Playwright Chromium
+              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+
+            - name: Provision MinIO env (defaults; suites are OAuth-free)
+              run: cp local-dev/.env.minio.example local-dev/.env.minio
+
+            - name: Guard against fixture/baseline regen in CI (F-205)
+              run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
+
+            - name: Run e2e gate (deep React + cross-framework)
+              run: pnpm run e2e
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
+
+            - name: Boot MinIO for the integration suites # cf teardown stops its own compose stack — see e2e.yml
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
+            - name: Server trust-model + byte-integrity suites (real MinIO)
+              run: pnpm run e2e:minio:test
+
+            - name: A11y ratchet + overflow sweep (six storybooks, serial)
+              run: pnpm run e2e:a11y
+
+            # Visual layer: same capture set as e2e.yml (parity mount/populated
+            # states x6 frameworks, real-upload success x6, deep-react product
+            # states) — nightly's copy is the unrouted full-breadth run and the
+            # future snapvisor.io baseline feed.
+            - name: Upload visual product-state screenshots
+              if: always()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: nightly-visual-screenshots
+                  path: apps/e2e-test/screenshots/
+                  if-no-files-found: warn
+                  retention-days: 14
+
+            - name: Upload Playwright traces and reports
+              if: failure()
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: nightly-playwright-artifacts
+                  path: |
+                      apps/e2e-test/playwright-report/
+                      apps/e2e-test/test-results/
+                  retention-days: 14
+
+    Storybook-Builds:
+        name: Static storybook builds (all six frameworks)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build every storybook statically # zero PR-CI callers — nightly catches build rot
+              run: pnpm run build:storybook
+
+    Smoke-Packages:
+        name: Package smoke (real tarball consumer)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
+              run: pnpm run smoke:packages
+
+    Mastra-Evals:
+        name: Mastra LLM evals (paid key; explicit skip without it)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Detect eval credentials
+              id: creds
+              env:
+                  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+              run: |
+                  if [ -n "$OPENROUTER_API_KEY" ]; then
+                    echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "present=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice title=Mastra evals skipped::OPENROUTER_API_KEY secret is not configured — the LLM eval suite did NOT run. Deterministic mastra tests still ran in main.yml's unit gate."
+                    echo "## Mastra evals: SKIPPED (no OPENROUTER_API_KEY secret)" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+
+            - name: Setup pnpm
+              if: steps.creds.outputs.present == 'true'
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              if: steps.creds.outputs.present == 'true'
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm install --frozen-lockfile
+
+            - name: Boot mastra dev server and run the canned-prompt evals
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+              run: |
+                  pnpm --filter @upupjs/mastra dev &
+                  MASTRA_PID=$!
+                  for i in $(seq 1 60); do
+                    if curl -sf http://localhost:4111/healthz > /dev/null; then
+                      echo "mastra dev healthy on :4111"; break
+                    fi
+                    if [ "$i" = "60" ]; then
+                      echo "mastra dev failed to become healthy" >&2; kill $MASTRA_PID || true; exit 1
+                    fi
+                    sleep 2
+                  done
+                  set +e
+                  pnpm --filter @upupjs/mastra eval
+                  EVAL_EXIT=$?
+                  set -e
+                  kill $MASTRA_PID || true
+                  exit $EVAL_EXIT
+
+    Drive-Sandbox:
+        name: Cloud-drive live integration (sandbox creds; explicit skip without them)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Detect drive sandbox credentials
+              id: creds
+              env:
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  UPUP_TEST_ONEDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_ONEDRIVE_REFRESH_TOKEN }}
+              run: |
+                  if [ -n "$UPUP_TEST_BOX_CLIENT_ID" ] || [ -n "$UPUP_TEST_DROPBOX_REFRESH_TOKEN" ] || [ -n "$UPUP_TEST_GDRIVE_REFRESH_TOKEN" ] || [ -n "$UPUP_TEST_ONEDRIVE_REFRESH_TOKEN" ]; then
+                    echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "present=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice title=Drive sandbox skipped::No UPUP_TEST_* drive sandbox secrets are configured — the live cloud-drive integration suite did NOT run. drive-clients.ts stays covered by its mocked unit tests. Any provider left unconfigured skips individually inside the suite."
+                    echo "## Drive sandbox: SKIPPED (no UPUP_TEST_* secrets)" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+
+            - name: Setup pnpm
+              if: steps.creds.outputs.present == 'true'
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              if: steps.creds.outputs.present == 'true'
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm install --frozen-lockfile
+
+            - name: Build @upupjs/core (the live suite imports drive-clients.ts → @upupjs/core)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upupjs/core build
+
+            - name: Rotate + write back the OneDrive refresh token (single mint point)
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_TEST_ONEDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_ONEDRIVE_CLIENT_ID }}
+                  UPUP_TEST_ONEDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_ONEDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_ONEDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_ONEDRIVE_REFRESH_TOKEN }}
+                  UPUP_TEST_ONEDRIVE_TENANT: ${{ secrets.UPUP_TEST_ONEDRIVE_TENANT }}
+                  # Fine-grained PAT with repo Secrets:write — enables the rotated
+                  # token to be persisted. Absent → OneDrive is skipped (the stored
+                  # refresh token is left untouched); see the script's header.
+                  GH_SECRETS_WRITE_PAT: ${{ secrets.GH_SECRETS_WRITE_PAT }}
+              run: node scripts/drive-sandbox/refresh-one-drive-token.mjs
+
+            - name: Seed fixture files (idempotent) into every configured account
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  # OneDrive uses the access token the rotation step wrote to
+                  # $GITHUB_ENV (UPUP_TEST_ONEDRIVE_ACCESS_TOKEN) — its refresh
+                  # token is deliberately NOT exposed to seed/test steps.
+              run: node scripts/drive-sandbox/seed.mjs all
+
+            - name: Run the live cloud-drive integration suite
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_DRIVE_SANDBOX: '1'
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+              run: pnpm --filter @upupjs/server exec vitest run tests/integration/drive-clients-live.integration.test.ts
+
+            - name: Provision MinIO env (defaults; the HTTP-surface suite needs a live bucket)
+              if: steps.creds.outputs.present == 'true'
+              run: cp local-dev/.env.minio.example local-dev/.env.minio
+
+            - name: Boot MinIO for the drive-sandbox HTTP-surface suite # ephemeral CI runner — no teardown
+              if: steps.creds.outputs.present == 'true'
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
+            - name: Build @upupjs/server (the Playwright HTTP-surface suite imports its built dist)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upupjs/server build
+
+            - name: All-provider server-transfer through the real @upupjs/server HTTP surface (Playwright)
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  UPUP_DRIVE_SANDBOX: '1'
+                  UPUP_TEST_BOX_CLIENT_ID: ${{ secrets.UPUP_TEST_BOX_CLIENT_ID }}
+                  UPUP_TEST_BOX_CLIENT_SECRET: ${{ secrets.UPUP_TEST_BOX_CLIENT_SECRET }}
+                  UPUP_TEST_BOX_ENTERPRISE_ID: ${{ secrets.UPUP_TEST_BOX_ENTERPRISE_ID }}
+                  UPUP_TEST_DROPBOX_APP_KEY: ${{ secrets.UPUP_TEST_DROPBOX_APP_KEY }}
+                  UPUP_TEST_DROPBOX_APP_SECRET: ${{ secrets.UPUP_TEST_DROPBOX_APP_SECRET }}
+                  UPUP_TEST_DROPBOX_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_DROPBOX_REFRESH_TOKEN }}
+                  UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
+                  UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
+                  UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
+                  # OneDrive: UPUP_TEST_ONEDRIVE_ACCESS_TOKEN arrives via $GITHUB_ENV
+                  # from the rotation step — nothing OneDrive-specific is set here.
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
+              run: pnpm --filter @upupjs/e2e-test test:e2e:drive-sandbox
+
+    # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
+    # branch-protection input (nightly has no PR) — it exists so one signal
+    # summarizes the night. Mastra-Evals is green-with-notice when the key is
+    # absent; that is an explicit documented skip, not a silent pass.
+    Nightly-Status:
+        name: Nightly Status Check
+        runs-on: ubuntu-latest
+        needs:
+            [
+                E2E-Full,
+                Storybook-Builds,
+                Smoke-Packages,
+                Mastra-Evals,
+                Drive-Sandbox,
+            ]
+        if: always()
+        steps:
+            - name: Check status
+              run: |
+                  if [ "${{ needs.E2E-Full.result }}" != "success" ] || \
+                     [ "${{ needs.Storybook-Builds.result }}" != "success" ] || \
+                     [ "${{ needs.Smoke-Packages.result }}" != "success" ] || \
+                     [ "${{ needs.Mastra-Evals.result }}" != "success" ] || \
+                     [ "${{ needs.Drive-Sandbox.result }}" != "success" ]; then
+                    echo "One or more nightly jobs failed"
+                    exit 1
+                  fi
+                  echo "All nightly jobs passed"

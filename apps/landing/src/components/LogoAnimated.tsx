@@ -17,7 +17,7 @@ const Loader: React.FC = () => {
                 priority
                 style={logoStyle}
             />
-            <style jsx>{`
+            <style>{`
                 @keyframes pulse {
                     0%,
                     100% {

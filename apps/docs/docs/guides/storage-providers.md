@@ -1,0 +1,266 @@
+---
+title: Storage Providers
+sidebar_position: 4
+description: Connect upup to any S3-compatible storage — AWS S3, Cloudflare R2, MinIO, Backblaze B2, DigitalOcean Spaces, Wasabi, and more — with ready-to-copy createUpupHandler configs and the full list of supported providers.
+---
+
+# Storage Providers
+
+upup uploads to any **S3-compatible** object store. One uploader UI, one config
+shape — the only thing that changes between AWS S3, Cloudflare R2, MinIO,
+Backblaze B2, and the rest is the `storage` block you hand the server (or the
+presign endpoint you point the client at).
+
+There are two ways to wire storage. In **client mode** the browser uploads bytes
+directly to storage using short-lived URLs your own presign endpoint signs — the
+storage credentials never leave your server, and upup never sees them. In
+**server mode** the browser talks only to your server and
+[`@upupjs/server`](./server-mode-setup.md) holds the credentials and writes to
+storage for you. Which one to pick, and what changes on the wire, is covered in
+[Client Mode vs Server Mode](./modes.md).
+
+This page focuses on server mode, where the storage provider is a
+`createUpupHandler` config value.
+
+## Supported providers
+
+`@upupjs/core` exports a `StorageProvider` enum with the values below. Every one
+except `azure` exposes an S3-compatible API and is served by `@upupjs/server`;
+`azure` is the sole exception (see [Azure Blob Storage](#azure-blob-storage-no-s3-api)).
+
+| `storage.type` | Provider                          | `endpoint`    | Served by `@upupjs/server`    |
+| -------------- | --------------------------------- | ------------- | ----------------------------- |
+| `aws`          | Amazon S3                         | not needed    | Yes                           |
+| `r2`           | Cloudflare R2                     | required      | Yes                           |
+| `minio`        | MinIO                             | required      | Yes                           |
+| `backblaze`    | Backblaze B2                      | required      | Yes                           |
+| `digitalocean` | DigitalOcean Spaces               | required      | Yes                           |
+| `wasabi`       | Wasabi                            | required      | Yes                           |
+| `gcs`          | Google Cloud Storage (S3 interop) | required      | Yes                           |
+| `supabase`     | Supabase Storage                  | required      | Yes                           |
+| `hetzner`      | Hetzner Object Storage            | required      | Yes                           |
+| `linode`       | Akamai (Linode) Object Storage    | required      | Yes                           |
+| `vultr`        | Vultr Object Storage              | required      | Yes                           |
+| `upcloud`      | UpCloud Object Storage            | required      | Yes                           |
+| `scaleway`     | Scaleway Object Storage           | required      | Yes                           |
+| `ovhcloud`     | OVHcloud Object Storage           | required      | Yes                           |
+| `alibaba`      | Alibaba Cloud OSS                 | required      | Yes                           |
+| `oracle`       | Oracle Cloud Object Storage       | required      | Yes                           |
+| `contabo`      | Contabo Object Storage            | required      | Yes                           |
+| `storj`        | Storj                             | required      | Yes                           |
+| `idrive`       | IDrive e2                         | required      | Yes                           |
+| `ceph`         | Ceph (RADOS Gateway)              | required      | Yes                           |
+| `azure`        | Azure Blob Storage                | — (no S3 API) | No — throws at construct time |
+
+The `type` value is a label. `@upupjs/server` builds the same AWS-SDK S3 client
+for every S3-compatible value and reaches your backend through `endpoint` — it
+does not branch on `type`. Because `storage.type` also accepts any string, a
+store that isn't in the enum works too, as long as it speaks the S3 API: use the
+[generic recipe](#any-other-s3-compatible-service) below.
+
+`azure` is the one value with no S3 surface. `createUpupHandler` throws an
+`UpupConfigError` at construct time if you pass it, rather than failing later at
+request time.
+
+## The `storage` config
+
+Every recipe on this page fills in the same object:
+
+| Field             | Type                        | Required        | Notes                                                                                     |
+| ----------------- | --------------------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `type`            | `StorageProvider \| string` | Yes             | Provider label from the table above. Also accepts any string for stores not listed.       |
+| `bucket`          | `string`                    | Yes             | The bucket (or "Space" / "container") name.                                               |
+| `region`          | `string`                    | Yes             | Must match the bucket's region. Use `auto` for Cloudflare R2.                             |
+| `accessKeyId`     | `string`                    | Both or neither | Omit both to use the host's IAM role / instance profile (AWS). A half-set pair throws.    |
+| `secretAccessKey` | `string`                    | Both or neither | Pairs with `accessKeyId`.                                                                 |
+| `endpoint`        | `string`                    | Non-AWS only    | The provider's S3 endpoint URL. Omit for native AWS S3.                                   |
+| `forcePathStyle`  | `boolean`                   | Optional        | Defaults to `true` when `endpoint` is set (MinIO requires it); ignored for native AWS S3. |
+
+`bucket`, `region`, and — when set — a complete `accessKeyId`/`secretAccessKey`
+pair are validated at construct time, so a forgotten env var fails loudly on boot
+instead of surfacing as a confusing 500 later.
+
+## Provider recipes
+
+The AWS S3 recipe below shows the complete `createUpupHandler` call. Every other
+recipe is just the `storage` block that changes between providers — keep
+`uploadTokenSecret` and the rest of the handler from the AWS example. See the
+[Server Mode setup guide](./server-mode-setup.md) for the full walkthrough
+(`getUserId`, `providers`, `tokenStore`, and tuning).
+
+Placeholders are env vars. **Never hard-code access keys or secrets** — keep them
+in server-side environment variables.
+
+### AWS S3
+
+Native AWS needs no `endpoint`.
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupHandler } from '@upupjs/server'
+
+const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!, // e.g. 'us-east-1'
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        // Omit both keys to use the host's IAM role instead.
+    },
+    // Required, server-only: a stable, high-entropy secret (min 16 chars),
+    // shared across every server instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    // getUserId, providers, tokenStore — see the Server Mode setup guide.
+})
+```
+
+For every S3-compatible provider below, only the `storage` block changes — keep
+`uploadTokenSecret` and the rest from the AWS example.
+
+### Cloudflare R2
+
+R2 uses the literal region `auto` and an account-scoped endpoint.
+
+```ts
+const storage = {
+    type: 'r2',
+    bucket: process.env.R2_BUCKET!,
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+}
+```
+
+### MinIO
+
+Point `endpoint` at your MinIO server. MinIO requires path-style addressing —
+it's the default when `endpoint` is set, shown here explicitly.
+
+```ts
+const storage = {
+    type: 'minio',
+    bucket: process.env.MINIO_BUCKET!,
+    region: 'us-east-1', // MinIO's default region
+    endpoint: 'http://localhost:9100', // your MinIO S3 endpoint
+    forcePathStyle: true, // required by MinIO
+    accessKeyId: process.env.MINIO_ACCESS_KEY,
+    secretAccessKey: process.env.MINIO_SECRET_KEY,
+}
+```
+
+### Backblaze B2
+
+The region appears in the endpoint host (e.g. `us-west-004`).
+
+```ts
+const storage = {
+    type: 'backblaze',
+    bucket: process.env.B2_BUCKET!,
+    region: process.env.B2_REGION!, // e.g. 'us-west-004'
+    endpoint: `https://s3.${process.env.B2_REGION}.backblazeb2.com`,
+    accessKeyId: process.env.B2_KEY_ID,
+    secretAccessKey: process.env.B2_APPLICATION_KEY,
+}
+```
+
+### DigitalOcean Spaces
+
+The region (e.g. `nyc3`) is both the endpoint host and the `region` value, and
+must match your Space's region.
+
+```ts
+const storage = {
+    type: 'digitalocean',
+    bucket: process.env.SPACES_BUCKET!, // the Space name
+    region: process.env.SPACES_REGION!, // e.g. 'nyc3'
+    endpoint: `https://${process.env.SPACES_REGION}.digitaloceanspaces.com`,
+    accessKeyId: process.env.SPACES_KEY,
+    secretAccessKey: process.env.SPACES_SECRET,
+}
+```
+
+### Wasabi
+
+Wasabi's endpoint host is region-scoped (e.g. `s3.us-east-1.wasabisys.com`).
+
+```ts
+const storage = {
+    type: 'wasabi',
+    bucket: process.env.WASABI_BUCKET!,
+    region: process.env.WASABI_REGION!, // e.g. 'us-east-1'
+    endpoint: `https://s3.${process.env.WASABI_REGION}.wasabisys.com`,
+    accessKeyId: process.env.WASABI_ACCESS_KEY,
+    secretAccessKey: process.env.WASABI_SECRET_KEY,
+}
+```
+
+### Any other S3-compatible service
+
+Anything with an S3 API works, whether or not it's in the enum. Ask your provider
+for four things:
+
+- **Endpoint** — the S3 API URL (`https://…`).
+- **Region** — the region string. Some providers use `us-east-1` or `auto`.
+- **Path-style vs virtual-hosted** — whether the endpoint expects
+  `endpoint/bucket/key` (path-style) or `bucket.endpoint/key` (virtual-hosted).
+- **Access key ID + secret access key.**
+
+```ts
+const storage = {
+    type: 'my-s3-store', // any StorageProvider value, or your own label string
+    bucket: process.env.S3_BUCKET!,
+    region: process.env.S3_REGION!, // ask your provider
+    endpoint: process.env.S3_ENDPOINT!, // the provider's S3 API URL
+    // Defaults to true when `endpoint` is set. Set false only if your provider
+    // requires virtual-hosted-style addressing.
+    forcePathStyle: true,
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+}
+```
+
+## Azure Blob Storage (no S3 API)
+
+Azure Blob Storage does not expose an S3-compatible API, so `@upupjs/server`
+cannot serve it — `createUpupHandler` throws an `UpupConfigError` the moment you
+pass `type: 'azure'`.
+
+Use Azure in **client mode** instead: your own endpoint returns an Azure SAS URL
+shaped as upup's presign contract (including the `x-ms-blob-type: BlockBlob`
+header), and the browser uploads directly to the blob. See
+[Azure SAS Responses](../api-reference/azure-generate-sas-url.md) for the exact
+response shape; the S3 equivalent is documented under
+[S3 Presign Responses](../api-reference/s3-generate-presigned-url.md).
+
+## Troubleshooting
+
+**`SignatureDoesNotMatch` / 403 on upload.** Almost always a wrong `region` or a
+skewed server clock. Make `region` match the bucket's actual region (use `auto`
+for R2), and confirm the server clock is accurate — S3 signatures are
+time-sensitive and tolerate only a few minutes of drift. A half-set credential
+pair (one of `accessKeyId`/`secretAccessKey` blank, the classic
+`process.env.X!` → `""` bug) throws at construct time; set both or neither.
+
+**Path-style vs virtual-hosted addressing.** upup enables path-style
+automatically whenever `endpoint` is set, which is what MinIO and most
+S3-compatible stores expect. If your provider only supports virtual-hosted-style
+and you see hostname or TLS errors, set `forcePathStyle: false`. This flag is
+ignored for native AWS S3.
+
+**Bucket or endpoint errors (`NoSuchBucket`, DNS/TLS failures).** Check that
+`bucket` exists in that `region`, and that the region segment inside `endpoint`
+matches `region`.
+
+**CORS (client mode only).** When the browser uploads directly to storage, the
+bucket must allow your app's origin for the signed `PUT` (and its headers). In
+server mode the browser only talks to your server, so bucket CORS isn't part of
+the upload path. See [Credentials And CORS](../credentials-configuration.md).
+
+## Next steps
+
+- [Server Mode — Setup](./server-mode-setup.md) — the full `createUpupHandler`
+  walkthrough: OAuth, token store, tuning, and re-auth.
+- [Quickstarts](/quickstarts) — copy-paste starting points for React, Vue,
+  Svelte, Angular, Vanilla JS, Preact, and Next.js.

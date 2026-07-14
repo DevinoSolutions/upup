@@ -11,6 +11,7 @@ export default [
       'docs/**',
       'blog/**',
       'static/**',
+      'public/**',
       '**/*.md',
       '**/*.mdx',
     ],

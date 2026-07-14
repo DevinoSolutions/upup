@@ -1,0 +1,53 @@
+import { describe, it, expect } from 'vitest'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+// vitest cwd is packages/core → packages/ is one up.
+const PACKAGES_DIR = resolve(process.cwd(), '..')
+// This guard file necessarily names the symbol; exclude it from its own scan.
+const SELF = fileURLToPath(import.meta.url)
+
+function walk(dir: string, out: string[] = []): string[] {
+    for (const entry of readdirSync(dir)) {
+        if (entry === 'node_modules' || entry === 'dist') continue
+        const full = join(dir, entry)
+        if (statSync(full).isDirectory()) walk(full, out)
+        else if (/\.(ts|tsx|vue|svelte|js|jsx|mjs|cjs|mts|cts)$/.test(entry))
+            out.push(full)
+    }
+    return out
+}
+
+describe('LocalFolderBrowser is fully removed', () => {
+    it('has no references in any package src/', () => {
+        const hits: string[] = []
+        for (const pkg of readdirSync(PACKAGES_DIR)) {
+            const srcDir = join(PACKAGES_DIR, pkg, 'src')
+            try {
+                statSync(srcDir)
+            } catch {
+                // upup-catch: not every package dir has a src/ (e.g. non-code
+                // packages); absence just means nothing to scan here.
+                continue
+            }
+            for (const file of walk(srcDir)) {
+                if (file === SELF) continue
+                // Filename check catches a reintroduced component whose body never names
+                // the symbol (e.g. an anonymous `<script setup>` LocalFolderBrowser.vue);
+                // content check catches imports/usages/references anywhere else.
+                const base = file.split(/[\\/]/).pop() ?? file
+                if (
+                    base.includes('LocalFolderBrowser') ||
+                    readFileSync(file, 'utf8').includes('LocalFolderBrowser')
+                ) {
+                    hits.push(file)
+                }
+            }
+        }
+        expect(
+            hits,
+            `unexpected LocalFolderBrowser references:\n${hits.join('\n')}`,
+        ).toEqual([])
+    }, 30_000)
+})

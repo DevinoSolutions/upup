@@ -1,4 +1,5 @@
-pnpm --filter upup-react-file-uploader run prettier-check
-pnpm --filter upup-react-file-uploader run test
-pnpm --filter upup-react-file-uploader run build
-pnpm --filter upup-react-file-uploader run build-storybook
+#!/usr/bin/env sh
+pnpm exec lint-staged
+pnpm --filter @upupjs/core run test
+pnpm --filter @upupjs/react run test
+pnpm --filter @upupjs/server run test

@@ -1,0 +1,14 @@
+diff --git a/start-schema.json b/start-schema.json
+index 7befb6f8b7271679c23d754dbafcf94684684f36..ff80824586c280bcb26bee16efea688c2e40e78f 100644
+--- a/start-schema.json
++++ b/start-schema.json
+@@ -7,7 +7,8 @@
+     "browserTarget": {
+       "type": "string",
+       "description": "Build target to be served in project-name:builder:config format. Should generally target on the builder: '@angular-devkit/build-angular:browser'. Useful for Storybook to use options (styles, assets, ...).",
+-      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
++      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
++      "default": null
+     },
+     "debugWebpack": {
+       "type": "boolean",

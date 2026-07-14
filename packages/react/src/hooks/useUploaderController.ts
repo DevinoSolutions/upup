@@ -1,0 +1,629 @@
+import {
+    Dispatch,
+    SetStateAction,
+    createElement,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useSyncExternalStore,
+} from 'react'
+import {
+    FileSource,
+    UploadStatus,
+    resolveTheme,
+    flattenSlotsToClassNames,
+    type UploadFile,
+} from '@upupjs/core'
+import {
+    normalizeUploaderOptions,
+    createUploaderController,
+    type UploaderController,
+    type UploaderControllerOptions,
+    type OrchestratorState,
+    type ThemeStoreState,
+} from '@upupjs/core/internal'
+import Icon from '../components/Icon'
+import { UploaderProps } from '../shared/types'
+import { IUploaderContext } from '../context/UploaderContext'
+import { useUpupUpload } from '../use-upup-upload'
+import { useSSEProcessing } from './useSSEProcessing'
+
+/** Default loader icon — renders the registry 'loader' glyph via the shared Icon renderer
+ *  (which applies the stroke attrs, so the glyph is visible). Forwards size/class like the
+ *  former react-icons default did. */
+const DefaultLoaderIconComponent = (props: {
+    size?: number | undefined
+    className?: string | undefined
+}) => createElement(Icon, { name: 'loader', ...props })
+
+/** Default 'add more' icon — renders the registry 'plus' glyph (was react-icons TbPlus). */
+const DefaultPlusIconComponent = (props: {
+    size?: number | undefined
+    className?: string | undefined
+}) => createElement(Icon, { name: 'plus', ...props })
+
+/** Default camera-capture icon — renders the registry 'capture' glyph (was react-icons TbCapture). */
+const DefaultCaptureIconComponent = (props: {
+    size?: number | undefined
+    className?: string | undefined
+}) => createElement(Icon, { name: 'capture', ...props })
+
+/** Default camera-rotate icon — renders the registry 'camera-rotate' glyph (was react-icons TbCameraRotate). */
+const DefaultCameraRotateIconComponent = (props: {
+    size?: number | undefined
+    className?: string | undefined
+}) => createElement(Icon, { name: 'camera-rotate', ...props })
+
+/** Default delete icon (file + camera slots) — renders the registry 'trash' glyph (was react-icons TbTrash). */
+const DefaultTrashIconComponent = (props: {
+    size?: number | undefined
+    className?: string | undefined
+}) => createElement(Icon, { name: 'trash', ...props })
+
+const EMPTY_THEME_SLOTS = {}
+const EMPTY_STYLE = {}
+
+/** Stable server snapshot for SSR (useSyncExternalStore third arg). */
+const SERVER_SNAPSHOT: OrchestratorState = {
+    files: new Map(),
+    uploadStatus: UploadStatus.IDLE,
+    uploadError: '',
+    totalProgress: 0,
+    filesProgressMap: {},
+    uploadSpeed: 0,
+    uploadEta: 0,
+    uploadedBytes: 0,
+    totalBytes: 0,
+    activeSource: undefined,
+    editingFile: null,
+    editorQueue: [],
+    isAddingMore: false,
+    viewMode: 'grid',
+    isOnline: true,
+}
+
+/** Shape a resolved theme into the ThemeStoreState snapshot (mirrors ThemeStore.compute()).
+ *  Pure — used for the pre-mount / SSR fallback when `controller` (hence controller.theme) is not yet created. */
+function themeStateFromResolved(
+    resolved: ThemeStoreState['resolved'],
+): ThemeStoreState {
+    return {
+        themeMode: resolved.mode,
+        isDark: resolved.mode === 'dark',
+        tokens: resolved.tokens,
+        resolved,
+        slotOverrides: flattenSlotsToClassNames(resolved.slots),
+        slots: resolved.slots ?? {},
+    }
+}
+
+export default function useUploaderController(
+    props: UploaderProps,
+): IUploaderContext {
+    const {
+        allowedFileTypes: acceptProp = '*',
+        mini = false,
+        theme,
+        maxFiles,
+        isProcessing = false,
+        allowPreview = true,
+        folderUpload,
+        showBranding = true,
+        disableDragDrop = false,
+        className,
+        style,
+        maxFileSize: maxFileSizeProp,
+        minFileSize: minFileSizeProp,
+        maxTotalFileSize: maxTotalFileSizeProp,
+        imageCompression = false,
+        thumbnailGenerator = false,
+        checksumVerification = false,
+        webWorker,
+        heicConversion = false,
+        stripExifData = false,
+        contentDeduplication = false,
+        crashRecovery = false,
+        sources,
+        onError: errorHandler,
+        onWarn: warningHandler,
+        icons = {},
+        i18n,
+        onIntegrationClick = () => {},
+        onFileClick = () => {},
+        onFileRemoved,
+        onStatusChange,
+        onFilesDragOver = () => {},
+        onFilesDragLeave = () => {},
+        onFilesDrop = () => {},
+        onFileTypeMismatch = () => {},
+        onBeforeFileAdded,
+        onRestrictionFailed,
+        enablePaste = false,
+        autoUpload = false,
+        maxConcurrentUploads,
+        imageEditor: imageEditorProp,
+        onUploadStart = () => {},
+        onFileUploadStart = () => {},
+        onFileUploadProgress = () => {},
+        onFilesUploadProgress = () => {},
+        onFileUploadComplete = () => {},
+        onFilesUploadComplete = () => {},
+        onUploadComplete = () => {},
+        onFilesSelected = () => {},
+        onDoneClicked = () => {},
+        onPrepareFiles,
+        provider,
+        mode: modeProp,
+        uploadEndpoint,
+        serverUrl,
+        cloudDrives,
+        metadata,
+        cors,
+        maxRetries,
+        resumable,
+        processingEndpoint,
+        onFileProcessed,
+        processingTimeout,
+    } = props
+
+    const onError = useCallback(
+        (message: string) => {
+            errorHandler?.(message)
+        },
+        [errorHandler],
+    )
+    const onWarn = useCallback(
+        (message: string) => {
+            warningHandler?.(message)
+        },
+        [warningHandler],
+    )
+
+    // ── Build factory-compatible options object ──────────────────
+    // UploaderProps.allowedFileTypes is string | string[] | undefined;
+    // UploaderControllerOptions.allowedFileTypes is string | undefined.
+    // normalizeUploaderOptions handles both at runtime via a cast, so we cast here.
+    const factoryOptions = useMemo<UploaderControllerOptions>(
+        () => ({
+            provider,
+            mode: modeProp,
+            sources: sources,
+            uploadEndpoint,
+            serverUrl,
+            maxFiles,
+            theme,
+            folderUpload,
+            cors,
+            cloudDrives,
+            imageCompression,
+            thumbnailGenerator,
+            checksumVerification,
+            webWorker,
+            heicConversion,
+            stripExifData,
+            contentDeduplication,
+            autoUpload,
+            maxConcurrentUploads,
+            crashRecovery,
+            allowedFileTypes:
+                typeof acceptProp === 'string'
+                    ? acceptProp
+                    : acceptProp.join(','),
+            mini,
+            isProcessing,
+            allowPreview,
+            showBranding,
+            disableDragDrop,
+            className,
+            maxFileSize: maxFileSizeProp,
+            minFileSize: minFileSizeProp,
+            maxTotalFileSize: maxTotalFileSizeProp,
+            imageEditor: imageEditorProp,
+            metadata,
+            maxRetries,
+            resumable,
+            i18n,
+            onBeforeFileAdded,
+            // Callbacks: set to current stable refs; updated live via controller.updateCallbacks() each render
+            onError: errorHandler,
+            onWarn: warningHandler,
+            onUploadStart,
+            onFileUploadStart,
+            onFileUploadProgress,
+            onFilesUploadProgress,
+            onFileUploadComplete,
+            onFilesUploadComplete,
+            onUploadComplete,
+            onFilesSelected,
+            onDoneClicked,
+            onPrepareFiles,
+            onFileRemoved,
+            onStatusChange,
+            onFileTypeMismatch,
+            onRestrictionFailed,
+        }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- every field is destructured from `props`; memoizing on props identity is equivalent to listing all ~50 and intentional (mirrors normalizeUploaderOptions below)
+        [props],
+    ) // props identity memoization — same as normalizeUploaderOptions below
+
+    // ── Normalize options (pure; memoized on props identity) ─────
+    const normalized = useMemo(
+        () => normalizeUploaderOptions(factoryOptions),
+        [factoryOptions],
+    )
+    const { resolved } = normalized
+
+    // ── Core (via useUpupUpload; owns core lifecycle) ────────────
+    const upload = useUpupUpload(normalized.coreOptions)
+    const core = upload.core
+
+    // ── SSE processing ──────────────────────────────────────────
+    const { connectSSE } = useSSEProcessing({
+        processingEndpoint,
+        onFileProcessed,
+        onError: err => {
+            onError(err.message)
+        },
+        processingTimeout,
+    })
+
+    // Keep connectSSERef fresh every render (factory proxy reads via closure)
+    const connectSSERef = useRef(connectSSE)
+    connectSSERef.current = connectSSE
+
+    // ── Uploader controller (created once, guarded ref) ──────────────
+    const controllerRef = useRef<UploaderController | null>(null)
+    if (!controllerRef.current && core) {
+        controllerRef.current = createUploaderController(
+            { core, options: factoryOptions, normalized },
+            {
+                connectSSE: file => {
+                    connectSSERef.current(file)
+                },
+            },
+        )
+    }
+    const controller = controllerRef.current
+
+    // Refresh proxied callbacks every render (replaces old callbackRefs.current overwrite).
+    // Must call before any render-path reads from the proxy.
+    if (controller) {
+        controller.updateCallbacks({
+            onError,
+            onWarn,
+            onUploadStart,
+            onFileUploadStart,
+            onFileUploadProgress,
+            onFilesUploadProgress,
+            onFileUploadComplete,
+            onFilesUploadComplete,
+            onUploadComplete,
+            onFilesSelected,
+            onDoneClicked,
+            onPrepareFiles,
+            onFileRemoved,
+            onStatusChange,
+            onFileTypeMismatch,
+            onRestrictionFailed,
+            autoUpload,
+        })
+    }
+
+    // ── Subscribe to orchestrator state (React 18 useSyncExternalStore) ──
+    const getServerSnapshot = useCallback(() => SERVER_SNAPSHOT, [])
+    const state = useSyncExternalStore(
+        controller?.orchestrator.subscribe ?? (() => () => {}),
+        controller?.orchestrator.getSnapshot ?? (() => SERVER_SNAPSHOT),
+        getServerSnapshot,
+    )
+
+    // ── Subscribe to theme state (ThemeStore → replaces useResolvedThemeMode) ──
+    // ThemeStore.init() owns the same matchMedia('prefers-color-scheme: dark') subscription
+    // as the old useResolvedThemeMode, so light/dark/system resolve identically.
+    // ThemeStoreState fields (themeMode, isDark, tokens, resolved, slotOverrides, slots)
+    // map 1:1 to ContextTheme — no field renaming needed.
+    //
+    // First-paint parity: on the very first render `controller` is null (core is created in
+    // useUpupUpload's post-paint effect), so the store/server snapshot is used. It must
+    // resolve the EXPLICIT mode synchronously to match the OLD synchronous resolveTheme:
+    //   - mode 'dark'   → dark on first paint (no light→dark flash)
+    //   - mode 'light'  → light
+    //   - mode 'system' → 'light' pre-mount (matches old useState('light') initial; the
+    //                     matchMedia flip happens after mount via ThemeStore.init()).
+    // Memoized on props.theme for referential stability (useSyncExternalStore requires the
+    // server/getSnapshot fallback to be stable). Deterministic from props → SSR + hydration
+    // compute the same value, so no hydration mismatch and the module-level light constant
+    // is no longer needed.
+    const themeFallback = useMemo<ThemeStoreState>(() => {
+        const requested = theme?.mode
+        const mode: 'light' | 'dark' = requested === 'dark' ? 'dark' : 'light'
+        return themeStateFromResolved(
+            resolveTheme({
+                ...(theme ?? {}),
+                mode,
+            }) as ThemeStoreState['resolved'],
+        )
+    }, [theme])
+    const getThemeServerSnapshot = useCallback(
+        () => themeFallback,
+        [themeFallback],
+    )
+    const themeState = useSyncExternalStore(
+        controller?.theme.subscribe ?? (() => () => {}),
+        controller?.theme.getSnapshot ?? (() => themeFallback),
+        getThemeServerSnapshot,
+    )
+
+    // ── Single lifecycle effect (replaces 4 old effects) ─────────
+    // init()/destroy() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
+    //
+    // The four old effects (orchestrator init/destroy, plugin registration, crash recovery,
+    // status-change) now live INSIDE createUploaderController.init()/destroy(). Notably the
+    // status-change callback is now DEDUPED there (it no longer fires an initial 'idle'),
+    // and crash recovery is triggered once from init() — both factory-owned.
+    //
+    // StrictMode/plugin behavior: factory destroy() calls p.destroy() on each plugin,
+    // which is IDENTICAL to the old React adapter's plugin-effect cleanup:
+    //   return () => { plugins.forEach(p => p.destroy()) }
+    // So after StrictMode init→destroy→init on the same core, cloud plugins could be dead.
+    // This is NOT a regression — the original React adapter had the same behavior.
+    useEffect(() => {
+        controller?.init()
+        return () => {
+            controller?.destroy()
+        }
+    }, [controller])
+
+    // ── Input ref (React-specific) ──────────────────────────────
+    const inputRef = useRef<HTMLInputElement>(null)
+    const openFilePicker = useCallback(() => {
+        inputRef.current?.click()
+    }, [])
+
+    // ── Commands (delegate to factory commands) ──────────────────
+    const handleSetSelectedFiles = useCallback(
+        (newFiles: File[]) => {
+            void controller?.commands.handleSetSelectedFiles(newFiles)
+        },
+        [controller],
+    )
+
+    const handleFileRemove = useCallback(
+        (fileId: string) => {
+            controller?.commands.handleFileRemove(fileId)
+        },
+        [controller],
+    )
+
+    const uploadFiles = useCallback(
+        async (newFiles: File[] | UploadFile[]) => {
+            return controller?.commands.uploadFiles(newFiles)
+        },
+        [controller],
+    )
+
+    const replaceFiles = useCallback(
+        (newFiles: File[] | UploadFile[]) => {
+            controller?.commands.replaceFiles(newFiles)
+        },
+        [controller],
+    )
+
+    const startUpload = useCallback(async () => {
+        return controller?.commands.startUpload()
+    }, [controller])
+
+    const retryUpload = useCallback(
+        async (fileId?: string) => {
+            return controller?.commands.retryUpload(fileId)
+        },
+        [controller],
+    )
+
+    const handleCancel = useCallback(() => {
+        controller?.commands.handleCancel()
+    }, [controller])
+
+    const handlePause = useCallback(() => {
+        controller?.commands.handlePause()
+    }, [controller])
+
+    const handleResume = useCallback(() => {
+        controller?.commands.handleResume()
+    }, [controller])
+
+    const handleDone = useCallback(() => {
+        controller?.commands.handleDone()
+    }, [controller])
+
+    const resetState = useCallback(() => {
+        controller?.commands.resetState()
+    }, [controller])
+
+    const openImageEditor = useCallback(
+        (file: UploadFile) => {
+            controller?.commands.openImageEditor(file)
+        },
+        [controller],
+    )
+
+    const closeImageEditor = useCallback(() => {
+        controller?.commands.closeImageEditor()
+    }, [controller])
+
+    const saveImageEdit = useCallback(
+        (editedImageData: string, mimeType?: string) => {
+            controller?.commands.saveImageEdit(editedImageData, mimeType)
+        },
+        [controller],
+    )
+
+    const replaceFile = useCallback(
+        (fileId: string, newFile: UploadFile) => {
+            controller?.commands.replaceFile(fileId, newFile)
+        },
+        [controller],
+    )
+
+    // ── Dispatch<SetStateAction> setters (preserve functional-update branch) ──
+    const setActiveSource: Dispatch<SetStateAction<FileSource | undefined>> =
+        useCallback(
+            (value: SetStateAction<FileSource | undefined>) => {
+                if (typeof value === 'function') {
+                    controller?.commands.setActiveSource(
+                        value(
+                            controller.orchestrator.getSnapshot().activeSource,
+                        ),
+                    )
+                } else {
+                    controller?.commands.setActiveSource(value)
+                }
+            },
+            [controller],
+        )
+    const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
+        (value: SetStateAction<boolean>) => {
+            if (typeof value === 'function') {
+                controller?.commands.setIsAddingMore(
+                    value(
+                        controller.orchestrator.getSnapshot().isAddingMore ??
+                            false,
+                    ),
+                )
+            } else {
+                controller?.commands.setIsAddingMore(value)
+            }
+        },
+        [controller],
+    )
+    const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
+        (value: SetStateAction<'grid' | 'list'>) => {
+            if (typeof value === 'function') {
+                controller?.commands.setViewMode(
+                    value(
+                        controller.orchestrator.getSnapshot().viewMode ??
+                            'grid',
+                    ),
+                )
+            } else {
+                controller?.commands.setViewMode(value)
+            }
+        },
+        [controller],
+    )
+
+    // ── Icons resolution (React-specific) ───────────────────────
+    const resolvedIcons = useMemo(
+        () => ({
+            ContainerAddMoreIcon:
+                icons.ContainerAddMoreIcon || DefaultPlusIconComponent,
+            FileDeleteIcon: icons.FileDeleteIcon || DefaultTrashIconComponent,
+            CameraCaptureIcon:
+                icons.CameraCaptureIcon || DefaultCaptureIconComponent,
+            CameraRotateIcon:
+                icons.CameraRotateIcon || DefaultCameraRotateIconComponent,
+            CameraDeleteIcon:
+                icons.CameraDeleteIcon || DefaultTrashIconComponent,
+            LoaderIcon: icons.LoaderIcon || DefaultLoaderIconComponent,
+        }),
+        [
+            icons.CameraCaptureIcon,
+            icons.CameraDeleteIcon,
+            icons.CameraRotateIcon,
+            icons.ContainerAddMoreIcon,
+            icons.FileDeleteIcon,
+            icons.LoaderIcon,
+        ],
+    )
+
+    const resolvedStyle = style ?? EMPTY_STYLE
+
+    // ── Assemble IUploaderContext ────────────────────────────────────
+    // themeState fields match ContextTheme 1:1 (ThemeStoreState ≡ ContextTheme shape)
+    return {
+        core,
+        orchestrator: controller?.orchestrator ?? null,
+        mode: resolved.mode,
+        serverUrl: resolved.serverUrl,
+        inputRef,
+        openFilePicker,
+        activeSource: state.activeSource,
+        setActiveSource,
+        isAddingMore: state.isAddingMore,
+        setIsAddingMore,
+        viewMode: state.viewMode,
+        setViewMode,
+        isOnline: state.isOnline,
+        translations: resolved.translations,
+        translator: resolved.translator,
+        lang: resolved.lang,
+        dir: resolved.dir,
+        theme: {
+            themeMode: themeState.themeMode,
+            isDark: themeState.isDark,
+            tokens: themeState.tokens,
+            resolved: themeState.resolved,
+            slotOverrides: themeState.slotOverrides,
+            slots: themeState.slots ?? EMPTY_THEME_SLOTS,
+        },
+        files: state.files,
+        setFiles: handleSetSelectedFiles,
+        uploadFiles,
+        resetState,
+        replaceFiles,
+        handleDone,
+        handleCancel,
+        handlePause,
+        handleResume,
+        handleFileRemove,
+        editingFile: state.editingFile,
+        openImageEditor,
+        closeImageEditor,
+        saveImageEdit,
+        replaceFile,
+        cloudDrives: resolved.cloudDrives,
+        upload: {
+            totalProgress: state.totalProgress,
+            filesProgressMap: state.filesProgressMap,
+            startUpload,
+            retryUpload,
+            uploadStatus: state.uploadStatus,
+            setUploadStatus: () => {},
+            uploadError: state.uploadError,
+            uploadErrorCode: state.uploadErrorCode,
+            uploadSpeed: state.uploadSpeed,
+            uploadEta: state.uploadEta,
+            uploadedBytes: state.uploadedBytes,
+            totalBytes: state.totalBytes,
+        },
+        props: {
+            mini,
+            maxRetries,
+            resumable,
+            onError,
+            onIntegrationClick,
+            onFileClick,
+            onFilesDragOver,
+            onFilesDragLeave,
+            onFilesDrop,
+            onWarn,
+            enablePaste,
+            sources: resolved.sources,
+            allowedFileTypes: resolved.allowedFileTypes,
+            maxFileSize: resolved.maxFileSize,
+            limit: resolved.limit,
+            isProcessing,
+            allowPreview,
+            folderUploadAllowDrop: resolved.folderUploadAllowDrop,
+            folderPickerButtonVisible: resolved.folderPickerButtonVisible,
+            showBranding,
+            disableDragDrop,
+            className: className ?? '',
+            style: resolvedStyle,
+            multiple: resolved.multiple,
+            icons: resolvedIcons,
+            imageEditor: resolved.imageEditor,
+        },
+    }
+}

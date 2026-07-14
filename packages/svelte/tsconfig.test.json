@@ -1,0 +1,17 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "declaration": false,
+        "declarationMap": false,
+        "rootDir": ".",
+        "types": ["vitest/globals"]
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.svelte",
+        "tests/**/*.ts",
+        "tests/**/*.svelte"
+    ],
+    "exclude": ["node_modules", "dist"]
+}

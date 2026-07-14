@@ -1,245 +1,293 @@
 name: CI
 
 permissions:
-  contents: read
+    contents: read
 on:
-  pull_request:
-    branches: [master, dev]
+    pull_request:
+        branches: [master, dev]
+    workflow_dispatch:
+
+# Actions are pinned to full commit SHAs (F-792) to match docker-compose's
+# digest-pinning posture; the trailing comment records the human version.
+# Dependabot's github-actions group updates the SHA pins weekly.
+# pnpm is bootstrapped via pnpm/action-setup (reads packageManager from
+# package.json) + setup-node cache:pnpm — one mechanism across all workflows
+# (F-787). Do not reintroduce the hardcoded `npm install -g pnpm@x` bootstrap.
 
 jobs:
-  Prettier-check:
-    name: Prettier Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
+    Prettier-check:
+        name: Prettier Check
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v3
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Install dependencies
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install
+            - name: Prettier Check
+              run: pnpm run prettier-check
 
-      - name: Prettier Check
-        run: pnpm run prettier-check
+    Test:
+        name: Run Tests and Coverage
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-  Test:
-    name: Run Tests and Coverage
-    runs-on: ubuntu-latest
-    needs: [Prettier-check]
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - uses: actions/setup-node@v3
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
+            - name: Test-quality guard # committed .only, silent skips, vague names, unjustified sleeps, integration-layer mocks, regen-guard presence
+              run: pnpm run test:quality
 
-      - name: Install dependencies
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install
+            - name: Script self-tests (quality guard, affected resolver, tarball lib)
+              run: pnpm run test:scripts
 
-      - name: Run Tests with Coverage
-        run: pnpm run test:coverage
+            - name: Run all package unit suites # F-163 / F-502 — every package, not just react
+              run: pnpm run test # after P1 === `turbo run test --continue`
 
-      - name: Check Coverage Thresholds
-        run: |
-          COVERAGE_OUTPUT=$(cat coverage/coverage-summary.json)
-          
-          STATEMENTS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.statements.pct')
-          BRANCHES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.branches.pct')
-          FUNCTIONS_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.functions.pct')
-          LINES_PCT=$(echo $COVERAGE_OUTPUT | jq -r '.total.lines.pct')
-          
-          THRESHOLD=1
-          
-          if (( $(echo "$STATEMENTS_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Statement coverage ($STATEMENTS_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$BRANCHES_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Branch coverage ($BRANCHES_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$FUNCTIONS_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Function coverage ($FUNCTIONS_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          if (( $(echo "$LINES_PCT < $THRESHOLD" | bc -l) )); then
-            echo "❌ Line coverage ($LINES_PCT%) is below threshold ($THRESHOLD%)"
-            exit 1
-          fi
-          
-          echo "✅ All coverage thresholds met!"
-          echo "Statements: $STATEMENTS_PCT%"
-          echo "Branches: $BRANCHES_PCT%"
-          echo "Functions: $FUNCTIONS_PCT%"
-          echo "Lines: $LINES_PCT%"
+            - name: Coverage floors (all 9 publishable packages) # F-162 / F-503 — per-package anti-regression ratchets in each vitest.config.ts; turbo --continue so one package cannot mask the rest (F-790: routed through turbo so preact/vanilla see fresh dist)
+              run: pnpm run test:coverage
 
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-coverage-report
-          path: coverage/
-          retention-days: 30
+            - name: Env schema drift
+              run: pnpm run env:check
 
-  Build:
-    name: Build project
-    runs-on: ubuntu-latest
-    needs: [Prettier-check, Test, E2E]
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+            - name: Retired-vocabulary census # naming sweeps must land in EVERY layer (identifiers, DOM strings, fixtures) — see scripts/check-retired-vocab.mjs
+              run: pnpm run vocab:check
 
-      - uses: actions/setup-node@v3
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
+            - name: Archive code coverage results
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: code-coverage-report
+                  path: coverage/
+                  retention-days: 30
 
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
+    Build:
+        name: Build project
+        runs-on: ubuntu-latest
+        needs: [Prettier-check, Test]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - name: Install dependencies
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Build
-        run: pnpm run build
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-  Status-Check:
-    name: Status Check
-    runs-on: ubuntu-latest
-    needs: [Prettier-check, Test, E2E, Build]
-    if: always()
-    steps:
-      - name: Check status
-        run: |
-          if [ "${{ needs.Prettier-check.result }}" != "success" ] || \
-             [ "${{ needs.Test.result }}" != "success" ] || \
-             [ "${{ needs.E2E.result }}" != "success" ] || \
-             [ "${{ needs.Build.result }}" != "success" ]; then
-            echo "One or more jobs failed"
-            exit 1
-          fi
-          echo "All jobs passed successfully"
+            - name: Build
+              run: pnpm run build
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
 
-  E2E:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    needs: [Prettier-check, Test]
-    timeout-minutes: 30
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    Typecheck:
+        name: Typecheck project
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: actions/setup-node@v4
-        id: cache-primes
-        with:
-          node-version-file: '.nvmrc'
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - name: Setup PNPM environment
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: |
-          npm install -g pnpm@latest
-          pnpm config set store-dir ~/.pnpm-store
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Cache PNPM dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-v3-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-v3-
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Install deps
-        if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: pnpm install
+            - name: Typecheck
+              run: pnpm run typecheck
 
-      - name: Install Playwright Browsers
-        run: pnpm run playwright:install
+    Bundle-Size:
+        name: Bundle size check
+        runs-on: ubuntu-latest
+        needs: [Build]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - name: Start backend (dev server)
-        env:
-          PORT: 53010
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_KEY_ID: ${{ secrets.S3_KEY_ID }}
-          S3_SECRET: ${{ secrets.S3_SECRET }}
-        run: |
-          pnpm run dev:server &
-          echo "Waiting for backend health..."
-          for i in {1..60}; do
-            if curl -sf http://localhost:53010/health >/dev/null; then echo OK; break; fi
-            sleep 2
-          done
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - name: Run Playwright tests
-        env:
-          # Storybook is started by Playwright's webServer config on port 6007
-          TOKEN_ENDPOINT: http://localhost:53010/api/upload
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GOOGLE_APP_ID: ${{ secrets.GOOGLE_APP_ID }}
-          ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
-          DROPBOX_CLIENT_ID: ${{ secrets.DROPBOX_CLIENT_ID }}
-          DROPBOX_APP_SECRET: ${{ secrets.DROPBOX_APP_SECRET }}
-          DROPBOX_REDIRECT_URI: ${{ secrets.DROPBOX_REDIRECT_URI }}
-        run: pnpm run test:e2e --reporter=list
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Upload Playwright report
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build
+              run: pnpm run build
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
+
+            - name: Size limit
+              run: pnpm run size
+
+    Dependency-Audit:
+        name: Dependency audit (packages/*, production scope)
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Prod dependency audit (publishable packages, fail on high+)
+              run: pnpm run audit:prod
+
+    Lint:
+        name: Lint
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Lint
+              run: pnpm run lint
+
+    Oxlint:
+        name: Oxlint (fast lint)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Oxlint
+              run: pnpm run lint:ox
+
+    Knip:
+        name: Knip (dead code)
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Knip
+              run: pnpm run knip
+
+    Status-Check:
+        name: Status Check
+        runs-on: ubuntu-latest
+        needs:
+            [
+                Prettier-check,
+                Oxlint,
+                Test,
+                Build,
+                Typecheck,
+                Bundle-Size,
+                Dependency-Audit,
+                Lint,
+                Knip,
+            ]
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: |
-            playwright-report
-            test-results
-          retention-days: 7
+        steps:
+            - name: Check status
+              run: |
+                  if [ "${{ needs.Prettier-check.result }}" != "success" ] || \
+                     [ "${{ needs.Oxlint.result }}" != "success" ] || \
+                     [ "${{ needs.Test.result }}" != "success" ] || \
+                     [ "${{ needs.Build.result }}" != "success" ] || \
+                     [ "${{ needs.Typecheck.result }}" != "success" ] || \
+                     [ "${{ needs.Bundle-Size.result }}" != "success" ] || \
+                     [ "${{ needs.Dependency-Audit.result }}" != "success" ] || \
+                     [ "${{ needs.Lint.result }}" != "success" ] || \
+                     [ "${{ needs.Knip.result }}" != "success" ]; then
+                    echo "One or more jobs failed"
+                    exit 1
+                  fi
+                  echo "All jobs passed successfully"

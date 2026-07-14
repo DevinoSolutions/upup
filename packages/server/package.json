@@ -1,0 +1,102 @@
+{
+    "name": "@upupjs/server",
+    "version": "3.0.0",
+    "description": "Server-mode endpoints for the upup uploader — S3-compatible presign + proxy uploads, cloud-drive token exchange, and an HMAC-signed upload-token trust model. Framework-agnostic with Next.js/Express/Fastify/Hono adapters.",
+    "keywords": [
+        "file-upload",
+        "uploader",
+        "server",
+        "s3",
+        "s3-compatible",
+        "presigned-url",
+        "multipart",
+        "hmac",
+        "express",
+        "fastify",
+        "hono",
+        "google-drive",
+        "one-drive",
+        "drag-and-drop",
+        "dropzone",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/server"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./next": {
+            "types": "./dist/next.d.ts",
+            "import": "./dist/next.js",
+            "require": "./dist/next.cjs"
+        },
+        "./express": {
+            "types": "./dist/express.d.ts",
+            "import": "./dist/express.js",
+            "require": "./dist/express.cjs"
+        },
+        "./hono": {
+            "types": "./dist/hono.d.ts",
+            "import": "./dist/hono.js",
+            "require": "./dist/hono.cjs"
+        },
+        "./fastify": {
+            "types": "./dist/fastify.d.ts",
+            "import": "./dist/fastify.js",
+            "require": "./dist/fastify.cjs"
+        },
+        "./node-bridge": {
+            "types": "./dist/node-http-bridge.d.ts",
+            "import": "./dist/node-http-bridge.js",
+            "require": "./dist/node-http-bridge.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "lint": "eslint . --max-warnings 0",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit"
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@upupjs/core": "workspace:*",
+        "@aws-sdk/client-s3": "^3.689.0",
+        "@aws-sdk/s3-request-presigner": "^3.689.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@upupjs/eslint-config": "workspace:*",
+        "@vitest/coverage-v8": "^4.1.2",
+        "eslint": "^10.6.0",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
+}

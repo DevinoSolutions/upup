@@ -1,77 +1,154 @@
 name: Publish
 on:
-  push:
-    branches:
-      - master
-      - dev
+    push:
+        branches:
+            - master
+            - dev
+
+# Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
+# setup-node cache:pnpm (F-787) — same mechanism as main.yml / e2e.yml.
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
+    contents: write
+    pull-requests: write
+    id-token: write
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: pnpm/action-setup@v4
+            - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.4.0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: pnpm
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
 
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@11.5.1
+            - name: Upgrade npm for trusted publishing
+              run: npm install -g npm@11.16.0
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request
-        if: github.ref == 'refs/heads/master'
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          createGithubReleases: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Create Release Pull Request
+              if: github.ref == 'refs/heads/master'
+              id: changesets
+              uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+              with:
+                  createGithubReleases: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if current package version still needs publishing
-        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false'
-        id: package_meta
-        shell: bash
-        run: |
-          NAME=$(node -p "require('./packages/upup/package.json').name")
-          VERSION=$(node -p "require('./packages/upup/package.json').version")
-          echo "name=$NAME" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "needs_publish=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "needs_publish=true" >> "$GITHUB_OUTPUT"
-          fi
+            - name: Check which package versions still need publishing
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false'
+              id: package_meta
+              shell: bash
+              run: |
+                  # F-781: derive the publishable set at runtime (the audit-prod.mjs
+                  # predicate: @upupjs/* workspace packages that are not private) instead of
+                  # a hand-maintained PKGS=(react server core ...) array that silently
+                  # under-scopes the publish gate when a package is added/removed.
+                  TO_PUBLISH=""
+                  while IFS= read -r ref; do
+                    npm view "$ref" version >/dev/null 2>&1 || TO_PUBLISH="$TO_PUBLISH $ref"
+                  done < <(pnpm -r ls --depth -1 --json | jq -r '.[] | select(.name | startswith("@upupjs/")) | select(.private != true) | "\(.name)@\(.version)"')
+                  TO_PUBLISH=$(echo $TO_PUBLISH | xargs)
+                  echo "to_publish=$TO_PUBLISH" >> "$GITHUB_OUTPUT"
+                  [ -n "$TO_PUBLISH" ] && echo "any_needs_publish=true" >> "$GITHUB_OUTPUT" || echo "any_needs_publish=false" >> "$GITHUB_OUTPUT"
 
-      - name: Publish to npm
-        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.needs_publish == 'true'
-        run: pnpm run release
+            # ── Pre-publish gate (F-791) ──────────────────────────────────────────
+            # Publishing from master implies its PR passed main.yml/e2e.yml, but a
+            # direct push (or unset branch protection) would publish a commit those
+            # gates never ran on. So the fast static gates that main.yml runs on PRs
+            # are re-run here on the exact commit being published: prettier, lint,
+            # env:check, vocab:check, audit:prod (all seconds-fast) alongside the
+            # existing typecheck/test/build/size/smoke. e2e is deliberately NOT here:
+            # it needs a MinIO service + Playwright browsers (minutes) and gates PRs
+            # in e2e.yml; publishing from master trusts that PR gate. Branch
+            # protection must require both rollups (see CLAUDE.md CI section).
+            - name: Prettier check
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run prettier-check
 
-      - name: Dry-run release on dev
-        if: github.ref == 'refs/heads/dev'
-        run: pnpm --filter upup-react-file-uploader run test-release
+            - name: Lint
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run lint
 
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.needs_publish == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
-          name: ${{ steps.package_meta.outputs.name }}@${{ steps.package_meta.outputs.version }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Env schema drift
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run env:check
+
+            - name: Retired-vocabulary census
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run vocab:check
+
+            - name: Prod dependency audit (publishable packages, fail on high+)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run audit:prod
+
+            - name: Typecheck (all packages)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run typecheck
+
+            - name: Unit suites (all packages)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run test
+
+            - name: Build (turbo)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run build
+
+            - name: Bundle-size budgets
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run size
+
+            - name: Package smoke (real tarball consumer)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run smoke:packages
+
+            # Auth: all nine @upupjs packages now exist on npm (first published
+            # 2026-07-13), so OIDC trusted publishing is the intended path. Configure
+            # a trusted publisher per package on npmjs.com (repo DevinoSolutions/upup,
+            # workflow publish.yml); then with id-token:write (above) + Node >=22.14 +
+            # npm >=11.5.1, `pnpm publish` exchanges the GitHub OIDC token automatically
+            # and no registry secret is needed. NODE_AUTH_TOKEN (NPM_TOKEN secret) stays
+            # as a fallback until every package has its trusted publisher configured —
+            # once OIDC is verified in a real release, the secret and the env below can
+            # be dropped. OIDC requires Node >=22.14, so this publish-scoped setup-node
+            # pins 22.14 (the gate steps above ran on .nvmrc / Node 20). registry-url is
+            # scoped here so install/gate steps never see a token-referencing .npmrc.
+            - name: Set up Node 22 + npm registry for OIDC/token publish
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+              with:
+                  node-version: '22.14.0'
+                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Publish to npm
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm run release
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Dry-run release on dev
+              if: github.ref == 'refs/heads/dev'
+              run: pnpm run test-release
+
+            - name: Create GitHub Releases (per published package)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              shell: bash
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TO_PUBLISH: ${{ steps.package_meta.outputs.to_publish }}
+              run: |
+                  for ref in $TO_PUBLISH; do
+                    case "$ref" in *[!A-Za-z0-9@._/-]*) echo "skip invalid ref: $ref"; continue;; esac
+                    gh release create "$ref" --title "$ref" --generate-notes || true
+                  done

@@ -1,9 +1,0 @@
-{
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "lib": ["esnext"],
-        "module": "esnext",
-        "types": ["node"]
-    },
-    "include": ["src/backend", "src/shared"]
-}

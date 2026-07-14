@@ -1,0 +1,90 @@
+{
+    "name": "@upupjs/vue",
+    "version": "3.0.0",
+    "description": "Vue 3 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
+    "keywords": [
+        "file-upload",
+        "file-uploader",
+        "upload",
+        "uploader",
+        "vue",
+        "vue3",
+        "drag-and-drop",
+        "dropzone",
+        "s3",
+        "presigned-url",
+        "google-drive",
+        "one-drive",
+        "dropbox",
+        "camera",
+        "typescript"
+    ],
+    "homepage": "https://useupup.com",
+    "bugs": {
+        "url": "https://github.com/DevinoSolutions/upup/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/DevinoSolutions/upup.git",
+        "directory": "packages/vue"
+    },
+    "license": "MIT",
+    "publishConfig": {
+        "access": "public"
+    },
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        },
+        "./styles": "./dist/tailwind-prefixed.css"
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsup && vue-tsc --declaration --emitDeclarationOnly --outDir dist && pnpm run build:css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
+        "lint": "eslint . --max-warnings 0",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "test:watch": "vitest",
+        "typecheck": "vue-tsc --noEmit && vue-tsc -p tsconfig.test.json --noEmit"
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@tanstack/vue-virtual": "^3.13.0",
+        "@upupjs/core": "workspace:*"
+    },
+    "peerDependencies": {
+        "vue": "^3.4.0"
+    },
+    "devDependencies": {
+        "@upupjs/eslint-config": "workspace:*",
+        "@upupjs/tailwind-config": "workspace:*",
+        "@vitejs/plugin-vue": "^5.0.0",
+        "@vitest/coverage-v8": "^4.1.2",
+        "@vue/test-utils": "^2.4.6",
+        "eslint": "^10.6.0",
+        "jsdom": "22.1.0",
+        "postcss": "^8.5.2",
+        "postcss-cli": "^11.0.1",
+        "tsup": "^8.4.0",
+        "typescript": "^5.3.2",
+        "unplugin-vue": "^7.2.0",
+        "vitest": "^4.1.2",
+        "vue": "^3.4.0",
+        "vue-tsc": "^2.0.0"
+    }
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+pnpm run typecheck
+pnpm exec turbo run lint --continue
+pnpm run knip

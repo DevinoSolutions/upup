@@ -1,203 +1,174 @@
 ---
+title: Localization (i18n)
 sidebar_position: 5
+description: upup ships nine ICU locale bundles from @upupjs/core/i18n — set the locale on any framework's uploader, override individual namespaced message keys, and get automatic RTL and pluralization.
 ---
 
 # Localization (i18n)
 
-Upup has built-in multilingual support with zero additional dependencies. You can use one of the bundled locale packs or provide your own custom translations.
+upup uses ICU locale bundles from `@upupjs/core/i18n`. Messages are grouped
+into namespaces, formatted with ICU MessageFormat (so plurals and interpolation
+work in every language), and Arabic switches the layout to right-to-left
+automatically.
 
-## Built-in Locales
+## Built-in locales
 
-The following locales are included out of the box:
+<!-- Table generated from LOCALE_CODES (packages/core/src/i18n/locales/registry.ts); keep in sync. -->
 
-| Locale  | Language              |
-| ------- | --------------------- |
-| `en_US` | English (default)     |
-| `ar_SA` | Arabic (العربية)      |
-| `de_DE` | German (Deutsch)      |
-| `es_ES` | Spanish (Español)     |
-| `fr_FR` | French (Français)     |
-| `ja_JP` | Japanese (日本語)      |
-| `ko_KR` | Korean (한국어)         |
-| `zh_CN` | Chinese Simplified    |
-| `zh_TW` | Chinese Traditional   |
+| Export | Locale  | Direction |
+| ------ | ------- | --------- |
+| `enUS` | `en-US` | `ltr`     |
+| `arSA` | `ar-SA` | `rtl`     |
+| `deDE` | `de-DE` | `ltr`     |
+| `esES` | `es-ES` | `ltr`     |
+| `frFR` | `fr-FR` | `ltr`     |
+| `jaJP` | `ja-JP` | `ltr`     |
+| `koKR` | `ko-KR` | `ltr`     |
+| `zhCN` | `zh-CN` | `ltr`     |
+| `zhTW` | `zh-TW` | `ltr`     |
 
-## Using a Locale
+## Using a locale
 
-Import the desired locale from `upup-react-file-uploader/locales` and pass it to the `localePack` prop:
+Pass a bundle to `i18n.locale`:
 
 ```tsx
-import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
-import { ja_JP } from 'upup-react-file-uploader/locales'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+import { jaJP } from '@upupjs/core/i18n'
 
 export default function Uploader() {
-  return (
-    <UpupUploader
-      provider={UpupProvider.AWS}
-      tokenEndpoint="/api/upload-token"
-      localePack={ja_JP}
-    />
-  )
+    return (
+        <UpupUploader
+            uploadEndpoint="/api/upload-token"
+            i18n={{ locale: jaJP }}
+        />
+    )
 }
 ```
 
-When no `localePack` is provided, the component defaults to `en_US` (English).
-
-## Overriding Individual Strings
-
-Use the `translations` prop to override specific keys without replacing the entire locale. Overrides are merged on top of the active locale:
+Arabic automatically sets right-to-left layout:
 
 ```tsx
-import { UpupUploader, UpupProvider } from 'upup-react-file-uploader'
-import 'upup-react-file-uploader/styles'
-import { fr_FR } from 'upup-react-file-uploader/locales'
+import { arSA } from '@upupjs/core/i18n'
 
-export default function Uploader() {
-  return (
-    <UpupUploader
-      provider={UpupProvider.AWS}
-      tokenEndpoint="/api/upload-token"
-      localePack={fr_FR}
-      translations={{
-        browseFiles: 'sélectionner des fichiers', // override one key
-      }}
-    />
-  )
+;<UpupUploader i18n={{ locale: arSA }} />
+```
+
+## The `i18n` prop
+
+The `i18n` object accepts four fields, all optional:
+
+```ts
+i18n?: {
+    /** A locale bundle. Takes precedence over `locale`. */
+    bundle?: LocaleBundle
+    /** A locale bundle, or a BCP-47 code string (e.g. 'fr-FR') for lang/dir. */
+    locale?: LocaleBundle | string
+    /** Bundle/code used when the active locale is missing a key. */
+    fallbackLocale?: LocaleBundle | string
+    /** Per-key overrides merged on top of the locale. */
+    overrides?: PartialMessages
 }
 ```
 
-You can also use `translations` without a `locale` to tweak the default English strings:
+- Pass a full bundle (like `jaJP`) to **`locale`** — that is the field to reach
+  for. **`bundle`** exists for when you construct a bundle object yourself and
+  want it to take precedence: if both are set, `bundle` wins.
+- A **string** code (`'fr-FR'`) is resolved from the registry; an unregistered
+  code falls back to English for content but still sets the language/direction.
+- **`fallbackLocale`** supplies missing keys (defaults to English).
+
+## Overrides
+
+Use `i18n.overrides` for small copy changes. Overrides are a `PartialMessages`
+object — **keyed by namespace**, then by the message key inside it. `browseFiles`,
+for example, lives under the `dropzone` namespace:
 
 ```tsx
-<UpupUploader
-  provider={UpupProvider.AWS}
-  tokenEndpoint="/api/upload-token"
-  translations={{
-    addDocumentsHere: 'Drop your images here (max {{limit}} files)',
-    browseFiles: 'choose files',
-  }}
+import { frFR } from '@upupjs/core/i18n'
+
+;<UpupUploader
+    i18n={{
+        locale: frFR,
+        overrides: {
+            dropzone: { browseFiles: 'choisir des fichiers' },
+            common: { cancel: 'annuler' },
+        },
+    }}
 />
 ```
 
-## Interpolation
+## Message structure
 
-Some strings contain `{{placeholder}}` variables that are replaced at runtime:
-
-| Placeholder   | Description                                  |
-| ------------- | -------------------------------------------- |
-| `{{limit}}`   | Maximum number of files allowed              |
-| `{{count}}`   | Number of files currently selected           |
-| `{{size}}`    | Maximum file size number                     |
-| `{{unit}}`    | File size unit (KB, MB, etc.)                |
-| `{{side}}`    | Camera side (front / back)                   |
-| `{{message}}` | Error message text                           |
-
-**Example:**
+Every message belongs to a namespace, and every value uses ICU MessageFormat.
+The namespaces are `common`, `sources`, `dropzone`, `header`, `fileList`,
+`filePreview`, `driveBrowser`, `url`, `camera`, `audio`, `screenCapture`,
+`branding`, and `errors`. A few real keys:
 
 ```ts
 {
-  addDocumentsHere: 'Upload up to {{limit}} files',
-  filesSelected_other: '{{count}} files ready',
+  common:   { cancel: 'Cancel', done: 'Done' },
+  sources:  { myDevice: 'My Device', googleDrive: 'Google Drive', oneDrive: 'OneDrive' },
+  dropzone: {
+    browseFiles: 'browse files',
+    // ICU interpolation:
+    addDocumentsHere: 'Add your documents here, you can upload up to {limit} files max',
+  },
+  fileList: {
+    // ICU pluralization:
+    uploadFiles: 'Upload {count, plural, one {# file} other {# files}}',
+  },
 }
 ```
 
-## Pluralization
+Your `overrides` follow this same namespaced shape, so you can retranslate or
+tweak any single key without shipping a whole bundle.
 
-Keys that differ between singular and plural use the `_one` and `_other` suffixes:
+## Setting the locale per framework
 
-| Key pattern         | When used        |
-| ------------------- | ---------------- |
-| `*_one`             | count === 1      |
-| `*_other`           | count !== 1      |
+The `i18n` prop is shared across every framework — it is part of the common
+uploader props. Only the binding syntax differs:
 
-For example, the following keys control the upload button text:
+| Framework  | How to pass it                                            |
+| ---------- | --------------------------------------------------------- |
+| React      | `<UpupUploader i18n={{ locale: jaJP }} />`                |
+| Vue        | `<UpupUploader :i18n="{ locale: jaJP }" />`               |
+| Svelte     | `<UpupUploader i18n={{ locale: jaJP }} />`                |
+| Angular    | `<upup-uploader [config]="{ i18n: { locale: jaJP } }" />` |
+| Vanilla JS | `createUploader('#el', { i18n: { locale: jaJP } })`       |
 
-```ts
-{
-  uploadFiles_one: 'Upload {{count}} file',
-  uploadFiles_other: 'Upload {{count}} files',
-}
-```
+Preact re-exports `@upupjs/react`, so its uploader takes the same `i18n` prop
+as the React row.
 
-The component automatically picks the correct variant based on the current count.
+In the [headless](./guides/headless.md) path — `useUpupUpload` or `UpupCore` —
+there is no `i18n` wrapper; set the engine's flat `locale` option to a bundle
+or code instead (`useUpupUpload({ locale: jaJP })`). It also drives the
+translator available to pipeline steps.
 
-## All Translation Keys
+## Adding a locale
 
-Below is the full list of translation keys with their default English values:
+Supported locales live behind one compiler-checked registry
+(`packages/core/src/i18n/locales/registry.ts`), so contributing a new one is
+a 2-file change:
 
-| Key | Default Value |
-| --- | ------------- |
-| `cancel` | Cancel |
-| `done` | Done |
-| `loading` | Loading... |
-| `myDevice` | My Device |
-| `googleDrive` | Google Drive |
-| `oneDrive` | OneDrive |
-| `dropbox` | Dropbox |
-| `link` | Link |
-| `camera` | Camera |
-| `dragFileOr` | Drag your file or |
-| `dragFilesOr` | Drag your files or |
-| `browseFiles` | browse files |
-| `or` | or |
-| `selectAFolder` | select a folder |
-| `maxFileSizeAllowed_one` | Max \{\{size\}\} \{\{unit\}\} file is allowed |
-| `maxFileSizeAllowed_other` | Max \{\{size\}\} \{\{unit\}\} files are allowed |
-| `addDocumentsHere` | Add your documents here, you can upload up to \{\{limit\}\} files max |
-| `builtBy` | Built by |
-| `removeAllFiles` | Remove all files |
-| `addingMoreFiles` | Adding more files |
-| `filesSelected_one` | \{\{count\}\} file selected |
-| `filesSelected_other` | \{\{count\}\} files selected |
-| `addMore` | Add More |
-| `uploadFiles_one` | Upload \{\{count\}\} file |
-| `uploadFiles_other` | Upload \{\{count\}\} files |
-| `removeFile` | Remove file |
-| `clickToPreview` | Click to preview |
-| `zeroBytes` | 0 Byte |
-| `bytes` | Bytes |
-| `kb` | KB |
-| `mb` | MB |
-| `gb` | GB |
-| `tb` | TB |
-| `previewError` | Error: \{\{message\}\} |
-| `noAcceptedFilesFound` | No accepted files found |
-| `selectThisFolder` | Select this folder |
-| `addFiles_one` | Add \{\{count\}\} file |
-| `addFiles_other` | Add \{\{count\}\} files |
-| `logOut` | Log out |
-| `search` | Search |
-| `enterFileUrl` | Enter file url |
-| `fetch` | Fetch |
-| `capture` | Capture |
-| `switchToCamera` | switch to \{\{side\}\} |
-| `addImage` | Add Image |
-| `front` | front |
-| `back` | back |
-| `poweredBy` | Powered by |
+1. Create `packages/core/src/i18n/locales/<code>.ts` (e.g. `pt-BR.ts`)
+   exporting a `LocaleBundle` — copy the closest existing bundle as a
+   starting point and set its `code`, `language`, and `dir`.
+2. In `registry.ts`, add the import, add the code to the `LOCALE_CODES`
+   tuple, add the bundle to the `LOCALE_REGISTRY` map, and add the
+   identifier to the re-export line.
 
-## Contributing a New Locale
+Everything else — `LOCALE_META`, the `UpupLocaleCode` type, both i18n
+barrel exports, and the locale test fixtures — derives from the registry
+automatically. The `Record<RegisteredLocaleCode, LocaleBundle>` type
+annotation on `LOCALE_REGISTRY` makes the compiler reject a code that's
+missing its bundle or a bundle that's missing its code, and
+`locale-registry.test.ts` asserts every bundle file under `locales/` is
+actually registered (the one thing the compiler can't see on its own).
 
-To add a new locale:
+## Next steps
 
-1. Create a new file in `packages/upup/src/shared/i18n/locales/` (e.g., `pt_BR.ts`)
-2. Import the `Translations` type and export a constant satisfying it:
-
-```ts
-import type { Translations } from '../types'
-
-export const pt_BR: Translations = {
-  cancel: 'Cancelar',
-  done: 'Concluído',
-  // ... all other keys
-}
-```
-
-3. Re-export it from `packages/upup/src/shared/i18n/locales/index.ts`:
-
-```ts
-export { pt_BR } from './pt_BR'
-```
-
-4. Since `Translations` is a complete type, TypeScript will ensure you don't miss any keys.
+- [Theming](./guides/theming.md) — restyle the components whose copy you just
+  localized.
+- [Headless Usage](./guides/headless.md) — set the `locale` option on the engine
+  when you build your own UI.

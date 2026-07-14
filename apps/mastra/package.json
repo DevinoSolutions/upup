@@ -1,0 +1,28 @@
+{
+    "name": "@upupjs/mastra",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "description": "Mastra app for the upup monorepo. Hosts agents/tools — currently the interactive-playground assistant; future agents land here.",
+    "scripts": {
+        "dev": "mastra dev",
+        "build": "mastra build",
+        "start": "node .mastra/output/index.mjs",
+        "typecheck": "tsc --noEmit",
+        "eval": "tsx src/evals/run.ts",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@mastra/client-js": "^1.31.0",
+        "@mastra/core": "^1.50.0",
+        "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.0",
+        "@upupjs/core": "workspace:*",
+        "mastra": "^1.18.1",
+        "tsx": "^4.0.0",
+        "typescript": "^5.3.2",
+        "vitest": "^4.1.2"
+    }
+}

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Mockup #1 — Inline prop docs</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="/mockups/_shared.css" />
+    <style>
+        .mk-field-head { position: relative; }
+        .mk-popover { position: absolute; top: calc(100% + 8px); left: 0; width: 280px; background: #1f2937; border: 0.8px solid var(--mk-card-border); border-radius: var(--mk-radius-input); padding: 14px 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); z-index: 10; opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease; }
+        .mk-info:hover + .mk-popover, .mk-popover:hover { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .mk-popover h4 { margin: 0 0 6px; font-size: 13px; font-weight: 600; color: var(--mk-fg); }
+        .mk-popover p { margin: 0 0 10px; font-size: 12px; line-height: 1.55; color: var(--mk-fg-muted); }
+        .mk-popover code { font-family: var(--mk-mono); font-size: 11px; padding: 1px 5px; background: rgba(96, 165, 250, 0.15); color: var(--mk-accent); border-radius: 4px; }
+        .mk-popover a { color: var(--mk-accent); text-decoration: none; font-size: 12px; font-weight: 500; }
+        .mk-popover a:hover { color: var(--mk-accent-strong); }
+        .mk-popover-arrow { position: absolute; top: -5px; left: 14px; width: 10px; height: 10px; background: #1f2937; border-top: 0.8px solid var(--mk-card-border); border-left: 0.8px solid var(--mk-card-border); transform: rotate(45deg); }
+        .mk-demo-note { margin-top: 20px; padding: 12px 16px; background: var(--mk-accent-soft); border-left: 3px solid var(--mk-accent); border-radius: 0 8px 8px 0; font-size: 12px; color: var(--mk-fg-muted); }
+        .mk-demo-note strong { color: var(--mk-fg); }
+    </style>
+</head>
+<body>
+    <div class="mk-wrap">
+        <div class="mk-nav">
+            <a href="/mockups/index.html">← index</a>
+            <a href="/mockups/1-inline-docs.html" class="active">#1 Inline docs</a>
+            <a href="/mockups/2-event-log.html">#2 Event log</a>
+            <a href="/mockups/3-presets.html">#3 Presets</a>
+        </div>
+        <h1 class="mk-h1">#1 — Inline prop docs</h1>
+        <p class="mk-sub">Hover any <span class="mk-info">i</span> to see the prop description and a docs link. The third prop is shown permanently open so you can see it on load.</p>
+
+        <div class="mk-grid">
+            <div class="mk-sidebar">
+                <div class="mk-card">
+                    <div class="mk-card-header">
+                        <span class="mk-card-dot"></span>
+                        <span class="mk-card-title">Upload</span>
+                        <span class="mk-card-count">4</span>
+                    </div>
+                    <div class="mk-card-body">
+                        <div class="mk-field">
+                            <div class="mk-field-head">
+                                <span class="mk-label">Provider</span>
+                                <button class="mk-info" tabindex="0" aria-label="About provider">i</button>
+                                <div class="mk-popover">
+                                    <span class="mk-popover-arrow"></span>
+                                    <h4>provider</h4>
+                                    <p>Which storage backend the uploader uses. Affects which adapter SDK loads and what credentials are required. Default: <code>'s3'</code>.</p>
+                                    <a href="#">Open docs →</a>
+                                </div>
+                            </div>
+                            <select class="mk-select"><option>s3</option></select>
+                        </div>
+
+                        <div class="mk-field">
+                            <div class="mk-field-head">
+                                <span class="mk-label">Upload endpoint</span>
+                                <button class="mk-info" tabindex="0">i</button>
+                                <div class="mk-popover">
+                                    <span class="mk-popover-arrow"></span>
+                                    <h4>uploadEndpoint</h4>
+                                    <p>Your backend URL that returns short-lived upload credentials for client-hosted uploads. Leave blank for local file collection only.</p>
+                                    <a href="#">Open docs →</a>
+                                </div>
+                            </div>
+                            <input class="mk-input" value="/api/upup-mock/presign" />
+                        </div>
+
+                        <div class="mk-field">
+                            <div class="mk-field-head">
+                                <span class="mk-label">Server URL</span>
+                                <button class="mk-info" tabindex="0" style="background: var(--mk-accent); color: #fff;">i</button>
+                                <div class="mk-popover" style="opacity:1;transform:translateY(0);pointer-events:auto;">
+                                    <span class="mk-popover-arrow"></span>
+                                    <h4>serverUrl</h4>
+                                    <p>Base URL for your backend. The uploader will <code>POST</code> <code>/upload</code> and <code>/complete</code> against this origin when orchestrating multipart uploads.</p>
+                                    <a href="#">Open docs →</a>
+                                </div>
+                            </div>
+                            <input class="mk-input" value="/api/upup" />
+                        </div>
+
+                        <div class="mk-field">
+                            <div class="mk-field-head">
+                                <span class="mk-label">CORS</span>
+                                <button class="mk-info">i</button>
+                                <div class="mk-popover">
+                                    <span class="mk-popover-arrow"></span>
+                                    <h4>cors.dangerouslyAutoConfigure</h4>
+                                    <p>Convenience-only CORS setup for quick local storage testing. Production apps should configure explicit origins and methods.</p>
+                                    <a href="#">Open docs →</a>
+                                </div>
+                            </div>
+                            <input class="mk-input" placeholder="allowedOrigins: ['http://localhost:3000']" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mk-demo-note"><strong>How it works:</strong> each entry in <code>src/categories/*.ts</code> already has <code>description</code> and <code>docsLink</code> fields — the info button just surfaces them.</div>
+            </div>
+
+            <div class="mk-preview">
+                <div class="mk-preview-uploader">
+                    <div class="row">
+                        <span class="mk-icon-stub">📁</span>
+                        <span class="mk-icon-stub">🔗</span>
+                        <span class="mk-icon-stub">📷</span>
+                        <span class="mk-icon-stub">🎤</span>
+                    </div>
+                    <div style="color: var(--mk-fg-muted); font-size: 12px;">drop files here</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -8,12 +8,15 @@ packages/*/node_modules
 **/.turbo-cache
 **/.next
 **/build
-packages/upup/dist
+packages/*/dist
 packages/upup/dist-node
 apps/landing/public/documentation
 coverage
 playwright-report
+test-results/
 storybook-static
+.tmp/
+graphify-out/
 
 # Logs
 *.log
@@ -23,11 +26,19 @@ storybook-static
 .env.*
 !.env.example
 !local-dev/.env.ports
+!local-dev/.env.minio.example
+!local-dev/.env.test.example
 
 # Editors
 .DS_Store
 .idea
 .vscode
+
+# Claude Code
+.claude/
+
+# Storybook
+apps/*/storybook-static
 
 # Misc
 *.tgz
@@ -35,3 +46,20 @@ storybook-static
 # dist
 /dist
 /dist-node
+
+# Brainstorm companion sessions
+.superpowers/
+
+# Local AI-session workspaces — specs, plans, audit records. Deliberately
+# untracked (see CLAUDE.md "Git & commits"); durable process truth is promoted
+# into CLAUDE.md, everything else stays on this machine.
+docs/superpowers/
+audit/
+tmp-*.txt
+
+# App build outputs (packages/*/dist is covered above)
+apps/*/dist
+
+# Visual-layer captures (CI artifact -> future snapvisor.io input; no goldens
+# are committed — snapvisor owns baselines server-side)
+apps/e2e-test/screenshots/

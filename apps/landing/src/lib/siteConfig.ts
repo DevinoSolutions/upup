@@ -1,5 +1,5 @@
 export const siteConfig = {
-    title: "Upup – React File Upload Library | Open-Source npm Package",
+    title: 'upup – One File Uploader for Every Framework | Open Source',
     tagline:
-        "Open-source React & TypeScript file upload library with drag & drop, progress bar, retry logic & customizable UI. Upload images, videos & files to S3 or Azure.",
-};
+        'Open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage.',
+}

@@ -4,3 +4,4 @@ Disallow: /api/
 Disallow: /mobile-demo/
 
 Sitemap: https://useupup.com/sitemap.xml
+Sitemap: https://useupup.com/documentation/sitemap.xml

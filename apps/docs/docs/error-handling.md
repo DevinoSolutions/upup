@@ -4,53 +4,85 @@ sidebar_position: 4
 
 # Error Handling
 
-All upload methods throw `UploadError` with:
+upup reports failures as a typed `UpupError` (or one of its subclasses). Every
+`UpupError` carries:
 
-- Human-readable message
-- Error type classification
-- HTTP status code
-- Retryability flag
+- `message` — human-readable description
+- `code` — a stable string from the `UpupErrorCode` enum
+- `retryable` — whether the failure is transient and worth retrying
+- `status` — the originating HTTP status, when the error came from a response
+
+## Error types
+
+Import the error classes and the code enum from `@upupjs/core`:
 
 ```typescript
-export enum UploadErrorType {
-    PERMISSION_ERROR = 'PERMISSION_ERROR',
-    EXPIRED_URL = 'EXPIRED_URL',
+import {
+    UpupError,
+    UpupErrorCode,
+    UpupAuthError,
+    UpupNetworkError,
+    UpupValidationError,
+    UpupQuotaError,
+    UpupStorageError,
+    UpupConfigError,
+} from '@upupjs/core'
+```
 
-    FILE_VALIDATION_ERROR = 'FILE_VALIDATION_ERROR',
-    PRESIGNED_URL_ERROR = 'PRESIGNED_URL_ERROR',
+| Class                 | Raised when                                                 | Extra fields                   |
+| --------------------- | ----------------------------------------------------------- | ------------------------------ |
+| `UpupError`           | Base class for every upup error                             | `code`, `retryable`, `status?` |
+| `UpupValidationError` | A file fails a size / type / count check                    | `reason`, `file`               |
+| `UpupNetworkError`    | A fetch / XHR fails (marked `retryable`)                    | `status?`                      |
+| `UpupStorageError`    | An S3 / storage operation fails                             | `provider`, `operation`        |
+| `UpupAuthError`       | A cloud-drive OAuth / provider call fails                   | `provider`                     |
+| `UpupQuotaError`      | A configured quota is exceeded                              | `limit`, `used`                |
+| `UpupConfigError`     | Configuration is missing or invalid (e.g. no upload target) | —                              |
 
-    SIGNED_URL_ERROR = 'SIGNED_URL_ERROR',
-    CORS_CONFIG_ERROR = 'CORS_CONFIG_ERROR',
-    TEMPORARY_CREDENTIALS_ERROR = 'TEMPORARY_CREDENTIALS_ERROR',
+The `code` values come from the `UpupErrorCode` enum — `NO_UPLOAD_TARGET`,
+`FILE_TOO_LARGE`, `TYPE_MISMATCH`, `LIMIT_EXCEEDED`, `PRESIGN_FAILED`,
+`UPLOAD_FAILED`, `NETWORK_ERROR`, `AUTH_EXPIRED`, and more. See [Error
+Monitoring](guides/error-monitoring.md) for the codes you'll tag most often.
 
-    UNKNOWN_UPLOAD_ERROR = 'UNKNOWN_UPLOAD_ERROR',
-}
+## Inspecting an error
 
-export class UploadError extends Error {
-    private DEFAULT_ERROR_STATUS_CODE = 500
+Upload failures surface through the core `upload-error` event with the full
+`Error` object and the file that failed. Narrow with `instanceof`, or switch on
+`code`:
 
-    constructor(
-        message: string,
-        public type = UploadErrorType.UNKNOWN_UPLOAD_ERROR,
-        public retryable = false,
-        public status?: number,
-    ) {
-        super(message)
-        this.name = 'UploadError'
-        this.status = status || this.DEFAULT_ERROR_STATUS_CODE
+```typescript
+import { UpupError, UpupErrorCode, UpupValidationError } from '@upupjs/core'
+
+// error is the Error object from an upload-error event (see Error Monitoring).
+function describeUploadError(error: unknown): string {
+    if (error instanceof UpupValidationError) {
+        return `${error.file.name} rejected: ${error.reason}`
     }
+    if (error instanceof UpupError) {
+        if (error.code === UpupErrorCode.PRESIGN_FAILED) {
+            return 'Your token endpoint returned an error.'
+        }
+        return error.retryable
+            ? 'Transient failure — safe to retry.'
+            : 'Permanent failure — needs attention.'
+    }
+    return 'Unknown error.'
 }
 ```
 
+Both surfaces — the headless core's `upload-error` event (full `Error`) and the
+React `onError` prop (message string) — plus wiring them into an error tracker
+are covered in [Error Monitoring](guides/error-monitoring.md).
+
 ## Retry Behavior
 
-You can configure automatic retries for failed uploads using the [`maxRetries`](/docs/api-reference/upupuploader/optional-props.md#maxretries) prop on the `UpupUploader` component. When set, each file upload is silently retried up to the specified number of times before being considered a failure.
+You can configure automatic retries for failed uploads using the [`maxRetries`](api-reference/upupuploader/optional-props.md#maxretries) prop on the `UpupUploader` component. When set, each file upload is silently retried up to the specified number of times before being considered a failure.
 
 ```tsx
 <UpupUploader
-  provider={UpupProvider.AWS}
-  tokenEndpoint="/api/upload-token"
-  maxRetries={3} // Automatically retry failed uploads up to 3 times
+    provider="aws"
+    uploadEndpoint="/api/upload-token"
+    maxRetries={3} // Automatically retry failed uploads up to 3 times
 />
 ```
 
@@ -58,7 +90,7 @@ When `maxRetries` is not set, a manual **"Retry Upload"** button appears in the 
 
 ### Resumable Upload Recovery
 
-When [resumable multipart uploads](/docs/resumable-uploads.md) are enabled (`resumable={{ mode: 'multipart' }}`), error recovery is enhanced:
+When [resumable multipart uploads](resumable-uploads.md) are enabled (`resumable={{ protocol: 'multipart' }}`), error recovery is enhanced:
 
 - On failure, the progress bar **preserves** the current progress instead of resetting to zero
 - The retry button shows **"Resume Upload"** instead of "Retry Upload"

@@ -33,7 +33,51 @@
 }
 html {
   scroll-behavior: smooth;
+  scrollbar-color: rgb(59 130 246 / 45%) transparent;
+  scrollbar-width: thin;
 }
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: rgb(59 130 246 / 38%);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: rgb(59 130 246 / 60%);
+  background-clip: padding-box;
+}
+
+html.dark {
+  scrollbar-color: rgb(96 165 250 / 55%) rgb(15 23 42 / 30%);
+}
+
+html.dark::-webkit-scrollbar-thumb,
+html.dark body::-webkit-scrollbar-thumb {
+  background: rgb(96 165 250 / 48%);
+  background-clip: padding-box;
+}
+
+html.dark::-webkit-scrollbar-thumb:hover,
+html.dark body::-webkit-scrollbar-thumb:hover {
+  background: rgb(96 165 250 / 68%);
+  background-clip: padding-box;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -156,27 +200,27 @@ body {
   }
 
   /* Adapter buttons */
-  .uploader-adapter-blue {
+  .uploader-source-blue {
     @apply !border-2 !border-blue-500/20 hover:!border-blue-500/40 hover:!bg-blue-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
-  .uploader-adapter-emerald {
+  .uploader-source-emerald {
     @apply !border-2 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
-  .uploader-adapter-purple {
+  .uploader-source-purple {
     @apply !border-2 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
-  .uploader-adapter-rose {
+  .uploader-source-rose {
     @apply !border-2 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
-  .uploader-adapter-orange {
+  .uploader-source-orange {
     @apply !border-2 !border-orange-500/20 hover:!border-orange-500/40 hover:!bg-orange-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
-  .uploader-adapter-indigo {
+  .uploader-source-indigo {
     @apply !border-2 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
   }
 
@@ -328,27 +372,27 @@ body {
     @apply !bg-indigo-500/5 dark:!bg-indigo-400/5 !rounded-lg;
   }
 
-  .uploader-adapter-view-blue {
+  .uploader-source-view-blue {
     @apply !bg-blue-500/5 dark:!bg-blue-400/5 !rounded-xl !border !border-blue-500/10 dark:!border-blue-400/10;
   }
 
-  .uploader-adapter-view-emerald {
+  .uploader-source-view-emerald {
     @apply !bg-emerald-500/5 dark:!bg-emerald-400/5 !rounded-xl !border !border-emerald-500/10 dark:!border-emerald-400/10;
   }
 
-  .uploader-adapter-view-purple {
+  .uploader-source-view-purple {
     @apply !bg-purple-500/5 dark:!bg-purple-400/5 !rounded-xl !border !border-purple-500/10 dark:!border-purple-400/10;
   }
 
-  .uploader-adapter-view-rose {
+  .uploader-source-view-rose {
     @apply !bg-rose-500/5 dark:!bg-rose-400/5 !rounded-xl !border !border-rose-500/10 dark:!border-rose-400/10;
   }
 
-  .uploader-adapter-view-orange {
+  .uploader-source-view-orange {
     @apply !bg-orange-500/5 dark:!bg-orange-400/5 !rounded-xl !border !border-orange-500/10 dark:!border-orange-400/10;
   }
 
-  .uploader-adapter-view-indigo {
+  .uploader-source-view-indigo {
     @apply !bg-indigo-500/5 dark:!bg-indigo-400/5 !rounded-xl !border !border-indigo-500/10 dark:!border-indigo-400/10;
   }
 }

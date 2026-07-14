@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "paths": {}
+  },
+  "include": ["src/filerobot-island.tsx", "src/filerobot-island-types.ts"]
+}

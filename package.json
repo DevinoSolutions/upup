@@ -1,50 +1,96 @@
 {
-  "name": "upup",
-  "private": true,
-  "packageManager": "pnpm@10.11.0",
-  "scripts": {
-    "build": "turbo run build",
-    "build:landing": "turbo run build --filter=@upup/landing",
-    "build:docs": "turbo run build --filter=docs",
-    "build:package": "pnpm --filter upup-react-file-uploader run build",
-    "clean": "turbo run clean",
-    "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
-    "dev:apps": "turbo run dev --parallel --filter=@upup/landing --filter=docs",
-    "dev:playground": "pnpm --filter @upup/playground run dev",
-    "build:playground": "turbo run build --filter=@upup/playground",
-    "start:playground": "pnpm --filter @upup/playground run start",
-    "dev:package-watch": "pnpm --filter upup-react-file-uploader run dev:build",
-    "dev:all": "turbo run dev --parallel",
-    "dev:package": "dotenv -e local-dev/.env.ports -- pnpm --filter upup-react-file-uploader run dev",
-    "lint": "turbo run lint",
-    "prettier-check": "pnpm --filter upup-react-file-uploader exec prettier --check \"src/**/*.{ts,tsx}\"",
-    "prettier-write": "pnpm --filter upup-react-file-uploader exec prettier --write \"src/**/*.{ts,tsx}\"",
-    "docs:build": "pnpm --filter docs run build",
-    "start": "pnpm run docs:build && pnpm --filter @upup/landing run start",
-    "dev:server": "pnpm --filter upup-react-file-uploader exec node server/index.js",
-    "test": "turbo run test",
-    "test:coverage": "pnpm --filter upup-react-file-uploader exec jest --coverage --coverageDirectory ../../coverage",
-    "test:e2e": "pnpm --filter upup-react-file-uploader run test:e2e",
-    "test:e2e:ui": "pnpm --filter upup-react-file-uploader run test:e2e:ui",
-    "typecheck": "turbo run typecheck",
-    "playwright:install": "pnpm --filter upup-react-file-uploader run playwright:install",
-    "release": "pnpm --filter upup-react-file-uploader run release"
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.30.0",
-    "concurrently": "^9.2.1",
-    "dotenv-cli": "^7.4.2",
-    "turbo": "2.5.8"
-  },
-  "pnpm": {
-    "overrides": {
-      "fast-xml-parser": "^4.3.2",
-      "prismjs": "^1.29.0",
-      "tough-cookie": "^4.1.3",
-      "jsdom": "22.1.0",
-      "node-notifier": "10.0.1",
-      "node-fetch": "2.6.7",
-      "rollup": "^3.29.4"
+    "name": "upup",
+    "private": true,
+    "packageManager": "pnpm@10.11.0",
+    "scripts": {
+        "prepare": "husky",
+        "build": "turbo run build",
+        "build:landing": "turbo run build --filter=@upupjs/landing",
+        "build:docs": "turbo run build --filter=@upupjs/docs",
+        "build:package": "pnpm --filter @upupjs/core run build && pnpm --filter @upupjs/server run build && pnpm --filter @upupjs/react run build && pnpm --filter @upupjs/vue run build && pnpm --filter @upupjs/svelte run build && pnpm --filter @upupjs/vanilla run build && pnpm --filter @upupjs/angular run build && pnpm --filter @upupjs/preact run build && pnpm --filter @upupjs/next run build",
+        "clean": "turbo run clean",
+        "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
+        "dev:apps": "turbo run dev --parallel --filter=@upupjs/landing --filter=@upupjs/docs --filter=@upupjs/playground",
+        "dev:playground": "pnpm --filter @upupjs/playground run dev",
+        "build:playground": "turbo run build --filter=@upupjs/playground",
+        "dev:storybook": "concurrently \"pnpm --filter @upupjs/storybook-vue storybook\" \"pnpm --filter @upupjs/storybook-react storybook\" \"pnpm --filter @upupjs/storybook-svelte storybook\" \"pnpm --filter @upupjs/storybook-vanilla storybook\" \"pnpm --filter @upupjs/storybook-angular storybook\" \"pnpm --filter @upupjs/storybook-preact storybook\"",
+        "build:storybook": "turbo run build-storybook",
+        "start:playground": "pnpm --filter @upupjs/playground run start",
+        "dev:package-watch": "pnpm --filter @upupjs/core run build && concurrently \"pnpm --filter @upupjs/core run dev\" \"pnpm --filter @upupjs/server run dev\" \"pnpm --filter @upupjs/react run dev\"",
+        "dev:all": "turbo run dev --parallel",
+        "dev:package": "dotenv -e local-dev/.env.ports -- pnpm run dev:package-watch",
+        "lint": "turbo run lint",
+        "lint:ox": "oxlint .",
+        "prettier-check": "prettier --check \"packages/{core,server,react,vue,svelte,vanilla,angular,preact,next}/src/**/*.{ts,tsx}\"",
+        "prettier-write": "prettier --write \"packages/{core,server,react,vue,svelte,vanilla,angular,preact,next}/src/**/*.{ts,tsx}\"",
+        "docs:build": "pnpm --filter @upupjs/docs run build",
+        "start": "pnpm run docs:build && pnpm --filter @upupjs/landing run start",
+        "test": "turbo run test --continue",
+        "test:coverage": "turbo run test:coverage --continue",
+        "test:quality": "node scripts/ci/test-quality-guard.mjs",
+        "test:scripts": "node --test scripts/ci/test-quality-guard.test.mjs scripts/ci/resolve-affected-tests.test.mjs scripts/lib/tarball.test.mjs",
+        "e2e": "turbo run build && pnpm --filter @upupjs/e2e-test test:e2e && dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test test:e2e:cf",
+        "e2e:a11y": "turbo run build && pnpm --filter @upupjs/e2e-test test:e2e:a11y",
+        "e2e:minio:up": "dotenv -e local-dev/.env.minio -- node scripts/validate-env.mjs && dotenv -e local-dev/.env.minio -- docker compose up -d",
+        "env:check": "node scripts/validate-env.mjs --example local-dev/.env.minio.example",
+        "vocab:check": "node scripts/check-retired-vocab.mjs",
+        "e2e:minio:down": "docker compose down -v",
+        "e2e:minio:server": "dotenv -e local-dev/.env.minio -- node scripts/upup-e2e-server.mjs",
+        "e2e:minio:test": "dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/server exec vitest run tests/integration",
+        "drive:sandbox:mint": "dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/mint.mjs",
+        "drive:sandbox:seed": "dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/seed.mjs",
+        "drive:sandbox:test": "pnpm --filter @upupjs/core build && dotenv -e local-dev/.env.test -- pnpm --filter @upupjs/server exec vitest run tests/integration/drive-clients-live.integration.test.ts",
+        "drive:sandbox": "pnpm --filter @upupjs/core build && pnpm --filter @upupjs/server build && dotenv -e local-dev/.env.test -- node scripts/drive-sandbox/rotate-and-test.mjs",
+        "smoke:packages": "node scripts/package-smoke-consumer.mjs",
+        "audit:prod": "node scripts/audit-prod.mjs",
+        "knip": "knip --config knip.jsonc",
+        "typecheck": "turbo run typecheck --continue",
+        "size": "size-limit",
+        "release": "pnpm run build:package && changeset publish",
+        "test-release": "pnpm run build:package && pnpm -r publish --dry-run --no-git-checks"
+    },
+    "devDependencies": {
+        "@changesets/cli": "^2.30.0",
+        "@napi-rs/canvas": "^1.0.2",
+        "@size-limit/file": "^11.0.0",
+        "@upupjs/server": "workspace:*",
+        "concurrently": "^9.2.1",
+        "dotenv-cli": "^7.4.2",
+        "express": "^4.21.0",
+        "husky": "^9.1.7",
+        "knip": "^6.24.0",
+        "lint-staged": "^17.0.8",
+        "oxlint": "^1.72.0",
+        "prettier": "^3.9.4",
+        "size-limit": "^11.0.0",
+        "turbo": "2.5.8"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx,mjs,cjs}": [
+            "oxlint",
+            "prettier --check"
+        ],
+        "*.{json,md,yml,yaml}": [
+            "prettier --check"
+        ]
+    },
+    "pnpm": {
+        "overrides": {
+            "fast-xml-parser": "^4.5.5",
+            "prismjs": "^1.29.0",
+            "tough-cookie": "^4.1.3",
+            "jsdom": "22.1.0",
+            "node-notifier": "10.0.1",
+            "node-fetch": "2.6.7",
+            "rollup": "^3.29.4",
+            "vite>rollup": "^4",
+            "react": "^19.2.0",
+            "react-dom": "^19.2.0",
+            "@types/react": "^19",
+            "@types/react-dom": "^19"
+        },
+        "patchedDependencies": {
+            "@storybook/angular@9.1.20": "patches/@storybook__angular@9.1.20.patch"
+        }
     }
-  }
 }

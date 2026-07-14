@@ -1,0 +1,22 @@
+{
+    "name": "@upupjs/tailwind-config",
+    "version": "0.1.0",
+    "private": true,
+    "type": "commonjs",
+    "main": "./postcss.cjs",
+    "exports": {
+        ".": {
+            "require": "./postcss.cjs",
+            "default": "./postcss.cjs"
+        }
+    },
+    "files": [
+        "postcss.cjs"
+    ],
+    "dependencies": {
+        "@tailwindcss/container-queries": "^0.1.1",
+        "autoprefixer": "^10.4.20",
+        "postcss-prefix-selector": "^2.1.1",
+        "tailwindcss": "^3.4.17"
+    }
+}

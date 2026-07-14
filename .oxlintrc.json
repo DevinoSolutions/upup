@@ -1,0 +1,73 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "categories": {
+        "correctness": "error",
+        "suspicious": "warn",
+        "perf": "warn"
+    },
+    "plugins": ["typescript", "import", "unicorn", "oxc"],
+    "rules": {
+        "no-console": ["error", { "allow": ["warn", "error"] }],
+        "no-restricted-imports": [
+            "error",
+            {
+                "paths": [
+                    {
+                        "name": "libheif-js",
+                        "message": "Heavy dep: dynamic import() behind @upupjs/core/steps/heic only (principle 6)."
+                    },
+                    {
+                        "name": "tus-js-client",
+                        "message": "Heavy dep: dynamic import() behind @upupjs/core/strategies/tus-upload only (principle 6)."
+                    }
+                ]
+            }
+        ],
+        "no-unused-vars": "warn",
+        "no-unused-expressions": "warn",
+        "no-control-regex": "warn",
+        "no-constant-binary-expression": "warn",
+        "no-unsafe-optional-chaining": "warn",
+        "unicorn/no-useless-fallback-in-spread": "warn",
+        "unicorn/no-useless-spread": "warn",
+        "unicorn/prefer-string-starts-ends-with": "warn"
+    },
+    "overrides": [
+        {
+            "files": [
+                "**/*.test.ts",
+                "**/*.spec.ts",
+                "**/tests/**",
+                "**/__tests__/**",
+                "**/*.test.tsx",
+                "**/*.spec.tsx"
+            ],
+            "rules": { "no-console": "off" }
+        },
+        {
+            "files": [
+                "packages/core/src/steps/heic.ts",
+                "packages/core/src/strategies/tus-upload.ts",
+                "packages/core/src/**/worker*"
+            ],
+            "rules": { "no-restricted-imports": "off" }
+        },
+        {
+            "files": ["apps/**", "**/scripts/**", "scripts/**"],
+            "rules": { "no-console": "off" }
+        }
+    ],
+    "ignorePatterns": [
+        "**/dist/**",
+        "**/dist-node/**",
+        "**/.next/**",
+        "**/storybook-static/**",
+        "**/coverage/**",
+        "apps/e2e-test/dist/**",
+        "**/public/**",
+        "**/*.d.ts",
+        "audit/**",
+        "docs/**",
+        "**/*.md"
+    ]
+}

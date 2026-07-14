@@ -1,0 +1,1672 @@
+/* InteractiveExample default styles — mirrors useupup.com landing aesthetic.
+   Glass cards, iOS-style toggles, dark-first palette. */
+
+.upup-ie-shell,
+.upup-ie-focus {
+    /* Light tokens (default) */
+    --ie-bg-page: transparent;
+    --ie-fg: #1f2937;
+    --ie-fg-muted: #6b7280;
+    --ie-fg-faint: #9ca3af;
+
+    --ie-card-bg: rgba(255, 255, 255, 0.5);
+    --ie-card-bg-hover: rgba(255, 255, 255, 0.8);
+    --ie-popover-bg: #ffffff;
+    --ie-card-border: rgba(229, 231, 235, 0.5);
+    --ie-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+    --ie-input-bg: rgba(255, 255, 255, 0.6);
+    --ie-input-border: rgba(209, 213, 219, 0.7);
+    --ie-input-border-hover: rgba(96, 165, 250, 0.7);
+
+    --ie-switch-bg-off: #e5e7eb;
+    --ie-switch-bg-on: #3b82f6;
+    --ie-switch-thumb: #ffffff;
+
+    --ie-accent: #3b82f6;
+    --ie-accent-soft: rgba(59, 130, 246, 0.12);
+    --ie-accent-strong: #1d4ed8;
+    --ie-accent-fg: #ffffff;
+
+    --ie-radius-card: 16px;
+    --ie-radius-input: 8px;
+    --ie-radius-pill: 999px;
+
+    --ie-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    --ie-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+    --ie-code-bg: #0f172a;
+    --ie-code-fg: #e2e8f0;
+
+    color: var(--ie-fg);
+    font-family: var(--ie-font);
+    font-size: 14px;
+    line-height: 1.5;
+    scrollbar-color: color-mix(in srgb, var(--ie-accent) 48%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.upup-ie-shell *,
+.upup-ie-focus * {
+    scrollbar-color: color-mix(in srgb, var(--ie-accent) 48%, transparent) transparent;
+    scrollbar-width: thin;
+}
+
+.upup-ie-shell *::-webkit-scrollbar,
+.upup-ie-focus *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-track,
+.upup-ie-focus *::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-thumb,
+.upup-ie-focus *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--ie-accent) 42%, transparent);
+    border: 3px solid transparent;
+    border-radius: var(--ie-radius-pill);
+    background-clip: padding-box;
+}
+
+.upup-ie-shell *::-webkit-scrollbar-thumb:hover,
+.upup-ie-focus *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--ie-accent) 62%, transparent);
+    background-clip: padding-box;
+}
+
+/* Dark theme — explicit (ancestor html.dark, [data-theme="dark"] ancestor, or [data-theme="dark"] on self) */
+html.dark .upup-ie-shell:not([data-theme="light"]),
+html.dark .upup-ie-focus:not([data-theme="light"]),
+[data-theme="dark"] .upup-ie-shell:not([data-theme="light"]),
+[data-theme="dark"] .upup-ie-focus:not([data-theme="light"]),
+.upup-ie-shell[data-theme="dark"],
+.upup-ie-focus[data-theme="dark"] {
+    --ie-fg: #f3f4f6;
+    --ie-fg-muted: #9ca3af;
+    --ie-fg-faint: #6b7280;
+    --ie-card-bg: rgba(31, 41, 55, 0.5);
+    --ie-card-bg-hover: rgba(31, 41, 55, 0.8);
+    --ie-popover-bg: #1f2937;
+    --ie-card-border: rgba(55, 65, 81, 0.5);
+    --ie-card-shadow: none;
+    --ie-input-bg: rgba(17, 24, 39, 0.6);
+    --ie-input-border: rgba(55, 65, 81, 0.7);
+    --ie-input-border-hover: rgba(96, 165, 250, 0.5);
+    --ie-switch-bg-off: #374151;
+    --ie-switch-bg-on: #3b82f6;
+    --ie-accent: #60a5fa;
+    --ie-accent-soft: rgba(96, 165, 250, 0.16);
+    --ie-accent-strong: #93c5fd;
+    color-scheme: dark;
+}
+
+/* Dark theme — auto via prefers-color-scheme, unless an ancestor/self explicitly forces light */
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-shell:not([data-theme="light"]),
+    html:not(.light):not([data-theme="light"]) .upup-ie-focus:not([data-theme="light"]) {
+        --ie-fg: #f3f4f6;
+        --ie-fg-muted: #9ca3af;
+        --ie-fg-faint: #6b7280;
+        --ie-card-bg: rgba(31, 41, 55, 0.5);
+        --ie-card-bg-hover: rgba(31, 41, 55, 0.8);
+        --ie-card-border: rgba(55, 65, 81, 0.5);
+        --ie-card-shadow: none;
+        --ie-input-bg: rgba(17, 24, 39, 0.6);
+        --ie-input-border: rgba(55, 65, 81, 0.7);
+        --ie-input-border-hover: rgba(96, 165, 250, 0.5);
+        --ie-switch-bg-off: #374151;
+        --ie-switch-bg-on: #3b82f6;
+        --ie-accent: #60a5fa;
+        --ie-accent-soft: rgba(96, 165, 250, 0.16);
+        --ie-accent-strong: #93c5fd;
+        color-scheme: dark;
+    }
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+
+.upup-ie-shell {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+/* When the AI panel is mounted, switch to a three-column layout. The
+   sidebar and AI panel cap their height so they sit flush with the
+   preview card, scrolling internally. */
+.upup-ie-shell.has-ai {
+    grid-template-columns: 320px minmax(0, 1fr) 380px;
+}
+
+.upup-ie-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    /* Locked to the main column's measured height (set by the Shell
+       via a ResizeObserver). Falls back to a viewport-based cap when
+       the JS hasn't measured yet (initial render, SSR). */
+    height: var(--ie-side-height, calc(100vh - 160px));
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Each child must keep its intrinsic height. Without this the flex
+   container shrinks every child to fit the column, hiding their
+   overflow visually but reporting scrollHeight === clientHeight, so
+   the sidebar's overflow-y:auto would never trigger a scrollbar. */
+.upup-ie-sidebar > * {
+    flex-shrink: 0;
+}
+
+/* Sidebar tier toggle (Simple / Advanced) — pinned at the top. */
+.upup-ie-tier-toggle {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-pill);
+}
+
+.upup-ie-tier-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--ie-fg-muted);
+    padding: 6px 10px;
+    border-radius: var(--ie-radius-pill);
+    font: 500 12px var(--ie-font);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.upup-ie-tier-toggle button:hover {
+    color: var(--ie-fg);
+}
+
+.upup-ie-tier-toggle button.is-active {
+    background: var(--ie-popover-bg);
+    color: var(--ie-fg);
+    box-shadow: var(--ie-card-shadow);
+}
+
+.upup-ie-tier-count {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: var(--ie-radius-pill);
+    background: var(--ie-accent-soft);
+    color: var(--ie-accent-strong);
+}
+
+/* ── Presets bar (top of sidebar) ──────────────────────── */
+
+.upup-ie-presets {
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: var(--ie-card-shadow);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upup-ie-presets-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-presets-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.upup-ie-preset {
+    appearance: none;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upup-ie-preset-icon {
+    flex: 0 0 auto;
+    color: var(--ie-fg-muted);
+    transition: color 0.15s ease;
+}
+
+.upup-ie-preset:hover .upup-ie-preset-icon {
+    color: var(--ie-accent);
+}
+
+.upup-ie-preset:hover {
+    background: var(--ie-accent-soft);
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-preset:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-preset-reset {
+    color: var(--ie-fg-muted);
+    margin-left: auto;
+}
+
+.upup-ie-preset-reset:hover {
+    color: var(--ie-fg);
+    background: transparent;
+    border-color: var(--ie-fg-muted);
+}
+
+/* ── Glass cards (categories) ──────────────────────────── */
+
+.upup-ie-category {
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: var(--ie-card-shadow);
+    transition: background-color 0.3s ease;
+    overflow: hidden;
+}
+
+.upup-ie-category:hover {
+    background: var(--ie-card-bg-hover);
+}
+
+.upup-ie-category-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ie-fg);
+    text-align: left;
+    transition: color 0.15s ease;
+}
+
+.upup-ie-category-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 6px;
+    height: 6px;
+    background: var(--ie-accent);
+    border-radius: 50%;
+    color: transparent;
+    font-size: 0;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.upup-ie-category[data-open="true"] .upup-ie-category-chevron {
+    background: var(--ie-accent);
+    box-shadow: 0 0 0 4px var(--ie-accent-soft);
+}
+
+.upup-ie-category-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: var(--ie-fg-muted);
+    flex-shrink: 0;
+}
+
+.upup-ie-category-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.upup-ie-category[data-open="true"] .upup-ie-category-icon {
+    color: var(--ie-accent);
+}
+
+.upup-ie-category-label {
+    flex: 1;
+    letter-spacing: -0.01em;
+}
+
+.upup-ie-category-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ie-accent);
+    background: var(--ie-accent-soft);
+    padding: 3px 10px;
+    border-radius: var(--ie-radius-pill);
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+}
+
+.upup-ie-category-count:empty {
+    display: none;
+}
+
+.upup-ie-category-body {
+    padding: 4px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Banner copy rendered above a category's entries — used to set context
+   for sections (Processing, Events) whose toggles only fire during a real
+   file pickup so a reader doesn't expect immediate visual feedback. */
+.upup-ie-category-intro {
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ie-fg-muted);
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-border);
+    border-radius: var(--ie-radius-md);
+}
+
+/* ── Boolean toggle: iOS-style switch ──────────────────── */
+
+.upup-ie-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.upup-ie-toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.upup-ie-toggle-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ie-fg);
+}
+
+.upup-ie-toggle-description {
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+    line-height: 1.4;
+}
+
+/* The native checkbox becomes the switch via custom appearance */
+.upup-ie-toggle input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 44px;
+    height: 24px;
+    background: var(--ie-switch-bg-off);
+    border-radius: var(--ie-radius-pill);
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin: 0;
+    border: 0;
+}
+
+.upup-ie-toggle input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: var(--ie-switch-thumb);
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.upup-ie-toggle input[type="checkbox"]:checked {
+    background: var(--ie-switch-bg-on);
+}
+
+.upup-ie-toggle input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+.upup-ie-toggle input[type="checkbox"]:focus-visible {
+    outline: 3px solid var(--ie-accent-soft);
+    outline-offset: 2px;
+}
+
+/* ── Generic field (number / string / select) ──────────── */
+
+.upup-ie-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.upup-ie-field-description {
+    font-size: 11.5px;
+    color: var(--ie-fg-muted);
+    line-height: 1.4;
+    margin-top: -4px;
+}
+
+.upup-ie-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ie-fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.upup-ie-field input[type="text"],
+.upup-ie-field input[type="number"],
+.upup-ie-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 12px;
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+    background: var(--ie-input-bg);
+    color: var(--ie-fg);
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.4;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.upup-ie-field input[type="text"]:hover,
+.upup-ie-field input[type="number"]:hover,
+.upup-ie-field select:hover {
+    border-color: var(--ie-input-border-hover);
+}
+
+.upup-ie-field input[type="text"]:focus,
+.upup-ie-field input[type="number"]:focus,
+.upup-ie-field select:focus {
+    outline: none;
+    border-color: var(--ie-accent);
+    box-shadow: 0 0 0 3px var(--ie-accent-soft);
+}
+
+.upup-ie-field input::placeholder {
+    color: var(--ie-fg-faint);
+}
+
+.upup-ie-field select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%239ca3af' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+}
+
+/* ── Event log panel (below preview) ───────────────────── */
+
+.upup-ie-eventlog {
+    margin-top: 16px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    overflow: hidden;
+}
+
+.upup-ie-eventlog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-eventlog-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-eventlog-count {
+    color: var(--ie-fg);
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.upup-ie-eventlog-clear {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg-muted);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.upup-ie-eventlog-clear:hover:not(:disabled) {
+    border-color: var(--ie-fg-muted);
+    color: var(--ie-fg);
+}
+
+.upup-ie-eventlog-clear:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+
+.upup-ie-eventlog-empty {
+    padding: 18px 16px 14px;
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+    line-height: 1.5;
+}
+
+.upup-ie-eventlog-empty p {
+    margin: 0 0 12px;
+}
+
+/* Ghosted "here is what fired events would look like" preview. Muted so it
+   reads as a placeholder, not real data. */
+.upup-ie-eventlog-list-sample {
+    max-height: none;
+    overflow: visible;
+    border-top: 1px dashed var(--ie-card-border);
+    padding-top: 6px;
+    opacity: 0.55;
+    pointer-events: none;
+    user-select: none;
+}
+
+.upup-ie-eventlog-list-sample .upup-ie-eventlog-row {
+    border-bottom: none;
+    padding: 4px 0;
+}
+
+.upup-ie-eventlog-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 260px;
+    overflow-y: auto;
+    font-family: var(--ie-mono);
+    font-size: 11.5px;
+}
+
+.upup-ie-eventlog-row {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 10px;
+    padding: 6px 14px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-eventlog-row:last-child {
+    border-bottom: 0;
+}
+
+.upup-ie-eventlog-time {
+    color: var(--ie-fg-faint);
+    white-space: nowrap;
+}
+
+.upup-ie-eventlog-name {
+    color: var(--ie-accent);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.upup-ie-eventlog-args {
+    color: var(--ie-fg-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Color input (swatch + hex) ────────────────────────── */
+
+.upup-ie-color {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.upup-ie-color-swatch {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid var(--ie-input-border);
+    background: var(--ie-input-bg);
+    border-radius: var(--ie-radius-input);
+    padding: 2px;
+    cursor: pointer;
+    width: 44px;
+    height: 36px;
+}
+
+.upup-ie-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.upup-ie-color-swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+}
+.upup-ie-color-swatch::-moz-color-swatch {
+    border: none;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+}
+
+.upup-ie-color-hex {
+    font-family: var(--ie-mono);
+    font-size: 12px;
+}
+
+/* ── Range slider (output quality etc.) ────────────────── */
+
+.upup-ie-range {
+    display: grid;
+    grid-template-columns: 1fr 48px;
+    align-items: center;
+    gap: 10px;
+}
+
+.upup-ie-range input[type="range"] {
+    width: 100%;
+    accent-color: var(--ie-accent);
+}
+
+.upup-ie-range-readout {
+    font-family: var(--ie-mono);
+    font-size: 12px;
+    color: var(--ie-fg);
+    text-align: right;
+}
+
+/* ── Group heading inside a category (events subgroups) ─ */
+
+.upup-ie-group-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ie-fg-muted);
+    margin: 8px 0 -4px;
+    padding-top: 4px;
+}
+
+.upup-ie-category-body > .upup-ie-group-heading:first-child {
+    margin-top: 0;
+}
+
+/* ── Segmented control (short enum options) ───────────── */
+
+.upup-ie-segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 3px;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+    min-height: 30px;
+}
+
+.upup-ie-segmented-option {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--ie-fg);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    padding: 4px 8px;
+    border-radius: calc(var(--ie-radius-input) - 2px);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    text-align: center;
+    white-space: nowrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.upup-ie-segmented-option:hover {
+    background: var(--ie-accent-soft);
+}
+
+.upup-ie-segmented-option[data-active] {
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg, #fff);
+}
+
+.upup-ie-segmented-option[data-active]:hover {
+    background: var(--ie-accent);
+}
+
+.upup-ie-segmented-option:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 1px;
+}
+
+/* ── Size + Unit inline row ───────────────────────────── */
+
+.upup-ie-size-unit {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.upup-ie-size-unit-input {
+    width: 100%;
+}
+
+.upup-ie-size-unit-segmented {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+}
+
+.upup-ie-size-unit-option {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* ── Nested config (cloud drives, slot overrides, etc.) ─ */
+
+.upup-ie-nested {
+    border: 1px dashed var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+    padding: 14px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--ie-input-bg);
+}
+
+.upup-ie-nested legend {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ie-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 8px;
+}
+
+/* ── Source tiles (brand-iconified multi-select) ───────── */
+
+.upup-ie-source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 4px;
+}
+
+.upup-ie-source-tile {
+    appearance: none;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg);
+    border-radius: var(--ie-radius-input);
+    min-height: 36px;
+    padding: 5px 6px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 5px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    font: inherit;
+    text-align: left;
+}
+
+.upup-ie-source-tile:hover {
+    border-color: var(--ie-accent);
+    background: var(--ie-accent-soft);
+}
+
+.upup-ie-source-tile[data-active] {
+    border-color: var(--ie-accent);
+    background: var(--ie-accent-soft);
+    box-shadow: 0 0 0 1px var(--ie-accent) inset;
+}
+
+.upup-ie-source-tile[data-unavailable] {
+    opacity: 0.45;
+    background: var(--ie-input-bg);
+    border-color: var(--ie-input-border);
+    box-shadow: none;
+    filter: grayscale(0.7);
+}
+
+/* Disabled + currently selected: dashed accent border keeps the "this
+   IS in your config, it just can't work without credentials" signal. */
+.upup-ie-source-tile[data-unavailable][data-active] {
+    border-style: dashed;
+    border-color: var(--ie-accent);
+    background: color-mix(in srgb, var(--ie-accent-soft) 50%, transparent);
+}
+
+.upup-ie-source-tile[data-unavailable][aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+/* Disabled + selected is still toggleable-off, so keep the pointer. */
+.upup-ie-source-tile[data-unavailable]:not([aria-disabled="true"]) {
+    cursor: pointer;
+}
+
+.upup-ie-source-tile[data-unavailable]:hover {
+    border-color: var(--ie-input-border);
+    background: var(--ie-input-bg);
+}
+
+.upup-ie-source-tile[data-unavailable][data-active]:hover {
+    border-color: var(--ie-accent);
+    background: color-mix(in srgb, var(--ie-accent-soft) 60%, transparent);
+}
+
+.upup-ie-multiselect-item[data-unavailable] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upup-ie-source-tile:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-source-tile-icon {
+    display: flex;
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    flex: 0 0 16px;
+}
+
+.upup-ie-source-tile-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+.upup-ie-source-tile-label {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.1;
+    color: var(--ie-fg);
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Legend-with-icon (cloud drive credential blocks) */
+
+.upup-ie-nested-legend-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upup-ie-nested-legend-icon {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+}
+
+.upup-ie-nested-legend-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ── Expandable tile overflow (see more / show less) ───── */
+
+.upup-ie-expand-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s ease;
+}
+
+.upup-ie-expand-wrap[data-expanded] {
+    grid-template-rows: 1fr;
+    margin-top: 4px;
+}
+
+.upup-ie-expand-inner {
+    overflow: hidden;
+    min-height: 0;
+    width: 100%;
+}
+
+.upup-ie-expand-inner > .upup-ie-source-grid {
+    width: 100%;
+}
+
+.upup-ie-expand-toggle {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--ie-radius-pill);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    align-self: center;
+    margin-top: 2px;
+}
+
+.upup-ie-expand-toggle:hover {
+    border-color: var(--ie-accent);
+    color: var(--ie-accent);
+    background: var(--ie-accent-soft);
+}
+
+.upup-ie-expand-toggle:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+/* ── Multi-select (sources, etc.) ──────────────────────── */
+
+.upup-ie-multiselect {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 4px;
+    padding: 6px;
+    background: var(--ie-input-bg);
+    border-radius: var(--ie-radius-input);
+    border: 1px solid var(--ie-input-border);
+}
+
+.upup-ie-multiselect-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--ie-fg);
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.upup-ie-multiselect-item:hover {
+    background: var(--ie-card-bg-hover);
+}
+
+.upup-ie-multiselect-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--ie-input-border);
+    border-radius: 4px;
+    background: var(--ie-input-bg);
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    margin: 0;
+    transition: all 0.15s ease;
+}
+
+.upup-ie-multiselect-item input[type="checkbox"]:checked {
+    background: var(--ie-accent);
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-multiselect-item input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    left: 4px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* ── Right pane (Preview / Code) ───────────────────────── */
+
+.upup-ie-main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.upup-ie-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+}
+
+.upup-ie-tabs button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    padding: 8px 18px;
+    cursor: pointer;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ie-fg-muted);
+    transition: all 0.15s ease;
+}
+
+.upup-ie-tabs button:hover {
+    color: var(--ie-fg);
+}
+
+.upup-ie-tabs button.is-active {
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg);
+    font-weight: 600;
+}
+
+
+.upup-ie-tabs-body {
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    overflow: hidden;
+    min-height: 480px;
+}
+
+.upup-ie-preview {
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* Pre-mount placeholder — matches uploader dimensions to avoid layout shift, and matches
+   uploader's own dark/light bg so there is no flash when the real uploader mounts. */
+.upup-ie-preview-placeholder {
+    width: 100%;
+    max-width: 600px;
+    height: 480px;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+html.dark .upup-ie-preview-placeholder,
+[data-theme="dark"] .upup-ie-preview-placeholder,
+[data-theme="dark"] .upup-ie-preview .upup-ie-preview-placeholder {
+    background: #232323;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-preview-placeholder {
+        background: #232323;
+    }
+}
+
+/* ── Code tab ──────────────────────────────────────────── */
+
+.upup-ie-code-tab {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.upup-ie-code-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-code-header button {
+    appearance: none;
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg);
+    border: 0;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.upup-ie-code-header button:hover {
+    background: var(--ie-accent-strong);
+}
+
+.upup-ie-code-header button:active {
+    transform: scale(0.97);
+}
+
+.upup-ie-code-pre {
+    margin: 0;
+    padding: 20px 24px;
+    background: var(--ie-code-bg);
+    color: var(--ie-code-fg);
+    overflow: auto;
+    font-family: var(--ie-mono);
+    font-size: 13px;
+    line-height: 1.7;
+    flex: 1;
+    min-height: 380px;
+}
+
+.upup-ie-code-pre code {
+    font-family: inherit;
+}
+
+/* ── Focus mode (docs embed) ───────────────────────────── */
+
+.upup-ie-focus {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    padding: 20px;
+    background: var(--ie-card-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+}
+
+.upup-ie-focus-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* ── Combo: text input with preset dropdown ──────────────── */
+
+.upup-ie-combo {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+/* Lift the whole field when its combo popover is open so the dropdown
+   paints above the next field's label/inputs (otherwise sibling z-index
+   wins because each field is its own positioning context). */
+.upup-ie-field:has(.upup-ie-combo-popover) {
+    position: relative;
+    z-index: 30;
+}
+
+.upup-ie-combo-input {
+    flex: 1;
+    width: 100%;
+    padding: 9px 36px 9px 12px;
+    border: 1px solid var(--ie-input-border);
+    border-radius: var(--ie-radius-input);
+    background: var(--ie-input-bg);
+    color: var(--ie-fg);
+    font-family: var(--ie-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 12.5px;
+    line-height: 1.4;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.upup-ie-combo-input:focus {
+    outline: none;
+    border-color: var(--ie-accent);
+    box-shadow: 0 0 0 3px var(--ie-accent-soft);
+}
+
+.upup-ie-combo-trigger {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    background: transparent;
+    color: var(--ie-fg-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.upup-ie-combo-trigger:hover {
+    background: var(--ie-card-bg-hover);
+    color: var(--ie-fg);
+}
+
+.upup-ie-combo-trigger[aria-expanded="true"] {
+    color: var(--ie-accent);
+}
+
+.upup-ie-combo-popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--ie-popover-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+    z-index: 20;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.upup-ie-combo-preset {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    background: transparent;
+    color: var(--ie-fg);
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.upup-ie-combo-preset:hover {
+    background: var(--ie-card-bg-hover);
+}
+
+.upup-ie-combo-preset[data-active] {
+    background: var(--ie-accent-soft);
+    color: var(--ie-accent);
+}
+
+.upup-ie-combo-preset-label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.upup-ie-combo-preset-desc {
+    font-size: 11.5px;
+    color: var(--ie-fg-muted);
+    line-height: 1.4;
+}
+
+.upup-ie-combo-preset-value {
+    font-family: var(--ie-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 11px;
+    color: var(--ie-fg-muted);
+    line-height: 1.4;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upup-ie-combo-preset[data-active] .upup-ie-combo-preset-desc,
+.upup-ie-combo-preset[data-active] .upup-ie-combo-preset-value {
+    color: var(--ie-accent);
+    opacity: 0.85;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+    .upup-ie-shell,
+    .upup-ie-focus {
+        grid-template-columns: 1fr;
+    }
+    /* Sidebar keeps its internal scroll even when stacked — the user can
+       still browse all categories without the page itself growing huge.
+       We deliberately ignore --ie-side-height here because at narrow
+       viewports the main column grows to fit the preview's wrapped
+       layout, which would defeat the cap. */
+    .upup-ie-sidebar {
+        height: 60vh;
+    }
+}
+
+/* ── AI Assistant (inline column) ─────────────────────────
+   Lives as a third column inside .upup-ie-shell.has-ai. Always
+   visible — no slide-over, no trigger button. Tokens duplicated here
+   so the panel stays themed even if a consumer mounts it outside the
+   shell wrapper. */
+
+.upup-ie-ai-panel {
+    --ie-fg: #1f2937;
+    --ie-fg-muted: #6b7280;
+    --ie-card-bg: rgba(255, 255, 255, 0.5);
+    --ie-card-bg-hover: rgba(255, 255, 255, 0.8);
+    --ie-card-border: rgba(229, 231, 235, 0.7);
+    --ie-popover-bg: #ffffff;
+    --ie-input-bg: rgba(255, 255, 255, 0.6);
+    --ie-input-border: rgba(209, 213, 219, 0.7);
+    --ie-accent: #3b82f6;
+    --ie-accent-soft: rgba(59, 130, 246, 0.12);
+    --ie-accent-strong: #1d4ed8;
+    --ie-accent-fg: #ffffff;
+    --ie-radius-card: 16px;
+    --ie-radius-input: 8px;
+    --ie-radius-pill: 999px;
+    --ie-card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --ie-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--ie-popover-bg);
+    color: var(--ie-fg);
+    font-family: var(--ie-font);
+    border: 0.8px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-card);
+    box-shadow: var(--ie-card-shadow);
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    /* Same height anchor as the sidebar — both columns line up flush
+       with the main column's bottom edge. */
+    height: var(--ie-side-height, calc(100vh - 160px));
+    min-height: 360px;
+    overflow: hidden;
+}
+
+html.dark .upup-ie-ai-panel,
+[data-theme="dark"] .upup-ie-ai-panel {
+    --ie-fg: #f3f4f6;
+    --ie-fg-muted: #9ca3af;
+    --ie-card-bg: rgba(31, 41, 55, 0.6);
+    --ie-card-bg-hover: rgba(31, 41, 55, 0.85);
+    --ie-card-border: rgba(55, 65, 81, 0.7);
+    --ie-popover-bg: #1f2937;
+    --ie-input-bg: rgba(17, 24, 39, 0.7);
+    --ie-input-border: rgba(55, 65, 81, 0.7);
+    --ie-accent: #60a5fa;
+    --ie-accent-soft: rgba(96, 165, 250, 0.16);
+    --ie-accent-strong: #93c5fd;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light):not([data-theme="light"]) .upup-ie-ai-panel {
+        --ie-fg: #f3f4f6;
+        --ie-fg-muted: #9ca3af;
+        --ie-card-bg: rgba(31, 41, 55, 0.6);
+        --ie-card-bg-hover: rgba(31, 41, 55, 0.85);
+        --ie-card-border: rgba(55, 65, 81, 0.7);
+        --ie-popover-bg: #1f2937;
+        --ie-input-bg: rgba(17, 24, 39, 0.7);
+        --ie-input-border: rgba(55, 65, 81, 0.7);
+        --ie-accent: #60a5fa;
+        --ie-accent-soft: rgba(96, 165, 250, 0.16);
+        --ie-accent-strong: #93c5fd;
+    }
+}
+
+.upup-ie-ai-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-ai-title {
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--ie-fg);
+}
+
+.upup-ie-ai-header-btn {
+    background: transparent;
+    border: none;
+    color: var(--ie-fg-muted);
+    font-size: 12px;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: var(--ie-radius-input);
+    cursor: pointer;
+}
+
+.upup-ie-ai-header-btn:hover {
+    background: var(--ie-card-bg);
+    color: var(--ie-fg);
+}
+
+.upup-ie-ai-messages {
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.upup-ie-ai-empty {
+    color: var(--ie-fg-muted);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.upup-ie-ai-empty p {
+    margin: 0 0 12px;
+}
+
+.upup-ie-ai-seeds {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.upup-ie-ai-seed {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-input);
+    color: var(--ie-fg);
+    font: 12px var(--ie-font);
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.upup-ie-ai-seed:hover {
+    background: var(--ie-accent-soft);
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-ai-msg {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.upup-ie-ai-msg-user {
+    align-items: flex-end;
+}
+
+.upup-ie-ai-msg-user .upup-ie-ai-msg-text {
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg);
+    padding: 8px 12px;
+    border-radius: 14px 14px 4px 14px;
+    max-width: 90%;
+}
+
+.upup-ie-ai-msg-assistant .upup-ie-ai-msg-text {
+    color: var(--ie-fg);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.upup-ie-ai-cursor {
+    display: inline-block;
+    margin-left: 2px;
+    color: var(--ie-fg-muted);
+    animation: upup-ie-ai-blink 1s steps(1) infinite;
+}
+
+@keyframes upup-ie-ai-blink {
+    50% { opacity: 0; }
+}
+
+.upup-ie-ai-patch {
+    align-self: flex-start;
+    background: var(--ie-accent-soft);
+    border: 1px solid var(--ie-accent);
+    color: var(--ie-fg);
+    padding: 6px 10px;
+    border-radius: var(--ie-radius-input);
+    font-size: 12px;
+    max-width: 95%;
+}
+
+.upup-ie-ai-patch strong {
+    color: var(--ie-accent-strong);
+    margin-right: 4px;
+}
+
+.upup-ie-ai-error {
+    margin: 0 14px 8px;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: var(--ie-radius-input);
+    color: #b91c1c;
+    font-size: 12px;
+}
+
+.upup-ie-ai-input {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 10px 14px 14px;
+    border-top: 1px solid var(--ie-card-border);
+    background: var(--ie-popover-bg);
+}
+
+.upup-ie-ai-input textarea {
+    resize: none;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg);
+    padding: 8px 10px;
+    border-radius: var(--ie-radius-input);
+    font: 13px var(--ie-font);
+}
+
+.upup-ie-ai-input textarea:focus {
+    outline: none;
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-ai-input button[type="submit"] {
+    align-self: stretch;
+    padding: 0 14px;
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg);
+    border: none;
+    border-radius: var(--ie-radius-input);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.upup-ie-ai-input button[type="submit"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+    /* Stack AI panel under the preview when the viewport gets tight. */
+    .upup-ie-shell.has-ai {
+        grid-template-columns: 320px minmax(0, 1fr);
+    }
+    .upup-ie-ai-panel {
+        grid-column: 1 / -1;
+        max-height: 480px;
+    }
+}
+
+@media (max-width: 900px) {
+    /* Single-column on small viewports. Each column keeps its own
+       internal scroll so the user can browse without the page itself
+       becoming enormous. Using a fixed 60vh here (not the variable)
+       so the main column's wrapped layout doesn't defeat the cap. */
+    .upup-ie-shell,
+    .upup-ie-shell.has-ai,
+    .upup-ie-focus {
+        grid-template-columns: 1fr;
+    }
+    .upup-ie-sidebar,
+    .upup-ie-ai-panel {
+        height: 60vh;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .upup-ie-ai-cursor {
+        animation: none;
+    }
+}

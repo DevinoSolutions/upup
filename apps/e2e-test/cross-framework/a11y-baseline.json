@@ -1,0 +1,38 @@
+{
+  "react": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ],
+  "vue": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ],
+  "svelte": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ],
+  "vanilla": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ],
+  "angular": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ],
+  "preact": [
+    {
+      "rule": "nested-interactive",
+      "count": 1
+    }
+  ]
+}
