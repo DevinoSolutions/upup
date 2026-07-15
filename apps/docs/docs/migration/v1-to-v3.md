@@ -1,12 +1,12 @@
 ---
-title: Migrating from v1 to v2
-description: Upgrade from upup v1 (upup-react-file-uploader) to v2 — the package rename to @upupjs/react, the full v1→v2 prop map, the UpupError/UpupErrorCode taxonomy, and client- vs server-mode uploads.
+title: Migrating from v1 to v3
+description: Upgrade from upup v1 (upup-react-file-uploader) to v3 — the package rename to @upupjs/react, the full v1→v3 prop map, the UpupError/UpupErrorCode taxonomy, and client- vs server-mode uploads.
 sidebar_position: 1
 ---
 
-# Migrating from v1 to v2
+# Migrating from v1 to v3
 
-v1 shipped as a single React package, `upup-react-file-uploader`. v2 is a
+v1 shipped as a single React package, `upup-react-file-uploader`. v3 is a
 ground-up rewrite: a framework-agnostic headless core (`@upupjs/core`) with a
 native UI for **React, Vue, Svelte, Angular, Vanilla JS, and Preact**, an
 optional server package (`@upupjs/server`) for signed uploads and
@@ -78,27 +78,27 @@ plain string (`"aws"`), and upload methods are configured with `sources`
 type, `@upupjs/react` re-exports `StorageProvider` from `@upupjs/core`.
 :::
 
-## Props: v1 → v2
+## Props: v1 → v3
 
-Every v1 `UpupUploader` prop, and where it went in v2. Exact v1 names are on the
-left; exact v2 names on the right.
+Every v1 `UpupUploader` prop, and where it went in v3. Exact v1 names are on the
+left; exact v3 names on the right.
 
-| v1 prop                                        | v2 prop                                                                               | Notes                                                                                                                                                                                                                                                                 |
+| v1 prop                                        | v3 prop                                                                               | Notes                                                                                                                                                                                                                                                                 |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `provider={UpupProvider.AWS}` (required)       | `provider="aws"` (optional)                                                           | Now a lowercase string, not the `UpupProvider` enum. Enum values are unchanged (`aws`, `azure`, `backblaze`, `digitalocean`) and v2 adds many more S3-compatible ids (`r2`, `wasabi`, `minio`, `gcs`, …). No longer required — omit it for local-only file selection. |
+| `provider={UpupProvider.AWS}` (required)       | `provider="aws"` (optional)                                                           | Now a lowercase string, not the `UpupProvider` enum. Enum values are unchanged (`aws`, `azure`, `backblaze`, `digitalocean`) and v3 adds many more S3-compatible ids (`r2`, `wasabi`, `minio`, `gcs`, …). No longer required — omit it for local-only file selection. |
 | `tokenEndpoint="/api/upload-token"` (required) | `uploadEndpoint="/api/upload-token"` **or** `mode="server"` + `serverUrl="/api/upup"` | Renamed and split into client mode vs server mode. See [Storage & upload path](#storage--upload-path).                                                                                                                                                                |
 | `accept="image/png"`                           | `allowedFileTypes="image/png"`                                                        | Renamed. Accepts a string, a `string[]`, or preset names (e.g. `"images"`, `"documents"`).                                                                                                                                                                            |
 | `dark={true}`                                  | `theme={{ mode: 'dark' }}`                                                            | `theme.mode` accepts `'light'`, `'dark'`, or `'system'`.                                                                                                                                                                                                              |
 | `classNames={{ … }}` (flat map)                | `theme={{ slots: { … } }}` (nested)                                                   | The flat keys (`adapterButton`, `progressBarInner`, …) become nested slot paths. The [v2.0→v2.1 guide](./v2-to-v2.1.md) has the full flat→nested key table — it applies verbatim to v1's `classNames`.                                                                |
 | `limit={5}`                                    | `maxFiles={5}`                                                                        | Renamed. **Default changed from `1` to `10`** — see [Gotchas](#gotchas).                                                                                                                                                                                              |
 | `mini={true}`                                  | `mini={true}`                                                                         | Unchanged.                                                                                                                                                                                                                                                            |
-| `maxFileSize={{ size: 20, unit: 'MB' }}`       | `maxFileSize={{ size: 20, unit: 'MB' }}`                                              | Unchanged shape. v2 adds `minFileSize` and `maxTotalFileSize` (same object shape).                                                                                                                                                                                    |
+| `maxFileSize={{ size: 20, unit: 'MB' }}`       | `maxFileSize={{ size: 20, unit: 'MB' }}`                                              | Unchanged shape. v3 adds `minFileSize` and `maxTotalFileSize` (same object shape).                                                                                                                                                                                    |
 | `maxRetries={3}`                               | `maxRetries={3}`                                                                      | Unchanged.                                                                                                                                                                                                                                                            |
-| `resumable={{ mode: 'multipart' }}`            | `resumable={{ protocol: 'multipart' }}`                                               | The key `mode` was renamed to `protocol`. v2 also supports `{ protocol: 'tus', endpoint }`.                                                                                                                                                                           |
+| `resumable={{ mode: 'multipart' }}`            | `resumable={{ protocol: 'multipart' }}`                                               | The key `mode` was renamed to `protocol`. v3 also supports `{ protocol: 'tus', endpoint }`.                                                                                                                                                                           |
 | `uploadAdapters={[UploadAdapter.INTERNAL, …]}` | `sources={['local', …]}`                                                              | Enum array → string-id array. Mapping below.                                                                                                                                                                                                                          |
 | `driveConfigs={{ … }}`                         | `cloudDrives={{ … }}`                                                                 | Renamed, keys are camelCased. See [Sources & cloud drives](#sources--cloud-drives).                                                                                                                                                                                   |
 | `imageEditor={true}`                           | `imageEditor={true}`                                                                  | Unchanged (`boolean \| ImageEditorOptions`). React/Preact only.                                                                                                                                                                                                       |
-| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v2's are camelCase, imported from `@upupjs/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                      |
+| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v3's are camelCase, imported from `@upupjs/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                      |
 | `translations={{ browseFiles: '…' }}`          | `i18n={{ overrides: { … } }}`                                                         | Per-key overrides move under `i18n.overrides`, and are **namespaced** (e.g. `{ fileList: { uploadFiles: '…' } }`) rather than flat.                                                                                                                                   |
 | `customProps={{ … }}`                          | `metadata={{ … }}`                                                                    | Renamed. Still forwarded to your upload route.                                                                                                                                                                                                                        |
 | `enableAutoCorsConfig={true}`                  | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: [...] }}`                    | Replaced by the `cors` object. Auto-configuration is now explicitly opt-in and named `dangerouslyAutoConfigure`.                                                                                                                                                      |
@@ -108,7 +108,7 @@ left; exact v2 names on the right.
 | `isProcessing={busy}`                          | `isProcessing={busy}`                                                                 | Unchanged.                                                                                                                                                                                                                                                            |
 | `icons={{ … }}`                                | `icons={{ … }}`                                                                       | Unchanged (the per-framework component types differ).                                                                                                                                                                                                                 |
 
-v2 also adds many new props with no v1 equivalent — among them `autoUpload`,
+v3 also adds many new props with no v1 equivalent — among them `autoUpload`,
 `thumbnailGenerator`, `heicConversion`, `stripExifData`, `checksumVerification`,
 `contentDeduplication`, `crashRecovery`, `webWorker`, `maxConcurrentUploads`,
 `enablePaste`, and `processingEndpoint`. See the
@@ -130,7 +130,7 @@ array). The order still controls tab order.
 
 Adapter → source id mapping:
 
-| v1 `UploadAdapter` | v2 `sources` id                     |
+| v1 `UploadAdapter` | v3 `sources` id                     |
 | ------------------ | ----------------------------------- |
 | `INTERNAL`         | `'local'`                           |
 | `GOOGLE_DRIVE`     | `'googleDrive'`                     |
@@ -202,10 +202,10 @@ theming you can also wrap your tree in `UpupThemeProvider` (exported from
 
 Most handlers keep their names and shapes. Two are worth a closer look:
 
-| v1 event                | v2 event                | Change                                                                                                                                                                                                                                          |
+| v1 event                | v3 event                | Change                                                                                                                                                                                                                                          |
 | ----------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `onFileRemove`          | `onFileRemoved`         | Renamed to past tense — the old spelling is gone, not aliased.                                                                                                                                                                                  |
-| `onFilesUploadComplete` | `onFilesUploadComplete` | Name and shape unchanged. Its argument is a list of files in both versions; v1 typed it `FileWithParams[]` (and v1's own docs mislabeled the items as storage "keys"), v2 types it `UploadFile[]` — the same type swap every file handler gets. |
+| `onFilesUploadComplete` | `onFilesUploadComplete` | Name and shape unchanged. Its argument is a list of files in both versions; v1 typed it `FileWithParams[]` (and v1's own docs mislabeled the items as storage "keys"), v3 types it `UploadFile[]` — the same type swap every file handler gets. |
 
 Unchanged names: `onFilesSelected`, `onFileClick`, `onFileTypeMismatch`,
 `onFileUploadComplete`, `onFileUploadStart`, `onFileUploadProgress`,
@@ -213,12 +213,12 @@ Unchanged names: `onFilesSelected`, `onFileClick`, `onFileTypeMismatch`,
 `onIntegrationClick`, `onPrepareFiles`, `onDoneClicked`, `onWarn`, and
 `onError`.
 
-New in v2: `onUploadStart`, `onUploadComplete`, `onStatusChange`,
+New in v3: `onUploadStart`, `onUploadComplete`, `onStatusChange`,
 `onRestrictionFailed`, `onBeforeFileAdded`, and `onFileProcessed`.
 
 :::note
 `onFilesSelected`, `onFileClick`, and the per-file complete/start handlers now
-receive v2 `UploadFile` objects (which carry `id`, `key`, `status`, and the
+receive v3 `UploadFile` objects (which carry `id`, `key`, `status`, and the
 underlying `File`) instead of v1's `FileWithParams`. Property access like
 `file.name` and `file.type` still works.
 :::
@@ -236,10 +236,10 @@ shape:
 + const ref = useRef<UploaderRef | null>(null)
 
   // ref.current.useUpload() still returns { files, loading, progress, upload, error }
-  // v2 adds: resetState, uploadFiles, setFiles, replaceFiles
+  // v3 adds: resetState, uploadFiles, setFiles, replaceFiles
 ```
 
-v2 also introduces a first-class headless hook, `useUpupUpload`, which is the
+v3 also introduces a first-class headless hook, `useUpupUpload`, which is the
 recommended way to drive uploads from your own UI. It returns reactive `files`,
 `status`, `progress`, and `error`, plus `addFiles`, `upload`, `pause`,
 `resume`, `cancel`, `retry`, and an `on(event, handler)` subscription — no ref
@@ -256,7 +256,7 @@ const { files, status, progress, error, addFiles, upload } = useUpupUpload({
 
 ## Error handling
 
-v1 threw `UploadError` carrying an `UploadErrorType` enum. v2 replaces it with
+v1 threw `UploadError` carrying an `UploadErrorType` enum. v3 replaces it with
 `UpupError` (base class) and typed subclasses, keyed by the `UpupErrorCode`
 enum. Both are exported from `@upupjs/core`.
 
@@ -279,7 +279,7 @@ Key differences:
 - The discriminator moved from `error.type` (an `UploadErrorType` value) to
   `error.code` (an `UpupErrorCode` value, a string). `retryable` and `status`
   are still present.
-- v2 ships typed subclasses you can narrow on: `UpupAuthError`,
+- v3 ships typed subclasses you can narrow on: `UpupAuthError`,
   `UpupNetworkError`, `UpupValidationError`, `UpupQuotaError`,
   `UpupStorageError`, and `UpupConfigError`.
 - `UpupErrorCode` is a broader, more specific set than v1's eight types — e.g.
@@ -296,7 +296,7 @@ plain message string it was in v1.
 
 v1 had one path: a `tokenEndpoint` you implemented server-side with
 `s3GeneratePresignedUrl` (from `upup-react-file-uploader/server`). The browser
-received a presigned URL and uploaded bytes directly to storage. v2 keeps that
+received a presigned URL and uploaded bytes directly to storage. v3 keeps that
 model as **client mode** and adds a **server-mode** option that holds your
 credentials and proxies drive transfers.
 
@@ -359,7 +359,7 @@ In v1, cloud-drive integration was client-side only: the Google Drive
 `clientId`/`apiKey` and OneDrive `clientId` were public identifiers shipped to
 the browser (which is the normal client-side OAuth model — those are not
 secrets). What v1 could **not** do is keep the OAuth **client secret** and the
-drive access tokens off the client. v2 server mode does: the client talks to
+drive access tokens off the client. v3 server mode does: the client talks to
 your `serverUrl` for OAuth and drive access, and `@upupjs/server` performs the
 OAuth exchange and stores tokens in your `TokenStore`. For storage, both modes still upload the
 file bytes directly to storage via a presigned URL — the difference is that in
@@ -427,7 +427,7 @@ export default function Uploader() {
 }
 ```
 
-**v2** (`@upupjs/react`):
+**v3** (`@upupjs/react`):
 
 ```tsx
 'use client'
@@ -480,13 +480,13 @@ Behavioral differences to check after the mechanical rename:
   to fit content. This is unchanged from v1's sizing model.
 - **`UpupProvider` and `UploadAdapter` no longer exist.** Replace enum usages
   with the string `provider` value and `sources` ids respectively.
-- **A fresh core per mount.** v2 creates and `destroy()`s its engine on
+- **A fresh core per mount.** v3 creates and `destroy()`s its engine on
   mount/unmount; hold state in your own app or via `useUpupUpload`, not across
   a remount of `<UpupUploader>`.
 
 ## Next steps
 
-- [React quickstart](../quickstarts/react.md) — the modern v2 surface end to end.
+- [React quickstart](../quickstarts/react.md) — the modern v3 surface end to end.
 - [Getting started](../getting-started.md) — local collection, client uploads,
   and server uploads in one page.
 - [Server Mode — Setup](../guides/server-mode-setup.md) — adapters, auth, and

@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Optional Props
 
-These are the stable v2-clean optional props.
+These are the stable optional props.
 
 | Prop           | Example                                                                                |
 | -------------- | -------------------------------------------------------------------------------------- |

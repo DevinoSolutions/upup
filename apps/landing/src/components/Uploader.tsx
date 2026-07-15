@@ -63,7 +63,7 @@ export default function Uploader({
     // Get the current theme
     const currentTheme = theme || 'blue'
 
-    // Per-slot class overrides — v2 nested shape fed through theme.slots.
+    // Per-slot class overrides — v3 nested shape fed through theme.slots.
     const customSlots = {
         uploader: {
             container: `uploader-container-full-${currentTheme}`,
