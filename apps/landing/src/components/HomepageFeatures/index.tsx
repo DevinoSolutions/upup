@@ -31,6 +31,9 @@ import {
     FaPalette,
     FaMicrochip,
     FaUniversalAccess,
+    FaImage,
+    FaVideo,
+    FaMusic,
 } from 'react-icons/fa'
 import {
     SiAmazonwebservices,
@@ -38,9 +41,6 @@ import {
     SiBackblaze,
     SiBox,
     SiGoogledrive,
-    SiAdobephotoshop,
-    SiAdobepremierepro,
-    SiSpotify,
     SiJavascript,
     SiCloudflare,
     SiVercel,
@@ -417,7 +417,7 @@ const developerStorageProviders: Integration[] = [
 
 const fileTypes = [
     {
-        icon: <SiAdobephotoshop className="w-8 h-8" />,
+        icon: <FaImage className="w-8 h-8" />,
         label: 'Images',
         types: 'JPG, PNG, GIF, WebP',
         color: 'text-[#31A8FF]',
@@ -435,7 +435,7 @@ const fileTypes = [
         hoverColor: 'hover:bg-[#DC3545]/20',
     },
     {
-        icon: <SiAdobepremierepro className="w-8 h-8" />,
+        icon: <FaVideo className="w-8 h-8" />,
         label: 'Videos',
         types: 'MP4, AVI, MOV, WebM',
         color: 'text-[#9999FF]',
@@ -444,7 +444,7 @@ const fileTypes = [
         hoverColor: 'hover:bg-[#9999FF]/20',
     },
     {
-        icon: <SiSpotify className="w-8 h-8" />,
+        icon: <FaMusic className="w-8 h-8" />,
         label: 'Audio',
         types: 'MP3, WAV, OGG, FLAC',
         color: 'text-[#1DB954]',
@@ -908,7 +908,10 @@ export default function HomepageFeatures() {
     }
 
     return (
-        <section id="features" className="py-24 px-6 relative overflow-hidden">
+        <section
+            id="features"
+            className="pt-24 pb-8 px-6 relative overflow-hidden"
+        >
             {/* Add custom CSS for marquee animation */}
             <style>{`
           @keyframes marquee {
