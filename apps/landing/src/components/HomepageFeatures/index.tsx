@@ -14,7 +14,6 @@ import {
     FaStar,
     FaTimes,
     FaSpinner,
-    FaRoad,
     FaPlus,
     FaInstagram,
     FaFacebook,
@@ -711,12 +710,65 @@ const EmailModal: React.FC<EmailModalProps> = ({
     )
 }
 
+interface PlannedStripProps {
+    planned: Integration[]
+    onProviderClick: (provider: Integration) => void
+    onCustomRequest: () => void
+}
+
+const PlannedStrip: React.FC<PlannedStripProps> = ({
+    planned,
+    onProviderClick,
+    onCustomRequest,
+}) => (
+    <div className="mt-6 text-center">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            On the roadmap — click to request one
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+            {planned.map(provider => (
+                <button
+                    key={provider.id}
+                    type="button"
+                    onClick={() => onProviderClick(provider)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                    <provider.icon
+                        className="w-3.5 h-3.5"
+                        style={{ color: provider.color }}
+                    />
+                    {provider.name}
+                </button>
+            ))}
+            <button
+                type="button"
+                onClick={onCustomRequest}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+                <FaPlus className="w-3.5 h-3.5" />
+                Request Custom
+            </button>
+        </div>
+    </div>
+)
+
 export default function HomepageFeatures() {
     const [selectedProvider, setSelectedProvider] = useState<string | null>(
         null,
     )
     const [modalOpen, setModalOpen] = useState(false)
     const [isCustomRequest, setIsCustomRequest] = useState(false)
+
+    const userSupported = userStorageProviders.filter(
+        p => p.status !== 'planned',
+    )
+    const userPlanned = userStorageProviders.filter(p => p.status === 'planned')
+    const devSupported = developerStorageProviders.filter(
+        p => p.status !== 'planned',
+    )
+    const devPlanned = developerStorageProviders.filter(
+        p => p.status === 'planned',
+    )
 
     // Refs for scroll-triggered animations
     const headerRef = useRef(null)
@@ -993,17 +1045,10 @@ export default function HomepageFeatures() {
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8"
                             variants={providerGridVariants}
                         >
-                            {userStorageProviders.map((provider, index) => (
+                            {userSupported.map((provider, index) => (
                                 <motion.div
                                     key={provider.id}
-                                    className={`group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden ${
-                                        provider.status === 'supported'
-                                            ? 'cursor-default'
-                                            : 'cursor-pointer'
-                                    }`}
-                                    onClick={() =>
-                                        handleProviderClick(provider)
-                                    }
+                                    className="group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-default"
                                     variants={providerItemVariants}
                                     whileHover={{
                                         y: -4,
@@ -1013,44 +1058,26 @@ export default function HomepageFeatures() {
                                     whileTap={{ scale: 0.98 }}
                                 >
                                     {/* Status Badge */}
-                                    {provider.status === 'supported' && (
+                                    <motion.div
+                                        className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
+                                        initial={{ scale: 0, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{
+                                            delay: index * 0.05 + 0.3,
+                                        }}
+                                    >
                                         <motion.div
-                                            className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
+                                            className="w-1.5 h-1.5 bg-green-500 rounded-full"
+                                            animate={{ scale: [1, 1.2, 1] }}
                                             transition={{
-                                                delay: index * 0.05 + 0.3,
+                                                duration: 2,
+                                                repeat: Infinity,
                                             }}
-                                        >
-                                            <motion.div
-                                                className="w-1.5 h-1.5 bg-green-500 rounded-full"
-                                                animate={{ scale: [1, 1.2, 1] }}
-                                                transition={{
-                                                    duration: 2,
-                                                    repeat: Infinity,
-                                                }}
-                                            />
-                                            <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
-                                                Supported
-                                            </span>
-                                        </motion.div>
-                                    )}
-
-                                    {provider.status === 'planned' && (
-                                        <motion.div
-                                            className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded-full z-10"
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{
-                                                delay: index * 0.05 + 0.3,
-                                            }}
-                                        >
-                                            <FaRoad className="w-1.5 h-1.5 text-blue-600 dark:text-blue-400" />
-                                            <span className="text-[9px] font-medium text-blue-700 dark:text-blue-300">
-                                                Planned
-                                            </span>
-                                        </motion.div>
-                                    )}
+                                        />
+                                        <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
+                                            Supported
+                                        </span>
+                                    </motion.div>
 
                                     {/* Icon and Title */}
                                     <div className="flex items-start gap-3 relative z-10">
@@ -1081,84 +1108,15 @@ export default function HomepageFeatures() {
                                             </p>
                                         </div>
                                     </div>
-
-                                    {/* Hover Overlay for non-supported providers */}
-                                    {provider.status !== 'supported' && (
-                                        <motion.div
-                                            className="absolute inset-0 bg-gray-900/90 z-50 dark:bg-gray-800/95 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center backdrop-blur-sm"
-                                            initial={{ opacity: 0 }}
-                                            whileHover={{ opacity: 1 }}
-                                        >
-                                            <div className="text-center px-3">
-                                                <motion.div
-                                                    className="text-sm font-semibold text-white"
-                                                    initial={{ y: 10 }}
-                                                    whileHover={{ y: 0 }}
-                                                    transition={{
-                                                        duration: 0.2,
-                                                    }}
-                                                >
-                                                    <span>I want this!</span>
-                                                </motion.div>
-                                            </div>
-                                        </motion.div>
-                                    )}
                                 </motion.div>
                             ))}
-
-                            {/* Custom Provider Request Card for User Storage */}
-                            <motion.div
-                                className="group shadow-md dark:shadow-none bg-white/5 dark:bg-white/[0.02] backdrop-blur-sm rounded-lg p-4 border-2 border-dashed border-white/30 dark:border-white/20 hover:border-white/50 dark:hover:border-white/30 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-pointer"
-                                onClick={handleCustomRequest}
-                                variants={providerItemVariants}
-                                whileHover={{
-                                    y: -4,
-                                    scale: 1.02,
-                                    transition: { duration: 0.2 },
-                                }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                <div className="flex items-start gap-3 relative z-10">
-                                    <motion.div
-                                        className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-md flex items-center justify-center group-hover:bg-gray-400 dark:group-hover:bg-gray-500 transition-colors flex-shrink-0"
-                                        whileHover={{ scale: 1.1, rotate: 90 }}
-                                        transition={{
-                                            type: 'spring',
-                                            stiffness: 400,
-                                            damping: 10,
-                                        }}
-                                    >
-                                        <FaPlus className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                                    </motion.div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-gray-700 dark:text-gray-300 text-sm truncate">
-                                            Request Custom
-                                        </h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Tell us what you need!
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <motion.div
-                                    className="absolute inset-0 bg-gray-900/90 z-50 dark:bg-gray-800/95 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center backdrop-blur-sm"
-                                    initial={{ opacity: 0 }}
-                                    whileHover={{ opacity: 1 }}
-                                >
-                                    <div className="text-center px-3">
-                                        <motion.div
-                                            className="text-sm font-semibold text-white"
-                                            initial={{ y: 10 }}
-                                            whileHover={{ y: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <span>Tell us what you need!</span>
-                                        </motion.div>
-                                    </div>
-                                </motion.div>
-                            </motion.div>
                         </motion.div>
+
+                        <PlannedStrip
+                            planned={userPlanned}
+                            onProviderClick={handleProviderClick}
+                            onCustomRequest={handleCustomRequest}
+                        />
                     </motion.div>
 
                     {/* Developer Storage Providers */}
@@ -1187,191 +1145,86 @@ export default function HomepageFeatures() {
                             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8"
                             variants={providerGridVariants}
                         >
-                            {developerStorageProviders.map(
-                                (provider, index) => (
-                                    <motion.div
-                                        key={provider.id}
-                                        className={`group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden ${
-                                            provider.status === 'supported'
-                                                ? 'cursor-default'
-                                                : 'cursor-pointer'
-                                        }`}
-                                        onClick={() =>
-                                            handleProviderClick(provider)
-                                        }
-                                        variants={providerItemVariants}
-                                        whileHover={{
-                                            y: -4,
-                                            scale: 1.02,
-                                            transition: { duration: 0.2 },
-                                        }}
-                                        whileTap={{ scale: 0.98 }}
-                                    >
-                                        {/* Status Badge */}
-                                        {provider.status === 'supported' && (
-                                            <motion.div
-                                                className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
-                                                initial={{
-                                                    scale: 0,
-                                                    opacity: 0,
-                                                }}
-                                                animate={{
-                                                    scale: 1,
-                                                    opacity: 1,
-                                                }}
-                                                transition={{
-                                                    delay: index * 0.05 + 0.3,
-                                                }}
-                                            >
-                                                <motion.div
-                                                    className="w-1.5 h-1.5 bg-green-500 rounded-full"
-                                                    animate={{
-                                                        scale: [1, 1.2, 1],
-                                                    }}
-                                                    transition={{
-                                                        duration: 2,
-                                                        repeat: Infinity,
-                                                    }}
-                                                />
-                                                <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
-                                                    Supported
-                                                </span>
-                                            </motion.div>
-                                        )}
-
-                                        {provider.status === 'planned' && (
-                                            <motion.div
-                                                className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded-full z-10"
-                                                initial={{
-                                                    scale: 0,
-                                                    opacity: 0,
-                                                }}
-                                                animate={{
-                                                    scale: 1,
-                                                    opacity: 1,
-                                                }}
-                                                transition={{
-                                                    delay: index * 0.05 + 0.3,
-                                                }}
-                                            >
-                                                <FaRoad className="w-1.5 h-1.5 text-blue-600 dark:text-blue-400" />
-                                                <span className="text-[9px] font-medium text-blue-700 dark:text-blue-300">
-                                                    Planned
-                                                </span>
-                                            </motion.div>
-                                        )}
-
-                                        {/* Icon and Title */}
-                                        <div className="flex items-start gap-3 relative z-10">
-                                            <motion.div
-                                                className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
-                                                style={{
-                                                    backgroundColor:
-                                                        provider.color,
-                                                }}
-                                                whileHover={{
-                                                    scale: 1.1,
-                                                    rotate: 5,
-                                                }}
-                                                transition={{
-                                                    type: 'spring',
-                                                    stiffness: 400,
-                                                    damping: 10,
-                                                }}
-                                            >
-                                                <provider.icon className="w-5 h-5 text-white" />
-                                            </motion.div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                                                    {provider.name}
-                                                </h4>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                                                    {provider.description}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Hover Overlay for non-supported providers */}
-                                        {provider.status !== 'supported' && (
-                                            <motion.div
-                                                className="absolute inset-0 bg-gray-900/90 z-50 dark:bg-gray-800/95 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center backdrop-blur-sm"
-                                                initial={{ opacity: 0 }}
-                                                whileHover={{ opacity: 1 }}
-                                            >
-                                                <div className="text-center px-3">
-                                                    <motion.div
-                                                        className="text-sm font-semibold text-white"
-                                                        initial={{ y: 10 }}
-                                                        whileHover={{ y: 0 }}
-                                                        transition={{
-                                                            duration: 0.2,
-                                                        }}
-                                                    >
-                                                        <span>
-                                                            I want this!
-                                                        </span>
-                                                    </motion.div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </motion.div>
-                                ),
-                            )}
-
-                            {/* Custom Provider Request Card for Developer Storage */}
-                            <motion.div
-                                className="group shadow-md dark:shadow-none bg-white/5 dark:bg-white/[0.02] backdrop-blur-sm rounded-lg p-4 border-2 border-dashed border-white/30 dark:border-white/20 hover:border-white/50 dark:hover:border-white/30 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-pointer"
-                                onClick={handleCustomRequest}
-                                variants={providerItemVariants}
-                                whileHover={{
-                                    y: -4,
-                                    scale: 1.02,
-                                    transition: { duration: 0.2 },
-                                }}
-                                whileTap={{ scale: 0.98 }}
-                            >
-                                <div className="flex items-start gap-3 relative z-10">
-                                    <motion.div
-                                        className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-md flex items-center justify-center group-hover:bg-gray-400 dark:group-hover:bg-gray-500 transition-colors flex-shrink-0"
-                                        whileHover={{ scale: 1.1, rotate: 90 }}
-                                        transition={{
-                                            type: 'spring',
-                                            stiffness: 400,
-                                            damping: 10,
-                                        }}
-                                    >
-                                        <FaPlus className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                                    </motion.div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-gray-700 dark:text-gray-300 text-sm truncate">
-                                            Request Custom
-                                        </h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            Tell us what you need!
-                                        </p>
-                                    </div>
-                                </div>
-
+                            {devSupported.map((provider, index) => (
                                 <motion.div
-                                    className="absolute inset-0 bg-gray-900/90 z-50 dark:bg-gray-800/95 opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-lg flex items-center justify-center backdrop-blur-sm"
-                                    initial={{ opacity: 0 }}
-                                    whileHover={{ opacity: 1 }}
+                                    key={provider.id}
+                                    className="group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-default"
+                                    variants={providerItemVariants}
+                                    whileHover={{
+                                        y: -4,
+                                        scale: 1.02,
+                                        transition: { duration: 0.2 },
+                                    }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
-                                    <div className="text-center px-3">
+                                    {/* Status Badge */}
+                                    <motion.div
+                                        className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
+                                        initial={{
+                                            scale: 0,
+                                            opacity: 0,
+                                        }}
+                                        animate={{
+                                            scale: 1,
+                                            opacity: 1,
+                                        }}
+                                        transition={{
+                                            delay: index * 0.05 + 0.3,
+                                        }}
+                                    >
                                         <motion.div
-                                            className="text-sm font-semibold text-white"
-                                            initial={{ y: 10 }}
-                                            whileHover={{ y: 0 }}
-                                            transition={{ duration: 0.2 }}
+                                            className="w-1.5 h-1.5 bg-green-500 rounded-full"
+                                            animate={{
+                                                scale: [1, 1.2, 1],
+                                            }}
+                                            transition={{
+                                                duration: 2,
+                                                repeat: Infinity,
+                                            }}
+                                        />
+                                        <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
+                                            Supported
+                                        </span>
+                                    </motion.div>
+
+                                    {/* Icon and Title */}
+                                    <div className="flex items-start gap-3 relative z-10">
+                                        <motion.div
+                                            className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
+                                            style={{
+                                                backgroundColor: provider.color,
+                                            }}
+                                            whileHover={{
+                                                scale: 1.1,
+                                                rotate: 5,
+                                            }}
+                                            transition={{
+                                                type: 'spring',
+                                                stiffness: 400,
+                                                damping: 10,
+                                            }}
                                         >
-                                            <span>Tell us what you need!</span>
+                                            <provider.icon className="w-5 h-5 text-white" />
                                         </motion.div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
+                                                {provider.name}
+                                            </h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                                                {provider.description}
+                                            </p>
+                                        </div>
                                     </div>
                                 </motion.div>
-                            </motion.div>
+                            ))}
                         </motion.div>
+
+                        <PlannedStrip
+                            planned={devPlanned}
+                            onProviderClick={handleProviderClick}
+                            onCustomRequest={handleCustomRequest}
+                        />
                     </motion.div>
                 </motion.div>
 
