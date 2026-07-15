@@ -14,6 +14,8 @@ import {
     FaPen,
     FaSlidersH,
     FaCheck,
+    FaMicrophone,
+    FaLink,
 } from 'react-icons/fa'
 import {
     SiGoogledrive,
@@ -129,12 +131,14 @@ export function FrameworksVignette() {
 // Source glyphs arranged around a central dropzone; dots travel inward and the
 // dropzone pulses on arrival.
 const SOURCES = [
-    { Icon: SiGoogledrive, color: '#4285F4', x: 8, y: 14 },
+    { Icon: SiGoogledrive, color: '#4285F4', x: 8, y: 8 },
     { Icon: GrOnedrive, color: '#0078D4', x: 118, y: 0 },
-    { Icon: SiDropbox, color: '#0061FF', x: 228, y: 14 },
-    { Icon: FaCamera, color: '#8b5cf6', x: 0, y: 96 },
-    { Icon: SiBox, color: '#0061D5', x: 236, y: 96 },
-    { Icon: FaDesktop, color: '#0ea5e9', x: 118, y: 118 },
+    { Icon: SiDropbox, color: '#0061FF', x: 228, y: 8 },
+    { Icon: FaCamera, color: '#8b5cf6', x: 0, y: 72 },
+    { Icon: SiBox, color: '#0061D5', x: 236, y: 72 },
+    { Icon: FaMicrophone, color: '#ec4899', x: 24, y: 144 },
+    { Icon: FaDesktop, color: '#0ea5e9', x: 118, y: 144 },
+    { Icon: FaLink, color: '#14b8a6', x: 212, y: 144 },
 ]
 
 export function SourcesVignette() {
