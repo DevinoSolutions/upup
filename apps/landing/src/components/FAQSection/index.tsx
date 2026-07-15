@@ -4,30 +4,33 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaChevronDown } from 'react-icons/fa'
 import { faqs } from '@/lib/faqs'
+import Section from '@/components/ui/Section'
+import Card from '@/components/ui/Card'
+import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 
 export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <section id="faq" className="py-16 px-6 scroll-mt-24">
-            <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-                        Frequently asked
-                        <span className="block bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-                            questions
-                        </span>
-                    </h2>
-                </div>
+        <Section id="faq" variant="raised">
+            <div className="mx-auto max-w-3xl">
+                <SectionHeading
+                    className="mb-16"
+                    title={
+                        <>
+                            Frequently asked
+                            <span className={`block ${GRADIENT_TEXT}`}>
+                                questions
+                            </span>
+                        </>
+                    }
+                />
 
                 <div className="space-y-4">
                     {faqs.map((faq, index) => {
                         const isOpen = openIndex === index
                         return (
-                            <div
-                                key={faq.question}
-                                className="shadow-md bg-white dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-2xl overflow-hidden"
-                            >
+                            <Card key={faq.question} hover>
                                 <button
                                     type="button"
                                     className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -75,11 +78,11 @@ export default function FAQSection() {
                                         )}
                                     </AnimatePresence>
                                 </div>
-                            </div>
+                            </Card>
                         )
                     })}
                 </div>
             </div>
-        </section>
+        </Section>
     )
 }
