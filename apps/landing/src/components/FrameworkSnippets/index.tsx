@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Copy, Terminal } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import {
     FRAMEWORK_LIST,
     type FrameworkId,
@@ -136,15 +136,12 @@ export default function FrameworkSnippets({
 }: Readonly<{ initialId?: FrameworkId }> = {}) {
     const [activeId, setActiveId] = useState(initialId)
     const [copiedCode, setCopiedCode] = useState(false)
-    const [copiedInstall, setCopiedInstall] = useState(false)
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
     const active = useMemo(
         () => FRAMEWORKS.find(f => f.id === activeId) ?? FRAMEWORKS[0],
         [activeId],
     )
-
-    const installCommand = `npm i ${active.pkg}`
 
     const copy = useCallback((text: string, mark: (v: boolean) => void) => {
         if (typeof window !== 'undefined' && navigator.clipboard) {
@@ -298,27 +295,6 @@ export default function FrameworkSnippets({
                         </motion.div>
                     </AnimatePresence>
                 </div>
-            </div>
-
-            {/* Install line */}
-            <div className="mt-3 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-gray-900/90 dark:bg-black/50 border border-gray-800 dark:border-gray-700">
-                <div className="flex items-center gap-2.5 min-w-0">
-                    <Terminal className="w-4 h-4 text-gray-500 shrink-0" />
-                    <code className="text-sm font-mono text-gray-200 truncate select-all">
-                        {installCommand}
-                    </code>
-                </div>
-                <button
-                    onClick={() => copy(installCommand, setCopiedInstall)}
-                    aria-label="Copy install command"
-                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
-                >
-                    {copiedInstall ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                        <Copy className="w-4 h-4 text-gray-400" />
-                    )}
-                </button>
             </div>
         </motion.div>
     )

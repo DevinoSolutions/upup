@@ -181,7 +181,7 @@ export default function HeroSection({
 
             <div className="relative max-w-7xl mx-auto">
                 <motion.div
-                    className="text-center max-w-4xl mx-auto mb-16"
+                    className="text-center max-w-4xl mx-auto mb-10"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
@@ -236,7 +236,7 @@ export default function HeroSection({
 
                     {/* Subtitle */}
                     <motion.p
-                        className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed max-w-3xl mx-auto"
+                        className="text-xl sm:text-2xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto"
                         variants={subtitleVariants}
                     >
                         One open-source, drag-and-drop file uploader with a
@@ -257,7 +257,7 @@ export default function HeroSection({
                     {/* Framework icon strip — official logos linking to each
                         /{framework} landing page (/react, /vue, …). */}
                     <motion.div
-                        className="mb-12"
+                        className="mb-8"
                         variants={itemVariants}
                         transition={{ delay: 0.5 }}
                     >
@@ -269,7 +269,7 @@ export default function HeroSection({
 
                     {/* CTA Buttons */}
                     <motion.div
-                        className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
+                        className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10"
                         variants={itemVariants}
                         transition={{ delay: 0.6 }}
                     >
@@ -309,7 +309,7 @@ export default function HeroSection({
 
                     {/* Install Command with Package Manager Select */}
                     <motion.div
-                        className="max-w-lg mx-auto mb-16"
+                        className="max-w-lg mx-auto mb-10"
                         variants={installBoxVariants}
                     >
                         <motion.div
