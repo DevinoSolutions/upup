@@ -130,7 +130,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 
 .upup-ie-shell {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: 300px minmax(0, 1fr);
     gap: 20px;
     align-items: start;
 }
@@ -139,7 +139,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
    sidebar and AI panel cap their height so they sit flush with the
    preview card, scrolling internally. */
 .upup-ie-shell.has-ai {
-    grid-template-columns: 320px minmax(0, 1fr) 380px;
+    grid-template-columns: 300px minmax(0, 1fr) 320px;
 }
 
 .upup-ie-sidebar {
@@ -1641,7 +1641,7 @@ html.dark .upup-ie-ai-panel,
 @media (max-width: 1100px) {
     /* Stack AI panel under the preview when the viewport gets tight. */
     .upup-ie-shell.has-ai {
-        grid-template-columns: 320px minmax(0, 1fr);
+        grid-template-columns: 300px minmax(0, 1fr);
     }
     .upup-ie-ai-panel {
         grid-column: 1 / -1;
