@@ -8,7 +8,7 @@ export const H3_HEADING =
 /* Electric blue→teal gradient for headline spans and CTAs. Wrap the accented
    words of `title` in a <span className={GRADIENT_TEXT}>. */
 export const GRADIENT_TEXT =
-    'bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent'
+    'bg-gradient-to-r from-blue-600 to-teal-600 dark:from-blue-500 dark:to-teal-400 bg-clip-text text-transparent'
 
 interface SectionHeadingProps {
     badge?: ReactNode
@@ -36,7 +36,7 @@ export default function SectionHeading({
                     {badge}
                 </span>
             )}
-            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
+            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-[2.75rem] dark:text-white">
                 {title}
             </h2>
             {subtitle && (

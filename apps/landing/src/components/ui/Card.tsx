@@ -79,6 +79,7 @@ export default function Card({
             } ${wrapperClassName}`}
             style={style}
         >
+            {/* Inner radius is coupled to the outer: rounded-[15px] = rounded-2xl (16px) minus the 1px p-px border — override one and you must move both. */}
             <div
                 className={`surface-card-fill h-full overflow-hidden rounded-[15px] ${className}`}
             >
