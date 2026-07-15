@@ -6,7 +6,7 @@ const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
 
 export default function Footer() {
     return (
-        <footer className="mt-auto border-t border-gray-200/60 dark:border-gray-800 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
+        <footer className="mt-auto border-t border-black/10 bg-[var(--bg-base)] backdrop-blur-sm dark:border-white/10">
             <div className="container mx-auto px-6 py-12">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div className="col-span-2 md:col-span-1">

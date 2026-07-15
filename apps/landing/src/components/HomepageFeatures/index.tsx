@@ -47,6 +47,11 @@ import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
 import * as gtag from '@/lib/gtag'
 import FeatureShowcase from '@/components/FeatureShowcase'
+import Section from '@/components/ui/Section'
+import SectionHeading, {
+    GRADIENT_TEXT,
+    H3_HEADING,
+} from '@/components/ui/SectionHeading'
 
 interface Integration {
     id: string
@@ -634,6 +639,39 @@ const EmailModal: React.FC<EmailModalProps> = ({
     )
 }
 
+/* Dense, calm logo wall — compact icon+name tiles on the raised surface with
+   ONE shared "supported" affordance (a single caption, not a badge per card).
+   Replaces the two 12/13-identical-card grids the audit flagged. */
+const SupportedWall: React.FC<{ providers: Integration[] }> = ({
+    providers,
+}) => (
+    <div className="mx-auto max-w-4xl">
+        <p className="mb-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span className="h-2 w-2 rounded-full bg-green-500" />
+            Supported today
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+            {providers.map(provider => (
+                <div key={provider.id} className="w-[120px]">
+                    <div className="surface-card-border surface-shadow h-full rounded-xl p-px transition-transform duration-200 hover:-translate-y-0.5">
+                        <div className="surface-card-fill flex h-full flex-col items-center gap-2.5 rounded-[11px] px-3 py-4 text-center">
+                            <span
+                                className="flex h-9 w-9 items-center justify-center rounded-lg"
+                                style={{ backgroundColor: provider.color }}
+                            >
+                                <provider.icon className="h-5 w-5 text-white" />
+                            </span>
+                            <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
+                                {provider.name}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+)
+
 interface PlannedStripProps {
     planned: Integration[]
     onProviderClick: (provider: Integration) => void
@@ -730,19 +768,6 @@ export default function HomepageFeatures() {
         },
     }
 
-    const badgeVariants = {
-        hidden: { opacity: 0, y: -20, scale: 0.8 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.6,
-                ease: easeCurve,
-            },
-        },
-    }
-
     const headingVariants = {
         hidden: { opacity: 0, y: 40 },
         visible: {
@@ -750,30 +775,6 @@ export default function HomepageFeatures() {
             y: 0,
             transition: {
                 duration: 0.8,
-                ease: easeCurve,
-            },
-        },
-    }
-
-    const providerGridVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.05,
-                delayChildren: 0.2,
-            },
-        },
-    }
-
-    const providerItemVariants = {
-        hidden: { opacity: 0, y: 20, scale: 0.9 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.5,
                 ease: easeCurve,
             },
         },
@@ -820,461 +821,298 @@ export default function HomepageFeatures() {
     }
 
     return (
-        <section
-            id="features"
-            className="py-16 px-6 relative overflow-hidden scroll-mt-24"
-        >
-            {/* Add custom CSS for marquee animation */}
+        <Section id="features">
+            {/* Marquee keyframes + reduced-motion stop for the file-type strip */}
             <style>{`
-          @keyframes marquee {
-            0% { transform: translateX(0) }
-            100% { transform: translateX(-50%) }
-          }
+                @keyframes marquee {
+                    0% { transform: translateX(0) }
+                    100% { transform: translateX(-50%) }
+                }
+                .animate-marquee {
+                    animation: marquee 25s linear infinite;
+                }
+                .animate-marquee:hover {
+                    animation-play-state: paused;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                    .animate-marquee { animation: none; }
+                }
+            `}</style>
 
-          .animate-marquee {
-            animation: marquee 25s linear infinite;
-          }
+            {/* Section Header */}
+            <motion.div
+                ref={headerRef}
+                className="mb-12"
+                initial={{ opacity: 0, y: 24 }}
+                animate={
+                    headerInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }
+                }
+                transition={{ duration: 0.6, ease: easeCurve }}
+            >
+                <SectionHeading
+                    badge={
+                        <>
+                            <motion.span
+                                className="inline-flex"
+                                animate={{ rotate: [0, 360] }}
+                                transition={{
+                                    duration: 4,
+                                    repeat: Infinity,
+                                    ease: 'linear',
+                                }}
+                            >
+                                <FaStar className="w-3.5 h-3.5 text-primary dark:text-primary-dark" />
+                            </motion.span>
+                            Powerful Features
+                        </>
+                    }
+                    title={
+                        <>
+                            Everything you need for{' '}
+                            <span className={`block ${GRADIENT_TEXT}`}>
+                                modern file uploads
+                            </span>
+                        </>
+                    }
+                    subtitle="One uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — with a drag-and-drop dropzone, file picker, cloud-drive sources, camera and screen capture, and optional server-mode uploads to any S3-compatible storage."
+                />
+            </motion.div>
 
-          .animate-marquee:hover {
-            animation-play-state: paused;
-          }
-        `}</style>
+            {/* Main Features — animated showcase rows */}
+            <FeatureShowcase />
 
-            <div className="relative max-w-7xl mx-auto">
-                {/* Section Header */}
-                <motion.div
-                    ref={headerRef}
-                    className="text-center mb-12"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate={headerInView ? 'visible' : 'hidden'}
-                >
+            {/* Cloud Providers Section */}
+            <motion.div
+                ref={providersRef}
+                className="mb-16"
+                initial="hidden"
+                animate={providersInView ? 'visible' : 'hidden'}
+            >
+                {/* User Storage Providers */}
+                <motion.div className="mb-20" variants={containerVariants}>
                     <motion.div
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 mb-8"
-                        variants={badgeVariants}
-                        whileHover={{ scale: 1.05 }}
-                    >
-                        <motion.div
-                            animate={{ rotate: [0, 360] }}
-                            transition={{
-                                duration: 4,
-                                repeat: Infinity,
-                                ease: 'linear',
-                            }}
-                        >
-                            <FaStar className="w-4 h-4 text-primary dark:text-primary-dark" />
-                        </motion.div>
-                        Powerful Features
-                    </motion.div>
-
-                    <motion.h2
-                        className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6"
-                        variants={headingVariants}
-                    >
-                        Everything you need for
-                        <motion.span
-                            className="block bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent"
-                            initial={{ backgroundPosition: '0% 50%' }}
-                            animate={{ backgroundPosition: '100% 50%' }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                repeatType: 'reverse',
-                            }}
-                        >
-                            modern file uploads
-                        </motion.span>
-                    </motion.h2>
-
-                    <motion.p
-                        className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
-                        variants={itemVariants}
-                    >
-                        One uploader with a headless core and native UI for
-                        React, Vue, Svelte, Angular, Vanilla JS, and Preact —
-                        with a drag-and-drop dropzone, file picker, cloud-drive
-                        sources, camera and screen capture, and optional
-                        server-mode uploads to any S3-compatible storage.
-                    </motion.p>
-                </motion.div>
-
-                {/* Main Features — animated showcase rows */}
-                <FeatureShowcase />
-
-                {/* Cloud Providers Section */}
-                <motion.div
-                    ref={providersRef}
-                    className="mb-16"
-                    initial="hidden"
-                    animate={providersInView ? 'visible' : 'hidden'}
-                >
-                    {/* User Storage Providers */}
-                    <motion.div className="mb-20" variants={containerVariants}>
-                        <motion.div
-                            className="text-center mb-12"
-                            variants={containerVariants}
-                        >
-                            <motion.h3
-                                className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
-                                variants={headingVariants}
-                            >
-                                Let your users connect to their favorite storage
-                                cloud providers
-                            </motion.h3>
-                            <motion.p
-                                className="text-lg text-gray-600 dark:text-gray-300"
-                                variants={itemVariants}
-                            >
-                                Users can directly upload from these providers
-                                in upup
-                            </motion.p>
-                        </motion.div>
-
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8"
-                            variants={providerGridVariants}
-                        >
-                            {userSupported.map((provider, index) => (
-                                <motion.div
-                                    key={provider.id}
-                                    className="group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-default"
-                                    variants={providerItemVariants}
-                                    whileHover={{
-                                        y: -4,
-                                        scale: 1.02,
-                                        transition: { duration: 0.2 },
-                                    }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {/* Status Badge */}
-                                    <motion.div
-                                        className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
-                                        initial={{ scale: 0, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{
-                                            delay: index * 0.05 + 0.3,
-                                        }}
-                                    >
-                                        <motion.div
-                                            className="w-1.5 h-1.5 bg-green-500 rounded-full"
-                                            animate={{ scale: [1, 1.2, 1] }}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                            }}
-                                        />
-                                        <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
-                                            Supported
-                                        </span>
-                                    </motion.div>
-
-                                    {/* Icon and Title */}
-                                    <div className="flex items-start gap-3 relative z-10">
-                                        <motion.div
-                                            className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
-                                            style={{
-                                                backgroundColor: provider.color,
-                                            }}
-                                            whileHover={{
-                                                scale: 1.1,
-                                                rotate: 5,
-                                            }}
-                                            transition={{
-                                                type: 'spring',
-                                                stiffness: 400,
-                                                damping: 10,
-                                            }}
-                                        >
-                                            <provider.icon className="w-5 h-5 text-white" />
-                                        </motion.div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                                                {provider.name}
-                                            </h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                                                {provider.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-
-                        <PlannedStrip
-                            planned={userPlanned}
-                            onProviderClick={handleProviderClick}
-                            onCustomRequest={handleCustomRequest}
-                        />
-                    </motion.div>
-
-                    {/* Developer Storage Providers */}
-                    <motion.div variants={containerVariants}>
-                        <motion.div
-                            className="text-center mb-12"
-                            variants={containerVariants}
-                        >
-                            <motion.h3
-                                className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
-                                variants={headingVariants}
-                            >
-                                And for developers, connect upup to your
-                                favorite cloud bucket
-                            </motion.h3>
-                            <motion.p
-                                className="text-lg text-gray-600 dark:text-gray-300"
-                                variants={itemVariants}
-                            >
-                                You can connect to upup using any S3 provider.
-                                We also support some non-S3 connections.
-                            </motion.p>
-                        </motion.div>
-
-                        <motion.div
-                            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8"
-                            variants={providerGridVariants}
-                        >
-                            {devSupported.map((provider, index) => (
-                                <motion.div
-                                    key={provider.id}
-                                    className="group shadow-md dark:shadow-none bg-white/10 dark:bg-white/5 backdrop-blur-sm rounded-lg p-4 border border-white/20 dark:border-white/10 hover:border-white/30 dark:hover:border-white/20 transition-all duration-300 hover:shadow-lg relative overflow-hidden cursor-default"
-                                    variants={providerItemVariants}
-                                    whileHover={{
-                                        y: -4,
-                                        scale: 1.02,
-                                        transition: { duration: 0.2 },
-                                    }}
-                                    whileTap={{ scale: 0.98 }}
-                                >
-                                    {/* Status Badge */}
-                                    <motion.div
-                                        className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1.5 py-0.5 bg-green-100 dark:bg-green-900/30 rounded-full z-10"
-                                        initial={{
-                                            scale: 0,
-                                            opacity: 0,
-                                        }}
-                                        animate={{
-                                            scale: 1,
-                                            opacity: 1,
-                                        }}
-                                        transition={{
-                                            delay: index * 0.05 + 0.3,
-                                        }}
-                                    >
-                                        <motion.div
-                                            className="w-1.5 h-1.5 bg-green-500 rounded-full"
-                                            animate={{
-                                                scale: [1, 1.2, 1],
-                                            }}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                            }}
-                                        />
-                                        <span className="text-[9px] font-medium text-green-700 dark:text-green-300">
-                                            Supported
-                                        </span>
-                                    </motion.div>
-
-                                    {/* Icon and Title */}
-                                    <div className="flex items-start gap-3 relative z-10">
-                                        <motion.div
-                                            className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0 transition-colors"
-                                            style={{
-                                                backgroundColor: provider.color,
-                                            }}
-                                            whileHover={{
-                                                scale: 1.1,
-                                                rotate: 5,
-                                            }}
-                                            transition={{
-                                                type: 'spring',
-                                                stiffness: 400,
-                                                damping: 10,
-                                            }}
-                                        >
-                                            <provider.icon className="w-5 h-5 text-white" />
-                                        </motion.div>
-
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                                                {provider.name}
-                                            </h4>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                                                {provider.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
-
-                        <PlannedStrip
-                            planned={devPlanned}
-                            onProviderClick={handleProviderClick}
-                            onCustomRequest={handleCustomRequest}
-                        />
-                    </motion.div>
-                </motion.div>
-
-                {/* File Types with Modern Infinite Marquee */}
-                <motion.div
-                    ref={fileTypesRef}
-                    initial="hidden"
-                    animate={fileTypesInView ? 'visible' : 'hidden'}
-                >
-                    <motion.div
-                        className="text-center mb-10"
+                        className="text-center mb-12"
                         variants={containerVariants}
                     >
                         <motion.h3
-                            className="text-3xl font-bold text-gray-900 dark:text-white mb-4"
+                            className={`${H3_HEADING} mb-4`}
                             variants={headingVariants}
                         >
-                            Support for all file types
+                            Let your users connect to their favorite storage
+                            cloud providers
                         </motion.h3>
                         <motion.p
                             className="text-lg text-gray-600 dark:text-gray-300"
                             variants={itemVariants}
                         >
-                            Upload images, videos, documents, and large files —
-                            handle any file type and size limit your users need
+                            Users can directly upload from these providers in
+                            upup
                         </motion.p>
                     </motion.div>
 
-                    {/* Modern Infinite Marquee with Scroll-triggered Animation */}
-                    <motion.div
-                        className="relative overflow-hidden py-6"
-                        initial={{ opacity: 0 }}
-                        animate={
-                            fileTypesInView ? { opacity: 1 } : { opacity: 0 }
-                        }
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                    >
-                        <div className="flex animate-marquee">
-                            {/* First set of items */}
-                            {fileTypes.map((type, index) => (
-                                <motion.div
-                                    key={`first-${index}`}
-                                    className={`group relative text-center p-8 mx-4 min-w-[200px] shadow-md dark:shadow-none ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 hover:shadow-lg transition-all duration-300 flex-shrink-0`}
-                                    initial={{
-                                        opacity: 0,
-                                        y: 30,
-                                        scale: 0.9,
-                                    }}
-                                    animate={
-                                        fileTypesInView
-                                            ? {
-                                                  opacity: 1,
-                                                  y: 0,
-                                                  scale: 1,
-                                              }
-                                            : {}
-                                    }
-                                    transition={{
-                                        duration: 0.6,
-                                        delay: index * 0.1 + 0.6,
-                                        ease: easeCurve,
-                                    }}
-                                    whileHover={{
-                                        scale: 1.05,
-                                        y: -5,
-                                        transition: { duration: 0.2 },
-                                    }}
-                                >
-                                    <motion.div
-                                        className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
-                                        whileHover={{ rotate: 5 }}
-                                        transition={{
-                                            type: 'spring',
-                                            stiffness: 400,
-                                            damping: 10,
-                                        }}
-                                    >
-                                        {type.icon}
-                                    </motion.div>
-                                    <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
-                                        {type.label}
-                                    </div>
-                                    <div className="text-gray-600 dark:text-gray-400 text-sm">
-                                        {type.types}
-                                    </div>
+                    <SupportedWall providers={userSupported} />
 
-                                    <motion.div
-                                        className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                        initial={{ x: '-100%' }}
-                                        whileHover={{
-                                            x: '100%',
-                                            transition: { duration: 0.6 },
-                                        }}
-                                    />
-                                </motion.div>
-                            ))}
-
-                            {/* Second set of items for seamless loop */}
-                            {fileTypes.map((type, index) => (
-                                <motion.div
-                                    key={`second-${index}`}
-                                    className={`group relative text-center p-8 mx-4 min-w-[200px] shadow-md dark:shadow-none ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 hover:shadow-lg transition-all duration-300 flex-shrink-0`}
-                                    initial={{
-                                        opacity: 0,
-                                        y: 30,
-                                        scale: 0.9,
-                                    }}
-                                    animate={
-                                        fileTypesInView
-                                            ? {
-                                                  opacity: 1,
-                                                  y: 0,
-                                                  scale: 1,
-                                              }
-                                            : {}
-                                    }
-                                    transition={{
-                                        duration: 0.6,
-                                        delay:
-                                            (index + fileTypes.length) * 0.1 +
-                                            0.6,
-                                        ease: easeCurve,
-                                    }}
-                                    whileHover={{
-                                        scale: 1.05,
-                                        y: -5,
-                                        transition: { duration: 0.2 },
-                                    }}
-                                >
-                                    <motion.div
-                                        className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
-                                        whileHover={{ rotate: 5 }}
-                                        transition={{
-                                            type: 'spring',
-                                            stiffness: 400,
-                                            damping: 10,
-                                        }}
-                                    >
-                                        {type.icon}
-                                    </motion.div>
-                                    <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
-                                        {type.label}
-                                    </div>
-                                    <div className="text-gray-600 dark:text-gray-400 text-sm">
-                                        {type.types}
-                                    </div>
-
-                                    <motion.div
-                                        className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                        initial={{ x: '-100%' }}
-                                        whileHover={{
-                                            x: '100%',
-                                            transition: { duration: 0.6 },
-                                        }}
-                                    />
-                                </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
+                    <PlannedStrip
+                        planned={userPlanned}
+                        onProviderClick={handleProviderClick}
+                        onCustomRequest={handleCustomRequest}
+                    />
                 </motion.div>
-            </div>
+
+                {/* Developer Storage Providers */}
+                <motion.div variants={containerVariants}>
+                    <motion.div
+                        className="text-center mb-12"
+                        variants={containerVariants}
+                    >
+                        <motion.h3
+                            className={`${H3_HEADING} mb-4`}
+                            variants={headingVariants}
+                        >
+                            And for developers, connect upup to your favorite
+                            cloud bucket
+                        </motion.h3>
+                        <motion.p
+                            className="text-lg text-gray-600 dark:text-gray-300"
+                            variants={itemVariants}
+                        >
+                            You can connect to upup using any S3 provider. We
+                            also support some non-S3 connections.
+                        </motion.p>
+                    </motion.div>
+
+                    <SupportedWall providers={devSupported} />
+
+                    <PlannedStrip
+                        planned={devPlanned}
+                        onProviderClick={handleProviderClick}
+                        onCustomRequest={handleCustomRequest}
+                    />
+                </motion.div>
+            </motion.div>
+
+            {/* File Types with Modern Infinite Marquee */}
+            <motion.div
+                ref={fileTypesRef}
+                initial="hidden"
+                animate={fileTypesInView ? 'visible' : 'hidden'}
+            >
+                <motion.div
+                    className="text-center mb-10"
+                    variants={containerVariants}
+                >
+                    <motion.h3
+                        className={`${H3_HEADING} mb-4`}
+                        variants={headingVariants}
+                    >
+                        Support for all file types
+                    </motion.h3>
+                    <motion.p
+                        className="text-lg text-gray-600 dark:text-gray-300"
+                        variants={itemVariants}
+                    >
+                        Upload images, videos, documents, and large files —
+                        handle any file type and size limit your users need
+                    </motion.p>
+                </motion.div>
+
+                {/* Modern Infinite Marquee with Scroll-triggered Animation.
+                        Edge-fade mask on both sides so no card renders half-cut
+                        at the container edges (fixes the first-card clip). */}
+                <motion.div
+                    className="relative overflow-hidden py-6"
+                    style={{
+                        maskImage:
+                            'linear-gradient(to right, transparent, #000 6%, #000 94%, transparent)',
+                        WebkitMaskImage:
+                            'linear-gradient(to right, transparent, #000 6%, #000 94%, transparent)',
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={fileTypesInView ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                    <div className="flex animate-marquee">
+                        {/* First set of items */}
+                        {fileTypes.map((type, index) => (
+                            <motion.div
+                                key={`first-${index}`}
+                                className={`group surface-shadow relative text-center p-8 mx-4 min-w-[200px] ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 transition-all duration-300 flex-shrink-0`}
+                                initial={{
+                                    opacity: 0,
+                                    y: 30,
+                                    scale: 0.9,
+                                }}
+                                animate={
+                                    fileTypesInView
+                                        ? {
+                                              opacity: 1,
+                                              y: 0,
+                                              scale: 1,
+                                          }
+                                        : {}
+                                }
+                                transition={{
+                                    duration: 0.6,
+                                    delay: index * 0.1 + 0.6,
+                                    ease: easeCurve,
+                                }}
+                                whileHover={{
+                                    scale: 1.05,
+                                    y: -5,
+                                    transition: { duration: 0.2 },
+                                }}
+                            >
+                                <motion.div
+                                    className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
+                                    whileHover={{ rotate: 5 }}
+                                    transition={{
+                                        type: 'spring',
+                                        stiffness: 400,
+                                        damping: 10,
+                                    }}
+                                >
+                                    {type.icon}
+                                </motion.div>
+                                <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
+                                    {type.label}
+                                </div>
+                                <div className="text-gray-600 dark:text-gray-400 text-sm">
+                                    {type.types}
+                                </div>
+
+                                <motion.div
+                                    className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    initial={{ x: '-100%' }}
+                                    whileHover={{
+                                        x: '100%',
+                                        transition: { duration: 0.6 },
+                                    }}
+                                />
+                            </motion.div>
+                        ))}
+
+                        {/* Second set of items for seamless loop */}
+                        {fileTypes.map((type, index) => (
+                            <motion.div
+                                key={`second-${index}`}
+                                className={`group surface-shadow relative text-center p-8 mx-4 min-w-[200px] ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 transition-all duration-300 flex-shrink-0`}
+                                initial={{
+                                    opacity: 0,
+                                    y: 30,
+                                    scale: 0.9,
+                                }}
+                                animate={
+                                    fileTypesInView
+                                        ? {
+                                              opacity: 1,
+                                              y: 0,
+                                              scale: 1,
+                                          }
+                                        : {}
+                                }
+                                transition={{
+                                    duration: 0.6,
+                                    delay:
+                                        (index + fileTypes.length) * 0.1 + 0.6,
+                                    ease: easeCurve,
+                                }}
+                                whileHover={{
+                                    scale: 1.05,
+                                    y: -5,
+                                    transition: { duration: 0.2 },
+                                }}
+                            >
+                                <motion.div
+                                    className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
+                                    whileHover={{ rotate: 5 }}
+                                    transition={{
+                                        type: 'spring',
+                                        stiffness: 400,
+                                        damping: 10,
+                                    }}
+                                >
+                                    {type.icon}
+                                </motion.div>
+                                <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
+                                    {type.label}
+                                </div>
+                                <div className="text-gray-600 dark:text-gray-400 text-sm">
+                                    {type.types}
+                                </div>
+
+                                <motion.div
+                                    className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                    initial={{ x: '-100%' }}
+                                    whileHover={{
+                                        x: '100%',
+                                        transition: { duration: 0.6 },
+                                    }}
+                                />
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+            </motion.div>
 
             <EmailModal
                 isOpen={modalOpen}
@@ -1283,6 +1121,6 @@ export default function HomepageFeatures() {
                 onSubmit={handleEmailSubmit}
                 isCustom={isCustomRequest}
             />
-        </section>
+        </Section>
     )
 }

@@ -4,16 +4,103 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Code, ExternalLink, Maximize2, Minimize2 } from 'lucide-react'
-import { FaExclamationTriangle, FaTimes } from 'react-icons/fa'
-import sdk from '@stackblitz/sdk'
+import { FaExclamationTriangle } from 'react-icons/fa'
+import { SiStackblitz } from 'react-icons/si'
+import sdk, { type Project } from '@stackblitz/sdk'
 import Link from 'next/link'
+import Section from '@/components/ui/Section'
+import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
+
+// Inline, self-owned StackBlitz project so the visible package.json pins the
+// current, published packages (@upupjs/react v3 + a current Next) instead of a
+// remote project we can't edit. `app/page.tsx` is the real minimal usage shown
+// on every framework page. See lib/frameworks REACT_CODE.
+const APP_CODE = `'use client'
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Page() {
+    return (
+        <main style={{ maxWidth: 640, margin: '4rem auto', padding: '0 1rem' }}>
+            <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+        </main>
+    )
+}
+`
+
+const LAYOUT_CODE = `export const metadata = { title: 'upup — React example' }
+
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode
+}) {
+    return (
+        <html lang="en">
+            <body>{children}</body>
+        </html>
+    )
+}
+`
+
+const PACKAGE_JSON = `{
+    "name": "upup-react-example",
+    "private": true,
+    "version": "0.1.0",
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start"
+    },
+    "dependencies": {
+        "@upupjs/react": "^3.0.0",
+        "next": "^15.1.6",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.0",
+        "@types/react": "^19.0.0",
+        "typescript": "^5.7.0"
+    }
+}
+`
+
+const NEXT_CONFIG = `/** @type {import('next').NextConfig} */
+const nextConfig = {}
+
+export default nextConfig
+`
+
+const stackblitzProject: Project = {
+    title: 'upup — React file uploader',
+    description:
+        'Minimal @upupjs/react example: drag & drop, cloud drives, and server-mode uploads.',
+    template: 'node',
+    files: {
+        'app/page.tsx': APP_CODE,
+        'app/layout.tsx': LAYOUT_CODE,
+        'next.config.mjs': NEXT_CONFIG,
+        'package.json': PACKAGE_JSON,
+    },
+}
+
+const OPEN_FILE = 'app/page.tsx'
 
 export default function StackBlitzDemoSection() {
     const containerRef = useRef<HTMLDivElement | null>(null)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [embedFailed, setEmbedFailed] = useState(false)
     const [showFullscreenWarning, setShowFullscreenWarning] = useState(false)
     const [pendingFullscreenState, setPendingFullscreenState] = useState(false)
+
+    const openInStackBlitz = () => {
+        sdk.openProject(stackblitzProject, {
+            openFile: OPEN_FILE,
+            newWindow: true,
+        })
+    }
 
     // lock body scroll while full screen is active
     useEffect(() => {
@@ -47,20 +134,25 @@ export default function StackBlitzDemoSection() {
                 if (targetContainer.children.length === 0) {
                     // Start loading when embedding
                     setIsLoading(true)
+                    setEmbedFailed(false)
 
                     try {
-                        sdk.embedProjectId(
-                            targetContainer,
-                            'stackblitz-starters-flxnhixb',
-                            {
-                                openFile: 'src/App.tsx',
-                                view: 'default',
-                                theme: 'dark',
-                                hideNavigation: true,
-                            },
-                        ).catch(error => {
+                        // Editor-only view: WebContainer preview needs the page
+                        // to be cross-origin isolated (COOP/COEP), which we do
+                        // NOT set globally because it breaks the drive OAuth
+                        // popups in the live demo. So the embed shows the real
+                        // (credible) source; "Open in StackBlitz" runs it live
+                        // on stackblitz.com, which is isolated.
+                        sdk.embedProject(targetContainer, stackblitzProject, {
+                            openFile: OPEN_FILE,
+                            view: 'editor',
+                            theme: 'dark',
+                            hideNavigation: true,
+                            hideDevTools: true,
+                        }).catch(error => {
                             console.error('StackBlitz embed failed:', error)
                             setIsLoading(false)
+                            setEmbedFailed(true)
                         })
 
                         // Fake 8-second loader
@@ -72,6 +164,7 @@ export default function StackBlitzDemoSection() {
                     } catch (error) {
                         console.error('StackBlitz embed error:', error)
                         setIsLoading(false)
+                        setEmbedFailed(true)
                     }
                 }
             },
@@ -99,36 +192,31 @@ export default function StackBlitzDemoSection() {
 
     return (
         <>
-            <section
-                id="live-editor"
-                className="py-16 px-6 relative overflow-hidden scroll-mt-24"
-            >
-                <div className="relative max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 mb-8">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <Section id="live-editor" variant="raised">
+                {/* Header */}
+                <SectionHeading
+                    className="mb-16"
+                    badge={
+                        <>
+                            <span className="h-2 w-2 rounded-full bg-green-500" />
                             Live Code Editor
-                        </div>
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+                        </>
+                    }
+                    title={
+                        <>
                             Try it in your{' '}
-                            <span className="bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
-                                browser
-                            </span>
-                        </h2>
-                        <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
-                            See a live example in React — edit the component,
-                            customize the dropzone and file picker, and watch
-                            results instantly. The same uploader ships for Vue,
-                            Svelte, Angular, Vanilla JS, and Preact.
-                        </p>
-                    </div>
+                            <span className={GRADIENT_TEXT}>browser</span>
+                        </>
+                    }
+                    subtitle="Browse a real React example — edit the component, tweak the dropzone and file picker, then open it in StackBlitz to run it live. The same uploader ships for Vue, Svelte, Angular, Vanilla JS, and Preact."
+                />
 
-                    {/* Regular container when not fullscreen */}
-                    {!isFullscreen && (
-                        <div className="relative bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-3xl p-2 shadow-2xl">
+                {/* Regular container when not fullscreen */}
+                {!isFullscreen && (
+                    <div className="surface-card-border surface-shadow relative rounded-3xl p-px">
+                        <div className="surface-card-fill overflow-hidden rounded-[23px]">
                             {/* Window bar */}
-                            <div className="flex items-center justify-between px-6 py-4 bg-gray-50/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50 rounded-t-2xl">
+                            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4 dark:border-white/10">
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 bg-red-500 rounded-full" />
@@ -136,28 +224,57 @@ export default function StackBlitzDemoSection() {
                                         <div className="w-3 h-3 bg-green-500 rounded-full" />
                                     </div>
                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        src/App.tsx
+                                        app/page.tsx
                                     </span>
                                 </div>
 
-                                <button
-                                    onClick={toggleFullScreen}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 dark:bg-primary-dark/10 text-primary dark:text-primary-dark rounded-lg text-sm font-medium hover:bg-primary/20 dark:hover:bg-primary-dark/20 transition-colors"
-                                >
-                                    <Maximize2 className="w-4 h-4" />
-                                    Full&nbsp;screen
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={openInStackBlitz}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20"
+                                    >
+                                        <SiStackblitz className="w-4 h-4" />
+                                        Open in StackBlitz
+                                    </button>
+                                    <button
+                                        onClick={toggleFullScreen}
+                                        className="inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                                    >
+                                        <Maximize2 className="w-4 h-4" />
+                                        Full&nbsp;screen
+                                    </button>
+                                </div>
                             </div>
 
                             {/* StackBlitz iframe */}
                             <div className="relative">
-                                <div
-                                    ref={containerRef}
-                                    className="w-full h-[75vh] overflow-hidden rounded-b-2xl"
-                                />
+                                {embedFailed ? (
+                                    <div className="flex h-[75vh] flex-col items-center justify-center gap-4 bg-gray-950 px-6 text-center">
+                                        <SiStackblitz className="h-12 w-12 text-primary-dark" />
+                                        <p className="max-w-md text-sm text-gray-300">
+                                            The embedded editor could not load
+                                            here. Open the same example in
+                                            StackBlitz to browse and run it
+                                            live.
+                                        </p>
+                                        <button
+                                            onClick={openInStackBlitz}
+                                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90"
+                                        >
+                                            <SiStackblitz className="w-5 h-5" />
+                                            Open in StackBlitz
+                                            <ExternalLink className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        ref={containerRef}
+                                        className="w-full h-[75vh] overflow-hidden"
+                                    />
+                                )}
                                 {/* Loading overlay that covers the StackBlitz container */}
-                                {isLoading && !isFullscreen && (
-                                    <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10 rounded-b-2xl">
+                                {isLoading && !isFullscreen && !embedFailed && (
+                                    <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
                                         <div className="flex flex-col items-center space-y-4">
                                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
                                             <p className="text-white text-sm">
@@ -168,41 +285,41 @@ export default function StackBlitzDemoSection() {
                                 )}
                             </div>
                         </div>
-                    )}
+                    </div>
+                )}
 
-                    {/* CTA hidden while in full screen */}
-                    {!isFullscreen && (
-                        <div className="text-center mt-12">
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                Like what you see? Install the package for your
-                                framework — React, Vue, Svelte, Angular, Vanilla
-                                JS, or Preact — and start uploading files today.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                <Link
-                                    target="_blank"
-                                    href="/documentation"
-                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
-                                >
-                                    <Code className="w-5 h-5" />
-                                    View Documentation
-                                    <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                                </Link>
+                {/* CTA hidden while in full screen */}
+                {!isFullscreen && (
+                    <div className="text-center mt-12">
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            Like what you see? Install the package for your
+                            framework — React, Vue, Svelte, Angular, Vanilla JS,
+                            or Preact — and start uploading files today.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link
+                                target="_blank"
+                                href="/documentation"
+                                className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                            >
+                                <Code className="w-5 h-5" />
+                                View Documentation
+                                <ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
 
-                                <a
-                                    href="https://github.com/DevinoSolutions/upup"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-8 py-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-200"
-                                >
-                                    <ExternalLink className="w-4 h-4" />
-                                    View on GitHub
-                                </a>
-                            </div>
+                            <a
+                                href="https://github.com/DevinoSolutions/upup"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-black/[0.03] px-8 py-4 font-semibold text-gray-700 backdrop-blur-sm transition-colors hover:bg-black/[0.06] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                View on GitHub
+                            </a>
                         </div>
-                    )}
-                </div>
-            </section>
+                    </div>
+                )}
+            </Section>
 
             {/* Fullscreen overlay portal */}
             {isFullscreen && (
@@ -217,17 +334,26 @@ export default function StackBlitzDemoSection() {
                                     <div className="w-3 h-3 bg-green-500 rounded-full" />
                                 </div>
                                 <span className="text-sm font-medium text-white">
-                                    src/App.tsx
+                                    app/page.tsx
                                 </span>
                             </div>
 
-                            <button
-                                onClick={toggleFullScreen}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                <Minimize2 className="w-4 h-4" />
-                                Exit&nbsp;full&nbsp;screen
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={openInStackBlitz}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    <SiStackblitz className="w-4 h-4" />
+                                    Open in StackBlitz
+                                </button>
+                                <button
+                                    onClick={toggleFullScreen}
+                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    <Minimize2 className="w-4 h-4" />
+                                    Exit&nbsp;full&nbsp;screen
+                                </button>
+                            </div>
                         </div>
 
                         {/* StackBlitz iframe container */}

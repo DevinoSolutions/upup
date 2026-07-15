@@ -12,7 +12,7 @@ export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <Section id="faq" variant="raised">
+        <Section id="faq">
             <div className="mx-auto max-w-3xl">
                 <SectionHeading
                     className="mb-16"
