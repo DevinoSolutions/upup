@@ -94,7 +94,7 @@ export default function HeroSection({
     }, [selectedManager, packageManagers])
 
     const handleSelectManager = useCallback(
-        (managerId: any) => {
+        (managerId: string) => {
             setSelectedManager(managerId)
             setIsOpen(false)
 
@@ -255,21 +255,29 @@ export default function HeroSection({
                         initial="hidden"
                         animate="visible"
                     >
-                        {/* Badge */}
+                        {/* Badge — raised-surface pill (padded-gradient recipe,
+                            same primitive as ui/Card, but rounded-full). */}
                         <motion.div
-                            className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-primary/5 dark:bg-primary-dark/5 backdrop-blur-sm border border-primary/20 dark:border-primary-dark/20 text-sm font-medium text-primary dark:text-primary-dark mb-6 hover:bg-primary/10 dark:hover:bg-primary-dark/10 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="surface-card-border surface-shadow mb-6 inline-flex rounded-full p-px"
                             variants={badgeVariants}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <motion.div
-                                className="flex items-center justify-center w-5 h-5 bg-primary/10 dark:bg-primary-dark/10 rounded-full"
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                            >
-                                <div className="w-2 h-2 bg-primary dark:bg-primary-dark rounded-full animate-pulse"></div>
-                            </motion.div>
-                            <span>Open source · One core, six frameworks</span>
+                            <div className="surface-card-fill inline-flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-medium text-primary dark:text-primary-dark">
+                                <motion.div
+                                    className="flex items-center justify-center w-5 h-5 bg-primary/10 dark:bg-primary-dark/10 rounded-full"
+                                    animate={{ scale: [1, 1.2, 1] }}
+                                    transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                    }}
+                                >
+                                    <div className="w-2 h-2 bg-primary dark:bg-primary-dark rounded-full animate-pulse"></div>
+                                </motion.div>
+                                <span>
+                                    Open source · One core, six frameworks
+                                </span>
+                            </div>
                         </motion.div>
 
                         {/* Main Heading */}
@@ -366,200 +374,204 @@ export default function HeroSection({
                             className="w-full max-w-lg mx-auto lg:mx-0"
                             variants={installBoxVariants}
                         >
+                            {/* Raised-surface card (padded-gradient recipe). No
+                                overflow-hidden on the fill so the absolute z-50
+                                package-manager menu below is never clipped. */}
                             <motion.div
-                                className="relative bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl p-4 transition-all duration-200"
-                                whileHover={{
-                                    scale: 1.02,
-                                    boxShadow:
-                                        '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                                }}
+                                className="surface-card-border surface-shadow rounded-2xl p-px"
+                                whileHover={{ scale: 1.02 }}
                             >
-                                <div className="flex items-center justify-between">
-                                    <motion.code
-                                        className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 1, duration: 0.5 }}
-                                    >
-                                        {currentCommand}
-                                    </motion.code>
-
-                                    <motion.div
-                                        className="flex items-center gap-2"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{
-                                            delay: 1.1,
-                                            duration: 0.5,
-                                        }}
-                                    >
-                                        {/* Copy Button */}
-                                        <motion.button
-                                            onClick={handleCopy}
-                                            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                            whileHover={{
-                                                scale: 1.05,
-                                                rotate: 5,
+                                <div className="surface-card-fill relative rounded-[15px] p-4">
+                                    <div className="flex items-center justify-between">
+                                        <motion.code
+                                            className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{
+                                                delay: 1,
+                                                duration: 0.5,
                                             }}
-                                            whileTap={{ scale: 0.95 }}
                                         >
-                                            <AnimatePresence mode="wait">
-                                                {copied ? (
-                                                    <motion.div
-                                                        key="check"
-                                                        initial={{
-                                                            scale: 0,
-                                                            rotate: -180,
-                                                        }}
-                                                        animate={{
-                                                            scale: 1,
-                                                            rotate: 0,
-                                                        }}
-                                                        exit={{
-                                                            scale: 0,
-                                                            rotate: 180,
-                                                        }}
-                                                        transition={{
-                                                            duration: 0.3,
-                                                        }}
-                                                    >
-                                                        <Check className="w-4 h-4 text-green-600" />
-                                                    </motion.div>
-                                                ) : (
-                                                    <motion.div
-                                                        key="copy"
-                                                        initial={{
-                                                            scale: 0,
-                                                            rotate: -180,
-                                                        }}
-                                                        animate={{
-                                                            scale: 1,
-                                                            rotate: 0,
-                                                        }}
-                                                        exit={{
-                                                            scale: 0,
-                                                            rotate: 180,
-                                                        }}
-                                                        transition={{
-                                                            duration: 0.3,
-                                                        }}
-                                                    >
-                                                        <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </motion.button>
+                                            {currentCommand}
+                                        </motion.code>
 
-                                        {/* Package Manager Select */}
-                                        <div className="relative">
+                                        <motion.div
+                                            className="flex items-center gap-2"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{
+                                                delay: 1.1,
+                                                duration: 0.5,
+                                            }}
+                                        >
+                                            {/* Copy Button */}
                                             <motion.button
-                                                onClick={() =>
-                                                    setIsOpen(!isOpen)
-                                                }
-                                                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]"
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
+                                                onClick={handleCopy}
+                                                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                whileHover={{
+                                                    scale: 1.05,
+                                                    rotate: 5,
+                                                }}
+                                                whileTap={{ scale: 0.95 }}
                                             >
-                                                <span>
-                                                    {
-                                                        packageManagers.find(
-                                                            pm =>
-                                                                pm.id ===
-                                                                selectedManager,
-                                                        )?.name
-                                                    }
-                                                </span>
-                                                <motion.div
-                                                    animate={{
-                                                        rotate: isOpen
-                                                            ? 180
-                                                            : 0,
-                                                    }}
-                                                    transition={{
-                                                        duration: 0.3,
-                                                        ease: easeCurve,
-                                                    }}
-                                                >
-                                                    <ChevronDown className="w-4 h-4" />
-                                                </motion.div>
+                                                <AnimatePresence mode="wait">
+                                                    {copied ? (
+                                                        <motion.div
+                                                            key="check"
+                                                            initial={{
+                                                                scale: 0,
+                                                                rotate: -180,
+                                                            }}
+                                                            animate={{
+                                                                scale: 1,
+                                                                rotate: 0,
+                                                            }}
+                                                            exit={{
+                                                                scale: 0,
+                                                                rotate: 180,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.3,
+                                                            }}
+                                                        >
+                                                            <Check className="w-4 h-4 text-green-600" />
+                                                        </motion.div>
+                                                    ) : (
+                                                        <motion.div
+                                                            key="copy"
+                                                            initial={{
+                                                                scale: 0,
+                                                                rotate: -180,
+                                                            }}
+                                                            animate={{
+                                                                scale: 1,
+                                                                rotate: 0,
+                                                            }}
+                                                            exit={{
+                                                                scale: 0,
+                                                                rotate: 180,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.3,
+                                                            }}
+                                                        >
+                                                            <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </motion.button>
 
-                                            <AnimatePresence>
-                                                {isOpen && (
+                                            {/* Package Manager Select */}
+                                            <div className="relative">
+                                                <motion.button
+                                                    onClick={() =>
+                                                        setIsOpen(!isOpen)
+                                                    }
+                                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]"
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    <span>
+                                                        {
+                                                            packageManagers.find(
+                                                                pm =>
+                                                                    pm.id ===
+                                                                    selectedManager,
+                                                            )?.name
+                                                        }
+                                                    </span>
                                                     <motion.div
-                                                        initial={{
-                                                            opacity: 0,
-                                                            y: -10,
-                                                            scale: 0.95,
-                                                        }}
                                                         animate={{
-                                                            opacity: 1,
-                                                            y: 0,
-                                                            scale: 1,
-                                                        }}
-                                                        exit={{
-                                                            opacity: 0,
-                                                            y: -10,
-                                                            scale: 0.95,
+                                                            rotate: isOpen
+                                                                ? 180
+                                                                : 0,
                                                         }}
                                                         transition={{
-                                                            duration: 0.2,
+                                                            duration: 0.3,
+                                                            ease: easeCurve,
                                                         }}
-                                                        className="absolute z-50 top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]"
                                                     >
-                                                        {packageManagers.map(
-                                                            (
-                                                                manager,
-                                                                index,
-                                                            ) => (
-                                                                <motion.button
-                                                                    key={
-                                                                        manager.id
-                                                                    }
-                                                                    onClick={() =>
-                                                                        handleSelectManager(
-                                                                            manager.id,
-                                                                        )
-                                                                    }
-                                                                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                                                                        selectedManager ===
-                                                                        manager.id
-                                                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium'
-                                                                            : 'text-gray-700 dark:text-gray-300'
-                                                                    }`}
-                                                                    initial={{
-                                                                        opacity: 0,
-                                                                        x: -10,
-                                                                    }}
-                                                                    animate={{
-                                                                        opacity: 1,
-                                                                        x: 0,
-                                                                    }}
-                                                                    transition={{
-                                                                        delay:
-                                                                            index *
-                                                                            0.05,
-                                                                    }}
-                                                                    whileHover={{
-                                                                        backgroundColor:
-                                                                            'rgba(0, 0, 0, 0.05)',
-                                                                        x: 4,
-                                                                    }}
-                                                                    whileTap={{
-                                                                        scale: 0.98,
-                                                                    }}
-                                                                >
-                                                                    {
-                                                                        manager.name
-                                                                    }
-                                                                </motion.button>
-                                                            ),
-                                                        )}
+                                                        <ChevronDown className="w-4 h-4" />
                                                     </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    </motion.div>
+                                                </motion.button>
+
+                                                <AnimatePresence>
+                                                    {isOpen && (
+                                                        <motion.div
+                                                            initial={{
+                                                                opacity: 0,
+                                                                y: -10,
+                                                                scale: 0.95,
+                                                            }}
+                                                            animate={{
+                                                                opacity: 1,
+                                                                y: 0,
+                                                                scale: 1,
+                                                            }}
+                                                            exit={{
+                                                                opacity: 0,
+                                                                y: -10,
+                                                                scale: 0.95,
+                                                            }}
+                                                            transition={{
+                                                                duration: 0.2,
+                                                            }}
+                                                            className="absolute z-50 top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]"
+                                                        >
+                                                            {packageManagers.map(
+                                                                (
+                                                                    manager,
+                                                                    index,
+                                                                ) => (
+                                                                    <motion.button
+                                                                        key={
+                                                                            manager.id
+                                                                        }
+                                                                        onClick={() =>
+                                                                            handleSelectManager(
+                                                                                manager.id,
+                                                                            )
+                                                                        }
+                                                                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                                                                            selectedManager ===
+                                                                            manager.id
+                                                                                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-medium'
+                                                                                : 'text-gray-700 dark:text-gray-300'
+                                                                        }`}
+                                                                        initial={{
+                                                                            opacity: 0,
+                                                                            x: -10,
+                                                                        }}
+                                                                        animate={{
+                                                                            opacity: 1,
+                                                                            x: 0,
+                                                                        }}
+                                                                        transition={{
+                                                                            delay:
+                                                                                index *
+                                                                                0.05,
+                                                                        }}
+                                                                        whileHover={{
+                                                                            backgroundColor:
+                                                                                'rgba(0, 0, 0, 0.05)',
+                                                                            x: 4,
+                                                                        }}
+                                                                        whileTap={{
+                                                                            scale: 0.98,
+                                                                        }}
+                                                                    >
+                                                                        {
+                                                                            manager.name
+                                                                        }
+                                                                    </motion.button>
+                                                                ),
+                                                            )}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        </motion.div>
+                                    </div>
                                 </div>
                             </motion.div>
                         </motion.div>
