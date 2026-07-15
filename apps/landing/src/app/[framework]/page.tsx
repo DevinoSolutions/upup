@@ -8,6 +8,7 @@ import HeroSection from '@/components/HomepageHero'
 import HomepageFeatures from '@/components/HomepageFeatures'
 import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import FeedbackSection from '@/components/FeedbackSection'
+import FAQSection from '@/components/FAQSection'
 import Toast from '@/components/Toast'
 
 const SITE_URL = 'https://useupup.com'
@@ -81,6 +82,7 @@ export default async function FrameworkPage({
             />
             <HomepageFeatures />
             {fw.id === 'react' && <StackBlitzDemoSection />}
+            <FAQSection />
             <FeedbackSection />
             <Toast />
         </div>

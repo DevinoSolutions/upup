@@ -6,6 +6,7 @@ import Toast from '@/components/Toast'
 import HeroSection from '@/components/HomepageHero'
 import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import StructuredData from '@/components/StructuredData'
+import FAQSection from '@/components/FAQSection'
 
 export const metadata = {
     title: 'upup – One File Uploader for React, Vue, Svelte, Angular, Vanilla JS & Preact',
@@ -24,6 +25,7 @@ export default function Home() {
             <InteractiveExample />
             <HomepageFeatures />
             <StackBlitzDemoSection />
+            <FAQSection />
             <FeedbackSection />
             <Toast />
         </div>
