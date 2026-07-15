@@ -36,6 +36,7 @@ import {
     SiAmazonwebservices,
     SiDigitalocean,
     SiBackblaze,
+    SiBox,
     SiGoogledrive,
     SiAdobephotoshop,
     SiAdobepremierepro,
@@ -182,6 +183,15 @@ const userStorageProviders: Integration[] = [
         description: 'Cloud file sharing',
         category: 'User Storage',
         color: '#0061FF',
+    },
+    {
+        id: 'box',
+        name: 'Box',
+        icon: SiBox,
+        status: 'supported',
+        description: 'Secure content management',
+        category: 'User Storage',
+        color: '#0061D5',
     },
     {
         id: 'instagram',
