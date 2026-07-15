@@ -120,8 +120,9 @@ export default function MockDriveBrowser({
                             : { duration: 1.6, repeat: Infinity }
                     }
                 >
-                    Add {selectedCount || ''}{' '}
-                    {selectedCount === 1 ? 'file' : 'files'}
+                    {selectedCount === 0
+                        ? 'Select files'
+                        : `Add ${selectedCount} ${selectedCount === 1 ? 'file' : 'files'}`}
                 </motion.span>
                 <span className="text-xs font-medium text-gray-400">
                     Cancel

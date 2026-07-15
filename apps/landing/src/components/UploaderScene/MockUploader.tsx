@@ -151,13 +151,31 @@ export default function MockUploader({
                     })}
                 </div>
 
-                {/* Body — dropzone OR file queue, fixed height (panel doesn't grow) */}
+                {/* Body — dropzone OR file queue, fixed height (panel doesn't grow).
+                    The dropzone crossfades and the queue rows stay DIRECT children
+                    of a persistent AnimatePresence, so on the loop-wrap "clear the
+                    panel" beat each row plays its exit variant instead of snapping. */}
                 <div className="relative min-h-[196px]">
-                    {!hasQueue && <Dropzone />}
-                    {hasQueue && (
-                        <div className="flex flex-col gap-2">
-                            <AnimatePresence initial={false}>
-                                {files.map((file, i) => (
+                    <AnimatePresence>
+                        {!hasQueue && (
+                            <motion.div
+                                key="dropzone"
+                                className="absolute inset-0"
+                                initial={reduce ? false : { opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={
+                                    reduce ? { duration: 0 } : { duration: 0.3 }
+                                }
+                            >
+                                <Dropzone />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                    <div className="flex flex-col gap-2">
+                        <AnimatePresence initial={false}>
+                            {hasQueue &&
+                                files.map((file, i) => (
                                     <FileRow
                                         key={file.id}
                                         file={file}
@@ -166,9 +184,8 @@ export default function MockUploader({
                                         reduce={reduce}
                                     />
                                 ))}
-                            </AnimatePresence>
-                        </div>
-                    )}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Drive-browser overlay — slides up over the panel body */}
                     <AnimatePresence>

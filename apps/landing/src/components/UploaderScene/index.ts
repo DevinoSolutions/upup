@@ -10,6 +10,7 @@ export { default as SceneCursor } from './SceneCursor'
 export {
     useSceneTimeline,
     useElementSize,
+    usePanelCursor,
     type TimelineStep,
 } from './useSceneTimeline'
 export type {

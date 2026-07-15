@@ -19,6 +19,12 @@ import { useReducedMotion } from 'framer-motion'
 //     state springs back to `initial` — the "clear the panel for the next take"
 //     reset beat. Give the last step a restful state and leave head-room in
 //     `loop` for the pause.
+//   • Resume vs reset: when `active` flips false→true, the clock RESTARTS from
+//     t=0 (you see the take from the top) rather than resuming where it froze —
+//     deliberate, so a scene scrolled back into view always replays cleanly.
+//   • Dev guard: in development a mis-authored script (steps not ascending by
+//     `at`, or `loop` not greater than the last step's `at`) console.errors with
+//     the offending index/values instead of silently truncating choreography.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface TimelineStep<S> {
@@ -36,6 +42,8 @@ interface UseSceneTimelineOptions<S> {
     loop: number
     /** Viewport gate: when false the timeline holds the final frame. */
     active?: boolean
+    /** Optional scene name, used only to label dev-guard diagnostics. */
+    name?: string
 }
 
 function mergeUpTo<S extends object>(
@@ -55,6 +63,7 @@ export function useSceneTimeline<S extends object>({
     steps,
     loop,
     active = true,
+    name,
 }: UseSceneTimelineOptions<S>): { state: S; phase: number; frozen: boolean } {
     const reduceMotion = useReducedMotion()
     const frozen = !!reduceMotion || !active
@@ -65,6 +74,26 @@ export function useSceneTimeline<S extends object>({
     stepsRef.current = steps
     const loopRef = useRef(loop)
     loopRef.current = loop
+
+    // Dev-only invariant guard: five scenes are authored against this engine, and
+    // a bad `at` ordering / short `loop` truncates choreography silently.
+    useEffect(() => {
+        if (process.env.NODE_ENV === 'production') return
+        const label = name ? `useSceneTimeline(${name})` : 'useSceneTimeline'
+        for (let i = 1; i < steps.length; i++) {
+            if (steps[i].at < steps[i - 1].at) {
+                console.error(
+                    `${label}: steps must be ascending by \`at\` — step ${i} (at=${steps[i].at}) precedes step ${i - 1} (at=${steps[i - 1].at}); choreography from here on is truncated.`,
+                )
+            }
+        }
+        const lastAt = steps.length ? steps[steps.length - 1].at : 0
+        if (loop <= lastAt) {
+            console.error(
+                `${label}: \`loop\` (${loop}s) must be greater than the last step's \`at\` (${lastAt}s), or that step never plays.`,
+            )
+        }
+    }, [steps, loop, name])
 
     const [phase, setPhase] = useState(steps.length)
 
@@ -118,4 +147,16 @@ export function useElementSize<T extends HTMLElement>() {
     }, [])
 
     return [ref, size] as const
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// usePanelCursor — the shared percent→pixel cursor mapping so every scene stops
+// re-deriving it. Attach `ref` to the panel box; pass the timeline's percent
+// cursor coords (`cx`/`cy`, 0–100); feed the returned `x`/`y` (pixels) straight
+// to <SceneCursor>. Transforms only — no layout in the loop.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function usePanelCursor<T extends HTMLElement>(cx: number, cy: number) {
+    const [ref, { width, height }] = useElementSize<T>()
+    return { ref, x: (cx / 100) * width, y: (cy / 100) * height }
 }

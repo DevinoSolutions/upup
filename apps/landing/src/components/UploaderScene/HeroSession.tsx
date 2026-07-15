@@ -1,12 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { SiGoogledrive } from 'react-icons/si'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
 import SceneCursor from './SceneCursor'
-import { useElementSize, useSceneTimeline } from './useSceneTimeline'
+import { usePanelCursor, useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
 import type { DriveThumb, QueueFile, QueueStage } from './types'
 
@@ -136,13 +135,13 @@ export default function HeroSession({
         steps: SCRIPT,
         loop: 16,
         active,
+        name: 'HeroSession',
     })
-    const [panelRef, { width, height }] = useElementSize<HTMLDivElement>()
-
-    const files = useMemo(() => HERO_FILES.slice(0, 3), [])
-
-    const cursorX = (state.cx / 100) * width
-    const cursorY = (state.cy / 100) * height
+    const {
+        ref: panelRef,
+        x: cursorX,
+        y: cursorY,
+    } = usePanelCursor<HTMLDivElement>(state.cx, state.cy)
 
     return (
         <div
@@ -153,7 +152,7 @@ export default function HeroSession({
                 <MockUploader
                     activeSource={state.activeSource}
                     stage={state.stage}
-                    files={files}
+                    files={HERO_FILES}
                     showBrowser={state.browserOpen}
                     reduce={frozen}
                     browser={
