@@ -151,7 +151,7 @@ const mainFeatures = [
         icon: <FaUniversalAccess className="w-6 h-6" />,
         title: 'Accessible & TypeScript-First',
         description:
-            'Keyboard and screen-reader friendly with accessibility checks enforced in CI, fully typed APIs, and a lean core where heavy capabilities stay opt-in',
+            'Keyboard and screen-reader friendly with accessibility checks in our CI suite, fully typed APIs, and a lean core where heavy capabilities stay opt-in',
     },
 ]
 
