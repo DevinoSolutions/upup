@@ -30,7 +30,7 @@ export default function FAQSection() {
                             >
                                 <button
                                     type="button"
-                                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
+                                    className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     aria-expanded={isOpen}
                                     aria-controls={`faq-panel-${index}`}
                                     onClick={() =>
@@ -46,24 +46,32 @@ export default function FAQSection() {
                                         }`}
                                     />
                                 </button>
-                                <AnimatePresence initial={false}>
-                                    {isOpen && (
-                                        <motion.div
-                                            id={`faq-panel-${index}`}
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{
-                                                height: 'auto',
-                                                opacity: 1,
-                                            }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <p className="px-6 pb-5 text-gray-600 dark:text-gray-300 leading-relaxed">
-                                                {faq.answer}
-                                            </p>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                <div
+                                    id={`faq-panel-${index}`}
+                                    role="region"
+                                    aria-hidden={!isOpen}
+                                >
+                                    <AnimatePresence initial={false}>
+                                        {isOpen && (
+                                            <motion.div
+                                                initial={{
+                                                    height: 0,
+                                                    opacity: 0,
+                                                }}
+                                                animate={{
+                                                    height: 'auto',
+                                                    opacity: 1,
+                                                }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <p className="px-6 pb-5 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                                    {faq.answer}
+                                                </p>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
                         )
                     })}
