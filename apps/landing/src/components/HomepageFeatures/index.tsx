@@ -753,7 +753,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
             <button
                 type="button"
                 onClick={onCustomRequest}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 <FaPlus className="w-3.5 h-3.5" />
                 Request Custom
