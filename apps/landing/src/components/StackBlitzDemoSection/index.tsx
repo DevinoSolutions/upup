@@ -118,6 +118,10 @@ export default function StackBlitzDemoSection() {
 
     // embed once, on mount and handle fullscreen transitions
     useEffect(() => {
+        // Fallback timer for the pathological case where embedProject never
+        // resolves; declared in effect scope so the cleanup below can clear it.
+        let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+
         // Add a small delay to ensure DOM is ready, especially for fullscreen container
         const timeoutId = setTimeout(
             () => {
@@ -149,18 +153,21 @@ export default function StackBlitzDemoSection() {
                             theme: 'dark',
                             hideNavigation: true,
                             hideDevTools: true,
-                        }).catch(error => {
-                            console.error('StackBlitz embed failed:', error)
-                            setIsLoading(false)
-                            setEmbedFailed(true)
                         })
+                            // Dismiss the loader when the editor is actually
+                            // ready, not on a fixed timer.
+                            .then(() => setIsLoading(false))
+                            .catch(error => {
+                                console.error('StackBlitz embed failed:', error)
+                                setIsLoading(false)
+                                setEmbedFailed(true)
+                            })
 
-                        // Fake 8-second loader
-                        const timer = setTimeout(() => {
-                            setIsLoading(false)
-                        }, 8000)
-
-                        return () => clearTimeout(timer)
+                        // Safety net: never leave the loader up indefinitely.
+                        fallbackTimer = setTimeout(
+                            () => setIsLoading(false),
+                            15000,
+                        )
                     } catch (error) {
                         console.error('StackBlitz embed error:', error)
                         setIsLoading(false)
@@ -171,7 +178,10 @@ export default function StackBlitzDemoSection() {
             isFullscreen ? 100 : 0,
         ) // Delay for fullscreen to ensure DOM is ready
 
-        return () => clearTimeout(timeoutId)
+        return () => {
+            clearTimeout(timeoutId)
+            if (fallbackTimer) clearTimeout(fallbackTimer)
+        }
     }, [isFullscreen])
 
     const toggleFullScreen = () => {

@@ -644,33 +644,47 @@ const EmailModal: React.FC<EmailModalProps> = ({
    Replaces the two 12/13-identical-card grids the audit flagged. */
 const SupportedWall: React.FC<{ providers: Integration[] }> = ({
     providers,
-}) => (
-    <div className="mx-auto max-w-4xl">
-        <p className="mb-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <span className="h-2 w-2 rounded-full bg-green-500" />
-            Supported today
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-            {providers.map(provider => (
-                <div key={provider.id} className="w-[120px]">
-                    <div className="surface-card-border surface-shadow h-full rounded-xl p-px transition-transform duration-200 hover:-translate-y-0.5">
-                        <div className="surface-card-fill flex h-full flex-col items-center gap-2.5 rounded-[11px] px-3 py-4 text-center">
-                            <span
-                                className="flex h-9 w-9 items-center justify-center rounded-lg"
-                                style={{ backgroundColor: provider.color }}
-                            >
-                                <provider.icon className="h-5 w-5 text-white" />
-                            </span>
-                            <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
-                                {provider.name}
-                            </span>
+}) => {
+    const captionId = React.useId()
+    return (
+        <div className="mx-auto max-w-4xl">
+            <p
+                id={captionId}
+                className="mb-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+            >
+                <span className="h-2 w-2 rounded-full bg-green-500" />
+                Supported today
+            </p>
+            <div
+                role="list"
+                aria-labelledby={captionId}
+                className="flex flex-wrap justify-center gap-3"
+            >
+                {providers.map(provider => (
+                    <div
+                        key={provider.id}
+                        role="listitem"
+                        className="w-[120px]"
+                    >
+                        <div className="surface-card-border surface-shadow h-full rounded-xl p-px transition-transform duration-200 hover:-translate-y-0.5">
+                            <div className="surface-card-fill flex h-full flex-col items-center gap-2.5 rounded-[11px] px-3 py-4 text-center">
+                                <span
+                                    className="flex h-9 w-9 items-center justify-center rounded-lg"
+                                    style={{ backgroundColor: provider.color }}
+                                >
+                                    <provider.icon className="h-5 w-5 text-white" />
+                                </span>
+                                <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
+                                    {provider.name}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
-    </div>
-)
+    )
+}
 
 interface PlannedStripProps {
     planned: Integration[]
@@ -693,7 +707,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
                     key={provider.id}
                     type="button"
                     onClick={() => onProviderClick(provider)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full surface-card-fill border border-black/10 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/20 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     <provider.icon
                         className="w-3.5 h-3.5"
@@ -705,7 +719,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
             <button
                 type="button"
                 onClick={onCustomRequest}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full surface-card-fill border border-black/10 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/20 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 <FaPlus className="w-3.5 h-3.5" />
                 Request Custom
