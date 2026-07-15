@@ -26,6 +26,12 @@ import {
     FaDatabase,
     FaCube,
     FaPhotoVideo,
+    FaEdit,
+    FaMobileAlt,
+    FaHistory,
+    FaPalette,
+    FaMicrochip,
+    FaUniversalAccess,
 } from 'react-icons/fa'
 import {
     SiAmazonwebservices,
@@ -91,7 +97,7 @@ const mainFeatures = [
         icon: <FaGlobe className="w-6 h-6" />,
         title: 'Cloud Drives, Camera & Screen Capture',
         description:
-            'Let users import files straight from Google Drive, OneDrive, Dropbox, and Box — plus device camera, screen capture, and link (URL) imports',
+            'Let users import files straight from Google Drive, OneDrive, Dropbox, and Box — plus device camera, screen capture, audio recording, and link (URL) imports',
     },
     {
         icon: <FaCloud className="w-6 h-6" />,
@@ -103,13 +109,49 @@ const mainFeatures = [
         icon: <FaShieldAlt className="w-6 h-6" />,
         title: 'Secure Server Mode',
         description:
-            'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — forged requests stay rejected',
+            'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — with ready-made adapters for Express, Fastify, Hono, and Next.js',
     },
     {
         icon: <FaEye className="w-6 h-6" />,
         title: 'Previews, Progress & Retry',
         description:
-            'Image and video previews, a real-time progress bar, automatic retry, and resumable chunked uploads for large files',
+            'Image and video previews, a real-time progress bar, and automatic retry when an upload fails',
+    },
+    {
+        icon: <FaEdit className="w-6 h-6" />,
+        title: 'Built-In Image Editor',
+        description:
+            'Crop, rotate, annotate, and filter images before upload with the integrated Filerobot editor — available in React and Preact, loaded lazily so it never weighs down your bundle',
+    },
+    {
+        icon: <FaMobileAlt className="w-6 h-6" />,
+        title: 'iPhone Photos Just Work',
+        description:
+            'Opt-in HEIC to JPEG conversion means .heic photos from iPhones preview and upload like any other image — no "unsupported format" support tickets',
+    },
+    {
+        icon: <FaMicrochip className="w-6 h-6" />,
+        title: 'Off-Main-Thread Processing',
+        description:
+            'Image compression and processing run in a web worker, so the page stays responsive while large files are prepared — with automatic fallback where workers are unavailable',
+    },
+    {
+        icon: <FaHistory className="w-6 h-6" />,
+        title: 'Crash-Safe & Resumable',
+        description:
+            'Reload the page mid-upload and pick up where you left off — crash recovery restores the queue, and resumable chunked uploads (tus) handle large files over unreliable networks',
+    },
+    {
+        icon: <FaPalette className="w-6 h-6" />,
+        title: 'Themeable & Localized',
+        description:
+            'Theme tokens with dark-mode support and built-in locale bundles let the uploader match your product and speak your users’ language',
+    },
+    {
+        icon: <FaUniversalAccess className="w-6 h-6" />,
+        title: 'Accessible & TypeScript-First',
+        description:
+            'Keyboard and screen-reader friendly with accessibility checks enforced in CI, fully typed APIs, and a lean core where heavy capabilities stay opt-in',
     },
 ]
 
