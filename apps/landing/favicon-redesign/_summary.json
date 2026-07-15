@@ -1,0 +1,23 @@
+{
+  "brandHex": "#0e2add",
+  "markBbox": {
+    "x0": 5,
+    "x1": 1063,
+    "y0": 2,
+    "y1": 675,
+    "mw": 1059,
+    "mh": 674
+  },
+  "corners": {
+    "tl": 0,
+    "tr": 0,
+    "bl": 0,
+    "br": 0
+  },
+  "center": 255,
+  "cornersTransparent": true,
+  "sizes": {
+    "icoOld": 370070,
+    "icoNew": 15086
+  }
+}
