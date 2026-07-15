@@ -41,7 +41,7 @@ export default function FeedbackSection() {
     ]
 
     return (
-        <section id="feedback" className="py-16 px-6">
+        <section id="feedback" className="py-16 px-6 scroll-mt-24">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-20">
                     <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">

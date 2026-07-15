@@ -101,7 +101,7 @@ export default function StackBlitzDemoSection() {
         <>
             <section
                 id="live-editor"
-                className="py-16 px-6 relative overflow-hidden"
+                className="py-16 px-6 relative overflow-hidden scroll-mt-24"
             >
                 <div className="relative max-w-7xl mx-auto">
                     {/* Header */}

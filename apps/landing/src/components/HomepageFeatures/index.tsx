@@ -820,7 +820,10 @@ export default function HomepageFeatures() {
     }
 
     return (
-        <section id="features" className="py-16 px-6 relative overflow-hidden">
+        <section
+            id="features"
+            className="py-16 px-6 relative overflow-hidden scroll-mt-24"
+        >
             {/* Add custom CSS for marquee animation */}
             <style>{`
           @keyframes marquee {
