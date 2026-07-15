@@ -28,7 +28,7 @@
         "test": "turbo run test --continue",
         "test:coverage": "turbo run test:coverage --continue",
         "test:quality": "node scripts/ci/test-quality-guard.mjs",
-        "test:scripts": "node --test scripts/ci/test-quality-guard.test.mjs scripts/ci/resolve-affected-tests.test.mjs scripts/lib/tarball.test.mjs",
+        "test:scripts": "node --test scripts/ci/test-quality-guard.test.mjs scripts/ci/resolve-affected-tests.test.mjs scripts/lib/tarball.test.mjs scripts/lib/release-notes.test.mjs",
         "e2e": "turbo run build && pnpm --filter @upupjs/e2e-test test:e2e && dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test test:e2e:cf",
         "e2e:a11y": "turbo run build && pnpm --filter @upupjs/e2e-test test:e2e:a11y",
         "e2e:minio:up": "dotenv -e local-dev/.env.minio -- node scripts/validate-env.mjs && dotenv -e local-dev/.env.minio -- docker compose up -d",
@@ -50,6 +50,7 @@
         "test-release": "pnpm run build:package && pnpm -r publish --dry-run --no-git-checks"
     },
     "devDependencies": {
+        "@changesets/changelog-github": "^0.5.1",
         "@changesets/cli": "^2.30.0",
         "@napi-rs/canvas": "^1.0.2",
         "@size-limit/file": "^11.0.0",

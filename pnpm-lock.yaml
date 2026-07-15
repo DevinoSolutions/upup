@@ -27,6 +27,9 @@ importers:
 
   .:
     devDependencies:
+      '@changesets/changelog-github':
+        specifier: ^0.5.1
+        version: 0.5.2(encoding@0.1.13)
       '@changesets/cli':
         specifier: ^2.30.0
         version: 2.30.0(@types/node@25.3.5)
@@ -576,11 +579,11 @@ importers:
         version: link:../../packages/preact
       preact:
         specifier: ^10.29.2
-        version: 10.29.2
+        version: 10.29.7(preact-render-to-string@6.7.0)
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.9.0
-        version: 2.10.5(@babel/core@7.29.7)(preact@10.29.2)(rollup@3.29.5)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+        version: 2.10.5(@babel/core@7.29.7)(preact@10.29.7)(rollup@3.29.5)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@storybook/addon-a11y':
         specifier: ^9
         version: 9.1.20(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))
@@ -592,7 +595,7 @@ importers:
         version: 9.1.20(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))
       '@storybook/preact-vite':
         specifier: ^9
-        version: 9.1.20(preact@10.29.2)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+        version: 9.1.20(preact@10.29.7)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@upupjs/storybook-config':
         specifier: workspace:*
         version: link:../../packages/storybook-config
@@ -1140,7 +1143,7 @@ importers:
     devDependencies:
       '@testing-library/preact':
         specifier: ^3.2.4
-        version: 3.2.4(preact@10.29.2)
+        version: 3.2.4(preact@10.29.7)
       '@types/node':
         specifier: ^20.19.37
         version: 20.19.37
@@ -1167,10 +1170,10 @@ importers:
         version: 10.3.0
       preact:
         specifier: ^10.29.2
-        version: 10.29.2
+        version: 10.29.7(preact-render-to-string@6.7.0)
       preact-render-to-string:
         specifier: ^6.5.0
-        version: 6.7.0(preact@10.29.2)
+        version: 6.7.0(preact@10.29.7)
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -2848,6 +2851,9 @@ packages:
   '@changesets/changelog-git@0.2.1':
     resolution: {integrity: sha512-x/xEleCFLH28c3bQeQIyeZf8lFXyDFVn1SgcBiR2Tw/r4IAWlk1fzxCEZ6NxQAjF2Nwtczoen3OA2qR+UawQ8Q==}
 
+  '@changesets/changelog-github@0.5.2':
+    resolution: {integrity: sha512-HeGeDl8HaIGj9fQHo/tv5XKQ2SNEi9+9yl1Bss1jttPqeiASRXhfi0A2wv8yFKCp07kR1gpOI5ge6+CWNm1jPw==}
+
   '@changesets/cli@2.30.0':
     resolution: {integrity: sha512-5D3Nk2JPqMI1wK25pEymeWRSlSMdo5QOGlyfrKg0AOufrUcjEE3RQgaCpHoBiM31CSNrtSgdJ0U6zL1rLDDfBA==}
     hasBin: true
@@ -2860,6 +2866,9 @@ packages:
 
   '@changesets/get-dependents-graph@2.1.3':
     resolution: {integrity: sha512-gphr+v0mv2I3Oxt19VdWRRUxq3sseyUpX9DaHpTUmLj92Y10AGy+XOtV+kbM6L/fDcpx7/ISDFK6T8A/P3lOdQ==}
+
+  '@changesets/get-github-info@0.7.0':
+    resolution: {integrity: sha512-+i67Bmhfj9V4KfDeS1+Tz3iF32btKZB2AAx+cYMqDSRFP7r3/ZdGbjCo+c6qkyViN9ygDuBjzageuPGJtKGe5A==}
 
   '@changesets/get-release-plan@4.0.15':
     resolution: {integrity: sha512-Q04ZaRPuEVZtA+auOYgFaVQQSA98dXiVe/yFaZfY7hoSmQICHGvP0TF4u3EDNHWmmCS4ekA/XSpKlSM2PyTS2g==}
@@ -8950,6 +8959,9 @@ packages:
     resolution: {integrity: sha512-BS8PfmtDGnrgYdOonGZQdLZslWIeCGFP9tpan0hi1Co2Zr2NKADsvGYA8XxuG/4UWgJ6Cjtv+YJnB6MM69QGlQ==}
     engines: {node: '>= 0.4'}
 
+  dataloader@1.4.0:
+    resolution: {integrity: sha512-68s5jYdlvasItOJnCuI2Q9s4q98g0pCyL3HrcKJu8KNugUl8ahgmZYg38ysLTgQjjXX3H8CJLkAvWrclWfcalw==}
+
   dateformat@4.6.3:
     resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
 
@@ -9216,6 +9228,10 @@ packages:
   dotenv@17.4.2:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
+
+  dotenv@8.6.0:
+    resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
+    engines: {node: '>=10'}
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -12034,6 +12050,15 @@ packages:
     resolution: {integrity: sha512-Z3lTE9pLaJF47NyMhd4ww1yFTAP8YhYI8SleJiHzM46Fgpm5cnNzSl9XfzFNqbaz+VlJrIj3fXQ4DeN1Rjm6cw==}
     engines: {node: '>=18'}
 
+  node-fetch@2.6.7:
+    resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
+
   node-forge@1.3.1:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
@@ -13072,9 +13097,6 @@ packages:
     resolution: {integrity: sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q==}
     peerDependencies:
       preact: '>=10 || >= 11.0.0-0'
-
-  preact@10.29.2:
-    resolution: {integrity: sha512-7tNmwg/7mzzAoB/8kSg6Hl37JraAZw3Z3A0JSY7VXlZwo82Xn0G7wKbNNs2qoF4ZEEsQGTwDAroNdqKs1ofJxQ==}
 
   preact@10.29.7:
     resolution: {integrity: sha512-DCHYrK/B10yUD3ZjLfhZ3WIE/9Vf9VFUODcRE2dRomTYDpJk6z6L9wecSfhfE6M9ZTHUdyQkoC46arIDhEV84Q==}
@@ -14712,6 +14734,9 @@ packages:
     resolution: {integrity: sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==}
     engines: {node: '>=6'}
 
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   tr46@1.0.1:
     resolution: {integrity: sha512-dTpowEjclQ7Kgx5SdBkqRzVhERQXov8/l9Ft9dVM9fmg0W0KQSVaXX9T4i6twCPNtYiZM53lpSSUAwJbFPOHxA==}
 
@@ -15388,6 +15413,9 @@ packages:
   web-vitals@5.3.0:
     resolution: {integrity: sha512-q6LWsLatGYZp5VGBIOvbTj6JBV2nOmC8KvWztXBmwJcfFAzhwKwbOxhUH306XY3CcaZDUlSmSuNPBsCn0bFu+g==}
 
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
   webidl-conversions@4.0.2:
     resolution: {integrity: sha512-YQ+BmxuTgd6UXZW3+ICGfyqRyHXVlD5GtQr5+qjiNW7bF0cqrzX500HVXPBOvgXb5YnzDd+h0zqyv61KUD7+Sg==}
 
@@ -15552,6 +15580,9 @@ packages:
   whatwg-url@12.0.1:
     resolution: {integrity: sha512-Ed/LrqB8EPlGxjS+TrsXcpUond1mhccS3pchLhzSgPCnTimUCKj3IZE75pAs5m6heB2U2TMerKFUXheyHY+VDQ==}
     engines: {node: '>=14'}
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   whatwg-url@7.1.0:
     resolution: {integrity: sha512-WUu7Rg1DroM7oQvGWfOiAK21n74Gg+T4elXEQYkOhtyLeWiJFoOGLXPKI/9gzIie9CtwVLm8wtw6YJdKyxSjeg==}
@@ -18713,6 +18744,14 @@ snapshots:
     dependencies:
       '@changesets/types': 6.1.0
 
+  '@changesets/changelog-github@0.5.2(encoding@0.1.13)':
+    dependencies:
+      '@changesets/get-github-info': 0.7.0(encoding@0.1.13)
+      '@changesets/types': 6.1.0
+      dotenv: 8.6.0
+    transitivePeerDependencies:
+      - encoding
+
   '@changesets/cli@2.30.0(@types/node@25.3.5)':
     dependencies:
       '@changesets/apply-release-plan': 7.1.0
@@ -18765,6 +18804,13 @@ snapshots:
       '@manypkg/get-packages': 1.1.3
       picocolors: 1.1.1
       semver: 7.7.4
+
+  '@changesets/get-github-info@0.7.0(encoding@0.1.13)':
+    dependencies:
+      dataloader: 1.4.0
+      node-fetch: 2.6.7(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
 
   '@changesets/get-release-plan@4.0.15':
     dependencies:
@@ -22452,12 +22498,12 @@ snapshots:
 
   '@posthog/types@1.394.0': {}
 
-  '@preact/preset-vite@2.10.5(@babel/core@7.29.7)(preact@10.29.2)(rollup@3.29.5)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@preact/preset-vite@2.10.5(@babel/core@7.29.7)(preact@10.29.7)(rollup@3.29.5)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx': 7.27.1(@babel/core@7.29.7)
       '@babel/plugin-transform-react-jsx-development': 7.27.1(@babel/core@7.29.7)
-      '@prefresh/vite': 2.4.12(preact@10.29.2)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@prefresh/vite': 2.4.12(preact@10.29.7)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       '@rollup/pluginutils': 5.3.0(rollup@3.29.5)
       babel-plugin-transform-hook-names: 1.0.2(@babel/core@7.29.7)
       debug: 4.4.3
@@ -22473,20 +22519,20 @@ snapshots:
 
   '@prefresh/babel-plugin@0.5.3': {}
 
-  '@prefresh/core@1.5.10(preact@10.29.2)':
+  '@prefresh/core@1.5.10(preact@10.29.7)':
     dependencies:
-      preact: 10.29.2
+      preact: 10.29.7(preact-render-to-string@6.7.0)
 
   '@prefresh/utils@1.2.1': {}
 
-  '@prefresh/vite@2.4.12(preact@10.29.2)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@prefresh/vite@2.4.12(preact@10.29.7)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@prefresh/babel-plugin': 0.5.3
-      '@prefresh/core': 1.5.10(preact@10.29.2)
+      '@prefresh/core': 1.5.10(preact@10.29.7)
       '@prefresh/utils': 1.2.1
       '@rollup/pluginutils': 4.2.1
-      preact: 10.29.2
+      preact: 10.29.7(preact-render-to-string@6.7.0)
       vite: 7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
@@ -23394,19 +23440,19 @@ snapshots:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
-  '@storybook/preact-vite@9.1.20(preact@10.29.2)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@storybook/preact-vite@9.1.20(preact@10.29.7)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@storybook/builder-vite': 9.1.20(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
-      '@storybook/preact': 9.1.20(preact@10.29.2)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))
-      preact: 10.29.2
+      '@storybook/preact': 9.1.20(preact@10.29.7)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))
+      preact: 10.29.7(preact-render-to-string@6.7.0)
       storybook: 9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - vite
 
-  '@storybook/preact@9.1.20(preact@10.29.2)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))':
+  '@storybook/preact@9.1.20(preact@10.29.7)(storybook@9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)))':
     dependencies:
       '@storybook/global': 5.0.0
-      preact: 10.29.2
+      preact: 10.29.7(preact-render-to-string@6.7.0)
       storybook: 9.1.20(@testing-library/dom@10.4.0)(msw@2.14.6(@types/node@25.3.5)(typescript@5.6.3))(prettier@3.9.4)(vite@7.3.5(@types/node@25.3.5)(jiti@2.7.0)(less@4.6.4)(lightningcss@1.32.0)(sass@1.100.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       ts-dedent: 2.2.0
 
@@ -23821,10 +23867,10 @@ snapshots:
       picocolors: 1.1.1
       redent: 3.0.0
 
-  '@testing-library/preact@3.2.4(preact@10.29.2)':
+  '@testing-library/preact@3.2.4(preact@10.29.7)':
     dependencies:
       '@testing-library/dom': 8.20.1
-      preact: 10.29.2
+      preact: 10.29.7(preact-render-to-string@6.7.0)
 
   '@testing-library/react@16.3.2(@testing-library/dom@10.4.0)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
@@ -26569,6 +26615,8 @@ snapshots:
       es-errors: 1.3.0
       is-data-view: 1.0.2
 
+  dataloader@1.4.0: {}
+
   dateformat@4.6.3: {}
 
   dayjs@1.11.19: {}
@@ -26824,6 +26872,8 @@ snapshots:
   dotenv@16.6.1: {}
 
   dotenv@17.4.2: {}
+
+  dotenv@8.6.0: {}
 
   dunder-proto@1.0.1:
     dependencies:
@@ -30574,6 +30624,12 @@ snapshots:
       emojilib: 2.4.0
       skin-tone: 2.0.0
 
+  node-fetch@2.6.7(encoding@0.1.13):
+    dependencies:
+      whatwg-url: 5.0.0
+    optionalDependencies:
+      encoding: 0.1.13
+
   node-forge@1.3.1: {}
 
   node-gyp-build-optional-packages@5.2.2:
@@ -31790,16 +31846,9 @@ snapshots:
     dependencies:
       three: 0.178.0
 
-  preact-render-to-string@6.7.0(preact@10.29.2):
-    dependencies:
-      preact: 10.29.2
-
   preact-render-to-string@6.7.0(preact@10.29.7):
     dependencies:
       preact: 10.29.7(preact-render-to-string@6.7.0)
-    optional: true
-
-  preact@10.29.2: {}
 
   preact@10.29.7(preact-render-to-string@6.7.0):
     optionalDependencies:
@@ -33898,6 +33947,8 @@ snapshots:
       universalify: 0.2.0
       url-parse: 1.5.10
 
+  tr46@0.0.3: {}
+
   tr46@1.0.1:
     dependencies:
       punycode: 2.3.1
@@ -34835,6 +34886,8 @@ snapshots:
 
   web-vitals@5.3.0: {}
 
+  webidl-conversions@3.0.1: {}
+
   webidl-conversions@4.0.2: {}
 
   webidl-conversions@7.0.0: {}
@@ -35394,6 +35447,11 @@ snapshots:
     dependencies:
       tr46: 4.1.1
       webidl-conversions: 7.0.0
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   whatwg-url@7.1.0:
     dependencies:
