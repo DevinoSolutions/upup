@@ -176,7 +176,7 @@ export default function HeroSection({
     }
 
     return (
-        <section className="relative pt-20 pb-12 px-6 rounded-xl mt-28">
+        <section className="relative pt-16 pb-12 px-6 rounded-xl mt-28">
             {/* Background Elements */}
 
             <div className="relative max-w-7xl mx-auto">

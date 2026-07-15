@@ -820,10 +820,7 @@ export default function HomepageFeatures() {
     }
 
     return (
-        <section
-            id="features"
-            className="pt-24 pb-8 px-6 relative overflow-hidden"
-        >
+        <section id="features" className="py-16 px-6 relative overflow-hidden">
             {/* Add custom CSS for marquee animation */}
             <style>{`
           @keyframes marquee {
@@ -844,7 +841,7 @@ export default function HomepageFeatures() {
                 {/* Section Header */}
                 <motion.div
                     ref={headerRef}
-                    className="text-center mb-20"
+                    className="text-center mb-12"
                     variants={containerVariants}
                     initial="hidden"
                     animate={headerInView ? 'visible' : 'hidden'}
@@ -904,7 +901,7 @@ export default function HomepageFeatures() {
                 {/* Cloud Providers Section */}
                 <motion.div
                     ref={providersRef}
-                    className="mb-24"
+                    className="mb-16"
                     initial="hidden"
                     animate={providersInView ? 'visible' : 'hidden'}
                 >
@@ -1124,7 +1121,7 @@ export default function HomepageFeatures() {
                     animate={fileTypesInView ? 'visible' : 'hidden'}
                 >
                     <motion.div
-                        className="text-center mb-16"
+                        className="text-center mb-10"
                         variants={containerVariants}
                     >
                         <motion.h3
@@ -1144,7 +1141,7 @@ export default function HomepageFeatures() {
 
                     {/* Modern Infinite Marquee with Scroll-triggered Animation */}
                     <motion.div
-                        className="relative overflow-hidden py-8"
+                        className="relative overflow-hidden py-6"
                         initial={{ opacity: 0 }}
                         animate={
                             fileTypesInView ? { opacity: 1 } : { opacity: 0 }
