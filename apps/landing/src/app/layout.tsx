@@ -9,6 +9,7 @@ import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
 import SplashCursor from '@/components/SplashCursor'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -177,6 +178,7 @@ export default function RootLayout({
                             <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
                                 <Navbar />
                                 {children}
+                                <Footer />
                             </div>
                         </ThemeProvider>
                     </Providers>
