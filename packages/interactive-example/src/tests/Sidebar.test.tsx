@@ -51,4 +51,22 @@ describe('Sidebar', () => {
         expect(screen.queryByText('Editor')).toBeNull()
         expect(screen.getByText('Processing')).toBeTruthy()
     })
+
+    it('excludes hidden categories from the simple-tier advanced badge count', () => {
+        // Six advanced-tier categories (Processing, Editor, Behavior,
+        // Language, Events, Advanced) are hidden in the simple tier, so the
+        // badge normally reads +6. Hiding the editor drops it to +5 — the
+        // count must be taken from the post-filter set, not `categories`.
+        // Clear the persisted tier: an earlier test clicks Advanced and the
+        // Sidebar restores that from localStorage on mount, which would hide
+        // the badge (only shown in the simple tier).
+        window.localStorage.clear()
+        render(
+            <ConfigProvider initialConfig={{}}>
+                <Sidebar defaultExpanded={[]} hiddenCategories={['editor']} />
+            </ConfigProvider>,
+        )
+        expect(screen.getByText('+5')).toBeTruthy()
+        expect(screen.queryByText('+6')).toBeNull()
+    })
 })
