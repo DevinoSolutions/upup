@@ -912,8 +912,10 @@ export default function HomepageFeatures() {
                             className={`${H3_HEADING} mb-4`}
                             variants={headingVariants}
                         >
-                            Let your users connect to their favorite storage
-                            cloud providers
+                            Let your users connect to their{' '}
+                            <span className={GRADIENT_TEXT}>
+                                favorite storage cloud providers
+                            </span>
                         </motion.h3>
                         <motion.p
                             className="text-lg text-gray-600 dark:text-gray-300"
@@ -943,8 +945,10 @@ export default function HomepageFeatures() {
                             className={`${H3_HEADING} mb-4`}
                             variants={headingVariants}
                         >
-                            And for developers, connect upup to your favorite
-                            cloud bucket
+                            And for developers, connect upup to your{' '}
+                            <span className={GRADIENT_TEXT}>
+                                favorite cloud bucket
+                            </span>
                         </motion.h3>
                         <motion.p
                             className="text-lg text-gray-600 dark:text-gray-300"
@@ -979,7 +983,8 @@ export default function HomepageFeatures() {
                         className={`${H3_HEADING} mb-4`}
                         variants={headingVariants}
                     >
-                        Support for all file types
+                        Support for{' '}
+                        <span className={GRADIENT_TEXT}>all file types</span>
                     </motion.h3>
                     <motion.p
                         className="text-lg text-gray-600 dark:text-gray-300"
@@ -991,15 +996,20 @@ export default function HomepageFeatures() {
                 </motion.div>
 
                 {/* Modern Infinite Marquee with Scroll-triggered Animation.
-                        Edge-fade mask on both sides so no card renders half-cut
-                        at the container edges (fixes the first-card clip). */}
+                        Fixed-width edge-fade mask on both sides paired with matching
+                        horizontal padding: the fade zones sit over the padding gutters,
+                        so at rest (and under prefers-reduced-motion, which freezes the
+                        row at translateX(0)) the first card clears the left fade instead
+                        of rendering half-faded, while cards still vanish smoothly at both
+                        edges while animating. Padding lives on the container, not the
+                        animated row, so the -50% seamless loop is unaffected. */}
                 <motion.div
-                    className="relative overflow-hidden py-6"
+                    className="relative overflow-hidden px-10 py-6"
                     style={{
                         maskImage:
-                            'linear-gradient(to right, transparent, #000 6%, #000 94%, transparent)',
+                            'linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)',
                         WebkitMaskImage:
-                            'linear-gradient(to right, transparent, #000 6%, #000 94%, transparent)',
+                            'linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)',
                     }}
                     initial={{ opacity: 0 }}
                     animate={fileTypesInView ? { opacity: 1 } : { opacity: 0 }}

@@ -7,15 +7,24 @@ import {
     ExternalLink,
 } from 'lucide-react'
 import Section from '@/components/ui/Section'
-import Card from '@/components/ui/Card'
-import SectionHeading from '@/components/ui/SectionHeading'
+import Card, { ACCENT_HUES, type AccentHue } from '@/components/ui/Card'
+import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 
 export default function FeedbackSection() {
-    const feedbackOptions = [
+    const feedbackOptions: {
+        icon: React.ReactNode
+        title: string
+        description: string
+        accent: AccentHue
+        action?: string
+        buttonText?: string
+        actions?: { url: string; text: string }[]
+    }[] = [
         {
             icon: <Mail className="w-5 h-5" />,
             title: 'Email Us',
             description: 'Send feedback directly to our team',
+            accent: 'blue',
             action: 'mailto:hello@devino.ca?subject=UpUp Feedback',
             buttonText: 'Send Email',
         },
@@ -23,6 +32,7 @@ export default function FeedbackSection() {
             icon: <Github className="w-5 h-5" />,
             title: 'GitHub Issues',
             description: 'Report bugs or request new features',
+            accent: 'violet',
             actions: [
                 {
                     url: 'https://github.com/DevinoSolutions/upup/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D+',
@@ -38,6 +48,7 @@ export default function FeedbackSection() {
             icon: <MessageCircle className="w-5 h-5" />,
             title: 'Discord Community',
             description: 'Join discussions and get support',
+            accent: 'teal',
             action: 'https://discord.com/invite/ny5WUE9ayc',
             buttonText: 'Join Discord',
         },
@@ -47,15 +58,32 @@ export default function FeedbackSection() {
         <Section id="feedback" variant="raised">
             <SectionHeading
                 className="mb-16"
-                title="Help us improve"
+                badge={
+                    <>
+                        <span className="h-2 w-2 rounded-full bg-green-500" />
+                        We&apos;re listening
+                    </>
+                }
+                title={
+                    <>
+                        Help us <span className={GRADIENT_TEXT}>improve</span>
+                    </>
+                }
                 subtitle="Your feedback drives our development. Share your thoughts, report issues, or suggest new features."
             />
 
             {/* Feedback Options */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12">
                 {feedbackOptions.map((option, index) => (
-                    <Card key={index} hover className="p-8">
-                        <div className="w-12 h-12 bg-black/5 dark:bg-white/10 rounded-2xl flex items-center justify-center text-gray-600 dark:text-gray-300 mb-6">
+                    <Card
+                        key={index}
+                        hover
+                        accent={option.accent}
+                        className="p-8"
+                    >
+                        <div
+                            className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${ACCENT_HUES[option.accent].icon}`}
+                        >
                             {option.icon}
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
