@@ -37,7 +37,10 @@ export default function FAQSection() {
                                         setOpenIndex(isOpen ? null : index)
                                     }
                                 >
-                                    <span className="font-semibold text-gray-900 dark:text-white">
+                                    <span
+                                        id={`faq-q-${index}`}
+                                        className="font-semibold text-gray-900 dark:text-white"
+                                    >
                                         {faq.question}
                                     </span>
                                     <FaChevronDown
@@ -49,7 +52,7 @@ export default function FAQSection() {
                                 <div
                                     id={`faq-panel-${index}`}
                                     role="region"
-                                    aria-hidden={!isOpen}
+                                    aria-labelledby={`faq-q-${index}`}
                                 >
                                     <AnimatePresence initial={false}>
                                         {isOpen && (
