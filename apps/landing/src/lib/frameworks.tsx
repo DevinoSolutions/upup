@@ -12,7 +12,7 @@ import {
 // The ONE source of truth for every framework upup ships a native UI package
 // for. The home page (framework strip), the per-framework marketing pages
 // (/react, /vue, …), and the code-snippet tabs all render from this enum — so a
-// framework's name, npm package, icon, docs link, and demo capabilities are
+// framework's name, npm package, icon, and demo capabilities are
 // declared exactly once. Adding a framework is one entry here.
 //
 // The live demo on every page is React-powered (@upupjs/react) by design; these
@@ -37,8 +37,6 @@ export interface FrameworkMeta {
     code: string
     /** The image editor is a real-React island — React/Preact only. */
     hasImageEditor: boolean
-    /** Docs quickstart path under /documentation. */
-    docsQuickstart: string
     /** Framework-specific hero sub-line. */
     tagline: string
     /** Official brand logo (react-icons/si). */
@@ -108,7 +106,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'Uploader.tsx',
         code: REACT_CODE,
         hasImageEditor: true,
-        docsQuickstart: '/documentation/quickstarts/react',
         tagline:
             'A headless-core React file uploader with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
         Icon: SiReact,
@@ -121,7 +118,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'Uploader.vue',
         code: VUE_CODE,
         hasImageEditor: false,
-        docsQuickstart: '/documentation/quickstarts/vue',
         tagline:
             'A native Vue file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
         Icon: SiVuedotjs,
@@ -134,7 +130,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'Uploader.svelte',
         code: SVELTE_CODE,
         hasImageEditor: false,
-        docsQuickstart: '/documentation/quickstarts/svelte',
         tagline:
             'A native Svelte file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
         Icon: SiSvelte,
@@ -147,7 +142,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'app.component.ts',
         code: ANGULAR_CODE,
         hasImageEditor: false,
-        docsQuickstart: '/documentation/quickstarts/angular',
         tagline:
             'A native Angular file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
         Icon: SiAngular,
@@ -160,7 +154,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'uploader.ts',
         code: VANILLA_CODE,
         hasImageEditor: false,
-        docsQuickstart: '/documentation/quickstarts/vanilla',
         tagline:
             'A framework-free file uploader for plain JavaScript & TypeScript — drag & drop, cloud drives, and secure server-mode uploads.',
         Icon: SiJavascript,
@@ -173,7 +166,6 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         file: 'App.tsx',
         code: PREACT_CODE,
         hasImageEditor: true,
-        docsQuickstart: '/documentation/quickstarts/preact',
         tagline:
             'A Preact file uploader (React-compatible) with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
         Icon: SiPreact,

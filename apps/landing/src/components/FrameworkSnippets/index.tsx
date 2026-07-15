@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Copy, Terminal } from 'lucide-react'
-import { FRAMEWORK_LIST, type FrameworkMeta } from '@/lib/frameworks'
+import {
+    FRAMEWORK_LIST,
+    type FrameworkId,
+    type FrameworkMeta,
+} from '@/lib/frameworks'
 
 // The per-framework list (id/name/pkg/file/code) is the single source of truth
 // in src/lib/frameworks — imported here so the home snippets, the framework
@@ -129,7 +133,7 @@ function HighlightedCode({ code }: { code: string }) {
 
 export default function FrameworkSnippets({
     initialId = 'react',
-}: Readonly<{ initialId?: string }> = {}) {
+}: Readonly<{ initialId?: FrameworkId }> = {}) {
     const [activeId, setActiveId] = useState(initialId)
     const [copiedCode, setCopiedCode] = useState(false)
     const [copiedInstall, setCopiedInstall] = useState(false)
