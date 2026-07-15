@@ -4,12 +4,6 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import {
-    FaCloud,
-    FaUpload,
-    FaEye,
-    FaGlobe,
-    FaBolt,
-    FaShieldAlt,
     FaFileAlt,
     FaStar,
     FaTimes,
@@ -25,12 +19,6 @@ import {
     FaDatabase,
     FaCube,
     FaPhotoVideo,
-    FaEdit,
-    FaMobileAlt,
-    FaHistory,
-    FaPalette,
-    FaMicrochip,
-    FaUniversalAccess,
     FaImage,
     FaVideo,
     FaMusic,
@@ -58,6 +46,7 @@ import { GrOnedrive } from 'react-icons/gr'
 import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
 import * as gtag from '@/lib/gtag'
+import FeatureShowcase from '@/components/FeatureShowcase'
 
 interface Integration {
     id: string
@@ -79,81 +68,6 @@ interface EmailModalProps {
     onSubmit: (email: string, customToolName?: string) => void
     isCustom?: boolean
 }
-
-const mainFeatures = [
-    {
-        icon: <FaUpload className="w-6 h-6" />,
-        title: 'Six Frameworks, One Uploader',
-        description:
-            'Native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — one uploader that renders byte-identical DOM in every framework, enforced by a cross-framework parity suite',
-    },
-    {
-        icon: <FaBolt className="w-6 h-6" />,
-        title: 'Headless Core',
-        description:
-            'The engine lives in a framework-agnostic @upupjs/core package — use the built-in UI or build your own on the same hooks, orchestrator, and upload pipeline',
-    },
-    {
-        icon: <FaGlobe className="w-6 h-6" />,
-        title: 'Cloud Drives, Camera & Screen Capture',
-        description:
-            'Let users import files straight from Google Drive, OneDrive, Dropbox, and Box — plus device camera, screen capture, audio recording, and link (URL) imports',
-    },
-    {
-        icon: <FaCloud className="w-6 h-6" />,
-        title: 'Any S3-Compatible Storage',
-        description:
-            'Upload to AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi, and more — plus Azure Blob — using pre-signed URLs',
-    },
-    {
-        icon: <FaShieldAlt className="w-6 h-6" />,
-        title: 'Secure Server Mode',
-        description:
-            'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — with ready-made adapters for Express, Fastify, Hono, and Next.js',
-    },
-    {
-        icon: <FaEye className="w-6 h-6" />,
-        title: 'Previews, Progress & Retry',
-        description:
-            'Image and video previews, a real-time progress bar, and automatic retry when an upload fails',
-    },
-    {
-        icon: <FaEdit className="w-6 h-6" />,
-        title: 'Built-In Image Editor',
-        description:
-            'Crop, rotate, annotate, and filter images before upload with the integrated Filerobot editor — available in React and Preact, loaded lazily so it never weighs down your bundle',
-    },
-    {
-        icon: <FaMobileAlt className="w-6 h-6" />,
-        title: 'iPhone Photos Just Work',
-        description:
-            'Opt-in HEIC to JPEG conversion means .heic photos from iPhones preview and upload like any other image — no "unsupported format" support tickets',
-    },
-    {
-        icon: <FaMicrochip className="w-6 h-6" />,
-        title: 'Off-Main-Thread Processing',
-        description:
-            'Image compression and processing run in a web worker, so the page stays responsive while large files are prepared — with automatic fallback where workers are unavailable',
-    },
-    {
-        icon: <FaHistory className="w-6 h-6" />,
-        title: 'Crash-Safe & Resumable',
-        description:
-            'Reload the page mid-upload and pick up where you left off — crash recovery restores the queue, and resumable chunked uploads (tus) handle large files over unreliable networks',
-    },
-    {
-        icon: <FaPalette className="w-6 h-6" />,
-        title: 'Themeable & Localized',
-        description:
-            'Theme tokens with dark-mode support and built-in locale bundles let the uploader match your product and speak your users’ language',
-    },
-    {
-        icon: <FaUniversalAccess className="w-6 h-6" />,
-        title: 'Accessible & TypeScript-First',
-        description:
-            'Keyboard and screen-reader friendly with accessibility checks in our CI suite, fully typed APIs, and a lean core where heavy capabilities stay opt-in',
-    },
-]
 
 // User Storage Providers - for end users to connect their personal cloud storage
 const userStorageProviders: Integration[] = [
@@ -782,12 +696,10 @@ export default function HomepageFeatures() {
 
     // Refs for scroll-triggered animations
     const headerRef = useRef(null)
-    const featuresRef = useRef(null)
     const providersRef = useRef(null)
     const fileTypesRef = useRef(null)
 
     const headerInView = useInView(headerRef, { once: true, amount: 0.3 })
-    const featuresInView = useInView(featuresRef, { once: true, amount: 0.2 })
     const providersInView = useInView(providersRef, { once: true, amount: 0.2 })
     const fileTypesInView = useInView(fileTypesRef, { once: true, amount: 0.3 })
 
@@ -986,44 +898,8 @@ export default function HomepageFeatures() {
                     </motion.p>
                 </motion.div>
 
-                {/* Main Features Grid */}
-                <motion.div
-                    ref={featuresRef}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate={featuresInView ? 'visible' : 'hidden'}
-                >
-                    {mainFeatures.map((feature, index) => (
-                        <motion.div
-                            key={index}
-                            className="group p-8 shadow-md bg-white dark:bg-white/5 backdrop-blur-sm border border-white/20 dark:border-white/10 rounded-3xl hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 hover:shadow-lg hover:shadow-white/10 dark:hover:shadow-white/5 hover:border-white/30 dark:hover:border-white/20"
-                            variants={itemVariants}
-                            whileHover={{
-                                y: -8,
-                                transition: { duration: 0.2 },
-                            }}
-                        >
-                            <motion.div
-                                className="w-12 h-12 bg-primary/10 dark:bg-primary-dark/10 rounded-2xl flex items-center justify-center text-primary dark:text-primary-dark mb-6 group-hover:bg-primary/20 dark:group-hover:bg-primary-dark/20 transition-colors"
-                                whileHover={{ scale: 1.1, rotate: 5 }}
-                                transition={{
-                                    type: 'spring',
-                                    stiffness: 400,
-                                    damping: 10,
-                                }}
-                            >
-                                {feature.icon}
-                            </motion.div>
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                                {feature.title}
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                                {feature.description}
-                            </p>
-                        </motion.div>
-                    ))}
-                </motion.div>
+                {/* Main Features — animated showcase rows */}
+                <FeatureShowcase />
 
                 {/* Cloud Providers Section */}
                 <motion.div
