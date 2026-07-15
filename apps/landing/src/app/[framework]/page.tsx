@@ -71,15 +71,19 @@ export default async function FrameworkPage({
                 framework={{ id: fw.id, name: fw.name, pkg: fw.pkg }}
             />
             <HeroSection framework={fw.id} />
-            <InteractiveExample
-                {...(fw.hasImageEditor
-                    ? {}
-                    : {
-                          initialConfig: { imageEditor: { enabled: false } },
-                          hiddenCategories: ['editor' as const],
-                          showCodeTab: false,
-                      })}
-            />
+            <div id="demo" className="scroll-mt-24">
+                <InteractiveExample
+                    {...(fw.hasImageEditor
+                        ? {}
+                        : {
+                              initialConfig: {
+                                  imageEditor: { enabled: false },
+                              },
+                              hiddenCategories: ['editor' as const],
+                              showCodeTab: false,
+                          })}
+                />
+            </div>
             <HomepageFeatures />
             {fw.id === 'react' && <StackBlitzDemoSection />}
             <FAQSection />

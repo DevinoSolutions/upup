@@ -22,7 +22,9 @@ export default function Home() {
         <div className="container mx-auto">
             <StructuredData />
             <HeroSection />
-            <InteractiveExample />
+            <div id="demo" className="scroll-mt-24">
+                <InteractiveExample />
+            </div>
             <HomepageFeatures />
             <StackBlitzDemoSection />
             <FAQSection />
