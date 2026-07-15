@@ -65,9 +65,9 @@ export default function EditorScene({
             <MockUploader
                 stage="idle"
                 files={[]}
-                showBrowser
+                showOverlay
                 reduce={frozen}
-                browser={<MockImageEditor state={state} reduce={frozen} />}
+                overlay={<MockImageEditor state={state} reduce={frozen} />}
             />
         </div>
     )

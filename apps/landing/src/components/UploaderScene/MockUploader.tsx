@@ -73,7 +73,11 @@ interface MockUploaderProps {
     activeSource?: string | null
     stage: QueueStage
     files: QueueFile[]
-    /** Overlay slot (MockDriveBrowser) — slides up over the panel body. */
+    /** One overlay slot shared by the drive browser AND the image editor — it
+        slides up over the panel body. `overlay`/`showOverlay` are the neutral
+        names; `browser`/`showBrowser` are kept as working aliases. */
+    showOverlay?: boolean
+    overlay?: ReactNode
     showBrowser?: boolean
     browser?: ReactNode
     reduce?: boolean
@@ -84,12 +88,16 @@ export default function MockUploader({
     activeSource = null,
     stage,
     files,
+    showOverlay,
+    overlay,
     showBrowser = false,
     browser,
     reduce = false,
     className = '',
 }: MockUploaderProps) {
     const hasQueue = stage !== 'idle'
+    const overlayNode = overlay ?? browser
+    const overlayVisible = showOverlay ?? showBrowser
 
     return (
         <div
@@ -187,9 +195,10 @@ export default function MockUploader({
                         </AnimatePresence>
                     </div>
 
-                    {/* Drive-browser overlay — slides up over the panel body */}
+                    {/* Overlay slot (drive browser or image editor) — slides up
+                        over the panel body */}
                     <AnimatePresence>
-                        {showBrowser && browser && (
+                        {overlayVisible && overlayNode && (
                             <motion.div
                                 className="absolute inset-0 z-30"
                                 initial={
@@ -211,7 +220,7 @@ export default function MockUploader({
                                           }
                                 }
                             >
-                                {browser}
+                                {overlayNode}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -380,7 +389,9 @@ function FileRow({
 }
 
 // Size text that crossfades from the pre- to post-compression value, with a
-// sparkle pop on the transition — the on-device compression flair.
+// sparkle pop on the transition — the on-device compression flair. When a file
+// isn't compressed (sizeFrom === sizeTo, e.g. the resume scene's large file),
+// the crossfade and sparkle are suppressed so it stays on-message.
 function SizeText({
     file,
     compressed,
@@ -390,6 +401,16 @@ function SizeText({
     compressed: boolean
     reduce: boolean
 }) {
+    const morphs = file.sizeFrom !== file.sizeTo
+
+    if (!morphs) {
+        return (
+            <span className="text-[11px] tabular-nums text-gray-400">
+                {file.sizeTo}
+            </span>
+        )
+    }
+
     return (
         <span className="relative inline-flex items-center gap-1">
             <span className="relative inline-grid text-right text-[11px] tabular-nums">

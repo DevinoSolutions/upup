@@ -96,10 +96,6 @@ const INITIAL: DriveState = {
     stage: 'idle',
 }
 
-// The step count is fixed regardless of which provider fills the `activeSource`
-// slot, so it is safe to seed the loop-wrap detector below with it.
-const STEP_COUNT = 13
-
 interface DriveSceneProps {
     /** Viewport gate from the parent; false freezes the final frame. */
     active?: boolean
@@ -149,9 +145,10 @@ export default function DriveScene({
     })
 
     // Advance the provider once per completed loop. The engine seeds `phase`
-    // with the final-frame value, so we ignore the opening len→0 settle and only
-    // count a wrap after we have seen genuine forward progress (`armed`).
-    const prevPhase = useRef(STEP_COUNT)
+    // with the final-frame value (script.length), so we ignore the opening
+    // len→0 settle and only count a wrap after genuine forward progress
+    // (`armed`).
+    const prevPhase = useRef(script.length)
     const armed = useRef(false)
     useEffect(() => {
         if (phase > prevPhase.current) {
