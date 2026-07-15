@@ -1,7 +1,14 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { InteractiveExample } from '@upupjs/interactive-example'
+import '@upupjs/interactive-example/styles'
 import { FRAMEWORK_IDS, getFramework } from '@/lib/frameworks'
-import FrameworkLanding from '@/components/FrameworkLanding'
+import StructuredData from '@/components/StructuredData'
+import HeroSection from '@/components/HomepageHero'
+import HomepageFeatures from '@/components/HomepageFeatures'
+import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
+import FeedbackSection from '@/components/FeedbackSection'
+import Toast from '@/components/Toast'
 
 const SITE_URL = 'https://useupup.com'
 
@@ -56,5 +63,26 @@ export default async function FrameworkPage({
     const { framework } = await params
     const fw = getFramework(framework)
     if (!fw) notFound()
-    return <FrameworkLanding framework={fw} />
+
+    return (
+        <div className="container mx-auto">
+            <StructuredData
+                framework={{ id: fw.id, name: fw.name, pkg: fw.pkg }}
+            />
+            <HeroSection framework={fw.id} />
+            <InteractiveExample
+                {...(fw.hasImageEditor
+                    ? {}
+                    : {
+                          initialConfig: { imageEditor: { enabled: false } },
+                          hiddenCategories: ['editor' as const],
+                          showCodeTab: false,
+                      })}
+            />
+            <HomepageFeatures />
+            {fw.id === 'react' && <StackBlitzDemoSection />}
+            <FeedbackSection />
+            <Toast />
+        </div>
+    )
 }

@@ -3,103 +3,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Copy, Terminal } from 'lucide-react'
+import { FRAMEWORK_LIST, type FrameworkMeta } from '@/lib/frameworks'
 
-// One uploader, native UI per framework. Every snippet below is the verified
-// minimal Client-Mode usage from that package's README (component/import names
-// pinned by each package's public-api test). Do not invent APIs here.
-type Framework = {
-    id: string
-    name: string
-    pkg: string
-    file: string
-    code: string
-}
-
-const FRAMEWORKS: Framework[] = [
-    {
-        id: 'react',
-        name: 'React',
-        pkg: '@upupjs/react',
-        file: 'Uploader.tsx',
-        code: `'use client'
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
-
-export default function Uploader() {
-  return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
-}`,
-    },
-    {
-        id: 'vue',
-        name: 'Vue',
-        pkg: '@upupjs/vue',
-        file: 'Uploader.vue',
-        code: `<script setup lang="ts">
-import { UpupUploader } from '@upupjs/vue'
-import '@upupjs/vue/styles'
-</script>
-
-<template>
-  <UpupUploader provider="aws" upload-endpoint="/api/upload-token" />
-</template>`,
-    },
-    {
-        id: 'svelte',
-        name: 'Svelte',
-        pkg: '@upupjs/svelte',
-        file: 'Uploader.svelte',
-        code: `<script lang="ts">
-  import { UpupUploader } from '@upupjs/svelte'
-  import '@upupjs/svelte/styles'
-</script>
-
-<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`,
-    },
-    {
-        id: 'angular',
-        name: 'Angular',
-        pkg: '@upupjs/angular',
-        file: 'app.component.ts',
-        code: `import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upupjs/angular'
-// Load styles once: add '@upupjs/angular/styles' to angular.json → "styles"
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [UpupUploaderComponent],
-  template: \`<upup-uploader
-    [config]="{ provider: 'aws', uploadEndpoint: '/api/upload-token' }"
-  />\`,
-})
-export class AppComponent {}`,
-    },
-    {
-        id: 'vanilla',
-        name: 'Vanilla JS',
-        pkg: '@upupjs/vanilla',
-        file: 'uploader.ts',
-        code: `import { createUploader } from '@upupjs/vanilla'
-import '@upupjs/vanilla/styles'
-
-createUploader('#uploader', {
-  provider: 'aws',
-  uploadEndpoint: '/api/upload-token',
-})`,
-    },
-    {
-        id: 'preact',
-        name: 'Preact',
-        pkg: '@upupjs/preact',
-        file: 'App.tsx',
-        code: `import { UpupUploader } from '@upupjs/preact'
-import '@upupjs/preact/styles'
-
-export function App() {
-  return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
-}`,
-    },
-]
+// The per-framework list (id/name/pkg/file/code) is the single source of truth
+// in src/lib/frameworks — imported here so the home snippets, the framework
+// strip, and the /{framework} pages never drift.
+const FRAMEWORKS: FrameworkMeta[] = FRAMEWORK_LIST
 
 // Small, dependency-free, deterministic (SSR-safe) tokenizer. It only colors
 // what is lexically unambiguous across TS/JSX/Vue/Svelte — strings, line
@@ -218,8 +127,10 @@ function HighlightedCode({ code }: { code: string }) {
     )
 }
 
-export default function FrameworkSnippets() {
-    const [activeId, setActiveId] = useState('react')
+export default function FrameworkSnippets({
+    initialId = 'react',
+}: Readonly<{ initialId?: string }> = {}) {
+    const [activeId, setActiveId] = useState(initialId)
     const [copiedCode, setCopiedCode] = useState(false)
     const [copiedInstall, setCopiedInstall] = useState(false)
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})

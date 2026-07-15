@@ -65,14 +65,21 @@ const faqPage = {
     })),
 }
 
-export default function StructuredData() {
+export default function StructuredData({
+    framework,
+}: Readonly<{ framework?: { id: string; name: string; pkg: string } }> = {}) {
+    const app = framework
+        ? {
+              ...softwareApplication,
+              url: `${SITE_URL}/${framework.id}`,
+              description: `Open-source ${framework.name} file uploader (${framework.pkg}) with a headless core. The same uploader ships native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact, with cloud-drive sources, camera, screen capture, and secure server-mode uploads to any S3-compatible storage.`,
+          }
+        : softwareApplication
     return (
         <>
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(softwareApplication),
-                }}
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(app) }}
             />
             <script
                 type="application/ld+json"
