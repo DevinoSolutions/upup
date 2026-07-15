@@ -23,6 +23,10 @@ jobs:
         steps:
             - name: Checkout repo
               uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  # Full history + tags: the umbrella-release step derives contributors
+                  # (git shortlog over the range) and the previous v-tag from them.
+                  fetch-depth: 0
 
             - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
 
@@ -141,14 +145,40 @@ jobs:
               if: github.ref == 'refs/heads/dev'
               run: pnpm run test-release
 
-            - name: Create GitHub Releases (per published package)
+            - name: Push package tags + publish umbrella GitHub Release
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               shell: bash
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  TO_PUBLISH: ${{ steps.package_meta.outputs.to_publish }}
               run: |
-                  for ref in $TO_PUBLISH; do
-                    case "$ref" in *[!A-Za-z0-9@._/-]*) echo "skip invalid ref: $ref"; continue;; esac
-                    gh release create "$ref" --title "$ref" --generate-notes || true
-                  done
+                  # changeset publish tagged each package locally (@upupjs/x@ver) — push them
+                  # so the per-package tags exist on the remote (but no per-package *releases*).
+                  git push origin --tags || echo "::warning::pushing package tags failed"
+
+                  VERSION="$(node -p "require('./packages/core/package.json').version")"
+                  TAG="v$VERSION"
+                  if gh release view "$TAG" >/dev/null 2>&1; then
+                    echo "Release $TAG already exists — nothing to do."
+                    exit 0
+                  fi
+
+                  # Previous v-release → compare link + GitHub's auto "What's Changed" body.
+                  PREV_TAG="$(git tag -l 'v*' --sort=-v:refname | grep -vx "$TAG" | head -1 || true)"
+                  NOTES="$RUNNER_TEMP/release-notes.md"
+                  CHANGELOG="$RUNNER_TEMP/changelog.md"
+                  : >"$CHANGELOG"
+                  if [ -n "$PREV_TAG" ]; then
+                    gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+                      -f tag_name="$TAG" -f previous_tag_name="$PREV_TAG" -f target_commitish="$GITHUB_SHA" \
+                      --jq '.body' >"$CHANGELOG" || : >"$CHANGELOG"
+                  fi
+
+                  NOTE_ARGS=(--version "$VERSION" --changelog "$CHANGELOG")
+                  if [ -n "$PREV_TAG" ]; then NOTE_ARGS+=(--previous-tag "$PREV_TAG"); fi
+                  node scripts/generate-release-notes.mjs "${NOTE_ARGS[@]}" >"$NOTES"
+
+                  gh release create "$TAG" \
+                    --title "upup $TAG" \
+                    --notes-file "$NOTES" \
+                    --target "$GITHUB_SHA" \
+                    --latest

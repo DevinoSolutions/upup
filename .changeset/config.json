@@ -1,8 +1,23 @@
 {
     "$schema": "https://unpkg.com/@changesets/config@2.3.1/schema.json",
-    "changelog": false,
+    "changelog": [
+        "@changesets/changelog-github",
+        { "repo": "DevinoSolutions/upup" }
+    ],
     "commit": false,
-    "fixed": [],
+    "fixed": [
+        [
+            "@upupjs/angular",
+            "@upupjs/core",
+            "@upupjs/next",
+            "@upupjs/preact",
+            "@upupjs/react",
+            "@upupjs/server",
+            "@upupjs/svelte",
+            "@upupjs/vanilla",
+            "@upupjs/vue"
+        ]
+    ],
     "linked": [],
     "access": "public",
     "baseBranch": "master",
