@@ -83,6 +83,12 @@ export type InteractiveExampleProps = {
     showCodeTab?: boolean
     /** Show the Events tab next to Preview/Code. Default true. */
     showEventsTab?: boolean
+    /**
+     * Category sections to remove from the sidebar entirely (both tiers).
+     * Used by the per-framework landing pages to hide the image-editor
+     * controls where the editor isn't available (react/preact-only island).
+     */
+    hiddenCategories?: CategoryId[]
     focus?: PropId[]
     initialConfig?: UpupConfig
     previewWidth?: number | 'auto'

@@ -19,7 +19,14 @@ describe('Sidebar', () => {
 
         await userEvent.click(screen.getByRole('tab', { name: /advanced/i }))
 
-        for (const label of ['Processing', 'Editor', 'Behavior', 'Language', 'Events', 'Advanced — self-host']) {
+        for (const label of [
+            'Processing',
+            'Editor',
+            'Behavior',
+            'Language',
+            'Events',
+            'Advanced — self-host',
+        ]) {
             expect(screen.getByText(label)).toBeTruthy()
         }
     })
@@ -32,5 +39,16 @@ describe('Sidebar', () => {
         )
         expect(screen.getByText('Provider')).toBeTruthy()
         expect(screen.queryByText('Enabled sources')).toBeNull()
+    })
+
+    it('omits categories listed in hiddenCategories even in advanced tier', async () => {
+        render(
+            <ConfigProvider initialConfig={{}}>
+                <Sidebar defaultExpanded={[]} hiddenCategories={['editor']} />
+            </ConfigProvider>,
+        )
+        await userEvent.click(screen.getByRole('tab', { name: /advanced/i }))
+        expect(screen.queryByText('Editor')).toBeNull()
+        expect(screen.getByText('Processing')).toBeTruthy()
     })
 })
