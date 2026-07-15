@@ -15,20 +15,26 @@ import { motion, AnimatePresence } from 'framer-motion'
 import GradientText from '@/components/TextAnimation/GradientText'
 import BlurText from '@/components/TextAnimation/BlurText'
 import FrameworkSnippets from '@/components/FrameworkSnippets'
+import FrameworkStrip from '@/components/FrameworkStrip'
+import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
 
-export default function HeroSection() {
+export default function HeroSection({
+    framework,
+}: Readonly<{ framework?: FrameworkId }> = {}) {
+    const fw = framework ? FRAMEWORKS[framework] : undefined
     const [copied, setCopied] = useState(false)
     const [isOpen, setIsOpen] = useState(false)
     const [selectedManager, setSelectedManager] = useState('npm')
 
+    const pkg = fw?.pkg ?? '@upupjs/react'
     const packageManagers = useMemo(
         () => [
-            { id: 'npm', name: 'npm', command: 'npm install @upupjs/react' },
-            { id: 'pnpm', name: 'pnpm', command: 'pnpm add @upupjs/react' },
-            { id: 'yarn', name: 'Yarn', command: 'yarn add @upupjs/react' },
-            { id: 'bun', name: 'Bun', command: 'bun add @upupjs/react' },
+            { id: 'npm', name: 'npm', command: `npm install ${pkg}` },
+            { id: 'pnpm', name: 'pnpm', command: `pnpm add ${pkg}` },
+            { id: 'yarn', name: 'Yarn', command: `yarn add ${pkg}` },
+            { id: 'bun', name: 'Bun', command: `bun add ${pkg}` },
         ],
-        [],
+        [pkg],
     )
 
     const currentCommand = useMemo(() => {
@@ -223,7 +229,7 @@ export default function HeroSection() {
                                 showBorder={false}
                                 className="font-bold"
                             >
-                                Every Framework
+                                {fw?.name ?? 'Every Framework'}
                             </GradientText>
                         </span>
                     </motion.h1>
@@ -241,11 +247,25 @@ export default function HeroSection() {
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.8, duration: 0.5 }}
                         >
-                            React, Vue, Svelte, Angular, Vanilla JS &amp; Preact
+                            {fw?.name ??
+                                'React, Vue, Svelte, Angular, Vanilla JS & Preact'}
                         </motion.span>
                         . Cloud drives, camera, screen capture, and secure
                         server-mode uploads to any S3-compatible storage.
                     </motion.p>
+
+                    {/* Framework icon strip — official logos linking to each
+                        /{framework} landing page (/react, /vue, …). */}
+                    <motion.div
+                        className="mb-12"
+                        variants={itemVariants}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <FrameworkStrip
+                            activeId={fw?.id}
+                            heading="Works with every framework — pick yours"
+                        />
+                    </motion.div>
 
                     {/* CTA Buttons */}
                     <motion.div
@@ -474,7 +494,7 @@ export default function HeroSection() {
                     </motion.div>
                 </motion.div>
 
-                <FrameworkSnippets />
+                <FrameworkSnippets initialId={fw?.id} />
             </div>
         </section>
     )
