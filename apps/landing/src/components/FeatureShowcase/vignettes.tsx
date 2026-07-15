@@ -33,6 +33,12 @@ import { FRAMEWORK_LIST } from '@/lib/frameworks'
 // static final frame instead of the animation (via useReducedMotion()).
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface VignetteProps {
+    // Animate only while the row is in the viewport; when false the vignette is
+    // treated exactly like reduced-motion (static final frame, no intervals).
+    active?: boolean
+}
+
 // Shared: a small dropzone/uploader panel mock reused as a visual anchor.
 function PanelMock({ children }: { children?: React.ReactNode }) {
     return (
@@ -45,8 +51,9 @@ function PanelMock({ children }: { children?: React.ReactNode }) {
 // 1. Six Frameworks, One Uploader ─────────────────────────────────────────────
 // A pixel-identical uploader panel mock while a framework badge cycles in the
 // corner — the message: same DOM, any framework.
-export function FrameworksVignette() {
-    const reduce = useReducedMotion()
+export function FrameworksVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
     const [idx, setIdx] = useState(0)
 
     useEffect(() => {
@@ -105,10 +112,11 @@ export function FrameworksVignette() {
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
                         <motion.div
-                            className="h-full rounded-full bg-primary dark:bg-primary-dark"
-                            initial={{ width: reduce ? '72%' : '20%' }}
+                            className="h-full w-full rounded-full bg-primary dark:bg-primary-dark"
+                            style={{ transformOrigin: 'left' }}
+                            initial={{ scaleX: reduce ? 0.72 : 0.2 }}
                             animate={{
-                                width: reduce ? '72%' : ['20%', '72%', '20%'],
+                                scaleX: reduce ? 0.72 : [0.2, 0.72, 0.2],
                             }}
                             transition={
                                 reduce
@@ -141,8 +149,9 @@ const SOURCES = [
     { Icon: FaLink, color: '#14b8a6', x: 212, y: 144 },
 ]
 
-export function SourcesVignette() {
-    const reduce = useReducedMotion()
+export function SourcesVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
     const center = { x: 118, y: 62 }
 
     return (
@@ -205,8 +214,9 @@ export function SourcesVignette() {
 // 3. Secure Server Mode ───────────────────────────────────────────────────────
 // Browser → Your Server (HMAC-signed) → S3, with signed packets flowing through
 // and an unsigned one bounced back with a 403.
-export function ServerModeVignette() {
-    const reduce = useReducedMotion()
+export function ServerModeVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
 
     return (
         <div className="w-full max-w-[320px]">
@@ -329,8 +339,9 @@ function Packet({ color, delay }: { color: string; delay: number }) {
 // 4. Built-In Image Editor (React & Preact) ───────────────────────────────────
 // A placeholder photo with a marching-ants crop marquee that draws, then the
 // crop snaps in; a small editor toolbar sits beneath.
-export function EditorVignette() {
-    const reduce = useReducedMotion()
+export function EditorVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
 
     return (
         <div className="flex flex-col items-center gap-3">
@@ -419,8 +430,9 @@ export function EditorVignette() {
 // 5. Crash-Safe & Resumable ───────────────────────────────────────────────────
 // Progress fills to ~62%, a reload flicker blinks the window chrome, then the
 // bar resumes from 62% to 100% with a "resumed" tick.
-export function ResumeVignette() {
-    const reduce = useReducedMotion()
+export function ResumeVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
 
     return (
         <div className="w-[260px] rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/80 dark:bg-white/[0.03] p-4 shadow-sm">
@@ -467,12 +479,11 @@ export function ResumeVignette() {
 
             <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
                 <motion.div
-                    className="h-full rounded-full bg-primary dark:bg-primary-dark"
-                    initial={{ width: reduce ? '100%' : '0%' }}
+                    className="h-full w-full rounded-full bg-primary dark:bg-primary-dark"
+                    style={{ transformOrigin: 'left' }}
+                    initial={{ scaleX: reduce ? 1 : 0 }}
                     animate={{
-                        width: reduce
-                            ? '100%'
-                            : ['0%', '62%', '62%', '62%', '100%'],
+                        scaleX: reduce ? 1 : [0, 0.62, 0.62, 0.62, 1],
                     }}
                     transition={
                         reduce
@@ -493,8 +504,9 @@ export function ResumeVignette() {
 // 6. Fast by Default: Workers + HEIC ──────────────────────────────────────────
 // Left: a .heic chip morphing to .jpg. Right: a flat "main thread" line while a
 // "worker" lane does the pulsing.
-export function PipelineVignette() {
-    const reduce = useReducedMotion()
+export function PipelineVignette({ active = true }: VignetteProps) {
+    const reduceMotion = useReducedMotion()
+    const reduce = reduceMotion || !active
 
     return (
         <div className="flex w-full max-w-[320px] items-center justify-around gap-4">

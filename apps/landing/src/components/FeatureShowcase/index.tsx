@@ -31,7 +31,7 @@ interface HeroRow {
     icon: React.ReactNode
     title: string
     description: string
-    Vignette: React.ComponentType
+    Vignette: React.ComponentType<{ active?: boolean }>
     live: boolean
 }
 
@@ -121,6 +121,8 @@ const secondaryFeatures = [
 function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
     const ref = useRef(null)
     const inView = useInView(ref, { once: true, amount: 0.3 })
+    // Separate, non-`once` observer so vignettes only animate while on-screen.
+    const active = useInView(ref, { amount: 0.2 })
     const flipped = index % 2 === 1
     const { Vignette } = row
 
@@ -148,6 +150,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 {row.live && (
                     <a
                         href="#demo"
+                        aria-label={`See ${row.title} live`}
                         className="group mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:text-primary-dark dark:hover:text-primary"
                     >
                         See it live
@@ -156,8 +159,9 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 )}
             </motion.div>
 
-            {/* Visual column */}
+            {/* Visual column — decorative, hidden from assistive tech */}
             <motion.div
+                aria-hidden="true"
                 className={`order-1 flex min-h-[260px] items-center justify-center overflow-hidden rounded-3xl border border-white/20 bg-white p-8 shadow-md dark:border-white/10 dark:bg-white/5 ${
                     flipped ? 'lg:order-1' : 'lg:order-2'
                 }`}
@@ -169,7 +173,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 }
                 transition={{ duration: 0.7, ease: easeCurve }}
             >
-                <Vignette />
+                <Vignette active={active} />
             </motion.div>
         </div>
     )
