@@ -315,7 +315,7 @@ export default function HeroSection({
                             (drag-and-drop, headless core, native UI, cloud drives,
                             camera, screen capture, secure S3 server-mode). */}
                         <motion.p
-                            className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
+                            className="text-sm sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
                             variants={subtitleVariants}
                         >
                             A drag-and-drop file uploader with a headless core

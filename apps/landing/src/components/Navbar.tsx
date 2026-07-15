@@ -1,20 +1,20 @@
-"use client";
+'use client'
 
-import { useState, useContext, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Menu, X, Github } from "lucide-react";
-import { ThemeContext } from "@/lib/contexts";
-import ThemeToggler from "@/components/ThemeToggler";
+import { useState, useContext, useEffect } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Menu, X, Github } from 'lucide-react'
+import { ThemeContext } from '@/lib/contexts'
+import ThemeToggler from '@/components/ThemeToggler'
 
 export default function Navbar() {
-    const [navbarOpen, setNavbarOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
-    const { isDarkMode } = useContext(ThemeContext);
+    const [navbarOpen, setNavbarOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
+    const { isDarkMode } = useContext(ThemeContext)
 
     useEffect(() => {
-        setMounted(true);
-    }, []);
+        setMounted(true)
+    }, [])
 
     const navLinks = (
         <>
@@ -66,10 +66,10 @@ export default function Navbar() {
                 </Link>
             </li>
         </>
-    );
+    )
 
     return (
-        <nav className="fixed top-0 w-full z-50  backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/50 transition-colors duration-300">
+        <nav className="fixed top-0 w-full z-50 bg-white/75 dark:bg-gray-950/75 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/50 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex items-center justify-between h-24  ">
                     {/* Logo */}
@@ -77,13 +77,28 @@ export default function Navbar() {
                         <Link href="/">
                             {mounted ? (
                                 isDarkMode ? (
-                                    <Image src="/img/logo-dark.png" alt="Upup" width={120} height={120} />
+                                    <Image
+                                        src="/img/logo-dark.png"
+                                        alt="Upup"
+                                        width={120}
+                                        height={120}
+                                    />
                                 ) : (
-                                    <Image src="/img/logo.png" alt="Upup" width={120} height={120} />
+                                    <Image
+                                        src="/img/logo.png"
+                                        alt="Upup"
+                                        width={120}
+                                        height={120}
+                                    />
                                 )
                             ) : (
                                 // Default logo during hydration to prevent mismatch
-                                <Image src="/img/logo.png" alt="Upup" width={120} height={120} />
+                                <Image
+                                    src="/img/logo.png"
+                                    alt="Upup"
+                                    width={120}
+                                    height={120}
+                                />
                             )}
                         </Link>
                     </div>
@@ -128,9 +143,7 @@ export default function Navbar() {
             {navbarOpen && (
                 <div className="lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-200/20 dark:border-gray-800/50">
                     <div className="px-6 py-6 space-y-4">
-                        <ul className="space-y-4">
-                            {navLinks}
-                        </ul>
+                        <ul className="space-y-4">{navLinks}</ul>
 
                         {/* Mobile CTA */}
                         <div className="pt-4 border-t border-gray-200/50 dark:border-gray-800/50">
@@ -146,5 +159,5 @@ export default function Navbar() {
                 </div>
             )}
         </nav>
-    );
+    )
 }

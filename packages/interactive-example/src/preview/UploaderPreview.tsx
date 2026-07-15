@@ -233,6 +233,12 @@ export function UploaderPreview({
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
                 <UpupUploader
+                    // Remount on a light/dark flip so the uploader picks up the
+                    // new mode. The uploader resolves its theme tokens once at
+                    // mount and does not re-resolve when the `theme.mode` prop
+                    // changes, so without a fresh key a page-theme toggle would
+                    // leave the panel painted in its original mode.
+                    key={effectiveMode}
                     provider="aws"
                     serverUrl=""
                     {...runtimeConfig}
