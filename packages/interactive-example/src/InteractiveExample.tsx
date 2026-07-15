@@ -89,7 +89,7 @@ function Shell({
     aiAssistant,
 }: {
     defaultExpanded: NonNullable<InteractiveExampleProps['defaultExpanded']>
-    hiddenCategories?: CategoryId[]
+    hiddenCategories: CategoryId[]
     showCodeTab: boolean
     showEventsTab: boolean
     previewWidth: number | 'auto'
@@ -204,7 +204,7 @@ function FocusMode({
 
 export function InteractiveExample({
     defaultExpanded = [],
-    hiddenCategories,
+    hiddenCategories = [],
     showCodeTab = true,
     showEventsTab = true,
     focus,
