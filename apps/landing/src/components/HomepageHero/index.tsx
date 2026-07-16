@@ -28,7 +28,7 @@ export default function HeroSection({
     const [selectedManager, setSelectedManager] = useState('npm')
 
     // Non-`once` observer on the hero visual: the scene only runs while it is
-    // on-screen (the FeatureShowcase idiom). usePanelCursor stays internal to
+    // on-screen (the FeatureShowcase idiom). Cursor measuring stays internal to
     // HeroSession — we just pass the gate down.
     const visualRef = useRef(null)
     const visualActive = useInView(visualRef, { amount: 0.2 })

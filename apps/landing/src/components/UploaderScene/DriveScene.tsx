@@ -7,8 +7,10 @@ import { GrOnedrive } from 'react-icons/gr'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
 import SceneCursor from './SceneCursor'
-import { usePanelCursor, useSceneTimeline } from './useSceneTimeline'
+import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
+import { useSceneTargets } from './scene-targets'
+import type { CursorWaypoint } from './scene-targets'
 import type { DriveProvider, DriveThumb, QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,8 +77,7 @@ const DRIVE_THUMBS: DriveThumb[] = [
 ]
 
 interface DriveState {
-    cx: number
-    cy: number
+    cursor: CursorWaypoint
     cursorHidden: boolean
     clickId: number
     activeSource: string | null
@@ -86,8 +87,7 @@ interface DriveState {
 }
 
 const INITIAL: DriveState = {
-    cx: 8,
-    cy: 92,
+    cursor: { px: 6, py: 92 },
     cursorHidden: true,
     clickId: 0,
     activeSource: null,
@@ -110,30 +110,39 @@ export default function DriveScene({
     const provider = DRIVE_PROVIDERS[providerIdx]
 
     // Ascending by `at` (seconds). loop = 11s → ~1.8s rest on the filled queue.
+    // Cursor moves land on measured targets and each click fires after the
+    // spring settles; the three picks visit the three thumbs that get selected.
     const script: TimelineStep<DriveState>[] = [
-        { at: 0.4, set: { cursorHidden: false, cx: 55, cy: 12 } },
-        { at: 1.6, set: { activeSource: provider.id, clickId: 1 } },
         {
-            at: 2.1,
-            set: { activeSource: null, browserOpen: true, cx: 26, cy: 42 },
+            at: 0.4,
+            set: {
+                cursorHidden: false,
+                cursor: { target: `source-${provider.id}` },
+            },
         },
-        { at: 3.0, set: { picked: 1, clickId: 2 } },
-        { at: 3.5, set: { cx: 60, cy: 42 } },
-        { at: 4.0, set: { picked: 2, clickId: 3 } },
-        { at: 4.5, set: { cx: 44, cy: 62 } },
-        { at: 5.0, set: { picked: 3, clickId: 4 } },
-        { at: 5.7, set: { cx: 26, cy: 86 } },
-        { at: 6.2, set: { clickId: 5 } },
+        { at: 1.4, set: { activeSource: provider.id, clickId: 1 } },
         {
-            at: 6.5,
+            at: 1.8,
+            set: { activeSource: null, browserOpen: true },
+        },
+        { at: 2.8, set: { cursor: { target: 'thumb-0' } } },
+        { at: 3.4, set: { picked: 1, clickId: 2 } },
+        { at: 4.0, set: { cursor: { target: 'thumb-1' } } },
+        { at: 4.6, set: { picked: 2, clickId: 3 } },
+        { at: 5.2, set: { cursor: { target: 'thumb-2' } } },
+        { at: 5.8, set: { picked: 3, clickId: 4 } },
+        { at: 6.5, set: { cursor: { target: 'drive-add' } } },
+        { at: 7.2, set: { clickId: 5 } },
+        {
+            at: 7.5,
             set: {
                 browserOpen: false,
                 stage: 'filling',
                 cursorHidden: true,
             },
         },
-        { at: 7.6, set: { stage: 'uploading' } },
-        { at: 9.2, set: { stage: 'done' } },
+        { at: 8.5, set: { stage: 'uploading' } },
+        { at: 10.0, set: { stage: 'done' } },
     ]
 
     const { state, phase, frozen } = useSceneTimeline<DriveState>({
@@ -160,18 +169,15 @@ export default function DriveScene({
         prevPhase.current = phase
     }, [phase])
 
-    const {
-        ref: panelRef,
-        x: cursorX,
-        y: cursorY,
-    } = usePanelCursor<HTMLDivElement>(state.cx, state.cy)
+    const { rootRef, measure } = useSceneTargets<HTMLDivElement>()
+    const { x: cursorX, y: cursorY } = measure(state.cursor)
 
     return (
         <div
             aria-hidden
             className={`mx-auto w-full max-w-[380px] ${className}`}
         >
-            <div ref={panelRef} className="relative">
+            <div ref={rootRef} className="relative">
                 <MockUploader
                     activeSource={state.activeSource}
                     stage={state.stage}

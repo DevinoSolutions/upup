@@ -131,6 +131,7 @@ export default function MockUploader({
                                 }
                             >
                                 <motion.span
+                                    data-scene-target={`source-${source.id}`}
                                     className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
                                     animate={{
                                         backgroundColor: active
@@ -388,10 +389,11 @@ function FileRow({
     )
 }
 
-// Size text that crossfades from the pre- to post-compression value, with a
-// sparkle pop on the transition — the on-device compression flair. When a file
-// isn't compressed (sizeFrom === sizeTo, e.g. the resume scene's large file),
-// the crossfade and sparkle are suppressed so it stays on-message.
+// Size text that crossfades from the pre- to post-compression value — the
+// on-device compression story, told by the number alone (the strikethrough
+// original giving way to the smaller green result). When a file isn't compressed
+// (sizeFrom === sizeTo, e.g. the resume scene's large file), the crossfade is
+// suppressed so it stays on-message.
 function SizeText({
     file,
     compressed,
@@ -412,47 +414,23 @@ function SizeText({
     }
 
     return (
-        <span className="relative inline-flex items-center gap-1">
-            <span className="relative inline-grid text-right text-[11px] tabular-nums">
-                <motion.span
-                    className="col-start-1 row-start-1 text-gray-500 line-through"
-                    initial={false}
-                    animate={{ opacity: compressed ? 0 : 1 }}
-                    transition={reduce ? { duration: 0 } : { duration: 0.3 }}
-                >
-                    {file.sizeFrom}
-                </motion.span>
-                <motion.span
-                    className="col-start-1 row-start-1 font-medium text-emerald-300"
-                    initial={false}
-                    animate={{ opacity: compressed ? 1 : 0 }}
-                    transition={reduce ? { duration: 0 } : { duration: 0.3 }}
-                >
-                    {file.sizeTo}
-                </motion.span>
-            </span>
-            {!reduce && (
-                <motion.span
-                    className="text-amber-300"
-                    initial={false}
-                    animate={
-                        compressed
-                            ? { scale: [0, 1.3, 1], opacity: [0, 1, 0] }
-                            : { scale: 0, opacity: 0 }
-                    }
-                    transition={{ duration: 0.7 }}
-                >
-                    <SparkleIcon />
-                </motion.span>
-            )}
+        <span className="relative inline-grid text-right text-[11px] tabular-nums">
+            <motion.span
+                className="col-start-1 row-start-1 text-gray-500 line-through"
+                initial={false}
+                animate={{ opacity: compressed ? 0 : 1 }}
+                transition={reduce ? { duration: 0 } : { duration: 0.3 }}
+            >
+                {file.sizeFrom}
+            </motion.span>
+            <motion.span
+                className="col-start-1 row-start-1 font-medium text-emerald-300"
+                initial={false}
+                animate={{ opacity: compressed ? 1 : 0 }}
+                transition={reduce ? { duration: 0 } : { duration: 0.3 }}
+            >
+                {file.sizeTo}
+            </motion.span>
         </span>
-    )
-}
-
-function SparkleIcon() {
-    return (
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z" />
-        </svg>
     )
 }

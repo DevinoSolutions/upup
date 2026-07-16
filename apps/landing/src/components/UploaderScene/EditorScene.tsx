@@ -159,25 +159,10 @@ function MockImageEditor({
                 </svg>
 
                 {/* Crop marquee (marching ants). */}
-                <motion.svg
+                <svg
                     viewBox="0 0 224 160"
                     className="absolute inset-0 h-full w-full"
                     aria-hidden="true"
-                    animate={
-                        reduce || tool !== 0
-                            ? { scale: 1 }
-                            : { scale: [1, 0.88, 0.88, 1] }
-                    }
-                    transition={
-                        reduce || tool !== 0
-                            ? { duration: 0 }
-                            : {
-                                  duration: 4,
-                                  repeat: Infinity,
-                                  ease: 'easeInOut',
-                              }
-                    }
-                    style={{ transformOrigin: 'center' }}
                 >
                     <motion.rect
                         x="26"
@@ -202,7 +187,7 @@ function MockImageEditor({
                                   }
                         }
                     />
-                </motion.svg>
+                </svg>
             </div>
 
             {/* Toolbar — highlights the active tool. */}

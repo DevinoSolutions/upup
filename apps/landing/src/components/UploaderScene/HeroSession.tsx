@@ -5,8 +5,10 @@ import { SiGoogledrive } from 'react-icons/si'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
 import SceneCursor from './SceneCursor'
-import { usePanelCursor, useSceneTimeline } from './useSceneTimeline'
+import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
+import { useSceneTargets } from './scene-targets'
+import type { CursorWaypoint } from './scene-targets'
 import type { DriveThumb, QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -19,9 +21,8 @@ import type { DriveThumb, QueueFile, QueueStage } from './types'
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface HeroState {
-    /** Cursor position as a percentage of the panel box. */
-    cx: number
-    cy: number
+    /** Cursor destination — a measured mock element, or an off-panel rest. */
+    cursor: CursorWaypoint
     cursorHidden: boolean
     /** Bumped on each click to fire the cursor ripple. */
     clickId: number
@@ -78,8 +79,7 @@ const HERO_PROVIDER = {
 }
 
 const INITIAL: HeroState = {
-    cx: 8,
-    cy: 94,
+    cursor: { px: 6, py: 92 },
     cursorHidden: true,
     clickId: 0,
     activeSource: null,
@@ -90,31 +90,39 @@ const INITIAL: HeroState = {
 }
 
 // Ascending by `at` (seconds). loop = 16s → ~3s rest on the finished state.
+// Each cursor move lands on a MEASURED target; the following click fires only
+// after the near-critically-damped spring has settled (~0.7–0.9s for the long
+// opening moves, ~0.6s for the short thumb-to-thumb hops). The three picks visit
+// the three thumbs that actually get selected (thumb-0/1/2), so the pointer is
+// always on the photo it selects.
 const SCRIPT: TimelineStep<HeroState>[] = [
-    { at: 0.4, set: { cursorHidden: false, cx: 57, cy: 16 } },
-    { at: 1.9, set: { activeSource: 'google-drive', clickId: 1 } },
-    { at: 2.3, set: { activeSource: null, browserOpen: true } },
-    { at: 3.1, set: { cx: 24, cy: 44 } },
-    { at: 3.6, set: { picked: 1, clickId: 2 } },
-    { at: 4.2, set: { cx: 62, cy: 44 } },
-    { at: 4.7, set: { picked: 2, clickId: 3 } },
-    { at: 5.3, set: { cx: 43, cy: 63 } },
-    { at: 5.8, set: { picked: 3, clickId: 4 } },
-    { at: 6.5, set: { cx: 24, cy: 85 } },
-    { at: 7.0, set: { clickId: 5 } },
     {
-        at: 7.3,
+        at: 0.4,
+        set: { cursorHidden: false, cursor: { target: 'source-google-drive' } },
+    },
+    { at: 1.3, set: { activeSource: 'google-drive', clickId: 1 } },
+    { at: 1.7, set: { activeSource: null, browserOpen: true } },
+    { at: 2.7, set: { cursor: { target: 'thumb-0' } } },
+    { at: 3.4, set: { picked: 1, clickId: 2 } },
+    { at: 4.0, set: { cursor: { target: 'thumb-1' } } },
+    { at: 4.6, set: { picked: 2, clickId: 3 } },
+    { at: 5.2, set: { cursor: { target: 'thumb-2' } } },
+    { at: 5.8, set: { picked: 3, clickId: 4 } },
+    { at: 6.5, set: { cursor: { target: 'drive-add' } } },
+    { at: 7.2, set: { clickId: 5 } },
+    {
+        at: 7.5,
         set: { browserOpen: false, stage: 'filling', cursorHidden: true },
     },
     {
-        at: 8.6,
+        at: 8.8,
         set: {
             stage: 'compress',
             caption: 'Compressed on-device — HEIC to JPG',
         },
     },
     {
-        at: 10.6,
+        at: 10.8,
         set: { stage: 'uploading', caption: 'Uploading to your storage' },
     },
     { at: 13.0, set: { stage: 'done', caption: 'Uploaded — all done' } },
@@ -137,18 +145,15 @@ export default function HeroSession({
         active,
         name: 'HeroSession',
     })
-    const {
-        ref: panelRef,
-        x: cursorX,
-        y: cursorY,
-    } = usePanelCursor<HTMLDivElement>(state.cx, state.cy)
+    const { rootRef, measure } = useSceneTargets<HTMLDivElement>()
+    const { x: cursorX, y: cursorY } = measure(state.cursor)
 
     return (
         <div
             aria-hidden
             className={`mx-auto w-full max-w-[440px] ${className}`}
         >
-            <div ref={panelRef} className="relative">
+            <div ref={rootRef} className="relative">
                 <MockUploader
                     activeSource={state.activeSource}
                     stage={state.stage}

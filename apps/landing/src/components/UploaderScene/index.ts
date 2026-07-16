@@ -12,12 +12,14 @@ export { default as FrameworksScene } from './FrameworksScene'
 export { default as MockUploader } from './MockUploader'
 export { default as MockDriveBrowser } from './MockDriveBrowser'
 export { default as SceneCursor } from './SceneCursor'
+export { useSceneTimeline, type TimelineStep } from './useSceneTimeline'
 export {
-    useSceneTimeline,
-    useElementSize,
-    usePanelCursor,
-    type TimelineStep,
-} from './useSceneTimeline'
+    useSceneTargets,
+    type CursorWaypoint,
+    type TargetAnchor,
+    type PointAnchor,
+    type ScenePoint,
+} from './scene-targets'
 export type {
     QueueFile,
     QueueStage,

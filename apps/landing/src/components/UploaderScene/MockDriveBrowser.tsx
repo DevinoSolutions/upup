@@ -63,6 +63,7 @@ export default function MockDriveBrowser({
                     return (
                         <motion.div
                             key={thumb.id}
+                            data-scene-target={`thumb-${i}`}
                             className={`relative aspect-[4/3] overflow-hidden rounded-lg bg-gradient-to-br ${thumb.gradient} ring-1`}
                             animate={{
                                 boxShadow: selected
@@ -107,23 +108,14 @@ export default function MockDriveBrowser({
 
             {/* Footer — mirrors the real drive footer's blue add button */}
             <div className="flex items-center gap-3 border-t border-white/10 bg-white/[0.04] px-3 py-2">
-                <motion.span
+                <span
+                    data-scene-target="drive-add"
                     className="rounded-md bg-sky-500 px-3 py-1.5 text-xs font-semibold text-white"
-                    animate={
-                        reduce || selectedCount === 0
-                            ? { opacity: 1 }
-                            : { opacity: [0.85, 1, 0.85] }
-                    }
-                    transition={
-                        reduce || selectedCount === 0
-                            ? { duration: 0 }
-                            : { duration: 1.6, repeat: Infinity }
-                    }
                 >
                     {selectedCount === 0
                         ? 'Select files'
                         : `Add ${selectedCount} ${selectedCount === 1 ? 'file' : 'files'}`}
-                </motion.span>
+                </span>
                 <span className="text-xs font-medium text-gray-400">
                     Cancel
                 </span>

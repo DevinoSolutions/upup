@@ -124,39 +124,3 @@ export function useSceneTimeline<S extends object>({
 
     return { state, phase: effectivePhase, frozen }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// useElementSize — measures a box so the cursor can be positioned by percentage
-// yet animated with transforms only (never top/left in the loop). The scene maps
-// percent coords → pixels via the measured size and feeds SceneCursor `x`/`y`.
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function useElementSize<T extends HTMLElement>() {
-    const ref = useRef<T>(null)
-    const [size, setSize] = useState({ width: 0, height: 0 })
-
-    useEffect(() => {
-        const el = ref.current
-        if (!el) return
-        const observer = new ResizeObserver(entries => {
-            const rect = entries[0]?.contentRect
-            if (rect) setSize({ width: rect.width, height: rect.height })
-        })
-        observer.observe(el)
-        return () => observer.disconnect()
-    }, [])
-
-    return [ref, size] as const
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// usePanelCursor — the shared percent→pixel cursor mapping so every scene stops
-// re-deriving it. Attach `ref` to the panel box; pass the timeline's percent
-// cursor coords (`cx`/`cy`, 0–100); feed the returned `x`/`y` (pixels) straight
-// to <SceneCursor>. Transforms only — no layout in the loop.
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function usePanelCursor<T extends HTMLElement>(cx: number, cy: number) {
-    const [ref, { width, height }] = useElementSize<T>()
-    return { ref, x: (cx / 100) * width, y: (cy / 100) * height }
-}
