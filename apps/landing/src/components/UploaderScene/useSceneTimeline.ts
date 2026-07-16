@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,6 +25,19 @@ import { useReducedMotion } from 'framer-motion'
 //   • Dev guard: in development a mis-authored script (steps not ascending by
 //     `at`, or `loop` not greater than the last step's `at`) console.errors with
 //     the offending index/values instead of silently truncating choreography.
+//   • `seek(seconds)`: jump the loop clock to `seconds` (the rAF `start` origin
+//     is held in a ref, so `seek` rebases it to `performance.now() - s*1000` and
+//     the next tick — ≤1 frame away — computes `elapsed = s` and re-merges the
+//     phase; no new render path). A no-op while `frozen` (the clock never runs
+//     frozen, so there is nothing to jump). Seeking backwards is legal:
+//     `mergeUpTo` replays from `initial`, so the merged state is exactly the
+//     scripted state at the target time and AnimatePresence plays the same row
+//     exits it would on the loop wrap.
+//     Authoring rule for callers: only seek to timestamps where NO
+//     overlay-internal element is the active cursor/ghost waypoint — i.e. beat
+//     starts, where `overlayKind === null` in the merged state. Seeking into a
+//     phase whose waypoint lives inside an overlay that mounts on that same
+//     render races `scene-targets` measurement (warn + fallback to {0,0}).
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface TimelineStep<S> {
@@ -64,9 +77,18 @@ export function useSceneTimeline<S extends object>({
     loop,
     active = true,
     name,
-}: UseSceneTimelineOptions<S>): { state: S; phase: number; frozen: boolean } {
+}: UseSceneTimelineOptions<S>): {
+    state: S
+    phase: number
+    frozen: boolean
+    seek: (seconds: number) => void
+} {
     const reduceMotion = useReducedMotion()
     const frozen = !!reduceMotion || !active
+    // seek reads `frozen` through a ref so its identity stays stable across
+    // renders (chips hand it to onClick) yet it always honours the live gate.
+    const frozenRef = useRef(frozen)
+    frozenRef.current = frozen
 
     // Read the script/loop through refs so a fresh (non-memoised) array from the
     // scene doesn't restart the clock every render — only `frozen` gates it.
@@ -97,17 +119,22 @@ export function useSceneTimeline<S extends object>({
 
     const [phase, setPhase] = useState(steps.length)
 
+    // The rAF clock's origin, held in a ref so `seek` can rebase it without
+    // touching the loop (null → the next tick stamps it to `now`, restarting
+    // from t=0 when the effect (re)runs on a frozen→live flip).
+    const startRef = useRef<number | null>(null)
+
     useEffect(() => {
         if (frozen) {
             setPhase(stepsRef.current.length)
             return
         }
+        startRef.current = null
         let raf = 0
-        let start: number | null = null
         const tick = (now: number) => {
-            if (start === null) start = now
+            if (startRef.current === null) startRef.current = now
             const script = stepsRef.current
-            const elapsed = ((now - start) / 1000) % loopRef.current
+            const elapsed = ((now - startRef.current) / 1000) % loopRef.current
             let count = 0
             while (count < script.length && script[count].at <= elapsed) {
                 count++
@@ -119,8 +146,15 @@ export function useSceneTimeline<S extends object>({
         return () => cancelAnimationFrame(raf)
     }, [frozen])
 
+    // Rebase the clock so the next tick reads `elapsed = seconds` (≤1 frame away)
+    // and re-merges the phase. No-op while frozen — the clock isn't running.
+    const seek = useCallback((seconds: number) => {
+        if (frozenRef.current) return
+        startRef.current = performance.now() - seconds * 1000
+    }, [])
+
     const effectivePhase = frozen ? steps.length : phase
     const state = mergeUpTo(initial, steps, effectivePhase)
 
-    return { state, phase: effectivePhase, frozen }
+    return { state, phase: effectivePhase, frozen, seek }
 }

@@ -76,6 +76,10 @@ interface MockUploaderProps {
     /** Min-height of the panel body. Taller scenes (the 4-row hero) raise it so
         their queue fits without clipping; defaults to the two/three-row height. */
     bodyMinHeightClass?: string
+    /** Drag affordance: while true a dashed sky veil fades in over the panel
+        body — the ONE drag visual, shown whether the dropzone or the queue is
+        mounted (mirrors the real uploader's isDragging state). */
+    dragOver?: boolean
     reduce?: boolean
     className?: string
 }
@@ -89,6 +93,7 @@ export default function MockUploader({
     showBrowser = false,
     browser,
     bodyMinHeightClass = 'min-h-[196px]',
+    dragOver = false,
     reduce = false,
     className = '',
 }: MockUploaderProps) {
@@ -161,7 +166,10 @@ export default function MockUploader({
                     The dropzone crossfades and the queue rows stay DIRECT children
                     of a persistent AnimatePresence, so on the loop-wrap "clear the
                     panel" beat each row plays its exit variant instead of snapping. */}
-                <div className={`relative ${bodyMinHeightClass}`}>
+                <div
+                    data-scene-target="panel-body"
+                    className={`relative ${bodyMinHeightClass}`}
+                >
                     <AnimatePresence>
                         {!hasQueue && (
                             <motion.div
@@ -192,6 +200,24 @@ export default function MockUploader({
                                 ))}
                         </AnimatePresence>
                     </div>
+
+                    {/* Drag veil — a dashed sky frame over the panel body while a
+                        ghost hovers it. Sits above the dropzone/queue (z-20) but
+                        below the overlay (z-30) and never intercepts pointers. */}
+                    <AnimatePresence>
+                        {dragOver && (
+                            <motion.div
+                                aria-hidden
+                                className="pointer-events-none absolute inset-0 z-20 rounded-xl border-2 border-dashed border-sky-400/70 bg-sky-400/[0.06]"
+                                initial={reduce ? false : { opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={
+                                    reduce ? { duration: 0 } : { duration: 0.2 }
+                                }
+                            />
+                        )}
+                    </AnimatePresence>
 
                     {/* Overlay slot (drive browser or image editor) — slides up
                         over the panel body */}
