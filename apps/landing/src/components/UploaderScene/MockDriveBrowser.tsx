@@ -1,16 +1,19 @@
 'use client'
 
 import type { CSSProperties } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { FaCheck, FaFolderOpen } from 'react-icons/fa'
+import { FaCheck, FaFolderOpen, FaPlay } from 'react-icons/fa'
+import { SCENE_MEDIA } from './scene-media'
 import type { DriveProvider, DriveThumb } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MockDriveBrowser — a marketing recreation of the real DriveBrowser overlay
 // (provider header + user chip + logout, a scrollable photo grid, a footer with
-// the blue "Add N files" button). Photo thumbs are gradient placeholders; the
-// first `selectedCount` are shown selected with a checkmark, mirroring how the
-// real browser marks picks. Slots over the panel body inside MockUploader.
+// the blue "Add N files" button). Thumbs are real stock images; one tile plays a
+// muted looping video clip. The first `selectedCount` are shown selected with a
+// checkmark, mirroring how the real browser marks picks. Slots over the panel
+// body inside MockUploader.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface MockDriveBrowserProps {
@@ -43,12 +46,10 @@ export default function MockDriveBrowser({
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span
-                        className="h-5 w-5 rounded-full ring-1 ring-white/20"
-                        style={{
-                            background:
-                                'conic-gradient(from 140deg, #38bdf8, #818cf8, #f472b6)',
-                        }}
+                    <img
+                        src={SCENE_MEDIA.photos.portrait}
+                        alt=""
+                        className="h-5 w-5 rounded-full object-cover ring-1 ring-white/20"
                     />
                     <span className="text-[11px] font-medium text-sky-300">
                         Log out
@@ -64,7 +65,7 @@ export default function MockDriveBrowser({
                         <motion.div
                             key={thumb.id}
                             data-scene-target={`thumb-${i}`}
-                            className={`relative aspect-[4/3] overflow-hidden rounded-lg bg-gradient-to-br ${thumb.gradient} ring-1`}
+                            className="relative aspect-[4/3] overflow-hidden rounded-lg ring-1"
                             animate={{
                                 boxShadow: selected
                                     ? '0 0 0 2px rgba(56,189,248,0.9)'
@@ -79,8 +80,9 @@ export default function MockDriveBrowser({
                                 } as CSSProperties
                             }
                         >
+                            <ThumbMedia thumb={thumb} reduce={reduce} />
                             {/* Soft photo sheen */}
-                            <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />
+                            <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />
                             {/* Selection checkmark */}
                             <motion.span
                                 className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white shadow"
@@ -121,5 +123,57 @@ export default function MockDriveBrowser({
                 </span>
             </div>
         </div>
+    )
+}
+
+// A single grid tile's media: a still stock image, or — when the thumb carries a
+// `video` — a muted looping clip that plays only while the scene is live
+// (`!reduce`), with a centred play glyph and a duration badge.
+function ThumbMedia({ thumb, reduce }: { thumb: DriveThumb; reduce: boolean }) {
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        const el = videoRef.current
+        if (!el) return
+        if (reduce) {
+            el.pause()
+        } else {
+            // Autoplay can reject (e.g. not-yet-allowed) — a muted decorative
+            // loop, so swallow it.
+            void el.play().catch(() => {})
+        }
+    }, [reduce])
+
+    if (thumb.video) {
+        return (
+            <>
+                <video
+                    ref={videoRef}
+                    src={thumb.video.src}
+                    poster={thumb.video.poster}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="absolute inset-0 h-full w-full object-cover"
+                />
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/30">
+                        <FaPlay className="ml-0.5 h-2 w-2" />
+                    </span>
+                </span>
+                <span className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/50 px-1 py-0.5 text-[9px] font-medium tabular-nums text-white">
+                    {thumb.video.duration}
+                </span>
+            </>
+        )
+    }
+
+    return (
+        <img
+            src={thumb.src}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+        />
     )
 }

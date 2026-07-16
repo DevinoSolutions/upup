@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
+import { SCENE_MEDIA } from './scene-media'
 import type { QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,6 +21,7 @@ const PIPELINE_FILES: QueueFile[] = [
         name: 'IMG_2287',
         ext: 'jpg',
         accent: 'amber',
+        thumb: SCENE_MEDIA.photos.canyonCliffs,
         sizeFrom: '8.4 MB',
         sizeTo: '1.9 MB',
         convertFrom: '.heic',
@@ -27,17 +29,19 @@ const PIPELINE_FILES: QueueFile[] = [
     },
     {
         id: 'p2',
-        name: 'poster-art',
+        name: 'pink-blossoms',
         ext: 'png',
         accent: 'violet',
+        thumb: SCENE_MEDIA.photos.pinkBlossoms,
         sizeFrom: '5.2 MB',
         sizeTo: '1.3 MB',
     },
     {
         id: 'p3',
-        name: 'skyline',
+        name: 'street-market',
         ext: 'jpg',
         accent: 'teal',
+        thumb: SCENE_MEDIA.photos.streetMarket,
         sizeFrom: '6.7 MB',
         sizeTo: '1.6 MB',
     },

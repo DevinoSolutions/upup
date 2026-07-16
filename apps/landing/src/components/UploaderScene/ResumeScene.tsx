@@ -5,6 +5,7 @@ import { FaCheck, FaSyncAlt } from 'react-icons/fa'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
+import { SCENE_MEDIA } from './scene-media'
 import type { QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,9 +19,11 @@ import type { QueueFile, QueueStage } from './types'
 const RESUME_FILES: QueueFile[] = [
     {
         id: 'r1',
-        name: 'keynote-recording.mp4',
+        name: 'beach-waves.mp4',
         ext: 'mp4',
         accent: 'blue',
+        kind: 'video',
+        thumb: SCENE_MEDIA.videos.beachWaves.poster,
         sizeFrom: '842 MB',
         sizeTo: '842 MB',
     },

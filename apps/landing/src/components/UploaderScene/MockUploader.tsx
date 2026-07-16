@@ -10,9 +10,11 @@ import {
     FaMicrophone,
     FaRegFolderOpen,
     FaCamera,
+    FaPlay,
 } from 'react-icons/fa'
 import { SiGoogledrive, SiDropbox, SiBox } from 'react-icons/si'
 import { GrOnedrive } from 'react-icons/gr'
+import { SCENE_MEDIA } from './scene-media'
 import type { QueueFile, QueueStage, SourceDef } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,15 +59,6 @@ const ACCENT_BAR: Record<QueueFile['accent'], string> = {
     amber: 'bg-amber-400',
     green: 'bg-emerald-400',
     pink: 'bg-pink-400',
-}
-
-const ACCENT_THUMB: Record<QueueFile['accent'], string> = {
-    blue: 'from-blue-400 to-sky-600',
-    teal: 'from-teal-300 to-cyan-600',
-    violet: 'from-violet-400 to-indigo-600',
-    amber: 'from-amber-300 to-orange-500',
-    green: 'from-emerald-300 to-teal-600',
-    pink: 'from-pink-400 to-rose-600',
 }
 
 interface MockUploaderProps {
@@ -229,15 +222,18 @@ export default function MockUploader({
 
                 {/* Footer — upup logo left, "Built by devino" right */}
                 <div className="flex items-center justify-between border-t border-white/[0.06] pt-3">
-                    <span className="flex items-center gap-1.5 text-sm font-bold text-sky-400">
-                        <FaCloudUploadAlt className="h-4 w-4" />
-                        upup
-                    </span>
-                    <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                    <img
+                        src={SCENE_MEDIA.logos.upup}
+                        alt=""
+                        className="h-4 w-auto"
+                    />
+                    <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
                         Built by
-                        <span className="font-semibold text-gray-300">
-                            devino
-                        </span>
+                        <img
+                            src={SCENE_MEDIA.logos.devino}
+                            alt=""
+                            className="h-3.5 w-auto"
+                        />
                     </span>
                 </div>
             </div>
@@ -300,12 +296,8 @@ function FileRow({
                       }
             }
         >
-            {/* Thumbnail */}
-            <div
-                className={`relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-gradient-to-br ${ACCENT_THUMB[file.accent]}`}
-            >
-                <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />
-            </div>
+            {/* Thumbnail — real stock image / video poster / audio mic tile */}
+            <FileThumb file={file} />
 
             {/* Name + progress */}
             <div className="min-w-0 flex-1">
@@ -386,6 +378,37 @@ function FileRow({
                 </div>
             </div>
         </motion.div>
+    )
+}
+
+// The 9×9 row thumbnail. Image rows (the default) show the real stock photo;
+// video rows show the poster frame with a small play triangle; audio rows carry
+// no photo — a dark tile with a mic glyph, since there's nothing to preview.
+function FileThumb({ file }: { file: QueueFile }) {
+    if (file.kind === 'audio') {
+        return (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white/10 ring-1 ring-white/10">
+                <FaMicrophone className="h-4 w-4 text-sky-300" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md bg-white/10">
+            <img
+                src={file.thumb}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />
+            {file.kind === 'video' && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-black/45 text-white ring-1 ring-white/30">
+                        <FaPlay className="ml-px h-1.5 w-1.5" />
+                    </span>
+                </span>
+            )}
+        </div>
     )
 }
 

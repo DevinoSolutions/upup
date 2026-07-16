@@ -9,6 +9,7 @@ import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
 import { useSceneTargets } from './scene-targets'
 import type { CursorWaypoint } from './scene-targets'
+import { SCENE_MEDIA } from './scene-media'
 import type { DriveThumb, QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,9 +38,10 @@ interface HeroState {
 const HERO_FILES: QueueFile[] = [
     {
         id: 'a',
-        name: 'seaside-cliff',
+        name: 'yosemite-valley',
         ext: 'jpg',
         accent: 'teal',
+        thumb: SCENE_MEDIA.photos.yosemiteValley,
         sizeFrom: '8.4 MB',
         sizeTo: '1.9 MB',
     },
@@ -48,6 +50,7 @@ const HERO_FILES: QueueFile[] = [
         name: 'IMG_0421',
         ext: 'jpg',
         accent: 'amber',
+        thumb: SCENE_MEDIA.photos.portrait,
         sizeFrom: '6.1 MB',
         sizeTo: '2.3 MB',
         convertFrom: '.heic',
@@ -55,21 +58,24 @@ const HERO_FILES: QueueFile[] = [
     },
     {
         id: 'c',
-        name: 'team-portrait',
-        ext: 'png',
+        name: 'river-canyon',
+        ext: 'jpg',
         accent: 'violet',
+        thumb: SCENE_MEDIA.photos.riverCanyon,
         sizeFrom: '4.2 MB',
         sizeTo: '1.1 MB',
     },
 ]
 
+// thumb-0 = yosemite-valley and thumb-1 = portrait are the scripted first two
+// picks (they match rows a + b); the rest fill the grid with real stock photos.
 const HERO_THUMBS: DriveThumb[] = [
-    { id: 't1', gradient: 'from-sky-400 to-blue-600' },
-    { id: 't2', gradient: 'from-amber-300 to-orange-500' },
-    { id: 't3', gradient: 'from-emerald-300 to-teal-600' },
-    { id: 't4', gradient: 'from-violet-400 to-fuchsia-600' },
-    { id: 't5', gradient: 'from-rose-400 to-pink-600' },
-    { id: 't6', gradient: 'from-cyan-300 to-indigo-500' },
+    { id: 't1', src: SCENE_MEDIA.photos.yosemiteValley },
+    { id: 't2', src: SCENE_MEDIA.photos.portrait },
+    { id: 't3', src: SCENE_MEDIA.photos.riverCanyon },
+    { id: 't4', src: SCENE_MEDIA.photos.canyonCliffs },
+    { id: 't5', src: SCENE_MEDIA.photos.strawberries },
+    { id: 't6', src: SCENE_MEDIA.photos.puppy },
 ]
 
 const HERO_PROVIDER = {

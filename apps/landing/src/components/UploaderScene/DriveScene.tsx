@@ -11,6 +11,7 @@ import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
 import { useSceneTargets } from './scene-targets'
 import type { CursorWaypoint } from './scene-targets'
+import { SCENE_MEDIA } from './scene-media'
 import type { DriveProvider, DriveThumb, QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,37 +44,54 @@ const DRIVE_PROVIDERS: CyclingProvider[] = [
 const DRIVE_FILES: QueueFile[] = [
     {
         id: 'd1',
-        name: 'harbour-dawn',
+        name: 'mountain-lake',
         ext: 'jpg',
         accent: 'teal',
+        thumb: SCENE_MEDIA.photos.mountainLake,
         sizeFrom: '7.2 MB',
         sizeTo: '1.8 MB',
     },
     {
         id: 'd2',
-        name: 'rooftops',
-        ext: 'jpg',
+        name: 'beach-waves',
+        ext: 'mp4',
         accent: 'violet',
-        sizeFrom: '5.4 MB',
-        sizeTo: '1.5 MB',
+        kind: 'video',
+        thumb: SCENE_MEDIA.videos.beachWaves.poster,
+        // A video isn't run through the image compression step, so its size
+        // stays put (no strikethrough morph).
+        sizeFrom: '12.6 MB',
+        sizeTo: '12.6 MB',
     },
     {
         id: 'd3',
-        name: 'market-stall',
+        name: 'waterfall',
         ext: 'jpg',
         accent: 'amber',
+        thumb: SCENE_MEDIA.photos.waterfall,
         sizeFrom: '6.8 MB',
         sizeTo: '2.0 MB',
     },
 ]
 
+// Six real tiles; index 1 is the beach-waves video, so the scripted second pick
+// (thumb-1) visibly selects a playing clip. Order mirrors DRIVE_FILES for the
+// three picked (thumb-0/1/2), then three extra photos fill the grid.
 const DRIVE_THUMBS: DriveThumb[] = [
-    { id: 'g1', gradient: 'from-sky-400 to-blue-600' },
-    { id: 'g2', gradient: 'from-amber-300 to-orange-500' },
-    { id: 'g3', gradient: 'from-emerald-300 to-teal-600' },
-    { id: 'g4', gradient: 'from-violet-400 to-fuchsia-600' },
-    { id: 'g5', gradient: 'from-rose-400 to-pink-600' },
-    { id: 'g6', gradient: 'from-cyan-300 to-indigo-500' },
+    { id: 'g1', src: SCENE_MEDIA.photos.mountainLake },
+    {
+        id: 'g2',
+        src: SCENE_MEDIA.videos.beachWaves.poster,
+        video: {
+            src: SCENE_MEDIA.videos.beachWaves.src,
+            poster: SCENE_MEDIA.videos.beachWaves.poster,
+            duration: '0:12',
+        },
+    },
+    { id: 'g3', src: SCENE_MEDIA.photos.waterfall },
+    { id: 'g4', src: SCENE_MEDIA.photos.puppy },
+    { id: 'g5', src: SCENE_MEDIA.photos.pinkBlossoms },
+    { id: 'g6', src: SCENE_MEDIA.photos.streetMarket },
 ]
 
 interface DriveState {

@@ -30,8 +30,13 @@ export interface QueueFile {
     name: string
     /** File extension shown as a small type badge (e.g. 'jpg'). */
     ext: string
-    /** Accent hue for the thumbnail tint + progress bar. */
+    /** Accent hue for the progress bar. */
     accent: AccentHue
+    /** Row thumbnail. Image/video rows point at a real stock image (a video row
+     *  uses its poster frame); audio rows omit it and render a mic tile. */
+    thumb?: string
+    /** File kind — drives the row thumbnail treatment. Defaults to 'image'. */
+    kind?: 'image' | 'video' | 'audio'
     /** Size before the on-device compression step (e.g. '8.4 MB'). */
     sizeFrom: string
     /** Size after compression — the number the size text morphs to. */
@@ -41,11 +46,19 @@ export interface QueueFile {
     convertTo?: string
 }
 
-/** A gradient thumbnail placeholder for the drive-browser grid. */
+/** A real-media thumbnail for the drive-browser grid. A plain image tile carries
+ *  only `src`; a video tile adds `video` (its clip + poster + duration badge). */
 export interface DriveThumb {
     id: string
-    /** Tailwind gradient classes, e.g. 'from-sky-400 to-teal-500'. */
-    gradient: string
+    /** Stock image shown in the tile (the poster frame for a video tile). */
+    src: string
+    /** When set, the tile plays this muted looping clip instead of the image. */
+    video?: {
+        src: string
+        poster: string
+        /** Duration badge text, e.g. '0:12'. */
+        duration: string
+    }
 }
 
 /** Provider identity for the drive-browser header (logo + name + brand colour). */
