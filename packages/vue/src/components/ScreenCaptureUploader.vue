@@ -141,9 +141,9 @@ function formatTime(s: number) {
             <button
                 type="button"
                 :class="cn(
-                    'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                    'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                     {
-                        'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': dark,
+                        'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark,
                     },
                 )"
                 @click="retryRecording"
@@ -158,14 +158,14 @@ function formatTime(s: number) {
         <div class="upup-flex upup-h-full upup-w-full upup-flex-col upup-items-center upup-justify-center upup-gap-4 upup-p-4">
             <!-- Idle -->
             <div v-if="state === 'idle'" class="upup-flex upup-flex-col upup-items-center upup-gap-4">
-                <div class="upup-flex upup-h-20 upup-w-20 upup-items-center upup-justify-center upup-rounded-full upup-bg-blue-500/20">
+                <div class="upup-flex upup-h-20 upup-w-20 upup-items-center upup-justify-center upup-rounded-full upup-bg-[#0ea5e9]/20">
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="32"
                         height="32"
                         viewBox="0 0 24 24"
                         fill="none"
-                        :stroke="dark ? '#59D1F9' : '#2563eb'"
+                        :stroke="dark ? '#38bdf8' : '#0284c7'"
                         stroke-width="2"
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -178,9 +178,9 @@ function formatTime(s: number) {
                 <button
                     type="button"
                     :class="cn(
-                        'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+                        'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
                         {
-                            'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]': dark,
+                            'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]': dark,
                         },
                     )"
                     @click="startRecording"
@@ -238,9 +238,9 @@ function formatTime(s: number) {
                     <button
                         type="button"
                         :class="cn(
-                            'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+                            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
                             {
-                                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]': dark,
+                                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]': dark,
                             },
                         )"
                         @click="addRecording"

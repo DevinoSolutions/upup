@@ -42,7 +42,7 @@ function handleCancel() {
     >
         <div
             :class="cn(
-                'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#1b5dab]',
+                'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#0284c7]',
                 {
                     'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]': dark,
                 },
@@ -52,8 +52,8 @@ function handleCancel() {
             <component :is="sourceIcon!" />
             <button
                 :class="cn(
-                    'upup-rounded-md upup-p-1 upup-text-blue-600 upup-transition-all upup-duration-300',
-                    { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark },
+                    'upup-rounded-md upup-p-1 upup-text-[#0284c7] upup-transition-all upup-duration-300',
+                    { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark },
                     slotClasses.sourceViewCancelButton,
                 )"
                 @click="handleCancel"
