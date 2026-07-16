@@ -96,7 +96,7 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                                 <button
                                     data-testid="upup-drive-load-more"
                                     data-upup-slot="drive-load-more"
-                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-[#0284c7] disabled:upup-opacity-50"
                                     [disabled]="isLoadingMore?.()"
                                     (click)="loadMore?.()"
                                 >
@@ -253,8 +253,8 @@ export class DriveBrowserComponent {
     get selectFolderBtnClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#0284c7] upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
         )
     }
 
@@ -262,9 +262,9 @@ export class DriveBrowserComponent {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+            'upup-rounded-md upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
             dark
-                ? 'upup-animate-pulse upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]'
+                ? 'upup-animate-pulse upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]'
                 : this.showLoader?.()
                   ? 'upup-animate-pulse'
                   : '',
@@ -276,8 +276,8 @@ export class DriveBrowserComponent {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-[#0284c7] upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
             slotClasses.driveCancelFilesButton,
         )
     }

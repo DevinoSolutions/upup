@@ -165,9 +165,9 @@ export class UploaderHeaderComponent {
         const slotClasses = this.store.slotOverrides()
         return [
             'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2',
-            'upup-p-1 upup-text-left upup-text-sm upup-text-blue-600',
+            'upup-p-1 upup-text-left upup-text-sm upup-text-[#0284c7]',
             'md:upup-col-end-2 md:upup-row-start-1',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
             slotClasses.containerCancelButton ?? '',
         ]
             .filter(Boolean)
@@ -200,9 +200,9 @@ export class UploaderHeaderComponent {
         const slotClasses = this.store.slotOverrides()
         return [
             'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border',
-            'upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1',
-            'upup-text-sm upup-text-blue-600',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            'upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1',
+            'upup-text-sm upup-text-[#0284c7]',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
             slotClasses.containerAddMoreButton ?? '',
         ]
             .filter(Boolean)

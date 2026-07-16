@@ -5,9 +5,11 @@ import {
     ElementRef,
     EventEmitter,
     Input,
+    OnChanges,
     OnInit,
     Output,
     PLATFORM_ID,
+    SimpleChanges,
     ViewChild,
     inject,
 } from '@angular/core'
@@ -151,7 +153,7 @@ const FORWARDED: ReadonlyArray<
         </div>
     `,
 })
-export class UpupUploaderComponent implements OnInit, AfterViewInit {
+export class UpupUploaderComponent implements OnInit, AfterViewInit, OnChanges {
     readonly store = inject(UpupStore)
     private readonly destroyRef = inject(DestroyRef)
     private readonly platformId = inject(PLATFORM_ID)
@@ -215,6 +217,19 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         }
     }
 
+    // Re-resolve the live ThemeStore when the `theme` input changes after mount
+    // (mirrors React's `controller.theme.setThemeConfig(theme)` effect). The
+    // `config` setter above already performs a full re-init on a new config
+    // reference; this is the lightweight seam the store short-circuits on a
+    // structurally-equal config, so it is a safe no-op after that re-init.
+    ngOnChanges(changes: SimpleChanges): void {
+        const change = changes['config']
+        if (change && !change.firstChange) {
+            const next = change.currentValue as UploaderProps | undefined
+            this.store.setThemeConfig(next?.theme)
+        }
+    }
+
     onInputChange(e: Event): void {
         const t = e.target as HTMLInputElement
         if (t.files?.length) {
@@ -238,8 +253,10 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         const slotOverrides = this.store.slotOverrides?.() ?? {}
 
         return cn(
-            `upup-shadow-wrapper upup-relative ${
-                dark ? 'upup-bg-[#232323]' : 'upup-bg-white'
+            `upup-panel-sheen upup-relative ${
+                dark
+                    ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
+                    : 'upup-bg-gradient-to-b upup-from-white upup-to-slate-50 upup-ring-1 upup-ring-slate-200 upup-shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]'
             } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
             {
                 [slotOverrides['containerFull'] ?? '']: !!(

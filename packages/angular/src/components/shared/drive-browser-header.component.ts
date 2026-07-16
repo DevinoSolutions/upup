@@ -134,7 +134,7 @@ export class DriveBrowserHeaderComponent {
     }
 
     get signOutClass(): string {
-        return 'upup-text-xs upup-text-blue-600 upup-transition-all upup-duration-300 hover:upup-underline'
+        return 'upup-text-xs upup-text-[#0284c7] upup-transition-all upup-duration-300 hover:upup-underline'
     }
 
     get searchContainerClass(): string {
