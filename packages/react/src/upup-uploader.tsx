@@ -111,7 +111,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                     <Icon
                                         name="loader"
                                         className={cn(
-                                            'upup-absolute upup-right-5 upup-animate-spin upup-text-xs upup-text-xs upup-leading-5 upup-text-[#0284c7] md:upup-text-xl',
+                                            'upup-absolute upup-right-5 upup-animate-spin upup-text-xs upup-leading-5 upup-text-[#0284c7] md:upup-text-xl',
                                             {
                                                 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                                     providerValues.theme

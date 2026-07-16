@@ -250,7 +250,7 @@ export default memo(function FilePreview(props: Props) {
                         className={cn(
                             'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#0284c7] upup-transition-all hover:upup-text-[#0284c7] hover:upup-underline',
                             {
-                                'upup-text-[#7dd3fc] hover:upup-text-[#7dd3fc]':
+                                'upup-text-[#38bdf8] hover:upup-text-[#7dd3fc]':
                                     isDarkTheme,
                             },
                             themeSlots?.filePreview?.previewButton,
