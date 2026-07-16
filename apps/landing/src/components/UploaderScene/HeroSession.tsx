@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { SiGoogledrive } from 'react-icons/si'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
-import SceneCursor from './SceneCursor'
+import SceneTap from './SceneTap'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
 import { useSceneTargets } from './scene-targets'
@@ -24,8 +24,8 @@ interface HeroState {
     /** Cursor destination — a measured mock element, or an off-panel rest. */
     cursor: CursorWaypoint
     cursorHidden: boolean
-    /** Bumped on each click to fire the cursor ripple. */
-    clickId: number
+    /** Bumped on each tap to fire the press pulse + ripple. */
+    tapId: number
     activeSource: string | null
     browserOpen: boolean
     /** How many drive thumbs are selected (0–3). */
@@ -81,7 +81,7 @@ const HERO_PROVIDER = {
 const INITIAL: HeroState = {
     cursor: { px: 6, py: 92 },
     cursorHidden: true,
-    clickId: 0,
+    tapId: 0,
     activeSource: null,
     browserOpen: false,
     picked: 0,
@@ -100,16 +100,16 @@ const SCRIPT: TimelineStep<HeroState>[] = [
         at: 0.4,
         set: { cursorHidden: false, cursor: { target: 'source-google-drive' } },
     },
-    { at: 1.3, set: { activeSource: 'google-drive', clickId: 1 } },
+    { at: 1.3, set: { activeSource: 'google-drive', tapId: 1 } },
     { at: 1.7, set: { activeSource: null, browserOpen: true } },
     { at: 2.7, set: { cursor: { target: 'thumb-0' } } },
-    { at: 3.4, set: { picked: 1, clickId: 2 } },
+    { at: 3.4, set: { picked: 1, tapId: 2 } },
     { at: 4.0, set: { cursor: { target: 'thumb-1' } } },
-    { at: 4.6, set: { picked: 2, clickId: 3 } },
+    { at: 4.6, set: { picked: 2, tapId: 3 } },
     { at: 5.2, set: { cursor: { target: 'thumb-2' } } },
-    { at: 5.8, set: { picked: 3, clickId: 4 } },
+    { at: 5.8, set: { picked: 3, tapId: 4 } },
     { at: 6.5, set: { cursor: { target: 'drive-add' } } },
-    { at: 7.2, set: { clickId: 5 } },
+    { at: 7.2, set: { tapId: 5 } },
     {
         at: 7.5,
         set: { browserOpen: false, stage: 'filling', cursorHidden: true },
@@ -169,10 +169,10 @@ export default function HeroSession({
                         />
                     }
                 />
-                <SceneCursor
+                <SceneTap
                     x={cursorX}
                     y={cursorY}
-                    clickId={state.clickId}
+                    tapId={state.tapId}
                     hidden={state.cursorHidden}
                     reduce={frozen}
                 />
