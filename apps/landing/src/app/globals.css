@@ -69,25 +69,6 @@ body {
     }
 }
 
-@keyframes glow {
-    0% {
-        box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.2);
-        transform: scale(1);
-    }
-    50% {
-        box-shadow: 0 0 15px 7px rgba(255, 255, 255, 0.6);
-        transform: scale(1.05);
-    }
-    100% {
-        box-shadow: 0 0 10px 5px rgba(255, 255, 255, 0.2);
-        transform: scale(1);
-    }
-}
-
-.glowing-circle {
-    animation: glow 3s infinite ease-in-out;
-}
-
 @layer components {
     .docs-body {
         @apply prose dark:prose-invert max-w-none lg:prose-lg;

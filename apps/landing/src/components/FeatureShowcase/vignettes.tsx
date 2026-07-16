@@ -102,7 +102,7 @@ function Node({
 }) {
     return (
         <div className="flex flex-col items-center gap-1 text-center">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.05] text-gray-700 dark:text-gray-200 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-black/5 dark:border-white/10 bg-white dark:bg-white/[0.05] text-gray-700 dark:text-gray-200">
                 {icon}
             </div>
             <span className="text-[10px] font-semibold text-gray-700 dark:text-gray-300">
