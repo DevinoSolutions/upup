@@ -1,8 +1,8 @@
 import type { IconType } from 'react-icons'
 
-/** Accent hue for a mock file's gradient thumbnail + progress bar. Scene-local:
- *  the ONE place the site still uses per-item hues, because the MockUploader's
- *  gradient chrome is a deliberate keep (the surviving product-demo gradient). */
+/** Accent hue for a mock file's progress bar. Scene-local: the ONE place the
+ *  site still uses per-item hues (row thumbnails are real stock media now; the
+ *  surviving product-demo gradient is MockUploader's panel chrome). */
 export type AccentHue = 'blue' | 'teal' | 'violet' | 'amber' | 'green' | 'pink'
 
 // ─────────────────────────────────────────────────────────────────────────────
