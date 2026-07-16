@@ -157,6 +157,9 @@ export default function DriveScene({
                 browserOpen: false,
                 stage: 'filling',
                 cursorHidden: true,
+                // Point rest: the later step re-renders (8.5/10.0) must not
+                // measure 'drive-add' after the browser overlay unmounts.
+                cursor: { px: 6, py: 92 },
             },
         },
         { at: 8.5, set: { stage: 'uploading' } },
