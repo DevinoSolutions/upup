@@ -375,6 +375,15 @@ export default function useUploaderController(
         }
     }, [controller])
 
+    // ── Re-resolve on theme-prop change (post-mount) ─────────────
+    // The controller (hence its ThemeStore) is created once, so a `theme` prop
+    // change after mount would otherwise never reach the live store. ThemeStore
+    // short-circuits structurally-equal configs, so an inlined object literal
+    // (e.g. theme={{ mode: 'dark' }}) per render costs nothing.
+    useEffect(() => {
+        controller?.theme.setThemeConfig(theme)
+    }, [controller, theme])
+
     // ── Input ref (React-specific) ──────────────────────────────
     const inputRef = useRef<HTMLInputElement>(null)
     const openFilePicker = useCallback(() => {
