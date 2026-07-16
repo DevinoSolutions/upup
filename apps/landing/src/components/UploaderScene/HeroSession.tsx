@@ -146,6 +146,9 @@ const SCRIPT: TimelineStep<HeroState>[] = [
             stage: 'filling',
             fileCount: 2,
             cursorHidden: true,
+            // Point rest: never leave the waypoint on an element that just
+            // unmounted with its overlay (a stray gap re-render would warn).
+            cursor: { px: 6, py: 92 },
         },
     },
 
@@ -168,7 +171,15 @@ const SCRIPT: TimelineStep<HeroState>[] = [
         set: { cursorHidden: false, cursor: { target: 'screen-stop' } },
     },
     { at: 12.0, set: { tapId: 6 } },
-    { at: 12.3, set: { overlayKind: null, fileCount: 3, cursorHidden: true } },
+    {
+        at: 12.3,
+        set: {
+            overlayKind: null,
+            fileCount: 3,
+            cursorHidden: true,
+            cursor: { px: 6, py: 92 },
+        },
+    },
 
     // ── Audio: record a voice note, watch the timer, stop ───────────────────
     {
