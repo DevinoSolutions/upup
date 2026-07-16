@@ -114,7 +114,7 @@
           'upup-flex upup-h-24 upup-w-24 upup-items-center upup-justify-center upup-rounded-full',
           {
             'upup-bg-red-500/20': recordingState === 'recording',
-            'upup-bg-blue-500/20': recordingState === 'idle' || recordingState === 'recorded',
+            'upup-bg-[#0ea5e9]/20': recordingState === 'idle' || recordingState === 'recorded',
           },
         )}
       >
@@ -123,7 +123,7 @@
             'upup-flex upup-h-16 upup-w-16 upup-items-center upup-justify-center upup-rounded-full upup-transition-all',
             {
               'upup-animate-pulse upup-bg-red-500': recordingState === 'recording',
-              'upup-bg-blue-500': recordingState === 'idle' || recordingState === 'recorded',
+              'upup-bg-[#0ea5e9]': recordingState === 'idle' || recordingState === 'recorded',
             },
           )}
         >
@@ -167,9 +167,9 @@
           <button
             type="button"
             class={cn(
-              'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+              'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
               {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]': $dark,
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]': $dark,
               },
             )}
             onclick={startRecording}
@@ -199,9 +199,9 @@
           <button
             type="button"
             class={cn(
-              'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+              'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
               {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]': $dark,
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]': $dark,
               },
             )}
             onclick={addRecording}

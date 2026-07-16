@@ -279,6 +279,9 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             slotOverrides: derived(themeState, $s => $s.slotOverrides),
             slots: derived(themeState, $s => $s.slots),
         },
+        setThemeConfig: config => {
+            controller.theme.setThemeConfig(config)
+        },
         files: derived(orchState, $s => $s.files),
         // ContextFiles.setFiles is fire-and-forget (`=> void`); route the async
         // command's rejection to onError rather than floating the promise.
