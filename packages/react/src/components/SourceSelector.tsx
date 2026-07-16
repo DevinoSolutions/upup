@@ -17,7 +17,7 @@ export default function SourceSelector(): React.ReactElement | null {
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isAddingMore, setIsAddingMore } = useUploaderView()
-    const { setFiles } = useUploaderFiles()
+    const { files, setFiles } = useUploaderFiles()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
         mini,
@@ -185,9 +185,9 @@ export default function SourceSelector(): React.ReactElement | null {
                 >
                     <button
                         className={cn(
-                            'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
+                            'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-[#0284c7]',
                             {
-                                'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                     dark,
                             },
                             slotClasses.containerCancelButton,
@@ -295,6 +295,12 @@ export default function SourceSelector(): React.ReactElement | null {
                             {
                                 'upup-text-[#0B0B0B]': !dark,
                                 'upup-text-white dark:upup-text-white': dark,
+                                // Idle drag-drop hint (mini): gently bob the upload
+                                // glyph while empty and at rest. Transform-only, so
+                                // no layout shift; paused once files are selected or
+                                // the add-more flow is active.
+                                'upup-animate-hint-bob motion-reduce:upup-animate-none':
+                                    !files.size && !isAddingMore,
                             },
                         )}
                     />
@@ -326,9 +332,9 @@ export default function SourceSelector(): React.ReactElement | null {
                             type="button"
                             data-testid="upup-browse-files"
                             className={cn(
-                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0284c7] md:upup-text-sm',
                                 {
-                                    'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                    'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                         dark,
                                 },
                             )}
@@ -353,9 +359,9 @@ export default function SourceSelector(): React.ReactElement | null {
                                 <button
                                     type="button"
                                     className={cn(
-                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0284c7] md:upup-text-sm',
                                         {
-                                            'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                                 dark,
                                         },
                                     )}
