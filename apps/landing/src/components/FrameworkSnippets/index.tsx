@@ -234,10 +234,10 @@ export default function FrameworkSnippets({
                 role="tabpanel"
                 id="framework-tabpanel"
                 aria-labelledby={`framework-tab-${activeId}`}
-                className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden text-left"
+                className="relative bg-white dark:bg-gray-900 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden text-left"
             >
                 {/* Window bar */}
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-50/80 dark:bg-gray-800/80 border-b border-gray-200/70 dark:border-gray-700/70">
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/[0.03] border-b border-black/5 dark:border-white/10">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="flex items-center gap-1.5 shrink-0">
                             <div className="w-3 h-3 bg-red-500 rounded-full" />

@@ -15,6 +15,9 @@ interface SectionHeadingProps {
     title: ReactNode
     subtitle?: ReactNode
     align?: 'center' | 'left'
+    /** Extra classes for the heading block. Do NOT pass a bottom margin here —
+     *  the baked `mb-12 sm:mb-16` owns the heading→content gap and a className
+     *  `mb-*` collides with it (stylesheet-order-indeterminate). */
     className?: string
 }
 

@@ -36,17 +36,13 @@ export default function FrameworkStrip({
                             href={`/${fw.id}`}
                             aria-current={isActive ? 'page' : undefined}
                             title={`upup for ${fw.name}`}
-                            className={`group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${
+                            className={`group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors duration-200 ${
                                 isActive
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-950/40 dark:text-blue-300'
-                                    : 'border-gray-200 bg-white/60 text-gray-700 backdrop-blur-sm hover:border-gray-300 hover:bg-white/90 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-200 dark:hover:bg-gray-800/90'
+                                    : 'border-black/5 bg-[var(--bg-base)] text-gray-700 hover:border-black/10 hover:text-gray-900 dark:border-white/10 dark:text-gray-200 dark:hover:border-white/20 dark:hover:text-white'
                             }`}
                         >
-                            <fw.Icon
-                                size={18}
-                                style={{ color: fw.brand }}
-                                aria-hidden
-                            />
+                            <fw.Icon size={18} aria-hidden />
                             <span>{fw.name}</span>
                         </Link>
                     )

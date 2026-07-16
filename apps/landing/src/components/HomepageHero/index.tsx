@@ -12,54 +12,12 @@ import {
     ChevronDown,
 } from 'lucide-react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import type { CSSProperties } from 'react'
 import GradientText from '@/components/TextAnimation/GradientText'
 import BlurText from '@/components/TextAnimation/BlurText'
 import FrameworkSnippets from '@/components/FrameworkSnippets'
 import FrameworkStrip from '@/components/FrameworkStrip'
 import { HeroSession } from '@/components/UploaderScene'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
-
-/* Decorative aurora + pedestal glow behind the hero. aria-hidden, blurred,
-   token-driven (matches ui/Section's glow variant), pointer-events-none. The
-   drift honours reduced-motion via globals.css. */
-function HeroAurora() {
-    const blob = 'absolute rounded-full blur-3xl aurora-drift'
-    return (
-        <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-        >
-            <div
-                className={`${blob} -top-1/4 left-0 h-[34rem] w-[34rem]`}
-                style={
-                    {
-                        background:
-                            'radial-gradient(circle, var(--aurora-blue), transparent 70%)',
-                    } as CSSProperties
-                }
-            />
-            <div
-                className={`${blob} top-1/4 right-0 h-[32rem] w-[32rem] translate-x-1/4`}
-                style={
-                    {
-                        background:
-                            'radial-gradient(circle, var(--aurora-teal), transparent 70%)',
-                    } as CSSProperties
-                }
-            />
-            <div
-                className={`${blob} bottom-0 left-1/3 h-[26rem] w-[26rem]`}
-                style={
-                    {
-                        background:
-                            'radial-gradient(circle, var(--aurora-violet), transparent 70%)',
-                    } as CSSProperties
-                }
-            />
-        </div>
-    )
-}
 
 export default function HeroSection({
     framework,
@@ -240,10 +198,8 @@ export default function HeroSection({
     }
 
     return (
-        <section className="relative isolate mt-28 overflow-hidden rounded-3xl px-6 pt-12 pb-16">
-            <HeroAurora />
-
-            <div className="relative mx-auto max-w-7xl">
+        <section className="relative mt-28 overflow-hidden px-6 pt-12 pb-16">
+            <div className="relative mx-auto max-w-6xl">
                 {/* Two-column split ≥lg: copy + CTAs + install left, the live
                     uploader animation right. Stacks on mobile with the animation
                     right under the fold copy. */}
@@ -255,29 +211,13 @@ export default function HeroSection({
                         initial="hidden"
                         animate="visible"
                     >
-                        {/* Badge — raised-surface pill (padded-gradient recipe,
-                            same primitive as ui/Card, but rounded-full). */}
+                        {/* Badge — hairline pill (the one border recipe). */}
                         <motion.div
-                            className="surface-card-border surface-shadow mb-6 inline-flex rounded-full p-px"
+                            className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-black/5 px-4 py-2 text-sm font-medium text-gray-600 dark:border-white/10 dark:text-gray-300"
                             variants={badgeVariants}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
                         >
-                            <div className="surface-card-fill inline-flex items-center gap-3 rounded-full px-5 py-2.5 text-sm font-medium text-primary dark:text-primary-dark">
-                                <motion.div
-                                    className="flex items-center justify-center w-5 h-5 bg-primary/10 dark:bg-primary-dark/10 rounded-full"
-                                    animate={{ scale: [1, 1.2, 1] }}
-                                    transition={{
-                                        duration: 2,
-                                        repeat: Infinity,
-                                    }}
-                                >
-                                    <div className="w-2 h-2 bg-primary dark:bg-primary-dark rounded-full animate-pulse"></div>
-                                </motion.div>
-                                <span>
-                                    Open source · One core, six frameworks
-                                </span>
-                            </div>
+                            <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400" />
+                            <span>Open source · One core, six frameworks</span>
                         </motion.div>
 
                         {/* Main Heading */}
@@ -299,8 +239,8 @@ export default function HeroSection({
                                         '#1849d6',
                                         '#4079ff',
                                         '#37c4f5',
+                                        '#4079ff',
                                         '#1849d6',
-                                        '#40ffaa',
                                     ]}
                                     animationSpeed={10}
                                     showBorder={false}
@@ -359,7 +299,7 @@ export default function HeroSection({
                                     href="https://github.com/DevinoSolutions/upup"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-8 py-4 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-200"
+                                    className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-white/[0.05] border border-black/5 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:border-black/10 dark:hover:border-white/20 transition-colors duration-200"
                                 >
                                     <Github className="w-5 h-5" />
                                     View Source
@@ -374,14 +314,11 @@ export default function HeroSection({
                             className="w-full max-w-lg mx-auto lg:mx-0"
                             variants={installBoxVariants}
                         >
-                            {/* Raised-surface card (padded-gradient recipe). No
-                                overflow-hidden on the fill so the absolute z-50
+                            {/* Flat hairline surface — the page's ONE install
+                                surface. No overflow-hidden so the absolute z-50
                                 package-manager menu below is never clipped. */}
-                            <motion.div
-                                className="surface-card-border surface-shadow rounded-2xl p-px"
-                                whileHover={{ scale: 1.02 }}
-                            >
-                                <div className="surface-card-fill relative rounded-[15px] p-4">
+                            <div className="rounded-2xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10">
+                                <div className="relative rounded-2xl p-4">
                                     <div className="flex items-center justify-between">
                                         <motion.code
                                             className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
@@ -408,10 +345,7 @@ export default function HeroSection({
                                             <motion.button
                                                 onClick={handleCopy}
                                                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                                whileHover={{
-                                                    scale: 1.05,
-                                                    rotate: 5,
-                                                }}
+                                                whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
                                                 <AnimatePresence mode="wait">
@@ -573,13 +507,13 @@ export default function HeroSection({
                                         </motion.div>
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         </motion.div>
                     </motion.div>
 
                     {/* RIGHT — the live-usage animation as the hero's visual
-                        anchor, on its own radiant pedestal. Decorative, so it
-                        carries no copy; the left column holds all the info. */}
+                        anchor. Decorative, so it carries no copy; the left
+                        column holds all the info. */}
                     <motion.div
                         ref={visualRef}
                         className="relative"
@@ -587,16 +521,6 @@ export default function HeroSection({
                         initial="hidden"
                         animate="visible"
                     >
-                        <div
-                            aria-hidden
-                            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[120%] w-[120%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-                            style={
-                                {
-                                    background:
-                                        'radial-gradient(circle, var(--aurora-blue), var(--aurora-teal) 45%, transparent 72%)',
-                                } as CSSProperties
-                            }
-                        />
                         <HeroSession active={visualActive} />
                     </motion.div>
                 </div>

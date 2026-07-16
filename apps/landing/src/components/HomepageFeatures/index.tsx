@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     FaFileAlt,
     FaStar,
@@ -339,55 +338,31 @@ const fileTypes = [
         icon: <FaImage className="w-8 h-8" />,
         label: 'Images',
         types: 'JPG, PNG, GIF, WebP',
-        color: 'text-[#31A8FF]',
-        bgColor: 'bg-[#31A8FF]/10',
-        borderColor: 'border-[#31A8FF]/20',
-        hoverColor: 'hover:bg-[#31A8FF]/20',
     },
     {
         icon: <FaFileAlt className="w-8 h-8" />,
         label: 'Documents',
         types: 'PDF, DOC, DOCX, TXT',
-        color: 'text-[#DC3545]',
-        bgColor: 'bg-[#DC3545]/10',
-        borderColor: 'border-[#DC3545]/20',
-        hoverColor: 'hover:bg-[#DC3545]/20',
     },
     {
         icon: <FaVideo className="w-8 h-8" />,
         label: 'Videos',
         types: 'MP4, AVI, MOV, WebM',
-        color: 'text-[#9999FF]',
-        bgColor: 'bg-[#9999FF]/10',
-        borderColor: 'border-[#9999FF]/20',
-        hoverColor: 'hover:bg-[#9999FF]/20',
     },
     {
         icon: <FaMusic className="w-8 h-8" />,
         label: 'Audio',
         types: 'MP3, WAV, OGG, FLAC',
-        color: 'text-[#1DB954]',
-        bgColor: 'bg-[#1DB954]/10',
-        borderColor: 'border-[#1DB954]/20',
-        hoverColor: 'hover:bg-[#1DB954]/20',
     },
     {
         icon: <ImFileZip className="w-8 h-8" />,
         label: 'Archives',
         types: 'ZIP, RAR, 7Z, TAR',
-        color: 'text-[#FFA500]',
-        bgColor: 'bg-[#FFA500]/10',
-        borderColor: 'border-[#FFA500]/20',
-        hoverColor: 'hover:bg-[#FFA500]/20',
     },
     {
         icon: <SiJavascript className="w-8 h-8" />,
         label: 'Code',
         types: 'JS, TS, JSON, XML',
-        color: 'text-[#F7DF1E]',
-        bgColor: 'bg-[#F7DF1E]/10',
-        borderColor: 'border-[#F7DF1E]/20',
-        hoverColor: 'hover:bg-[#F7DF1E]/20',
     },
 ]
 
@@ -666,18 +641,13 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                         role="listitem"
                         className="w-[120px]"
                     >
-                        <div className="surface-card-border surface-shadow h-full rounded-xl p-px transition-transform duration-200 hover:-translate-y-0.5">
-                            <div className="surface-card-fill flex h-full flex-col items-center gap-2.5 rounded-[11px] px-3 py-4 text-center">
-                                <span
-                                    className="flex h-9 w-9 items-center justify-center rounded-lg"
-                                    style={{ backgroundColor: provider.color }}
-                                >
-                                    <provider.icon className="h-5 w-5 text-white" />
-                                </span>
-                                <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
-                                    {provider.name}
-                                </span>
-                            </div>
+                        <div className="flex h-full flex-col items-center gap-2.5 rounded-xl border border-black/5 bg-[var(--bg-base)] px-3 py-4 text-center dark:border-white/10">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
+                                <provider.icon className="h-5 w-5" />
+                            </span>
+                            <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
+                                {provider.name}
+                            </span>
                         </div>
                     </div>
                 ))}
@@ -707,19 +677,16 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
                     key={provider.id}
                     type="button"
                     onClick={() => onProviderClick(provider)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full surface-card-fill border border-black/10 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/20 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                    <provider.icon
-                        className="w-3.5 h-3.5"
-                        style={{ color: provider.color }}
-                    />
+                    <provider.icon className="w-3.5 h-3.5" />
                     {provider.name}
                 </button>
             ))}
             <button
                 type="button"
                 onClick={onCustomRequest}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full surface-card-fill border border-black/10 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/20 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 <FaPlus className="w-3.5 h-3.5" />
                 Request Custom
@@ -745,54 +712,6 @@ export default function HomepageFeatures() {
     const devPlanned = developerStorageProviders.filter(
         p => p.status === 'planned',
     )
-
-    // Refs for scroll-triggered animations
-    const headerRef = useRef(null)
-    const providersRef = useRef(null)
-    const fileTypesRef = useRef(null)
-
-    const headerInView = useInView(headerRef, { once: true, amount: 0.3 })
-    const providersInView = useInView(providersRef, { once: true, amount: 0.2 })
-    const fileTypesInView = useInView(fileTypesRef, { once: true, amount: 0.3 })
-
-    const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
-
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2,
-            },
-        },
-    }
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 30, scale: 0.95 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.6,
-                ease: easeCurve,
-            },
-        },
-    }
-
-    const headingVariants = {
-        hidden: { opacity: 0, y: 40 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.8,
-                ease: easeCurve,
-            },
-        },
-    }
 
     const handleProviderClick = (provider: Integration) => {
         if (provider.status === 'supported') return // Don't show modal for supported providers
@@ -854,77 +773,43 @@ export default function HomepageFeatures() {
             `}</style>
 
             {/* Section Header */}
-            <motion.div
-                ref={headerRef}
-                className="mb-12"
-                initial={{ opacity: 0, y: 24 }}
-                animate={
-                    headerInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }
+            <SectionHeading
+                badge={
+                    <>
+                        <FaStar className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                        Powerful Features
+                    </>
                 }
-                transition={{ duration: 0.6, ease: easeCurve }}
-            >
-                <SectionHeading
-                    badge={
-                        <>
-                            <motion.span
-                                className="inline-flex"
-                                animate={{ rotate: [0, 360] }}
-                                transition={{
-                                    duration: 4,
-                                    repeat: Infinity,
-                                    ease: 'linear',
-                                }}
-                            >
-                                <FaStar className="w-3.5 h-3.5 text-primary dark:text-primary-dark" />
-                            </motion.span>
-                            Powerful Features
-                        </>
-                    }
-                    title={
-                        <>
-                            Everything you need for{' '}
-                            <span className={`block ${GRADIENT_TEXT}`}>
-                                modern file uploads
-                            </span>
-                        </>
-                    }
-                    subtitle="One uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — with a drag-and-drop dropzone, file picker, cloud-drive sources, camera and screen capture, and optional server-mode uploads to any S3-compatible storage."
-                />
-            </motion.div>
+                title={
+                    <>
+                        Everything you need for{' '}
+                        <span className={`block ${GRADIENT_TEXT}`}>
+                            modern file uploads
+                        </span>
+                    </>
+                }
+                subtitle="One uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — with a drag-and-drop dropzone, file picker, cloud-drive sources, camera and screen capture, and optional server-mode uploads to any S3-compatible storage."
+            />
 
             {/* Main Features — animated showcase rows */}
             <FeatureShowcase />
 
             {/* Cloud Providers Section */}
-            <motion.div
-                ref={providersRef}
-                className="mb-16"
-                initial="hidden"
-                animate={providersInView ? 'visible' : 'hidden'}
-            >
+            <div className="mb-16">
                 {/* User Storage Providers */}
-                <motion.div className="mb-20" variants={containerVariants}>
-                    <motion.div
-                        className="text-center mb-12"
-                        variants={containerVariants}
-                    >
-                        <motion.h3
-                            className={`${H3_HEADING} mb-4`}
-                            variants={headingVariants}
-                        >
+                <div className="mb-20">
+                    <div className="text-center mb-12">
+                        <h3 className={`${H3_HEADING} mb-4`}>
                             Let your users connect to their{' '}
                             <span className={GRADIENT_TEXT}>
                                 favorite storage cloud providers
                             </span>
-                        </motion.h3>
-                        <motion.p
-                            className="text-lg text-gray-600 dark:text-gray-300"
-                            variants={itemVariants}
-                        >
+                        </h3>
+                        <p className="text-lg text-gray-600 dark:text-gray-300">
                             Users can directly upload from these providers in
                             upup
-                        </motion.p>
-                    </motion.div>
+                        </p>
+                    </div>
 
                     <SupportedWall providers={userSupported} />
 
@@ -933,31 +818,22 @@ export default function HomepageFeatures() {
                         onProviderClick={handleProviderClick}
                         onCustomRequest={handleCustomRequest}
                     />
-                </motion.div>
+                </div>
 
                 {/* Developer Storage Providers */}
-                <motion.div variants={containerVariants}>
-                    <motion.div
-                        className="text-center mb-12"
-                        variants={containerVariants}
-                    >
-                        <motion.h3
-                            className={`${H3_HEADING} mb-4`}
-                            variants={headingVariants}
-                        >
+                <div>
+                    <div className="text-center mb-12">
+                        <h3 className={`${H3_HEADING} mb-4`}>
                             And for developers, connect upup to your{' '}
                             <span className={GRADIENT_TEXT}>
                                 favorite cloud bucket
                             </span>
-                        </motion.h3>
-                        <motion.p
-                            className="text-lg text-gray-600 dark:text-gray-300"
-                            variants={itemVariants}
-                        >
+                        </h3>
+                        <p className="text-lg text-gray-600 dark:text-gray-300">
                             You can connect to upup using any S3 provider. We
                             also support some non-S3 connections.
-                        </motion.p>
-                    </motion.div>
+                        </p>
+                    </div>
 
                     <SupportedWall providers={devSupported} />
 
@@ -966,34 +842,21 @@ export default function HomepageFeatures() {
                         onProviderClick={handleProviderClick}
                         onCustomRequest={handleCustomRequest}
                     />
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
             {/* File Types with Modern Infinite Marquee */}
-            <motion.div
-                ref={fileTypesRef}
-                initial="hidden"
-                animate={fileTypesInView ? 'visible' : 'hidden'}
-            >
-                <motion.div
-                    className="text-center mb-10"
-                    variants={containerVariants}
-                >
-                    <motion.h3
-                        className={`${H3_HEADING} mb-4`}
-                        variants={headingVariants}
-                    >
+            <div>
+                <div className="text-center mb-10">
+                    <h3 className={`${H3_HEADING} mb-4`}>
                         Support for{' '}
                         <span className={GRADIENT_TEXT}>all file types</span>
-                    </motion.h3>
-                    <motion.p
-                        className="text-lg text-gray-600 dark:text-gray-300"
-                        variants={itemVariants}
-                    >
+                    </h3>
+                    <p className="text-lg text-gray-600 dark:text-gray-300">
                         Upload images, videos, documents, and large files —
                         handle any file type and size limit your users need
-                    </motion.p>
-                </motion.div>
+                    </p>
+                </div>
 
                 {/* Modern Infinite Marquee with Scroll-triggered Animation.
                         Fixed-width edge-fade mask on both sides paired with matching
@@ -1003,7 +866,7 @@ export default function HomepageFeatures() {
                         of rendering half-faded, while cards still vanish smoothly at both
                         edges while animating. Padding lives on the container, not the
                         animated row, so the -50% seamless loop is unaffected. */}
-                <motion.div
+                <div
                     className="relative overflow-hidden px-10 py-6"
                     style={{
                         maskImage:
@@ -1011,132 +874,28 @@ export default function HomepageFeatures() {
                         WebkitMaskImage:
                             'linear-gradient(to right, transparent, #000 48px, #000 calc(100% - 48px), transparent)',
                     }}
-                    initial={{ opacity: 0 }}
-                    animate={fileTypesInView ? { opacity: 1 } : { opacity: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
                 >
                     <div className="flex animate-marquee">
-                        {/* First set of items */}
-                        {fileTypes.map((type, index) => (
-                            <motion.div
-                                key={`first-${index}`}
-                                className={`group surface-shadow relative text-center p-8 mx-4 min-w-[200px] ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 transition-all duration-300 flex-shrink-0`}
-                                initial={{
-                                    opacity: 0,
-                                    y: 30,
-                                    scale: 0.9,
-                                }}
-                                animate={
-                                    fileTypesInView
-                                        ? {
-                                              opacity: 1,
-                                              y: 0,
-                                              scale: 1,
-                                          }
-                                        : {}
-                                }
-                                transition={{
-                                    duration: 0.6,
-                                    delay: index * 0.1 + 0.6,
-                                    ease: easeCurve,
-                                }}
-                                whileHover={{
-                                    scale: 1.05,
-                                    y: -5,
-                                    transition: { duration: 0.2 },
-                                }}
+                        {/* Two identical sets for a seamless -50% loop */}
+                        {[...fileTypes, ...fileTypes].map((type, index) => (
+                            <div
+                                key={index}
+                                className="relative flex-shrink-0 text-center p-8 mx-4 min-w-[200px] rounded-3xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10"
                             >
-                                <motion.div
-                                    className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
-                                    whileHover={{ rotate: 5 }}
-                                    transition={{
-                                        type: 'spring',
-                                        stiffness: 400,
-                                        damping: 10,
-                                    }}
-                                >
+                                <div className="flex justify-center mb-6 text-gray-500 dark:text-gray-400">
                                     {type.icon}
-                                </motion.div>
+                                </div>
                                 <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
                                     {type.label}
                                 </div>
                                 <div className="text-gray-600 dark:text-gray-400 text-sm">
                                     {type.types}
                                 </div>
-
-                                <motion.div
-                                    className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                    initial={{ x: '-100%' }}
-                                    whileHover={{
-                                        x: '100%',
-                                        transition: { duration: 0.6 },
-                                    }}
-                                />
-                            </motion.div>
-                        ))}
-
-                        {/* Second set of items for seamless loop */}
-                        {fileTypes.map((type, index) => (
-                            <motion.div
-                                key={`second-${index}`}
-                                className={`group surface-shadow relative text-center p-8 mx-4 min-w-[200px] ${type.bgColor} backdrop-blur-sm border ${type.borderColor} rounded-3xl ${type.hoverColor} hover:scale-105 transition-all duration-300 flex-shrink-0`}
-                                initial={{
-                                    opacity: 0,
-                                    y: 30,
-                                    scale: 0.9,
-                                }}
-                                animate={
-                                    fileTypesInView
-                                        ? {
-                                              opacity: 1,
-                                              y: 0,
-                                              scale: 1,
-                                          }
-                                        : {}
-                                }
-                                transition={{
-                                    duration: 0.6,
-                                    delay:
-                                        (index + fileTypes.length) * 0.1 + 0.6,
-                                    ease: easeCurve,
-                                }}
-                                whileHover={{
-                                    scale: 1.05,
-                                    y: -5,
-                                    transition: { duration: 0.2 },
-                                }}
-                            >
-                                <motion.div
-                                    className={`flex justify-center mb-6 ${type.color} group-hover:scale-110 transition-transform duration-300`}
-                                    whileHover={{ rotate: 5 }}
-                                    transition={{
-                                        type: 'spring',
-                                        stiffness: 400,
-                                        damping: 10,
-                                    }}
-                                >
-                                    {type.icon}
-                                </motion.div>
-                                <div className="font-bold text-gray-900 dark:text-white text-lg mb-2">
-                                    {type.label}
-                                </div>
-                                <div className="text-gray-600 dark:text-gray-400 text-sm">
-                                    {type.types}
-                                </div>
-
-                                <motion.div
-                                    className="absolute inset-0 rounded-3xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                    initial={{ x: '-100%' }}
-                                    whileHover={{
-                                        x: '100%',
-                                        transition: { duration: 0.6 },
-                                    }}
-                                />
-                            </motion.div>
+                            </div>
                         ))}
                     </div>
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
             <EmailModal
                 isOpen={modalOpen}

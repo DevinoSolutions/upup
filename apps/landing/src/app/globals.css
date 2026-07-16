@@ -47,9 +47,6 @@
     --card-shadow:
         0 1px 2px rgba(15, 23, 42, 0.04),
         0 8px 24px -12px rgba(15, 23, 42, 0.14);
-    --aurora-blue: rgba(59, 130, 246, 0.26);
-    --aurora-teal: rgba(45, 212, 191, 0.2);
-    --aurora-violet: rgba(139, 92, 246, 0.18);
 }
 
 .dark {
@@ -66,9 +63,6 @@
     );
     --card-shadow:
         0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
-    --aurora-blue: rgba(59, 130, 246, 0.22);
-    --aurora-teal: rgba(45, 212, 191, 0.16);
-    --aurora-violet: rgba(139, 92, 246, 0.18);
 }
 
 html {
@@ -433,24 +427,5 @@ body {
     }
     .surface-shadow {
         box-shadow: var(--card-shadow);
-    }
-    .aurora-drift {
-        animation: aurora-drift 26s ease-in-out infinite alternate;
-        will-change: transform;
-    }
-}
-
-@keyframes aurora-drift {
-    0% {
-        transform: translate3d(0, 0, 0) scale(1);
-    }
-    100% {
-        transform: translate3d(0, -5%, 0) scale(1.08);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .aurora-drift {
-        animation: none;
     }
 }

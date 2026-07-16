@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { useInView } from 'framer-motion'
 import {
     FaUpload,
     FaGlobe,
@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa'
 import Card from '@/components/ui/Card'
 import { H3_HEADING } from '@/components/ui/SectionHeading'
+import { ICON_CHIP } from '@/components/ui/recipes'
 import {
     FrameworksScene,
     DriveScene,
@@ -26,12 +27,6 @@ import {
     PipelineScene,
 } from '@/components/UploaderScene'
 import { ServerModeVignette } from './vignettes'
-
-const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
-
-// Monochrome icon chip — one neutral treatment for every feature glyph.
-const ICON_CHIP =
-    'flex items-center justify-center border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400'
 
 interface HeroRow {
     icon: React.ReactNode
@@ -132,8 +127,8 @@ const secondaryFeatures: {
 
 function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
     const ref = useRef(null)
-    const inView = useInView(ref, { once: true, amount: 0.3 })
-    // Separate, non-`once` observer so scenes only animate while on-screen.
+    // Non-`once` viewport gate so scenes only animate while on-screen (perf,
+    // not an entrance animation — rows themselves render static).
     const active = useInView(ref, { amount: 0.2 })
     const flipped = index % 2 === 1
     const { Visual } = row
@@ -144,12 +139,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
             className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12"
         >
             {/* Text column */}
-            <motion.div
-                className={`order-2 ${flipped ? 'lg:order-2' : 'lg:order-1'}`}
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={{ duration: 0.6, ease: easeCurve }}
-            >
+            <div className={`order-2 ${flipped ? 'lg:order-2' : 'lg:order-1'}`}>
                 <div className={`mb-5 h-12 w-12 rounded-2xl ${ICON_CHIP}`}>
                     {row.icon}
                 </div>
@@ -167,28 +157,22 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                         <FaArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                     </a>
                 )}
-            </motion.div>
+            </div>
 
             {/* Visual column — decorative, hidden from assistive tech */}
-            <motion.div
+            <div
                 aria-hidden="true"
                 className={`order-1 ${flipped ? 'lg:order-1' : 'lg:order-2'}`}
-                initial={{ opacity: 0, y: 30 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                transition={{ duration: 0.7, ease: easeCurve }}
             >
                 <Card className="flex min-h-[320px] items-center justify-center p-5 sm:p-6">
                     <Visual active={active} />
                 </Card>
-            </motion.div>
+            </div>
         </div>
     )
 }
 
 export default function FeatureShowcase() {
-    const stripRef = useRef(null)
-    const stripInView = useInView(stripRef, { once: true, amount: 0.2 })
-
     return (
         <div className="mb-16">
             {/* Alternating hero rows */}
@@ -199,45 +183,24 @@ export default function FeatureShowcase() {
             </div>
 
             {/* Secondary feature strip */}
-            <motion.div
-                ref={stripRef}
-                className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5"
-                initial="hidden"
-                animate={stripInView ? 'visible' : 'hidden'}
-                variants={{
-                    hidden: { opacity: 0 },
-                    visible: {
-                        opacity: 1,
-                        transition: { staggerChildren: 0.08 },
-                    },
-                }}
-            >
+            <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {secondaryFeatures.map(feature => (
-                    <motion.div
+                    <Card
                         key={feature.title}
-                        variants={{
-                            hidden: { opacity: 0, y: 20 },
-                            visible: {
-                                opacity: 1,
-                                y: 0,
-                                transition: { duration: 0.5, ease: easeCurve },
-                            },
-                        }}
+                        className="flex flex-col gap-2 p-5"
                     >
-                        <Card className="flex flex-col gap-2 p-5">
-                            <div className={`h-9 w-9 rounded-xl ${ICON_CHIP}`}>
-                                {feature.icon}
-                            </div>
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                                {feature.title}
-                            </h4>
-                            <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-                                {feature.description}
-                            </p>
-                        </Card>
-                    </motion.div>
+                        <div className={`h-9 w-9 rounded-xl ${ICON_CHIP}`}>
+                            {feature.icon}
+                        </div>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                            {feature.title}
+                        </h4>
+                        <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                            {feature.description}
+                        </p>
+                    </Card>
                 ))}
-            </motion.div>
+            </div>
         </div>
     )
 }
