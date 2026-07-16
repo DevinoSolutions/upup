@@ -38,7 +38,6 @@
    the light values; .dark overrides them. */
 :root {
     --bg-base: #f8fafc;
-    --bg-raised: #eef2f8;
     --card-fill: linear-gradient(180deg, #ffffff, #f6f8fc);
     --card-border: linear-gradient(
         180deg,
@@ -48,9 +47,6 @@
     --card-shadow:
         0 1px 2px rgba(15, 23, 42, 0.04),
         0 8px 24px -12px rgba(15, 23, 42, 0.14);
-    --card-hover-shadow:
-        0 1px 2px rgba(15, 23, 42, 0.06),
-        0 16px 44px -16px rgba(15, 23, 42, 0.22);
     --aurora-blue: rgba(59, 130, 246, 0.26);
     --aurora-teal: rgba(45, 212, 191, 0.2);
     --aurora-violet: rgba(139, 92, 246, 0.18);
@@ -58,7 +54,6 @@
 
 .dark {
     --bg-base: #05070d;
-    --bg-raised: #0a0e18;
     --card-fill: linear-gradient(
         180deg,
         rgba(255, 255, 255, 0.09),
@@ -71,8 +66,6 @@
     );
     --card-shadow:
         0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
-    --card-hover-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.45), 0 22px 52px -16px rgba(0, 0, 0, 0.72);
     --aurora-blue: rgba(59, 130, 246, 0.22);
     --aurora-teal: rgba(45, 212, 191, 0.16);
     --aurora-violet: rgba(139, 92, 246, 0.18);
@@ -430,7 +423,7 @@ body {
     }
 }
 
-/* ── Dark-radiant surface primitives (consumed by ui/Card + ui/Section) ── */
+/* ── Radiant surface primitives (hero pill / demo frame / feature chrome) ── */
 @layer utilities {
     .surface-card-border {
         background: var(--card-border);
@@ -440,20 +433,6 @@ body {
     }
     .surface-shadow {
         box-shadow: var(--card-shadow);
-    }
-    /* Accent glow + lift on hover; the accent colour rides in via the
-     inline --accent-glow custom property set by Card's `accent` prop.
-     Falls back to transparent (plain hover shadow) when no accent. */
-    .surface-glow-hover {
-        transition:
-            box-shadow 0.3s ease,
-            transform 0.3s ease;
-    }
-    .surface-glow-hover:hover {
-        transform: translateY(-2px);
-        box-shadow:
-            var(--card-hover-shadow),
-            0 22px 60px -20px var(--accent-glow, transparent);
     }
     .aurora-drift {
         animation: aurora-drift 26s ease-in-out infinite alternate;
@@ -471,9 +450,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .surface-glow-hover:hover {
-        transform: none;
-    }
     .aurora-drift {
         animation: none;
     }

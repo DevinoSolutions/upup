@@ -16,7 +16,7 @@ import {
     FaUniversalAccess,
     FaArrowRight,
 } from 'react-icons/fa'
-import Card, { ACCENT_HUES, type AccentHue } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 import { H3_HEADING } from '@/components/ui/SectionHeading'
 import {
     FrameworksScene,
@@ -29,27 +29,29 @@ import { ServerModeVignette } from './vignettes'
 
 const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
+// Monochrome icon chip — one neutral treatment for every feature glyph.
+const ICON_CHIP =
+    'flex items-center justify-center border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400'
+
 interface HeroRow {
     icon: React.ReactNode
     title: string
     description: string
-    accent: AccentHue
     Visual: React.ComponentType<{ active?: boolean }>
     live: boolean
 }
 
 // The six hero rows. Copy is unchanged from the prior showcase; the image-editor
 // row keeps the React & Preact qualifier and the accessibility line stays
-// "accessibility checks in our CI suite" (no invented claims). Each visual is now
-// a scene segment reused from the hero movie (except Server Mode, which keeps its
-// diagram), and each row carries its own accent hue instead of 12 identical blues.
+// "accessibility checks in our CI suite" (no invented claims). Each visual is a
+// scene segment reused from the hero movie (except Server Mode, which keeps its
+// diagram).
 const heroRows: HeroRow[] = [
     {
         icon: <FaUpload className="h-6 w-6" />,
         title: 'Six Frameworks, One Uploader',
         description:
             'Native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — one uploader that renders byte-identical DOM in every framework, enforced by a cross-framework parity suite.',
-        accent: 'blue',
         Visual: FrameworksScene,
         live: true,
     },
@@ -58,7 +60,6 @@ const heroRows: HeroRow[] = [
         title: 'Cloud Drives, Camera & Screen Capture',
         description:
             'Import files straight from Google Drive, OneDrive, Dropbox, and Box — plus device camera, screen capture, audio recording, and link (URL) imports.',
-        accent: 'teal',
         Visual: DriveScene,
         live: true,
     },
@@ -67,7 +68,6 @@ const heroRows: HeroRow[] = [
         title: 'Secure Server Mode',
         description:
             'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — with ready-made adapters for Express, Fastify, Hono, and Next.js.',
-        accent: 'green',
         Visual: ServerModeVignette,
         live: false,
     },
@@ -76,7 +76,6 @@ const heroRows: HeroRow[] = [
         title: 'Built-In Image Editor (React & Preact)',
         description:
             'Crop, rotate, annotate, and filter images before upload with the integrated Filerobot editor — available in React and Preact, loaded lazily so it never weighs down your bundle.',
-        accent: 'violet',
         Visual: EditorScene,
         live: true,
     },
@@ -85,7 +84,6 @@ const heroRows: HeroRow[] = [
         title: 'Crash-Safe & Resumable',
         description:
             'Reload the page mid-upload and pick up where you left off — crash recovery restores the queue, and resumable chunked uploads (tus) handle large files over unreliable networks.',
-        accent: 'amber',
         Visual: ResumeScene,
         live: false,
     },
@@ -94,49 +92,41 @@ const heroRows: HeroRow[] = [
         title: 'Fast by Default: Workers + HEIC',
         description:
             'Image compression runs off the main thread in a web worker, so the page stays responsive — and opt-in HEIC to JPEG conversion means .heic photos from iPhones just work.',
-        accent: 'pink',
         Visual: PipelineScene,
         live: false,
     },
 ]
 
-// The remaining five features as a compact secondary chip strip (no scenes),
-// each with its own accent hue.
+// The remaining five features as a compact secondary chip strip (no scenes).
 const secondaryFeatures: {
     icon: React.ReactNode
     title: string
     description: string
-    accent: AccentHue
 }[] = [
     {
         icon: <FaBolt className="h-5 w-5" />,
         title: 'Headless Core',
         description: 'Framework-agnostic engine — bring your own UI.',
-        accent: 'blue',
     },
     {
         icon: <FaCloud className="h-5 w-5" />,
         title: 'Any S3-Compatible Storage',
         description: 'AWS, R2, MinIO, Spaces, B2, Wasabi, and more.',
-        accent: 'teal',
     },
     {
         icon: <FaEye className="h-5 w-5" />,
         title: 'Previews, Progress & Retry',
         description: 'Live previews, progress bar, and automatic retry.',
-        accent: 'violet',
     },
     {
         icon: <FaPalette className="h-5 w-5" />,
         title: 'Themeable & Localized',
         description: 'Theme tokens, dark mode, and built-in locales.',
-        accent: 'amber',
     },
     {
         icon: <FaUniversalAccess className="h-5 w-5" />,
         title: 'Accessible & TypeScript-First',
         description: 'Accessibility checks in our CI suite, fully typed APIs.',
-        accent: 'green',
     },
 ]
 
@@ -147,7 +137,6 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
     const active = useInView(ref, { amount: 0.2 })
     const flipped = index % 2 === 1
     const { Visual } = row
-    const hue = ACCENT_HUES[row.accent]
 
     return (
         <div
@@ -161,9 +150,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ duration: 0.6, ease: easeCurve }}
             >
-                <div
-                    className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${hue.icon}`}
-                >
+                <div className={`mb-5 h-12 w-12 rounded-2xl ${ICON_CHIP}`}>
                     {row.icon}
                 </div>
                 <h3 className={`mb-4 ${H3_HEADING}`}>{row.title}</h3>
@@ -174,7 +161,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                     <a
                         href="#demo"
                         aria-label={`See ${row.title} live`}
-                        className={`group mt-5 inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${hue.text}`}
+                        className="group mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:text-blue-400"
                     >
                         See it live
                         <FaArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
@@ -190,11 +177,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ duration: 0.7, ease: easeCurve }}
             >
-                <Card
-                    hover
-                    accent={row.accent}
-                    className="flex min-h-[320px] items-center justify-center p-5 sm:p-6"
-                >
+                <Card className="flex min-h-[320px] items-center justify-center p-5 sm:p-6">
                     <Visual active={active} />
                 </Card>
             </motion.div>
@@ -241,14 +224,8 @@ export default function FeatureShowcase() {
                             },
                         }}
                     >
-                        <Card
-                            hover
-                            accent={feature.accent}
-                            className="flex flex-col gap-2 p-5"
-                        >
-                            <div
-                                className={`flex h-9 w-9 items-center justify-center rounded-xl ${ACCENT_HUES[feature.accent].icon}`}
-                            >
+                        <Card className="flex flex-col gap-2 p-5">
+                            <div className={`h-9 w-9 rounded-xl ${ICON_CHIP}`}>
                                 {feature.icon}
                             </div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white">

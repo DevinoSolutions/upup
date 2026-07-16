@@ -66,7 +66,7 @@ export default async function FrameworkPage({
     if (!fw) notFound()
 
     return (
-        <div className="container mx-auto">
+        <>
             <StructuredData
                 framework={{ id: fw.id, name: fw.name, pkg: fw.pkg }}
             />
@@ -89,6 +89,6 @@ export default async function FrameworkPage({
             <FAQSection />
             <FeedbackSection />
             <Toast />
-        </div>
+        </>
     )
 }

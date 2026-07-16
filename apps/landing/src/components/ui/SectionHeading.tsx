@@ -29,10 +29,13 @@ export default function SectionHeading({
         align === 'center'
             ? 'items-center text-center mx-auto max-w-3xl'
             : 'items-start text-left'
+    // The heading owns the heading→content gap so consumers don't each set it.
     return (
-        <div className={`flex flex-col ${alignment} ${className}`}>
+        <div
+            className={`flex flex-col mb-12 sm:mb-16 ${alignment} ${className}`}
+        >
             {badge && (
-                <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-black/10 bg-black/[0.03] px-3 py-1 text-xs font-medium text-gray-600 backdrop-blur-sm dark:border-white/15 dark:bg-white/[0.06] dark:text-gray-300">
+                <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-black/5 px-3 py-1 text-xs font-medium text-gray-600 dark:border-white/10 dark:text-gray-300">
                     {badge}
                 </span>
             )}

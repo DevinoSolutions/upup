@@ -19,7 +19,7 @@ export const metadata = {
 
 export default function Home() {
     return (
-        <div className="container mx-auto">
+        <>
             <StructuredData />
             <HeroSection />
             <div id="demo" className="scroll-mt-24">
@@ -30,6 +30,6 @@ export default function Home() {
             <FAQSection />
             <FeedbackSection />
             <Toast />
-        </div>
+        </>
     )
 }

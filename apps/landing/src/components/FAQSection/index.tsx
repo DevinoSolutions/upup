@@ -15,7 +15,6 @@ export default function FAQSection() {
         <Section id="faq">
             <div className="mx-auto max-w-3xl">
                 <SectionHeading
-                    className="mb-16"
                     title={
                         <>
                             Frequently asked
@@ -30,7 +29,7 @@ export default function FAQSection() {
                     {faqs.map((faq, index) => {
                         const isOpen = openIndex === index
                         return (
-                            <Card key={faq.question} hover>
+                            <Card key={faq.question}>
                                 <button
                                     type="button"
                                     className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"

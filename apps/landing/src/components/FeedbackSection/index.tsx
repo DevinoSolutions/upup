@@ -7,7 +7,7 @@ import {
     ExternalLink,
 } from 'lucide-react'
 import Section from '@/components/ui/Section'
-import Card, { ACCENT_HUES, type AccentHue } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 
 export default function FeedbackSection() {
@@ -15,7 +15,6 @@ export default function FeedbackSection() {
         icon: React.ReactNode
         title: string
         description: string
-        accent: AccentHue
         action?: string
         buttonText?: string
         actions?: { url: string; text: string }[]
@@ -24,7 +23,6 @@ export default function FeedbackSection() {
             icon: <Mail className="w-5 h-5" />,
             title: 'Email Us',
             description: 'Send feedback directly to our team',
-            accent: 'blue',
             action: 'mailto:hello@devino.ca?subject=UpUp Feedback',
             buttonText: 'Send Email',
         },
@@ -32,7 +30,6 @@ export default function FeedbackSection() {
             icon: <Github className="w-5 h-5" />,
             title: 'GitHub Issues',
             description: 'Report bugs or request new features',
-            accent: 'violet',
             actions: [
                 {
                     url: 'https://github.com/DevinoSolutions/upup/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D+',
@@ -48,16 +45,14 @@ export default function FeedbackSection() {
             icon: <MessageCircle className="w-5 h-5" />,
             title: 'Discord Community',
             description: 'Join discussions and get support',
-            accent: 'teal',
             action: 'https://discord.com/invite/ny5WUE9ayc',
             buttonText: 'Join Discord',
         },
     ]
 
     return (
-        <Section id="feedback" variant="raised">
+        <Section id="feedback" bordered>
             <SectionHeading
-                className="mb-16"
                 badge={
                     <>
                         <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -75,15 +70,8 @@ export default function FeedbackSection() {
             {/* Feedback Options */}
             <div className="grid lg:grid-cols-3 gap-8 mb-12">
                 {feedbackOptions.map((option, index) => (
-                    <Card
-                        key={index}
-                        hover
-                        accent={option.accent}
-                        className="p-8"
-                    >
-                        <div
-                            className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${ACCENT_HUES[option.accent].icon}`}
-                        >
+                    <Card key={index} className="p-8">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
                             {option.icon}
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">

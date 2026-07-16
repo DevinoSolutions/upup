@@ -1,5 +1,9 @@
 import type { IconType } from 'react-icons'
-import type { AccentHue } from '@/components/ui/Card'
+
+/** Accent hue for a mock file's gradient thumbnail + progress bar. Scene-local:
+ *  the ONE place the site still uses per-item hues, because the MockUploader's
+ *  gradient chrome is a deliberate keep (the surviving product-demo gradient). */
+export type AccentHue = 'blue' | 'teal' | 'violet' | 'amber' | 'green' | 'pink'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared shapes for the UploaderScene kit — a marketing recreation of the real

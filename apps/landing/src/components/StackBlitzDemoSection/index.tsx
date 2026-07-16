@@ -202,10 +202,9 @@ export default function StackBlitzDemoSection() {
 
     return (
         <>
-            <Section id="live-editor" variant="raised">
+            <Section id="live-editor" bordered>
                 {/* Header */}
                 <SectionHeading
-                    className="mb-16"
                     badge={
                         <>
                             <span className="h-2 w-2 rounded-full bg-green-500" />
