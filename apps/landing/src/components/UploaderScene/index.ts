@@ -11,6 +11,8 @@ export { default as EditorScene } from './EditorScene'
 export { default as FrameworksScene } from './FrameworksScene'
 export { default as MockUploader } from './MockUploader'
 export { default as MockDriveBrowser } from './MockDriveBrowser'
+export { default as MockScreenShare } from './MockScreenShare'
+export { default as MockAudioRecorder } from './MockAudioRecorder'
 export { default as SceneTap } from './SceneTap'
 export { useSceneTimeline, type TimelineStep } from './useSceneTimeline'
 export {

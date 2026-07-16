@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { SiGoogledrive } from 'react-icons/si'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
+import MockScreenShare from './MockScreenShare'
+import MockAudioRecorder from './MockAudioRecorder'
 import SceneTap from './SceneTap'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
@@ -13,12 +15,15 @@ import { SCENE_MEDIA } from './scene-media'
 import type { DriveThumb, QueueFile, QueueStage } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HeroSession — the flagship ~16s loop: a simulated user imports 3 photos from
-// Google Drive, they fly into the queue, compress on-device (one morphs
-// HEIC → JPG), upload, and land with green ticks — then a rest beat and reset.
-// Every beat is a REAL upup capability (drive import, compression, HEIC→JPG,
-// progress). Decorative: the root is aria-hidden; honours reduced-motion and the
-// `active` viewport gate via useSceneTimeline (final "all uploaded" frame).
+// HeroSession — the flagship ~24s loop: a simulated user imports two photos from
+// Google Drive, captures their screen, records a voice note, then the four files
+// compress on-device (one photo morphs HEIC → JPG), upload, and land with green
+// ticks — then a rest beat and reset. Every beat is a REAL upup capability (drive
+// import, screen capture, audio recording, compression, HEIC→JPG, progress). One
+// overlay slot is shared by the drive browser / screen-share window / audio
+// recorder — only one is open at a time (`overlayKind`). Decorative: the root is
+// aria-hidden; honours reduced-motion and the `active` viewport gate via
+// useSceneTimeline (final "all uploaded" 4-row frame).
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface HeroState {
@@ -28,13 +33,21 @@ interface HeroState {
     /** Bumped on each tap to fire the press pulse + ripple. */
     tapId: number
     activeSource: string | null
-    browserOpen: boolean
-    /** How many drive thumbs are selected (0–3). */
+    /** Which overlay is slid over the panel body (one at a time). */
+    overlayKind: null | 'drive' | 'screen' | 'audio'
+    /** How many drive thumbs are selected (0–2). */
     picked: number
+    /** How many queue rows are shown (0–4) — grows as each source imports. */
+    fileCount: number
+    /** Elapsed seconds shown on the audio recorder's timer. */
+    recSeconds: number
     stage: QueueStage
     caption: string
 }
 
+// Four rows, filled in source order: two Drive photos, a screen recording, then a
+// voice note. The two photos morph on compression (one is HEIC → JPG); the video
+// and audio rows keep their size (sizeFrom === sizeTo — no compression morph).
 const HERO_FILES: QueueFile[] = [
     {
         id: 'a',
@@ -58,17 +71,27 @@ const HERO_FILES: QueueFile[] = [
     },
     {
         id: 'c',
-        name: 'river-canyon',
-        ext: 'jpg',
+        name: 'screen-rec',
+        ext: 'mp4',
         accent: 'violet',
-        thumb: SCENE_MEDIA.photos.riverCanyon,
-        sizeFrom: '4.2 MB',
-        sizeTo: '1.1 MB',
+        kind: 'video',
+        thumb: SCENE_MEDIA.videos.screenShare.poster,
+        sizeFrom: '18.4 MB',
+        sizeTo: '18.4 MB',
+    },
+    {
+        id: 'd',
+        name: 'voice-note',
+        ext: 'webm',
+        accent: 'blue',
+        kind: 'audio',
+        sizeFrom: '1.2 MB',
+        sizeTo: '1.2 MB',
     },
 ]
 
-// thumb-0 = yosemite-valley and thumb-1 = portrait are the scripted first two
-// picks (they match rows a + b); the rest fill the grid with real stock photos.
+// thumb-0 = yosemite-valley and thumb-1 = portrait are the scripted two picks
+// (they match rows a + b); the rest fill the grid with real stock photos.
 const HERO_THUMBS: DriveThumb[] = [
     { id: 't1', src: SCENE_MEDIA.photos.yosemiteValley },
     { id: 't2', src: SCENE_MEDIA.photos.portrait },
@@ -89,49 +112,114 @@ const INITIAL: HeroState = {
     cursorHidden: true,
     tapId: 0,
     activeSource: null,
-    browserOpen: false,
+    overlayKind: null,
     picked: 0,
+    fileCount: 0,
+    recSeconds: 0,
     stage: 'idle',
     caption: 'Import straight from Google Drive',
 }
 
-// Ascending by `at` (seconds). loop = 16s → ~3s rest on the finished state.
+// Ascending by `at` (seconds). loop = 24s → ~1.8s rest on the finished frame.
 // Each cursor move lands on a MEASURED target; the following click fires only
-// after the near-critically-damped spring has settled (~0.7–0.9s for the long
-// opening moves, ~0.6s for the short thumb-to-thumb hops). The three picks visit
-// the three thumbs that actually get selected (thumb-0/1/2), so the pointer is
-// always on the photo it selects.
+// after the near-critically-damped spring has settled (~0.6–0.9s). Targets that
+// live inside an overlay (screen-stop / audio-stop) are only pointed at while
+// that overlay is open — otherwise scene-targets warns + falls back to {0,0}.
 const SCRIPT: TimelineStep<HeroState>[] = [
+    // ── Drive: open, pick two photos, import ────────────────────────────────
     {
         at: 0.4,
         set: { cursorHidden: false, cursor: { target: 'source-google-drive' } },
     },
     { at: 1.3, set: { activeSource: 'google-drive', tapId: 1 } },
-    { at: 1.7, set: { activeSource: null, browserOpen: true } },
+    { at: 1.7, set: { activeSource: null, overlayKind: 'drive' } },
     { at: 2.7, set: { cursor: { target: 'thumb-0' } } },
     { at: 3.4, set: { picked: 1, tapId: 2 } },
     { at: 4.0, set: { cursor: { target: 'thumb-1' } } },
     { at: 4.6, set: { picked: 2, tapId: 3 } },
-    { at: 5.2, set: { cursor: { target: 'thumb-2' } } },
-    { at: 5.8, set: { picked: 3, tapId: 4 } },
-    { at: 6.5, set: { cursor: { target: 'drive-add' } } },
-    { at: 7.2, set: { tapId: 5 } },
+    { at: 5.3, set: { cursor: { target: 'drive-add' } } },
+    { at: 6.1, set: { tapId: 4 } },
     {
-        at: 7.5,
-        set: { browserOpen: false, stage: 'filling', cursorHidden: true },
+        at: 6.4,
+        set: {
+            overlayKind: null,
+            stage: 'filling',
+            fileCount: 2,
+            cursorHidden: true,
+        },
+    },
+
+    // ── Screen share: capture, watch it record, stop ────────────────────────
+    {
+        at: 7.4,
+        set: {
+            cursorHidden: false,
+            cursor: { target: 'source-screen' },
+            caption: 'Capture your screen',
+        },
+    },
+    { at: 8.3, set: { activeSource: 'screen', tapId: 5 } },
+    {
+        at: 8.7,
+        set: { activeSource: null, overlayKind: 'screen', cursorHidden: true },
     },
     {
-        at: 8.8,
+        at: 11.2,
+        set: { cursorHidden: false, cursor: { target: 'screen-stop' } },
+    },
+    { at: 12.0, set: { tapId: 6 } },
+    { at: 12.3, set: { overlayKind: null, fileCount: 3, cursorHidden: true } },
+
+    // ── Audio: record a voice note, watch the timer, stop ───────────────────
+    {
+        at: 13.2,
+        set: {
+            cursorHidden: false,
+            cursor: { target: 'source-audio' },
+            caption: 'Record a voice note',
+        },
+    },
+    { at: 14.1, set: { activeSource: 'audio', tapId: 7 } },
+    {
+        at: 14.5,
+        set: {
+            activeSource: null,
+            overlayKind: 'audio',
+            recSeconds: 0,
+            cursorHidden: true,
+        },
+    },
+    { at: 15.5, set: { recSeconds: 1 } },
+    { at: 16.5, set: { recSeconds: 2 } },
+    {
+        at: 17.0,
+        set: { cursorHidden: false, cursor: { target: 'audio-stop' } },
+    },
+    { at: 17.4, set: { recSeconds: 3 } },
+    { at: 17.8, set: { tapId: 8 } },
+    {
+        at: 18.1,
+        set: {
+            overlayKind: null,
+            fileCount: 4,
+            cursorHidden: true,
+            cursor: { px: 6, py: 92 },
+        },
+    },
+
+    // ── Pipeline: compress on-device, upload, done ──────────────────────────
+    {
+        at: 18.6,
         set: {
             stage: 'compress',
             caption: 'Compressed on-device — HEIC to JPG',
         },
     },
     {
-        at: 10.8,
+        at: 20.2,
         set: { stage: 'uploading', caption: 'Uploading to your storage' },
     },
-    { at: 13.0, set: { stage: 'done', caption: 'Uploaded — all done' } },
+    { at: 22.2, set: { stage: 'done', caption: 'Uploaded — all done' } },
 ]
 
 interface HeroSessionProps {
@@ -147,12 +235,28 @@ export default function HeroSession({
     const { state, frozen } = useSceneTimeline<HeroState>({
         initial: INITIAL,
         steps: SCRIPT,
-        loop: 16,
+        loop: 24,
         active,
         name: 'HeroSession',
     })
     const { rootRef, measure } = useSceneTargets<HTMLDivElement>()
     const { x: cursorX, y: cursorY } = measure(state.cursor)
+
+    // One overlay slot, one open at a time. `null` → nothing rendered (the
+    // MockUploader gate hides it and plays the previous overlay's exit).
+    const overlay =
+        state.overlayKind === 'drive' ? (
+            <MockDriveBrowser
+                provider={HERO_PROVIDER}
+                thumbs={HERO_THUMBS}
+                selectedCount={state.picked}
+                reduce={frozen}
+            />
+        ) : state.overlayKind === 'screen' ? (
+            <MockScreenShare reduce={frozen} />
+        ) : state.overlayKind === 'audio' ? (
+            <MockAudioRecorder seconds={state.recSeconds} reduce={frozen} />
+        ) : null
 
     return (
         <div
@@ -163,17 +267,11 @@ export default function HeroSession({
                 <MockUploader
                     activeSource={state.activeSource}
                     stage={state.stage}
-                    files={HERO_FILES}
-                    showBrowser={state.browserOpen}
+                    files={HERO_FILES.slice(0, state.fileCount)}
+                    showOverlay={state.overlayKind !== null}
+                    overlay={overlay}
+                    bodyMinHeightClass="min-h-[252px]"
                     reduce={frozen}
-                    browser={
-                        <MockDriveBrowser
-                            provider={HERO_PROVIDER}
-                            thumbs={HERO_THUMBS}
-                            selectedCount={state.picked}
-                            reduce={frozen}
-                        />
-                    }
                 />
                 <SceneTap
                     x={cursorX}

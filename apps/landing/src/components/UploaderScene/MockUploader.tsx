@@ -73,6 +73,9 @@ interface MockUploaderProps {
     overlay?: ReactNode
     showBrowser?: boolean
     browser?: ReactNode
+    /** Min-height of the panel body. Taller scenes (the 4-row hero) raise it so
+        their queue fits without clipping; defaults to the two/three-row height. */
+    bodyMinHeightClass?: string
     reduce?: boolean
     className?: string
 }
@@ -85,6 +88,7 @@ export default function MockUploader({
     overlay,
     showBrowser = false,
     browser,
+    bodyMinHeightClass = 'min-h-[196px]',
     reduce = false,
     className = '',
 }: MockUploaderProps) {
@@ -157,7 +161,7 @@ export default function MockUploader({
                     The dropzone crossfades and the queue rows stay DIRECT children
                     of a persistent AnimatePresence, so on the loop-wrap "clear the
                     panel" beat each row plays its exit variant instead of snapping. */}
-                <div className="relative min-h-[196px]">
+                <div className={`relative ${bodyMinHeightClass}`}>
                     <AnimatePresence>
                         {!hasQueue && (
                             <motion.div
@@ -245,7 +249,7 @@ export default function MockUploader({
 // copy + limits caption + dashed frame.
 function Dropzone() {
     return (
-        <div className="flex h-full min-h-[196px] flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.015] px-6 text-center">
+        <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.015] px-6 text-center">
             <FaCloudUploadAlt className="mb-3 h-8 w-8 text-sky-400/70" />
             <p className="text-sm text-white">
                 Drag your files or{' '}

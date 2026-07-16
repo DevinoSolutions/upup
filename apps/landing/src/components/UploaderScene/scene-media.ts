@@ -24,8 +24,7 @@ export const SCENE_MEDIA = {
             src: '/scene/beach-waves.mp4',
             poster: '/scene/beach-waves-poster.jpg',
         },
-        // Reserved for a later scene task (screen-capture source) — kept here so
-        // the manifest stays the one place scene assets are named.
+        // The hero movie's screen-capture beat (MockScreenShare) plays this clip.
         screenShare: {
             src: '/scene/screen-share.mp4',
             poster: '/scene/screen-share-poster.jpg',
