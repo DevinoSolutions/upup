@@ -2,12 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 @layer components {
-    .upup-shadow-wrapper {
-        box-shadow:
-            0px 4px 50px 0px rgba(0, 0, 0, 0.08),
-            0px 4px 6px 0px rgba(0, 0, 0, 0.05);
-    }
-
     /* Top "lit-from-above" sheen for the gradient panel chrome. Drawn on a
        ::before so no per-framework DOM node is added. The dark tint is keyed on
        an explicit modifier class (upup-panel-sheen-dark) applied in JS from the
