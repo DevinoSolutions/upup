@@ -79,7 +79,6 @@ export default function SceneTap({
                     <motion.div
                         key={reduce ? undefined : tapId}
                         className="h-2.5 w-2.5 rounded-full bg-white/95"
-                        initial={false}
                         animate={reduce ? {} : { scale: [1, 0.65, 1] }}
                         transition={
                             reduce
