@@ -37,9 +37,24 @@ function createPostcssConfig({ content }) {
                                     transform: 'translateY(0)',
                                 },
                             },
+                            'hint-pulse': {
+                                '0%, 100%': {
+                                    borderColor: 'rgba(148,163,184,0.35)',
+                                },
+                                '50%': {
+                                    borderColor: 'rgba(56,189,248,0.55)',
+                                },
+                            },
+                            'hint-bob': {
+                                '0%, 100%': { transform: 'translateY(0)' },
+                                '50%': { transform: 'translateY(-4px)' },
+                            },
                         },
                         animation: {
                             'informer-in': 'informer-in 0.2s ease-out both',
+                            'hint-pulse':
+                                'hint-pulse 2.4s ease-in-out infinite',
+                            'hint-bob': 'hint-bob 2.4s ease-in-out infinite',
                         },
                     },
                 },
