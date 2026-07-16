@@ -9,6 +9,7 @@ import {
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
+import { ICON_CHIP } from '@/components/ui/recipes'
 
 export default function FeedbackSection() {
     const feedbackOptions: {
@@ -71,7 +72,9 @@ export default function FeedbackSection() {
             <div className="grid lg:grid-cols-3 gap-8 mb-12">
                 {feedbackOptions.map((option, index) => (
                     <Card key={index} className="p-8">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
+                        <div
+                            className={`${ICON_CHIP} w-12 h-12 rounded-2xl mb-6`}
+                        >
                             {option.icon}
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -146,7 +149,7 @@ export default function FeedbackSection() {
                         href="https://github.com/DevinoSolutions/upup/blob/master/CODE_OF_CONDUCT.md"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-black/[0.03] px-8 py-4 font-semibold text-gray-700 backdrop-blur-sm transition-colors hover:bg-black/[0.06] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-black/5 bg-black/[0.03] px-8 py-4 font-semibold text-gray-700 transition-colors hover:bg-black/[0.06] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
                     >
                         Code of Conduct
                         <ExternalLink className="w-4 h-4" />

@@ -10,6 +10,7 @@ import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import FeedbackSection from '@/components/FeedbackSection'
 import FAQSection from '@/components/FAQSection'
 import Toast from '@/components/Toast'
+import Section from '@/components/ui/Section'
 
 const SITE_URL = 'https://useupup.com'
 
@@ -71,7 +72,7 @@ export default async function FrameworkPage({
                 framework={{ id: fw.id, name: fw.name, pkg: fw.pkg }}
             />
             <HeroSection framework={fw.id} />
-            <div id="demo" className="scroll-mt-24">
+            <Section id="demo">
                 <InteractiveExample
                     {...(fw.hasImageEditor
                         ? {}
@@ -83,7 +84,7 @@ export default async function FrameworkPage({
                               showCodeTab: false,
                           })}
                 />
-            </div>
+            </Section>
             <HomepageFeatures />
             {fw.id === 'react' && <StackBlitzDemoSection />}
             <FAQSection />

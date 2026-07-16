@@ -6,8 +6,8 @@ const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
 
 export default function Footer() {
     return (
-        <footer className="mt-auto border-t border-black/10 bg-[var(--bg-base)] dark:border-white/10">
-            <div className="container mx-auto px-6 py-12">
+        <footer className="mt-auto border-t border-black/5 bg-[var(--bg-base)] dark:border-white/10">
+            <div className="mx-auto max-w-6xl px-6 py-12">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <div className="col-span-2 md:col-span-1">
                         <Link
@@ -126,7 +126,7 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-10 pt-6 border-t border-gray-200/60 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div className="mt-10 pt-6 border-t border-black/5 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                         MIT licensed. Free for commercial and personal use.
                     </p>

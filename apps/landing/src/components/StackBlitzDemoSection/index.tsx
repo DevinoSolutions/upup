@@ -222,77 +222,74 @@ export default function StackBlitzDemoSection() {
 
                 {/* Regular container when not fullscreen */}
                 {!isFullscreen && (
-                    <div className="surface-card-border surface-shadow relative rounded-3xl p-px">
-                        <div className="surface-card-fill overflow-hidden rounded-[23px]">
-                            {/* Window bar */}
-                            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4 dark:border-white/10">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-red-500 rounded-full" />
-                                        <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                                        <div className="w-3 h-3 bg-green-500 rounded-full" />
-                                    </div>
-                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        app/page.tsx
-                                    </span>
-                                </div>
-
+                    <div className="relative overflow-hidden rounded-3xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10">
+                        {/* Window bar */}
+                        <div className="flex items-center justify-between gap-3 border-b border-black/5 px-6 py-4 dark:border-white/10">
+                            <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-red-500 rounded-full" />
+                                    <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    app/page.tsx
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={openInStackBlitz}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20"
+                                >
+                                    <SiStackblitz className="w-4 h-4" />
+                                    Open in StackBlitz
+                                </button>
+                                <button
+                                    onClick={toggleFullScreen}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                                >
+                                    <Maximize2 className="w-4 h-4" />
+                                    Full&nbsp;screen
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* StackBlitz iframe */}
+                        <div className="relative">
+                            {embedFailed ? (
+                                <div className="flex h-[75vh] flex-col items-center justify-center gap-4 bg-gray-950 px-6 text-center">
+                                    <SiStackblitz className="h-12 w-12 text-primary-dark" />
+                                    <p className="max-w-md text-sm text-gray-300">
+                                        The embedded editor could not load here.
+                                        Open the same example in StackBlitz to
+                                        browse and run it live.
+                                    </p>
                                     <button
                                         onClick={openInStackBlitz}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90"
                                     >
-                                        <SiStackblitz className="w-4 h-4" />
+                                        <SiStackblitz className="w-5 h-5" />
                                         Open in StackBlitz
-                                    </button>
-                                    <button
-                                        onClick={toggleFullScreen}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
-                                    >
-                                        <Maximize2 className="w-4 h-4" />
-                                        Full&nbsp;screen
+                                        <ExternalLink className="w-4 h-4" />
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* StackBlitz iframe */}
-                            <div className="relative">
-                                {embedFailed ? (
-                                    <div className="flex h-[75vh] flex-col items-center justify-center gap-4 bg-gray-950 px-6 text-center">
-                                        <SiStackblitz className="h-12 w-12 text-primary-dark" />
-                                        <p className="max-w-md text-sm text-gray-300">
-                                            The embedded editor could not load
-                                            here. Open the same example in
-                                            StackBlitz to browse and run it
-                                            live.
+                            ) : (
+                                <div
+                                    ref={containerRef}
+                                    className="w-full h-[75vh] overflow-hidden"
+                                />
+                            )}
+                            {/* Loading overlay that covers the StackBlitz container */}
+                            {isLoading && !isFullscreen && !embedFailed && (
+                                <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
+                                    <div className="flex flex-col items-center space-y-4">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                                        <p className="text-white text-sm">
+                                            Loading editor...
                                         </p>
-                                        <button
-                                            onClick={openInStackBlitz}
-                                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90"
-                                        >
-                                            <SiStackblitz className="w-5 h-5" />
-                                            Open in StackBlitz
-                                            <ExternalLink className="w-4 h-4" />
-                                        </button>
                                     </div>
-                                ) : (
-                                    <div
-                                        ref={containerRef}
-                                        className="w-full h-[75vh] overflow-hidden"
-                                    />
-                                )}
-                                {/* Loading overlay that covers the StackBlitz container */}
-                                {isLoading && !isFullscreen && !embedFailed && (
-                                    <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
-                                        <div className="flex flex-col items-center space-y-4">
-                                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                            <p className="text-white text-sm">
-                                                Loading editor...
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -320,7 +317,7 @@ export default function StackBlitzDemoSection() {
                                 href="https://github.com/DevinoSolutions/upup"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-black/[0.03] px-8 py-4 font-semibold text-gray-700 backdrop-blur-sm transition-colors hover:bg-black/[0.06] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
+                                className="inline-flex items-center gap-2 rounded-2xl border border-black/5 bg-black/[0.03] px-8 py-4 font-semibold text-gray-700 transition-colors hover:bg-black/[0.06] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
                             >
                                 <ExternalLink className="w-4 h-4" />
                                 View on GitHub

@@ -7,6 +7,7 @@ import HeroSection from '@/components/HomepageHero'
 import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import StructuredData from '@/components/StructuredData'
 import FAQSection from '@/components/FAQSection'
+import Section from '@/components/ui/Section'
 
 export const metadata = {
     title: 'upup – One File Uploader for React, Vue, Svelte, Angular, Vanilla JS & Preact',
@@ -22,9 +23,9 @@ export default function Home() {
         <>
             <StructuredData />
             <HeroSection />
-            <div id="demo" className="scroll-mt-24">
+            <Section id="demo">
                 <InteractiveExample />
-            </div>
+            </Section>
             <HomepageFeatures />
             <StackBlitzDemoSection />
             <FAQSection />
