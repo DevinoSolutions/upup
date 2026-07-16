@@ -15,6 +15,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
     const slot = ctx.theme.getSnapshot().slotOverrides
     const tr = ctx.translations
     const isAddingMore = ctx.orchestrator.getSnapshot().isAddingMore
+    const filesSize = ctx.orchestrator.getSnapshot().files.size
     const mini = ctx.props.mini
     const allowedFileTypes = ctx.props.allowedFileTypes
     const limit = ctx.props.limit
@@ -196,9 +197,9 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                           >
                               <button
                                   class=${cn(
-                                      'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
+                                      'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-[#0284c7]',
                                       {
-                                          'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                          'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                               isDark,
                                       },
                                       slot.containerCancelButton,
@@ -301,6 +302,13 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                           'upup-text-[#0B0B0B]': !isDark,
                                           'upup-text-white dark:upup-text-white':
                                               isDark,
+                                          // Idle drag-drop hint (mini): gently bob
+                                          // the upload glyph while empty and at rest.
+                                          // Transform-only, so no layout shift;
+                                          // paused once files are selected or the
+                                          // add-more flow is active.
+                                          'upup-animate-hint-bob motion-reduce:upup-animate-none':
+                                              !filesSize && !isAddingMore,
                                       },
                                   ),
                               })}
@@ -341,9 +349,9 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                       type="button"
                                       data-testid="upup-browse-files"
                                       class=${cn(
-                                          'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                          'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0284c7] md:upup-text-sm',
                                           {
-                                              'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                              'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                                   isDark,
                                           },
                                       )}
@@ -368,9 +376,9 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                                 <button
                                                     type="button"
                                                     class=${cn(
-                                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
+                                                        'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0284c7] md:upup-text-sm',
                                                         {
-                                                            'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]':
+                                                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                                                 isDark,
                                                         },
                                                     )}

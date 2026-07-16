@@ -91,9 +91,9 @@ export function urlUploader(ctx: UploaderContext): TemplateResult {
         />
         <button
             class=${cn(
-                'upup-disabled:bg-[#e0e0e0] upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
+                'upup-disabled:bg-[#e0e0e0] upup-mt-2 upup-w-full upup-rounded-md upup-bg-[#0ea5e9] upup-p-2 upup-text-white upup-transition-all upup-duration-300',
                 {
-                    'upup-disabled:bg-[#6D6D6D] dark:upup-disabled:bg-[#6D6D6D] upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]':
+                    'upup-disabled:bg-[#6D6D6D] dark:upup-disabled:bg-[#6D6D6D] upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                         isDark,
                 },
                 slot.urlFetchButton,

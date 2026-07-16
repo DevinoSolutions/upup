@@ -13,7 +13,9 @@ describe('@upupjs/vanilla CSS artifact', () => {
         // prefix + scope both applied:
         expect(css).toMatch(/\.upup-scope[^{]*\.upup-/)
         // Layer-defined classes must survive the content purge:
-        expect(css).toContain('.upup-shadow-wrapper')
+        expect(css).toContain('.upup-panel-sheen')
         expect(css).toContain('.upup-preview-scroll')
+        // The old flat-shadow chrome was replaced by the gradient + sheen:
+        expect(css).not.toContain('.upup-shadow-wrapper')
     })
 })
