@@ -71,7 +71,14 @@ export function useSceneTargets<T extends HTMLElement>() {
         const el = root.querySelector<HTMLElement>(
             `[data-scene-target="${wp.target}"]`,
         )
-        if (!el) return { x: 0, y: 0 }
+        if (!el) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.warn(
+                    `[scene-targets] no element found for data-scene-target="${wp.target}" — cursor falling back to {0,0}`,
+                )
+            }
+            return { x: 0, y: 0 }
+        }
         const r = el.getBoundingClientRect()
         const ax = wp.ax ?? 0.5
         const ay = wp.ay ?? 0.5

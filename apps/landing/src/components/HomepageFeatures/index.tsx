@@ -62,7 +62,6 @@ interface Integration {
     status: 'supported' | 'in-development' | 'planned'
     description: string
     category: string
-    color: string // Brand color for the icon
 }
 
 interface EmailModalProps {
@@ -82,7 +81,6 @@ const userStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Direct access to files',
         category: 'User Storage',
-        color: '#4285F4',
     },
     {
         id: 'one-drive',
@@ -91,7 +89,6 @@ const userStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Microsoft cloud storage',
         category: 'User Storage',
-        color: '#0078D4',
     },
     {
         id: 'dropbox',
@@ -100,7 +97,6 @@ const userStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Cloud file sharing',
         category: 'User Storage',
-        color: '#0061FF',
     },
     {
         id: 'box',
@@ -109,7 +105,6 @@ const userStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Secure content management',
         category: 'User Storage',
-        color: '#0061D5',
     },
     {
         id: 'instagram',
@@ -118,7 +113,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Import photos and videos',
         category: 'User Storage',
-        color: '#E4405F',
     },
     {
         id: 'facebook',
@@ -127,7 +121,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Access photos and videos',
         category: 'User Storage',
-        color: '#1877F2',
     },
     {
         id: 'zoom',
@@ -136,7 +129,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Upload recordings',
         category: 'User Storage',
-        color: '#2D8CFF',
     },
     {
         id: 'google-photos',
@@ -145,7 +137,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Photos picker integration',
         category: 'User Storage',
-        color: '#4285F4',
     },
     {
         id: 'icloud',
@@ -154,7 +145,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Apple cloud storage',
         category: 'User Storage',
-        color: '#007AFF',
     },
     {
         id: 'pinterest',
@@ -163,7 +153,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Import images',
         category: 'User Storage',
-        color: '#E60023',
     },
     {
         id: 'tiktok',
@@ -172,7 +161,6 @@ const userStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Upload videos',
         category: 'User Storage',
-        color: '#FF0050',
     },
 ]
 
@@ -185,7 +173,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Amazon S3 buckets',
         category: 'Developer Storage',
-        color: '#FF9900',
     },
     {
         id: 'azure',
@@ -194,7 +181,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Microsoft Azure storage',
         category: 'Developer Storage',
-        color: '#0078D4',
     },
     {
         id: 'backblaze',
@@ -203,7 +189,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Cost-effective storage',
         category: 'Developer Storage',
-        color: '#E21E3A',
     },
     {
         id: 'digitalocean',
@@ -212,7 +197,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Spaces object storage',
         category: 'Developer Storage',
-        color: '#0080FF',
     },
     {
         id: 'cloudflare',
@@ -221,7 +205,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'R2 object storage',
         category: 'Developer Storage',
-        color: '#F38020',
     },
     {
         id: 'wasabi',
@@ -230,7 +213,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Hot cloud storage',
         category: 'Developer Storage',
-        color: '#00B04F',
     },
     {
         id: 'linode',
@@ -239,7 +221,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Linode object storage',
         category: 'Developer Storage',
-        color: '#00A95C',
     },
     {
         id: 'idrive',
@@ -248,7 +229,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'IDrive object storage',
         category: 'Developer Storage',
-        color: '#2B5A87',
     },
     {
         id: 'hetzner',
@@ -257,7 +237,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Hetzner cloud storage',
         category: 'Developer Storage',
-        color: '#D50C2D',
     },
     {
         id: 'scaleway',
@@ -266,7 +245,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Scaleway cloud storage',
         category: 'Developer Storage',
-        color: '#4F0599',
     },
     {
         id: 'oracle',
@@ -275,7 +253,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Oracle cloud storage',
         category: 'Developer Storage',
-        color: '#F80000',
     },
     {
         id: 'alibaba',
@@ -284,7 +261,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Alibaba Cloud OSS',
         category: 'Developer Storage',
-        color: '#FF6A00',
     },
     {
         id: 'minio',
@@ -293,7 +269,6 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Self-hosted storage',
         category: 'Developer Storage',
-        color: '#C72E29',
     },
     {
         id: 'gcp',
@@ -302,7 +277,6 @@ const developerStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Google Cloud storage',
         category: 'Developer Storage',
-        color: '#4285F4',
     },
     {
         id: 'vercel',
@@ -311,7 +285,6 @@ const developerStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Vercel blob storage',
         category: 'Developer Storage',
-        color: '#000000',
     },
     {
         id: 'supabase',
@@ -320,7 +293,6 @@ const developerStorageProviders: Integration[] = [
         status: 'planned',
         description: 'Supabase storage',
         category: 'Developer Storage',
-        color: '#3ECF8E',
     },
     {
         id: 'ibm',
@@ -329,7 +301,6 @@ const developerStorageProviders: Integration[] = [
         status: 'planned',
         description: 'IBM cloud storage',
         category: 'Developer Storage',
-        color: '#1261FE',
     },
 ]
 
@@ -421,11 +392,11 @@ const EmailModal: React.FC<EmailModalProps> = ({
                 onClick={onClose}
             >
                 <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-                    className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-200 dark:border-gray-700 shadow-2xl"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
                     onClick={e => e.stopPropagation()}
                 >
                     {!isSubmitted ? (
@@ -444,8 +415,6 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                 <motion.button
                                     onClick={onClose}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                    whileHover={{ scale: 1.1, rotate: 90 }}
-                                    whileTap={{ scale: 0.9 }}
                                 >
                                     <FaTimes className="w-4 h-4 text-gray-500" />
                                 </motion.button>
@@ -505,9 +474,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                     <motion.button
                                         type="button"
                                         onClick={onClose}
-                                        className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
+                                        className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
                                     >
                                         Cancel
                                     </motion.button>
@@ -515,8 +482,6 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         type="submit"
                                         disabled={isSubmitting}
                                         className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
                                     >
                                         {isSubmitting ? (
                                             <>

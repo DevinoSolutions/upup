@@ -332,7 +332,7 @@ export default function StackBlitzDemoSection() {
                 <div className="fixed inset-0 z-[9999] bg-gray-900">
                     <div className="w-full h-full flex flex-col">
                         {/* Window bar with improved text readability */}
-                        <div className="flex items-center justify-between px-6 py-4 bg-gray-800/90 backdrop-blur-sm border-b border-gray-700/50 shrink-0">
+                        <div className="flex items-center justify-between px-6 py-4 bg-gray-950 border-b border-white/10 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-red-500 rounded-full" />
