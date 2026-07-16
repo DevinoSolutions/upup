@@ -5,11 +5,9 @@ import {
     ElementRef,
     EventEmitter,
     Input,
-    OnChanges,
     OnInit,
     Output,
     PLATFORM_ID,
-    SimpleChanges,
     ViewChild,
     inject,
 } from '@angular/core'
@@ -153,7 +151,7 @@ const FORWARDED: ReadonlyArray<
         </div>
     `,
 })
-export class UpupUploaderComponent implements OnInit, AfterViewInit, OnChanges {
+export class UpupUploaderComponent implements OnInit, AfterViewInit {
     readonly store = inject(UpupStore)
     private readonly destroyRef = inject(DestroyRef)
     private readonly platformId = inject(PLATFORM_ID)
@@ -214,19 +212,6 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit, OnChanges {
         if (!isPlatformBrowser(this.platformId)) return
         if (this.fileInputRef?.nativeElement) {
             this.store.registerFileInput(this.fileInputRef.nativeElement)
-        }
-    }
-
-    // Re-resolve the live ThemeStore when the `theme` input changes after mount
-    // (mirrors React's `controller.theme.setThemeConfig(theme)` effect). The
-    // `config` setter above already performs a full re-init on a new config
-    // reference; this is the lightweight seam the store short-circuits on a
-    // structurally-equal config, so it is a safe no-op after that re-init.
-    ngOnChanges(changes: SimpleChanges): void {
-        const change = changes['config']
-        if (change && !change.firstChange) {
-            const next = change.currentValue as UploaderProps | undefined
-            this.store.setThemeConfig(next?.theme)
         }
     }
 

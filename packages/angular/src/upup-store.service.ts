@@ -386,16 +386,6 @@ export class UpupStore {
         return this.orchState.state()
     }
 
-    /**
-     * Re-resolve the live ThemeStore when the `theme` input changes after mount
-     * (mirrors React's `controller.theme.setThemeConfig(theme)` effect). The
-     * store short-circuits on a structurally-equal config, so an inlined object
-     * literal per change does not loop.
-     */
-    setThemeConfig(config: UploaderProps['theme']): void {
-        this.controller?.theme.setThemeConfig(config)
-    }
-
     // ── Input ref helpers (delegated to factory) ─────────────────
     registerFileInput = (el: HTMLInputElement | null): void => {
         this.controller.registerFileInput(el)
