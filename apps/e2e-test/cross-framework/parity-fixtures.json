@@ -122,7 +122,7 @@
                                     "classes": [
                                         "upup-cursor-pointer",
                                         "upup-font-semibold",
-                                        "upup-text-[#0E2ADD]",
+                                        "upup-text-[#0284c7]",
                                         "upup-text-xs"
                                     ],
                                     "children": [],
@@ -222,7 +222,7 @@
                                                             "tag": "svg",
                                                             "classes": [
                                                                 "upup-text-5xl",
-                                                                "upup-text-blue-600"
+                                                                "upup-text-[#0284c7]"
                                                             ],
                                                             "children": []
                                                         }
@@ -301,7 +301,7 @@
                                         "upup-font-normal",
                                         "upup-leading-tight",
                                         "upup-mt-1",
-                                        "upup-text-[#2563eb]",
+                                        "upup-text-[#0284c7]",
                                         "upup-text-[11px]",
                                         "upup-transition-all"
                                     ],
@@ -379,7 +379,7 @@
                                                     "tag": "svg",
                                                     "classes": [
                                                         "upup-text-5xl",
-                                                        "upup-text-blue-600"
+                                                        "upup-text-[#0284c7]"
                                                     ],
                                                     "children": []
                                                 }
@@ -458,7 +458,7 @@
                                 "upup-font-normal",
                                 "upup-leading-tight",
                                 "upup-mt-1",
-                                "upup-text-[#2563eb]",
+                                "upup-text-[#0284c7]",
                                 "upup-text-[11px]",
                                 "upup-transition-all"
                             ],
@@ -478,7 +478,7 @@
             "children": [
                 {
                     "tag": "svg",
-                    "classes": ["upup-text-5xl", "upup-text-blue-600"],
+                    "classes": ["upup-text-5xl", "upup-text-[#0284c7]"],
                     "children": []
                 }
             ],
@@ -533,7 +533,7 @@
                                 "upup-max-md",
                                 "upup-p-1",
                                 "upup-row-start-2",
-                                "upup-text-blue-600",
+                                "upup-text-[#0284c7]",
                                 "upup-text-left",
                                 "upup-text-sm"
                             ],
@@ -586,7 +586,7 @@
                                     "tag": "button",
                                     "classes": [
                                         "upup-border",
-                                        "upup-border-blue-400/50",
+                                        "upup-border-[#38bdf8]/50",
                                         "upup-border-dashed",
                                         "upup-flex",
                                         "upup-gap-1",
@@ -594,7 +594,7 @@
                                         "upup-px-2",
                                         "upup-py-1",
                                         "upup-rounded-md",
-                                        "upup-text-blue-600",
+                                        "upup-text-[#0284c7]",
                                         "upup-text-sm"
                                     ],
                                     "children": [
@@ -707,7 +707,7 @@
                                                                                     "tag": "svg",
                                                                                     "classes": [
                                                                                         "upup-text-5xl",
-                                                                                        "upup-text-blue-600"
+                                                                                        "upup-text-[#0284c7]"
                                                                                     ],
                                                                                     "children": []
                                                                                 }
@@ -792,7 +792,7 @@
                                                                 "upup-font-normal",
                                                                 "upup-leading-tight",
                                                                 "upup-mt-1",
-                                                                "upup-text-[#2563eb]",
+                                                                "upup-text-[#0284c7]",
                                                                 "upup-text-[11px]",
                                                                 "upup-transition-all"
                                                             ],
@@ -928,7 +928,7 @@
                                                                 "upup-font-normal",
                                                                 "upup-leading-tight",
                                                                 "upup-mt-1",
-                                                                "upup-text-[#2563eb]",
+                                                                "upup-text-[#0284c7]",
                                                                 "upup-text-[11px]",
                                                                 "upup-transition-all"
                                                             ],
@@ -966,7 +966,7 @@
                         {
                             "tag": "button",
                             "classes": [
-                                "upup-bg-blue-600",
+                                "upup-bg-[#0ea5e9]",
                                 "upup-disabled:animate-pulse",
                                 "upup-font-medium",
                                 "upup-ml-auto",
