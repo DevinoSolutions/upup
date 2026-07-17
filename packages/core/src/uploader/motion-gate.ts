@@ -1,3 +1,5 @@
+import type { ObservableController } from '../controllers/types'
+
 export type MotionMode = 'on' | 'off'
 
 export interface MotionGateParams {
@@ -19,11 +21,7 @@ export interface MotionGateParams {
         | undefined
 }
 
-export interface MotionGate {
-    getSnapshot(): MotionMode
-    subscribe(listener: () => void): () => void
-    destroy(): void
-}
+export interface MotionGate extends ObservableController<MotionMode> {}
 
 const REDUCE_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -34,7 +32,8 @@ const REDUCE_QUERY = '(prefers-reduced-motion: reduce)'
  */
 export function createMotionGate({
     animations,
-    matchMedia = typeof window !== 'undefined'
+    matchMedia = typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function'
         ? window.matchMedia.bind(window)
         : undefined,
 }: MotionGateParams): MotionGate {

@@ -68,4 +68,42 @@ describe('createMotionGate', () => {
         expect(gate.getSnapshot()).toBe('on')
         gate.destroy()
     })
+
+    it('survives a jsdom window without matchMedia: stays on, does not throw', () => {
+        vi.stubGlobal('window', {})
+        try {
+            let gate!: ReturnType<typeof createMotionGate>
+            expect(() => {
+                gate = createMotionGate({ animations: true })
+            }).not.toThrow()
+            expect(gate.getSnapshot()).toBe('on')
+            gate.destroy()
+        } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
+    it('does not notify a subscriber after destroy()', () => {
+        const mm = fakeMatchMedia(false)
+        const gate = createMotionGate({ animations: true, matchMedia: mm.impl })
+        const spy = vi.fn()
+        gate.subscribe(spy)
+        gate.destroy()
+        mm.fire(true)
+        expect(spy).not.toHaveBeenCalled()
+    })
+
+    it('unsubscribe stops one listener while a second still fires', () => {
+        const mm = fakeMatchMedia(false)
+        const gate = createMotionGate({ animations: true, matchMedia: mm.impl })
+        const stay = vi.fn()
+        const leave = vi.fn()
+        gate.subscribe(stay)
+        const unsubscribe = gate.subscribe(leave)
+        unsubscribe()
+        mm.fire(true)
+        expect(stay).toHaveBeenCalledTimes(1)
+        expect(leave).not.toHaveBeenCalled()
+        gate.destroy()
+    })
 })

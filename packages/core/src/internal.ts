@@ -57,7 +57,11 @@ export type {
     ChildControllerHandle,
 } from './uploader/create-child-controller'
 export { createMotionGate } from './uploader/motion-gate'
-export type { MotionGate, MotionMode } from './uploader/motion-gate'
+export type {
+    MotionGate,
+    MotionGateParams,
+    MotionMode,
+} from './uploader/motion-gate'
 
 // ── Controllers ────────────────────────────────────────────────
 export { DriveBrowserController } from './drives/drive-browser-controller'
