@@ -106,6 +106,10 @@ export type UploaderBaseProps = {
     allowPreview?: boolean | undefined
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean | undefined
+    /** v2: Default animation layer. `false` disables all decorative motion
+     *  (spinner/progress/focus stay). Reduced further automatically under
+     *  `prefers-reduced-motion`. Default true. */
+    animations?: boolean | undefined
     /** v2: Disable drag-and-drop (keep browse/click functional). Default false. */
     disableDragDrop?: boolean | undefined
     /** v2: Additional CSS class name applied to the root container */
