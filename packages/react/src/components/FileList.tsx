@@ -14,6 +14,7 @@ import {
     useUploaderView,
 } from '../context/UploaderContext'
 import FileItem from './FileItem'
+import FileHero from './FileHero'
 import UploaderHeader from './shared/UploaderHeader'
 import ProgressBar from './shared/ProgressBar'
 
@@ -37,9 +38,9 @@ function formatEta(seconds: number): string {
 }
 
 export default memo(function FileList() {
-    const { isAddingMore, viewMode } = useUploaderView()
+    const { isAddingMore, viewMode, setIsAddingMore } = useUploaderView()
     const { activeSource } = useUploaderSource()
-    const { files } = useUploaderFiles()
+    const { files, leavingFileIds } = useUploaderFiles()
     const { translations: tr } = useUploaderI18n()
     const {
         upload: {
@@ -59,7 +60,12 @@ export default memo(function FileList() {
         handlePause,
         handleResume,
     } = useUploaderUploadControls()
-    const { isProcessing, resumable } = useUploaderOptions()
+    const {
+        isProcessing,
+        resumable,
+        limit,
+        icons: { ContainerAddMoreIcon },
+    } = useUploaderOptions()
     const {
         isDark: dark,
         slotOverrides: slotClasses,
@@ -74,7 +80,9 @@ export default memo(function FileList() {
         return pa.localeCompare(pb) || a.name.localeCompare(b.name)
     })
 
-    // Virtual scrolling only for list mode with many files
+    const isSingle = sortedFiles.length === 1
+
+    // Virtual scrolling only for list mode with many files (never for the hero)
     const shouldVirtualize =
         sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
 
@@ -85,6 +93,11 @@ export default memo(function FileList() {
         overscan: 5,
         enabled: shouldVirtualize,
     })
+
+    const isUploading = isUploadActive(uploadStatus)
+    const heroLeaving = isSingle && leavingFileIds.has(sortedFiles[0]!.id)
+    const canAddMore =
+        limit > 1 && files.size < limit && !isUploading && !isProcessing
 
     return (
         <div
@@ -111,12 +124,24 @@ export default memo(function FileList() {
             <div
                 ref={scrollRef}
                 className={cn(
-                    'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-                    { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
+                    'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-p-3',
+                    dark ? 'upup-bg-transparent' : 'upup-bg-black/[0.075]',
                     slotClasses.fileListContainer,
                 )}
             >
-                {shouldVirtualize ? (
+                {isSingle ? (
+                    // Single-file HERO: one visual fills the content area.
+                    <div
+                        role="list"
+                        className={cn(
+                            'upup-animate-fx-enter upup-flex upup-min-h-0 upup-flex-1 upup-flex-col',
+                            heroLeaving &&
+                                'upup-animate-fx-exit upup-overflow-hidden',
+                        )}
+                    >
+                        <FileHero file={sortedFiles[0]!} />
+                    </div>
+                ) : shouldVirtualize ? (
                     // Virtualized list: only renders visible FileItems
                     <div
                         role="list"
@@ -148,7 +173,10 @@ export default memo(function FileList() {
                                         paddingBottom: 12,
                                     }}
                                 >
-                                    <FileItem file={file} />
+                                    <FileItem
+                                        file={file}
+                                        index={virtualItem.index}
+                                    />
                                 </div>
                             )
                         })}
@@ -164,7 +192,6 @@ export default memo(function FileList() {
                                     files.size > 1 && viewMode === 'grid',
                                 'md:upup-grid-cols-2':
                                     files.size > 1 && viewMode === 'grid',
-                                'upup-flex-1': files.size === 1,
                                 [slotClasses.fileListContainerInnerMultiple ??
                                 '']:
                                     slotClasses.fileListContainerInnerMultiple &&
@@ -176,10 +203,38 @@ export default memo(function FileList() {
                             },
                         )}
                     >
-                        {sortedFiles.map(file => (
-                            <FileItem key={file.id} file={file} />
+                        {sortedFiles.map((file, index) => (
+                            <FileItem key={file.id} file={file} index={index} />
                         ))}
                     </div>
+                )}
+
+                {/* Full-width dashed "Add more" row (spec §4 state 3): a second
+                    add-more affordance beneath the list/hero. Shares the
+                    upup-add-more testid with the header control; disambiguated by
+                    data-placement. Deviation (Task 6): still drives the legacy
+                    setIsAddingMore mechanism — Task 7 swaps it to the source
+                    overlay (transientUi.openSourceOverlay). */}
+                {canAddMore && (
+                    <button
+                        data-testid="upup-add-more"
+                        data-placement="footer"
+                        data-upup-slot="add-more"
+                        className={cn(
+                            'upup-fx-hover-lift upup-fx-press upup-mt-2.5 upup-flex upup-flex-none upup-items-center upup-justify-center upup-gap-2 upup-rounded-xl upup-border-[1.5px] upup-border-dashed upup-px-3 upup-py-2.5 upup-text-[13px] upup-font-medium',
+                            dark
+                                ? 'upup-border-white/[0.16] upup-text-[#94a3b8]'
+                                : 'upup-border-black/[0.16] upup-text-gray-500',
+                            slotClasses.containerAddMoreButton,
+                        )}
+                        onClick={() => {
+                            setIsAddingMore(true)
+                        }}
+                        disabled={isUploading || isProcessing}
+                    >
+                        <ContainerAddMoreIcon />
+                        {tr.addMore}
+                    </button>
                 )}
             </div>
             <div
@@ -197,7 +252,7 @@ export default memo(function FileList() {
                         <button
                             data-testid="upup-upload-btn"
                             className={cn(
-                                'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                                'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                                 {
                                     'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                                         dark,
@@ -236,7 +291,7 @@ export default memo(function FileList() {
                     <button
                         data-testid="upup-retry-btn"
                         className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                            'upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
                                 'upup-bg-red-500 dark:upup-bg-red-500': dark,
                             },
@@ -254,7 +309,7 @@ export default memo(function FileList() {
                 {uploadStatus === UploadStatus.SUCCESSFUL && (
                     <button
                         className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                            'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
                                 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                                     dark,

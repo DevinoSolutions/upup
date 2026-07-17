@@ -108,8 +108,11 @@ export default function UploaderHeader({
                 )}
                 {!isAddingMore && limit > 1 && !isLimitReached && (
                     <button
+                        data-testid="upup-add-more"
+                        data-placement="header"
+                        data-upup-slot="add-more"
                         className={cn(
-                            'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1 upup-text-sm upup-text-[#0284c7]',
+                            'upup-fx-hover-lift upup-fx-press upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1 upup-text-sm upup-text-[#0284c7]',
                             {
                                 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                     dark,

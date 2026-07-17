@@ -79,7 +79,12 @@ export type ContextSource = Omit<BaseContextSource, 'setActiveSource'> & {
 
 export type ContextI18n = BaseContextI18n
 
-export type ContextFiles = BaseContextFiles
+export type ContextFiles = BaseContextFiles & {
+    /** Transient: file ids currently playing their exit animation. Read by
+     *  FileList (hero) and FileItem (cards) to render `upup-fx-exit`. Sourced
+     *  from the core transient-UI store (deferred removal). */
+    leavingFileIds: ReadonlySet<string>
+}
 
 export type ContextUploadControls = Omit<
     BaseContextUploadControls,
@@ -186,6 +191,7 @@ export function UploaderContextProvider({
     const files = useMemo<ContextFiles>(
         () => ({
             files: value.files,
+            leavingFileIds: value.leavingFileIds,
             setFiles: value.setFiles,
             replaceFiles: value.replaceFiles,
             resetState: value.resetState,
@@ -196,6 +202,7 @@ export function UploaderContextProvider({
             value.uploadFiles,
             value.replaceFiles,
             value.files,
+            value.leavingFileIds,
             value.handleFileRemove,
             value.resetState,
             value.setFiles,

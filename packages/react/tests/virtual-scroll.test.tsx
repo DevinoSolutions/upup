@@ -29,12 +29,14 @@ vi.mock('../src/context/UploaderContext', () => ({
     useUploaderView: () => ({
         isAddingMore: false,
         viewMode: _viewMode,
+        setIsAddingMore: () => {},
     }),
     useUploaderSource: () => ({
         activeSource: null,
     }),
     useUploaderFiles: () => ({
         files: makeFilesMap(_fileCount),
+        leavingFileIds: new Set<string>(),
     }),
     useUploaderI18n: () => ({
         translations: {
@@ -67,6 +69,8 @@ vi.mock('../src/context/UploaderContext', () => ({
         isProcessing: false,
         maxRetries: 0,
         resumable: undefined,
+        limit: 100,
+        icons: { ContainerAddMoreIcon: () => null },
     }),
     useUploaderTheme: () => ({
         isDark: false,

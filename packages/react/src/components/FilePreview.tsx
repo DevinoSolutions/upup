@@ -126,8 +126,13 @@ export default memo(function FilePreview(props: Props) {
         >
             <div
                 className={cn(
-                    'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+                    // Chrome-language tile (spec §3): translucent card + hairline
+                    // ring, sky accents. Image tiles paint the picture over it.
+                    'upup-fx-hover-lift upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-xl upup-ring-1',
                     'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+                    isDarkTheme
+                        ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
+                        : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
                     {
                         [slotClasses.fileThumbnailMultiple ?? '']:
                             slotClasses.fileThumbnailMultiple && files.size > 1,
@@ -200,10 +205,10 @@ export default memo(function FilePreview(props: Props) {
 
                 <button
                     className={cn(
-                        'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                        'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
                         'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
                         'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-                        'hover:upup-bg-white hover:upup-text-red-700',
+                        'hover:upup-bg-white',
                         'upup-ring-1 upup-ring-black/5',
                         'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                         slotClasses.fileDeleteButton,

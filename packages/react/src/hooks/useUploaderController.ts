@@ -23,6 +23,7 @@ import {
     type OrchestratorState,
     type ThemeStoreState,
     type MotionMode,
+    type TransientUiSnapshot,
 } from '@upupjs/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
@@ -64,6 +65,14 @@ const DefaultTrashIconComponent = (props: {
 
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
+
+/** Stable server/pre-mount snapshot for the transient-UI store (matches the
+ *  core unit's initial shape: nothing leaving, no overlay, no rejection). */
+const EMPTY_TRANSIENT_UI: TransientUiSnapshot = {
+    leavingFileIds: new Set<string>(),
+    sourceOverlayOpen: false,
+    dropRejected: null,
+}
 
 /** Stable server snapshot for SSR (useSyncExternalStore third arg). */
 const SERVER_SNAPSHOT: OrchestratorState = {
@@ -370,6 +379,21 @@ export default function useUploaderController(
         getMotionServerSnapshot,
     )
 
+    // ── Subscribe to the transient-UI store (deferred removal / overlay / toast) ──
+    // Core owns the timing: `handleFileRemove` marks a file `leaving` for the
+    // exit-animation window before the real removal fires. Components read
+    // `leavingFileIds` to render `upup-fx-exit`; `sourceOverlayOpen`/`dropRejected`
+    // feed later states (Tasks 7-8). The empty snapshot is the SSR/pre-mount value.
+    const getTransientUiServerSnapshot = useCallback(
+        () => EMPTY_TRANSIENT_UI,
+        [],
+    )
+    const transientUi = useSyncExternalStore(
+        controller?.transientUi.subscribe ?? (() => () => {}),
+        controller?.transientUi.getSnapshot ?? getTransientUiServerSnapshot,
+        getTransientUiServerSnapshot,
+    )
+
     // ── Single lifecycle effect (replaces 4 old effects) ─────────
     // init()/destroy() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
     //
@@ -593,6 +617,7 @@ export default function useUploaderController(
             slots: themeState.slots ?? EMPTY_THEME_SLOTS,
         },
         files: state.files,
+        leavingFileIds: transientUi.leavingFileIds,
         setFiles: handleSetSelectedFiles,
         uploadFiles,
         resetState,
