@@ -220,28 +220,27 @@ export default function ScreenCaptureUploader(): React.ReactElement | null {
 
                 {state === 'recording' && (
                     <>
-                        <video
-                            ref={bindPreview}
-                            muted
-                            className="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
-                        />
-                        <div className="upup-flex upup-items-center upup-gap-3">
-                            <span className="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500" />
-                            <span
-                                className={cn(
-                                    'upup-font-mono upup-text-lg upup-tabular-nums',
-                                    {
-                                        'upup-text-[#1b1b1b]': !dark,
-                                        'upup-text-white': dark,
-                                    },
-                                )}
+                        <div className="upup-relative upup-flex upup-min-h-0 upup-w-full upup-max-w-md upup-flex-1">
+                            <video
+                                ref={bindPreview}
+                                muted
+                                className="upup-min-h-0 upup-w-full upup-flex-1 upup-rounded-lg upup-object-contain"
+                            />
+                            {/* REC chip (states-tour-3 state E): red dot + label +
+                                timer. The dot's pulse is fx-gated (upup-animate-fx-
+                                substring) — under motion-off the dot stays static so
+                                the recording status remains visible. */}
+                            <div
+                                data-upup-slot="screen-rec-chip"
+                                className="upup-absolute upup-left-2.5 upup-top-2.5 upup-flex upup-items-center upup-gap-1.5 upup-rounded-md upup-bg-[#04080f]/60 upup-px-2 upup-py-1 upup-font-mono upup-text-[11px] upup-tabular-nums upup-text-[#fecdd3]"
                             >
-                                {formatTime(duration)}
-                            </span>
+                                <span className="upup-animate-fx-rec-pulse upup-h-2 upup-w-2 upup-rounded-full upup-bg-red-500" />
+                                REC {formatTime(duration)}
+                            </div>
                         </div>
                         <button
                             type="button"
-                            className="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
+                            className="upup-fx-press upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
                             onClick={stopRecording}
                         >
                             Stop Recording

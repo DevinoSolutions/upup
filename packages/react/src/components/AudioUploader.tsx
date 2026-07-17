@@ -6,6 +6,7 @@ import {
 } from '../context/UploaderContext'
 import { cn } from '@upupjs/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
+import AudioWaveform from './AudioWaveform'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -169,6 +170,10 @@ export default function AudioUploader(): React.ReactElement | null {
                         </svg>
                     </div>
                 </div>
+
+                {state === 'recording' && streamRef.current && (
+                    <AudioWaveform stream={streamRef.current} />
+                )}
 
                 <span
                     className={cn(
