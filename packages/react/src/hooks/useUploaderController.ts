@@ -22,6 +22,7 @@ import {
     type UploaderControllerOptions,
     type OrchestratorState,
     type ThemeStoreState,
+    type MotionMode,
 } from '@upupjs/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
@@ -104,6 +105,7 @@ export default function useUploaderController(
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
+        animations = true,
         theme,
         maxFiles,
         isProcessing = false,
@@ -211,6 +213,7 @@ export default function useUploaderController(
                     ? acceptProp
                     : acceptProp.join(','),
             mini,
+            animations,
             isProcessing,
             allowPreview,
             showBranding,
@@ -353,6 +356,18 @@ export default function useUploaderController(
         controller?.theme.subscribe ?? (() => () => {}),
         controller?.theme.getSnapshot ?? (() => themeFallback),
         getThemeServerSnapshot,
+    )
+
+    // ── Subscribe to the motion gate (data-motion resolution) ──
+    // The gate resolves `off` iff `animations={false}` OR the OS asks for
+    // reduced motion; the panel writes the snapshot as `data-motion` and the
+    // shared CSS gates every `upup-fx-*` rule on it. `on` is the SSR/pre-mount
+    // fallback (matches the gate's own default before matchMedia is read).
+    const getMotionServerSnapshot = useCallback(() => 'on' as MotionMode, [])
+    const motionMode = useSyncExternalStore(
+        controller?.motionGate.subscribe ?? (() => () => {}),
+        controller?.motionGate.getSnapshot ?? getMotionServerSnapshot,
+        getMotionServerSnapshot,
     )
 
     // ── Single lifecycle effect (replaces 4 old effects) ─────────
@@ -564,6 +579,7 @@ export default function useUploaderController(
         viewMode: state.viewMode,
         setViewMode,
         isOnline: state.isOnline,
+        motionMode,
         translations: resolved.translations,
         translator: resolved.translator,
         lang: resolved.lang,

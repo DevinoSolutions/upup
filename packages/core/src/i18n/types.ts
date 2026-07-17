@@ -49,7 +49,15 @@ export interface DropzoneMessages {
     dragFilesHere: string
     browseFiles: string
     dragOrBrowse: string
+    /** Heading lead-in before the inline "browse files" link. */
+    dropFilesHere: string
+    /** Heading tail after "browse files", introducing the source chips. */
+    orImportFrom: string
     selectAFolder: string
+    /** ICU: "{count, plural, one {# file max} other {# files max}}" */
+    filesMax: string
+    /** ICU: "{size} {unit} each" — per-file size limit caption. */
+    sizeEach: string
     /** ICU: "Max {size} {unit} {count, plural, one {file is allowed} other {files are allowed}}" */
     maxFileSizeAllowed: string
     /** ICU: "Min {size} {unit}" */

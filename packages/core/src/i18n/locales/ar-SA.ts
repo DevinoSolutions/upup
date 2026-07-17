@@ -35,7 +35,14 @@ export const arSA: LocaleBundle = {
                 '\u062A\u0635\u0641\u062D \u0627\u0644\u0645\u0644\u0641\u0627\u062A',
             dragOrBrowse:
                 '\u0627\u0633\u062D\u0628 \u0623\u0648 \u062A\u0635\u0641\u062D \u0644\u0644\u0631\u0641\u0639',
+            dropFilesHere:
+                '\u0623\u0641\u0644\u062A \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0647\u0646\u0627\u060C',
+            orImportFrom:
+                '\u0623\u0648 \u0627\u0633\u062A\u0648\u0631\u062F \u0645\u0646:',
             selectAFolder: '\u0627\u062E\u062A\u0631 \u0645\u062C\u0644\u062F',
+            filesMax:
+                '{count, plural, one {# \u0645\u0644\u0641 \u0643\u062D\u062F \u0623\u0642\u0635\u0649} other {# \u0645\u0644\u0641\u0627\u062A \u0643\u062D\u062F \u0623\u0642\u0635\u0649}}',
+            sizeEach: '{size} {unit} \u0644\u0643\u0644 \u0645\u0644\u0641',
             maxFileSizeAllowed:
                 '\u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 {size} {unit} {count, plural, one {\u0645\u0644\u0641 \u0645\u0633\u0645\u0648\u062D} other {\u0645\u0644\u0641\u0627\u062A \u0645\u0633\u0645\u0648\u062D\u0629}}',
             minFileSizeDisplay:

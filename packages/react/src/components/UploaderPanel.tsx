@@ -18,7 +18,7 @@ export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
     const { isAddingMore } = useUploaderView()
-    const { isOnline } = useUploaderRuntime()
+    const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
     const {
@@ -33,6 +33,13 @@ export default function UploaderPanel(): React.ReactElement | null {
         handleDrop,
         handlePaste,
     } = useUploaderPanel()
+
+    // The dashed dropzone frame is the idle-view affordance: shown only when the
+    // panel is an empty, at-rest dropzone (no active source, no add-more flow, no
+    // files). It supersedes the old pulsing CSS border — the CSS border is kept
+    // for the file-present states, so we suppress it whenever the frame is shown.
+    const showDropzoneFrame =
+        absoluteHasBorder && !activeSource && !isAddingMore && !files.size
 
     const dropEffectProps: React.AriaAttributes = {
         // aria-dropeffect is intentionally set for drag-and-drop
@@ -59,26 +66,20 @@ export default function UploaderPanel(): React.ReactElement | null {
         <div
             data-testid="upup-dropzone"
             data-upup-slot="uploader-panel"
+            data-motion={motionMode}
             role="region"
             aria-label={tr.dropzoneLabel}
             {...dropEffectProps}
             className={cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                 {
-                    'upup-border upup-border-[#0ea5e9]': absoluteHasBorder,
+                    // Solid/dashed CSS border stays for the file-present states;
+                    // the idle dropzone uses the animated SVG frame instead.
+                    'upup-border upup-border-[#0ea5e9]':
+                        absoluteHasBorder && !showDropzoneFrame,
                     'upup-border-[#38bdf8] dark:upup-border-[#38bdf8]':
-                        absoluteHasBorder && dark,
-                    'upup-border-dashed': !isDragging,
-                    // Idle drag-drop hint: pulse the dashed border between a muted
-                    // slate and the sky accent while the panel is empty and at rest.
-                    // Border-color only (no width/layout change); paused whenever a
-                    // drag, file, active source, or add-more flow is in progress.
-                    'upup-animate-hint-pulse motion-reduce:upup-animate-none':
-                        absoluteHasBorder &&
-                        !isDragging &&
-                        !files.size &&
-                        !activeSource &&
-                        !isAddingMore,
+                        absoluteHasBorder && !showDropzoneFrame && dark,
+                    'upup-border-dashed': !isDragging && !showDropzoneFrame,
                     'upup-bg-[#e0f2fe] upup-backdrop-blur-sm':
                         absoluteIsDragging && !dark,
                     'upup-bg-[#0b2a3a] upup-backdrop-blur-sm dark:upup-bg-[#0b2a3a]':
@@ -103,6 +104,41 @@ export default function UploaderPanel(): React.ReactElement | null {
                     No internet connection — uploads will resume when you
                     reconnect.
                 </div>
+            )}
+            {showDropzoneFrame && (
+                <svg
+                    data-upup-slot="dropzone-frame"
+                    aria-hidden="true"
+                    className="upup-pointer-events-none upup-absolute upup-inset-3"
+                >
+                    <rect
+                        x="1"
+                        y="1"
+                        rx="14"
+                        ry="14"
+                        fill="none"
+                        strokeWidth="1.5"
+                        strokeDasharray="6 6"
+                        stroke={
+                            absoluteIsDragging
+                                ? 'rgba(56,189,248,0.6)'
+                                : 'rgba(56,189,248,0.22)'
+                        }
+                        // The dash-march is an `animate-fx-*` utility, which the
+                        // shared `[data-motion='off'] [class*='upup-fx-']` kill
+                        // rule does NOT match (no `upup-fx-` substring). Gate it on
+                        // the resolved motion snapshot so `animations={false}` and
+                        // reduced-motion leave a static frame. (Foundation follow-up:
+                        // broaden the kill rule to `upup-animate-fx-` centrally.)
+                        className={cn(
+                            motionMode === 'on' && 'upup-animate-fx-dash-march',
+                        )}
+                        style={{
+                            width: 'calc(100% - 2px)',
+                            height: 'calc(100% - 2px)',
+                        }}
+                    />
+                </svg>
             )}
             {!!activeSource && <SourceView />}
             {!activeSource && (isAddingMore || !files.size) && (

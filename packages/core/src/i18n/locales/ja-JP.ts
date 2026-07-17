@@ -32,7 +32,14 @@ export const jaJP: LocaleBundle = {
             browseFiles: '\u53C2\u7167',
             dragOrBrowse:
                 '\u30C9\u30E9\u30C3\u30B0\u307E\u305F\u306F\u53C2\u7167\u3057\u3066\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9',
+            dropFilesHere:
+                '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7\u3001',
+            orImportFrom:
+                '\u307E\u305F\u306F\u30A4\u30F3\u30DD\u30FC\u30C8\u5143\uFF1A',
             selectAFolder: '\u30D5\u30A9\u30EB\u30C0\u3092\u9078\u629E',
+            filesMax:
+                '{count, plural, other {\u6700\u5927 # \u30D5\u30A1\u30A4\u30EB}}',
+            sizeEach: '\u5404 {size} {unit}',
             maxFileSizeAllowed:
                 '\u6700\u5927 {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u53EF\u80FD\u3067\u3059',
             minFileSizeDisplay: '\u6700\u5C0F {size} {unit}',

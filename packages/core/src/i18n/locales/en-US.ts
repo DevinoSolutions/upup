@@ -31,7 +31,11 @@ export const enUS: LocaleBundle = {
                 '{count, plural, one {Drag your file here} other {Drag your files here}}',
             browseFiles: 'browse files',
             dragOrBrowse: 'Drag or browse to upload',
+            dropFilesHere: 'Drop files here,',
+            orImportFrom: 'or import from:',
             selectAFolder: 'select a folder',
+            filesMax: '{count, plural, one {# file max} other {# files max}}',
+            sizeEach: '{size} {unit} each',
             maxFileSizeAllowed:
                 'Max {size} {unit} {count, plural, one {file is allowed} other {files are allowed}}',
             minFileSizeDisplay: 'Min {size} {unit}',

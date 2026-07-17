@@ -31,7 +31,12 @@ export const deDE: LocaleBundle = {
                 '{count, plural, one {Datei hierher ziehen} other {Dateien hierher ziehen}}',
             browseFiles: 'Dateien durchsuchen',
             dragOrBrowse: 'Ziehen oder durchsuchen zum Hochladen',
+            dropFilesHere: 'Dateien hier ablegen,',
+            orImportFrom: 'oder importieren aus:',
             selectAFolder: 'Ordner ausw\u00E4hlen',
+            filesMax:
+                '{count, plural, one {max. # Datei} other {max. # Dateien}}',
+            sizeEach: 'je {size} {unit}',
             maxFileSizeAllowed:
                 'Maximal {size} {unit} {count, plural, one {Datei erlaubt} other {Dateien erlaubt}}',
             minFileSizeDisplay: 'Min. {size} {unit}',

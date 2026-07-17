@@ -31,7 +31,12 @@ export const frFR: LocaleBundle = {
                 '{count, plural, one {Glissez votre fichier ici} other {Glissez vos fichiers ici}}',
             browseFiles: 'parcourir les fichiers',
             dragOrBrowse: 'Glissez ou parcourez pour t\u00E9l\u00E9verser',
+            dropFilesHere: 'D\u00E9posez les fichiers ici,',
+            orImportFrom: 'ou importez depuis :',
             selectAFolder: 's\u00E9lectionner un dossier',
+            filesMax:
+                '{count, plural, one {# fichier max.} other {# fichiers max.}}',
+            sizeEach: '{size} {unit} chacun',
             maxFileSizeAllowed:
                 'Max {size} {unit} {count, plural, one {fichier autoris\u00E9} other {fichiers autoris\u00E9s}}',
             minFileSizeDisplay: 'Min {size} {unit}',

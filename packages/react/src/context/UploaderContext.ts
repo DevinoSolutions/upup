@@ -10,6 +10,7 @@ import {
     type ReactNode,
 } from 'react'
 import type { FileSource, ResolvedImageEditorOptions } from '@upupjs/core'
+import type { MotionMode } from '@upupjs/core/internal'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -68,6 +69,8 @@ export type ContextProps = RequiredDefined<
 export type ContextRuntime = BaseContextRuntime & {
     /** @deprecated Use openFilePicker() instead */
     inputRef: RefObject<HTMLInputElement | null>
+    /** Resolved `data-motion` value ('on' | 'off') from the core motion gate. */
+    motionMode: MotionMode
 }
 
 export type ContextSource = Omit<BaseContextSource, 'setActiveSource'> & {
@@ -146,6 +149,7 @@ export function UploaderContextProvider({
             inputRef: value.inputRef,
             openFilePicker: value.openFilePicker,
             isOnline: value.isOnline,
+            motionMode: value.motionMode,
         }),
         [
             value.core,
@@ -153,6 +157,7 @@ export function UploaderContextProvider({
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- see above
             value.inputRef,
             value.isOnline,
+            value.motionMode,
             value.mode,
             value.openFilePicker,
             value.serverUrl,

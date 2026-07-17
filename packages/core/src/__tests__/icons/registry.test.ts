@@ -26,6 +26,8 @@ const EXPECTED: IconName[] = [
     'search',
     'user',
     'file',
+    'stacked-files',
+    'storage',
     // filled
     'player-play',
     'player-pause',

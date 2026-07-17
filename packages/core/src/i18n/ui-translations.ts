@@ -23,10 +23,15 @@ export type UiTranslations = {
     dragFileOr: string
     dragFilesOr: string
     browseFiles: string
+    dropFilesHere: string
+    orImportFrom: string
     or: string
     selectAFolder: string
     maxFileSizeAllowed_one: string
     maxFileSizeAllowed_other: string
+    filesMax_one: string
+    filesMax_other: string
+    sizeEach: string
     addDocumentsHere: string
     builtBy: string
     removeAllFiles: string
@@ -228,6 +233,8 @@ export function flattenTranslatorToUiTranslations(
         dragFileOr: tr('dropzone.dragFilesOr', { count: 1 }),
         dragFilesOr: tr('dropzone.dragFilesOr', { count: 2 }),
         browseFiles: tr('dropzone.browseFiles'),
+        dropFilesHere: tr('dropzone.dropFilesHere'),
+        orImportFrom: tr('dropzone.orImportFrom'),
         selectAFolder: tr('dropzone.selectAFolder'),
         maxFileSizeAllowed_one: tr('dropzone.maxFileSizeAllowed', {
             size: '{{size}}',
@@ -238,6 +245,12 @@ export function flattenTranslatorToUiTranslations(
             size: '{{size}}',
             unit: '{{unit}}',
             count: 2,
+        }),
+        filesMax_one: countPluralForm('dropzone.filesMax', 1),
+        filesMax_other: countPluralForm('dropzone.filesMax', 2),
+        sizeEach: tr('dropzone.sizeEach', {
+            size: '{{size}}',
+            unit: '{{unit}}',
         }),
         addDocumentsHere: tr('dropzone.addDocumentsHere', {
             limit: '{{limit}}',

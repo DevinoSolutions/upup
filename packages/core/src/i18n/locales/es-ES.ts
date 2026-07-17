@@ -31,7 +31,12 @@ export const esES: LocaleBundle = {
                 '{count, plural, one {Arrastra tu archivo aqu\u00ED} other {Arrastra tus archivos aqu\u00ED}}',
             browseFiles: 'buscar archivos',
             dragOrBrowse: 'Arrastra o busca para subir',
+            dropFilesHere: 'Suelta los archivos aquí,',
+            orImportFrom: 'o importa desde:',
             selectAFolder: 'seleccionar una carpeta',
+            filesMax:
+                '{count, plural, one {máx. # archivo} other {máx. # archivos}}',
+            sizeEach: '{size} {unit} cada uno',
             maxFileSizeAllowed:
                 'M\u00E1x. {size} {unit} {count, plural, one {archivo permitido} other {archivos permitidos}}',
             minFileSizeDisplay: 'M\u00EDn. {size} {unit}',
