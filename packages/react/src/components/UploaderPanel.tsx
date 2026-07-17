@@ -124,15 +124,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                                 ? 'rgba(56,189,248,0.6)'
                                 : 'rgba(56,189,248,0.22)'
                         }
-                        // The dash-march is an `animate-fx-*` utility, which the
-                        // shared `[data-motion='off'] [class*='upup-fx-']` kill
-                        // rule does NOT match (no `upup-fx-` substring). Gate it on
-                        // the resolved motion snapshot so `animations={false}` and
-                        // reduced-motion leave a static frame. (Foundation follow-up:
-                        // broaden the kill rule to `upup-animate-fx-` centrally.)
-                        className={cn(
-                            motionMode === 'on' && 'upup-animate-fx-dash-march',
-                        )}
+                        // Marches continuously; the shared `[data-motion='off']`
+                        // kill rule (which now also gates `upup-animate-fx-*`) makes
+                        // it static when motion is off.
+                        className="upup-animate-fx-dash-march"
                         style={{
                             width: 'calc(100% - 2px)',
                             height: 'calc(100% - 2px)',

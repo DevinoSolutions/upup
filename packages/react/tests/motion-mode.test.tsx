@@ -40,5 +40,14 @@ describe('data-motion gate on the uploader panel', () => {
             )
             expect(panel?.getAttribute('data-motion')).toBe('off')
         })
+        // The march class is applied UNCONDITIONALLY — the shared
+        // `[data-motion='off']` CSS kill rule (which gates `upup-animate-fx-*`)
+        // makes it static, so the class must still be present under animations=false.
+        const rect = container.querySelector(
+            '[data-upup-slot="dropzone-frame"] rect',
+        )
+        expect(rect?.getAttribute('class')).toContain(
+            'upup-animate-fx-dash-march',
+        )
     })
 })

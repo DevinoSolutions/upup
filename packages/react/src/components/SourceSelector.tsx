@@ -385,7 +385,12 @@ export default function SourceSelector(): React.ReactElement | null {
                             )}
                         {showFilesLimit && (
                             <span className="upup-inline-flex upup-items-center upup-gap-1.5">
-                                <StackedFilesIcon className="upup-h-4 upup-w-4" />
+                                <span
+                                    aria-hidden="true"
+                                    className="upup-inline-flex"
+                                >
+                                    <StackedFilesIcon className="upup-h-4 upup-w-4" />
+                                </span>
                                 {t(plural(tr, 'filesMax', limit), {
                                     count: limit,
                                 })}
@@ -396,7 +401,12 @@ export default function SourceSelector(): React.ReactElement | null {
                         )}
                         {showSizeLimit && (
                             <span className="upup-inline-flex upup-items-center upup-gap-1.5">
-                                <StorageIcon className="upup-h-4 upup-w-4" />
+                                <span
+                                    aria-hidden="true"
+                                    className="upup-inline-flex"
+                                >
+                                    <StorageIcon className="upup-h-4 upup-w-4" />
+                                </span>
                                 {t(tr.sizeEach, {
                                     size: maxFileSize?.size ?? 0,
                                     unit: maxFileSize?.unit ?? '',
