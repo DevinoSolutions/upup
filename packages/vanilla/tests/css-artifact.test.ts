@@ -29,6 +29,8 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain('.upup-fx-hover-lift')
         expect(css).toContain('.upup-fx-press')
         expect(css).toContain('.upup-fx-sheen-sweep')
+        expect(css).toContain('.upup-fx-icon-nudge')
+        expect(css).toContain('.upup-fx-remove')
         expect(css).toContain('fx-enter')
         expect(css).toContain('fx-view')
         expect(css).toContain('fx-draw')
@@ -37,6 +39,10 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain("[data-motion='off']")
         expect(css).toContain('upup-fx-essential')
         expect(css).toContain('prefers-reduced-motion')
+        // Guard the double-prefix regression: tailwind's prefix:'upup-' also
+        // prefixes addComponents keys, so a hardcoded '.upup-fx-*' key doubles
+        // to '.upup-upup-fx-*'. Plugin keys must stay unprefixed.
+        expect(css).not.toContain('upup-upup')
         // The old flat-shadow chrome was replaced by the gradient + sheen:
         expect(css).not.toContain('.upup-shadow-wrapper')
     })

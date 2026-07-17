@@ -28,6 +28,12 @@ function createPostcssConfig({ content }) {
                 // so the JIT purge would drop them. Safelisting the fx component
                 // classes + the fx animation utilities forces the plugin's rules
                 // and their `@keyframes` into the artifact by construction.
+                // Lifecycle: the component/animation entries become removable
+                // once Phase-3 markup references them, but 'upup-fx-essential'
+                // must STAY safelisted forever — it's the candidate that forces
+                // the kill-switch + reduced-motion selectors (which reference it
+                // only inside :not()) to emit, and no real markup may ever carry
+                // it, so nothing else keeps those rules alive.
                 safelist: [
                     'upup-scope',
                     'upup-fx-hover-lift',
