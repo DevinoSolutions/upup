@@ -151,6 +151,13 @@ export interface IUploaderContext
         ContextEditor {
     props: ContextProps
     theme: ContextTheme
+    /**
+     * Re-resolve the live ThemeStore when the `theme` prop changes after mount
+     * (mirrors React's `controller.theme.setThemeConfig(theme)` effect). The
+     * store short-circuits on a structurally-equal config, so an inlined object
+     * literal per render does not loop.
+     */
+    setThemeConfig: (config: UploaderProps['theme']) => void
 }
 
 // ─── Keys ───────────────────────────────────────────────────

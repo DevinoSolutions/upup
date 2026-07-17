@@ -48,4 +48,48 @@ describe('ThemeStore', () => {
         expect(store.getSnapshot().isDark).toBe(true)
         expect(count).toBe(1)
     })
+
+    it('setThemeConfig is a no-op for a structurally-equal-but-new config', () => {
+        const store = new ThemeStore({ mode: 'light' })
+        const before = store.getSnapshot()
+        const spy = vi.fn()
+        store.subscribe(spy)
+        // Fresh object literal, same content — mimics a consumer inlining
+        // theme={{ mode: 'light' }} on every render.
+        store.setThemeConfig({ mode: 'light' })
+        expect(spy).not.toHaveBeenCalled()
+        expect(store.getSnapshot()).toBe(before)
+    })
+
+    it('setThemeConfig notifies and flips isDark when the mode changes', () => {
+        const store = new ThemeStore({ mode: 'light' })
+        expect(store.getSnapshot().isDark).toBe(false)
+        const spy = vi.fn()
+        store.subscribe(spy)
+        store.setThemeConfig({ mode: 'dark' })
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(store.getSnapshot().isDark).toBe(true)
+    })
+
+    it('setThemeConfig notifies when slots change with an unchanged mode', () => {
+        const store = new ThemeStore({ mode: 'light' })
+        const spy = vi.fn()
+        store.subscribe(spy)
+        store.setThemeConfig({
+            mode: 'light',
+            slots: { uploader: { root: 'custom-root' } },
+        })
+        expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+    it('setThemeConfig notifies when tokens change with an unchanged mode', () => {
+        const store = new ThemeStore({ mode: 'light' })
+        const spy = vi.fn()
+        store.subscribe(spy)
+        store.setThemeConfig({
+            mode: 'light',
+            tokens: { color: { primary: '#123456' } },
+        })
+        expect(spy).toHaveBeenCalledTimes(1)
+    })
 })

@@ -10,8 +10,8 @@ export function fileIcon(
     className = '',
 ): TemplateResult {
     const isDark = ctx.theme.getSnapshot().isDark
-    const iconClass = cn('upup-text-5xl upup-text-blue-600', className, {
-        'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': isDark,
+    const iconClass = cn('upup-text-5xl upup-text-[#0284c7]', className, {
+        'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': isDark,
     })
     return html` <span
         class="upup-inline-flex"

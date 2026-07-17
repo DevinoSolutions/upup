@@ -188,7 +188,7 @@ export function driveBrowser(
                               ? html` <button
                                     data-testid="upup-drive-load-more"
                                     data-upup-slot="drive-load-more"
-                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-[#0284c7] disabled:upup-opacity-50"
                                     ?disabled=${isLoadingMore}
                                     @click=${() => {
                                         void loadMore?.()
@@ -217,9 +217,9 @@ export function driveBrowser(
                           onSelectCurrentFolder
                               ? html` <button
                                     class=${cn(
-                                        'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
+                                        'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#0284c7] upup-transition-all upup-duration-300',
                                         {
-                                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                                 isDark,
                                         },
                                     )}
@@ -234,10 +234,10 @@ export function driveBrowser(
                       }
                       <button
                           class=${cn(
-                              'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+                              'upup-rounded-md upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
                               {
                                   'upup-animate-pulse': showLoader,
-                                  'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                  'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                                       isDark,
                               },
                               slot.driveAddFilesButton,
@@ -253,9 +253,9 @@ export function driveBrowser(
                       </button>
                       <button
                           class=${cn(
-                              'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
+                              'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-[#0284c7] upup-transition-all upup-duration-300',
                               {
-                                  'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                                  'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                       isDark,
                               },
                               slot.driveCancelFilesButton,

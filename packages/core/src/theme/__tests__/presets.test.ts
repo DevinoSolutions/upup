@@ -53,7 +53,7 @@ describe('darkPreset', () => {
         expect(lightPreset.color.surface).not.toEqual(darkPreset.color.surface)
     })
 
-    it('dark.primary maps to existing #30C5F7 brand color', () => {
-        expect(darkPreset.color.primary).toBe('#30C5F7')
+    it('dark.primary is the sky-family accent (#38bdf8)', () => {
+        expect(darkPreset.color.primary).toBe('#38bdf8')
     })
 })

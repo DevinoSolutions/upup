@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import './upup.css'
+import '@upupjs/react/styles'
 import { UpupUploader, useUpupUpload } from '@upupjs/react'
 
 /** Headless hook demo — v2 feature, custom UI built from scratch */

@@ -197,9 +197,9 @@ export default memo(function FileList() {
                         <button
                             data-testid="upup-upload-btn"
                             className={cn(
-                                'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                                'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                                 {
-                                    'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                    'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                                         dark,
                                 },
                                 slotClasses.uploadButton,
@@ -254,9 +254,9 @@ export default memo(function FileList() {
                 {uploadStatus === UploadStatus.SUCCESSFUL && (
                     <button
                         className={cn(
-                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                             {
-                                'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]':
+                                'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]':
                                     dark,
                             },
                             slotClasses.uploadDoneButton,

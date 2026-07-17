@@ -86,7 +86,7 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                 <!-- Edit-image button (only for images with editor enabled) -->
                 @if (isImage && store.uiProps.imageEditor.enabled) {
                     <button
-                        class="upup-absolute upup-right-1.5 upup-top-8 upup-z-10 upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm hover:upup-bg-white hover:upup-text-blue-700 upup-ring-1 upup-ring-black/5 disabled:upup-cursor-not-allowed disabled:upup-opacity-50"
+                        class="upup-absolute upup-right-1.5 upup-top-8 upup-z-10 upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center upup-rounded-full upup-bg-white upup-text-[#0284c7] upup-shadow-sm hover:upup-bg-white hover:upup-text-[#0284c7] upup-ring-1 upup-ring-black/5 disabled:upup-cursor-not-allowed disabled:upup-opacity-50"
                         (click)="onHandleEditImage($event)"
                         type="button"
                         [disabled]="!!progress"
@@ -275,8 +275,8 @@ export class FilePreviewComponent implements OnChanges {
         const dark = this.isDark
         const themeSlots = this.store.slots()
         return cn(
-            'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
-            dark ? 'upup-text-[#4A9EFF] hover:upup-text-blue-300' : '',
+            'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#0284c7] upup-transition-all hover:upup-text-[#0284c7] hover:upup-underline',
+            dark ? 'upup-text-[#38bdf8] hover:upup-text-[#7dd3fc]' : '',
             themeSlots.filePreview?.previewButton ?? '',
         )
     }

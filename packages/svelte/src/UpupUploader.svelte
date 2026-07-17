@@ -23,6 +23,15 @@ $effect(() => {
     ctx.registerFileInput(inputEl)
 })
 
+// Re-resolve on theme-prop change (post-mount). The controller (hence its
+// ThemeStore) is created once from the initial props, so a `theme` prop change
+// after mount would otherwise never reach the live store. ThemeStore's
+// setThemeConfig short-circuits on a structurally-equal config, so re-running
+// per change costs nothing when the object is stable.
+$effect(() => {
+    ctx.setThemeConfig(props.theme)
+})
+
 function onInputChange(e: Event) {
     const target = e.target as HTMLInputElement
     if (target.files?.length) {
@@ -52,8 +61,10 @@ function onInputChange(e: Event) {
             data-testid="upup-container"
             aria-labelledby="drop-instructions"
             class={cn(
-                `upup-shadow-wrapper upup-relative ${
-                    $isDark ? 'upup-bg-[#232323]' : 'upup-bg-white'
+                `upup-panel-sheen upup-relative ${
+                    $isDark
+                        ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
+                        : 'upup-bg-gradient-to-b upup-from-white upup-to-slate-50 upup-ring-1 upup-ring-slate-200 upup-shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]'
                 } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                 {
                     [$slotOverrides.containerFull!]:

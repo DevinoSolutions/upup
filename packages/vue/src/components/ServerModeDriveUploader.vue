@@ -150,7 +150,7 @@ function formatBytes(bytes: number): string {
                         :data-selected="selected.has(file.id)"
                         :class="cn(
                             'upup-flex upup-w-full upup-items-center upup-gap-3 upup-border-b upup-px-4 upup-py-2 upup-text-left upup-text-sm',
-                            selected.has(file.id) && 'upup-bg-blue-50 dark:upup-bg-blue-900/30',
+                            selected.has(file.id) && 'upup-bg-[#f0f9ff] dark:upup-bg-[#0c4a6e]/30',
                             dark
                                 ? 'upup-border-gray-700 upup-text-gray-100 hover:upup-bg-gray-700'
                                 : 'upup-border-gray-200 hover:upup-bg-gray-50',
@@ -178,7 +178,7 @@ function formatBytes(bytes: number): string {
                     <button
                         type="button"
                         :disabled="selected.size === 0 || transferring"
-                        class="upup-rounded upup-bg-blue-600 upup-px-3 upup-py-1.5 upup-text-sm upup-text-white disabled:upup-opacity-50"
+                        class="upup-rounded upup-bg-[#0ea5e9] upup-px-3 upup-py-1.5 upup-text-sm upup-text-white disabled:upup-opacity-50"
                         @click="handleTransfer()"
                     >
                         {{ transferring

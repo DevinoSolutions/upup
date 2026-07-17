@@ -28,7 +28,7 @@ const { slotOverrides } = useUploaderTheme()
         {{ editingFile.name }}
       </p>
       <button
-        class="upup-px-4 upup-py-2 upup-bg-blue-500 upup-text-white upup-rounded-md upup-hover:bg-blue-600 upup-transition-colors"
+        class="upup-px-4 upup-py-2 upup-bg-[#0ea5e9] upup-text-white upup-rounded-md hover:upup-bg-[#0284c7] upup-transition-colors"
         data-testid="upup-image-editor-close"
         @click="closeImageEditor"
       >

@@ -61,7 +61,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                             class="upup-flex upup-flex-col upup-items-center upup-gap-4"
                         >
                             <div
-                                class="upup-flex upup-h-20 upup-w-20 upup-items-center upup-justify-center upup-rounded-full upup-bg-blue-500/20"
+                                class="upup-flex upup-h-20 upup-w-20 upup-items-center upup-justify-center upup-rounded-full upup-bg-[#0ea5e9]/20"
                             >
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -70,7 +70,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     [attr.stroke]="
-                                        store.isDark() ? '#59D1F9' : '#2563eb'
+                                        store.isDark() ? '#38bdf8' : '#0284c7'
                                     "
                                     stroke-width="2"
                                     stroke-linecap="round"
@@ -293,18 +293,18 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
 
     get retryButtonClass(): string {
         return cn(
-            'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
             {
-                'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': this.store.isDark(),
+                'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': this.store.isDark(),
             },
         )
     }
 
     get shareButtonClass(): string {
         return cn(
-            'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
             {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]':
                     this.store.isDark(),
             },
         )
@@ -319,9 +319,9 @@ export class ScreenCaptureUploaderComponent implements OnDestroy {
 
     get addButtonClass(): string {
         return cn(
-            'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
             {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]':
                     this.store.isDark(),
             },
         )

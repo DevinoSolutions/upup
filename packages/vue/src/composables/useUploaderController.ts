@@ -2,6 +2,7 @@ import {
     ref,
     shallowRef,
     computed,
+    watch,
     onMounted,
     onUnmounted,
     defineComponent,
@@ -246,6 +247,18 @@ export default function useUploaderController(
     onUnmounted(() => {
         unsubTheme?.()
     })
+
+    // ── Re-resolve on theme-prop change (post-mount) ─────────────
+    // The controller (hence its ThemeStore) is created once, so a `theme` prop
+    // change after mount would otherwise never reach the live store. ThemeStore
+    // short-circuits structurally-equal configs, so an inlined object literal
+    // (e.g. :theme="{ mode: 'dark' }") per render costs nothing.
+    watch(
+        () => props.theme,
+        theme => {
+            controller.theme.setThemeConfig(theme)
+        },
+    )
 
     // ── Lifecycle via factory (idempotent init/destroy) ──────────
     // controller.init() owns: orchestrator.init, theme.init, plugin registration,

@@ -31,9 +31,9 @@ export class FileIconComponent {
     get iconClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-text-5xl upup-text-blue-600',
+            'upup-text-5xl upup-text-[#0284c7]',
             this.extraClass,
-            dark ? 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]' : '',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
         )
     }
 }

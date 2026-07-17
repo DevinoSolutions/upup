@@ -65,13 +65,23 @@ export default function UploaderPanel(): React.ReactElement | null {
             className={cn(
                 'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
                 {
-                    'upup-border upup-border-[#1849D6]': absoluteHasBorder,
-                    'upup-border-[#30C5F7] dark:upup-border-[#30C5F7]':
+                    'upup-border upup-border-[#0ea5e9]': absoluteHasBorder,
+                    'upup-border-[#38bdf8] dark:upup-border-[#38bdf8]':
                         absoluteHasBorder && dark,
                     'upup-border-dashed': !isDragging,
-                    'upup-bg-[#E7ECFC] upup-backdrop-blur-sm':
+                    // Idle drag-drop hint: pulse the dashed border between a muted
+                    // slate and the sky accent while the panel is empty and at rest.
+                    // Border-color only (no width/layout change); paused whenever a
+                    // drag, file, active source, or add-more flow is in progress.
+                    'upup-animate-hint-pulse motion-reduce:upup-animate-none':
+                        absoluteHasBorder &&
+                        !isDragging &&
+                        !files.size &&
+                        !activeSource &&
+                        !isAddingMore,
+                    'upup-bg-[#e0f2fe] upup-backdrop-blur-sm':
                         absoluteIsDragging && !dark,
-                    'upup-bg-[#045671] upup-backdrop-blur-sm dark:upup-bg-[#045671]':
+                    'upup-bg-[#0b2a3a] upup-backdrop-blur-sm dark:upup-bg-[#0b2a3a]':
                         absoluteIsDragging && dark,
                 },
             )}

@@ -99,9 +99,9 @@ export function driveBrowserHeader(
                 </div>
                 <button
                     class=${cn(
-                        'upup-hover:upup-underline upup-text-blue-600',
+                        'upup-hover:upup-underline upup-text-[#0284c7]',
                         {
-                            'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]':
+                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
                                 isDark,
                         },
                         slot.driveLogoutButton,
