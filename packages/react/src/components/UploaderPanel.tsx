@@ -17,7 +17,7 @@ import FileList from './FileList'
 export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
-    const { isAddingMore } = useUploaderView()
+    const { sourceOverlayOpen } = useUploaderView()
     const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
@@ -39,7 +39,14 @@ export default function UploaderPanel(): React.ReactElement | null {
     // files). It supersedes the old pulsing CSS border — the CSS border is kept
     // for the file-present states, so we suppress it whenever the frame is shown.
     const showDropzoneFrame =
-        absoluteHasBorder && !activeSource && !isAddingMore && !files.size
+        absoluteHasBorder && !activeSource && !sourceOverlayOpen && !files.size
+
+    // The add-more overlay: once files exist, the source surface (selector, or a
+    // chosen source's view) slides up over the still-mounted, dimmed file list.
+    // With no files the same surface is the panel's primary content instead.
+    const hasFiles = files.size > 0
+    const sourceSurface = activeSource ? <SourceView /> : <SourceSelector />
+    const showSourceOverlay = hasFiles && (sourceOverlayOpen || !!activeSource)
 
     const dropEffectProps: React.AriaAttributes = {
         // aria-dropeffect is intentionally set for drag-and-drop
@@ -135,9 +142,22 @@ export default function UploaderPanel(): React.ReactElement | null {
                     />
                 </svg>
             )}
-            {!!activeSource && <SourceView />}
-            {!activeSource && (isAddingMore || !files.size) && (
-                <SourceSelector />
+            {/* Idle primary: the source surface fills the panel when empty. */}
+            {!hasFiles && sourceSurface}
+            {/* Add-more overlay: the source surface slides up over the dimmed,
+                still-mounted file list — nothing unmounts, no state is lost. */}
+            {showSourceOverlay && (
+                <div
+                    data-upup-slot="source-overlay"
+                    className={cn(
+                        'upup-fx-overlay-slide upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-lg upup-ring-1 upup-ring-inset',
+                        dark
+                            ? 'upup-bg-[#0b1220]/95 upup-ring-white/[0.06]'
+                            : 'upup-bg-white/95 upup-ring-black/[0.06]',
+                    )}
+                >
+                    {sourceSurface}
+                </div>
             )}
             <FileList />
         </div>

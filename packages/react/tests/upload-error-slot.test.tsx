@@ -31,9 +31,11 @@ vi.mock('../src/context/UploaderContext', () => ({
         FAILED: 'FAILED',
     },
     useUploaderView: () => ({
-        isAddingMore: false,
         viewMode: 'list',
-        setIsAddingMore: () => {},
+        setViewMode: () => {},
+        sourceOverlayOpen: false,
+        openSourceOverlay: () => {},
+        closeSourceOverlay: () => {},
     }),
     useUploaderSource: () => ({
         activeSource: null,

@@ -17,7 +17,7 @@ export default function SourceSelector(): React.ReactElement | null {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- inputRef is required for direct webkitdirectory/directory DOM wiring; openFilePicker() cannot toggle those attributes
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
-    const { isAddingMore, setIsAddingMore } = useUploaderView()
+    const { sourceOverlayOpen, closeSourceOverlay } = useUploaderView()
     const { setFiles } = useUploaderFiles()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
@@ -162,14 +162,14 @@ export default function SourceSelector(): React.ReactElement | null {
             data-testid="upup-source-selector"
             data-upup-slot="source-selector"
             className={cn(
-                'upup-relative upup-flex upup-h-full upup-flex-col upup-gap-6 upup-rounded-lg',
+                'upup-animate-fx-view upup-relative upup-flex upup-h-full upup-flex-col upup-gap-6 upup-rounded-lg',
                 {
                     'upup-items-center upup-justify-center upup-px-4 upup-py-6':
-                        !isAddingMore,
+                        !sourceOverlayOpen,
                 },
             )}
         >
-            {isAddingMore && (
+            {sourceOverlayOpen && (
                 <div
                     className={cn(
                         'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
@@ -189,7 +189,7 @@ export default function SourceSelector(): React.ReactElement | null {
                             slotClasses.containerCancelButton,
                         )}
                         onClick={() => {
-                            setIsAddingMore(false)
+                            closeSourceOverlay()
                         }}
                     >
                         <svg

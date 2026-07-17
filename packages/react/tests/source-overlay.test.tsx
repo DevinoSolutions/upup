@@ -1,0 +1,166 @@
+import { afterEach, describe, it, expect } from 'vitest'
+import { cleanup, render, fireEvent, waitFor } from '@testing-library/react'
+import React from 'react'
+import { UpupUploader } from '../src'
+
+afterEach(() => {
+    cleanup()
+})
+
+/**
+ * Task 7 — add-more source overlay (React canon).
+ * Files are seeded through the real hidden file input so these exercise the
+ * live controller + core transient-UI store, not a mocked context.
+ */
+function renderUploader() {
+    return render(
+        <UpupUploader
+            provider="aws"
+            uploadEndpoint="/api/upload"
+            maxFiles={10}
+        />,
+    )
+}
+
+/** Seed files through whichever file input is currently mounted (idle selector
+ *  or the overlay's selector). */
+function seed(container: HTMLElement, files: File[]) {
+    const input = container.querySelector(
+        '[data-testid="upup-file-input"]',
+    ) as HTMLInputElement
+    expect(input).not.toBeNull()
+    Object.defineProperty(input, 'files', { value: files, configurable: true })
+    fireEvent.change(input)
+}
+
+function txt(name: string) {
+    return new File([new Uint8Array(1024).fill(1)], name, {
+        type: 'text/plain',
+    })
+}
+
+async function seedAndWaitForList(container: HTMLElement, files: File[]) {
+    seed(container, files)
+    await waitFor(() => {
+        if (!container.querySelector('[data-testid="upup-file-list"]'))
+            throw new Error('file list not rendered')
+    })
+}
+
+function overlay(container: HTMLElement) {
+    return container.querySelector('[data-upup-slot="source-overlay"]')
+}
+
+function openViaHeader(container: HTMLElement) {
+    const btn = container.querySelector(
+        '[data-testid="upup-add-more"][data-placement="header"]',
+    ) as HTMLButtonElement
+    expect(btn).not.toBeNull()
+    fireEvent.click(btn)
+}
+
+describe('add-more source overlay', () => {
+    it('opens the overlay over a still-mounted, dimmed file list', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+
+        expect(overlay(container)).toBeNull()
+        openViaHeader(container)
+
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+        // Source selector lives inside the overlay:
+        expect(
+            container.querySelector(
+                '[data-upup-slot="source-overlay"] [data-testid="upup-source-selector"]',
+            ),
+        ).not.toBeNull()
+        // The file list stays mounted underneath, dimmed and inert:
+        const list = container.querySelector(
+            '[data-testid="upup-file-list"]',
+        ) as HTMLElement
+        expect(list).not.toBeNull()
+        expect(list.className).toContain('upup-opacity-40')
+        expect(list.className).toContain('upup-pointer-events-none')
+    })
+
+    it('closes the overlay when files are added while it is open', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+
+        // Add a third file through the overlay's own picker input.
+        seed(container, [txt('c.txt')])
+
+        await waitFor(() => {
+            if (overlay(container))
+                throw new Error('overlay should have closed on add')
+        })
+        // Landed on the merged 3-file list, un-dimmed.
+        await waitFor(() => {
+            const items = container.querySelectorAll(
+                '[data-testid="upup-file-item"]',
+            )
+            if (items.length !== 3) throw new Error('expected 3 files merged')
+        })
+        const list = container.querySelector(
+            '[data-testid="upup-file-list"]',
+        ) as HTMLElement
+        expect(list.className).not.toContain('upup-opacity-40')
+    })
+
+    it('closes on the overlay Back control and re-opens cleanly', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+
+        // The overlay selector's Back button closes it (transient close command).
+        const backBtn = Array.from(
+            container.querySelectorAll(
+                '[data-upup-slot="source-overlay"] button',
+            ),
+        ).find(b => /back/i.test(b.textContent ?? '')) as HTMLButtonElement
+        expect(backBtn).not.toBeNull()
+        fireEvent.click(backBtn)
+
+        await waitFor(() => {
+            if (overlay(container))
+                throw new Error('overlay should have closed')
+        })
+        const list = container.querySelector(
+            '[data-testid="upup-file-list"]',
+        ) as HTMLElement
+        expect(list.className).not.toContain('upup-opacity-40')
+
+        // Re-open works after a close — no state was torn down.
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay did not re-open')
+        })
+    })
+
+    it('is idempotent: opening twice keeps a single overlay', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+        // The header add-more still exists in the dimmed list; clicking it again
+        // must not spawn a second overlay (open command is idempotent).
+        openViaHeader(container)
+        expect(
+            container.querySelectorAll('[data-upup-slot="source-overlay"]')
+                .length,
+        ).toBe(1)
+    })
+})

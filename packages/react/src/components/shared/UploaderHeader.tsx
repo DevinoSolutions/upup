@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import Icon from '../Icon'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@upupjs/core'
 import { cn, isUploadActive } from '@upupjs/core/internal'
@@ -19,8 +19,7 @@ export default function UploaderHeader({
     handleCancel,
 }: Readonly<Props>): React.ReactElement | null {
     const { files } = useUploaderFiles()
-    const { setIsAddingMore, isAddingMore, viewMode, setViewMode } =
-        useUploaderView()
+    const { viewMode, setViewMode, openSourceOverlay } = useUploaderView()
     const { translations: tr } = useUploaderI18n()
     const {
         mini,
@@ -34,10 +33,6 @@ export default function UploaderHeader({
     } = useUploaderUploadControls()
     const isUploading = isUploadActive(uploadStatus)
     const isLimitReached = limit === files.size
-    const cancelText = useMemo(
-        () => (isAddingMore ? tr.cancel : tr.removeAllFiles),
-        [isAddingMore, tr],
-    )
 
     if (mini) return null
 
@@ -64,7 +59,7 @@ export default function UploaderHeader({
                 onClick={handleCancel}
                 disabled={isUploading || isProcessing}
             >
-                {cancelText}
+                {tr.removeAllFiles}
             </button>
             <span
                 className={cn(
@@ -74,11 +69,9 @@ export default function UploaderHeader({
                     },
                 )}
             >
-                {isAddingMore && tr.addingMoreFiles}
-                {!isAddingMore &&
-                    t(plural(tr, 'filesSelected', files.size), {
-                        count: files.size,
-                    })}
+                {t(plural(tr, 'filesSelected', files.size), {
+                    count: files.size,
+                })}
             </span>
             <div className="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
                 {files.size > 1 && (
@@ -106,7 +99,7 @@ export default function UploaderHeader({
                         )}
                     </button>
                 )}
-                {!isAddingMore && limit > 1 && !isLimitReached && (
+                {limit > 1 && !isLimitReached && (
                     <button
                         data-testid="upup-add-more"
                         data-placement="header"
@@ -120,7 +113,7 @@ export default function UploaderHeader({
                             slotClasses.containerAddMoreButton,
                         )}
                         onClick={() => {
-                            setIsAddingMore(true)
+                            openSourceOverlay()
                         }}
                         disabled={isUploading || isProcessing}
                     >

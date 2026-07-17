@@ -95,9 +95,14 @@ export type ContextUploadControls = Omit<
 
 export type ContextView = Omit<
     BaseContextView,
-    'setIsAddingMore' | 'setViewMode'
+    'isAddingMore' | 'setIsAddingMore' | 'setViewMode'
 > & {
-    setIsAddingMore: Dispatch<SetStateAction<boolean>>
+    /** Add-more source overlay: source surface mounted above the dimmed,
+     *  still-mounted file list. Sourced from the core transient-UI store
+     *  (replaces the retired `isAddingMore` flag in the React canon). */
+    sourceOverlayOpen: boolean
+    openSourceOverlay: () => void
+    closeSourceOverlay: () => void
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
 }
 
@@ -228,14 +233,16 @@ export function UploaderContextProvider({
 
     const view = useMemo<ContextView>(
         () => ({
-            isAddingMore: value.isAddingMore,
-            setIsAddingMore: value.setIsAddingMore,
+            sourceOverlayOpen: value.sourceOverlayOpen,
+            openSourceOverlay: value.openSourceOverlay,
+            closeSourceOverlay: value.closeSourceOverlay,
             viewMode: value.viewMode,
             setViewMode: value.setViewMode,
         }),
         [
-            value.isAddingMore,
-            value.setIsAddingMore,
+            value.sourceOverlayOpen,
+            value.openSourceOverlay,
+            value.closeSourceOverlay,
             value.setViewMode,
             value.viewMode,
         ],

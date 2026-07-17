@@ -38,7 +38,7 @@ function formatEta(seconds: number): string {
 }
 
 export default memo(function FileList() {
-    const { isAddingMore, viewMode, setIsAddingMore } = useUploaderView()
+    const { viewMode, sourceOverlayOpen, openSourceOverlay } = useUploaderView()
     const { activeSource } = useUploaderSource()
     const { files, leavingFileIds } = useUploaderFiles()
     const { translations: tr } = useUploaderI18n()
@@ -95,6 +95,9 @@ export default memo(function FileList() {
     })
 
     const isUploading = isUploadActive(uploadStatus)
+    // When the add-more source surface is up (overlay open, or a source chosen
+    // while files exist), this list stays mounted but dimmed and inert behind it.
+    const dimmed = sourceOverlayOpen || !!activeSource
     const heroLeaving = isSingle && leavingFileIds.has(sortedFiles[0]!.id)
     const canAddMore =
         limit > 1 && files.size < limit && !isUploading && !isProcessing
@@ -106,7 +109,8 @@ export default memo(function FileList() {
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {
-                    'upup-hidden': isAddingMore || activeSource || !files.size,
+                    'upup-hidden': !files.size,
+                    'upup-opacity-40 upup-pointer-events-none': dimmed,
                 },
                 themeSlots?.fileList?.root,
             )}
@@ -212,9 +216,8 @@ export default memo(function FileList() {
                 {/* Full-width dashed "Add more" row (spec §4 state 3): a second
                     add-more affordance beneath the list/hero. Shares the
                     upup-add-more testid with the header control; disambiguated by
-                    data-placement. Deviation (Task 6): still drives the legacy
-                    setIsAddingMore mechanism — Task 7 swaps it to the source
-                    overlay (transientUi.openSourceOverlay). */}
+                    data-placement. Opens the add-more source overlay over this
+                    dimmed list (core transient-UI store). */}
                 {canAddMore && (
                     <button
                         data-testid="upup-add-more"
@@ -228,7 +231,7 @@ export default memo(function FileList() {
                             slotClasses.containerAddMoreButton,
                         )}
                         onClick={() => {
-                            setIsAddingMore(true)
+                            openSourceOverlay()
                         }}
                         disabled={isUploading || isProcessing}
                     >

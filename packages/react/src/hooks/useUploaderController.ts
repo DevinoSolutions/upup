@@ -432,9 +432,22 @@ export default function useUploaderController(
     // ── Commands (delegate to factory commands) ──────────────────
     const handleSetSelectedFiles = useCallback(
         (newFiles: File[]) => {
-            void controller?.commands.handleSetSelectedFiles(newFiles)
+            const before = core?.files.size ?? 0
+            void controller?.commands
+                .handleSetSelectedFiles(newFiles)
+                .then(() => {
+                    // A successful add merges into the list. If it happened while
+                    // the add-more overlay was up (device picker or a drop), close
+                    // the overlay so the user lands on the merged list. Gated on an
+                    // actual count increase — a rejected file keeps the overlay
+                    // open to try again. Pure state, no timers (both device pick
+                    // and drop funnel through this one command path).
+                    if ((core?.files.size ?? 0) > before) {
+                        controller?.transientUi.closeSourceOverlay()
+                    }
+                })
         },
-        [controller],
+        [controller, core],
     )
 
     const handleFileRemove = useCallback(
@@ -530,21 +543,13 @@ export default function useUploaderController(
             },
             [controller],
         )
-    const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
-        (value: SetStateAction<boolean>) => {
-            if (typeof value === 'function') {
-                controller?.commands.setIsAddingMore(
-                    value(
-                        controller.orchestrator.getSnapshot().isAddingMore ??
-                            false,
-                    ),
-                )
-            } else {
-                controller?.commands.setIsAddingMore(value)
-            }
-        },
-        [controller],
-    )
+    // Add-more source overlay commands (core transient-UI store; idempotent).
+    const openSourceOverlay = useCallback(() => {
+        controller?.transientUi.openSourceOverlay()
+    }, [controller])
+    const closeSourceOverlay = useCallback(() => {
+        controller?.transientUi.closeSourceOverlay()
+    }, [controller])
     const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
         (value: SetStateAction<'grid' | 'list'>) => {
             if (typeof value === 'function') {
@@ -598,8 +603,9 @@ export default function useUploaderController(
         openFilePicker,
         activeSource: state.activeSource,
         setActiveSource,
-        isAddingMore: state.isAddingMore,
-        setIsAddingMore,
+        sourceOverlayOpen: transientUi.sourceOverlayOpen,
+        openSourceOverlay,
+        closeSourceOverlay,
         viewMode: state.viewMode,
         setViewMode,
         isOnline: state.isOnline,

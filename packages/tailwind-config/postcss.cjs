@@ -41,6 +41,7 @@ function createPostcssConfig({ content }) {
                     'upup-fx-icon-nudge',
                     'upup-fx-sheen-sweep',
                     'upup-fx-remove',
+                    'upup-fx-overlay-slide',
                     'upup-fx-essential',
                     'upup-animate-fx-enter',
                     'upup-animate-fx-exit',
@@ -215,6 +216,28 @@ function createPostcssConfig({ content }) {
                             '.fx-remove:hover': {
                                 color: '#f87171',
                                 transform: 'rotate(90deg)',
+                            },
+                            // Add-more source overlay: the source surface slides
+                            // up over the still-mounted, dimmed file list. Timing
+                            // is the dedicated `--upup-fx-overlay` token (350ms).
+                            // The keyframe lives here (not theme.animation) so the
+                            // whole rule ships from the ONE fx plugin; the class
+                            // key stays UNPREFIXED (tailwind's prefix makes it
+                            // `.upup-fx-overlay-slide`) and the `upup-fx-` substring
+                            // keeps it inside the `[data-motion='off']` kill gate.
+                            '.fx-overlay-slide': {
+                                animation:
+                                    'fx-overlay-slide var(--upup-fx-overlay) var(--upup-fx-ease) both',
+                            },
+                            '@keyframes fx-overlay-slide': {
+                                '0%': {
+                                    opacity: '0',
+                                    transform: 'translateY(100%)',
+                                },
+                                '100%': {
+                                    opacity: '1',
+                                    transform: 'translateY(0)',
+                                },
                             },
                             // The kill switch: data-motion="off" (written by core
                             // onto the uploader-panel element) disables every fx
