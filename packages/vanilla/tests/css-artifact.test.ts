@@ -15,6 +15,10 @@ describe('@upupjs/vanilla CSS artifact', () => {
         // Layer-defined classes must survive the content purge:
         expect(css).toContain('.upup-panel-sheen')
         expect(css).toContain('.upup-preview-scroll')
+        // The idle-hint keyframes come from the shared postcss factory —
+        // a regression there would silently kill the animation everywhere:
+        expect(css).toContain('hint-pulse')
+        expect(css).toContain('hint-bob')
         // The old flat-shadow chrome was replaced by the gradient + sheen:
         expect(css).not.toContain('.upup-shadow-wrapper')
     })
