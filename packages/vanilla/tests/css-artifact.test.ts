@@ -19,6 +19,24 @@ describe('@upupjs/vanilla CSS artifact', () => {
         // a regression there would silently kill the animation everywhere:
         expect(css).toContain('hint-pulse')
         expect(css).toContain('hint-bob')
+        // The fx layer is emitted ONCE by the shared tailwind-config plugin —
+        // these pins fail if the plugin is missing or a framework stops
+        // inheriting it:
+        expect(css).toContain('--upup-fx-fast')
+        expect(css).toContain('--upup-fx-base')
+        expect(css).toContain('--upup-fx-overlay')
+        expect(css).toContain('--upup-fx-ease')
+        expect(css).toContain('.upup-fx-hover-lift')
+        expect(css).toContain('.upup-fx-press')
+        expect(css).toContain('.upup-fx-sheen-sweep')
+        expect(css).toContain('fx-enter')
+        expect(css).toContain('fx-view')
+        expect(css).toContain('fx-draw')
+        expect(css).toContain('fx-dash-march')
+        // The kill switch and its essential carve-out:
+        expect(css).toContain("[data-motion='off']")
+        expect(css).toContain('upup-fx-essential')
+        expect(css).toContain('prefers-reduced-motion')
         // The old flat-shadow chrome was replaced by the gradient + sheen:
         expect(css).not.toContain('.upup-shadow-wrapper')
     })
