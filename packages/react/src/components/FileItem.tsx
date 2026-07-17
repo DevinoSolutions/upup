@@ -70,7 +70,13 @@ export default memo(function FileItem({ file, index = 0 }: Props) {
                         slotClasses.fileItemSingle && files.size === 1,
                 },
             )}
-            style={leaving ? undefined : { animationDelay: `${index * 40}ms` }}
+            // Cap the stagger: in the virtualized branch `index` is unbounded,
+            // so a late row would otherwise wait index*40ms (index 30 = 1200ms).
+            style={
+                leaving
+                    ? undefined
+                    : { animationDelay: `${Math.min(index, 8) * 40}ms` }
+            }
         >
             {viewMode === 'list' ? (
                 <FileRow file={file} />

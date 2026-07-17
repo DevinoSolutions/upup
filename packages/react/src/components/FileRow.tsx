@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
-import type { Translations, UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -8,19 +8,11 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/UploaderContext'
-import { fileGetIsImage } from '../lib/file'
+import { fileGetIsImage, formatFileSize } from '../lib/file'
 import ProgressBar from './shared/ProgressBar'
 
 type Props = {
     file: UploadFile
-}
-
-function formatFileSize(bytes: number | undefined, tr: Translations): string {
-    if (!bytes || bytes === 0) return tr.zeroBytes
-    const k = 1024
-    const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
 }
 
 /**
@@ -45,7 +37,10 @@ export default memo(function FileRow({ file }: Props) {
         const p = filesProgressMap[file.id]
         const loaded = p?.loaded ?? NaN
         const total = p?.total ?? NaN
-        return Math.floor((loaded / total) * 100)
+        const pct = Math.floor((loaded / total) * 100)
+        // No progress entry ⇒ NaN; total === 0 ⇒ Infinity. Either would render
+        // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
+        return Number.isFinite(pct) ? pct : 0
     }, [file.id, filesProgressMap])
 
     return (

@@ -1,26 +1,19 @@
 import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
-import type { Translations, UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/UploaderContext'
-import { fileGetExtension, fileGetIsImage } from '../lib/file'
+import { fileGetExtension, fileGetIsImage, formatFileSize } from '../lib/file'
 import FileIcon from './FileIcon'
 import ProgressBar from './shared/ProgressBar'
 
 type Props = {
     file: UploadFile
-}
-
-function formatFileSize(bytes: number | undefined, tr: Translations): string {
-    if (!bytes || bytes === 0) return tr.zeroBytes
-    const k = 1024
-    const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
 }
 
 /**
@@ -35,6 +28,7 @@ export default memo(function FileHero({ file }: Props) {
     const {
         icons: { FileDeleteIcon },
     } = useUploaderOptions()
+    const { isDark: dark } = useUploaderTheme()
     const {
         upload: { filesProgressMap },
     } = useUploaderUploadControls()
@@ -48,7 +42,10 @@ export default memo(function FileHero({ file }: Props) {
         const p = filesProgressMap[file.id]
         const loaded = p?.loaded ?? NaN
         const total = p?.total ?? NaN
-        return Math.floor((loaded / total) * 100)
+        const pct = Math.floor((loaded / total) * 100)
+        // No progress entry ⇒ NaN; total === 0 ⇒ Infinity. Either would render
+        // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
+        return Number.isFinite(pct) ? pct : 0
     }, [file.id, filesProgressMap])
 
     return (
@@ -56,7 +53,12 @@ export default memo(function FileHero({ file }: Props) {
             data-testid="upup-file-hero"
             data-upup-slot="file-hero"
             role="listitem"
-            className="upup-relative upup-flex upup-min-h-0 upup-flex-1 upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-bg-white/[0.03] upup-ring-1 upup-ring-white/[0.08]"
+            className={cn(
+                'upup-relative upup-flex upup-min-h-0 upup-flex-1 upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1',
+                dark
+                    ? 'upup-bg-white/[0.03] upup-ring-white/[0.08]'
+                    : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
+            )}
         >
             {isImage ? (
                 <img

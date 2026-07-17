@@ -9,7 +9,6 @@ import React, {
 } from 'react'
 
 import { cn } from '@upupjs/core/internal'
-import type { Translations } from '@upupjs/core'
 import {
     useUploaderEditor,
     useUploaderFiles,
@@ -23,6 +22,7 @@ import {
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
+    formatFileSize,
 } from '../lib/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
@@ -89,7 +89,10 @@ export default memo(function FilePreview(props: Props) {
         const fileProgress = filesProgressMap[fileId]
         const loaded = fileProgress?.loaded ?? NaN
         const total = fileProgress?.total ?? NaN
-        return Math.floor((loaded / total) * 100)
+        const pct = Math.floor((loaded / total) * 100)
+        // No progress entry ⇒ NaN; total === 0 ⇒ Infinity. Either would render
+        // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
+        return Number.isFinite(pct) ? pct : 0
     }, [fileId, filesProgressMap])
 
     useEffect(() => {
@@ -107,14 +110,6 @@ export default memo(function FilePreview(props: Props) {
         e.stopPropagation()
         const file = files.get(fileId)
         if (file) openImageEditor(file)
-    }
-
-    const formatFileSize = (bytes: number | undefined, tr: Translations) => {
-        if (!bytes || bytes === 0) return tr.zeroBytes
-        const k = 1024
-        const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
     }
 
     return (
