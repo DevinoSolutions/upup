@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
-import type { UploadFile } from '@upupjs/core'
+import { UploadStatus, type UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -10,9 +10,12 @@ import {
 } from '../context/UploaderContext'
 import { fileGetIsImage, formatFileSize } from '../lib/file'
 import ProgressBar from './shared/ProgressBar'
+import FileSuccessCheck from './shared/FileSuccessCheck'
 
 type Props = {
     file: UploadFile
+    /** Position in the sorted list — drives the completion-check stagger. */
+    index?: number
 }
 
 /**
@@ -21,7 +24,7 @@ type Props = {
  * (FilePreview) keeps the richer affordances (edit, click-to-preview); the row
  * is the dense overview and matches the mockup exactly.
  */
-export default memo(function FileRow({ file }: Props) {
+export default memo(function FileRow({ file, index = 0 }: Props) {
     const { handleFileRemove } = useUploaderFiles()
     const { translations: tr } = useUploaderI18n()
     const {
@@ -106,6 +109,14 @@ export default memo(function FileRow({ file }: Props) {
                     />
                 )}
             </div>
+
+            {file.status === UploadStatus.SUCCESSFUL && (
+                <FileSuccessCheck
+                    index={index}
+                    size={20}
+                    className="upup-flex-none"
+                />
+            )}
 
             <button
                 className={cn(

@@ -79,7 +79,7 @@ export default memo(function FileItem({ file, index = 0 }: Props) {
             }
         >
             {viewMode === 'list' ? (
-                <FileRow file={file} />
+                <FileRow file={file} index={index} />
             ) : (
                 <>
                     <FilePreview
@@ -88,6 +88,7 @@ export default memo(function FileItem({ file, index = 0 }: Props) {
                         fileId={file.id}
                         fileUrl={file.url ?? ''}
                         fileSize={file.size}
+                        index={index}
                         canPreview={canPreview}
                         setCanPreview={setCanPreview}
                         onRequestPreview={openPreviewPortal}

@@ -44,6 +44,7 @@ function createPostcssConfig({ content }) {
                     'upup-fx-overlay-slide',
                     'upup-fx-overlay-close-slide',
                     'upup-fx-essential',
+                    'upup-fx-progress-fill',
                     'upup-animate-fx-enter',
                     'upup-animate-fx-exit',
                     'upup-animate-fx-view',
@@ -51,6 +52,7 @@ function createPostcssConfig({ content }) {
                     'upup-animate-fx-draw',
                     'upup-animate-fx-sheen',
                     'upup-animate-fx-dash-march',
+                    'upup-animate-fx-rec-pulse',
                 ],
                 theme: {
                     extend: {
@@ -126,6 +128,16 @@ function createPostcssConfig({ content }) {
                                 '0%': { strokeDashoffset: '0' },
                                 '100%': { strokeDashoffset: '-24' },
                             },
+                            'fx-rec-pulse': {
+                                '0%, 100%': {
+                                    opacity: '1',
+                                    transform: 'scale(1)',
+                                },
+                                '50%': {
+                                    opacity: '0.55',
+                                    transform: 'scale(0.82)',
+                                },
+                            },
                         },
                         animation: {
                             'informer-in': 'informer-in 0.2s ease-out both',
@@ -143,6 +155,8 @@ function createPostcssConfig({ content }) {
                             'fx-draw': 'fx-draw 400ms var(--upup-fx-ease) both',
                             'fx-sheen': 'fx-sheen 1.6s linear infinite',
                             'fx-dash-march': 'fx-dash-march 8s linear infinite',
+                            'fx-rec-pulse':
+                                'fx-rec-pulse 1.4s ease-in-out infinite',
                         },
                     },
                 },
@@ -217,6 +231,15 @@ function createPostcssConfig({ content }) {
                             '.fx-remove:hover': {
                                 color: '#f87171',
                                 transform: 'rotate(90deg)',
+                            },
+                            // The progress fill's width tween — the ONE essential
+                            // motion (spinner/progress/focus survive motion-off).
+                            // The element also carries `.fx-essential`, so the
+                            // kill-switch `:not(.fx-essential)` excludes it and
+                            // this transition plays under `data-motion="off"` too.
+                            '.fx-progress-fill': {
+                                transition:
+                                    'width var(--upup-fx-base) var(--upup-fx-ease)',
                             },
                             // Add-more source overlay: the source surface slides
                             // up over the still-mounted, dimmed file list. Timing

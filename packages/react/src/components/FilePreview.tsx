@@ -9,6 +9,7 @@ import React, {
 } from 'react'
 
 import { cn } from '@upupjs/core/internal'
+import { UploadStatus } from '@upupjs/core'
 import {
     useUploaderEditor,
     useUploaderFiles,
@@ -26,6 +27,7 @@ import {
 } from '../lib/file'
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
+import FileSuccessCheck from './shared/FileSuccessCheck'
 
 type Props = {
     fileName: string
@@ -36,6 +38,8 @@ type Props = {
     canPreview: boolean
     setCanPreview: Dispatch<SetStateAction<boolean>>
     onRequestPreview?: (() => void) | undefined
+    /** Position in the sorted list — drives the completion-check stagger. */
+    index?: number
 } & HTMLAttributes<HTMLDivElement>
 
 export default memo(function FilePreview(props: Props) {
@@ -49,6 +53,7 @@ export default memo(function FilePreview(props: Props) {
         setCanPreview,
         onRequestPreview,
         onClick,
+        index = 0,
         ...restProps
     } = props
 
@@ -100,6 +105,8 @@ export default memo(function FilePreview(props: Props) {
         if ((isImage || isPdf || (isText && canPreviewText)) && !canPreview)
             setCanPreview(true)
     }, [isImage, isPdf, isText, canPreviewText, canPreview, setCanPreview])
+
+    const isSuccessful = files.get(fileId)?.status === UploadStatus.SUCCESSFUL
 
     const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
         e.stopPropagation()
@@ -217,6 +224,14 @@ export default memo(function FilePreview(props: Props) {
                 >
                     <FileDeleteIcon className="upup-h-3 upup-w-3" />
                 </button>
+
+                {isSuccessful && (
+                    <FileSuccessCheck
+                        index={index}
+                        size={20}
+                        className="upup-absolute upup-left-1.5 upup-top-1.5 upup-z-10"
+                    />
+                )}
 
                 <ProgressBar
                     className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"

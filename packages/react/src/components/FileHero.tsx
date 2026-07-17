@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
-import type { UploadFile } from '@upupjs/core'
+import { UploadStatus, type UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -11,6 +11,7 @@ import {
 import { fileGetExtension, fileGetIsImage, formatFileSize } from '../lib/file'
 import FileIcon from './FileIcon'
 import ProgressBar from './shared/ProgressBar'
+import FileSuccessCheck from './shared/FileSuccessCheck'
 
 type Props = {
     file: UploadFile
@@ -70,6 +71,10 @@ export default memo(function FileHero({ file }: Props) {
                 <div className="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-bg-gradient-to-br upup-from-[#0ea5e9]/10 upup-to-[#7c3aed]/10">
                     <FileIcon extension={extension} />
                 </div>
+            )}
+
+            {file.status === UploadStatus.SUCCESSFUL && (
+                <FileSuccessCheck className="upup-absolute upup-left-3 upup-top-3 upup-z-10" />
             )}
 
             <button

@@ -31,6 +31,10 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain('.upup-fx-sheen-sweep')
         expect(css).toContain('.upup-fx-icon-nudge')
         expect(css).toContain('.upup-fx-remove')
+        // The essential progress-fill width tween (survives the kill switch via
+        // its paired .fx-essential class) and the fx-family REC pulse keyframe:
+        expect(css).toContain('.upup-fx-progress-fill')
+        expect(css).toContain('fx-rec-pulse')
         // The add-more overlay open + reverse-close slides (component classes +
         // their keyframes) — timing token-driven, gated by the kill switch via
         // their upup-fx- substring:
