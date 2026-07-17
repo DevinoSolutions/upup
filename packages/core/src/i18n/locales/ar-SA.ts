@@ -68,6 +68,7 @@ export const arSA: LocaleBundle = {
                 '\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u0644\u0641\u0627\u062A',
             addingMoreFiles:
                 '\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0641\u0627\u062A \u0623\u062E\u0631\u0649',
+            overlayBack: '\u0631\u062C\u0648\u0639',
             filesSelected:
                 '{count, plural, one {# \u0645\u0644\u0641 \u0645\u062D\u062F\u062F} other {# \u0645\u0644\u0641\u0627\u062A \u0645\u062D\u062F\u062F\u0629}}',
             addMore:

@@ -106,6 +106,10 @@ export default memo(function FileList() {
         <div
             data-testid="upup-file-list"
             data-upup-slot="file-list"
+            // When the source overlay is up, the list is dimmed AND inert so
+            // keyboard/screen-reader users can't reach the hidden remove/add-more
+            // controls underneath (opacity+pointer-events alone don't block Tab/AT).
+            inert={dimmed}
             className={cn(
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {

@@ -57,6 +57,7 @@ export const esES: LocaleBundle = {
         header: {
             removeAllFiles: 'Eliminar todos los archivos',
             addingMoreFiles: 'A\u00F1adiendo m\u00E1s archivos',
+            overlayBack: 'Atr\u00E1s',
             filesSelected:
                 '{count, plural, one {# archivo seleccionado} other {# archivos seleccionados}}',
             addMore: 'A\u00F1adir m\u00E1s',

@@ -101,6 +101,8 @@ export type ContextView = Omit<
      *  still-mounted file list. Sourced from the core transient-UI store
      *  (replaces the retired `isAddingMore` flag in the React canon). */
     sourceOverlayOpen: boolean
+    /** Overlay is playing its reverse close-slide before it unmounts. */
+    sourceOverlayClosing: boolean
     openSourceOverlay: () => void
     closeSourceOverlay: () => void
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
@@ -234,6 +236,7 @@ export function UploaderContextProvider({
     const view = useMemo<ContextView>(
         () => ({
             sourceOverlayOpen: value.sourceOverlayOpen,
+            sourceOverlayClosing: value.sourceOverlayClosing,
             openSourceOverlay: value.openSourceOverlay,
             closeSourceOverlay: value.closeSourceOverlay,
             viewMode: value.viewMode,
@@ -241,6 +244,7 @@ export function UploaderContextProvider({
         }),
         [
             value.sourceOverlayOpen,
+            value.sourceOverlayClosing,
             value.openSourceOverlay,
             value.closeSourceOverlay,
             value.setViewMode,

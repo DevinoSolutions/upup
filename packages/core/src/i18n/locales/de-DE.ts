@@ -57,6 +57,7 @@ export const deDE: LocaleBundle = {
         header: {
             removeAllFiles: 'Alle Dateien entfernen',
             addingMoreFiles: 'Weitere Dateien hinzuf\u00FCgen',
+            overlayBack: 'Zur\u00FCck',
             filesSelected:
                 '{count, plural, one {# Datei ausgew\u00E4hlt} other {# Dateien ausgew\u00E4hlt}}',
             addMore: 'Mehr hinzuf\u00FCgen',

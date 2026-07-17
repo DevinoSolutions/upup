@@ -205,7 +205,7 @@ export default function SourceSelector(): React.ReactElement | null {
                         >
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
-                        Back
+                        {tr.overlayBack}
                     </button>
                     <span
                         className={cn(
@@ -216,7 +216,7 @@ export default function SourceSelector(): React.ReactElement | null {
                             },
                         )}
                     >
-                        Adding more files
+                        {tr.addingMoreFiles}
                     </span>
                 </div>
             )}

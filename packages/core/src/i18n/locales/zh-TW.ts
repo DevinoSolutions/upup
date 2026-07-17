@@ -45,6 +45,7 @@ export const zhTW: LocaleBundle = {
         header: {
             removeAllFiles: '刪除所有檔案',
             addingMoreFiles: '正在新增更多檔案',
+            overlayBack: '返回',
             filesSelected: '{count, plural, other {已選取 # 個檔案}}',
             addMore: '新增更多',
             switchToListView: 'Switch to list view',

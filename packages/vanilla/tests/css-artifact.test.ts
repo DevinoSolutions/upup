@@ -31,10 +31,13 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain('.upup-fx-sheen-sweep')
         expect(css).toContain('.upup-fx-icon-nudge')
         expect(css).toContain('.upup-fx-remove')
-        // The add-more overlay slide (component class + its keyframe) — timing
-        // token-driven, gated by the kill switch via its upup-fx- substring:
+        // The add-more overlay open + reverse-close slides (component classes +
+        // their keyframes) — timing token-driven, gated by the kill switch via
+        // their upup-fx- substring:
         expect(css).toContain('.upup-fx-overlay-slide')
         expect(css).toContain('fx-overlay-slide')
+        expect(css).toContain('.upup-fx-overlay-close-slide')
+        expect(css).toContain('fx-overlay-close-slide')
         expect(css).toContain('fx-enter')
         expect(css).toContain('fx-view')
         expect(css).toContain('fx-draw')

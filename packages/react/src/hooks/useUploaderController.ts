@@ -71,6 +71,7 @@ const EMPTY_STYLE = {}
 const EMPTY_TRANSIENT_UI: TransientUiSnapshot = {
     leavingFileIds: new Set<string>(),
     sourceOverlayOpen: false,
+    sourceOverlayClosing: false,
     dropRejected: null,
 }
 
@@ -432,22 +433,12 @@ export default function useUploaderController(
     // ── Commands (delegate to factory commands) ──────────────────
     const handleSetSelectedFiles = useCallback(
         (newFiles: File[]) => {
-            const before = core?.files.size ?? 0
-            void controller?.commands
-                .handleSetSelectedFiles(newFiles)
-                .then(() => {
-                    // A successful add merges into the list. If it happened while
-                    // the add-more overlay was up (device picker or a drop), close
-                    // the overlay so the user lands on the merged list. Gated on an
-                    // actual count increase — a rejected file keeps the overlay
-                    // open to try again. Pure state, no timers (both device pick
-                    // and drop funnel through this one command path).
-                    if ((core?.files.size ?? 0) > before) {
-                        controller?.transientUi.closeSourceOverlay()
-                    }
-                })
+            // Overlay close-on-add is owned by core's handleSetSelectedFiles
+            // command (count-increase + no-active-source gate) so every framework
+            // inherits it — do not re-add it here.
+            void controller?.commands.handleSetSelectedFiles(newFiles)
         },
-        [controller, core],
+        [controller],
     )
 
     const handleFileRemove = useCallback(
@@ -604,6 +595,7 @@ export default function useUploaderController(
         activeSource: state.activeSource,
         setActiveSource,
         sourceOverlayOpen: transientUi.sourceOverlayOpen,
+        sourceOverlayClosing: transientUi.sourceOverlayClosing,
         openSourceOverlay,
         closeSourceOverlay,
         viewMode: state.viewMode,

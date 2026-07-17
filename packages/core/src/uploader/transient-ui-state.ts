@@ -6,6 +6,9 @@ export interface TransientUiSnapshot {
     leavingFileIds: ReadonlySet<string>
     /** Add-more overlay: source view mounted above the dimmed file list. */
     sourceOverlayOpen: boolean
+    /** Add-more overlay is playing its reverse (close) slide before it unmounts.
+     *  Kept mounted while `sourceOverlayOpen || sourceOverlayClosing`. */
+    sourceOverlayClosing: boolean
     /** Provider whose read-only picker just rejected an OS drop (drives the toast). */
     dropRejected: string | null
 }
@@ -17,6 +20,8 @@ export interface TransientUiParams {
     reallyRemove: (fileId: string) => void
     /** Exit-animation duration. Keep in lockstep with --upup-fx-base. */
     exitMs?: number
+    /** Overlay reverse-slide duration. Keep in lockstep with --upup-fx-overlay. */
+    overlayMs?: number
     /** Drop-rejection toast lifetime. */
     toastMs?: number
 }
@@ -41,12 +46,15 @@ export function createTransientUiState({
     motion,
     reallyRemove,
     exitMs = 200,
+    overlayMs = 350,
     toastMs = 3000,
 }: TransientUiParams): TransientUiState {
     const listeners = new Set<() => void>()
     const leaving = new Set<string>()
     const timers = new Set<ReturnType<typeof setTimeout>>()
     let overlayOpen = false
+    let overlayClosing = false
+    let overlayGen = 0
     let rejected: string | null = null
     let toastGen = 0
     let destroyed = false
@@ -55,6 +63,7 @@ export function createTransientUiState({
         return {
             leavingFileIds: new Set(leaving),
             sourceOverlayOpen: overlayOpen,
+            sourceOverlayClosing: overlayClosing,
             dropRejected: rejected,
         }
     }
@@ -98,14 +107,39 @@ export function createTransientUiState({
             })
         },
         openSourceOverlay() {
+            // Opening cancels any in-flight close (and its pending completion
+            // timer, via the generation token), so an open during the reverse
+            // slide snaps back to fully-open.
             if (overlayOpen) return
             overlayOpen = true
+            overlayClosing = false
+            overlayGen++
             notify()
         },
         closeSourceOverlay() {
+            // Idempotent: a second close during the closing window is a no-op —
+            // it must not re-arm the completion timer.
             if (!overlayOpen) return
             overlayOpen = false
+            if (motion() === 'off') {
+                // instant path: no reverse slide to play
+                overlayClosing = false
+                notify()
+                return
+            }
+            // Two-phase close mirroring removeFileAnimated: mark `closing` so the
+            // overlay stays mounted and plays its reverse slide, then complete
+            // after overlayMs. A generation token keeps a stale timer from
+            // clearing a newer open/close.
+            overlayClosing = true
+            const g = ++overlayGen
             notify()
+            later(overlayMs, () => {
+                if (g === overlayGen) {
+                    overlayClosing = false
+                    notify()
+                }
+            })
         },
         flagDropRejected(provider) {
             rejected = provider

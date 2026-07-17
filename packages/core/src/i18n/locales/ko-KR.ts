@@ -47,6 +47,7 @@ export const koKR: LocaleBundle = {
         header: {
             removeAllFiles: '모든 파일 삭제',
             addingMoreFiles: '파일 추가 중',
+            overlayBack: '뒤로',
             filesSelected: '{count, plural, other {#개 파일 선택됨}}',
             addMore: '더 추가',
             switchToListView: 'Switch to list view',

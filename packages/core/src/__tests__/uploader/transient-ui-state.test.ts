@@ -59,8 +59,73 @@ describe('createTransientUiState', () => {
         expect(spy).toHaveBeenCalledTimes(1)
         s.closeSourceOverlay()
         expect(s.getSnapshot().sourceOverlayOpen).toBe(false)
-        s.closeSourceOverlay() // idempotent: already closed, no extra notify
+        s.closeSourceOverlay() // idempotent: already closing, no extra notify
         expect(spy).toHaveBeenCalledTimes(2)
+    })
+
+    it('two-phase close: marks closing, holds for overlayMs, then clears', () => {
+        const s = createTransientUiState({
+            motion: () => 'on',
+            reallyRemove: () => {},
+            overlayMs: 350,
+        })
+        s.openSourceOverlay()
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+        s.closeSourceOverlay()
+        // open flips false immediately; closing stays true for the reverse slide
+        expect(s.getSnapshot().sourceOverlayOpen).toBe(false)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(true)
+        vi.advanceTimersByTime(349)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(true)
+        vi.advanceTimersByTime(1)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+    })
+
+    it('close is INSTANT (no closing phase) when motion is off', () => {
+        const s = createTransientUiState({
+            motion: () => 'off',
+            reallyRemove: () => {},
+            overlayMs: 350,
+        })
+        s.openSourceOverlay()
+        s.closeSourceOverlay()
+        expect(s.getSnapshot().sourceOverlayOpen).toBe(false)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+    })
+
+    it('open during the closing window snaps back open; the stale timer no-ops', () => {
+        const s = createTransientUiState({
+            motion: () => 'on',
+            reallyRemove: () => {},
+            overlayMs: 350,
+        })
+        s.openSourceOverlay()
+        s.closeSourceOverlay()
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(true)
+        s.openSourceOverlay() // re-open mid-close
+        expect(s.getSnapshot().sourceOverlayOpen).toBe(true)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+        // the original close-completion timer is now stale; it must not re-close
+        vi.advanceTimersByTime(350)
+        expect(s.getSnapshot().sourceOverlayOpen).toBe(true)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+    })
+
+    it('double-close in the closing window is harmless (single settle, no re-arm)', () => {
+        const s = createTransientUiState({
+            motion: () => 'on',
+            reallyRemove: () => {},
+            overlayMs: 350,
+        })
+        s.openSourceOverlay()
+        const spy = vi.fn()
+        s.subscribe(spy)
+        s.closeSourceOverlay() // notify: closing=true
+        s.closeSourceOverlay() // no-op: already closing
+        expect(spy).toHaveBeenCalledTimes(1)
+        vi.advanceTimersByTime(350) // single completion notify: closing=false
+        expect(spy).toHaveBeenCalledTimes(2)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
     })
 
     it('dropRejected generation token: a stale timer cannot clear a newer rejection', () => {

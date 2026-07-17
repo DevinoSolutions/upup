@@ -42,6 +42,7 @@ function createPostcssConfig({ content }) {
                     'upup-fx-sheen-sweep',
                     'upup-fx-remove',
                     'upup-fx-overlay-slide',
+                    'upup-fx-overlay-close-slide',
                     'upup-fx-essential',
                     'upup-animate-fx-enter',
                     'upup-animate-fx-exit',
@@ -237,6 +238,23 @@ function createPostcssConfig({ content }) {
                                 '100%': {
                                     opacity: '1',
                                     transform: 'translateY(0)',
+                                },
+                            },
+                            // Reverse slide: played while the overlay is closing
+                            // (core `sourceOverlayClosing`) so it slides back down
+                            // before it unmounts. Same token/easing as the open.
+                            '.fx-overlay-close-slide': {
+                                animation:
+                                    'fx-overlay-close-slide var(--upup-fx-overlay) var(--upup-fx-ease) both',
+                            },
+                            '@keyframes fx-overlay-close-slide': {
+                                '0%': {
+                                    opacity: '1',
+                                    transform: 'translateY(0)',
+                                },
+                                '100%': {
+                                    opacity: '0',
+                                    transform: 'translateY(100%)',
                                 },
                             },
                             // The kill switch: data-motion="off" (written by core

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -17,7 +17,7 @@ import FileList from './FileList'
 export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
-    const { sourceOverlayOpen } = useUploaderView()
+    const { sourceOverlayOpen, sourceOverlayClosing } = useUploaderView()
     const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
@@ -44,9 +44,24 @@ export default function UploaderPanel(): React.ReactElement | null {
     // The add-more overlay: once files exist, the source surface (selector, or a
     // chosen source's view) slides up over the still-mounted, dimmed file list.
     // With no files the same surface is the panel's primary content instead.
+    // It stays mounted through the reverse close-slide (`sourceOverlayClosing`).
     const hasFiles = files.size > 0
     const sourceSurface = activeSource ? <SourceView /> : <SourceSelector />
-    const showSourceOverlay = hasFiles && (sourceOverlayOpen || !!activeSource)
+    const showSourceOverlay =
+        hasFiles &&
+        (sourceOverlayOpen || sourceOverlayClosing || !!activeSource)
+
+    // Move focus into the overlay when it opens (or when its inner view swaps)
+    // so keyboard/SR users don't land on the inert list underneath. Minimal —
+    // no focus trap; the dimmed list is `inert` so Tab can't reach it anyway.
+    const overlayRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (sourceOverlayOpen || activeSource) {
+            overlayRef.current
+                ?.querySelector<HTMLElement>('button:not([disabled])')
+                ?.focus()
+        }
+    }, [sourceOverlayOpen, activeSource])
 
     const dropEffectProps: React.AriaAttributes = {
         // aria-dropeffect is intentionally set for drag-and-drop
@@ -104,7 +119,7 @@ export default function UploaderPanel(): React.ReactElement | null {
             {!isOnline && (
                 <div
                     className={cn(
-                        'upup-absolute upup-inset-x-0 upup-top-0 upup-z-20 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
+                        'upup-absolute upup-inset-x-0 upup-top-0 upup-z-30 upup-px-3 upup-py-1.5 upup-text-center upup-text-xs upup-font-medium upup-text-white upup-bg-yellow-500',
                         { 'upup-bg-yellow-600': dark },
                     )}
                 >
@@ -148,9 +163,16 @@ export default function UploaderPanel(): React.ReactElement | null {
                 still-mounted file list — nothing unmounts, no state is lost. */}
             {showSourceOverlay && (
                 <div
+                    ref={overlayRef}
                     data-upup-slot="source-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={tr.addingMoreFiles}
                     className={cn(
-                        'upup-fx-overlay-slide upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-lg upup-ring-1 upup-ring-inset',
+                        'upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-lg upup-ring-1 upup-ring-inset',
+                        sourceOverlayClosing
+                            ? 'upup-fx-overlay-close-slide'
+                            : 'upup-fx-overlay-slide',
                         dark
                             ? 'upup-bg-[#0b1220]/95 upup-ring-white/[0.06]'
                             : 'upup-bg-white/95 upup-ring-black/[0.06]',

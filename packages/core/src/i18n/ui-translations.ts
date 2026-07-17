@@ -36,6 +36,7 @@ export type UiTranslations = {
     builtBy: string
     removeAllFiles: string
     addingMoreFiles: string
+    overlayBack: string
     filesSelected_one: string
     filesSelected_other: string
     addMore: string
@@ -257,6 +258,7 @@ export function flattenTranslatorToUiTranslations(
         }),
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
+        overlayBack: tr('header.overlayBack'),
         filesSelected_one: countPluralForm('header.filesSelected', 1),
         filesSelected_other: countPluralForm('header.filesSelected', 2),
         addMore: tr('header.addMore'),

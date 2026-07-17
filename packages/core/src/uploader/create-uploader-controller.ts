@@ -169,8 +169,22 @@ export function createUploaderController(
 
     const commands: UploaderCommands = {
         async handleSetSelectedFiles(newFiles: File[]) {
+            const before = core.files.size
             try {
                 await core.addFiles(newFiles)
+                // Close the add-more overlay once files actually merge in, but
+                // ONLY on the device-pick / drop path — those add files with no
+                // active source. Camera / screen-capture / drive add files WHILE
+                // their source view is open (activeSource set); that view stays up
+                // until the user dismisses it, so we leave the overlay in place.
+                // A rejected-all add doesn't change the count, so the overlay also
+                // stays open to try again.
+                if (
+                    core.files.size > before &&
+                    !orchestrator.getSnapshot().activeSource
+                ) {
+                    transientUi.closeSourceOverlay()
+                }
             } catch (error) {
                 const message =
                     error instanceof Error ? error.message : String(error)

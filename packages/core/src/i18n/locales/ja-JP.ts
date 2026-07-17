@@ -62,6 +62,7 @@ export const jaJP: LocaleBundle = {
         header: {
             removeAllFiles: '\u3059\u3079\u3066\u524A\u9664',
             addingMoreFiles: '\u30D5\u30A1\u30A4\u30EB\u3092\u8FFD\u52A0\u4E2D',
+            overlayBack: '\u623B\u308B',
             filesSelected:
                 '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u9078\u629E\u6E08\u307F}}',
             addMore: '\u8FFD\u52A0',

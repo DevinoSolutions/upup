@@ -81,6 +81,8 @@ export interface DropzoneMessages {
 export interface HeaderMessages {
     removeAllFiles: string
     addingMoreFiles: string
+    /** Navigation "Back" — closes the add-more source overlay. */
+    overlayBack: string
     /** ICU: "{count, plural, one {# file selected} other {# files selected}}" */
     filesSelected: string
     addMore: string

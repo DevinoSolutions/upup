@@ -45,6 +45,7 @@ export const zhCN: LocaleBundle = {
         header: {
             removeAllFiles: '删除所有文件',
             addingMoreFiles: '正在添加更多文件',
+            overlayBack: '返回',
             filesSelected: '{count, plural, other {已选择 # 个文件}}',
             addMore: '添加更多',
             switchToListView: 'Switch to list view',

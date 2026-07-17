@@ -76,13 +76,22 @@ describe('add-more source overlay', () => {
                 '[data-upup-slot="source-overlay"] [data-testid="upup-source-selector"]',
             ),
         ).not.toBeNull()
-        // The file list stays mounted underneath, dimmed and inert:
+        // The overlay is a labelled modal dialog:
+        const dialog = overlay(container) as HTMLElement
+        expect(dialog.getAttribute('role')).toBe('dialog')
+        expect(dialog.getAttribute('aria-modal')).toBe('true')
+        expect(dialog.getAttribute('aria-label')).toBe('Adding more files')
+        // The file list stays mounted underneath, dimmed AND inert (so keyboard
+        // and screen readers can't reach the hidden controls behind the overlay):
         const list = container.querySelector(
             '[data-testid="upup-file-list"]',
         ) as HTMLElement
         expect(list).not.toBeNull()
         expect(list.className).toContain('upup-opacity-40')
         expect(list.className).toContain('upup-pointer-events-none')
+        expect(list.hasAttribute('inert')).toBe(true)
+        // Focus moved into the overlay on open:
+        expect(dialog.contains(document.activeElement)).toBe(true)
     })
 
     it('closes the overlay when files are added while it is open', async () => {
@@ -130,6 +139,12 @@ describe('add-more source overlay', () => {
         ).find(b => /back/i.test(b.textContent ?? '')) as HTMLButtonElement
         expect(backBtn).not.toBeNull()
         fireEvent.click(backBtn)
+
+        // Two-phase close: the overlay stays mounted and plays the reverse slide
+        // (state-driven, no animationend listener) before it unmounts.
+        const closing = overlay(container) as HTMLElement
+        expect(closing).not.toBeNull()
+        expect(closing.className).toContain('upup-fx-overlay-close-slide')
 
         await waitFor(() => {
             if (overlay(container))

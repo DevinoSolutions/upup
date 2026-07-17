@@ -54,6 +54,7 @@ export const enUS: LocaleBundle = {
         header: {
             removeAllFiles: 'Remove all files',
             addingMoreFiles: 'Adding more files',
+            overlayBack: 'Back',
             filesSelected:
                 '{count, plural, one {# file selected} other {# files selected}}',
             addMore: 'Add More',
