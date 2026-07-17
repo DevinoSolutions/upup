@@ -51,17 +51,33 @@ export default function UploaderPanel(): React.ReactElement | null {
         hasFiles &&
         (sourceOverlayOpen || sourceOverlayClosing || !!activeSource)
 
-    // Move focus into the overlay when it opens (or when its inner view swaps)
-    // so keyboard/SR users don't land on the inert list underneath. Minimal —
-    // no focus trap; the dimmed list is `inert` so Tab can't reach it anyway.
+    // Focus management (minimal — no focus trap; the dimmed list is `inert`).
+    // On open (or an inner view swap) pull focus into the overlay so keyboard/SR
+    // users don't land on the inert list underneath, capturing the element that
+    // triggered it. Skips the closing phase (open/activeSource both false there)
+    // so the departing overlay never steals focus back.
     const overlayRef = useRef<HTMLDivElement>(null)
+    const triggerRef = useRef<HTMLElement | null>(null)
     useEffect(() => {
-        if (sourceOverlayOpen || activeSource) {
-            overlayRef.current
-                ?.querySelector<HTMLElement>('button:not([disabled])')
-                ?.focus()
-        }
+        if (!(sourceOverlayOpen || activeSource)) return
+        const overlayEl = overlayRef.current
+        if (!overlayEl) return
+        if (
+            !triggerRef.current &&
+            document.activeElement instanceof HTMLElement
+        )
+            triggerRef.current = document.activeElement
+        overlayEl.querySelector<HTMLElement>('button:not([disabled])')?.focus()
     }, [sourceOverlayOpen, activeSource])
+    // When the overlay fully settles closed (past the reverse slide), restore
+    // focus to the trigger if it's still in the document.
+    useEffect(() => {
+        if (sourceOverlayOpen || sourceOverlayClosing || activeSource) return
+        const trigger = triggerRef.current
+        if (!trigger) return
+        triggerRef.current = null
+        if (trigger.isConnected) trigger.focus()
+    }, [sourceOverlayOpen, sourceOverlayClosing, activeSource])
 
     const dropEffectProps: React.AriaAttributes = {
         // aria-dropeffect is intentionally set for drag-and-drop
@@ -165,13 +181,18 @@ export default function UploaderPanel(): React.ReactElement | null {
                 <div
                     ref={overlayRef}
                     data-upup-slot="source-overlay"
-                    role="dialog"
-                    aria-modal="true"
+                    // Modality applies only while the overlay is the live surface.
+                    // During the reverse close-slide it's departing (the list has
+                    // already un-dimmed/un-inerted), so drop the dialog role +
+                    // aria-modal and let pointer events fall through to the list —
+                    // otherwise AT/pointer briefly see two live surfaces.
+                    role={sourceOverlayClosing ? undefined : 'dialog'}
+                    aria-modal={sourceOverlayClosing ? undefined : 'true'}
                     aria-label={tr.addingMoreFiles}
                     className={cn(
                         'upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-lg upup-ring-1 upup-ring-inset',
                         sourceOverlayClosing
-                            ? 'upup-fx-overlay-close-slide'
+                            ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                             : 'upup-fx-overlay-slide',
                         dark
                             ? 'upup-bg-[#0b1220]/95 upup-ring-white/[0.06]'

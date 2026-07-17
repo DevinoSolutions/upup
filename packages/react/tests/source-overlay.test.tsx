@@ -51,11 +51,17 @@ function overlay(container: HTMLElement) {
     return container.querySelector('[data-upup-slot="source-overlay"]')
 }
 
-function openViaHeader(container: HTMLElement) {
-    const btn = container.querySelector(
+function headerTrigger(container: HTMLElement) {
+    return container.querySelector(
         '[data-testid="upup-add-more"][data-placement="header"]',
     ) as HTMLButtonElement
+}
+
+function openViaHeader(container: HTMLElement) {
+    const btn = headerTrigger(container)
     expect(btn).not.toBeNull()
+    // Focus the trigger first so focus-restore-on-close has a deterministic target.
+    btn.focus()
     fireEvent.click(btn)
 }
 
@@ -141,10 +147,15 @@ describe('add-more source overlay', () => {
         fireEvent.click(backBtn)
 
         // Two-phase close: the overlay stays mounted and plays the reverse slide
-        // (state-driven, no animationend listener) before it unmounts.
+        // (state-driven, no animationend listener) before it unmounts. While
+        // departing it drops its modality — no live pointer events, no dialog
+        // role/aria-modal — so AT/pointer don't see two live surfaces at once.
         const closing = overlay(container) as HTMLElement
         expect(closing).not.toBeNull()
         expect(closing.className).toContain('upup-fx-overlay-close-slide')
+        expect(closing.className).toContain('upup-pointer-events-none')
+        expect(closing.getAttribute('aria-modal')).toBeNull()
+        expect(closing.getAttribute('role')).toBeNull()
 
         await waitFor(() => {
             if (overlay(container))
@@ -154,6 +165,8 @@ describe('add-more source overlay', () => {
             '[data-testid="upup-file-list"]',
         ) as HTMLElement
         expect(list.className).not.toContain('upup-opacity-40')
+        // Focus returns to the add-more trigger once the close settles.
+        expect(document.activeElement).toBe(headerTrigger(container))
 
         // Re-open works after a close — no state was torn down.
         openViaHeader(container)
