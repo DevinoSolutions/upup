@@ -66,6 +66,16 @@ const DefaultTrashIconComponent = (props: {
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
 
+/** Read-only drive FileSource → flattened i18n label key (the human provider
+ *  name for the drop-rejection toast). Mirrors READONLY_DRIVE_SOURCES in core's
+ *  DragDropController. */
+const DRIVE_SOURCE_LABEL_KEY = {
+    [FileSource.GOOGLE_DRIVE]: 'googleDrive',
+    [FileSource.ONE_DRIVE]: 'oneDrive',
+    [FileSource.DROPBOX]: 'dropbox',
+    [FileSource.BOX]: 'box',
+} as const
+
 /** Stable server/pre-mount snapshot for the transient-UI store (matches the
  *  core unit's initial shape: nothing leaving, no overlay, no rejection). */
 const EMPTY_TRANSIENT_UI: TransientUiSnapshot = {
@@ -541,6 +551,19 @@ export default function useUploaderController(
     const closeSourceOverlay = useCallback(() => {
         controller?.transientUi.closeSourceOverlay()
     }, [controller])
+    // Drop-rejection: core's DragDropController decides WHICH source rejects; the
+    // host resolves the human provider label and raises the toast (core store).
+    const flagDriveDropRejected = useCallback(
+        (source: FileSource) => {
+            const key =
+                DRIVE_SOURCE_LABEL_KEY[
+                    source as keyof typeof DRIVE_SOURCE_LABEL_KEY
+                ]
+            const label = key ? resolved.translations[key] : source
+            controller?.transientUi.flagDropRejected(label)
+        },
+        [controller, resolved.translations],
+    )
     const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
         (value: SetStateAction<'grid' | 'list'>) => {
             if (typeof value === 'function') {
@@ -598,6 +621,8 @@ export default function useUploaderController(
         sourceOverlayClosing: transientUi.sourceOverlayClosing,
         openSourceOverlay,
         closeSourceOverlay,
+        dropRejected: transientUi.dropRejected,
+        flagDriveDropRejected,
         viewMode: state.viewMode,
         setViewMode,
         isOnline: state.isOnline,

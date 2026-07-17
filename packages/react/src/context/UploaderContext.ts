@@ -105,6 +105,14 @@ export type ContextView = Omit<
     sourceOverlayClosing: boolean
     openSourceOverlay: () => void
     closeSourceOverlay: () => void
+    /** Human provider label whose read-only picker just rejected an OS drop —
+     *  drives the drop-rejection toast. Null when no rejection is showing.
+     *  Auto-clears via the core transient-UI store's 3s window. */
+    dropRejected: string | null
+    /** Raise the drop-rejection toast for a read-only drive source (resolves the
+     *  provider label, then flags the core store). Wired to core's
+     *  DragDropController.onReadonlyDropRejected. */
+    flagDriveDropRejected: (source: FileSource) => void
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
 }
 
@@ -239,6 +247,8 @@ export function UploaderContextProvider({
             sourceOverlayClosing: value.sourceOverlayClosing,
             openSourceOverlay: value.openSourceOverlay,
             closeSourceOverlay: value.closeSourceOverlay,
+            dropRejected: value.dropRejected,
+            flagDriveDropRejected: value.flagDriveDropRejected,
             viewMode: value.viewMode,
             setViewMode: value.setViewMode,
         }),
@@ -247,6 +257,8 @@ export function UploaderContextProvider({
             value.sourceOverlayClosing,
             value.openSourceOverlay,
             value.closeSourceOverlay,
+            value.dropRejected,
+            value.flagDriveDropRejected,
             value.setViewMode,
             value.viewMode,
         ],

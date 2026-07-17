@@ -136,6 +136,8 @@ export interface DriveBrowserMessages {
     /** ICU: "Couldn't load files: {message}" */
     loadError: string
     loadMore: string
+    /** ICU: "We can't add files to your {provider}" — read-only drive-picker drop rejection. */
+    dropRejected: string
 }
 
 export interface UrlMessages {

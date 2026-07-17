@@ -123,6 +123,7 @@ export const arSA: LocaleBundle = {
             signInWith:
                 '\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected: 'لا يمكننا إضافة ملفات إلى {provider}',
             loadMore: 'Load more',
         },
 

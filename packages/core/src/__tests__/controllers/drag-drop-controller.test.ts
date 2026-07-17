@@ -157,6 +157,46 @@ describe('DragDropController', () => {
         expect(c.getSnapshot().isDragging).toBe(false)
     })
 
+    it('rejects a file drop while a read-only drive picker is active (toast, no add)', async () => {
+        const { deps, orch, setFiles, core } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        orch._set({ activeSource: FileSource.GOOGLE_DRIVE })
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        expect(onReadonlyDropRejected).toHaveBeenCalledWith(
+            FileSource.GOOGLE_DRIVE,
+        )
+        expect(setFiles).not.toHaveBeenCalled()
+        expect(core.emit).not.toHaveBeenCalledWith('drop', expect.anything())
+    })
+
+    it('does NOT reject a drop when the active source is not a drive picker (camera)', async () => {
+        const { deps, orch, setFiles } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        orch._set({ activeSource: FileSource.CAMERA })
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        // camera falls through to the `disabled` (active source) guard — the drop
+        // is ignored, not rejected: no toast, no add.
+        expect(onReadonlyDropRejected).not.toHaveBeenCalled()
+        expect(setFiles).not.toHaveBeenCalled()
+    })
+
+    it('accepts a drop (no rejection) when no source is active — idle / file list', async () => {
+        const { deps, setFiles } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        expect(onReadonlyDropRejected).not.toHaveBeenCalled()
+        expect(setFiles).toHaveBeenCalledTimes(1)
+    })
+
     it('handlePaste renames image.png / nameless clipboard files', () => {
         const { deps, setFiles } = makeDeps()
         const c = new DragDropController(deps)

@@ -85,6 +85,7 @@ export const zhCN: LocaleBundle = {
             authenticatePrompt: '使用 {provider} 认证以选择上传文件',
             signInWith: '使用 {provider} 登录',
             loadError: "Couldn't load files: {message}",
+            dropRejected: '无法将文件添加到您的 {provider}',
             loadMore: 'Load more',
         },
         url: {

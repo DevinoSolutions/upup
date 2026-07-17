@@ -104,6 +104,8 @@ export const deDE: LocaleBundle = {
                 'Authentifizieren Sie sich mit {provider}, um Dateien zum Hochladen auszuw\u00E4hlen',
             signInWith: 'Anmelden mit {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected:
+                'Wir können keine Dateien zu Ihrem {provider} hinzufügen',
             loadMore: 'Load more',
         },
 

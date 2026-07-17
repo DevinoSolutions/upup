@@ -99,6 +99,7 @@ export const enUS: LocaleBundle = {
                 'Authenticate with {provider} to select files for upload',
             signInWith: 'Sign in with {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected: "We can't add files to your {provider}",
             loadMore: 'Load more',
         },
 

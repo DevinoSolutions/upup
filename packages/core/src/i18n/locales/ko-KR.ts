@@ -88,6 +88,7 @@ export const koKR: LocaleBundle = {
                 '{provider}에서 인증하여 업로드할 파일을 선택하세요',
             signInWith: '{provider}로 로그인',
             loadError: "Couldn't load files: {message}",
+            dropRejected: '{provider}에 파일을 추가할 수 없습니다',
             loadMore: 'Load more',
         },
         url: {

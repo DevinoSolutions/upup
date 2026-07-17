@@ -73,6 +73,7 @@ export type UiTranslations = {
     authenticatePrompt: string
     signInWith: string
     driveLoadError: string
+    dropRejected: string
     loadMore: string
     enterFileUrl: string
     fetch: string
@@ -300,6 +301,9 @@ export function flattenTranslatorToUiTranslations(
         signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
         driveLoadError: tr('driveBrowser.loadError', {
             message: '{{message}}',
+        }),
+        dropRejected: tr('driveBrowser.dropRejected', {
+            provider: '{{provider}}',
         }),
         loadMore: tr('driveBrowser.loadMore'),
         enterFileUrl: tr('url.enterFileUrl'),

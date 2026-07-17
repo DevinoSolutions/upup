@@ -104,6 +104,7 @@ export const esES: LocaleBundle = {
                 'Autent\u00EDcate con {provider} para seleccionar archivos para subir',
             signInWith: 'Iniciar sesi\u00F3n con {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected: 'No podemos añadir archivos a tu {provider}',
             loadMore: 'Load more',
         },
 

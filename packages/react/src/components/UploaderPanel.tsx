@@ -10,14 +10,15 @@ import {
 } from '../context/UploaderContext'
 import useUploaderPanel from '../hooks/useUploaderPanel'
 import { cn } from '@upupjs/core/internal'
-import { UploadStatus } from '@upupjs/core'
+import { UploadStatus, formatUiMessage } from '@upupjs/core'
 import SourceSelector from './SourceSelector'
 import SourceView from './SourceView'
 import FileList from './FileList'
 export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
-    const { sourceOverlayOpen, sourceOverlayClosing } = useUploaderView()
+    const { sourceOverlayOpen, sourceOverlayClosing, dropRejected } =
+        useUploaderView()
     const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
@@ -132,6 +133,45 @@ export default function UploaderPanel(): React.ReactElement | null {
             <div role="status" aria-live="polite" className="upup-sr-only">
                 {uploadAnnouncement}
             </div>
+            {/* Drop-rejection toast: a file was dropped onto a read-only drive
+                picker (core DragDropController → transient-UI store). Auto-clears
+                after the store's 3s window drives an unmount — no JS timer here. */}
+            {dropRejected && (
+                <div
+                    data-testid="upup-drop-rejected-toast"
+                    data-upup-slot="drop-rejected-toast"
+                    role="status"
+                    aria-live="polite"
+                    className={cn(
+                        'upup-animate-informer-in upup-absolute upup-inset-x-4 upup-top-4 upup-z-30 upup-flex upup-items-center upup-gap-2.5 upup-rounded-xl upup-px-3.5 upup-py-2.5 upup-text-[13px] upup-leading-snug upup-ring-1',
+                        dark
+                            ? 'upup-bg-rose-500/[0.14] upup-text-rose-200 upup-ring-rose-400/30'
+                            : 'upup-bg-rose-50 upup-text-rose-700 upup-ring-rose-300/60',
+                    )}
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.9"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                        className="upup-flex-none"
+                    >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 8v4" />
+                        <path d="M12 16h.01" />
+                    </svg>
+                    <span>
+                        {formatUiMessage(tr.dropRejected, {
+                            provider: dropRejected,
+                        })}
+                    </span>
+                </div>
+            )}
             {!isOnline && (
                 <div
                     className={cn(

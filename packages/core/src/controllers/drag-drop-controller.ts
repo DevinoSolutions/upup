@@ -1,8 +1,23 @@
 import { collectDroppedFiles } from '../folder-drop'
 import { isUploadActive } from '../utils/status-helpers'
+import { FileSource } from '../types/file-source'
 import type { UpupCore } from '../core'
 import type { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
 import type { ObservableController } from './types'
+
+/**
+ * The read-only cloud-drive pickers. A file dropped while one of these is the
+ * active source can't be added (the picker browses a remote drive, it doesn't
+ * accept OS drops) — the drop is rejected with a toast instead of silently
+ * ignored. Every OTHER view (idle, file list, the source selector, camera,
+ * screen, audio) keeps its existing drop behavior.
+ */
+const READONLY_DRIVE_SOURCES: ReadonlySet<FileSource> = new Set([
+    FileSource.GOOGLE_DRIVE,
+    FileSource.ONE_DRIVE,
+    FileSource.DROPBOX,
+    FileSource.BOX,
+])
 
 /** The subset of uploader options the dropzone reads. */
 export interface DragDropOptions {
@@ -42,6 +57,15 @@ export interface DragDropDeps {
     options: () => DragDropOptions
     /** Getter so frameworks that re-read props each render (React) stay fresh. */
     props: () => DragDropProps
+    /**
+     * Invoked when a file is dropped while a read-only drive picker is the
+     * active source (see `READONLY_DRIVE_SOURCES`). The host resolves the human
+     * provider label and raises the drop-rejection toast (core transient-UI
+     * store). When omitted, such a drop is silently ignored (the prior
+     * behavior). Core owns the DECISION (which source, that files were dropped);
+     * the host owns the i18n label + toast.
+     */
+    onReadonlyDropRejected?: (source: FileSource) => void
 }
 
 export interface DragDropSnapshot {
@@ -151,8 +175,36 @@ export class DragDropController implements ObservableController<DragDropSnapshot
         this.recompute()
     }
 
+    /** True when the drag payload carries at least one file. */
+    private dropHasFiles(e: DragEvent): boolean {
+        const dt = e.dataTransfer
+        if (!dt) return false
+        if (dt.files && dt.files.length > 0) return true
+        const types = dt.types ? Array.from(dt.types) : []
+        if (types.includes('Files')) return true
+        return dt.items
+            ? Array.from(dt.items).some(i => i.kind === 'file')
+            : false
+    }
+
     async handleDrop(e: DragEvent): Promise<void> {
-        if (this.disabled || this.deps.props().isProcessing) return
+        const p = this.deps.props()
+        if (p.isProcessing || p.disableDragDrop) return
+        // Read-only drive picker active: reject the drop (toast), don't add.
+        const active = this.deps.orchestrator.getSnapshot().activeSource
+        if (
+            active &&
+            READONLY_DRIVE_SOURCES.has(active) &&
+            this.dropHasFiles(e) &&
+            this.deps.onReadonlyDropRejected
+        ) {
+            e.preventDefault()
+            this.deps.onReadonlyDropRejected(active)
+            this.isDragging = false
+            this.recompute()
+            return
+        }
+        if (this.disabled) return
         e.preventDefault()
         if (!e.dataTransfer) {
             this.isDragging = false

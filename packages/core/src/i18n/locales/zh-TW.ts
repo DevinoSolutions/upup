@@ -85,6 +85,7 @@ export const zhTW: LocaleBundle = {
             authenticatePrompt: '使用 {provider} 驗證以選取上傳檔案',
             signInWith: '使用 {provider} 登入',
             loadError: "Couldn't load files: {message}",
+            dropRejected: '無法將檔案新增到您的 {provider}',
             loadMore: 'Load more',
         },
         url: {
