@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createUploader } from '../src/create-uploader'
 
 // Regression coverage for the cached-snapshot dropzone border at the vanilla seam.
@@ -37,8 +37,11 @@ describe('vanilla dropzone border recovery', () => {
         await Promise.resolve()
         expect(hasBorder()).toBe(false) // file present → no border
         up.removeFile(up.getState().files[0]!.id)
-        await Promise.resolve()
-        expect(hasBorder()).toBe(true) // last file gone → border returns
+        // Deferred-removal contract (core transient-ui-state, commit 34362f92):
+        // the file leaves only after the ~200ms exit window, so the empty-state
+        // border returns once true removal fires (jsdom has no matchMedia ⇒
+        // motion 'on'). Task 10 will render upup-fx-exit during it.
+        await vi.waitFor(() => expect(hasBorder()).toBe(true)) // last file gone → border returns
         up.destroy()
     })
 

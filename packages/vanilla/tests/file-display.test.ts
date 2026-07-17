@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createUploader } from '../src/create-uploader'
 
 beforeEach(() => {
@@ -21,8 +21,19 @@ describe('file display', () => {
         ).toBeTruthy()
         const id = up.getState().files[0]!.id
         up.removeFile(id)
+        // Deferred-removal contract (core transient-ui-state, commit 34362f92):
+        // the row stays mounted through the ~200ms exit window before true
+        // removal (jsdom has no matchMedia ⇒ motion 'on'). Task 10 will render
+        // upup-fx-exit during it.
         await Promise.resolve()
-        expect(host.querySelector('[data-testid="upup-file-item"]')).toBeNull()
+        expect(
+            host.querySelector('[data-testid="upup-file-item"]'),
+        ).toBeTruthy()
+        await vi.waitFor(() =>
+            expect(
+                host.querySelector('[data-testid="upup-file-item"]'),
+            ).toBeNull(),
+        )
         up.destroy()
     })
 })
