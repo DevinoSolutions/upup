@@ -28,6 +28,7 @@ export function normalizeUploaderOptions(
     const acceptProp =
         (options.allowedFileTypes as string | string[] | undefined) ?? '*'
     const mini = options.mini ?? false
+    const animations = options.animations ?? true
     const resolvedSources = options.sources
         ? (options.sources
               .map(s => normalizeSource(s))
@@ -88,6 +89,7 @@ export function normalizeUploaderOptions(
 
     const resolved: UploaderResolved = {
         mini,
+        animations,
         sources: resolvedSources,
         allowedFileTypes: accept,
         limit,

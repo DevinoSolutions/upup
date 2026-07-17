@@ -42,6 +42,7 @@ const EXPECTED_INTERNAL_VALUE_EXPORTS: string[] = [
     'collectDroppedFiles',
     'createChildController',
     'createMotionGate',
+    'createTransientUiState',
     'createUploaderController',
     'dataURLtoBlob',
     'deriveFetchedFileName',

@@ -1,6 +1,8 @@
 import { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
 import type { OrchestratorCallbacks } from '../orchestrator/types'
 import { ThemeStore } from '../theme/theme-store'
+import { createMotionGate } from './motion-gate'
+import { createTransientUiState } from './transient-ui-state'
 import { GoogleDrivePlugin } from '../drives/google-drive-plugin'
 import { DropboxPlugin } from '../drives/dropbox-plugin'
 import { BoxPlugin } from '../drives/box-plugin'
@@ -90,6 +92,19 @@ export function createUploaderController(
             ? ({ mode: options.dark ? 'dark' : 'light' } as const)
             : undefined)
     const theme = new ThemeStore(themeConfig)
+
+    // ── Motion gate + transient UI state ──
+    // The motion gate resolves the ONE reduced-motion verdict; transient UI
+    // defers file removal through it so the exit animation can play (and
+    // collapses to an immediate removal when motion is off). Framework call
+    // sites keep calling `handleFileRemove` — the deferral lives in the command.
+    const motionGate = createMotionGate({ animations: resolved.animations })
+    const transientUi = createTransientUiState({
+        motion: () => motionGate.getSnapshot(),
+        reallyRemove: fileId => {
+            orchestrator.removeFile(fileId)
+        },
+    })
 
     // ── Plugin registration (#7) ──
     const drivePlugins: Array<{ destroy(): void }> = []
@@ -197,7 +212,7 @@ export function createUploaderController(
         // run, and owns the done/state-reset emissions. Re-implementing any of
         // these here re-creates the drifting second copy pass 2 removed.
         handleFileRemove(fileId: string) {
-            orchestrator.removeFile(fileId)
+            transientUi.removeFileAnimated(fileId)
         },
         handleRemoveAll() {
             core.removeAll()
@@ -275,6 +290,8 @@ export function createUploaderController(
             core.on('state-change', notifyAll),
             orchestrator.subscribe(notifyAll),
             theme.subscribe(notifyAll),
+            motionGate.subscribe(notifyAll),
+            transientUi.subscribe(notifyAll),
         ]
     }
 
@@ -330,6 +347,8 @@ export function createUploaderController(
         })
         tearDownFanIn()
         orchestrator.destroy()
+        transientUi.destroy()
+        motionGate.destroy()
         theme.destroy()
         // NOTE: core is owned by the host; the host destroys it
     }
@@ -353,6 +372,8 @@ export function createUploaderController(
         core,
         orchestrator,
         theme,
+        motionGate,
+        transientUi,
         resolved,
         commands,
         registerFileInput,

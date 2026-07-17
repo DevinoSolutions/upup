@@ -13,6 +13,8 @@ import type { Translator, LocaleBundle, PartialMessages } from '../i18n/types'
 import type { UiTranslations } from '../i18n/ui-translations'
 import type { ResumableUploadOptions } from '../types/upload-protocols'
 import type { CloudDrivesConfig } from '../drives/configs'
+import type { MotionGate } from './motion-gate'
+import type { TransientUiState } from './transient-ui-state'
 
 /** i18n option block (identical across frameworks). */
 export interface UploaderI18nOptions {
@@ -54,6 +56,7 @@ export interface UploaderControllerOptions
     theme?: UpupThemeConfig | undefined
     sources?: Array<FileSource | string> | undefined
     mini?: boolean | undefined
+    animations?: boolean | undefined
     isProcessing?: boolean | undefined
     allowPreview?: boolean | undefined
     showBranding?: boolean | undefined
@@ -75,6 +78,7 @@ export interface UploaderControllerOptions
 export interface UploaderResolved {
     cloudDrives?: CloudDrivesConfig | undefined
     mini: boolean
+    animations: boolean
     sources: FileSource[]
     allowedFileTypes: string
     limit: number
@@ -143,6 +147,10 @@ export interface UploaderController {
     core: UpupCore
     orchestrator: UploaderOrchestrator
     theme: ThemeStore
+    /** Reduced-motion gate: `off` iff `animations={false}` or the OS asks. */
+    motionGate: MotionGate
+    /** Deferred-removal / source-overlay / drop-rejection transient UI state. */
+    transientUi: TransientUiState
     resolved: UploaderResolved
     commands: UploaderCommands
     registerFileInput(el: HTMLInputElement | null): void

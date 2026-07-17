@@ -62,6 +62,12 @@ export type {
     MotionGateParams,
     MotionMode,
 } from './uploader/motion-gate'
+export { createTransientUiState } from './uploader/transient-ui-state'
+export type {
+    TransientUiState,
+    TransientUiSnapshot,
+    TransientUiParams,
+} from './uploader/transient-ui-state'
 
 // ── Controllers ────────────────────────────────────────────────
 export { DriveBrowserController } from './drives/drive-browser-controller'
