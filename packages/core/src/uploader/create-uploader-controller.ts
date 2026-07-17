@@ -212,6 +212,7 @@ export function createUploaderController(
         // run, and owns the done/state-reset emissions. Re-implementing any of
         // these here re-creates the drifting second copy pass 2 removed.
         handleFileRemove(fileId: string) {
+            // deferred exit animation; removal still ends at orchestrator via reallyRemove
             transientUi.removeFileAnimated(fileId)
         },
         handleRemoveAll() {

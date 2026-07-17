@@ -55,9 +55,36 @@ describe('createTransientUiState', () => {
         s.subscribe(spy)
         s.openSourceOverlay()
         expect(s.getSnapshot().sourceOverlayOpen).toBe(true)
+        s.openSourceOverlay() // idempotent: already open, no second notify
+        expect(spy).toHaveBeenCalledTimes(1)
         s.closeSourceOverlay()
         expect(s.getSnapshot().sourceOverlayOpen).toBe(false)
+        s.closeSourceOverlay() // idempotent: already closed, no extra notify
         expect(spy).toHaveBeenCalledTimes(2)
+    })
+
+    it('dropRejected generation token: a stale timer cannot clear a newer rejection', () => {
+        const s = createTransientUiState({
+            motion: () => 'on',
+            reallyRemove: () => {},
+            exitMs: 200,
+            toastMs: 3000,
+        })
+        const spy = vi.fn()
+        s.subscribe(spy)
+        s.flagDropRejected('a') // t=0, timer fires at t=3000
+        vi.advanceTimersByTime(1000)
+        s.flagDropRejected('b') // t=1000, timer fires at t=4000
+        expect(spy).toHaveBeenCalledTimes(2)
+        // 3100ms after the FIRST rejection: its timer (t=3000) fires but is now
+        // stale (generation moved on), so it must NOT clear the newer rejection.
+        vi.advanceTimersByTime(2100) // t=3100
+        expect(s.getSnapshot().dropRejected).toBe('b')
+        expect(spy).toHaveBeenCalledTimes(2) // no spurious notify from the stale timer
+        // 3100ms after the SECOND rejection: its own timer (t=4000) clears it.
+        vi.advanceTimersByTime(1000) // t=4100
+        expect(s.getSnapshot().dropRejected).toBe(null)
+        expect(spy).toHaveBeenCalledTimes(3)
     })
 
     it('dropRejected sets the provider and auto-clears', () => {

@@ -48,6 +48,7 @@ export function createTransientUiState({
     const timers = new Set<ReturnType<typeof setTimeout>>()
     let overlayOpen = false
     let rejected: string | null = null
+    let toastGen = 0
     let destroyed = false
 
     function compute(): TransientUiSnapshot {
@@ -84,6 +85,7 @@ export function createTransientUiState({
         removeFileAnimated(fileId) {
             if (leaving.has(fileId)) return
             if (motion() === 'off') {
+                // instant path: no self-notify — reallyRemove's own change event drives render
                 reallyRemove(fileId)
                 return
             }
@@ -96,19 +98,26 @@ export function createTransientUiState({
             })
         },
         openSourceOverlay() {
+            if (overlayOpen) return
             overlayOpen = true
             notify()
         },
         closeSourceOverlay() {
+            if (!overlayOpen) return
             overlayOpen = false
             notify()
         },
         flagDropRejected(provider) {
             rejected = provider
+            // Generation token so a stale toast timer can't clear a newer
+            // rejection early (re-arming the same provider is intended).
+            const g = ++toastGen
             notify()
             later(toastMs, () => {
-                rejected = null
-                notify()
+                if (g === toastGen) {
+                    rejected = null
+                    notify()
+                }
             })
         },
         destroy() {
