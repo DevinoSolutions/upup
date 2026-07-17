@@ -219,13 +219,18 @@ function createPostcssConfig({ content }) {
                             // The kill switch: data-motion="off" (written by core
                             // onto the uploader-panel element) disables every fx
                             // rule EXCEPT the essential carve-out (spinner,
-                            // progress width, focus rings).
-                            "[data-motion='off'] [class*='upup-fx-']:not(.fx-essential)":
+                            // progress width, focus rings). It gates BOTH fx class
+                            // families: the `.upup-fx-*` component rules AND the
+                            // `.upup-animate-fx-*` keyframe utilities — the latter
+                            // has no `upup-fx-` substring, so a single
+                            // `[class*='upup-fx-']` matcher would let every fx-*
+                            // animation escape the gate.
+                            "[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.fx-essential)":
                                 {
                                     animation: 'none !important',
                                     transition: 'none !important',
                                 },
-                            "[data-motion='off'] [class*='upup-fx-']:not(.fx-essential)::after":
+                            "[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.fx-essential)::after":
                                 {
                                     animation: 'none !important',
                                     transition: 'none !important',
@@ -233,10 +238,11 @@ function createPostcssConfig({ content }) {
                             // Defense-in-depth for SSR'd markup before hydration
                             // writes data-motion:
                             '@media (prefers-reduced-motion: reduce)': {
-                                "[class*='upup-fx-']:not(.fx-essential)": {
-                                    animation: 'none !important',
-                                    transition: 'none !important',
-                                },
+                                ":is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.fx-essential)":
+                                    {
+                                        animation: 'none !important',
+                                        transition: 'none !important',
+                                    },
                             },
                         })
                     },

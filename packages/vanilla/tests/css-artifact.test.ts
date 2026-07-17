@@ -39,6 +39,13 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain("[data-motion='off']")
         expect(css).toContain('upup-fx-essential')
         expect(css).toContain('prefers-reduced-motion')
+        // The gate must also cover the keyframe animation utilities, which are
+        // named upup-animate-fx-* (NO upup-fx- substring), so a lone
+        // [class*='upup-fx-'] matcher would let every fx-* animation escape.
+        // Pin the paired :is() selector exactly as the artifact emits it:
+        expect(css).toContain(
+            "[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-'])",
+        )
         // Guard the double-prefix regression: tailwind's prefix:'upup-' also
         // prefixes addComponents keys, so a hardcoded '.upup-fx-*' key doubles
         // to '.upup-upup-fx-*'. Plugin keys must stay unprefixed.
