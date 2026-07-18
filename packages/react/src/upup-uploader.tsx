@@ -90,7 +90,7 @@ export default forwardRef<UploaderRef, UploaderProps>(
                                         providerValues.theme.themeMode ===
                                         'dark'
                                             ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
-                                            : 'upup-bg-gradient-to-b upup-from-white upup-to-slate-50 upup-ring-1 upup-ring-slate-200 upup-shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]'
+                                            : 'upup-bg-gradient-to-b upup-from-white upup-to-[#eef2f7] upup-ring-1 upup-ring-slate-200 upup-shadow-[0_24px_60px_-24px_rgba(15,23,42,0.28)]'
                                     } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                                     {
                                         [providerValues.theme.slotOverrides

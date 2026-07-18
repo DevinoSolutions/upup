@@ -190,10 +190,13 @@ watch(
         </template>
 
         <template v-if="showDropzoneFrame">
+            <!-- An <svg> is a replaced element: absolute insets position it but
+                 do NOT stretch it (it keeps the 300x150 default), so the frame
+                 needs its size stated explicitly alongside inset-3. -->
             <svg
                 data-upup-slot="dropzone-frame"
                 aria-hidden="true"
-                class="upup-pointer-events-none upup-absolute upup-inset-3"
+                class="upup-pointer-events-none upup-absolute upup-inset-3 upup-h-[calc(100%-1.5rem)] upup-w-[calc(100%-1.5rem)]"
             >
                 <rect
                     x="1"
@@ -203,7 +206,15 @@ watch(
                     fill="none"
                     stroke-width="1.5"
                     stroke-dasharray="6 6"
-                    :stroke="absoluteIsDragging ? 'rgba(56,189,248,0.6)' : 'rgba(56,189,248,0.22)'"
+                    :stroke="
+                        dark
+                            ? absoluteIsDragging
+                                ? 'rgba(56,189,248,0.65)'
+                                : 'rgba(56,189,248,0.35)'
+                            : absoluteIsDragging
+                              ? 'rgba(2,132,199,0.7)'
+                              : 'rgba(2,132,199,0.4)'
+                    "
                     class="upup-animate-fx-dash-march"
                     :style="{ width: 'calc(100% - 2px)', height: 'calc(100% - 2px)' }"
                 />

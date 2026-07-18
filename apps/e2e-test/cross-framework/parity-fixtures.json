@@ -90,14 +90,15 @@
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-bg-black/[0.04]",
+                                        "upup-bg-white",
                                         "upup-flex",
                                         "upup-h-[52px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
-                                        "upup-ring-black/[0.06]",
+                                        "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
+                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
@@ -105,9 +106,9 @@
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-6",
+                                                "upup-h-8",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-6"
+                                                "upup-w-8"
                                             ],
                                             "children": []
                                         }
@@ -146,21 +147,22 @@
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-bg-black/[0.04]",
+                                        "upup-bg-white",
                                         "upup-flex",
                                         "upup-h-[52px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
-                                        "upup-ring-black/[0.06]",
+                                        "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
+                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": ["upup-h-6", "upup-w-6"],
+                                            "classes": ["upup-h-8", "upup-w-8"],
                                             "children": []
                                         }
                                     ]
@@ -1263,14 +1265,15 @@
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-bg-black/[0.04]",
+                                        "upup-bg-white",
                                         "upup-flex",
                                         "upup-h-[52px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
-                                        "upup-ring-black/[0.06]",
+                                        "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
+                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
@@ -1278,9 +1281,9 @@
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-6",
+                                                "upup-h-8",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-6"
+                                                "upup-w-8"
                                             ],
                                             "children": []
                                         }
@@ -1319,21 +1322,22 @@
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-bg-black/[0.04]",
+                                        "upup-bg-white",
                                         "upup-flex",
                                         "upup-h-[52px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
-                                        "upup-ring-black/[0.06]",
+                                        "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
+                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": ["upup-h-6", "upup-w-6"],
+                                            "classes": ["upup-h-8", "upup-w-8"],
                                             "children": []
                                         }
                                     ]

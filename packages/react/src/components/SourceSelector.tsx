@@ -294,7 +294,7 @@ export default function SourceSelector(): React.ReactElement | null {
                                     className={cn(
                                         'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
                                         {
-                                            'upup-bg-black/[0.04] upup-ring-black/[0.06] group-hover:upup-bg-black/[0.07]':
+                                            'upup-bg-white upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)] upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
                                                 !dark,
                                             'upup-bg-white/[0.055] upup-ring-white/[0.06] group-hover:upup-bg-white/[0.09] dark:upup-bg-white/[0.055] dark:upup-ring-white/[0.06]':
                                                 dark,
@@ -303,7 +303,10 @@ export default function SourceSelector(): React.ReactElement | null {
                                 >
                                     <Icon
                                         className={cn(
-                                            'upup-h-6 upup-w-6',
+                                            // The registry glyphs carry ~30% internal
+                                            // viewBox padding; a 32px box lands the
+                                            // visible glyph at the mockup's ~20px.
+                                            'upup-h-8 upup-w-8',
                                             slotClasses.sourceButtonIcon,
                                         )}
                                     />

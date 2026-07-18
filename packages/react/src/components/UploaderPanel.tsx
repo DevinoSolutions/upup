@@ -187,7 +187,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                 <svg
                     data-upup-slot="dropzone-frame"
                     aria-hidden="true"
-                    className="upup-pointer-events-none upup-absolute upup-inset-3"
+                    // An <svg> is a replaced element: absolute insets position it
+                    // but do NOT stretch it (it keeps the 300x150 default), so the
+                    // frame needs its size stated explicitly alongside inset-3.
+                    className="upup-pointer-events-none upup-absolute upup-inset-3 upup-h-[calc(100%-1.5rem)] upup-w-[calc(100%-1.5rem)]"
                 >
                     <rect
                         x="1"
@@ -198,9 +201,13 @@ export default function UploaderPanel(): React.ReactElement | null {
                         strokeWidth="1.5"
                         strokeDasharray="6 6"
                         stroke={
-                            absoluteIsDragging
-                                ? 'rgba(56,189,248,0.6)'
-                                : 'rgba(56,189,248,0.22)'
+                            dark
+                                ? absoluteIsDragging
+                                    ? 'rgba(56,189,248,0.65)'
+                                    : 'rgba(56,189,248,0.35)'
+                                : absoluteIsDragging
+                                  ? 'rgba(2,132,199,0.7)'
+                                  : 'rgba(2,132,199,0.4)'
                         }
                         // Marches continuously; the shared `[data-motion='off']`
                         // kill rule (which now also gates `upup-animate-fx-*`) makes
