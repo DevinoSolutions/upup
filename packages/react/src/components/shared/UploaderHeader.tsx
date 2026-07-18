@@ -10,6 +10,7 @@ import {
     useUploaderUploadControls,
     useUploaderView,
 } from '../../context/UploaderContext'
+import { isListViewForced } from '../../lib/view-mode'
 
 type Props = {
     handleCancel(): void
@@ -74,7 +75,9 @@ export default function UploaderHeader({
                 })}
             </span>
             <div className="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
-                {files.size > 1 && (
+                {/* Toggle hides once the row list is forced (too many files for
+                    the tile grid to fit the fixed-height panel). */}
+                {files.size > 1 && !isListViewForced(files.size) && (
                     <button
                         className={cn(
                             'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',

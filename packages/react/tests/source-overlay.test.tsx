@@ -93,7 +93,9 @@ describe('add-more source overlay', () => {
             '[data-testid="upup-file-list"]',
         ) as HTMLElement
         expect(list).not.toBeNull()
-        expect(list.className).toContain('upup-opacity-40')
+        // Mock st2-listdim: dimmed AND softly blurred, but still visible.
+        expect(list.className).toContain('upup-opacity-50')
+        expect(list.className).toContain('upup-blur-[2px]')
         expect(list.className).toContain('upup-pointer-events-none')
         expect(list.hasAttribute('inert')).toBe(true)
         // Focus moved into the overlay on open:
@@ -125,7 +127,7 @@ describe('add-more source overlay', () => {
         const list = container.querySelector(
             '[data-testid="upup-file-list"]',
         ) as HTMLElement
-        expect(list.className).not.toContain('upup-opacity-40')
+        expect(list.className).not.toContain('upup-opacity-50')
     })
 
     it('closes on the overlay Back control and re-opens cleanly', async () => {
@@ -137,14 +139,15 @@ describe('add-more source overlay', () => {
             if (!overlay(container)) throw new Error('overlay not rendered')
         })
 
-        // The overlay selector's Back button closes it (transient close command).
-        const backBtn = Array.from(
-            container.querySelectorAll(
-                '[data-upup-slot="source-overlay"] button',
-            ),
-        ).find(b => /back/i.test(b.textContent ?? '')) as HTMLButtonElement
-        expect(backBtn).not.toBeNull()
-        fireEvent.click(backBtn)
+        // The sheet grip is the close control; its aria-label carries the
+        // Back semantics for AT (the old header Back row is gone — the sheet
+        // chrome replaced it).
+        const grip = container.querySelector(
+            '[data-testid="upup-sheet-grip"]',
+        ) as HTMLButtonElement
+        expect(grip).not.toBeNull()
+        expect(grip.getAttribute('aria-label')).toMatch(/back/i)
+        fireEvent.click(grip)
 
         // Two-phase close: the overlay stays mounted and plays the reverse slide
         // (state-driven, no animationend listener) before it unmounts. While
@@ -164,7 +167,7 @@ describe('add-more source overlay', () => {
         const list = container.querySelector(
             '[data-testid="upup-file-list"]',
         ) as HTMLElement
-        expect(list.className).not.toContain('upup-opacity-40')
+        expect(list.className).not.toContain('upup-opacity-50')
         // Focus returns to the add-more trigger once the close settles.
         expect(document.activeElement).toBe(headerTrigger(container))
 

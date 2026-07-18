@@ -41,6 +41,7 @@ export const zhTW: LocaleBundle = {
             maxTotalFileSizeDisplay: '最大總大小: {size} {unit}',
             addDocumentsHere: '在此新增檔案，最多可上傳 {limit} 個檔案',
             dropAriaLabel: '將檔案拖曳至此或點擊瀏覽',
+            dropToUpload: '將檔案拖放到此處',
         },
         header: {
             removeAllFiles: '刪除所有檔案',

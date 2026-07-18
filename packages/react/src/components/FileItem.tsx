@@ -11,6 +11,7 @@ import {
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 import FileRow from './FileRow'
+import { isListViewForced } from '../lib/view-mode'
 
 type Props = {
     file: UploadFile
@@ -78,7 +79,7 @@ export default memo(function FileItem({ file, index = 0 }: Props) {
                     : { animationDelay: `${Math.min(index, 8) * 40}ms` }
             }
         >
-            {viewMode === 'list' ? (
+            {viewMode === 'list' || isListViewForced(files.size) ? (
                 <FileRow file={file} index={index} />
             ) : (
                 <>

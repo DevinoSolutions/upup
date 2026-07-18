@@ -75,6 +75,7 @@ export default memo(function FilePreview(props: Props) {
     } = useUploaderTheme()
 
     const isImage = useMemo(() => fileGetIsImage(fileType), [fileType])
+    const isVideo = useMemo(() => fileType.startsWith('video/'), [fileType])
     const isPdf = useMemo(
         () => fileGetIsPdf(fileType, fileName),
         [fileType, fileName],
@@ -121,7 +122,13 @@ export default memo(function FilePreview(props: Props) {
 
     return (
         <div
-            className={cn('upup-inline-block', themeSlots?.filePreview?.root)}
+            // The explicit width is what makes the caption's `truncate` work —
+            // an unconstrained inline-block grows to the name's full width and
+            // overlaps the neighboring grid column.
+            className={cn(
+                'upup-inline-block upup-w-[145px] upup-max-w-full',
+                themeSlots?.filePreview?.root,
+            )}
             data-testid="upup-file-preview"
             data-upup-slot="file-preview"
             {...restProps}
@@ -162,7 +169,18 @@ export default memo(function FilePreview(props: Props) {
                         )
                     }
                 />
-                {!isImage && (
+                {isVideo && (
+                    // First-frame video thumbnail — no controls chrome (the
+                    // native player pill read as broken CSS in a 145px tile).
+                    <video
+                        src={fileUrl}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+                    />
+                )}
+                {!isImage && !isVideo && (
                     <div className="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
                         <FilePreviewThumbnail
                             canPreview={canPreview}
@@ -181,11 +199,13 @@ export default memo(function FilePreview(props: Props) {
                 {isImage && imageEditor.enabled && (
                     <button
                         className={cn(
-                            'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
-                            'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                            'upup-rounded-full upup-bg-white upup-text-[#0284c7] upup-shadow-sm',
-                            'hover:upup-bg-white hover:upup-text-[#0284c7]',
-                            'upup-ring-1 upup-ring-black/5',
+                            // Hero-chrome action button (matches FileHero's
+                            // remove): translucent dark square, not the legacy
+                            // white/red circles.
+                            'upup-fx-press upup-absolute upup-right-1.5 upup-top-9 upup-z-10',
+                            'upup-flex upup-h-[26px] upup-w-[26px] upup-items-center upup-justify-center',
+                            'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                            'hover:upup-bg-[#04080f]/65',
                             'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                         )}
                         onClick={onHandleEditImage}
@@ -208,10 +228,9 @@ export default memo(function FilePreview(props: Props) {
                 <button
                     className={cn(
                         'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-                        'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                        'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-                        'hover:upup-bg-white',
-                        'upup-ring-1 upup-ring-black/5',
+                        'upup-flex upup-h-[26px] upup-w-[26px] upup-items-center upup-justify-center',
+                        'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                        'hover:upup-bg-[#04080f]/65',
                         'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                         slotClasses.fileDeleteButton,
                         themeSlots?.filePreview?.deleteButton,
@@ -222,7 +241,7 @@ export default memo(function FilePreview(props: Props) {
                     aria-label={tr.removeFile}
                     data-testid="upup-file-remove"
                 >
-                    <FileDeleteIcon className="upup-h-3 upup-w-3" />
+                    <FileDeleteIcon className="upup-h-3.5 upup-w-3.5" />
                 </button>
 
                 {isSuccessful && (

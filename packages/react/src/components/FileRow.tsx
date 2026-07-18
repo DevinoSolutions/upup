@@ -49,7 +49,7 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
     return (
         <div
             className={cn(
-                'upup-fx-hover-lift upup-flex upup-items-center upup-gap-3 upup-rounded-xl upup-px-3 upup-py-2.5 upup-ring-1',
+                'upup-fx-hover-lift upup-flex upup-w-full upup-items-center upup-gap-3 upup-rounded-xl upup-px-3 upup-py-2.5 upup-ring-1',
                 dark
                     ? 'upup-bg-white/[0.04] upup-ring-white/[0.07]'
                     : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',

@@ -33,6 +33,7 @@ export type UiTranslations = {
     filesMax_other: string
     sizeEach: string
     addDocumentsHere: string
+    dropToUpload: string
     builtBy: string
     removeAllFiles: string
     addingMoreFiles: string
@@ -257,6 +258,7 @@ export function flattenTranslatorToUiTranslations(
         addDocumentsHere: tr('dropzone.addDocumentsHere', {
             limit: '{{limit}}',
         }),
+        dropToUpload: tr('dropzone.dropToUpload'),
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
         overlayBack: tr('header.overlayBack'),

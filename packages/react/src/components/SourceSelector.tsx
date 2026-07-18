@@ -9,7 +9,6 @@ import {
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
-    useUploaderView,
 } from '../context/UploaderContext'
 import useSourceSelector from '../hooks/useSourceSelector'
 
@@ -17,7 +16,6 @@ export default function SourceSelector(): React.ReactElement | null {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- inputRef is required for direct webkitdirectory/directory DOM wiring; openFilePicker() cannot toggle those attributes
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
-    const { sourceOverlayOpen, closeSourceOverlay } = useUploaderView()
     const { setFiles } = useUploaderFiles()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
@@ -161,65 +159,11 @@ export default function SourceSelector(): React.ReactElement | null {
         <div
             data-testid="upup-source-selector"
             data-upup-slot="source-selector"
-            className={cn(
-                'upup-animate-fx-view upup-relative upup-flex upup-h-full upup-flex-col upup-gap-6 upup-rounded-lg',
-                {
-                    'upup-items-center upup-justify-center upup-px-4 upup-py-6':
-                        !sourceOverlayOpen,
-                },
-            )}
+            // Centered in BOTH the idle panel and the add-more sheet — the sheet
+            // supplies its own chrome (grip), so the selector no longer swaps in
+            // a header bar (which also un-centered the capped-width chip grid).
+            className="upup-animate-fx-view upup-relative upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center upup-gap-6 upup-rounded-lg upup-px-4 upup-py-6"
         >
-            {sourceOverlayOpen && (
-                <div
-                    className={cn(
-                        'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                        {
-                            'upup-bg-white/5 dark:upup-bg-white/5': dark,
-                        },
-                        slotClasses.containerHeader,
-                    )}
-                >
-                    <button
-                        className={cn(
-                            'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-[#0284c7]',
-                            {
-                                'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
-                                    dark,
-                            },
-                            slotClasses.containerCancelButton,
-                        )}
-                        onClick={() => {
-                            closeSourceOverlay()
-                        }}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                        {tr.overlayBack}
-                    </button>
-                    <span
-                        className={cn(
-                            'upup-flex-1 upup-text-center upup-text-sm upup-text-[#6D6D6D]',
-                            {
-                                'upup-text-gray-300 dark:upup-text-gray-300':
-                                    dark,
-                            },
-                        )}
-                    >
-                        {tr.addingMoreFiles}
-                    </span>
-                </div>
-            )}
             {!mini && (
                 <>
                     <div
@@ -294,7 +238,7 @@ export default function SourceSelector(): React.ReactElement | null {
                                     className={cn(
                                         'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
                                         {
-                                            'upup-bg-white upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)] upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
+                                            'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
                                                 !dark,
                                             'upup-bg-white/[0.055] upup-ring-white/[0.06] group-hover:upup-bg-white/[0.09] dark:upup-bg-white/[0.055] dark:upup-ring-white/[0.06]':
                                                 dark,
@@ -304,9 +248,9 @@ export default function SourceSelector(): React.ReactElement | null {
                                     <Icon
                                         className={cn(
                                             // The registry glyphs carry ~30% internal
-                                            // viewBox padding; a 32px box lands the
-                                            // visible glyph at the mockup's ~20px.
-                                            'upup-h-8 upup-w-8',
+                                            // viewBox padding; the 40px box keeps the
+                                            // visible glyph reading confidently sized.
+                                            'upup-h-10 upup-w-10',
                                             slotClasses.sourceButtonIcon,
                                         )}
                                     />

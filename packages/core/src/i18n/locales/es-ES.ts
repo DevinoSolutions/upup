@@ -52,6 +52,7 @@ export const esES: LocaleBundle = {
             addDocumentsHere:
                 'A\u00F1ade tus documentos aqu\u00ED, puedes subir hasta {limit} archivos m\u00E1x.',
             dropAriaLabel: 'Suelta archivos aqu\u00ED o haz clic para buscar',
+            dropToUpload: 'Suelta tus archivos aqu\u00ED',
         },
 
         header: {

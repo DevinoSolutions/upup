@@ -43,6 +43,7 @@ export const koKR: LocaleBundle = {
             addDocumentsHere:
                 '여기에 문서를 추가하세요. 최대 {limit}개 파일까지 업로드 가능합니다',
             dropAriaLabel: '파일을 여기에 드롭하거나 클릭하여 찾아보기',
+            dropToUpload: '여기에 파일을 놓으세요',
         },
         header: {
             removeAllFiles: '모든 파일 삭제',

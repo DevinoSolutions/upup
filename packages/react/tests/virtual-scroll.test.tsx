@@ -124,12 +124,27 @@ describe('FileList — virtual scrolling', () => {
         ).not.toBeNull()
     })
 
-    it('does NOT use virtual scroll in grid mode even with many files', () => {
+    it('forces the row list past the grid threshold: many files virtualize even in grid mode', () => {
         _fileCount = 30
+        _viewMode = 'grid'
+        const { container } = render(<FileList />)
+        // Past GRID_VIEW_MAX_FILES the tile grid no longer fits the fixed
+        // panel, so the row list (and its virtualization) engages regardless
+        // of the user's toggle.
+        expect(
+            container.querySelector('[data-upup-slot="file-list-virtual"]'),
+        ).not.toBeNull()
+    })
+
+    it('honors grid mode below the forced-list threshold (no virtualization)', () => {
+        _fileCount = 4
         _viewMode = 'grid'
         const { container } = render(<FileList />)
         expect(
             container.querySelector('[data-upup-slot="file-list-virtual"]'),
         ).toBeNull()
+        expect(
+            container.querySelectorAll('[data-testid="file-item"]').length,
+        ).toBe(4)
     })
 })

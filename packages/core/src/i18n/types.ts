@@ -76,6 +76,8 @@ export interface DropzoneMessages {
     addDocumentsHere: string
     /** ICU: "Drop files here or click to browse" */
     dropAriaLabel: string
+    /** Drag-over prompt shown while a file is dragged over the panel. */
+    dropToUpload: string
 }
 
 export interface HeaderMessages {

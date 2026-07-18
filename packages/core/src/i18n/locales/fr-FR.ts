@@ -52,6 +52,7 @@ export const frFR: LocaleBundle = {
                 "Ajoutez vos documents ici, vous pouvez t\u00E9l\u00E9verser jusqu'\u00E0 {limit} fichiers max",
             dropAriaLabel:
                 'D\u00E9posez les fichiers ici ou cliquez pour parcourir',
+            dropToUpload: 'D\u00E9posez vos fichiers ici',
         },
 
         header: {

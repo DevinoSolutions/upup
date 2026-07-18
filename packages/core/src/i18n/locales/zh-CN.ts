@@ -41,6 +41,7 @@ export const zhCN: LocaleBundle = {
             maxTotalFileSizeDisplay: '最大总大小: {size} {unit}',
             addDocumentsHere: '在此添加文件，最多可上传 {limit} 个文件',
             dropAriaLabel: '将文件拖到此处或点击浏览',
+            dropToUpload: '将文件拖放到此处',
         },
         header: {
             removeAllFiles: '删除所有文件',

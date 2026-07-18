@@ -17,8 +17,12 @@ import FileList from './FileList'
 export default function UploaderPanel(): React.ReactElement | null {
     const { files } = useUploaderFiles()
     const { activeSource } = useUploaderSource()
-    const { sourceOverlayOpen, sourceOverlayClosing, dropRejected } =
-        useUploaderView()
+    const {
+        sourceOverlayOpen,
+        sourceOverlayClosing,
+        dropRejected,
+        closeSourceOverlay,
+    } = useUploaderView()
     const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
@@ -59,6 +63,9 @@ export default function UploaderPanel(): React.ReactElement | null {
     // so the departing overlay never steals focus back.
     const overlayRef = useRef<HTMLDivElement>(null)
     const triggerRef = useRef<HTMLElement | null>(null)
+    // Sheet swipe-to-dismiss state (refs — dragging must not re-render).
+    const swipeStartYRef = useRef<number | null>(null)
+    const swipedRef = useRef(false)
     useEffect(() => {
         if (!(sourceOverlayOpen || activeSource)) return
         const overlayEl = overlayRef.current
@@ -209,10 +216,13 @@ export default function UploaderPanel(): React.ReactElement | null {
                                   ? 'rgba(2,132,199,0.7)'
                                   : 'rgba(2,132,199,0.4)'
                         }
-                        // Marches continuously; the shared `[data-motion='off']`
-                        // kill rule (which now also gates `upup-animate-fx-*`) makes
-                        // it static when motion is off.
-                        className="upup-animate-fx-dash-march"
+                        // The dashes rest at idle and march only while a drag is
+                        // over the panel (interaction state, not a motion-pref
+                        // gate — the `[data-motion='off']` kill rule still stops
+                        // the march entirely when motion is off).
+                        className={cn(
+                            absoluteIsDragging && 'upup-animate-fx-dash-march',
+                        )}
                         style={{
                             width: 'calc(100% - 2px)',
                             height: 'calc(100% - 2px)',
@@ -220,10 +230,61 @@ export default function UploaderPanel(): React.ReactElement | null {
                     />
                 </svg>
             )}
+            {/* Drag-over prompt: an explicit "drop it here" affordance (icon +
+                text) so the drag state never reads as a mere glow. Pointer
+                events pass through — the panel underneath owns the drop. */}
+            {absoluteIsDragging && (
+                <div
+                    data-testid="upup-drag-overlay"
+                    data-upup-slot="drag-overlay"
+                    aria-hidden="true"
+                    className={cn(
+                        'upup-animate-fx-view upup-pointer-events-none upup-absolute upup-inset-0 upup-z-10 upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-3',
+                        dark ? 'upup-bg-[#0b1220]/70' : 'upup-bg-white/70',
+                    )}
+                >
+                    <span
+                        className={cn(
+                            'upup-flex upup-h-16 upup-w-16 upup-items-center upup-justify-center upup-rounded-2xl',
+                            dark
+                                ? 'upup-bg-[#38bdf8]/15 upup-text-[#38bdf8]'
+                                : 'upup-bg-[#0284c7]/10 upup-text-[#0284c7]',
+                        )}
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="30"
+                            height="30"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M12 4v11" />
+                            <path d="m7 10 5 5 5-5" />
+                            <path d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+                        </svg>
+                    </span>
+                    <span
+                        className={cn(
+                            'upup-text-[15px] upup-font-semibold',
+                            dark
+                                ? 'upup-text-[#e2e8f0]'
+                                : 'upup-text-[#0f172a]',
+                        )}
+                    >
+                        {tr.dropToUpload}
+                    </span>
+                </div>
+            )}
             {/* Idle primary: the source surface fills the panel when empty. */}
             {!hasFiles && sourceSurface}
-            {/* Add-more overlay: the source surface slides up over the dimmed,
-                still-mounted file list — nothing unmounts, no state is lost. */}
+            {/* Add-more DRAWER (states-tour-v2 sheet): the source surface slides
+                up as a translucent bottom sheet over the dimmed, still-mounted
+                file list — the files stay visible behind it so nothing feels
+                lost. Swipe the grip down (or Escape / the grip click) to close. */}
             {showSourceOverlay && (
                 <div
                     ref={overlayRef}
@@ -236,16 +297,66 @@ export default function UploaderPanel(): React.ReactElement | null {
                     role={sourceOverlayClosing ? undefined : 'dialog'}
                     aria-modal={sourceOverlayClosing ? undefined : 'true'}
                     aria-label={tr.addingMoreFiles}
+                    onKeyDown={e => {
+                        if (e.key === 'Escape' && !sourceOverlayClosing)
+                            closeSourceOverlay()
+                    }}
                     className={cn(
-                        'upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-lg upup-ring-1 upup-ring-inset',
+                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
                         sourceOverlayClosing
                             ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                             : 'upup-fx-overlay-slide',
                         dark
-                            ? 'upup-bg-[#0b1220]/95 upup-ring-white/[0.06]'
-                            : 'upup-bg-white/95 upup-ring-black/[0.06]',
+                            ? 'upup-bg-[#0b1220]/[0.85] upup-ring-white/[0.08] upup-shadow-[0_-18px_40px_-18px_rgba(0,0,0,0.65)]'
+                            : 'upup-bg-white/[0.85] upup-ring-black/[0.08] upup-shadow-[0_-18px_40px_-18px_rgba(15,23,42,0.25)]',
                     )}
                 >
+                    {/* Sheet grip: click closes; drag down past the threshold
+                        closes (pointer capture — no transitionend reliance). */}
+                    <button
+                        type="button"
+                        data-testid="upup-sheet-grip"
+                        data-upup-slot="sheet-grip"
+                        aria-label={tr.overlayBack}
+                        onClick={() => {
+                            if (!swipedRef.current) closeSourceOverlay()
+                            swipedRef.current = false
+                        }}
+                        onPointerDown={e => {
+                            swipeStartYRef.current = e.clientY
+                            e.currentTarget.setPointerCapture(e.pointerId)
+                        }}
+                        onPointerMove={e => {
+                            const startY = swipeStartYRef.current
+                            const sheet = overlayRef.current
+                            if (startY === null || !sheet) return
+                            const dy = Math.max(0, e.clientY - startY)
+                            sheet.style.transition = 'none'
+                            sheet.style.transform = `translateY(${dy}px)`
+                        }}
+                        onPointerUp={e => {
+                            const startY = swipeStartYRef.current
+                            const sheet = overlayRef.current
+                            swipeStartYRef.current = null
+                            if (startY === null || !sheet) return
+                            const dy = Math.max(0, e.clientY - startY)
+                            sheet.style.transition = ''
+                            sheet.style.transform = ''
+                            if (dy > 72) {
+                                swipedRef.current = true
+                                closeSourceOverlay()
+                            }
+                        }}
+                        className="upup-absolute upup-left-1/2 upup-top-1.5 upup-z-10 upup-flex upup-h-6 upup-w-20 upup--translate-x-1/2 upup-cursor-grab upup-touch-none upup-items-center upup-justify-center upup-rounded-full"
+                    >
+                        <span
+                            aria-hidden="true"
+                            className={cn(
+                                'upup-h-1 upup-w-10 upup-rounded-full',
+                                dark ? 'upup-bg-white/20' : 'upup-bg-black/20',
+                            )}
+                        />
+                    </button>
                     {sourceSurface}
                 </div>
             )}

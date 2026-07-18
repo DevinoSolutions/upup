@@ -17,6 +17,7 @@ import FileItem from './FileItem'
 import FileHero from './FileHero'
 import UploaderHeader from './shared/UploaderHeader'
 import ProgressBar from './shared/ProgressBar'
+import { isListViewForced } from '../lib/view-mode'
 
 const VIRTUAL_SCROLL_THRESHOLD = 20
 const ESTIMATED_ITEM_HEIGHT = 76 // px — approximate FileItem row height
@@ -82,9 +83,17 @@ export default memo(function FileList() {
 
     const isSingle = sortedFiles.length === 1
 
+    // Adaptive layout rule: past GRID_VIEW_MAX_FILES the square tiles no longer
+    // fit the fixed-height panel, so the row list is FORCED regardless of the
+    // toggle (which UploaderHeader hides at that point).
+    const effectiveViewMode = isListViewForced(sortedFiles.length)
+        ? 'list'
+        : viewMode
+
     // Virtual scrolling only for list mode with many files (never for the hero)
     const shouldVirtualize =
-        sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode !== 'grid'
+        sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD &&
+        effectiveViewMode !== 'grid'
 
     const virtualizer = useVirtualizer({
         count: sortedFiles.length,
@@ -114,7 +123,10 @@ export default memo(function FileList() {
                 'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
                 {
                     'upup-hidden': !files.size,
-                    'upup-opacity-40 upup-pointer-events-none': dimmed,
+                    // Mock st2-listdim: the list stays clearly visible behind
+                    // the add-more sheet — dimmed and softly blurred, not gone.
+                    'upup-opacity-50 upup-blur-[2px] upup-pointer-events-none':
+                        dimmed,
                 },
                 themeSlots?.fileList?.root,
             )}
@@ -197,9 +209,11 @@ export default memo(function FileList() {
                             `${isProcessing && 'upup-pointer-events-none upup-opacity-75'} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                             {
                                 'md:upup-grid md:upup-gap-y-6':
-                                    files.size > 1 && viewMode === 'grid',
+                                    files.size > 1 &&
+                                    effectiveViewMode === 'grid',
                                 'md:upup-grid-cols-2':
-                                    files.size > 1 && viewMode === 'grid',
+                                    files.size > 1 &&
+                                    effectiveViewMode === 'grid',
                                 [slotClasses.fileListContainerInnerMultiple ??
                                 '']:
                                     slotClasses.fileListContainerInnerMultiple &&

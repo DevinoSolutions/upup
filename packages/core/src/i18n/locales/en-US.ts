@@ -49,6 +49,7 @@ export const enUS: LocaleBundle = {
             addDocumentsHere:
                 'Add your documents here, you can upload up to {limit} files max',
             dropAriaLabel: 'Drop files here or click to browse',
+            dropToUpload: 'Drop your files here',
         },
 
         header: {

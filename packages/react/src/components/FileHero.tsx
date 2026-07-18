@@ -35,6 +35,10 @@ export default memo(function FileHero({ file }: Props) {
     } = useUploaderUploadControls()
 
     const isImage = useMemo(() => fileGetIsImage(file.type ?? ''), [file.type])
+    const isVideo = useMemo(
+        () => (file.type ?? '').startsWith('video/'),
+        [file.type],
+    )
     const extension = useMemo(
         () => fileGetExtension(file.type ?? '', file.name),
         [file.type, file.name],
@@ -67,6 +71,17 @@ export default memo(function FileHero({ file }: Props) {
                     alt={file.name}
                     className="upup-min-h-0 upup-flex-1 upup-object-contain"
                 />
+            ) : isVideo ? (
+                // preload="metadata" paints the first frame — a real thumbnail
+                // without controls chrome. Muted + playsInline keep mobile
+                // browsers from hijacking it into a player.
+                <video
+                    src={file.url ?? ''}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="upup-pointer-events-none upup-min-h-0 upup-flex-1 upup-object-contain"
+                />
             ) : (
                 <div className="upup-flex upup-min-h-0 upup-flex-1 upup-items-center upup-justify-center upup-bg-gradient-to-br upup-from-[#0ea5e9]/10 upup-to-[#7c3aed]/10">
                     <FileIcon extension={extension} />
@@ -97,21 +112,43 @@ export default memo(function FileHero({ file }: Props) {
                 <FileDeleteIcon className="upup-h-[15px] upup-w-[15px]" />
             </button>
 
-            <div className="upup-pointer-events-none upup-absolute upup-inset-x-0 upup-bottom-0 upup-bg-gradient-to-t upup-from-[#04080f]/[0.86] upup-via-[#04080f]/50 upup-to-transparent upup-px-[18px] upup-pb-3.5 upup-pt-4">
-                <div className="upup-truncate upup-text-[13px] upup-font-semibold upup-text-[#e2e8f0]">
+            {/* Caption scrim: theme-aware (a black scrim over a light hero read
+                as a dark-mode leak). The progress bar lives INSIDE the scrim
+                flow so it can never overlap the name/size lines. */}
+            <div
+                className={cn(
+                    'upup-pointer-events-none upup-absolute upup-inset-x-0 upup-bottom-0 upup-bg-gradient-to-t upup-to-transparent upup-px-[18px] upup-pb-3.5 upup-pt-4',
+                    dark
+                        ? 'upup-from-[#04080f]/[0.86] upup-via-[#04080f]/50'
+                        : 'upup-from-white/[0.92] upup-via-white/60',
+                )}
+            >
+                <div
+                    className={cn(
+                        'upup-truncate upup-text-[13px] upup-font-semibold',
+                        dark ? 'upup-text-[#e2e8f0]' : 'upup-text-[#1e293b]',
+                    )}
+                >
                     {file.name}
                 </div>
-                <div className="upup-mt-0.5 upup-text-[12px] upup-text-[#94a3b8]">
+                <div
+                    className={cn(
+                        'upup-mt-0.5 upup-text-[12px]',
+                        dark ? 'upup-text-[#94a3b8]' : 'upup-text-[#64748b]',
+                    )}
+                >
                     {formatFileSize(file.size, tr)}
                 </div>
+                <ProgressBar
+                    className={cn(
+                        'upup-mt-2',
+                        dark ? 'upup-text-white' : 'upup-text-[#0f172a]',
+                    )}
+                    progressBarClassName="upup-rounded"
+                    progress={progress}
+                    showValue
+                />
             </div>
-
-            <ProgressBar
-                className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0 upup-px-[18px] upup-pb-2 upup-text-white"
-                progressBarClassName="upup-rounded-none"
-                progress={progress}
-                showValue
-            />
         </div>
     )
 })

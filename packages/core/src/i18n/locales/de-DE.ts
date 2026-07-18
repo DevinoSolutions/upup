@@ -52,6 +52,7 @@ export const deDE: LocaleBundle = {
             addDocumentsHere:
                 'Dokumente hier hinzuf\u00FCgen, maximal {limit} Dateien',
             dropAriaLabel: 'Dateien hier ablegen oder klicken zum Durchsuchen',
+            dropToUpload: 'Dateien hier ablegen',
         },
 
         header: {
