@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
-import { UploadStatus, type UploadFile } from '@upupjs/core'
+import { UploadStatus, fileTypeIconName, type UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -8,9 +8,55 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/UploaderContext'
-import { fileGetIsImage, formatFileSize } from '../lib/file'
+import { fileGetExtension, fileGetIsImage, formatFileSize } from '../lib/file'
+import Icon from './Icon'
 import ProgressBar from './shared/ProgressBar'
 import FileSuccessCheck from './shared/FileSuccessCheck'
+
+const ARCHIVE_EXTENSIONS = new Set([
+    'zip',
+    'rar',
+    '7z',
+    'tar',
+    'gz',
+    'bz2',
+    'xz',
+])
+
+/**
+ * Per-category thumbnail treatment for non-media rows so pdf / archive / audio /
+ * generic no longer all read as the same blue doc: a distinct gradient tint plus
+ * the type-specific glyph (audio uses the waveform icon; the rest use the
+ * file-<ext> registry icon, falling back to the generic file glyph).
+ */
+function nonMediaThumb(
+    type: string,
+    name: string,
+): {
+    gradient: string
+    icon: 'audio' | ReturnType<typeof fileTypeIconName>
+} {
+    const ext = fileGetExtension(type, name)
+    if (type.startsWith('audio/'))
+        return {
+            gradient: 'linear-gradient(135deg,#a855f7,#6366f1)',
+            icon: 'audio',
+        }
+    if (ext === 'pdf' || type === 'application/pdf')
+        return {
+            gradient: 'linear-gradient(135deg,#f43f5e,#ec4899)',
+            icon: 'file-pdf',
+        }
+    if (ARCHIVE_EXTENSIONS.has(ext) || type.includes('zip'))
+        return {
+            gradient: 'linear-gradient(135deg,#f59e0b,#f97316)',
+            icon: fileTypeIconName(ext === 'zip' ? 'zip' : ext),
+        }
+    return {
+        gradient: 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+        icon: fileTypeIconName(ext),
+    }
+}
 
 type Props = {
     file: UploadFile
@@ -35,7 +81,14 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
         upload: { filesProgressMap },
     } = useUploaderUploadControls()
 
-    const isImage = useMemo(() => fileGetIsImage(file.type ?? ''), [file.type])
+    const type = file.type ?? ''
+    const isImage = useMemo(() => fileGetIsImage(type), [type])
+    const isVideo = useMemo(() => type.startsWith('video/'), [type])
+    const isSuccessful = file.status === UploadStatus.SUCCESSFUL
+    const thumb = useMemo(
+        () => nonMediaThumb(type, file.name),
+        [type, file.name],
+    )
     const progress = useMemo(() => {
         const p = filesProgressMap[file.id]
         const loaded = p?.loaded ?? NaN
@@ -56,31 +109,33 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
             )}
         >
             <div
-                className="upup-flex upup-h-10 upup-w-10 upup-flex-none upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-[9px] upup-bg-center upup-bg-cover upup-bg-no-repeat"
+                className="upup-relative upup-flex upup-h-10 upup-w-10 upup-flex-none upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-[9px] upup-bg-center upup-bg-cover upup-bg-no-repeat"
                 style={
                     isImage
                         ? { backgroundImage: `url(${file.url ?? ''})` }
-                        : {
-                              background:
-                                  'linear-gradient(135deg,#0ea5e9,#7c3aed)',
-                          }
+                        : isVideo
+                          ? undefined
+                          : { background: thumb.gradient }
                 }
             >
-                {!isImage && (
-                    <svg
-                        viewBox="0 0 24 24"
-                        width="18"
-                        height="18"
-                        fill="none"
-                        stroke="rgba(255,255,255,0.9)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M6 3h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-                        <path d="M14 3v4h4" />
-                    </svg>
+                {/* Real first-frame video thumbnail (no controls chrome). Uses the
+                    local object URL, which persists through upload (updateFile keeps
+                    `url`), so the preview survives a completed run. */}
+                {isVideo && (
+                    <video
+                        src={file.url ?? ''}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+                    />
+                )}
+                {!isImage && !isVideo && (
+                    <Icon
+                        name={thumb.icon}
+                        size={20}
+                        className="upup-text-white"
+                    />
                 )}
             </div>
 
@@ -111,33 +166,37 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
                 )}
             </div>
 
-            {file.status === UploadStatus.SUCCESSFUL && (
+            {isSuccessful && (
                 <FileSuccessCheck
                     index={index}
-                    size={20}
+                    size={22}
                     className="upup-flex-none"
                 />
             )}
 
-            <button
-                className={cn(
-                    'upup-fx-remove upup-fx-press upup-flex upup-h-[26px] upup-w-[26px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[7px]',
-                    dark
-                        ? 'upup-text-[#64748b] hover:upup-bg-white/[0.06]'
-                        : 'upup-text-gray-500 hover:upup-bg-black/[0.06]',
-                    'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                )}
-                onClick={e => {
-                    e.stopPropagation()
-                    handleFileRemove(file.id)
-                }}
-                type="button"
-                disabled={!!progress}
-                aria-label={tr.removeFile}
-                data-testid="upup-file-remove"
-            >
-                <FileDeleteIcon className="upup-h-[15px] upup-w-[15px]" />
-            </button>
+            {/* Once a file has uploaded successfully its delete control is gone —
+                the completion check is the only trailing affordance. */}
+            {!isSuccessful && (
+                <button
+                    className={cn(
+                        'upup-fx-remove upup-fx-press upup-flex upup-h-8 upup-w-8 upup-flex-none upup-items-center upup-justify-center upup-rounded-lg',
+                        dark
+                            ? 'upup-text-[#64748b] hover:upup-bg-white/[0.06]'
+                            : 'upup-text-gray-500 hover:upup-bg-black/[0.06]',
+                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                    )}
+                    onClick={e => {
+                        e.stopPropagation()
+                        handleFileRemove(file.id)
+                    }}
+                    type="button"
+                    disabled={!!progress}
+                    aria-label={tr.removeFile}
+                    data-testid="upup-file-remove"
+                >
+                    <FileDeleteIcon className="upup-h-5 upup-w-5" />
+                </button>
+            )}
         </div>
     )
 })

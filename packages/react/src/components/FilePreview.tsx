@@ -122,11 +122,12 @@ export default memo(function FilePreview(props: Props) {
 
     return (
         <div
-            // The explicit width is what makes the caption's `truncate` work —
-            // an unconstrained inline-block grows to the name's full width and
-            // overlaps the neighboring grid column.
+            // Fills its grid cell (auto-fit minmax(160px,1fr) in FileList), so the
+            // tile stretches to share the row evenly — no dead columns at 2/3
+            // files. The cell has a definite width, so the caption `truncate`
+            // still works without an explicit pixel width here.
             className={cn(
-                'upup-inline-block upup-w-[145px] upup-max-w-full',
+                'upup-block upup-w-full',
                 themeSlots?.filePreview?.root,
             )}
             data-testid="upup-file-preview"
@@ -137,7 +138,9 @@ export default memo(function FilePreview(props: Props) {
                 className={cn(
                     // Chrome-language tile (spec §3): translucent card + hairline
                     // ring, sky accents. Image tiles paint the picture over it.
-                    'upup-fx-hover-lift upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-xl upup-ring-1',
+                    // Fluid width, fixed height — fills the cell horizontally but
+                    // never balloons vertically in the widest (2-file) row.
+                    'upup-fx-hover-lift upup-relative upup-h-[160px] upup-w-full upup-overflow-hidden upup-rounded-xl upup-ring-1',
                     'upup-bg-contain upup-bg-center upup-bg-no-repeat',
                     isDarkTheme
                         ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
@@ -225,24 +228,28 @@ export default memo(function FilePreview(props: Props) {
                     </button>
                 )}
 
-                <button
-                    className={cn(
-                        'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-                        'upup-flex upup-h-[26px] upup-w-[26px] upup-items-center upup-justify-center',
-                        'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
-                        'hover:upup-bg-[#04080f]/65',
-                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                        slotClasses.fileDeleteButton,
-                        themeSlots?.filePreview?.deleteButton,
-                    )}
-                    onClick={onHandleFileRemove}
-                    type="button"
-                    disabled={!!progress}
-                    aria-label={tr.removeFile}
-                    data-testid="upup-file-remove"
-                >
-                    <FileDeleteIcon className="upup-h-3.5 upup-w-3.5" />
-                </button>
+                {/* Delete disappears once the file has uploaded successfully —
+                    the completion check is then the only overlay affordance. */}
+                {!isSuccessful && (
+                    <button
+                        className={cn(
+                            'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                            'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
+                            'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                            'hover:upup-bg-[#04080f]/65',
+                            'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                            slotClasses.fileDeleteButton,
+                            themeSlots?.filePreview?.deleteButton,
+                        )}
+                        onClick={onHandleFileRemove}
+                        type="button"
+                        disabled={!!progress}
+                        aria-label={tr.removeFile}
+                        data-testid="upup-file-remove"
+                    >
+                        <FileDeleteIcon className="upup-h-5 upup-w-5" />
+                    </button>
+                )}
 
                 {isSuccessful && (
                     <FileSuccessCheck

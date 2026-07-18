@@ -92,25 +92,29 @@ export default memo(function FileHero({ file }: Props) {
                 <FileSuccessCheck className="upup-absolute upup-left-3 upup-top-3 upup-z-10" />
             )}
 
-            <button
-                className={cn(
-                    'upup-fx-remove upup-fx-press upup-absolute upup-right-3 upup-top-3 upup-z-10',
-                    'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
-                    'upup-rounded-[9px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
-                    'hover:upup-bg-[#04080f]/65',
-                    'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                )}
-                onClick={e => {
-                    e.stopPropagation()
-                    handleFileRemove(file.id)
-                }}
-                type="button"
-                disabled={!!progress}
-                aria-label={tr.removeFile}
-                data-testid="upup-file-remove"
-            >
-                <FileDeleteIcon className="upup-h-[15px] upup-w-[15px]" />
-            </button>
+            {/* Delete is gone once the file has uploaded successfully — the
+                completion check (top-left) is the only remaining overlay mark. */}
+            {file.status !== UploadStatus.SUCCESSFUL && (
+                <button
+                    className={cn(
+                        'upup-fx-remove upup-fx-press upup-absolute upup-right-3 upup-top-3 upup-z-10',
+                        'upup-flex upup-h-[34px] upup-w-[34px] upup-items-center upup-justify-center',
+                        'upup-rounded-[9px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                        'hover:upup-bg-[#04080f]/65',
+                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                    )}
+                    onClick={e => {
+                        e.stopPropagation()
+                        handleFileRemove(file.id)
+                    }}
+                    type="button"
+                    disabled={!!progress}
+                    aria-label={tr.removeFile}
+                    data-testid="upup-file-remove"
+                >
+                    <FileDeleteIcon className="upup-h-5 upup-w-5" />
+                </button>
+            )}
 
             {/* Caption scrim: theme-aware (a black scrim over a light hero read
                 as a dark-mode leak). The progress bar lives INSIDE the scrim

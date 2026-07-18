@@ -11,15 +11,20 @@ import {
 import FilePreview from './FilePreview'
 import FilePreviewPortal from './FilePreviewPortal'
 import FileRow from './FileRow'
-import { isListViewForced } from '../lib/view-mode'
 
 type Props = {
     file: UploadFile
     /** Position in the sorted list — drives the entrance stagger. */
     index?: number
+    /** True when the panel forces the row list (tiles don't fit one row). */
+    forcedList?: boolean
 }
 
-export default memo(function FileItem({ file, index = 0 }: Props) {
+export default memo(function FileItem({
+    file,
+    index = 0,
+    forcedList = false,
+}: Props) {
     const { core } = useUploaderRuntime()
     const { files, leavingFileIds } = useUploaderFiles()
     const { viewMode } = useUploaderView()
@@ -79,7 +84,7 @@ export default memo(function FileItem({ file, index = 0 }: Props) {
                     : { animationDelay: `${Math.min(index, 8) * 40}ms` }
             }
         >
-            {viewMode === 'list' || isListViewForced(files.size) ? (
+            {viewMode === 'list' || forcedList ? (
                 <FileRow file={file} index={index} />
             ) : (
                 <>

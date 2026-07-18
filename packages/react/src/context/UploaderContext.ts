@@ -52,6 +52,7 @@ export type ContextProps = RequiredDefined<
     | 'onError'
     | 'icons'
     | 'showBranding'
+    | 'quietCompletion'
     | 'className'
     | 'style'
     | 'disableDragDrop'
@@ -309,6 +310,7 @@ export function UploaderContextProvider({
             value.props.onIntegrationClick,
             value.props.resumable,
             value.props.showBranding,
+            value.props.quietCompletion,
             value.props.sources,
             value.props.style,
         ],
