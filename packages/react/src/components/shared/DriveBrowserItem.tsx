@@ -35,7 +35,7 @@ export default function DriveBrowserItem({
                         : 'upup-bg-[#0ea5e9]/10 upup-ring-[#0ea5e9]/40'
                     : dark
                       ? 'upup-bg-white/[0.04] upup-ring-white/[0.06] hover:upup-bg-white/[0.07]'
-                      : 'upup-bg-black/[0.03] upup-ring-black/[0.06] hover:upup-bg-black/[0.05]',
+                      : 'upup-bg-white upup-ring-black/[0.07] hover:upup-bg-slate-50',
                 {
                     [slotClasses.driveItemContainerDefault ?? '']:
                         !isFileSelected &&

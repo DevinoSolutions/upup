@@ -27,17 +27,19 @@ export default function SourceView(): React.ReactElement | null {
             className="upup-animate-fx-view upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
             data-upup-slot="source-view"
         >
+            {/* Transparent header on the panel gradient (no inner box): the
+                provider icon + name fill the row; "Back" returns to sources. */}
             <div
                 className={cn(
-                    'upup-shadow-bottom upup-flex upup-items-center upup-justify-between upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#0284c7]',
-                    {
-                        'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
-                            dark,
-                    },
+                    'upup-flex upup-items-center upup-justify-between upup-gap-2 upup-px-3 upup-py-2 upup-text-sm upup-font-medium',
+                    dark ? 'upup-text-[#FAFAFA]' : 'upup-text-[#0f172a]',
                     slotClasses.sourceViewHeader,
                 )}
             >
-                <Icon />
+                <span className="upup-flex upup-items-center upup-gap-2">
+                    <Icon />
+                    <span>{tr[uploadSourceObject[activeSource].nameKey]}</span>
+                </span>
                 <button
                     className={cn(
                         'upup-rounded-md upup-p-1 upup-text-[#0284c7] upup-transition-all upup-duration-300',
@@ -55,7 +57,7 @@ export default function SourceView(): React.ReactElement | null {
                     }}
                     type="button"
                 >
-                    {tr.cancel}
+                    {tr.overlayBack}
                 </button>
             </div>
             <Suspense

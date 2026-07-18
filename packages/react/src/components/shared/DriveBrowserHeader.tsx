@@ -36,18 +36,17 @@ export default function DriveBrowserHeader({
 
     return (
         <div data-upup-slot="drive-browser-header">
+            {/* One compact row on the panel gradient (no inner box):
+                breadcrumb | search | avatar + log out. */}
             <div
                 className={cn(
-                    'upup-shadow-bottom upup-grid upup-grid-cols-[1fr,auto] upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
-                    {
-                        'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]':
-                            dark,
-                    },
+                    'upup-flex upup-items-center upup-gap-2.5 upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
+                    { 'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]': dark },
                     slotClasses.driveHeader,
                 )}
             >
                 {!!path && (
-                    <div className="upup-flex upup-items-center upup-gap-1">
+                    <div className="upup-flex upup-min-w-0 upup-shrink upup-items-center upup-gap-1">
                         {path.map((p, i) => (
                             <p
                                 key={p.id}
@@ -75,8 +74,40 @@ export default function DriveBrowserHeader({
                         ))}
                     </div>
                 )}
-                <div className="upup-flex upup-items-center upup-gap-2">
-                    <div className="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
+                {showSearch ? (
+                    <div
+                        className={cn(
+                            'upup-relative upup-min-w-0 upup-flex-1',
+                            slotClasses.driveSearchContainer,
+                        )}
+                    >
+                        <input
+                            type="search"
+                            name="upup-drive-search"
+                            aria-label={tr.search}
+                            className={cn(
+                                'upup-w-full upup-rounded-lg upup-px-3 upup-py-1.5 upup-pl-8 upup-text-xs upup-outline-none upup-ring-1 upup-transition-shadow focus:upup-ring-2 focus:upup-ring-[#38bdf8]',
+                                dark
+                                    ? 'upup-bg-white/[0.06] upup-text-[#e2e8f0] upup-ring-white/[0.1] placeholder:upup-text-[#64748b]'
+                                    : 'upup-bg-white upup-text-[#0f172a] upup-ring-black/[0.08] placeholder:upup-text-[#94a3b8]',
+                                slotClasses.driveSearchInput,
+                            )}
+                            placeholder={tr.search}
+                            value={searchTerm}
+                            onChange={e => {
+                                onSearch(e.currentTarget.value)
+                            }}
+                        />
+                        <Icon
+                            name="search"
+                            className="upup-absolute upup-left-2.5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]"
+                        />
+                    </div>
+                ) : (
+                    <div className="upup-flex-1" />
+                )}
+                <div className="upup-flex upup-flex-none upup-items-center upup-gap-2">
+                    <div className="upup-relative upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
                         {!!user.picture && (
                             <img
                                 alt={user.name}
@@ -107,42 +138,6 @@ export default function DriveBrowserHeader({
                     </button>
                 </div>
             </div>
-
-            {showSearch && (
-                <div
-                    className={cn(
-                        'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                        {
-                            'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
-                                dark,
-                        },
-                        slotClasses.driveSearchContainer,
-                    )}
-                >
-                    <input
-                        type="search"
-                        name="upup-drive-search"
-                        aria-label={tr.search}
-                        className={cn(
-                            'upup-h-fit upup-w-full upup-rounded-md upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-pl-8 upup-text-xs upup-outline-none upup-transition-all upup-duration-300',
-                            {
-                                'upup-bg-white/5 upup-text-[#6D6D6D] dark:upup-bg-white/5 dark:upup-text-[#6D6D6D]':
-                                    dark,
-                            },
-                            slotClasses.driveSearchInput,
-                        )}
-                        placeholder={tr.search}
-                        value={searchTerm}
-                        onChange={e => {
-                            onSearch(e.currentTarget.value)
-                        }}
-                    />
-                    <Icon
-                        name="search"
-                        className="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]"
-                    />
-                </div>
-            )}
         </div>
     )
 }

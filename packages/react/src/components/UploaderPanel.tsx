@@ -209,7 +209,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                         ry="14"
                         fill="none"
                         strokeWidth="1.5"
-                        strokeDasharray="6 6"
+                        // 24px period (10 dash + 14 gap) — the fx-dash-march
+                        // keyframe shifts stroke-dashoffset by exactly -24, so
+                        // the marching loop stays seamless.
+                        strokeDasharray="10 14"
                         stroke={
                             dark
                                 ? absoluteIsDragging
@@ -370,8 +373,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                 </div>
             )}
             {/* Branding row INSIDE the panel (and the dashed frame). The
-                add-more sheet slides over it, per the states-tour mock. */}
-            {!mini && showBranding && (
+                add-more sheet slides over it, per the states-tour mock. Hidden
+                while a source view is active — the drive browser / camera / url
+                views own the full panel. */}
+            {!mini && showBranding && !activeSource && (
                 <div
                     data-testid="upup-branding"
                     className="upup-flex upup-w-full upup-flex-none upup-flex-col upup-items-center upup-justify-between upup-gap-1 upup-px-6 upup-pb-5 upup-pt-1.5 md:upup-flex-row"
