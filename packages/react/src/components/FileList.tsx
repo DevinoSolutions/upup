@@ -78,29 +78,30 @@ export default memo(function FileList() {
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    const sortedFiles = Array.from(files.values()).sort((a, b) => {
-        const pa = a.relativePath || a.name
-        const pb = b.relativePath || b.name
-        return pa.localeCompare(pb) || a.name.localeCompare(b.name)
-    })
+    // Render in CORE's insertion order (FileManager's Map preserves it, stable
+    // across renders and unchanged by in-place updateFile). A file added after
+    // others must appear LAST, never re-sorted into the middle alphabetically
+    // (round-7 item 3). Folder uploads already add folder-by-folder, so grouping
+    // survives without a sort.
+    const orderedFiles = Array.from(files.values())
 
-    const isSingle = sortedFiles.length === 1
+    const isSingle = orderedFiles.length === 1
 
     // Adaptive layout rule: the square-tile grid is only honored when every tile
     // fits in ONE row of the fixed-height panel. tilesPerRow is measured from the
     // scroll container (160px min tile + 16px gap); past it the row list is FORCED
     // and UploaderHeader hides the grid/list toggle.
     const tilesPerRow = useTilesPerRow(scrollRef)
-    const forcedList = isListViewForced(sortedFiles.length, tilesPerRow)
+    const forcedList = isListViewForced(orderedFiles.length, tilesPerRow)
     const effectiveViewMode = forcedList ? 'list' : viewMode
 
     // Virtual scrolling only for list mode with many files (never for the hero)
     const shouldVirtualize =
-        sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD &&
+        orderedFiles.length >= VIRTUAL_SCROLL_THRESHOLD &&
         effectiveViewMode !== 'grid'
 
     const virtualizer = useVirtualizer({
-        count: sortedFiles.length,
+        count: orderedFiles.length,
         getScrollElement: () => scrollRef.current,
         estimateSize: () => ESTIMATED_ITEM_HEIGHT,
         overscan: 5,
@@ -111,7 +112,7 @@ export default memo(function FileList() {
     // When the add-more source surface is up (overlay open, or a source chosen
     // while files exist), this list stays mounted but dimmed and inert behind it.
     const dimmed = sourceOverlayOpen || !!activeSource
-    const heroLeaving = isSingle && leavingFileIds.has(sortedFiles[0]!.id)
+    const heroLeaving = isSingle && leavingFileIds.has(orderedFiles[0]!.id)
     // Quiet completion (item 7): a successful run under `quietCompletion` shows
     // ONLY the checkmark overlay — Done/add-more/CTA are all suppressed and the
     // host takes over via the completion callbacks. Wins over 6a's continue flow.
@@ -203,7 +204,7 @@ export default memo(function FileList() {
                                 'upup-animate-fx-exit upup-overflow-hidden',
                         )}
                     >
-                        <FileHero file={sortedFiles[0]!} />
+                        <FileHero file={orderedFiles[0]!} />
                     </div>
                 ) : shouldVirtualize ? (
                     // Virtualized list: only renders visible FileItems
@@ -221,7 +222,7 @@ export default memo(function FileList() {
                         )}
                     >
                         {virtualizer.getVirtualItems().map(virtualItem => {
-                            const file = sortedFiles[virtualItem.index]
+                            const file = orderedFiles[virtualItem.index]
                             if (!file) return null
                             return (
                                 <div
@@ -286,7 +287,7 @@ export default memo(function FileList() {
                             },
                         )}
                     >
-                        {sortedFiles.map((file, index) => (
+                        {orderedFiles.map((file, index) => (
                             <FileItem
                                 key={file.id}
                                 file={file}
