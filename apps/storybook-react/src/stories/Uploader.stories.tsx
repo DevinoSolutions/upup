@@ -29,6 +29,11 @@ type Story = StoryObj<UploaderProps>
 
 export const Playground: Story = {}
 
+// Per-variant Playground for the a11y-overflow 4b sweep (keys on
+// `<fw>-uploader--playground-<variant>`). Same defaults as Playground; the
+// distinct story id is the only thing the sweep needs.
+export const PlaygroundHero: Story = {}
+
 export const Basic: Story = {
     args: { sources: ['local'], showBranding: false, maxFiles: 1 },
 }
@@ -81,4 +86,13 @@ export const Parity: Story = {
         showBranding: false,
         themeMode: 'light',
     } as any,
+}
+
+// Parity fixture for the single-file HERO state (exactly one file → FileHero,
+// not the card list). IDENTICAL args to `Parity`; the parity spec seeds one
+// file for this variant instead of two. Locale/theme match `Parity` so only the
+// file-count-driven DOM differs.
+export const ParityHero: Story = {
+    parameters: Parity.parameters,
+    args: Parity.args,
 }

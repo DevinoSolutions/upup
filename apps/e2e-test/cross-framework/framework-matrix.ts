@@ -11,8 +11,8 @@
 // visual check (the harness catches DOM structure, never geometry/spacing).
 
 /** UI variants the parity + overflow harnesses are keyed by. */
-export type ParityVariant = 'default'
-export const PARITY_VARIANTS: readonly ParityVariant[] = ['default']
+export type ParityVariant = 'default' | 'hero'
+export const PARITY_VARIANTS: readonly ParityVariant[] = ['default', 'hero']
 
 export interface FrameworkEntry {
     /** Playwright project name AND the `@upupjs/storybook-<name>` package suffix. */
@@ -30,37 +30,55 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         name: 'react',
         port: 53050,
         storyId: 'react-uploader--real-upload-client',
-        parityStoryIds: { default: 'react-uploader--parity' },
+        parityStoryIds: {
+            default: 'react-uploader--parity',
+            hero: 'react-uploader--parity-hero',
+        },
     },
     {
         name: 'vue',
         port: 53051,
         storyId: 'vue-uploader--real-upload-client',
-        parityStoryIds: { default: 'vue-uploader--parity' },
+        parityStoryIds: {
+            default: 'vue-uploader--parity',
+            hero: 'vue-uploader--parity-hero',
+        },
     },
     {
         name: 'svelte',
         port: 53052,
         storyId: 'svelte-uploader--real-upload-client',
-        parityStoryIds: { default: 'svelte-uploader--parity' },
+        parityStoryIds: {
+            default: 'svelte-uploader--parity',
+            hero: 'svelte-uploader--parity-hero',
+        },
     },
     {
         name: 'vanilla',
         port: 53053,
         storyId: 'vanilla-uploader--real-upload-client',
-        parityStoryIds: { default: 'vanilla-uploader--parity' },
+        parityStoryIds: {
+            default: 'vanilla-uploader--parity',
+            hero: 'vanilla-uploader--parity-hero',
+        },
     },
     {
         name: 'angular',
         port: 53054,
         storyId: 'angular-uploader--real-upload-client',
-        parityStoryIds: { default: 'angular-uploader--parity' },
+        parityStoryIds: {
+            default: 'angular-uploader--parity',
+            hero: 'angular-uploader--parity-hero',
+        },
     },
     {
         name: 'preact',
         port: 53055,
         storyId: 'preact-uploader--real-upload-client',
-        parityStoryIds: { default: 'preact-uploader--parity' },
+        parityStoryIds: {
+            default: 'preact-uploader--parity',
+            hero: 'preact-uploader--parity-hero',
+        },
     },
 ]
 

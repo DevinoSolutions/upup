@@ -3,12 +3,15 @@
         "sourceSelector": {
             "tag": "div",
             "classes": [
+                "upup-animate-fx-view",
                 "upup-flex",
-                "upup-flex-col-reverse",
-                "upup-gap-3",
+                "upup-flex-col",
+                "upup-gap-6",
                 "upup-h-full",
                 "upup-items-center",
                 "upup-justify-center",
+                "upup-px-4",
+                "upup-py-6",
                 "upup-relative",
                 "upup-rounded-lg"
             ],
@@ -17,34 +20,104 @@
                     "tag": "div",
                     "classes": [
                         "upup-flex",
-                        "upup-flex-col",
-                        "upup-gap-1",
+                        "upup-flex-wrap",
+                        "upup-font-medium",
+                        "upup-gap-x-1.5",
+                        "upup-gap-y-1",
+                        "upup-items-center",
                         "upup-justify-center",
-                        "upup-w-full"
+                        "upup-px-2",
+                        "upup-text-[#242634]",
+                        "upup-text-base",
+                        "upup-text-center"
+                    ],
+                    "children": [
+                        {
+                            "tag": "span",
+                            "classes": [],
+                            "children": [],
+                            "text": "Drop files here,"
+                        },
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-cursor-pointer",
+                                "upup-font-semibold",
+                                "upup-rounded",
+                                "upup-text-[#0284c7]"
+                            ],
+                            "children": [],
+                            "testid": "upup-browse-files",
+                            "type": "button",
+                            "text": "browse files"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [],
+                            "children": [],
+                            "text": "or import from:"
+                        }
+                    ]
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-flex",
+                        "upup-flex-wrap",
+                        "upup-gap-x-6",
+                        "upup-gap-y-5",
+                        "upup-items-start",
+                        "upup-justify-center",
+                        "upup-max-w-[420px]"
                     ],
                     "children": [
                         {
                             "tag": "button",
                             "classes": [
-                                "upup-border-b",
-                                "upup-border-gray-200",
+                                "upup-cursor-pointer",
                                 "upup-flex",
-                                "upup-gap-[6px]",
+                                "upup-flex-col",
+                                "upup-fx-hover-lift",
+                                "upup-fx-icon-nudge",
+                                "upup-fx-press",
+                                "upup-gap-[9px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-px-2",
-                                "upup-py-1"
+                                "upup-rounded-[14px]",
+                                "upup-w-[66px]"
                             ],
                             "children": [
                                 {
-                                    "tag": "svg",
-                                    "classes": ["upup-text-[#2275d7]"],
-                                    "children": []
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-bg-black/[0.04]",
+                                        "upup-flex",
+                                        "upup-h-[52px]",
+                                        "upup-items-center",
+                                        "upup-justify-center",
+                                        "upup-ring-1",
+                                        "upup-ring-black/[0.06]",
+                                        "upup-rounded-[14px]",
+                                        "upup-transition-colors",
+                                        "upup-w-[52px]"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": [
+                                                "upup-h-6",
+                                                "upup-text-[#0ea5e9]",
+                                                "upup-w-6"
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
                                 },
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-text-[#242634]",
+                                        "upup-leading-none",
+                                        "upup-text-[#6D6D6D]",
                                         "upup-text-xs"
                                     ],
                                     "children": [],
@@ -57,25 +130,46 @@
                         {
                             "tag": "button",
                             "classes": [
-                                "upup-border-b",
-                                "upup-border-gray-200",
+                                "upup-cursor-pointer",
                                 "upup-flex",
-                                "upup-gap-[6px]",
+                                "upup-flex-col",
+                                "upup-fx-hover-lift",
+                                "upup-fx-icon-nudge",
+                                "upup-fx-press",
+                                "upup-gap-[9px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-px-2",
-                                "upup-py-1"
+                                "upup-rounded-[14px]",
+                                "upup-w-[66px]"
                             ],
                             "children": [
                                 {
-                                    "tag": "svg",
-                                    "classes": [],
-                                    "children": []
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-bg-black/[0.04]",
+                                        "upup-flex",
+                                        "upup-h-[52px]",
+                                        "upup-items-center",
+                                        "upup-justify-center",
+                                        "upup-ring-1",
+                                        "upup-ring-black/[0.06]",
+                                        "upup-rounded-[14px]",
+                                        "upup-transition-colors",
+                                        "upup-w-[52px]"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-6", "upup-w-6"],
+                                            "children": []
+                                        }
+                                    ]
                                 },
                                 {
                                     "tag": "span",
                                     "classes": [
-                                        "upup-text-[#242634]",
+                                        "upup-leading-none",
+                                        "upup-text-[#6D6D6D]",
                                         "upup-text-xs"
                                     ],
                                     "children": [],
@@ -91,58 +185,72 @@
                     "tag": "div",
                     "classes": [
                         "upup-flex",
-                        "upup-flex-col",
-                        "upup-gap-1",
+                        "upup-flex-wrap",
+                        "upup-gap-x-2.5",
+                        "upup-gap-y-1",
                         "upup-items-center",
+                        "upup-justify-center",
                         "upup-px-3",
-                        "upup-text-center"
+                        "upup-text-[#6D6D6D]",
+                        "upup-text-center",
+                        "upup-text-xs"
                     ],
                     "children": [
                         {
-                            "tag": "div",
+                            "tag": "span",
                             "classes": [
-                                "upup-flex",
-                                "upup-flex-wrap",
-                                "upup-gap-1",
-                                "upup-items-center",
-                                "upup-justify-center"
+                                "upup-gap-1.5",
+                                "upup-inline-flex",
+                                "upup-items-center"
                             ],
                             "children": [
                                 {
                                     "tag": "span",
-                                    "classes": [
-                                        "upup-text-[#0B0B0B]",
-                                        "upup-text-xs"
+                                    "classes": ["upup-inline-flex"],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-4", "upup-w-4"],
+                                            "children": []
+                                        }
                                     ],
-                                    "children": [],
-                                    "text": "Drag your files or"
-                                },
-                                {
-                                    "tag": "button",
-                                    "classes": [
-                                        "upup-cursor-pointer",
-                                        "upup-font-semibold",
-                                        "upup-text-[#0284c7]",
-                                        "upup-text-xs"
-                                    ],
-                                    "children": [],
-                                    "testid": "upup-browse-files",
-                                    "type": "button",
-                                    "text": "browse files"
+                                    "ariaHidden": "true"
                                 }
-                            ]
+                            ],
+                            "text": "3 files max"
                         },
                         {
-                            "tag": "p",
-                            "classes": [
-                                "upup-text-[#6D6D6D]",
-                                "upup-text-center",
-                                "upup-text-xs"
-                            ],
+                            "tag": "span",
+                            "classes": [],
                             "children": [],
-                            "text": "Add your documents here, you can upload up to 3 files max, Max 1 GB files are allowed"
+                            "ariaHidden": "true",
+                            "text": "·"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [
+                                "upup-gap-1.5",
+                                "upup-inline-flex",
+                                "upup-items-center"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "span",
+                                    "classes": ["upup-inline-flex"],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-4", "upup-w-4"],
+                                            "children": []
+                                        }
+                                    ],
+                                    "ariaHidden": "true"
+                                }
+                            ],
+                            "text": "1 GB each"
                         }
-                    ]
+                    ],
+                    "slot": "limits-caption"
                 }
             ],
             "testid": "upup-source-selector",
@@ -151,6 +259,7 @@
         "fileItem": {
             "tag": "div",
             "classes": [
+                "upup-animate-fx-enter",
                 "upup-bg-transparent",
                 "upup-flex",
                 "upup-flex-1",
@@ -167,15 +276,17 @@
                         {
                             "tag": "div",
                             "classes": [
+                                "upup-bg-black/[0.04]",
                                 "upup-bg-center",
                                 "upup-bg-contain",
                                 "upup-bg-no-repeat",
-                                "upup-bg-white",
+                                "upup-fx-hover-lift",
                                 "upup-h-[145px]",
                                 "upup-overflow-hidden",
                                 "upup-relative",
-                                "upup-rounded-lg",
-                                "upup-shadow-sm",
+                                "upup-ring-1",
+                                "upup-ring-black/[0.06]",
+                                "upup-rounded-xl",
                                 "upup-w-[145px]"
                             ],
                             "children": [
@@ -240,6 +351,8 @@
                                         "upup-absolute",
                                         "upup-bg-white",
                                         "upup-flex",
+                                        "upup-fx-press",
+                                        "upup-fx-remove",
                                         "upup-h-5",
                                         "upup-items-center",
                                         "upup-justify-center",
@@ -326,15 +439,17 @@
                 {
                     "tag": "div",
                     "classes": [
+                        "upup-bg-black/[0.04]",
                         "upup-bg-center",
                         "upup-bg-contain",
                         "upup-bg-no-repeat",
-                        "upup-bg-white",
+                        "upup-fx-hover-lift",
                         "upup-h-[145px]",
                         "upup-overflow-hidden",
                         "upup-relative",
-                        "upup-rounded-lg",
-                        "upup-shadow-sm",
+                        "upup-ring-1",
+                        "upup-ring-black/[0.06]",
+                        "upup-rounded-xl",
                         "upup-w-[145px]"
                     ],
                     "children": [
@@ -397,6 +512,8 @@
                                 "upup-absolute",
                                 "upup-bg-white",
                                 "upup-flex",
+                                "upup-fx-press",
+                                "upup-fx-remove",
                                 "upup-h-5",
                                 "upup-items-center",
                                 "upup-justify-center",
@@ -589,6 +706,8 @@
                                         "upup-border-[#38bdf8]/50",
                                         "upup-border-dashed",
                                         "upup-flex",
+                                        "upup-fx-hover-lift",
+                                        "upup-fx-press",
                                         "upup-gap-1",
                                         "upup-items-center",
                                         "upup-px-2",
@@ -604,6 +723,8 @@
                                             "children": []
                                         }
                                     ],
+                                    "testid": "upup-add-more",
+                                    "slot": "add-more",
                                     "text": "Add More"
                                 }
                             ]
@@ -636,6 +757,7 @@
                                 {
                                     "tag": "div",
                                     "classes": [
+                                        "upup-animate-fx-enter",
                                         "upup-bg-transparent",
                                         "upup-flex",
                                         "upup-flex-1",
@@ -652,15 +774,17 @@
                                                 {
                                                     "tag": "div",
                                                     "classes": [
+                                                        "upup-bg-black/[0.04]",
                                                         "upup-bg-center",
                                                         "upup-bg-contain",
                                                         "upup-bg-no-repeat",
-                                                        "upup-bg-white",
+                                                        "upup-fx-hover-lift",
                                                         "upup-h-[145px]",
                                                         "upup-overflow-hidden",
                                                         "upup-relative",
-                                                        "upup-rounded-lg",
-                                                        "upup-shadow-sm",
+                                                        "upup-ring-1",
+                                                        "upup-ring-black/[0.06]",
+                                                        "upup-rounded-xl",
                                                         "upup-w-[145px]"
                                                     ],
                                                     "children": [
@@ -725,6 +849,8 @@
                                                                 "upup-absolute",
                                                                 "upup-bg-white",
                                                                 "upup-flex",
+                                                                "upup-fx-press",
+                                                                "upup-fx-remove",
                                                                 "upup-h-5",
                                                                 "upup-items-center",
                                                                 "upup-justify-center",
@@ -813,6 +939,7 @@
                                 {
                                     "tag": "div",
                                     "classes": [
+                                        "upup-animate-fx-enter",
                                         "upup-bg-transparent",
                                         "upup-flex",
                                         "upup-flex-1",
@@ -829,15 +956,17 @@
                                                 {
                                                     "tag": "div",
                                                     "classes": [
+                                                        "upup-bg-black/[0.04]",
                                                         "upup-bg-center",
                                                         "upup-bg-contain",
                                                         "upup-bg-no-repeat",
-                                                        "upup-bg-white",
+                                                        "upup-fx-hover-lift",
                                                         "upup-h-[145px]",
                                                         "upup-overflow-hidden",
                                                         "upup-relative",
-                                                        "upup-rounded-lg",
-                                                        "upup-shadow-sm",
+                                                        "upup-ring-1",
+                                                        "upup-ring-black/[0.06]",
+                                                        "upup-rounded-xl",
                                                         "upup-w-[145px]"
                                                     ],
                                                     "children": [
@@ -861,6 +990,8 @@
                                                                 "upup-absolute",
                                                                 "upup-bg-white",
                                                                 "upup-flex",
+                                                                "upup-fx-press",
+                                                                "upup-fx-remove",
                                                                 "upup-h-5",
                                                                 "upup-items-center",
                                                                 "upup-justify-center",
@@ -947,6 +1078,38 @@
                                     "slot": "file-item"
                                 }
                             ]
+                        },
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-border-[1.5px]",
+                                "upup-border-black/[0.16]",
+                                "upup-border-dashed",
+                                "upup-flex",
+                                "upup-flex-none",
+                                "upup-font-medium",
+                                "upup-fx-hover-lift",
+                                "upup-fx-press",
+                                "upup-gap-2",
+                                "upup-items-center",
+                                "upup-justify-center",
+                                "upup-mt-2.5",
+                                "upup-px-3",
+                                "upup-py-2.5",
+                                "upup-rounded-xl",
+                                "upup-text-[13px]",
+                                "upup-text-gray-500"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "svg",
+                                    "classes": [],
+                                    "children": []
+                                }
+                            ],
+                            "testid": "upup-add-more",
+                            "slot": "add-more",
+                            "text": "Add More"
                         }
                     ]
                 },
@@ -969,6 +1132,8 @@
                                 "upup-bg-[#0ea5e9]",
                                 "upup-disabled:animate-pulse",
                                 "upup-font-medium",
+                                "upup-fx-press",
+                                "upup-fx-sheen-sweep",
                                 "upup-ml-auto",
                                 "upup-px-4",
                                 "upup-py-2",
@@ -979,6 +1144,692 @@
                             "children": [],
                             "testid": "upup-upload-btn",
                             "text": "Upload 2 files"
+                        },
+                        {
+                            "tag": "div",
+                            "classes": [
+                                "upup-flex",
+                                "upup-flex-1",
+                                "upup-flex-col",
+                                "upup-gap-1"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "div",
+                                    "classes": [
+                                        "upup-flex",
+                                        "upup-gap-2",
+                                        "upup-items-center"
+                                    ],
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "testid": "upup-file-list",
+            "slot": "file-list"
+        }
+    },
+    "hero": {
+        "sourceSelector": {
+            "tag": "div",
+            "classes": [
+                "upup-animate-fx-view",
+                "upup-flex",
+                "upup-flex-col",
+                "upup-gap-6",
+                "upup-h-full",
+                "upup-items-center",
+                "upup-justify-center",
+                "upup-px-4",
+                "upup-py-6",
+                "upup-relative",
+                "upup-rounded-lg"
+            ],
+            "children": [
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-flex",
+                        "upup-flex-wrap",
+                        "upup-font-medium",
+                        "upup-gap-x-1.5",
+                        "upup-gap-y-1",
+                        "upup-items-center",
+                        "upup-justify-center",
+                        "upup-px-2",
+                        "upup-text-[#242634]",
+                        "upup-text-base",
+                        "upup-text-center"
+                    ],
+                    "children": [
+                        {
+                            "tag": "span",
+                            "classes": [],
+                            "children": [],
+                            "text": "Drop files here,"
+                        },
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-cursor-pointer",
+                                "upup-font-semibold",
+                                "upup-rounded",
+                                "upup-text-[#0284c7]"
+                            ],
+                            "children": [],
+                            "testid": "upup-browse-files",
+                            "type": "button",
+                            "text": "browse files"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [],
+                            "children": [],
+                            "text": "or import from:"
+                        }
+                    ]
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-flex",
+                        "upup-flex-wrap",
+                        "upup-gap-x-6",
+                        "upup-gap-y-5",
+                        "upup-items-start",
+                        "upup-justify-center",
+                        "upup-max-w-[420px]"
+                    ],
+                    "children": [
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-cursor-pointer",
+                                "upup-flex",
+                                "upup-flex-col",
+                                "upup-fx-hover-lift",
+                                "upup-fx-icon-nudge",
+                                "upup-fx-press",
+                                "upup-gap-[9px]",
+                                "upup-group",
+                                "upup-items-center",
+                                "upup-rounded-[14px]",
+                                "upup-w-[66px]"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-bg-black/[0.04]",
+                                        "upup-flex",
+                                        "upup-h-[52px]",
+                                        "upup-items-center",
+                                        "upup-justify-center",
+                                        "upup-ring-1",
+                                        "upup-ring-black/[0.06]",
+                                        "upup-rounded-[14px]",
+                                        "upup-transition-colors",
+                                        "upup-w-[52px]"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": [
+                                                "upup-h-6",
+                                                "upup-text-[#0ea5e9]",
+                                                "upup-w-6"
+                                            ],
+                                            "children": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-leading-none",
+                                        "upup-text-[#6D6D6D]",
+                                        "upup-text-xs"
+                                    ],
+                                    "children": [],
+                                    "text": "My Device"
+                                }
+                            ],
+                            "testid": "upup-source-local",
+                            "type": "button"
+                        },
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-cursor-pointer",
+                                "upup-flex",
+                                "upup-flex-col",
+                                "upup-fx-hover-lift",
+                                "upup-fx-icon-nudge",
+                                "upup-fx-press",
+                                "upup-gap-[9px]",
+                                "upup-group",
+                                "upup-items-center",
+                                "upup-rounded-[14px]",
+                                "upup-w-[66px]"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-bg-black/[0.04]",
+                                        "upup-flex",
+                                        "upup-h-[52px]",
+                                        "upup-items-center",
+                                        "upup-justify-center",
+                                        "upup-ring-1",
+                                        "upup-ring-black/[0.06]",
+                                        "upup-rounded-[14px]",
+                                        "upup-transition-colors",
+                                        "upup-w-[52px]"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-6", "upup-w-6"],
+                                            "children": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "tag": "span",
+                                    "classes": [
+                                        "upup-leading-none",
+                                        "upup-text-[#6D6D6D]",
+                                        "upup-text-xs"
+                                    ],
+                                    "children": [],
+                                    "text": "Google Drive"
+                                }
+                            ],
+                            "testid": "upup-source-googleDrive",
+                            "type": "button"
+                        }
+                    ]
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-flex",
+                        "upup-flex-wrap",
+                        "upup-gap-x-2.5",
+                        "upup-gap-y-1",
+                        "upup-items-center",
+                        "upup-justify-center",
+                        "upup-px-3",
+                        "upup-text-[#6D6D6D]",
+                        "upup-text-center",
+                        "upup-text-xs"
+                    ],
+                    "children": [
+                        {
+                            "tag": "span",
+                            "classes": [
+                                "upup-gap-1.5",
+                                "upup-inline-flex",
+                                "upup-items-center"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "span",
+                                    "classes": ["upup-inline-flex"],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-4", "upup-w-4"],
+                                            "children": []
+                                        }
+                                    ],
+                                    "ariaHidden": "true"
+                                }
+                            ],
+                            "text": "3 files max"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [],
+                            "children": [],
+                            "ariaHidden": "true",
+                            "text": "·"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [
+                                "upup-gap-1.5",
+                                "upup-inline-flex",
+                                "upup-items-center"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "span",
+                                    "classes": ["upup-inline-flex"],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": ["upup-h-4", "upup-w-4"],
+                                            "children": []
+                                        }
+                                    ],
+                                    "ariaHidden": "true"
+                                }
+                            ],
+                            "text": "1 GB each"
+                        }
+                    ],
+                    "slot": "limits-caption"
+                }
+            ],
+            "testid": "upup-source-selector",
+            "slot": "source-selector"
+        },
+        "fileHero": {
+            "tag": "div",
+            "classes": [
+                "upup-bg-black/[0.04]",
+                "upup-flex",
+                "upup-flex-1",
+                "upup-flex-col",
+                "upup-min-h-0",
+                "upup-overflow-hidden",
+                "upup-relative",
+                "upup-ring-1",
+                "upup-ring-black/[0.06]",
+                "upup-rounded-2xl"
+            ],
+            "children": [
+                {
+                    "tag": "img",
+                    "classes": [
+                        "upup-flex-1",
+                        "upup-min-h-0",
+                        "upup-object-contain"
+                    ],
+                    "children": [],
+                    "hasSrc": true
+                },
+                {
+                    "tag": "button",
+                    "classes": [
+                        "upup-absolute",
+                        "upup-bg-[#04080f]/40",
+                        "upup-flex",
+                        "upup-fx-press",
+                        "upup-fx-remove",
+                        "upup-h-[30px]",
+                        "upup-items-center",
+                        "upup-justify-center",
+                        "upup-right-3",
+                        "upup-rounded-[9px]",
+                        "upup-text-[#e2e8f0]",
+                        "upup-top-3",
+                        "upup-w-[30px]",
+                        "upup-z-10"
+                    ],
+                    "children": [
+                        {
+                            "tag": "svg",
+                            "classes": ["upup-h-[15px]", "upup-w-[15px]"],
+                            "children": []
+                        }
+                    ],
+                    "testid": "upup-file-remove",
+                    "type": "button",
+                    "aria": {
+                        "aria-label": "Remove file"
+                    }
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-absolute",
+                        "upup-bg-gradient-to-t",
+                        "upup-bottom-0",
+                        "upup-from-[#04080f]/[0.86]",
+                        "upup-inset-x-0",
+                        "upup-pb-3.5",
+                        "upup-pointer-events-none",
+                        "upup-pt-4",
+                        "upup-px-[18px]",
+                        "upup-to-transparent",
+                        "upup-via-[#04080f]/50"
+                    ],
+                    "children": [
+                        {
+                            "tag": "div",
+                            "classes": [
+                                "upup-font-semibold",
+                                "upup-text-[#e2e8f0]",
+                                "upup-text-[13px]",
+                                "upup-truncate"
+                            ],
+                            "children": [],
+                            "text": "parity.png"
+                        },
+                        {
+                            "tag": "div",
+                            "classes": [
+                                "upup-mt-0.5",
+                                "upup-text-[#94a3b8]",
+                                "upup-text-[12px]"
+                            ],
+                            "children": [],
+                            "text": "70 Bytes"
+                        }
+                    ]
+                }
+            ],
+            "testid": "upup-file-hero",
+            "slot": "file-hero"
+        },
+        "fileList": {
+            "tag": "div",
+            "classes": [
+                "upup-flex",
+                "upup-flex-col",
+                "upup-h-full",
+                "upup-relative",
+                "upup-rounded-lg",
+                "upup-shadow"
+            ],
+            "children": [
+                {
+                    "tag": "div",
+                    "classes": ["upup-sr-only"],
+                    "children": [],
+                    "role": "status",
+                    "aria": {
+                        "aria-live": "polite"
+                    },
+                    "text": "1 file selected"
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-bg-black/[0.025]",
+                        "upup-grid",
+                        "upup-grid-cols-4",
+                        "upup-grid-rows-2",
+                        "upup-items-center",
+                        "upup-justify-between",
+                        "upup-left-0",
+                        "upup-px-3",
+                        "upup-py-2",
+                        "upup-right-0",
+                        "upup-rounded-t-lg",
+                        "upup-shadow-bottom",
+                        "upup-top-0",
+                        "upup-z-10"
+                    ],
+                    "children": [
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-col-end-3",
+                                "upup-col-start-1",
+                                "upup-max-md",
+                                "upup-p-1",
+                                "upup-row-start-2",
+                                "upup-text-[#0284c7]",
+                                "upup-text-left",
+                                "upup-text-sm"
+                            ],
+                            "children": [],
+                            "text": "Remove all files"
+                        },
+                        {
+                            "tag": "span",
+                            "classes": [
+                                "upup-col-span-4",
+                                "upup-text-[#6D6D6D]",
+                                "upup-text-center",
+                                "upup-text-sm"
+                            ],
+                            "children": [],
+                            "text": "1 file selected"
+                        },
+                        {
+                            "tag": "div",
+                            "classes": [
+                                "upup-col-end-5",
+                                "upup-col-start-3",
+                                "upup-flex",
+                                "upup-gap-2",
+                                "upup-items-center",
+                                "upup-justify-end"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "button",
+                                    "classes": [
+                                        "upup-border",
+                                        "upup-border-[#38bdf8]/50",
+                                        "upup-border-dashed",
+                                        "upup-flex",
+                                        "upup-fx-hover-lift",
+                                        "upup-fx-press",
+                                        "upup-gap-1",
+                                        "upup-items-center",
+                                        "upup-px-2",
+                                        "upup-py-1",
+                                        "upup-rounded-md",
+                                        "upup-text-[#0284c7]",
+                                        "upup-text-sm"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "svg",
+                                            "classes": [],
+                                            "children": []
+                                        }
+                                    ],
+                                    "testid": "upup-add-more",
+                                    "slot": "add-more",
+                                    "text": "Add More"
+                                }
+                            ]
+                        }
+                    ],
+                    "testid": "upup-header",
+                    "slot": "header"
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-bg-black/[0.075]",
+                        "upup-flex",
+                        "upup-flex-1",
+                        "upup-flex-col",
+                        "upup-overflow-y-auto",
+                        "upup-p-3",
+                        "upup-preview-scroll"
+                    ],
+                    "children": [
+                        {
+                            "tag": "div",
+                            "classes": [
+                                "upup-animate-fx-enter",
+                                "upup-flex",
+                                "upup-flex-1",
+                                "upup-flex-col",
+                                "upup-min-h-0"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "div",
+                                    "classes": [
+                                        "upup-bg-black/[0.04]",
+                                        "upup-flex",
+                                        "upup-flex-1",
+                                        "upup-flex-col",
+                                        "upup-min-h-0",
+                                        "upup-overflow-hidden",
+                                        "upup-relative",
+                                        "upup-ring-1",
+                                        "upup-ring-black/[0.06]",
+                                        "upup-rounded-2xl"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "img",
+                                            "classes": [
+                                                "upup-flex-1",
+                                                "upup-min-h-0",
+                                                "upup-object-contain"
+                                            ],
+                                            "children": [],
+                                            "hasSrc": true
+                                        },
+                                        {
+                                            "tag": "button",
+                                            "classes": [
+                                                "upup-absolute",
+                                                "upup-bg-[#04080f]/40",
+                                                "upup-flex",
+                                                "upup-fx-press",
+                                                "upup-fx-remove",
+                                                "upup-h-[30px]",
+                                                "upup-items-center",
+                                                "upup-justify-center",
+                                                "upup-right-3",
+                                                "upup-rounded-[9px]",
+                                                "upup-text-[#e2e8f0]",
+                                                "upup-top-3",
+                                                "upup-w-[30px]",
+                                                "upup-z-10"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "tag": "svg",
+                                                    "classes": [
+                                                        "upup-h-[15px]",
+                                                        "upup-w-[15px]"
+                                                    ],
+                                                    "children": []
+                                                }
+                                            ],
+                                            "testid": "upup-file-remove",
+                                            "type": "button",
+                                            "aria": {
+                                                "aria-label": "Remove file"
+                                            }
+                                        },
+                                        {
+                                            "tag": "div",
+                                            "classes": [
+                                                "upup-absolute",
+                                                "upup-bg-gradient-to-t",
+                                                "upup-bottom-0",
+                                                "upup-from-[#04080f]/[0.86]",
+                                                "upup-inset-x-0",
+                                                "upup-pb-3.5",
+                                                "upup-pointer-events-none",
+                                                "upup-pt-4",
+                                                "upup-px-[18px]",
+                                                "upup-to-transparent",
+                                                "upup-via-[#04080f]/50"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "tag": "div",
+                                                    "classes": [
+                                                        "upup-font-semibold",
+                                                        "upup-text-[#e2e8f0]",
+                                                        "upup-text-[13px]",
+                                                        "upup-truncate"
+                                                    ],
+                                                    "children": [],
+                                                    "text": "parity.png"
+                                                },
+                                                {
+                                                    "tag": "div",
+                                                    "classes": [
+                                                        "upup-mt-0.5",
+                                                        "upup-text-[#94a3b8]",
+                                                        "upup-text-[12px]"
+                                                    ],
+                                                    "children": [],
+                                                    "text": "70 Bytes"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "testid": "upup-file-hero",
+                                    "slot": "file-hero"
+                                }
+                            ]
+                        },
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-border-[1.5px]",
+                                "upup-border-black/[0.16]",
+                                "upup-border-dashed",
+                                "upup-flex",
+                                "upup-flex-none",
+                                "upup-font-medium",
+                                "upup-fx-hover-lift",
+                                "upup-fx-press",
+                                "upup-gap-2",
+                                "upup-items-center",
+                                "upup-justify-center",
+                                "upup-mt-2.5",
+                                "upup-px-3",
+                                "upup-py-2.5",
+                                "upup-rounded-xl",
+                                "upup-text-[13px]",
+                                "upup-text-gray-500"
+                            ],
+                            "children": [
+                                {
+                                    "tag": "svg",
+                                    "classes": [],
+                                    "children": []
+                                }
+                            ],
+                            "testid": "upup-add-more",
+                            "slot": "add-more",
+                            "text": "Add More"
+                        }
+                    ]
+                },
+                {
+                    "tag": "div",
+                    "classes": [
+                        "upup-bg-black/[0.025]",
+                        "upup-flex",
+                        "upup-gap-3",
+                        "upup-items-center",
+                        "upup-px-3",
+                        "upup-py-2",
+                        "upup-rounded-b-lg",
+                        "upup-shadow-top"
+                    ],
+                    "children": [
+                        {
+                            "tag": "button",
+                            "classes": [
+                                "upup-bg-[#0ea5e9]",
+                                "upup-disabled:animate-pulse",
+                                "upup-font-medium",
+                                "upup-fx-press",
+                                "upup-fx-sheen-sweep",
+                                "upup-ml-auto",
+                                "upup-px-4",
+                                "upup-py-2",
+                                "upup-rounded-full",
+                                "upup-text-sm",
+                                "upup-text-white"
+                            ],
+                            "children": [],
+                            "testid": "upup-upload-btn",
+                            "text": "Upload 1 file"
                         },
                         {
                             "tag": "div",
