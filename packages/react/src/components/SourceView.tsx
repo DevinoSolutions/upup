@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React, { Suspense, useState } from 'react'
 import {
     useUploaderI18n,
     useUploaderOptions,
@@ -6,6 +6,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/UploaderContext'
+import { SourceViewHeaderExtraContext } from '../context/SourceViewHeaderExtraContext'
 import { uploadSourceObject } from '../lib/constants'
 import { cn } from '@upupjs/core/internal'
 import DefaultLoaderIcon from './DefaultLoaderIcon'
@@ -16,6 +17,12 @@ export default function SourceView(): React.ReactElement | null {
     const { translations: tr } = useUploaderI18n()
     const { mini } = useUploaderOptions()
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+    // Portal host for a source view's header extras (drive avatar + log out);
+    // lives left of Back. `empty:hidden` keeps the flex gap from showing when
+    // no view portals anything in.
+    const [headerExtraHost, setHeaderExtraHost] = useState<HTMLElement | null>(
+        null,
+    )
     const UploadComponent =
         activeSource && uploadSourceObject[activeSource].Component
     const Icon = activeSource && uploadSourceObject[activeSource].Icon
@@ -40,35 +47,44 @@ export default function SourceView(): React.ReactElement | null {
                     <Icon />
                     <span>{tr[uploadSourceObject[activeSource].nameKey]}</span>
                 </span>
-                <button
-                    className={cn(
-                        'upup-rounded-md upup-p-1 upup-text-[#0284c7] upup-transition-all upup-duration-300',
-                        {
-                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
-                                dark,
-                        },
-                        slotClasses.sourceViewCancelButton,
-                    )}
-                    onClick={() => {
-                        core?.emit('source-view-cancel', {
-                            sourceId: activeSource,
-                        })
-                        setActiveSource(undefined)
-                    }}
-                    type="button"
-                >
-                    {tr.overlayBack}
-                </button>
+                <span className="upup-flex upup-items-center upup-gap-2.5">
+                    <span
+                        ref={setHeaderExtraHost}
+                        data-upup-slot="source-view-header-extra"
+                        className="upup-flex upup-items-center upup-gap-2.5 empty:upup-hidden"
+                    />
+                    <button
+                        className={cn(
+                            'upup-rounded-md upup-p-1 upup-text-[#0284c7] upup-transition-all upup-duration-300',
+                            {
+                                'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
+                                    dark,
+                            },
+                            slotClasses.sourceViewCancelButton,
+                        )}
+                        onClick={() => {
+                            core?.emit('source-view-cancel', {
+                                sourceId: activeSource,
+                            })
+                            setActiveSource(undefined)
+                        }}
+                        type="button"
+                    >
+                        {tr.overlayBack}
+                    </button>
+                </span>
             </div>
-            <Suspense
-                fallback={
-                    <div className="upup-flex upup-h-full upup-items-center upup-justify-center">
-                        <DefaultLoaderIcon />
-                    </div>
-                }
-            >
-                <UploadComponent />
-            </Suspense>
+            <SourceViewHeaderExtraContext.Provider value={headerExtraHost}>
+                <Suspense
+                    fallback={
+                        <div className="upup-flex upup-h-full upup-items-center upup-justify-center">
+                            <DefaultLoaderIcon />
+                        </div>
+                    }
+                >
+                    <UploadComponent />
+                </Suspense>
+            </SourceViewHeaderExtraContext.Provider>
         </div>
     )
 }

@@ -199,8 +199,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                     aria-hidden="true"
                     // An <svg> is a replaced element: absolute insets position it
                     // but do NOT stretch it (it keeps the 300x150 default), so the
-                    // frame needs its size stated explicitly alongside inset-3.
-                    className="upup-pointer-events-none upup-absolute upup-inset-3 upup-h-[calc(100%-1.5rem)] upup-w-[calc(100%-1.5rem)]"
+                    // frame needs its size stated explicitly alongside its inset.
+                    // Hugs the panel edge (4px) so the in-frame branding row has
+                    // breathing room above the bottom dashes.
+                    className="upup-pointer-events-none upup-absolute upup-inset-1 upup-h-[calc(100%-0.5rem)] upup-w-[calc(100%-0.5rem)]"
                 >
                     <rect
                         x="1"
@@ -209,10 +211,10 @@ export default function UploaderPanel(): React.ReactElement | null {
                         ry="14"
                         fill="none"
                         strokeWidth="1.5"
-                        // 24px period (10 dash + 14 gap) — the fx-dash-march
-                        // keyframe shifts stroke-dashoffset by exactly -24, so
-                        // the marching loop stays seamless.
-                        strokeDasharray="10 14"
+                        // 12px period (5 dash + 7 gap) — the fx-dash-march
+                        // keyframe shifts stroke-dashoffset by exactly -24 (two
+                        // periods), so the marching loop stays seamless.
+                        strokeDasharray="5 7"
                         stroke={
                             dark
                                 ? absoluteIsDragging
