@@ -14,8 +14,9 @@ describe('normalizeUploaderOptions', () => {
         expect(resolved.allowedFileTypes).toBeTypeOf('string')
         expect(resolved.lang).toBe('en-US')
         expect(resolved.dir).toBe('ltr')
+        // round-8 item 1: an OMITTED imageEditor now defaults ON.
         expect(resolved.imageEditor).toEqual({
-            enabled: false,
+            enabled: true,
             autoOpen: 'never',
             display: 'inline',
         })
@@ -68,6 +69,17 @@ describe('normalizeUploaderOptions', () => {
                 imageEditor: { display: 'modal' } as never,
             }).resolved.imageEditor,
         ).toEqual({ enabled: true, autoOpen: 'never', display: 'modal' })
+    })
+
+    it('resolvedImageEditor: explicit false / null still DISABLE (round-8 item 1)', () => {
+        expect(
+            normalizeUploaderOptions({ imageEditor: false }).resolved
+                .imageEditor,
+        ).toEqual({ enabled: false, autoOpen: 'never', display: 'inline' })
+        expect(
+            normalizeUploaderOptions({ imageEditor: null as never }).resolved
+                .imageEditor,
+        ).toEqual({ enabled: false, autoOpen: 'never', display: 'inline' })
     })
 
     it('sources normalize + filter; default when absent', () => {

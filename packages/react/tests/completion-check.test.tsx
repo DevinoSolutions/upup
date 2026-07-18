@@ -20,7 +20,11 @@ vi.mock('../src/context/UploaderContext', () => ({
     UploadStatus,
     useUploaderFiles: () => ({ handleFileRemove: vi.fn() }),
     useUploaderI18n: () => ({ translations: tr }),
-    useUploaderOptions: () => ({ icons: { FileDeleteIcon: () => null } }),
+    useUploaderOptions: () => ({
+        icons: { FileDeleteIcon: () => null },
+        imageEditor: { enabled: false },
+    }),
+    useUploaderEditor: () => ({ openImageEditor: vi.fn() }),
     useUploaderTheme: () => ({
         isDark: true,
         slotOverrides: {},

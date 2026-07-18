@@ -2,6 +2,7 @@ import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
 import { UploadStatus, type UploadFile } from '@upupjs/core'
 import {
+    useUploaderEditor,
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
@@ -12,6 +13,7 @@ import { fileGetExtension, fileGetIsImage, formatFileSize } from '../lib/file'
 import FileIcon from './FileIcon'
 import ProgressBar from './shared/ProgressBar'
 import FileSuccessCheck from './shared/FileSuccessCheck'
+import EditIcon from './shared/EditIcon'
 
 type Props = {
     file: UploadFile
@@ -28,12 +30,18 @@ export default memo(function FileHero({ file }: Props) {
     const { translations: tr } = useUploaderI18n()
     const {
         icons: { FileDeleteIcon },
+        imageEditor,
     } = useUploaderOptions()
+    const { openImageEditor } = useUploaderEditor()
     const { isDark: dark } = useUploaderTheme()
     const {
         upload: { filesProgressMap },
     } = useUploaderUploadControls()
 
+    const isSuccessful = file.status === UploadStatus.SUCCESSFUL
+    const isBusy =
+        file.status === UploadStatus.UPLOADING ||
+        file.status === UploadStatus.PROCESSING
     const isImage = useMemo(() => fileGetIsImage(file.type ?? ''), [file.type])
     const isVideo = useMemo(
         () => (file.type ?? '').startsWith('video/'),
@@ -113,6 +121,32 @@ export default memo(function FileHero({ file }: Props) {
                     data-testid="upup-file-remove"
                 >
                     <FileDeleteIcon className="upup-h-5 upup-w-5" />
+                </button>
+            )}
+
+            {/* Edit affordance for images (single-file hero) — pre/post upload;
+                sits left of the trash, and slides to the trash's slot once the
+                file is done and the trash is gone (round-8 item 1). */}
+            {isImage && imageEditor.enabled && (
+                <button
+                    className={cn(
+                        'upup-fx-press upup-absolute upup-top-3 upup-z-10',
+                        isSuccessful ? 'upup-right-3' : 'upup-right-[54px]',
+                        'upup-flex upup-h-[34px] upup-w-[34px] upup-items-center upup-justify-center',
+                        'upup-rounded-[9px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                        'hover:upup-bg-[#04080f]/65',
+                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                    )}
+                    onClick={e => {
+                        e.stopPropagation()
+                        openImageEditor(file)
+                    }}
+                    type="button"
+                    disabled={isBusy}
+                    aria-label={tr.editImage}
+                    data-testid="upup-file-edit"
+                >
+                    <EditIcon className="upup-h-5 upup-w-5" />
                 </button>
             )}
 

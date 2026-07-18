@@ -28,6 +28,7 @@ import {
 import FilePreviewThumbnail from './FilePreviewThumbnail'
 import ProgressBar from './shared/ProgressBar'
 import FileSuccessCheck from './shared/FileSuccessCheck'
+import EditIcon from './shared/EditIcon'
 
 type Props = {
     fileName: string
@@ -107,7 +108,14 @@ export default memo(function FilePreview(props: Props) {
             setCanPreview(true)
     }, [isImage, isPdf, isText, canPreviewText, canPreview, setCanPreview])
 
-    const isSuccessful = files.get(fileId)?.status === UploadStatus.SUCCESSFUL
+    const fileStatus = files.get(fileId)?.status
+    const isSuccessful = fileStatus === UploadStatus.SUCCESSFUL
+    // Edit stays available pre- AND post-upload — only an in-flight file is busy
+    // (round-8 item 1). Editing a completed image re-opens the editor; it does
+    // not re-trigger the upload by itself (openImageEditor semantics).
+    const isBusy =
+        fileStatus === UploadStatus.UPLOADING ||
+        fileStatus === UploadStatus.PROCESSING
 
     const onHandleFileRemove: MouseEventHandler<HTMLButtonElement> = e => {
         e.stopPropagation()
@@ -203,28 +211,23 @@ export default memo(function FilePreview(props: Props) {
                     <button
                         className={cn(
                             // Hero-chrome action button (matches FileHero's
-                            // remove): translucent dark square, not the legacy
-                            // white/red circles.
-                            'upup-fx-press upup-absolute upup-right-1.5 upup-top-9 upup-z-10',
-                            'upup-flex upup-h-[26px] upup-w-[26px] upup-items-center upup-justify-center',
+                            // remove): translucent dark square. Sits below the
+                            // trash normally; once the file is done (trash gone)
+                            // it slides up to the top slot.
+                            'upup-fx-press upup-absolute upup-right-1.5 upup-z-10',
+                            isSuccessful ? 'upup-top-1.5' : 'upup-top-9',
+                            'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
                             'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
                             'hover:upup-bg-[#04080f]/65',
                             'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                         )}
                         onClick={onHandleEditImage}
                         type="button"
-                        disabled={!!progress}
+                        disabled={isBusy}
                         aria-label={tr.editImage}
+                        data-testid="upup-file-edit"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="upup-h-3 upup-w-3"
-                            aria-hidden="true"
-                        >
-                            <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-                        </svg>
+                        <EditIcon className="upup-h-[18px] upup-w-[18px]" />
                     </button>
                 )}
 

@@ -2,6 +2,7 @@ import React, { memo, useMemo } from 'react'
 import { cn } from '@upupjs/core/internal'
 import { UploadStatus, fileTypeIconName, type UploadFile } from '@upupjs/core'
 import {
+    useUploaderEditor,
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
@@ -12,6 +13,7 @@ import { fileGetExtension, fileGetIsImage, formatFileSize } from '../lib/file'
 import Icon from './Icon'
 import ProgressBar from './shared/ProgressBar'
 import FileSuccessCheck from './shared/FileSuccessCheck'
+import EditIcon from './shared/EditIcon'
 
 const ARCHIVE_EXTENSIONS = new Set([
     'zip',
@@ -75,7 +77,9 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
     const { translations: tr } = useUploaderI18n()
     const {
         icons: { FileDeleteIcon },
+        imageEditor,
     } = useUploaderOptions()
+    const { openImageEditor } = useUploaderEditor()
     const { isDark: dark } = useUploaderTheme()
     const {
         upload: { filesProgressMap },
@@ -85,6 +89,9 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
     const isImage = useMemo(() => fileGetIsImage(type), [type])
     const isVideo = useMemo(() => type.startsWith('video/'), [type])
     const isSuccessful = file.status === UploadStatus.SUCCESSFUL
+    const isBusy =
+        file.status === UploadStatus.UPLOADING ||
+        file.status === UploadStatus.PROCESSING
     const thumb = useMemo(
         () => nonMediaThumb(type, file.name),
         [type, file.name],
@@ -165,6 +172,30 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
                     />
                 )}
             </div>
+
+            {/* Edit affordance for images (list view) — enabled pre/post upload,
+                disabled only while the file is in flight (round-8 item 1). */}
+            {isImage && imageEditor.enabled && (
+                <button
+                    className={cn(
+                        'upup-fx-press upup-flex upup-h-8 upup-w-8 upup-flex-none upup-items-center upup-justify-center upup-rounded-lg',
+                        dark
+                            ? 'upup-text-[#64748b] hover:upup-bg-white/[0.06]'
+                            : 'upup-text-gray-500 hover:upup-bg-black/[0.06]',
+                        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                    )}
+                    onClick={e => {
+                        e.stopPropagation()
+                        openImageEditor(file)
+                    }}
+                    type="button"
+                    disabled={isBusy}
+                    aria-label={tr.editImage}
+                    data-testid="upup-file-edit"
+                >
+                    <EditIcon className="upup-h-5 upup-w-5" />
+                </button>
+            )}
 
             {isSuccessful && (
                 <FileSuccessCheck
