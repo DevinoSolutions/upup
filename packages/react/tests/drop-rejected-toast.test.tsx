@@ -17,8 +17,10 @@ vi.mock('../src/context/UploaderContext', () => ({
         sourceOverlayOpen: false,
         sourceOverlayClosing: false,
         dropRejected: _dropRejected,
+        closeSourceOverlay: vi.fn(),
     }),
     useUploaderRuntime: () => ({ isOnline: true, motionMode: 'on' }),
+    useUploaderOptions: () => ({ mini: false, showBranding: false }),
     useUploaderI18n: () => ({
         translations: {
             dropzoneLabel: 'Drop files',

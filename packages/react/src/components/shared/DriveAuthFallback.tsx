@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { type DriveBrowserError, formatUiMessage as t } from '@upupjs/core'
 import { cn } from '@upupjs/core/internal'
 import {
@@ -23,6 +23,18 @@ export default function DriveAuthFallback({
 }: Readonly<Props>): React.ReactElement | null {
     const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const { translations: tr } = useUploaderI18n()
+
+    // One-shot auto sign-in: the provider tile click carries a transient user
+    // activation (~5s in modern browsers), so kicking the OAuth popup off on
+    // mount goes straight to the provider instead of an interstitial. If the
+    // popup is blocked (activation consumed/expired), this view stays as the
+    // manual fallback. Never auto-retries after an error.
+    const attemptedRef = useRef(false)
+    useEffect(() => {
+        if (attemptedRef.current || error) return
+        attemptedRef.current = true
+        onRetry()
+    }, [error, onRetry])
 
     return (
         <SourceViewContainer data-upup-slot={dataUpupSlot}>

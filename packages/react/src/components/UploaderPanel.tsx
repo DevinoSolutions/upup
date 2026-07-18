@@ -2,12 +2,14 @@ import React, { useEffect, useRef } from 'react'
 import {
     useUploaderFiles,
     useUploaderI18n,
+    useUploaderOptions,
     useUploaderRuntime,
     useUploaderSource,
     useUploaderTheme,
     useUploaderUploadControls,
     useUploaderView,
 } from '../context/UploaderContext'
+import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
 import useUploaderPanel from '../hooks/useUploaderPanel'
 import { cn } from '@upupjs/core/internal'
 import { UploadStatus, formatUiMessage } from '@upupjs/core'
@@ -26,6 +28,7 @@ export default function UploaderPanel(): React.ReactElement | null {
     const { isOnline, motionMode } = useUploaderRuntime()
     const { translations: tr } = useUploaderI18n()
     const { isDark: dark } = useUploaderTheme()
+    const { mini, showBranding } = useUploaderOptions()
     const {
         upload: { uploadStatus },
     } = useUploaderUploadControls()
@@ -117,7 +120,7 @@ export default function UploaderPanel(): React.ReactElement | null {
             aria-label={tr.dropzoneLabel}
             {...dropEffectProps}
             className={cn(
-                'upup-relative upup-flex-1 upup-overflow-hidden upup-rounded-lg',
+                'upup-relative upup-flex upup-flex-1 upup-flex-col upup-overflow-hidden upup-rounded-lg',
                 {
                     // Solid/dashed CSS border stays for the file-present states;
                     // the idle dropzone uses the animated SVG frame instead.
@@ -279,8 +282,14 @@ export default function UploaderPanel(): React.ReactElement | null {
                     </span>
                 </div>
             )}
-            {/* Idle primary: the source surface fills the panel when empty. */}
-            {!hasFiles && sourceSurface}
+            {/* Content area (source surface / file list) flexes above the
+                in-panel branding row so the dashed frame — inset-3 of this
+                panel — wraps EVERYTHING including the brand, per the mock. */}
+            <div className="upup-relative upup-flex upup-min-h-0 upup-flex-1 upup-flex-col">
+                {/* Idle primary: the source surface fills the panel when empty. */}
+                {!hasFiles && sourceSurface}
+                <FileList />
+            </div>
             {/* Add-more DRAWER (states-tour-v2 sheet): the source surface slides
                 up as a translucent bottom sheet over the dimmed, still-mounted
                 file list — the files stay visible behind it so nothing feels
@@ -360,7 +369,70 @@ export default function UploaderPanel(): React.ReactElement | null {
                     {sourceSurface}
                 </div>
             )}
-            <FileList />
+            {/* Branding row INSIDE the panel (and the dashed frame). The
+                add-more sheet slides over it, per the states-tour mock. */}
+            {!mini && showBranding && (
+                <div
+                    data-testid="upup-branding"
+                    className="upup-flex upup-w-full upup-flex-none upup-flex-col upup-items-center upup-justify-between upup-gap-1 upup-px-6 upup-pb-5 upup-pt-1.5 md:upup-flex-row"
+                >
+                    <a
+                        href={'https://useupup.com/'}
+                        target={'_blank'}
+                        rel="noopener noreferrer"
+                        className="upup-flex upup-items-center upup-gap-[5px]"
+                    >
+                        {dark ? (
+                            <img
+                                src={logoDark}
+                                width={61}
+                                height={13}
+                                alt="logo-dark"
+                            />
+                        ) : (
+                            <img
+                                src={logoLight}
+                                width={61}
+                                height={13}
+                                alt="logo-light"
+                            />
+                        )}
+                    </a>
+                    <a
+                        href={'https://devino.ca/'}
+                        target={'_blank'}
+                        rel="noopener noreferrer"
+                        className="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
+                    >
+                        <span
+                            className={cn(
+                                'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
+                                {
+                                    'upup-text-gray-300 dark:upup-text-gray-300':
+                                        dark,
+                                },
+                            )}
+                        >
+                            {tr.builtBy}{' '}
+                        </span>
+                        {dark ? (
+                            <img
+                                src={devinoDark}
+                                width={61}
+                                height={13}
+                                alt="logo-dark"
+                            />
+                        ) : (
+                            <img
+                                src={devinoLight}
+                                width={61}
+                                height={13}
+                                alt="logo-light"
+                            />
+                        )}
+                    </a>
+                </div>
+            )}
         </div>
     )
 }
