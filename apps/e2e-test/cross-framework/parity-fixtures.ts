@@ -48,9 +48,10 @@ export const KNOWN_DIVERGENCES: Partial<
     Record<ParityComponent, { assertOnly: string[]; reason: string }>
 > = {
     fileList: {
-        assertOnly: ['react', 'vanilla', 'preact'],
+        assertOnly: ['react', 'vanilla', 'preact', 'vue'],
         reason:
-            'F-711 Add-More SVG icon missing in vue/svelte/angular header; ' +
-            'F-712 angular <upup-progress-bar> host element wraps extra node',
+            'F-711 Add-More SVG icon missing in svelte/angular header (healed ' +
+            'in vue by the T10 default-experience port); F-712 angular ' +
+            '<upup-progress-bar> host element wraps extra node',
     },
 }

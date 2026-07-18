@@ -37,7 +37,7 @@ function handleCancel() {
 <template>
     <div
         v-if="shouldRender"
-        class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
+        class="upup-animate-fx-view upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr]"
         data-upup-slot="source-view"
     >
         <div

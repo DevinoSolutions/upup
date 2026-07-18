@@ -22,6 +22,7 @@ import type {
     BaseContextView,
     BaseContextEditor,
     BaseContextTheme,
+    MotionMode,
 } from '@upupjs/core/internal'
 import { UploadStatus } from '@upupjs/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
@@ -57,6 +58,8 @@ export type ContextUpload = Omit<
 export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     inputRef: Ref<HTMLInputElement | null>
     isOnline: ComputedRef<boolean>
+    /** Resolved `data-motion` value ('on' | 'off') from the core motion gate. */
+    motionMode: ComputedRef<MotionMode>
 }
 
 // Vue exposes activeSource as a reactive ComputedRef (React uses a plain value
@@ -70,6 +73,10 @@ export type ContextI18n = BaseContextI18n
 // Reactive so the file list / dropzone re-render as files are added or removed.
 export type ContextFiles = Omit<BaseContextFiles, 'files'> & {
     files: ComputedRef<Map<string, UploadFile>>
+    /** Transient: file ids currently playing their exit animation. Read by
+     *  FileList (hero) and FileItem (cards) to render `upup-fx-exit`. Sourced
+     *  from the core transient-UI store (deferred removal). */
+    leavingFileIds: ComputedRef<ReadonlySet<string>>
 }
 
 export type ContextUploadControls = Omit<
@@ -83,6 +90,21 @@ export type ContextUploadControls = Omit<
 export type ContextView = Omit<BaseContextView, 'isAddingMore' | 'viewMode'> & {
     isAddingMore: ComputedRef<boolean>
     viewMode: ComputedRef<'grid' | 'list'>
+    /** Add-more source overlay: source surface mounted above the dimmed,
+     *  still-mounted file list. Sourced from the core transient-UI store. */
+    sourceOverlayOpen: ComputedRef<boolean>
+    /** Overlay is playing its reverse close-slide before it unmounts. */
+    sourceOverlayClosing: ComputedRef<boolean>
+    openSourceOverlay: () => void
+    closeSourceOverlay: () => void
+    /** Human provider label whose read-only picker just rejected an OS drop —
+     *  drives the drop-rejection toast. Null when no rejection is showing.
+     *  Auto-clears via the core transient-UI store's 3s window. */
+    dropRejected: ComputedRef<string | null>
+    /** Raise the drop-rejection toast for a read-only drive source (resolves the
+     *  provider label, then flags the core store). Wired to core's
+     *  DragDropController.onReadonlyDropRejected. */
+    flagDriveDropRejected: (source: FileSource) => void
 }
 
 // Reactive so opening/closing the image editor re-renders consumers.
@@ -180,6 +202,7 @@ export function provideUploaderContext(value: IUploaderContext): void {
         inputRef: value.inputRef,
         openFilePicker: value.openFilePicker,
         isOnline: value.isOnline,
+        motionMode: value.motionMode,
     })
     provide(SourceKey, {
         activeSource: value.activeSource,
@@ -194,6 +217,7 @@ export function provideUploaderContext(value: IUploaderContext): void {
     })
     provide(FilesKey, {
         files: value.files,
+        leavingFileIds: value.leavingFileIds,
         setFiles: value.setFiles,
         replaceFiles: value.replaceFiles,
         resetState: value.resetState,
@@ -212,6 +236,12 @@ export function provideUploaderContext(value: IUploaderContext): void {
         setIsAddingMore: value.setIsAddingMore,
         viewMode: value.viewMode,
         setViewMode: value.setViewMode,
+        sourceOverlayOpen: value.sourceOverlayOpen,
+        sourceOverlayClosing: value.sourceOverlayClosing,
+        openSourceOverlay: value.openSourceOverlay,
+        closeSourceOverlay: value.closeSourceOverlay,
+        dropRejected: value.dropRejected,
+        flagDriveDropRejected: value.flagDriveDropRejected,
     })
     provide(EditorKey, {
         editingFile: value.editingFile,

@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const { files } = useUploaderFiles()
-const { setIsAddingMore, isAddingMore, viewMode, setViewMode } = useUploaderView()
+const { viewMode, setViewMode, openSourceOverlay } = useUploaderView()
 const { translations: tr } = useUploaderI18n()
 const {
     mini,
@@ -29,9 +29,6 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const { upload: { uploadStatus } } = useUploaderUploadControls()
 const isUploading = computed(() => isUploadActive(uploadStatus.value))
 const isLimitReached = computed(() => limit === files.value.size)
-const cancelText = computed(() =>
-    isAddingMore.value ? tr.cancel : tr.removeAllFiles,
-)
 
 function toggleViewMode() {
     setViewMode(viewMode.value === 'grid' ? 'list' : 'grid')
@@ -58,7 +55,7 @@ function toggleViewMode() {
                 @click="props.handleCancel"
                 :disabled="isUploading || isProcessing"
             >
-                {{ cancelText }}
+                {{ tr.removeAllFiles }}
             </button>
             <span
                 :class="cn(
@@ -66,12 +63,7 @@ function toggleViewMode() {
                     { 'upup-text-gray-300 dark:upup-text-gray-300': dark },
                 )"
             >
-                <template v-if="isAddingMore">
-                    {{ tr.addingMoreFiles }}
-                </template>
-                <template v-if="!isAddingMore">
-                    {{ t(plural(tr, 'filesSelected', files.size), { count: files.size }) }}
-                </template>
+                {{ t(plural(tr, 'filesSelected', files.size), { count: files.size }) }}
             </span>
             <div class="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4">
                 <template v-if="files.size > 1">
@@ -87,14 +79,17 @@ function toggleViewMode() {
                         <Icon v-else name="layout-grid" :size="16" />
                     </button>
                 </template>
-                <template v-if="!isAddingMore && limit > 1 && !isLimitReached">
+                <template v-if="limit > 1 && !isLimitReached">
                     <button
+                        data-testid="upup-add-more"
+                        data-placement="header"
+                        data-upup-slot="add-more"
                         :class="cn(
-                            'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1 upup-text-sm upup-text-[#0284c7]',
+                            'upup-fx-hover-lift upup-fx-press upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1 upup-text-sm upup-text-[#0284c7]',
                             { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark },
                             slotClasses.containerAddMoreButton,
                         )"
-                        @click="setIsAddingMore(true)"
+                        @click="openSourceOverlay"
                         :disabled="isUploading || isProcessing"
                     >
                         <component :is="ContainerAddMoreIcon" /> {{ tr.addMore }}

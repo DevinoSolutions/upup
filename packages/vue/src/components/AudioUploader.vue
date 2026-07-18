@@ -7,6 +7,7 @@ import {
 } from '../context/uploader-context'
 import { cn } from '@upupjs/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
+import AudioWaveform from './AudioWaveform.vue'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -144,6 +145,11 @@ function formatTime(s: number) {
                     </svg>
                 </div>
             </div>
+
+            <AudioWaveform
+                v-if="state === 'recording' && streamRef"
+                :stream="streamRef!"
+            />
 
             <span
                 :class="cn(

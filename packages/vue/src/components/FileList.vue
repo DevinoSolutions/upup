@@ -14,6 +14,7 @@ import {
 } from '../context/uploader-context'
 import Icon from './Icon'
 import FileItem from './FileItem.vue'
+import FileHero from './FileHero.vue'
 import UploaderHeader from './shared/UploaderHeader.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 
@@ -36,9 +37,9 @@ function formatEta(seconds: number): string {
     return `${s}s left`
 }
 
-const { isAddingMore, viewMode } = useUploaderView()
+const { viewMode, sourceOverlayOpen, openSourceOverlay } = useUploaderView()
 const { activeSource } = useUploaderSource()
-const { files } = useUploaderFiles()
+const { files, leavingFileIds } = useUploaderFiles()
 const { translations: tr } = useUploaderI18n()
 const {
     upload: {
@@ -58,7 +59,12 @@ const {
     handlePause,
     handleResume,
 } = useUploaderUploadControls()
-const { isProcessing, resumable } = useUploaderOptions()
+const {
+    isProcessing,
+    resumable,
+    limit,
+    icons: { ContainerAddMoreIcon },
+} = useUploaderOptions()
 const { isDark: dark, slotOverrides: slotClasses, slots: themeSlots } = useUploaderTheme()
 
 const scrollRef = ref<HTMLDivElement | null>(null)
@@ -70,6 +76,8 @@ const sortedFiles = computed(() =>
         return pa.localeCompare(pb) || a.name.localeCompare(b.name)
     }),
 )
+
+const isSingle = computed(() => sortedFiles.value.length === 1)
 
 const shouldVirtualize = computed(
     () => sortedFiles.value.length >= VIRTUAL_SCROLL_THRESHOLD && viewMode.value !== 'grid',
@@ -94,6 +102,24 @@ const virtualRows = computed(() =>
 )
 const totalSize = computed(() => virtualizer.value.getTotalSize())
 
+const isUploading = computed(() => isUploadActive(uploadStatus.value))
+// When the add-more source surface is up (overlay open, or a source chosen
+// while files exist), this list stays mounted but dimmed and inert behind it.
+const dimmed = computed(() => sourceOverlayOpen.value || !!activeSource.value)
+const heroLeaving = computed(
+    () =>
+        isSingle.value &&
+        !!sortedFiles.value[0] &&
+        leavingFileIds.value.has(sortedFiles.value[0].id),
+)
+const canAddMore = computed(
+    () =>
+        limit > 1 &&
+        files.value.size < limit &&
+        !isUploading.value &&
+        !isProcessing,
+)
+
 function onUploadClick() {
     void startUpload().catch(() => undefined)
 }
@@ -107,25 +133,46 @@ function onRetryClick() {
     <div
         data-testid="upup-file-list"
         data-upup-slot="file-list"
+        :inert="dimmed || undefined"
         :class="cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
-            { 'upup-hidden': isAddingMore || activeSource || !files.size },
+            {
+                'upup-hidden': !files.size,
+                'upup-opacity-40 upup-pointer-events-none': dimmed,
+            },
             themeSlots?.fileList?.root,
         )"
     >
+        <div role="status" aria-live="polite" class="upup-sr-only">
+            {{ t(plural(tr, 'filesSelected', files.size), { count: files.size }) }}
+        </div>
+
         <UploaderHeader :handle-cancel="handleCancel" />
 
         <div
             ref="scrollRef"
             :class="cn(
-                'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-                { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
+                'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-p-3',
+                dark ? 'upup-bg-transparent' : 'upup-bg-black/[0.075]',
                 slotClasses.fileListContainer,
             )"
         >
+            <!-- Single-file HERO -->
+            <div
+                v-if="isSingle"
+                role="list"
+                :class="cn(
+                    'upup-animate-fx-enter upup-flex upup-min-h-0 upup-flex-1 upup-flex-col',
+                    heroLeaving && 'upup-animate-fx-exit upup-overflow-hidden',
+                )"
+            >
+                <FileHero :file="sortedFiles[0]!" />
+            </div>
+
             <!-- Virtualized list -->
             <div
-                v-if="shouldVirtualize"
+                v-else-if="shouldVirtualize"
+                role="list"
                 data-upup-slot="file-list-virtual"
                 :style="{ height: totalSize + 'px', position: 'relative' }"
                 :class="cn(
@@ -146,19 +193,19 @@ function onRetryClick() {
                         paddingBottom: '12px',
                     }"
                 >
-                    <FileItem :file="file" />
+                    <FileItem :file="file" :index="virtualItem.index" />
                 </div>
             </div>
 
             <!-- Standard rendering -->
             <div
                 v-else
+                role="list"
                 :class="cn(
                     `${isProcessing ? 'upup-pointer-events-none upup-opacity-75' : ''} upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]`,
                     {
                         'md:upup-grid md:upup-gap-y-6': files.size > 1 && viewMode === 'grid',
                         'md:upup-grid-cols-2': files.size > 1 && viewMode === 'grid',
-                        'upup-flex-1': files.size === 1,
                         [slotClasses.fileListContainerInnerMultiple!]:
                             slotClasses.fileListContainerInnerMultiple && files.size > 1,
                         [slotClasses.fileListContainerInnerSingle!]:
@@ -167,11 +214,33 @@ function onRetryClick() {
                 )"
             >
                 <FileItem
-                    v-for="file in sortedFiles"
+                    v-for="(file, index) in sortedFiles"
                     :key="file.id"
                     :file="file"
+                    :index="index"
                 />
             </div>
+
+            <!-- Full-width dashed "Add more" row (spec §4 state 3): a second
+                 add-more affordance beneath the list/hero, opening the overlay. -->
+            <button
+                v-if="canAddMore"
+                data-testid="upup-add-more"
+                data-placement="footer"
+                data-upup-slot="add-more"
+                :class="cn(
+                    'upup-fx-hover-lift upup-fx-press upup-mt-2.5 upup-flex upup-flex-none upup-items-center upup-justify-center upup-gap-2 upup-rounded-xl upup-border-[1.5px] upup-border-dashed upup-px-3 upup-py-2.5 upup-text-[13px] upup-font-medium',
+                    dark
+                        ? 'upup-border-white/[0.16] upup-text-[#94a3b8]'
+                        : 'upup-border-black/[0.16] upup-text-gray-500',
+                    slotClasses.containerAddMoreButton,
+                )"
+                @click="openSourceOverlay"
+                :disabled="isUploading || isProcessing"
+            >
+                <component :is="ContainerAddMoreIcon" />
+                {{ tr.addMore }}
+            </button>
         </div>
 
         <div
@@ -187,7 +256,7 @@ function onRetryClick() {
                 <button
                     data-testid="upup-upload-btn"
                     :class="cn(
-                        'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                        'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                         { 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark },
                         slotClasses.uploadButton,
                     )"
@@ -211,7 +280,7 @@ function onRetryClick() {
                 <button
                     data-testid="upup-retry-btn"
                     :class="cn(
-                        'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                        'upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                         { 'upup-bg-red-500 dark:upup-bg-red-500': dark },
                         slotClasses.uploadButton,
                     )"
@@ -223,7 +292,7 @@ function onRetryClick() {
             <template v-if="uploadStatus === UploadStatus.SUCCESSFUL">
                 <button
                     :class="cn(
-                        'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+                        'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
                         { 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark },
                         slotClasses.uploadDoneButton,
                     )"

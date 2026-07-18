@@ -31,15 +31,15 @@ export const A11Y_GAPS: A11yGap[] = [
         id: 'list-role',
         kind: 'role',
         token: 'list',
-        reason: 'React-first list semantics (Phase 3); not yet ported to vue/svelte/vanilla/angular',
-        ported: ['react', 'preact'],
+        reason: 'React-first list semantics (Phase 3); not yet ported to svelte/vanilla/angular',
+        ported: ['react', 'preact', 'vue'],
     },
     {
         id: 'listitem-role',
         kind: 'role',
         token: 'listitem',
-        reason: 'React-first list semantics (Phase 3); not yet ported to vue/svelte/vanilla/angular',
-        ported: ['react', 'preact'],
+        reason: 'React-first list semantics (Phase 3); not yet ported to svelte/vanilla/angular',
+        ported: ['react', 'preact', 'vue'],
     },
 ]
 

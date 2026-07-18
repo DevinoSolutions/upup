@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import type { Translations } from '@upupjs/core'
+import { UploadStatus, type Translations } from '@upupjs/core'
 import {
     useUploaderEditor,
     useUploaderFiles,
@@ -13,16 +13,22 @@ import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText } from 
 import { cn } from '@upupjs/core/internal'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
+import FileSuccessCheck from './shared/FileSuccessCheck.vue'
 
-const props = defineProps<{
-    fileName: string
-    fileType: string
-    fileId: string
-    fileUrl: string
-    fileSize?: number
-    canPreview: boolean
-    onRequestPreview?: () => void
-}>()
+const props = withDefaults(
+    defineProps<{
+        fileName: string
+        fileType: string
+        fileId: string
+        fileUrl: string
+        fileSize?: number
+        canPreview: boolean
+        onRequestPreview?: () => void
+        /** Position in the sorted list — drives the completion-check stagger. */
+        index?: number
+    }>(),
+    { index: 0 },
+)
 
 const emit = defineEmits<{
     'update:canPreview': [value: boolean]
@@ -53,9 +59,17 @@ const canPreviewText = computed(() =>
 
 const progress = computed(() => {
     const fileProgress = filesProgressMap.value[props.fileId]
-    if (!fileProgress) return NaN
-    return Math.floor((fileProgress.loaded / fileProgress.total) * 100)
+    const loaded = fileProgress?.loaded ?? NaN
+    const total = fileProgress?.total ?? NaN
+    const pct = Math.floor((loaded / total) * 100)
+    // No progress entry ⇒ NaN; total === 0 ⇒ Infinity. Either would render
+    // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
+    return Number.isFinite(pct) ? pct : 0
 })
+
+const isSuccessful = computed(
+    () => files.value.get(props.fileId)?.status === UploadStatus.SUCCESSFUL,
+)
 
 watch(
     [isImage, isPdf, isText, canPreviewText],
@@ -102,8 +116,11 @@ function updateCanPreview(val: boolean) {
     >
         <div
             :class="cn(
-                'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+                'upup-fx-hover-lift upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-xl upup-ring-1',
                 'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+                isDarkTheme
+                    ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
+                    : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
                 {
                     [slotClasses.fileThumbnailMultiple!]: slotClasses.fileThumbnailMultiple && files.size > 1,
                     [slotClasses.fileThumbnailSingle!]: slotClasses.fileThumbnailSingle && files.size === 1,
@@ -162,10 +179,10 @@ function updateCanPreview(val: boolean) {
 
             <button
                 :class="cn(
-                    'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                    'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
                     'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
                     'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-                    'hover:upup-bg-white hover:upup-text-red-700',
+                    'hover:upup-bg-white',
                     'upup-ring-1 upup-ring-black/5',
                     'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
                     slotClasses.fileDeleteButton,
@@ -179,6 +196,13 @@ function updateCanPreview(val: boolean) {
             >
                 <component :is="FileDeleteIcon" class="upup-h-3 upup-w-3" />
             </button>
+
+            <FileSuccessCheck
+                v-if="isSuccessful"
+                :index="index ?? 0"
+                :size="20"
+                class="upup-absolute upup-left-1.5 upup-top-1.5 upup-z-10"
+            />
 
             <ProgressBar
                 class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"

@@ -191,28 +191,26 @@ function formatTime(s: number) {
 
             <!-- Recording -->
             <template v-if="state === 'recording'">
-                <video
-                    :ref="bindPreview"
-                    muted
-                    class="upup-w-full upup-max-w-md upup-min-h-0 upup-flex-1 upup-rounded-lg upup-object-contain"
-                />
-                <div class="upup-flex upup-items-center upup-gap-3">
-                    <span class="upup-h-3 upup-w-3 upup-animate-pulse upup-rounded-full upup-bg-red-500" />
-                    <span
-                        :class="cn(
-                            'upup-font-mono upup-text-lg upup-tabular-nums',
-                            {
-                                'upup-text-[#1b1b1b]': !dark,
-                                'upup-text-white': dark,
-                            },
-                        )"
+                <div class="upup-relative upup-flex upup-min-h-0 upup-w-full upup-max-w-md upup-flex-1">
+                    <video
+                        :ref="bindPreview"
+                        muted
+                        class="upup-min-h-0 upup-w-full upup-flex-1 upup-rounded-lg upup-object-contain"
+                    />
+                    <!-- REC chip (states-tour-3 state E): red dot + label + timer.
+                         The dot's pulse is fx-gated — under motion-off the dot
+                         stays static so the recording status remains visible. -->
+                    <div
+                        data-upup-slot="screen-rec-chip"
+                        class="upup-absolute upup-left-2.5 upup-top-2.5 upup-flex upup-items-center upup-gap-1.5 upup-rounded-md upup-bg-[#04080f]/60 upup-px-2 upup-py-1 upup-font-mono upup-text-[11px] upup-tabular-nums upup-text-[#fecdd3]"
                     >
-                        {{ formatTime(duration) }}
-                    </span>
+                        <span class="upup-animate-fx-rec-pulse upup-h-2 upup-w-2 upup-rounded-full upup-bg-red-500" />
+                        REC {{ formatTime(duration) }}
+                    </div>
                 </div>
                 <button
                     type="button"
-                    class="upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
+                    class="upup-fx-press upup-rounded-lg upup-bg-red-500 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-red-600"
                     @click="stopRecording"
                 >
                     Stop Recording
