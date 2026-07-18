@@ -64,6 +64,8 @@ export const deDE: LocaleBundle = {
             addMore: 'Mehr hinzuf\u00FCgen',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Raster',
+            viewList: 'Liste',
         },
 
         fileList: {

@@ -53,6 +53,8 @@ export const koKR: LocaleBundle = {
             addMore: '더 추가',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: '그리드',
+            viewList: '목록',
         },
         fileList: {
             uploadFiles: '{count, plural, other {#개 파일 업로드}}',

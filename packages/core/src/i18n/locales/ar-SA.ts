@@ -77,6 +77,8 @@ export const arSA: LocaleBundle = {
                 '\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0645\u0632\u064A\u062F',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'شبكة',
+            viewList: 'قائمة',
         },
 
         fileList: {

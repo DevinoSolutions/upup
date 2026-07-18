@@ -51,6 +51,8 @@ export const zhTW: LocaleBundle = {
             addMore: '新增更多',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: '網格',
+            viewList: '列表',
         },
         fileList: {
             uploadFiles: '上傳 {count, plural, other {# 個檔案}}',

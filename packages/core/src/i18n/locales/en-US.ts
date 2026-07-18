@@ -61,6 +61,8 @@ export const enUS: LocaleBundle = {
             addMore: 'Add More',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Grid',
+            viewList: 'List',
         },
 
         fileList: {

@@ -90,6 +90,10 @@ export interface HeaderMessages {
     addMore: string
     switchToListView: string
     switchToGridView: string
+    /** Short label shown next to the icon on the ACTIVE view-toggle segment
+     *  (the inactive segment stays icon-only). Keep it to one short word. */
+    viewGrid: string
+    viewList: string
 }
 
 export interface FileListMessages {

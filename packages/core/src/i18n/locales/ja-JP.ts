@@ -70,6 +70,8 @@ export const jaJP: LocaleBundle = {
             addMore: '\u8FFD\u52A0',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'グリッド',
+            viewList: 'リスト',
         },
 
         fileList: {

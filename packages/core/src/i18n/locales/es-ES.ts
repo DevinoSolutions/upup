@@ -64,6 +64,8 @@ export const esES: LocaleBundle = {
             addMore: 'A\u00F1adir m\u00E1s',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Cuadrícula',
+            viewList: 'Lista',
         },
 
         fileList: {

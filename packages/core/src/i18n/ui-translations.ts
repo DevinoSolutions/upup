@@ -43,6 +43,8 @@ export type UiTranslations = {
     addMore: string
     switchToListView: string
     switchToGridView: string
+    viewGrid: string
+    viewList: string
     dropzoneLabel: string
     uploadFiles_one: string
     uploadFiles_other: string
@@ -267,6 +269,8 @@ export function flattenTranslatorToUiTranslations(
         addMore: tr('header.addMore'),
         switchToListView: tr('header.switchToListView'),
         switchToGridView: tr('header.switchToGridView'),
+        viewGrid: tr('header.viewGrid'),
+        viewList: tr('header.viewList'),
         dropzoneLabel: tr('dropzone.dropAriaLabel'),
         uploadFiles_one: countPluralForm('fileList.uploadFiles', 1),
         uploadFiles_other: countPluralForm('fileList.uploadFiles', 2),

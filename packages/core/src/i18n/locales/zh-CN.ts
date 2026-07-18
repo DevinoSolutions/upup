@@ -51,6 +51,8 @@ export const zhCN: LocaleBundle = {
             addMore: '添加更多',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: '网格',
+            viewList: '列表',
         },
         fileList: {
             uploadFiles: '上传 {count, plural, other {# 个文件}}',
