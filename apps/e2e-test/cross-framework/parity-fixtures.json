@@ -98,7 +98,6 @@
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
-                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
@@ -106,9 +105,9 @@
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-8",
+                                                "upup-h-10",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-8"
+                                                "upup-w-10"
                                             ],
                                             "children": []
                                         }
@@ -155,14 +154,16 @@
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
-                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": ["upup-h-8", "upup-w-8"],
+                                            "classes": [
+                                                "upup-h-10",
+                                                "upup-w-10"
+                                            ],
                                             "children": []
                                         }
                                     ]
@@ -273,7 +274,7 @@
             "children": [
                 {
                     "tag": "div",
-                    "classes": ["upup-inline-block"],
+                    "classes": ["upup-block", "upup-w-full"],
                     "children": [
                         {
                             "tag": "div",
@@ -283,13 +284,13 @@
                                 "upup-bg-contain",
                                 "upup-bg-no-repeat",
                                 "upup-fx-hover-lift",
-                                "upup-h-[145px]",
+                                "upup-h-[160px]",
                                 "upup-overflow-hidden",
                                 "upup-relative",
                                 "upup-ring-1",
                                 "upup-ring-black/[0.06]",
                                 "upup-rounded-xl",
-                                "upup-w-[145px]"
+                                "upup-w-full"
                             ],
                             "children": [
                                 {
@@ -303,75 +304,31 @@
                                     "children": [],
                                     "type": "button",
                                     "aria": {
-                                        "aria-label": "parity.pdf"
+                                        "aria-label": "parity.png"
                                     }
-                                },
-                                {
-                                    "tag": "div",
-                                    "classes": [
-                                        "upup-flex",
-                                        "upup-h-full",
-                                        "upup-items-center",
-                                        "upup-justify-center",
-                                        "upup-p-6"
-                                    ],
-                                    "children": [
-                                        {
-                                            "tag": "div",
-                                            "classes": [
-                                                "upup-flex",
-                                                "upup-flex-col",
-                                                "upup-gap-2",
-                                                "upup-items-center"
-                                            ],
-                                            "children": [
-                                                {
-                                                    "tag": "span",
-                                                    "classes": [
-                                                        "upup-inline-flex"
-                                                    ],
-                                                    "children": [
-                                                        {
-                                                            "tag": "svg",
-                                                            "classes": [
-                                                                "upup-text-5xl",
-                                                                "upup-text-[#0284c7]"
-                                                            ],
-                                                            "children": []
-                                                        }
-                                                    ],
-                                                    "testid": "upup-file-icon",
-                                                    "slot": "file-icon"
-                                                }
-                                            ]
-                                        }
-                                    ]
                                 },
                                 {
                                     "tag": "button",
                                     "classes": [
                                         "upup-absolute",
-                                        "upup-bg-white",
+                                        "upup-bg-[#04080f]/40",
                                         "upup-flex",
                                         "upup-fx-press",
                                         "upup-fx-remove",
-                                        "upup-h-5",
+                                        "upup-h-[30px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-right-1.5",
-                                        "upup-ring-1",
-                                        "upup-ring-black/5",
-                                        "upup-rounded-full",
-                                        "upup-shadow-sm",
-                                        "upup-text-red-600",
+                                        "upup-rounded-[8px]",
+                                        "upup-text-[#e2e8f0]",
                                         "upup-top-1.5",
-                                        "upup-w-5",
+                                        "upup-w-[30px]",
                                         "upup-z-10"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": ["upup-h-3", "upup-w-3"],
+                                            "classes": ["upup-h-5", "upup-w-5"],
                                             "children": []
                                         }
                                     ],
@@ -397,7 +354,7 @@
                                         "upup-truncate"
                                     ],
                                     "children": [],
-                                    "text": "parity.pdf"
+                                    "text": "parity.png"
                                 },
                                 {
                                     "tag": "div",
@@ -408,7 +365,7 @@
                                         "upup-text-gray-500"
                                     ],
                                     "children": [],
-                                    "text": "18 Bytes"
+                                    "text": "70 Bytes"
                                 },
                                 {
                                     "tag": "button",
@@ -436,7 +393,7 @@
         },
         "filePreview": {
             "tag": "div",
-            "classes": ["upup-inline-block"],
+            "classes": ["upup-block", "upup-w-full"],
             "children": [
                 {
                     "tag": "div",
@@ -446,13 +403,13 @@
                         "upup-bg-contain",
                         "upup-bg-no-repeat",
                         "upup-fx-hover-lift",
-                        "upup-h-[145px]",
+                        "upup-h-[160px]",
                         "upup-overflow-hidden",
                         "upup-relative",
                         "upup-ring-1",
                         "upup-ring-black/[0.06]",
                         "upup-rounded-xl",
-                        "upup-w-[145px]"
+                        "upup-w-full"
                     ],
                     "children": [
                         {
@@ -466,73 +423,31 @@
                             "children": [],
                             "type": "button",
                             "aria": {
-                                "aria-label": "parity.pdf"
+                                "aria-label": "parity.png"
                             }
-                        },
-                        {
-                            "tag": "div",
-                            "classes": [
-                                "upup-flex",
-                                "upup-h-full",
-                                "upup-items-center",
-                                "upup-justify-center",
-                                "upup-p-6"
-                            ],
-                            "children": [
-                                {
-                                    "tag": "div",
-                                    "classes": [
-                                        "upup-flex",
-                                        "upup-flex-col",
-                                        "upup-gap-2",
-                                        "upup-items-center"
-                                    ],
-                                    "children": [
-                                        {
-                                            "tag": "span",
-                                            "classes": ["upup-inline-flex"],
-                                            "children": [
-                                                {
-                                                    "tag": "svg",
-                                                    "classes": [
-                                                        "upup-text-5xl",
-                                                        "upup-text-[#0284c7]"
-                                                    ],
-                                                    "children": []
-                                                }
-                                            ],
-                                            "testid": "upup-file-icon",
-                                            "slot": "file-icon"
-                                        }
-                                    ]
-                                }
-                            ]
                         },
                         {
                             "tag": "button",
                             "classes": [
                                 "upup-absolute",
-                                "upup-bg-white",
+                                "upup-bg-[#04080f]/40",
                                 "upup-flex",
                                 "upup-fx-press",
                                 "upup-fx-remove",
-                                "upup-h-5",
+                                "upup-h-[30px]",
                                 "upup-items-center",
                                 "upup-justify-center",
                                 "upup-right-1.5",
-                                "upup-ring-1",
-                                "upup-ring-black/5",
-                                "upup-rounded-full",
-                                "upup-shadow-sm",
-                                "upup-text-red-600",
+                                "upup-rounded-[8px]",
+                                "upup-text-[#e2e8f0]",
                                 "upup-top-1.5",
-                                "upup-w-5",
+                                "upup-w-[30px]",
                                 "upup-z-10"
                             ],
                             "children": [
                                 {
                                     "tag": "svg",
-                                    "classes": ["upup-h-3", "upup-w-3"],
+                                    "classes": ["upup-h-5", "upup-w-5"],
                                     "children": []
                                 }
                             ],
@@ -558,7 +473,7 @@
                                 "upup-truncate"
                             ],
                             "children": [],
-                            "text": "parity.pdf"
+                            "text": "parity.png"
                         },
                         {
                             "tag": "div",
@@ -569,7 +484,7 @@
                                 "upup-text-gray-500"
                             ],
                             "children": [],
-                            "text": "18 Bytes"
+                            "text": "70 Bytes"
                         },
                         {
                             "tag": "button",
@@ -682,24 +597,75 @@
                             ],
                             "children": [
                                 {
-                                    "tag": "button",
+                                    "tag": "div",
                                     "classes": [
+                                        "upup-bg-black/[0.05]",
                                         "upup-flex",
-                                        "upup-h-7",
+                                        "upup-gap-0.5",
                                         "upup-items-center",
-                                        "upup-justify-center",
-                                        "upup-rounded",
-                                        "upup-text-gray-500",
-                                        "upup-transition-colors",
-                                        "upup-w-7"
+                                        "upup-p-0.5",
+                                        "upup-rounded-lg"
                                     ],
                                     "children": [
                                         {
-                                            "tag": "svg",
-                                            "classes": [],
-                                            "children": []
+                                            "tag": "button",
+                                            "classes": [
+                                                "upup-bg-[#0ea5e9]",
+                                                "upup-flex",
+                                                "upup-gap-1",
+                                                "upup-h-6",
+                                                "upup-items-center",
+                                                "upup-justify-center",
+                                                "upup-px-1.5",
+                                                "upup-rounded-md",
+                                                "upup-text-white",
+                                                "upup-transition-colors"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "tag": "svg",
+                                                    "classes": [],
+                                                    "children": []
+                                                }
+                                            ],
+                                            "testid": "upup-view-toggle-grid",
+                                            "aria": {
+                                                "aria-label": "Switch to grid view",
+                                                "aria-pressed": "true"
+                                            }
+                                        },
+                                        {
+                                            "tag": "button",
+                                            "classes": [
+                                                "upup-flex",
+                                                "upup-gap-1",
+                                                "upup-h-6",
+                                                "upup-items-center",
+                                                "upup-justify-center",
+                                                "upup-px-1.5",
+                                                "upup-rounded-md",
+                                                "upup-text-gray-500",
+                                                "upup-transition-colors"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "tag": "svg",
+                                                    "classes": [],
+                                                    "children": []
+                                                }
+                                            ],
+                                            "testid": "upup-view-toggle-list",
+                                            "aria": {
+                                                "aria-label": "Switch to list view",
+                                                "aria-pressed": "false"
+                                            }
                                         }
-                                    ]
+                                    ],
+                                    "slot": "view-toggle",
+                                    "role": "group",
+                                    "aria": {
+                                        "aria-label": "Switch to grid view"
+                                    }
                                 },
                                 {
                                     "tag": "button",
@@ -707,16 +673,19 @@
                                         "upup-border",
                                         "upup-border-[#38bdf8]/50",
                                         "upup-border-dashed",
-                                        "upup-flex",
                                         "upup-fx-hover-lift",
                                         "upup-fx-press",
                                         "upup-gap-1",
+                                        "upup-inline-flex",
                                         "upup-items-center",
+                                        "upup-leading-none",
                                         "upup-px-2",
                                         "upup-py-1",
                                         "upup-rounded-md",
+                                        "upup-shrink-0",
                                         "upup-text-[#0284c7]",
-                                        "upup-text-sm"
+                                        "upup-text-sm",
+                                        "upup-whitespace-nowrap"
                                     ],
                                     "children": [
                                         {
@@ -750,10 +719,9 @@
                         {
                             "tag": "div",
                             "classes": [
-                                "upup-flex",
-                                "upup-flex-col",
                                 "upup-font-[Arial,Helvetica,sans-serif]",
-                                "upup-gap-3"
+                                "upup-gap-4",
+                                "upup-grid"
                             ],
                             "children": [
                                 {
@@ -771,189 +739,10 @@
                                     "children": [
                                         {
                                             "tag": "div",
-                                            "classes": ["upup-inline-block"],
-                                            "children": [
-                                                {
-                                                    "tag": "div",
-                                                    "classes": [
-                                                        "upup-bg-black/[0.04]",
-                                                        "upup-bg-center",
-                                                        "upup-bg-contain",
-                                                        "upup-bg-no-repeat",
-                                                        "upup-fx-hover-lift",
-                                                        "upup-h-[145px]",
-                                                        "upup-overflow-hidden",
-                                                        "upup-relative",
-                                                        "upup-ring-1",
-                                                        "upup-ring-black/[0.06]",
-                                                        "upup-rounded-xl",
-                                                        "upup-w-[145px]"
-                                                    ],
-                                                    "children": [
-                                                        {
-                                                            "tag": "button",
-                                                            "classes": [
-                                                                "upup-absolute",
-                                                                "upup-cursor-pointer",
-                                                                "upup-inset-0",
-                                                                "upup-z-0"
-                                                            ],
-                                                            "children": [],
-                                                            "type": "button",
-                                                            "aria": {
-                                                                "aria-label": "parity.pdf"
-                                                            }
-                                                        },
-                                                        {
-                                                            "tag": "div",
-                                                            "classes": [
-                                                                "upup-flex",
-                                                                "upup-h-full",
-                                                                "upup-items-center",
-                                                                "upup-justify-center",
-                                                                "upup-p-6"
-                                                            ],
-                                                            "children": [
-                                                                {
-                                                                    "tag": "div",
-                                                                    "classes": [
-                                                                        "upup-flex",
-                                                                        "upup-flex-col",
-                                                                        "upup-gap-2",
-                                                                        "upup-items-center"
-                                                                    ],
-                                                                    "children": [
-                                                                        {
-                                                                            "tag": "span",
-                                                                            "classes": [
-                                                                                "upup-inline-flex"
-                                                                            ],
-                                                                            "children": [
-                                                                                {
-                                                                                    "tag": "svg",
-                                                                                    "classes": [
-                                                                                        "upup-text-5xl",
-                                                                                        "upup-text-[#0284c7]"
-                                                                                    ],
-                                                                                    "children": []
-                                                                                }
-                                                                            ],
-                                                                            "testid": "upup-file-icon",
-                                                                            "slot": "file-icon"
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            "tag": "button",
-                                                            "classes": [
-                                                                "upup-absolute",
-                                                                "upup-bg-white",
-                                                                "upup-flex",
-                                                                "upup-fx-press",
-                                                                "upup-fx-remove",
-                                                                "upup-h-5",
-                                                                "upup-items-center",
-                                                                "upup-justify-center",
-                                                                "upup-right-1.5",
-                                                                "upup-ring-1",
-                                                                "upup-ring-black/5",
-                                                                "upup-rounded-full",
-                                                                "upup-shadow-sm",
-                                                                "upup-text-red-600",
-                                                                "upup-top-1.5",
-                                                                "upup-w-5",
-                                                                "upup-z-10"
-                                                            ],
-                                                            "children": [
-                                                                {
-                                                                    "tag": "svg",
-                                                                    "classes": [
-                                                                        "upup-h-3",
-                                                                        "upup-w-3"
-                                                                    ],
-                                                                    "children": []
-                                                                }
-                                                            ],
-                                                            "testid": "upup-file-remove",
-                                                            "type": "button",
-                                                            "aria": {
-                                                                "aria-label": "Remove file"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "tag": "div",
-                                                    "classes": [
-                                                        "upup-mt-1",
-                                                        "upup-px-0.5"
-                                                    ],
-                                                    "children": [
-                                                        {
-                                                            "tag": "div",
-                                                            "classes": [
-                                                                "upup-font-normal",
-                                                                "upup-leading-tight",
-                                                                "upup-text-[13px]",
-                                                                "upup-text-gray-900",
-                                                                "upup-truncate"
-                                                            ],
-                                                            "children": [],
-                                                            "text": "parity.pdf"
-                                                        },
-                                                        {
-                                                            "tag": "div",
-                                                            "classes": [
-                                                                "upup-leading-tight",
-                                                                "upup-mt-0.5",
-                                                                "upup-text-[11px]",
-                                                                "upup-text-gray-500"
-                                                            ],
-                                                            "children": [],
-                                                            "text": "18 Bytes"
-                                                        },
-                                                        {
-                                                            "tag": "button",
-                                                            "classes": [
-                                                                "upup-font-normal",
-                                                                "upup-leading-tight",
-                                                                "upup-mt-1",
-                                                                "upup-text-[#0284c7]",
-                                                                "upup-text-[11px]",
-                                                                "upup-transition-all"
-                                                            ],
-                                                            "children": [],
-                                                            "type": "button",
-                                                            "text": "Click to preview"
-                                                        }
-                                                    ]
-                                                }
+                                            "classes": [
+                                                "upup-block",
+                                                "upup-w-full"
                                             ],
-                                            "testid": "upup-file-preview",
-                                            "slot": "file-preview"
-                                        }
-                                    ],
-                                    "testid": "upup-file-item",
-                                    "slot": "file-item"
-                                },
-                                {
-                                    "tag": "div",
-                                    "classes": [
-                                        "upup-animate-fx-enter",
-                                        "upup-bg-transparent",
-                                        "upup-flex",
-                                        "upup-flex-1",
-                                        "upup-flex-col",
-                                        "upup-gap-1",
-                                        "upup-items-start",
-                                        "upup-relative"
-                                    ],
-                                    "children": [
-                                        {
-                                            "tag": "div",
-                                            "classes": ["upup-inline-block"],
                                             "children": [
                                                 {
                                                     "tag": "div",
@@ -963,13 +752,13 @@
                                                         "upup-bg-contain",
                                                         "upup-bg-no-repeat",
                                                         "upup-fx-hover-lift",
-                                                        "upup-h-[145px]",
+                                                        "upup-h-[160px]",
                                                         "upup-overflow-hidden",
                                                         "upup-relative",
                                                         "upup-ring-1",
                                                         "upup-ring-black/[0.06]",
                                                         "upup-rounded-xl",
-                                                        "upup-w-[145px]"
+                                                        "upup-w-full"
                                                     ],
                                                     "children": [
                                                         {
@@ -990,29 +779,26 @@
                                                             "tag": "button",
                                                             "classes": [
                                                                 "upup-absolute",
-                                                                "upup-bg-white",
+                                                                "upup-bg-[#04080f]/40",
                                                                 "upup-flex",
                                                                 "upup-fx-press",
                                                                 "upup-fx-remove",
-                                                                "upup-h-5",
+                                                                "upup-h-[30px]",
                                                                 "upup-items-center",
                                                                 "upup-justify-center",
                                                                 "upup-right-1.5",
-                                                                "upup-ring-1",
-                                                                "upup-ring-black/5",
-                                                                "upup-rounded-full",
-                                                                "upup-shadow-sm",
-                                                                "upup-text-red-600",
+                                                                "upup-rounded-[8px]",
+                                                                "upup-text-[#e2e8f0]",
                                                                 "upup-top-1.5",
-                                                                "upup-w-5",
+                                                                "upup-w-[30px]",
                                                                 "upup-z-10"
                                                             ],
                                                             "children": [
                                                                 {
                                                                     "tag": "svg",
                                                                     "classes": [
-                                                                        "upup-h-3",
-                                                                        "upup-w-3"
+                                                                        "upup-h-5",
+                                                                        "upup-w-5"
                                                                     ],
                                                                     "children": []
                                                                 }
@@ -1078,6 +864,188 @@
                                     ],
                                     "testid": "upup-file-item",
                                     "slot": "file-item"
+                                },
+                                {
+                                    "tag": "div",
+                                    "classes": [
+                                        "upup-animate-fx-enter",
+                                        "upup-bg-transparent",
+                                        "upup-flex",
+                                        "upup-flex-1",
+                                        "upup-flex-col",
+                                        "upup-gap-1",
+                                        "upup-items-start",
+                                        "upup-relative"
+                                    ],
+                                    "children": [
+                                        {
+                                            "tag": "div",
+                                            "classes": [
+                                                "upup-block",
+                                                "upup-w-full"
+                                            ],
+                                            "children": [
+                                                {
+                                                    "tag": "div",
+                                                    "classes": [
+                                                        "upup-bg-black/[0.04]",
+                                                        "upup-bg-center",
+                                                        "upup-bg-contain",
+                                                        "upup-bg-no-repeat",
+                                                        "upup-fx-hover-lift",
+                                                        "upup-h-[160px]",
+                                                        "upup-overflow-hidden",
+                                                        "upup-relative",
+                                                        "upup-ring-1",
+                                                        "upup-ring-black/[0.06]",
+                                                        "upup-rounded-xl",
+                                                        "upup-w-full"
+                                                    ],
+                                                    "children": [
+                                                        {
+                                                            "tag": "button",
+                                                            "classes": [
+                                                                "upup-absolute",
+                                                                "upup-cursor-pointer",
+                                                                "upup-inset-0",
+                                                                "upup-z-0"
+                                                            ],
+                                                            "children": [],
+                                                            "type": "button",
+                                                            "aria": {
+                                                                "aria-label": "parity.pdf"
+                                                            }
+                                                        },
+                                                        {
+                                                            "tag": "div",
+                                                            "classes": [
+                                                                "upup-flex",
+                                                                "upup-h-full",
+                                                                "upup-items-center",
+                                                                "upup-justify-center",
+                                                                "upup-p-6"
+                                                            ],
+                                                            "children": [
+                                                                {
+                                                                    "tag": "div",
+                                                                    "classes": [
+                                                                        "upup-flex",
+                                                                        "upup-flex-col",
+                                                                        "upup-gap-2",
+                                                                        "upup-items-center"
+                                                                    ],
+                                                                    "children": [
+                                                                        {
+                                                                            "tag": "span",
+                                                                            "classes": [
+                                                                                "upup-inline-flex"
+                                                                            ],
+                                                                            "children": [
+                                                                                {
+                                                                                    "tag": "svg",
+                                                                                    "classes": [
+                                                                                        "upup-text-5xl",
+                                                                                        "upup-text-[#0284c7]"
+                                                                                    ],
+                                                                                    "children": []
+                                                                                }
+                                                                            ],
+                                                                            "testid": "upup-file-icon",
+                                                                            "slot": "file-icon"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "tag": "button",
+                                                            "classes": [
+                                                                "upup-absolute",
+                                                                "upup-bg-[#04080f]/40",
+                                                                "upup-flex",
+                                                                "upup-fx-press",
+                                                                "upup-fx-remove",
+                                                                "upup-h-[30px]",
+                                                                "upup-items-center",
+                                                                "upup-justify-center",
+                                                                "upup-right-1.5",
+                                                                "upup-rounded-[8px]",
+                                                                "upup-text-[#e2e8f0]",
+                                                                "upup-top-1.5",
+                                                                "upup-w-[30px]",
+                                                                "upup-z-10"
+                                                            ],
+                                                            "children": [
+                                                                {
+                                                                    "tag": "svg",
+                                                                    "classes": [
+                                                                        "upup-h-5",
+                                                                        "upup-w-5"
+                                                                    ],
+                                                                    "children": []
+                                                                }
+                                                            ],
+                                                            "testid": "upup-file-remove",
+                                                            "type": "button",
+                                                            "aria": {
+                                                                "aria-label": "Remove file"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "tag": "div",
+                                                    "classes": [
+                                                        "upup-mt-1",
+                                                        "upup-px-0.5"
+                                                    ],
+                                                    "children": [
+                                                        {
+                                                            "tag": "div",
+                                                            "classes": [
+                                                                "upup-font-normal",
+                                                                "upup-leading-tight",
+                                                                "upup-text-[13px]",
+                                                                "upup-text-gray-900",
+                                                                "upup-truncate"
+                                                            ],
+                                                            "children": [],
+                                                            "text": "parity.pdf"
+                                                        },
+                                                        {
+                                                            "tag": "div",
+                                                            "classes": [
+                                                                "upup-leading-tight",
+                                                                "upup-mt-0.5",
+                                                                "upup-text-[11px]",
+                                                                "upup-text-gray-500"
+                                                            ],
+                                                            "children": [],
+                                                            "text": "18 Bytes"
+                                                        },
+                                                        {
+                                                            "tag": "button",
+                                                            "classes": [
+                                                                "upup-font-normal",
+                                                                "upup-leading-tight",
+                                                                "upup-mt-1",
+                                                                "upup-text-[#0284c7]",
+                                                                "upup-text-[11px]",
+                                                                "upup-transition-all"
+                                                            ],
+                                                            "children": [],
+                                                            "type": "button",
+                                                            "text": "Click to preview"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "testid": "upup-file-preview",
+                                            "slot": "file-preview"
+                                        }
+                                    ],
+                                    "testid": "upup-file-item",
+                                    "slot": "file-item"
                                 }
                             ]
                         },
@@ -1097,10 +1065,11 @@
                                 "upup-justify-center",
                                 "upup-mt-2.5",
                                 "upup-px-3",
-                                "upup-py-2.5",
+                                "upup-py-2",
                                 "upup-rounded-xl",
                                 "upup-text-[13px]",
-                                "upup-text-gray-500"
+                                "upup-text-gray-500",
+                                "upup-whitespace-nowrap"
                             ],
                             "children": [
                                 {
@@ -1273,7 +1242,6 @@
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
-                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
@@ -1281,9 +1249,9 @@
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-8",
+                                                "upup-h-10",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-8"
+                                                "upup-w-10"
                                             ],
                                             "children": []
                                         }
@@ -1330,14 +1298,16 @@
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
                                         "upup-rounded-[14px]",
-                                        "upup-shadow-[0_1px_3px_rgba(15,23,42,0.1)]",
                                         "upup-transition-colors",
                                         "upup-w-[52px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": ["upup-h-8", "upup-w-8"],
+                                            "classes": [
+                                                "upup-h-10",
+                                                "upup-w-10"
+                                            ],
                                             "children": []
                                         }
                                     ]
@@ -1466,20 +1436,20 @@
                         "upup-flex",
                         "upup-fx-press",
                         "upup-fx-remove",
-                        "upup-h-[30px]",
+                        "upup-h-[34px]",
                         "upup-items-center",
                         "upup-justify-center",
                         "upup-right-3",
                         "upup-rounded-[9px]",
                         "upup-text-[#e2e8f0]",
                         "upup-top-3",
-                        "upup-w-[30px]",
+                        "upup-w-[34px]",
                         "upup-z-10"
                     ],
                     "children": [
                         {
                             "tag": "svg",
-                            "classes": ["upup-h-[15px]", "upup-w-[15px]"],
+                            "classes": ["upup-h-5", "upup-w-5"],
                             "children": []
                         }
                     ],
@@ -1495,21 +1465,21 @@
                         "upup-absolute",
                         "upup-bg-gradient-to-t",
                         "upup-bottom-0",
-                        "upup-from-[#04080f]/[0.86]",
+                        "upup-from-white/[0.92]",
                         "upup-inset-x-0",
                         "upup-pb-3.5",
                         "upup-pointer-events-none",
                         "upup-pt-4",
                         "upup-px-[18px]",
                         "upup-to-transparent",
-                        "upup-via-[#04080f]/50"
+                        "upup-via-white/60"
                     ],
                     "children": [
                         {
                             "tag": "div",
                             "classes": [
                                 "upup-font-semibold",
-                                "upup-text-[#e2e8f0]",
+                                "upup-text-[#1e293b]",
                                 "upup-text-[13px]",
                                 "upup-truncate"
                             ],
@@ -1520,7 +1490,7 @@
                             "tag": "div",
                             "classes": [
                                 "upup-mt-0.5",
-                                "upup-text-[#94a3b8]",
+                                "upup-text-[#64748b]",
                                 "upup-text-[12px]"
                             ],
                             "children": [],
@@ -1615,16 +1585,19 @@
                                         "upup-border",
                                         "upup-border-[#38bdf8]/50",
                                         "upup-border-dashed",
-                                        "upup-flex",
                                         "upup-fx-hover-lift",
                                         "upup-fx-press",
                                         "upup-gap-1",
+                                        "upup-inline-flex",
                                         "upup-items-center",
+                                        "upup-leading-none",
                                         "upup-px-2",
                                         "upup-py-1",
                                         "upup-rounded-md",
+                                        "upup-shrink-0",
                                         "upup-text-[#0284c7]",
-                                        "upup-text-sm"
+                                        "upup-text-sm",
+                                        "upup-whitespace-nowrap"
                                     ],
                                     "children": [
                                         {
@@ -1698,22 +1671,22 @@
                                                 "upup-flex",
                                                 "upup-fx-press",
                                                 "upup-fx-remove",
-                                                "upup-h-[30px]",
+                                                "upup-h-[34px]",
                                                 "upup-items-center",
                                                 "upup-justify-center",
                                                 "upup-right-3",
                                                 "upup-rounded-[9px]",
                                                 "upup-text-[#e2e8f0]",
                                                 "upup-top-3",
-                                                "upup-w-[30px]",
+                                                "upup-w-[34px]",
                                                 "upup-z-10"
                                             ],
                                             "children": [
                                                 {
                                                     "tag": "svg",
                                                     "classes": [
-                                                        "upup-h-[15px]",
-                                                        "upup-w-[15px]"
+                                                        "upup-h-5",
+                                                        "upup-w-5"
                                                     ],
                                                     "children": []
                                                 }
@@ -1730,21 +1703,21 @@
                                                 "upup-absolute",
                                                 "upup-bg-gradient-to-t",
                                                 "upup-bottom-0",
-                                                "upup-from-[#04080f]/[0.86]",
+                                                "upup-from-white/[0.92]",
                                                 "upup-inset-x-0",
                                                 "upup-pb-3.5",
                                                 "upup-pointer-events-none",
                                                 "upup-pt-4",
                                                 "upup-px-[18px]",
                                                 "upup-to-transparent",
-                                                "upup-via-[#04080f]/50"
+                                                "upup-via-white/60"
                                             ],
                                             "children": [
                                                 {
                                                     "tag": "div",
                                                     "classes": [
                                                         "upup-font-semibold",
-                                                        "upup-text-[#e2e8f0]",
+                                                        "upup-text-[#1e293b]",
                                                         "upup-text-[13px]",
                                                         "upup-truncate"
                                                     ],
@@ -1755,7 +1728,7 @@
                                                     "tag": "div",
                                                     "classes": [
                                                         "upup-mt-0.5",
-                                                        "upup-text-[#94a3b8]",
+                                                        "upup-text-[#64748b]",
                                                         "upup-text-[12px]"
                                                     ],
                                                     "children": [],
@@ -1785,10 +1758,11 @@
                                 "upup-justify-center",
                                 "upup-mt-2.5",
                                 "upup-px-3",
-                                "upup-py-2.5",
+                                "upup-py-2",
                                 "upup-rounded-xl",
                                 "upup-text-[13px]",
-                                "upup-text-gray-500"
+                                "upup-text-gray-500",
+                                "upup-whitespace-nowrap"
                             ],
                             "children": [
                                 {
