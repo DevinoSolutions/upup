@@ -216,7 +216,7 @@ const LIGHT_CASES = [
     },
     {
         name: 'an interactive-example change stays light because the private demo package is not gated',
-        path: 'packages/interactive-example/src/ai/localAssistant.ts',
+        path: 'packages/interactive-example/src/ai/useMastraChat.ts',
     },
     {
         name: 'a dependabot config change stays light because non-workflow github metadata cannot alter suite outcomes',

@@ -146,11 +146,6 @@ const KNOWN_EXCEPTIONS = [
         ],
         reason: 'the retired-name eslint bans (identifier, property, and string-literal layers) name their own targets',
     },
-    {
-        file: 'packages/interactive-example/src/ai/localAssistant.ts',
-        tokens: ['onedrive'],
-        reason: 'matches USER-TYPED intent text; the assistant aliases onedrive / one drive / one-drive so a user can type any spelling',
-    },
 ]
 
 // ── Census ───────────────────────────────────────────────────────────────

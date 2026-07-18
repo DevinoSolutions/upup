@@ -10,7 +10,7 @@
         "build:package": "pnpm --filter @upupjs/core run build && pnpm --filter @upupjs/server run build && pnpm --filter @upupjs/react run build && pnpm --filter @upupjs/vue run build && pnpm --filter @upupjs/svelte run build && pnpm --filter @upupjs/vanilla run build && pnpm --filter @upupjs/angular run build && pnpm --filter @upupjs/preact run build && pnpm --filter @upupjs/next run build",
         "clean": "turbo run clean",
         "dev": "dotenv -e local-dev/.env.ports -- concurrently \"pnpm run dev:apps\" \"pnpm run dev:package-watch\"",
-        "dev:apps": "turbo run dev --parallel --filter=@upupjs/landing --filter=@upupjs/docs --filter=@upupjs/playground",
+        "dev:apps": "turbo run dev --parallel --filter=@upupjs/landing --filter=@upupjs/docs --filter=@upupjs/playground --filter=@upupjs/mastra",
         "dev:playground": "pnpm --filter @upupjs/playground run dev",
         "build:playground": "turbo run build --filter=@upupjs/playground",
         "dev:storybook": "concurrently \"pnpm --filter @upupjs/storybook-vue storybook\" \"pnpm --filter @upupjs/storybook-react storybook\" \"pnpm --filter @upupjs/storybook-svelte storybook\" \"pnpm --filter @upupjs/storybook-vanilla storybook\" \"pnpm --filter @upupjs/storybook-angular storybook\" \"pnpm --filter @upupjs/storybook-preact storybook\"",

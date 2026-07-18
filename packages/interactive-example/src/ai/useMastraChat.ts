@@ -1,7 +1,15 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
 import type { UpupConfig } from '../types'
-import { getLocalAssistantPatch } from './localAssistant'
+
+/**
+ * Shown inline (as the assistant turn) when the real Mastra agent can't be
+ * reached — no canned patches, ever (round-8 item 2). The playground talks only
+ * to the real agent; if it's down, say so honestly and tell the user how to
+ * bring it up.
+ */
+const AGENT_UNAVAILABLE_HINT =
+    'Start the Mastra server with `pnpm run dev` (it boots on http://localhost:4111) and set OPENROUTER_API_KEY in apps/mastra/.env.'
 
 type ChatRole = 'user' | 'assistant'
 
@@ -44,7 +52,11 @@ const newId = () =>
  * means another runtime in the middle. This hook is ~80 lines and does
  * exactly what the playground needs — text streaming + tool result hand-off.
  */
-export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOptions) {
+export function useMastraChat({
+    baseUrl,
+    agentId,
+    onPatch,
+}: UseMastraChatOptions) {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isStreaming, setIsStreaming] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -58,28 +70,21 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
             if (!trimmed || isStreaming) return
 
             setError(null)
-            const userMsg: ChatMessage = { id: newId(), role: 'user', text: trimmed }
-
-            const localPatch = getLocalAssistantPatch(trimmed)
-            if (localPatch) {
-                onPatch(localPatch)
-                setMessages((prev) => [
-                    ...prev,
-                    userMsg,
-                    {
-                        id: newId(),
-                        role: 'assistant',
-                        text: localPatch.explanation,
-                        patches: [localPatch],
-                    },
-                ])
-                return
+            const userMsg: ChatMessage = {
+                id: newId(),
+                role: 'user',
+                text: trimmed,
             }
 
             const asstId = newId()
-            const asstMsg: ChatMessage = { id: asstId, role: 'assistant', text: '', pending: true }
+            const asstMsg: ChatMessage = {
+                id: asstId,
+                role: 'assistant',
+                text: '',
+                pending: true,
+            }
 
-            setMessages((prev) => [...prev, userMsg, asstMsg])
+            setMessages(prev => [...prev, userMsg, asstMsg])
             setIsStreaming(true)
 
             const controller = new AbortController()
@@ -105,10 +110,15 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
                 const collect = (results: any[] | undefined) => {
                     if (!Array.isArray(results)) return
                     for (const r of results) {
-                        const id: string | undefined = r?.toolCallId ?? r?.payload?.toolCallId
+                        const id: string | undefined =
+                            r?.toolCallId ?? r?.payload?.toolCallId
                         if (id && seen.has(id)) continue
                         const name = r?.toolName ?? r?.payload?.toolName
-                        if (name !== 'apply-config-patch' && name !== 'applyConfigPatch') continue
+                        if (
+                            name !== 'apply-config-patch' &&
+                            name !== 'applyConfigPatch'
+                        )
+                            continue
                         const data = r?.result ?? r?.payload?.result
                         if (!data?.patch) continue
                         if (id) seen.add(id)
@@ -117,21 +127,31 @@ export function useMastraChat({ baseUrl, agentId, onPatch }: UseMastraChatOption
                 }
                 collect(response?.toolResults)
                 if (Array.isArray(response?.steps)) {
-                    for (const step of response.steps) collect(step?.toolResults)
+                    for (const step of response.steps)
+                        collect(step?.toolResults)
                 }
 
                 for (const p of patches) onPatch(p)
 
-                setMessages((prev) =>
-                    prev.map((m) =>
-                        m.id === asstId ? { ...m, text, patches, pending: false } : m,
+                setMessages(prev =>
+                    prev.map(m =>
+                        m.id === asstId
+                            ? { ...m, text, patches, pending: false }
+                            : m,
                     ),
                 )
             } catch (e: unknown) {
-                const msg = e instanceof Error ? e.message : 'Network error.'
-                setError(msg)
-                setMessages((prev) =>
-                    prev.map((m) => (m.id === asstId ? { ...m, pending: false } : m)),
+                const detail = e instanceof Error ? e.message : 'Network error.'
+                const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
+                setError(friendly)
+                // Render the honest error AS the assistant turn — never a canned
+                // patch (round-8 item 2).
+                setMessages(prev =>
+                    prev.map(m =>
+                        m.id === asstId
+                            ? { ...m, text: friendly, pending: false }
+                            : m,
+                    ),
                 )
             } finally {
                 setIsStreaming(false)
