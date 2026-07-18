@@ -227,7 +227,11 @@ export default function SourceSelector(): React.ReactElement | null {
                                 type="button"
                                 data-testid={`upup-source-${id}`}
                                 className={cn(
-                                    'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8]',
+                                    // hover:shadow-none cancels fx-hover-lift's
+                                    // glow here: the chip button box is
+                                    // transparent (icon + label), so the shadow
+                                    // would halo empty space, not a card.
+                                    'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
                                     slotClasses.sourceButton,
                                 )}
                                 onClick={() => {

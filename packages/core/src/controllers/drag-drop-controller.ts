@@ -177,6 +177,22 @@ export class DragDropController implements ObservableController<DragDropSnapshot
     handleDragLeave(e: DragEvent): void {
         if (this.disabled || this.deps.props().isProcessing) return
         e.preventDefault()
+        // dragleave fires on every internal element boundary the drag crosses
+        // (panel → child, child → child), not just on leaving the panel — and
+        // clearing the flag mid-hover makes the drag overlay flicker. Ignore a
+        // leave whose destination is still inside the element the handler is
+        // bound to; only a leave to outside (or off-window, relatedTarget null)
+        // ends the drag-over state. Duck-typed (not instanceof Element) — core
+        // must stay evaluable in DOM-less runtimes (node test env, SSR).
+        const container = e.currentTarget as Element | null
+        const destination = e.relatedTarget as Node | null
+        if (
+            container &&
+            destination &&
+            typeof container.contains === 'function' &&
+            container.contains(destination)
+        )
+            return
         this.isDragging = false
         const dropped = Array.from(e.dataTransfer?.files || [])
         this.deps.options().onFilesDragLeave?.(dropped)

@@ -147,6 +147,52 @@ describe('DragDropController', () => {
         expect(core.emit).not.toHaveBeenCalled()
     })
 
+    it('ignores a dragleave whose destination is still inside the panel (no flicker)', () => {
+        const { deps, core } = makeDeps()
+        const c = new DragDropController(deps)
+        c.handleDragOver(dragEvent())
+        expect(c.getSnapshot().isDragging).toBe(true)
+        // Structural Element/Node fakes — core tests run in the node env (no
+        // DOM), and the controller's guard is deliberately duck-typed.
+        const child = { name: 'child' }
+        const panel = { contains: (n: unknown) => n === child }
+        // Crossing panel → child fires dragleave with the child as the
+        // destination; the drag-over state must survive it.
+        const inside = {
+            preventDefault: vi.fn(),
+            currentTarget: panel,
+            relatedTarget: child,
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(inside)
+        expect(c.getSnapshot().isDragging).toBe(true)
+        expect(core.emit).not.toHaveBeenCalledWith('drag-leave', {})
+        // Leaving to an element outside the panel ends it.
+        const outside = {
+            preventDefault: vi.fn(),
+            currentTarget: panel,
+            relatedTarget: { name: 'outside' },
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(outside)
+        expect(c.getSnapshot().isDragging).toBe(false)
+        expect(core.emit).toHaveBeenCalledWith('drag-leave', {})
+    })
+
+    it('clears the drag state on a dragleave with no destination (left the window)', () => {
+        const { deps } = makeDeps()
+        const c = new DragDropController(deps)
+        c.handleDragOver(dragEvent())
+        const offWindow = {
+            preventDefault: vi.fn(),
+            currentTarget: { contains: () => false },
+            relatedTarget: null,
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(offWindow)
+        expect(c.getSnapshot().isDragging).toBe(false)
+    })
+
     it('handleDrop routes dropped files to setFiles + emits drop', async () => {
         const { deps, setFiles, core } = makeDeps()
         const c = new DragDropController(deps)
