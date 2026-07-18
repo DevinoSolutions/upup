@@ -106,6 +106,7 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
                         className="upup-mt-1"
                         progressBarClassName="upup-rounded"
                         progress={progress}
+                        showValue
                     />
                 )}
             </div>

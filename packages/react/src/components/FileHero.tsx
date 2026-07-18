@@ -107,9 +107,10 @@ export default memo(function FileHero({ file }: Props) {
             </div>
 
             <ProgressBar
-                className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
+                className="upup-absolute upup-bottom-0 upup-left-0 upup-right-0 upup-px-[18px] upup-pb-2 upup-text-white"
                 progressBarClassName="upup-rounded-none"
                 progress={progress}
+                showValue
             />
         </div>
     )
