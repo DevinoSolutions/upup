@@ -60,6 +60,7 @@ export interface UploaderControllerOptions
     isProcessing?: boolean | undefined
     allowPreview?: boolean | undefined
     showBranding?: boolean | undefined
+    quietCompletion?: boolean | undefined
     disableDragDrop?: boolean | undefined
     className?: string | undefined
     folderUpload?:

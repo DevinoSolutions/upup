@@ -106,6 +106,11 @@ export type UploaderBaseProps = {
     allowPreview?: boolean | undefined
     /** v2: Show/hide the upup branding footer. Default true. */
     showBranding?: boolean | undefined
+    /** v3: Quiet completion. When true, a successful run shows ONLY a brief
+     *  checkmark over the panel — no Done button, summary, or further CTAs — on
+     *  the assumption the host app takes over via the completion callbacks/events.
+     *  Default false (the normal Done/continue-after-upload flow). */
+    quietCompletion?: boolean | undefined
     /** v2: Default animation layer. `false` disables all decorative motion
      *  (spinner/progress/focus stay). Reduced further automatically under
      *  `prefers-reduced-motion`. Default true. */
