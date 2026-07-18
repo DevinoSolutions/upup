@@ -1,6 +1,7 @@
 import { collectDroppedFiles } from '../folder-drop'
 import { isUploadActive } from '../utils/status-helpers'
 import { FileSource } from '../types/file-source'
+import type { CloudProvider } from '../contracts'
 import type { UpupCore } from '../core'
 import type { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
 import type { ObservableController } from './types'
@@ -11,13 +12,21 @@ import type { ObservableController } from './types'
  * accept OS drops) — the drop is rejected with a toast instead of silently
  * ignored. Every OTHER view (idle, file list, the source selector, camera,
  * screen, audio) keeps its existing drop behavior.
+ *
+ * The membership set is DERIVED from a `Record<CloudProvider, true>` so the
+ * compiler owns exhaustiveness: a new drive source added to the `CloudProvider`
+ * union fails to compile here until it is listed (and its host label wired).
+ * CloudProvider's string values are exactly the drive `FileSource` values.
  */
-const READONLY_DRIVE_SOURCES: ReadonlySet<FileSource> = new Set([
-    FileSource.GOOGLE_DRIVE,
-    FileSource.ONE_DRIVE,
-    FileSource.DROPBOX,
-    FileSource.BOX,
-])
+const READONLY_DRIVE_SOURCE_MAP: Record<CloudProvider, true> = {
+    googleDrive: true,
+    oneDrive: true,
+    dropbox: true,
+    box: true,
+}
+const READONLY_DRIVE_SOURCES: ReadonlySet<string> = new Set(
+    Object.keys(READONLY_DRIVE_SOURCE_MAP),
+)
 
 /** The subset of uploader options the dropzone reads. */
 export interface DragDropOptions {

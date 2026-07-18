@@ -24,6 +24,9 @@ export default function AudioWaveform({
                 .webkitAudioContext
         if (!AudioCtor) return
         const ctx = new AudioCtor()
+        // Autoplay policy may create the context suspended; without resuming,
+        // getByteFrequencyData returns all-zeros and the bars silently flatline.
+        void ctx.resume()
         const source = ctx.createMediaStreamSource(stream)
         const analyser = ctx.createAnalyser()
         analyser.fftSize = 64

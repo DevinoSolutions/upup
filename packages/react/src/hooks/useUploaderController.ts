@@ -14,6 +14,7 @@ import {
     resolveTheme,
     flattenSlotsToClassNames,
     type UploadFile,
+    type UiTranslations,
 } from '@upupjs/core'
 import {
     normalizeUploaderOptions,
@@ -24,6 +25,7 @@ import {
     type ThemeStoreState,
     type MotionMode,
     type TransientUiSnapshot,
+    type CloudProvider,
 } from '@upupjs/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
@@ -66,15 +68,17 @@ const DefaultTrashIconComponent = (props: {
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
 
-/** Read-only drive FileSource → flattened i18n label key (the human provider
- *  name for the drop-rejection toast). Mirrors READONLY_DRIVE_SOURCES in core's
- *  DragDropController. */
-const DRIVE_SOURCE_LABEL_KEY = {
-    [FileSource.GOOGLE_DRIVE]: 'googleDrive',
-    [FileSource.ONE_DRIVE]: 'oneDrive',
-    [FileSource.DROPBOX]: 'dropbox',
-    [FileSource.BOX]: 'box',
-} as const
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof
+ *  UiTranslations>` so the compiler enforces exhaustiveness against the same
+ *  drive-source union core's DragDropController gates on — a new provider fails
+ *  typecheck here until its label key is wired. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
 
 /** Stable server/pre-mount snapshot for the transient-UI store (matches the
  *  core unit's initial shape: nothing leaving, no overlay, no rejection). */
@@ -555,10 +559,11 @@ export default function useUploaderController(
     // host resolves the human provider label and raises the toast (core store).
     const flagDriveDropRejected = useCallback(
         (source: FileSource) => {
-            const key =
-                DRIVE_SOURCE_LABEL_KEY[
-                    source as keyof typeof DRIVE_SOURCE_LABEL_KEY
-                ]
+            // core only calls this for drive sources; FileSource's drive values
+            // are exactly the CloudProvider strings, but the enum type doesn't
+            // structurally overlap the literal union — index by value.
+            const key: keyof UiTranslations | undefined =
+                DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
             const label = key ? resolved.translations[key] : source
             controller?.transientUi.flagDropRejected(label)
         },
