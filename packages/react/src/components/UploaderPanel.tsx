@@ -377,8 +377,9 @@ export default function UploaderPanel(): React.ReactElement | null {
             {/* Branding row INSIDE the panel (and the dashed frame). The
                 add-more sheet slides over it, per the states-tour mock. Hidden
                 while a source view is active — the drive browser / camera / url
-                views own the full panel. */}
-            {!mini && showBranding && !activeSource && (
+                views own the full panel — and once files are selected: the
+                file-list screen needs the vertical space (round-7 item 1). */}
+            {!mini && showBranding && !activeSource && !hasFiles && (
                 <div
                     data-testid="upup-branding"
                     className="upup-flex upup-w-full upup-flex-none upup-flex-col upup-items-center upup-justify-between upup-gap-1 upup-px-6 upup-pb-5 upup-pt-1.5 md:upup-flex-row"

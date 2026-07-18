@@ -103,7 +103,7 @@ export default function UploaderHeader({
                             aria-pressed={viewMode === 'grid'}
                             title={tr.switchToGridView}
                             className={cn(
-                                'upup-flex upup-h-6 upup-w-6 upup-items-center upup-justify-center upup-rounded-md upup-transition-colors',
+                                'upup-flex upup-h-6 upup-items-center upup-justify-center upup-gap-1 upup-rounded-md upup-px-1.5 upup-transition-colors',
                                 viewMode === 'grid'
                                     ? 'upup-bg-[#0ea5e9] upup-text-white'
                                     : dark
@@ -115,6 +115,14 @@ export default function UploaderHeader({
                             }}
                         >
                             <Icon name="layout-grid" size={15} />
+                            {/* Label only on the ACTIVE segment, and only at md+
+                                where the header has room (mini shows no header at
+                                all). Inactive segment stays icon-only. */}
+                            {viewMode === 'grid' && (
+                                <span className="upup-hidden upup-text-xs upup-font-medium upup-leading-none md:upup-inline">
+                                    {tr.viewGrid}
+                                </span>
+                            )}
                         </button>
                         <button
                             data-testid="upup-view-toggle-list"
@@ -122,7 +130,7 @@ export default function UploaderHeader({
                             aria-pressed={viewMode === 'list'}
                             title={tr.switchToListView}
                             className={cn(
-                                'upup-flex upup-h-6 upup-w-6 upup-items-center upup-justify-center upup-rounded-md upup-transition-colors',
+                                'upup-flex upup-h-6 upup-items-center upup-justify-center upup-gap-1 upup-rounded-md upup-px-1.5 upup-transition-colors',
                                 viewMode === 'list'
                                     ? 'upup-bg-[#0ea5e9] upup-text-white'
                                     : dark
@@ -134,6 +142,11 @@ export default function UploaderHeader({
                             }}
                         >
                             <Icon name="layout-list" size={15} />
+                            {viewMode === 'list' && (
+                                <span className="upup-hidden upup-text-xs upup-font-medium upup-leading-none md:upup-inline">
+                                    {tr.viewList}
+                                </span>
+                            )}
                         </button>
                     </div>
                 )}
