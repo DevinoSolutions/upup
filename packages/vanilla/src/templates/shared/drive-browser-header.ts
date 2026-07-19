@@ -1,5 +1,5 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
-import { repeat } from 'lit-html/directives/repeat.js'
+import { ref } from 'lit-html/directives/ref.js'
 import { cn } from '@upupjs/core/internal'
 import type { DriveFolder } from '@upupjs/core'
 import type { UploaderContext } from '../../lib/types'
@@ -16,6 +16,10 @@ export function driveBrowserHeader(
         onSearch: (value: string) => void
         searchTerm: string
         showSearch: boolean
+        searchOpen: boolean
+        setSearchOpen: (open: boolean) => void
+        focusPending: boolean
+        onSearchFocused: () => void
     },
 ): TemplateResult | typeof nothing {
     const {
@@ -26,6 +30,10 @@ export function driveBrowserHeader(
         onSearch,
         searchTerm,
         showSearch,
+        searchOpen,
+        setSearchOpen,
+        focusPending,
+        onSearchFocused,
     } = args
 
     const isDark = ctx.theme.getSnapshot().isDark
@@ -39,9 +47,12 @@ export function driveBrowserHeader(
         return nothing
     }
 
-    // Breadcrumbs only once the user has navigated into a folder — the root crumb
-    // ("Drive") is redundant next to the provider name in the top row.
-    const showBreadcrumbs = path.length > 1
+    // Once navigated into a folder we show a Back affordance + the current folder
+    // name, not a full breadcrumb trail (long provider folder names blew the row
+    // up, and multi-level jumps weren't worth the fragility).
+    const navigated = path.length > 1
+    const currentFolder = path[path.length - 1]
+    const hasFilter = searchTerm.trim().length > 0
 
     // Account controls live in the SourceView header row (portal), next to Back,
     // separated by a hairline — not in their own strip. Reproduce React's 3
@@ -83,9 +94,55 @@ export function driveBrowserHeader(
             ></span>`,
     )
 
+    // Collapsed/expanded search; the term itself stays in DriveBrowser. The
+    // expand animation runs only on the navigated form, never at root.
+    const searchField = html` <div
+        class=${cn(
+            'upup-relative upup-min-w-0 upup-flex-1',
+            navigated ? 'upup-fx-search-expand' : '',
+            slot.driveSearchContainer,
+        )}
+    >
+        <input
+            ${ref(el => {
+                if (el && focusPending) {
+                    onSearchFocused()
+                    ;(el as HTMLInputElement).focus()
+                }
+            })}
+            type="search"
+            name="upup-drive-search"
+            data-testid="upup-drive-search-input"
+            data-upup-slot="drive-search-input"
+            aria-label=${tr.search}
+            class=${cn(
+                'upup-w-full upup-rounded-lg upup-px-3 upup-py-1.5 upup-pl-8 upup-text-xs upup-outline-none upup-ring-1 upup-transition-shadow focus:upup-ring-2 focus:upup-ring-[#38bdf8]',
+                isDark
+                    ? 'upup-bg-white/[0.06] upup-text-[#e2e8f0] upup-ring-white/[0.1] placeholder:upup-text-[#64748b]'
+                    : 'upup-bg-white upup-text-[#0f172a] upup-ring-black/[0.08] placeholder:upup-text-[#94a3b8]',
+                slot.driveSearchInput,
+            )}
+            placeholder=${tr.search}
+            .value=${searchTerm}
+            @input=${(e: Event) => {
+                onSearch((e.target as HTMLInputElement).value)
+            }}
+            @keydown=${(e: KeyboardEvent) => {
+                if (e.key === 'Escape') setSearchOpen(false)
+            }}
+            @blur=${() => {
+                // Collapse only when empty — a live filter must stay visible.
+                if (!searchTerm) setSearchOpen(false)
+            }}
+        />
+        ${icon('search', {
+            class: 'upup-absolute upup-left-2.5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]',
+        })}
+    </div>`
+
     return html` <div data-upup-slot="drive-browser-header">
         ${
-            showSearch || showBreadcrumbs
+            showSearch || navigated
                 ? html` <div
                       class=${cn(
                           'upup-flex upup-items-center upup-gap-2.5 upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
@@ -97,81 +154,63 @@ export function driveBrowserHeader(
                       )}
                   >
                       ${
-                          showBreadcrumbs
-                              ? html` <div
-                                    class="upup-flex upup-min-w-0 upup-shrink upup-items-center upup-gap-1"
-                                >
-                                    ${repeat(
-                                        path,
-                                        p => p.id,
-                                        (p, i) =>
-                                            html` <p
-                                                class=${cn(
-                                                    'upup-group upup-flex upup-shrink-0 upup-cursor-pointer upup-gap-1 upup-truncate',
-                                                    {
-                                                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]':
-                                                            isDark,
-                                                    },
-                                                )}
-                                                style="max-width: ${
-                                                    100 / path.length
-                                                }%; pointer-events: ${
-                                                    i === path.length - 1
-                                                        ? 'none'
-                                                        : 'auto'
-                                                }"
-                                                @click=${() => {
-                                                    setPath(
-                                                        path.slice(0, i + 1),
-                                                    )
-                                                }}
-                                            >
-                                                <span
-                                                    class="upup-group-hover:upup-underline upup-truncate"
-                                                    >${p.name}</span
-                                                >
-                                                ${
-                                                    i !== path.length - 1
-                                                        ? html` &gt; `
-                                                        : nothing
-                                                }
-                                            </p>`,
+                          navigated
+                              ? html` <button
+                                    type="button"
+                                    data-testid="upup-drive-back"
+                                    data-upup-slot="drive-back"
+                                    aria-label=${tr.overlayBack}
+                                    class=${cn(
+                                        'upup-fx-hover-lift upup-fx-press upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+                                        isDark
+                                            ? 'upup-text-[#e2e8f0] hover:upup-bg-white/[0.08]'
+                                            : 'upup-text-[#334155] hover:upup-bg-black/[0.05]',
                                     )}
-                                </div>`
+                                    @click=${() => {
+                                        setPath(path.slice(0, -1))
+                                    }}
+                                >
+                                    ${icon('chevron-left')}
+                                </button>`
                               : nothing
                       }
                       ${
-                          showSearch
-                              ? html` <div
+                          navigated && !searchOpen
+                              ? html` <span
+                                    data-upup-slot="drive-current-folder"
+                                    title=${currentFolder?.name ?? ''}
+                                    class="upup-min-w-0 upup-flex-1 upup-truncate upup-font-medium"
+                                    >${currentFolder?.name}</span
+                                >`
+                              : nothing
+                      }
+                      ${
+                          navigated && showSearch && !searchOpen
+                              ? html` <button
+                                    type="button"
+                                    data-testid="upup-drive-search-toggle"
+                                    data-upup-slot="drive-search-toggle"
+                                    aria-label=${tr.search}
+                                    aria-expanded="false"
                                     class=${cn(
-                                        'upup-relative upup-min-w-0 upup-flex-1',
-                                        slot.driveSearchContainer,
+                                        'upup-fx-hover-lift upup-fx-press upup-ml-auto upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+                                        hasFilter
+                                            ? 'upup-text-[#0ea5e9]'
+                                            : isDark
+                                              ? 'upup-text-[#94a3b8] hover:upup-bg-white/[0.08]'
+                                              : 'upup-text-[#64748b] hover:upup-bg-black/[0.05]',
                                     )}
+                                    @click=${() => {
+                                        setSearchOpen(true)
+                                    }}
                                 >
-                                    <input
-                                        type="search"
-                                        name="upup-drive-search"
-                                        aria-label=${tr.search}
-                                        class=${cn(
-                                            'upup-w-full upup-rounded-lg upup-px-3 upup-py-1.5 upup-pl-8 upup-text-xs upup-outline-none upup-ring-1 upup-transition-shadow focus:upup-ring-2 focus:upup-ring-[#38bdf8]',
-                                            isDark
-                                                ? 'upup-bg-white/[0.06] upup-text-[#e2e8f0] upup-ring-white/[0.1] placeholder:upup-text-[#64748b]'
-                                                : 'upup-bg-white upup-text-[#0f172a] upup-ring-black/[0.08] placeholder:upup-text-[#94a3b8]',
-                                            slot.driveSearchInput,
-                                        )}
-                                        placeholder=${tr.search}
-                                        .value=${searchTerm}
-                                        @input=${(e: Event) => {
-                                            onSearch(
-                                                (e.target as HTMLInputElement)
-                                                    .value,
-                                            )
-                                        }}
-                                    />
-                                    ${icon('search', {
-                                        class: 'upup-absolute upup-left-2.5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]',
-                                    })}
-                                </div>`
+                                    ${icon('search')}
+                                </button>`
+                              : nothing
+                      }
+                      ${
+                          showSearch && (!navigated || searchOpen)
+                              ? searchField
                               : nothing
                       }
                   </div>`

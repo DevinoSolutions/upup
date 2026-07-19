@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { type DriveFolder, type DriveUser } from '@upupjs/core'
 import {
     useUploaderI18n,
@@ -27,9 +27,21 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 const headerExtraHostRef = useSourceViewHeaderExtra()
 const headerExtraHost = computed(() => headerExtraHostRef?.value ?? null)
 
-// Breadcrumbs only once the user has navigated into a folder — the root crumb
-// ("Drive") is redundant next to the provider name in the top row.
-const showBreadcrumbs = computed(() => props.path.length > 1)
+// Once navigated into a folder we show a Back affordance + the current folder
+// name, not a full breadcrumb trail (long provider folder names blew the row
+// up, and multi-level jumps weren't worth the fragility).
+const navigated = computed(() => props.path.length > 1)
+const currentFolder = computed(() => props.path[props.path.length - 1])
+const hasFilter = computed(() => props.searchTerm.trim().length > 0)
+
+// Collapsed/expanded search lives here; the term itself stays in DriveBrowser.
+const searchOpen = ref(false)
+const searchInputRef = ref<HTMLInputElement | null>(null)
+
+// Focus the field the moment it expands.
+watch(searchOpen, open => {
+    if (open) void nextTick(() => searchInputRef.value?.focus())
+})
 
 function onLogout() {
     void props.handleSignOut()
@@ -78,7 +90,7 @@ function onLogout() {
             />
         </Teleport>
         <div
-            v-if="props.showSearch || showBreadcrumbs"
+            v-if="props.showSearch || navigated"
             :class="
                 cn(
                     'upup-flex upup-items-center upup-gap-2.5 upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
@@ -89,47 +101,69 @@ function onLogout() {
                 )
             "
         >
-            <div
-                v-if="showBreadcrumbs"
-                class="upup-flex upup-min-w-0 upup-shrink upup-items-center upup-gap-1"
+            <button
+                v-if="navigated"
+                type="button"
+                data-testid="upup-drive-back"
+                data-upup-slot="drive-back"
+                :aria-label="tr.overlayBack"
+                :class="
+                    cn(
+                        'upup-fx-hover-lift upup-fx-press upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+                        dark
+                            ? 'upup-text-[#e2e8f0] hover:upup-bg-white/[0.08]'
+                            : 'upup-text-[#334155] hover:upup-bg-black/[0.05]',
+                    )
+                "
+                @click="props.setPath(props.path.slice(0, -1))"
             >
-                <p
-                    v-for="(p, i) in props.path"
-                    :key="p.id"
-                    :class="
-                        cn(
-                            'upup-group upup-flex upup-shrink-0 upup-cursor-pointer upup-gap-1 upup-truncate',
-                            {
-                                'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]':
-                                    dark,
-                            },
-                        )
-                    "
-                    :style="{
-                        maxWidth: 100 / props.path.length + '%',
-                        pointerEvents:
-                            i === props.path.length - 1 ? 'none' : 'auto',
-                    }"
-                    @click="props.setPath(props.path.slice(0, i + 1))"
-                >
-                    <span class="upup-group-hover:upup-underline upup-truncate">
-                        {{ p.name }}
-                    </span>
-                    <template v-if="i !== props.path.length - 1"> &gt; </template>
-                </p>
-            </div>
+                <Icon name="chevron-left" />
+            </button>
+            <span
+                v-if="navigated && !searchOpen"
+                data-upup-slot="drive-current-folder"
+                :title="currentFolder?.name"
+                class="upup-min-w-0 upup-flex-1 upup-truncate upup-font-medium"
+            >
+                {{ currentFolder?.name }}
+            </span>
+            <button
+                v-if="navigated && props.showSearch && !searchOpen"
+                type="button"
+                data-testid="upup-drive-search-toggle"
+                data-upup-slot="drive-search-toggle"
+                :aria-label="tr.search"
+                :aria-expanded="false"
+                :class="
+                    cn(
+                        'upup-fx-hover-lift upup-fx-press upup-ml-auto upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+                        hasFilter
+                            ? 'upup-text-[#0ea5e9]'
+                            : dark
+                              ? 'upup-text-[#94a3b8] hover:upup-bg-white/[0.08]'
+                              : 'upup-text-[#64748b] hover:upup-bg-black/[0.05]',
+                    )
+                "
+                @click="searchOpen = true"
+            >
+                <Icon name="search" />
+            </button>
             <div
-                v-if="props.showSearch"
+                v-if="props.showSearch && (!navigated || searchOpen)"
                 :class="
                     cn(
                         'upup-relative upup-min-w-0 upup-flex-1',
+                        navigated && 'upup-fx-search-expand',
                         slotClasses.driveSearchContainer,
                     )
                 "
             >
                 <input
+                    ref="searchInputRef"
                     type="search"
                     name="upup-drive-search"
+                    data-testid="upup-drive-search-input"
+                    data-upup-slot="drive-search-input"
                     :aria-label="tr.search"
                     :class="
                         cn(
@@ -144,6 +178,12 @@ function onLogout() {
                     :value="props.searchTerm"
                     @input="
                         props.onSearch(($event.target as HTMLInputElement).value)
+                    "
+                    @keydown.esc="searchOpen = false"
+                    @blur="
+                        () => {
+                            if (!props.searchTerm) searchOpen = false
+                        }
                     "
                 />
                 <Icon

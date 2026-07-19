@@ -2,11 +2,11 @@ import { Component, Input } from '@angular/core'
 import { IconComponent } from '../icon.component'
 
 @Component({
-    selector: 'upup-folder-icon',
+    selector: 'upup-folder-filled-icon',
     standalone: true,
     imports: [IconComponent],
-    template: `<upup-icon name="folder" [class]="className" />`,
+    template: `<upup-icon name="folder-filled" [class]="className" />`,
 })
-export class FolderIconComponent {
+export class FolderFilledIconComponent {
     @Input('class') className: string = ''
 }

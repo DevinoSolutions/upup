@@ -15,16 +15,18 @@ import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewHeaderExtraService } from '../../context/source-view-header-extra.service'
 import { SearchIconComponent } from '../icons/search-icon.component'
+import { ChevronLeftIconComponent } from '../icons/chevron-left-icon.component'
 import { UserIconComponent } from '../icons/user-icon.component'
 
 /**
  * Angular port of DriveBrowserHeader.
  *
- * Boxless, merged header: breadcrumbs (only once navigated past the root — the
- * root crumb is redundant next to the provider name) + restyled search share one
- * transparent row. The account controls (avatar + log out + hairline separator)
- * are portaled into the SourceView header row, next to Back — not their own
- * strip. Only shown when `user` is set. Preserves
+ * Boxless, merged header: once navigated past the root, a ghost chevron-left
+ * Back button (up one folder) + the current folder name, with the search
+ * collapsed into an icon toggle that expands into the styled input. At the root
+ * the full-width search shows directly. The account controls (avatar + log out +
+ * hairline separator) are portaled into the SourceView header row, next to Back
+ * — not their own strip. Only shown when `user` is set. Preserves
  * data-upup-slot="drive-browser-header".
  *
  * Portal idiom: the account controls live in a `display:contents` wrapper which
@@ -35,7 +37,7 @@ import { UserIconComponent } from '../icons/user-icon.component'
 @Component({
     selector: 'upup-drive-browser-header',
     standalone: true,
-    imports: [SearchIconComponent, UserIconComponent],
+    imports: [SearchIconComponent, ChevronLeftIconComponent, UserIconComponent],
     template: `
         @if (user) {
             <div data-upup-slot="drive-browser-header">
@@ -71,46 +73,56 @@ import { UserIconComponent } from '../icons/user-icon.component'
                     </div>
                 }
 
-                @if (showSearch || showBreadcrumbs) {
+                @if (showSearch || navigated) {
                     <div [class]="headerClass">
-                        @if (showBreadcrumbs) {
-                            <div
-                                class="upup-flex upup-min-w-0 upup-shrink upup-items-center upup-gap-1"
+                        @if (navigated) {
+                            <button
+                                type="button"
+                                data-testid="upup-drive-back"
+                                data-upup-slot="drive-back"
+                                [attr.aria-label]="tr.overlayBack"
+                                [class]="backClass"
+                                (click)="setPath(path!.slice(0, -1))"
                             >
-                                @for (p of path; track p.id; let i = $index) {
-                                    <p
-                                        [class]="breadcrumbClass"
-                                        [style.max-width]="
-                                            100 / (path?.length ?? 1) + '%'
-                                        "
-                                        [style.pointer-events]="
-                                            i === (path?.length ?? 0) - 1
-                                                ? 'none'
-                                                : 'auto'
-                                        "
-                                        (click)="setPath(path!.slice(0, i + 1))"
-                                    >
-                                        <span
-                                            class="upup-group-hover:upup-underline upup-truncate"
-                                            >{{ p.name }}</span
-                                        >
-                                        @if (i !== (path?.length ?? 0) - 1) {
-                                            &gt;
-                                        }
-                                    </p>
-                                }
-                            </div>
+                                <upup-chevron-left-icon />
+                            </button>
                         }
-                        @if (showSearch) {
+                        @if (navigated && !searchOpen) {
+                            <span
+                                data-upup-slot="drive-current-folder"
+                                [attr.title]="currentFolder?.name"
+                                class="upup-min-w-0 upup-flex-1 upup-truncate upup-font-medium"
+                                >{{ currentFolder?.name }}</span
+                            >
+                        }
+                        @if (navigated && showSearch && !searchOpen) {
+                            <button
+                                type="button"
+                                data-testid="upup-drive-search-toggle"
+                                data-upup-slot="drive-search-toggle"
+                                [attr.aria-label]="tr.search"
+                                aria-expanded="false"
+                                [class]="searchToggleClass"
+                                (click)="searchOpen = true"
+                            >
+                                <upup-search-icon />
+                            </button>
+                        }
+                        @if (showSearch && (!navigated || searchOpen)) {
                             <div [class]="searchContainerClass">
                                 <input
+                                    #searchInput
                                     type="search"
                                     name="upup-drive-search"
+                                    data-testid="upup-drive-search-input"
+                                    data-upup-slot="drive-search-input"
                                     [attr.aria-label]="tr.search"
                                     [class]="searchInputClass"
                                     [placeholder]="tr.search"
                                     [value]="searchTerm"
                                     (input)="onSearch(getInputValue($event))"
+                                    (keydown.escape)="searchOpen = false"
+                                    (blur)="onSearchBlur()"
                                 />
                                 <upup-search-icon
                                     class="upup-absolute upup-left-2.5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]"
@@ -161,10 +173,39 @@ export class DriveBrowserHeaderComponent implements OnDestroy {
         }
     }
 
-    // Breadcrumbs only once the user has navigated into a folder — the root
-    // crumb is redundant next to the provider name in the top row.
-    get showBreadcrumbs(): boolean {
+    // Collapsed/expanded search lives here; the term itself stays in
+    // DriveBrowser.
+    searchOpen = false
+
+    /**
+     * Focus the field the moment it expands. The input renders only while
+     * `searchOpen`, so the query result appears exactly on the open transition —
+     * mirroring React's `useEffect(focus, [searchOpen])`, using the same
+     * ViewChild-setter idiom as `extra` above.
+     */
+    @ViewChild('searchInput')
+    set searchInput(ref: ElementRef<HTMLInputElement> | undefined) {
+        if (ref && this.searchOpen) ref.nativeElement.focus()
+    }
+
+    // Once navigated into a folder we show a Back affordance + the current
+    // folder name, not a full breadcrumb trail (long provider folder names blew
+    // the row up, and multi-level jumps weren't worth the fragility).
+    get navigated(): boolean {
         return (this.path?.length ?? 0) > 1
+    }
+
+    get currentFolder(): DriveFolder | undefined {
+        return this.path?.[this.path.length - 1]
+    }
+
+    get hasFilter(): boolean {
+        return this.searchTerm.trim().length > 0
+    }
+
+    onSearchBlur(): void {
+        // Collapse only when empty — a live filter must stay visible.
+        if (!this.searchTerm) this.searchOpen = false
     }
 
     get tr(): UiTranslations {
@@ -191,11 +232,25 @@ export class DriveBrowserHeaderComponent implements OnDestroy {
         )
     }
 
-    get breadcrumbClass(): string {
+    get backClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-group upup-flex upup-shrink-0 upup-cursor-pointer upup-gap-1 upup-truncate',
-            dark ? 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]' : '',
+            'upup-fx-hover-lift upup-fx-press upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+            dark
+                ? 'upup-text-[#e2e8f0] hover:upup-bg-white/[0.08]'
+                : 'upup-text-[#334155] hover:upup-bg-black/[0.05]',
+        )
+    }
+
+    get searchToggleClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-fx-hover-lift upup-fx-press upup-ml-auto upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+            this.hasFilter
+                ? 'upup-text-[#0ea5e9]'
+                : dark
+                  ? 'upup-text-[#94a3b8] hover:upup-bg-white/[0.08]'
+                  : 'upup-text-[#64748b] hover:upup-bg-black/[0.05]',
         )
     }
 
@@ -221,6 +276,8 @@ export class DriveBrowserHeaderComponent implements OnDestroy {
         const slotClasses = this.store.slotOverrides()
         return cn(
             'upup-relative upup-min-w-0 upup-flex-1',
+            // Enter animation only on the navigated-expanded form, never at root.
+            this.navigated ? 'upup-fx-search-expand' : '',
             slotClasses.driveSearchContainer,
         )
     }

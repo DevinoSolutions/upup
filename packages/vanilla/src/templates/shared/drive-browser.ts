@@ -34,9 +34,14 @@ export interface DriveBrowserProps {
     loadMore?: () => void | Promise<void>
 }
 
-// Per-context search state (reset when props key changes)
+// Per-context search state (reset when props key changes). `searchOpen` is the
+// collapsed/expanded toggle for the navigated search; `focusPending` is a
+// one-shot flag consumed by the header's input ref to focus exactly on the open
+// transition (mirrors React's focus-on-expand effect).
 interface DriveSearchState {
     searchTerm: string
+    searchOpen: boolean
+    focusPending: boolean
     slotKey: string
 }
 const searchStateMap = new WeakMap<UploaderContext, DriveSearchState>()
@@ -46,7 +51,12 @@ function getDriveSearchState(
 ): DriveSearchState {
     let s = searchStateMap.get(ctx)
     if (!s || s.slotKey !== slot) {
-        s = { searchTerm: '', slotKey: slot }
+        s = {
+            searchTerm: '',
+            searchOpen: false,
+            focusPending: false,
+            slotKey: slot,
+        }
         searchStateMap.set(ctx, s)
     }
     return s
@@ -128,6 +138,16 @@ export function driveBrowser(
             onSearch: (v: string) => {
                 ss.searchTerm = v
                 ctx.invalidate()
+            },
+            searchOpen: ss.searchOpen,
+            setSearchOpen: (open: boolean) => {
+                ss.searchOpen = open
+                if (open) ss.focusPending = true
+                ctx.invalidate()
+            },
+            focusPending: ss.focusPending,
+            onSearchFocused: () => {
+                ss.focusPending = false
             },
         })}
         <div
