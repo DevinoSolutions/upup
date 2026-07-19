@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1
+#
+# Landing app (Next.js) image for the one-compose site contract.
+# Build context is the monorepo ROOT (see docker-compose.yml build.context: ../..).
+#
+# Next.js inlines NEXT_PUBLIC_* at BUILD time, so every public var arrives as a
+# build ARG. Server-side secrets (S3_*, *_SECRET, UPUP_UPLOAD_TOKEN_SECRET) are
+# deliberately NOT here — they are injected at runtime by compose.
+#
+# The landing app does not use Next `output: standalone`, so `next start` needs
+# the built workspace present. We therefore run the final stage from the build
+# stage (node_modules + .next intact) — correctness over image size, as briefed.
+
+FROM node:20.20.2-slim AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME:$PATH"
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS build
+# Build-time public config (inlined into the client bundle by `next build`).
+ARG NEXT_PUBLIC_BASE_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_GOOGLE_API_KEY
+ARG NEXT_PUBLIC_GOOGLE_APP_ID
+ARG NEXT_PUBLIC_ONEDRIVE_CLIENT_ID
+ARG NEXT_PUBLIC_DROPBOX_CLIENT_ID
+ARG NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
+ARG NEXT_PUBLIC_POSTHOG_KEY
+ARG NEXT_PUBLIC_POSTHOG_HOST
+ARG NEXT_PUBLIC_MASTRA_BASE_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID \
+    NEXT_PUBLIC_GOOGLE_API_KEY=$NEXT_PUBLIC_GOOGLE_API_KEY \
+    NEXT_PUBLIC_GOOGLE_APP_ID=$NEXT_PUBLIC_GOOGLE_APP_ID \
+    NEXT_PUBLIC_ONEDRIVE_CLIENT_ID=$NEXT_PUBLIC_ONEDRIVE_CLIENT_ID \
+    NEXT_PUBLIC_DROPBOX_CLIENT_ID=$NEXT_PUBLIC_DROPBOX_CLIENT_ID \
+    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=$NEXT_PUBLIC_GOOGLE_ANALYTICS_ID \
+    NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY \
+    NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST \
+    NEXT_PUBLIC_MASTRA_BASE_URL=$NEXT_PUBLIC_MASTRA_BASE_URL
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+# Builds @upupjs/core → react → server → interactive-example → docs → landing
+# (turbo dependency graph). Docs output lands in apps/landing/public/documentation.
+RUN pnpm run build:landing
+
+FROM build AS runtime
+ENV NODE_ENV=production
+ENV PORT=3000
+EXPOSE 3000
+# `next start` honors PORT; landing's start script is a bare `next start`.
+CMD ["pnpm", "--filter", "@upupjs/landing", "start"]

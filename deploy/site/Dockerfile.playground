@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1
+#
+# Playground app (Next.js) image for the one-compose site contract.
+# Build context is the monorepo ROOT (see docker-compose.yml build.context: ../..).
+#
+# The playground's own dev/start scripts wrap Next in a dotenv + port-runner that
+# expects local-dev env files absent from a container. In Docker we run a plain
+# `next start` instead. Like landing, it is not `output: standalone`, so the
+# final stage runs from the build stage with node_modules + .next intact.
+
+FROM node:20.20.2-slim AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME:$PATH"
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS build
+COPY . .
+RUN pnpm install --frozen-lockfile
+# turbo builds @upupjs/core → react → server → interactive-example → playground.
+RUN pnpm run build:playground
+
+FROM build AS runtime
+ENV NODE_ENV=production
+ENV PORT=3000
+EXPOSE 3000
+# Plain `next start` (bypasses the port-runner/dotenv wrapper); honors PORT.
+CMD ["pnpm", "--filter", "@upupjs/playground", "exec", "next", "start"]

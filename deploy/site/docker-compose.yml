@@ -1,0 +1,78 @@
+# One-compose site contract for dev.useupup.com.
+#
+# Three services: the landing site, the Mastra AI server that powers the Ask-AI
+# panel, and the playground. Dokploy/Traefik routes to the container ports over
+# its own network, so no host port mappings are declared (only `expose`).
+#
+# Values come from a `.env` file placed next to this compose file:
+#   - Build-time NEXT_PUBLIC_* args are inlined into the landing bundle.
+#   - Runtime secrets (S3_*, *_SECRET, OPENROUTER_API_KEY, ...) are read at boot.
+# See README.md for the full env contract.
+
+services:
+    landing:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.landing
+            args:
+                NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
+                NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_API_KEY: ${NEXT_PUBLIC_GOOGLE_API_KEY:-}
+                NEXT_PUBLIC_GOOGLE_APP_ID: ${NEXT_PUBLIC_GOOGLE_APP_ID:-}
+                NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${NEXT_PUBLIC_ONEDRIVE_CLIENT_ID:-}
+                NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${NEXT_PUBLIC_DROPBOX_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}
+                NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+                NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-}
+                NEXT_PUBLIC_MASTRA_BASE_URL: ${NEXT_PUBLIC_MASTRA_BASE_URL:-}
+        environment:
+            NODE_ENV: production
+            PORT: 3000
+            # Server-mode upload secrets (route handlers only — never NEXT_PUBLIC_*).
+            S3_BUCKET: ${S3_BUCKET:-}
+            S3_REGION: ${S3_REGION:-}
+            S3_KEY_ID: ${S3_KEY_ID:-}
+            S3_SECRET: ${S3_SECRET:-}
+            S3_ENDPOINT: ${S3_ENDPOINT:-}
+            GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+            GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+            DROPBOX_CLIENT_ID: ${DROPBOX_CLIENT_ID:-}
+            DROPBOX_APP_SECRET: ${DROPBOX_APP_SECRET:-}
+            ONEDRIVE_CLIENT_ID: ${ONEDRIVE_CLIENT_ID:-}
+            ONEDRIVE_CLIENT_SECRET: ${ONEDRIVE_CLIENT_SECRET:-}
+            UPUP_UPLOAD_TOKEN_SECRET: ${UPUP_UPLOAD_TOKEN_SECRET:-}
+        expose:
+            - '3000'
+        restart: unless-stopped
+
+    mastra:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.mastra
+        environment:
+            NODE_ENV: production
+            MASTRA_HOST: 0.0.0.0
+            PORT: 4111
+            # LLM provider key for the default model (openrouter/anthropic/claude-haiku-4.5).
+            OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+            # Comma-separated CORS allowlist (the landing origin must be listed).
+            ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+            # ORIGIN_TOKEN_SECRET stays UNSET on dev → auth disabled (see README).
+            ORIGIN_TOKEN_SECRET: ${ORIGIN_TOKEN_SECRET:-}
+            DAILY_REQUEST_CAP: ${DAILY_REQUEST_CAP:-5000}
+            RATE_LIMIT_CAPACITY: ${RATE_LIMIT_CAPACITY:-30}
+            RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+        expose:
+            - '4111'
+        restart: unless-stopped
+
+    playground:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.playground
+        environment:
+            NODE_ENV: production
+            PORT: 3000
+        expose:
+            - '3000'
+        restart: unless-stopped

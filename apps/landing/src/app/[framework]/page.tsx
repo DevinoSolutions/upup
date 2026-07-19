@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { InteractiveExample } from '@upupjs/interactive-example'
 import '@upupjs/interactive-example/styles'
+import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import { FRAMEWORK_IDS, getFramework } from '@/lib/frameworks'
 import StructuredData from '@/components/StructuredData'
 import HeroSection from '@/components/HomepageHero'
@@ -74,15 +75,17 @@ export default async function FrameworkPage({
             <HeroSection framework={fw.id} />
             <Section id="demo">
                 <InteractiveExample
-                    {...(fw.hasImageEditor
-                        ? {}
-                        : {
-                              initialConfig: {
-                                  imageEditor: { enabled: false },
+                    {...interactiveExampleEnvProps(
+                        fw.hasImageEditor
+                            ? undefined
+                            : {
+                                  initialConfig: {
+                                      imageEditor: { enabled: false },
+                                  },
+                                  hiddenCategories: ['editor'],
+                                  showCodeTab: false,
                               },
-                              hiddenCategories: ['editor' as const],
-                              showCodeTab: false,
-                          })}
+                    )}
                 />
             </Section>
             <HomepageFeatures />

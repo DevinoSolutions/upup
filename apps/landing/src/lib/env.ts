@@ -100,6 +100,9 @@ const clientSchema = z.object({
     NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().default('https://posthog.devino.ca'),
+    // Base URL of the deployed Mastra AI server that powers the Ask-AI panel.
+    // Unset → the interactive example falls back to http://localhost:4111.
+    NEXT_PUBLIC_MASTRA_BASE_URL: z.string().optional(),
 })
 
 const clientParsed = clientSchema.safeParse({
@@ -113,6 +116,7 @@ const clientParsed = clientSchema.safeParse({
         process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_MASTRA_BASE_URL: process.env.NEXT_PUBLIC_MASTRA_BASE_URL,
 })
 export const clientEnv = clientParsed.success
     ? clientParsed.data
