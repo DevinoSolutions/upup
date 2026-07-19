@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy } from '@angular/core'
 import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { SourceViewContainerComponent } from './source-view-container.component'
+import { AudioWaveformComponent } from './audio-waveform.component'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -25,7 +26,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 @Component({
     selector: 'upup-audio-uploader',
     standalone: true,
-    imports: [SourceViewContainerComponent],
+    imports: [SourceViewContainerComponent, AudioWaveformComponent],
     template: `
         @if (error) {
             <!-- Error state -->
@@ -64,6 +65,10 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                             </svg>
                         </div>
                     </div>
+
+                    @if (recordingState === 'recording' && streamRef) {
+                        <upup-audio-waveform [stream]="streamRef" />
+                    }
 
                     <span [class]="timerClass">{{ formatTime(duration) }}</span>
 
@@ -130,7 +135,8 @@ export class AudioUploaderComponent implements OnDestroy {
     private mediaRecorder: MediaRecorder | null = null
     private chunks: Blob[] = []
     private timerHandle: ReturnType<typeof setInterval> | null = null
-    private streamRef: MediaStream | null = null
+    /** Exposed to the template so the live waveform can read the mic stream. */
+    protected streamRef: MediaStream | null = null
 
     ngOnDestroy(): void {
         if (this.timerHandle) clearInterval(this.timerHandle)

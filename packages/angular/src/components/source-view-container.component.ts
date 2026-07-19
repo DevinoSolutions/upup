@@ -43,13 +43,14 @@ export class SourceViewContainerComponent {
     get containerClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
+        // Transparent by design: the view body sits directly on the panel's
+        // gradient chrome (the old black/[0.075] wash read as a mismatched gray
+        // block over the light gradient).
         const parts: string[] = [
-            'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
+            'upup-flex upup-items-center upup-justify-center upup-overflow-hidden',
         ]
         if (this.isLoading && dark) {
-            parts.push(
-                'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]',
-            )
+            parts.push('upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]')
         } else if (!this.isLoading && slotClasses.sourceView) {
             parts.push(slotClasses.sourceView)
         }
