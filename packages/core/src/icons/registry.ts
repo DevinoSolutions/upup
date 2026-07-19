@@ -13,6 +13,7 @@ export type IconName =
     | 'upload'
     | 'loader'
     | 'x'
+    | 'chevron-left'
     | 'trash'
     | 'camera-rotate'
     | 'capture'
@@ -20,6 +21,7 @@ export type IconName =
     | 'layout-grid'
     | 'layout-list'
     | 'folder'
+    | 'folder-filled'
     | 'search'
     | 'user'
     | 'file'
@@ -184,6 +186,16 @@ export const ICONS: Record<IconName, IconDef> = {
   `,
     },
 
+    // Tabler 'chevron-left' — drive-browser "go back one folder" affordance.
+    'chevron-left': {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...STROKE_ATTRS },
+        inner: `
+    <path d="M15 6l-6 6l6 6" />
+  `,
+    },
+
     // Tabler 'trash' (matches react-icons/tb TbTrash exactly) — default for icons.FileDeleteIcon.
     trash: {
         viewBox: '0 0 24 24',
@@ -261,6 +273,17 @@ export const ICONS: Record<IconName, IconDef> = {
         attrs: { ...STROKE_ATTRS },
         inner: `
     <path d="M5 4h4l3 3h7a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2" />
+  `,
+    },
+
+    // Tabler 'folder-filled' — solid folder glyph for the drive browser, tinted
+    // amber at the call site so folders read unmistakably as folders.
+    'folder-filled': {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...FILLED_ATTRS },
+        inner: `
+    <path d="M9 3a1 1 0 0 1 .608 .206l.1 .087l2.706 2.707h6.586a3 3 0 0 1 2.995 2.824l.005 .176v8a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-11a3 3 0 0 1 2.824 -2.995l.176 -.005h4z" />
   `,
     },
 

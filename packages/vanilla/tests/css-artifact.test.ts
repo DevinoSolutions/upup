@@ -38,6 +38,11 @@ describe('@upupjs/vanilla CSS artifact', () => {
         expect(css).toContain('fx-overlay-slide')
         expect(css).toContain('.upup-fx-overlay-close-slide')
         expect(css).toContain('fx-overlay-close-slide')
+        // The collapsible drive-search expand entrance (component class + its
+        // keyframe) — token-driven, gated by the kill switch via its
+        // upup-fx- substring:
+        expect(css).toContain('.upup-fx-search-expand')
+        expect(css).toContain('fx-search-expand')
         expect(css).toContain('fx-enter')
         expect(css).toContain('fx-view')
         expect(css).toContain('fx-draw')

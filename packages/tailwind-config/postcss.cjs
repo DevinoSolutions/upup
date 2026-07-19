@@ -43,6 +43,7 @@ function createPostcssConfig({ content }) {
                     'upup-fx-remove',
                     'upup-fx-overlay-slide',
                     'upup-fx-overlay-close-slide',
+                    'upup-fx-search-expand',
                     'upup-fx-essential',
                     'upup-fx-progress-fill',
                     'upup-animate-fx-enter',
@@ -263,6 +264,29 @@ function createPostcssConfig({ content }) {
                                 '100%': {
                                     opacity: '0',
                                     transform: 'translateY(100%)',
+                                },
+                            },
+                            // Drive-search expand: the collapsed search icon
+                            // button gives way to the full input, which grows
+                            // from its right edge (where the toggle sat). Timing
+                            // is the shared `--upup-fx-base` token; the class key
+                            // stays UNPREFIXED (tailwind's prefix makes it
+                            // `.upup-fx-search-expand`) and the `upup-fx-`
+                            // substring keeps it inside the kill gate. Enter-only:
+                            // collapse is instant (no transitionend reliance).
+                            '.fx-search-expand': {
+                                transformOrigin: 'right center',
+                                animation:
+                                    'fx-search-expand var(--upup-fx-base) var(--upup-fx-ease) both',
+                            },
+                            '@keyframes fx-search-expand': {
+                                '0%': {
+                                    opacity: '0',
+                                    transform: 'scaleX(0.6)',
+                                },
+                                '100%': {
+                                    opacity: '1',
+                                    transform: 'scaleX(1)',
                                 },
                             },
                             // The kill switch: data-motion="off" (written by core
