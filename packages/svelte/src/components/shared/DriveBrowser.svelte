@@ -97,22 +97,24 @@ import { searchDriveFiles, cn } from '@upupjs/core/internal'
       {#if !!$path}
         <div
           class={cn(
-            'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
+            'upup-h-full upup-overflow-y-auto upup-pt-2',
             {
-              'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]': $dark,
+              'upup-text-[#fafafa] dark:upup-text-[#fafafa]': $dark,
             },
             $slotClasses.driveBody,
           )}
         >
           {#if !!$error}
-            <p
-              data-testid="upup-drive-error"
-              data-upup-slot="drive-error"
-              role="alert"
-              class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
-            >
-              {t(tr.driveLoadError, { message: $error.message })}
-            </p>
+            <div class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center upup-px-6 upup-text-center">
+              <p
+                data-testid="upup-drive-error"
+                data-upup-slot="drive-error"
+                role="alert"
+                class="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+              >
+                {t(tr.driveLoadError, { message: $error.message })}
+              </p>
+            </div>
           {/if}
           {#if !!displayedItems.length}
             <ul class="upup-p-2">
@@ -146,13 +148,13 @@ import { searchDriveFiles, cn } from '@upupjs/core/internal'
         </div>
       {/if}
 
-      {#if !!$selectedFiles.length || !!onSelectCurrentFolder}
+      {#if (!!$selectedFiles.length || !!onSelectCurrentFolder) && !$error}
         <div
           class={cn(
-            'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
-            {
-              'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]': $dark,
-            },
+            'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-border-t upup-px-3 upup-py-2',
+            $dark
+              ? 'upup-border-white/[0.08] upup-text-[#fafafa]'
+              : 'upup-border-black/[0.06]',
             $slotClasses.driveFooter,
           )}
         >

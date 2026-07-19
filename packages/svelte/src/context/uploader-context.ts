@@ -17,6 +17,7 @@ import type {
     BaseContextView,
     BaseContextEditor,
     BaseContextTheme,
+    MotionMode,
 } from '@upupjs/core/internal'
 import { UploadStatus } from '@upupjs/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
@@ -53,6 +54,8 @@ export type ContextRuntime = Omit<BaseContextRuntime, 'isOnline'> & {
     /** Read the registered hidden file <input> (to toggle webkitdirectory/directory or reset value). */
     getFileInput: () => HTMLInputElement | null
     isOnline: Readable<boolean>
+    /** Resolved `data-motion` value ('on' | 'off') from the core motion gate. */
+    motionMode: Readable<MotionMode>
 }
 
 export type ContextSource = Omit<BaseContextSource, 'activeSource'> & {
@@ -63,6 +66,10 @@ export type ContextI18n = BaseContextI18n
 
 export type ContextFiles = Omit<BaseContextFiles, 'files'> & {
     files: Readable<Map<string, UploadFile>>
+    /** Transient: file ids currently playing their exit animation. Read by
+     *  FileList (hero) and FileItem (cards) to render `upup-fx-exit`. Sourced
+     *  from the core transient-UI store (deferred removal). */
+    leavingFileIds: Readable<ReadonlySet<string>>
 }
 
 export type ContextUploadControls = Omit<
@@ -75,6 +82,21 @@ export type ContextUploadControls = Omit<
 export type ContextView = Omit<BaseContextView, 'isAddingMore' | 'viewMode'> & {
     isAddingMore: Readable<boolean>
     viewMode: Readable<'grid' | 'list'>
+    /** Add-more source overlay: source surface mounted above the dimmed,
+     *  still-mounted file list. Sourced from the core transient-UI store. */
+    sourceOverlayOpen: Readable<boolean>
+    /** Overlay is playing its reverse close-slide before it unmounts. */
+    sourceOverlayClosing: Readable<boolean>
+    openSourceOverlay: () => void
+    closeSourceOverlay: () => void
+    /** Human provider label whose read-only picker just rejected an OS drop —
+     *  drives the drop-rejection toast. Null when no rejection is showing.
+     *  Auto-clears via the core transient-UI store's 3s window. */
+    dropRejected: Readable<string | null>
+    /** Raise the drop-rejection toast for a read-only drive source (resolves the
+     *  provider label, then flags the core store). Wired to core's
+     *  DragDropController.onReadonlyDropRejected. */
+    flagDriveDropRejected: (source: FileSource) => void
 }
 
 export type ContextEditor = Omit<BaseContextEditor, 'editingFile'> & {
@@ -119,6 +141,7 @@ export type ContextProps = RequiredDefined<
     | 'enablePaste'
     | 'onError'
     | 'showBranding'
+    | 'quietCompletion'
     | 'className'
     | 'style'
     | 'disableDragDrop'
@@ -184,6 +207,7 @@ export function provideUploaderContext(value: IUploaderContext): void {
         getFileInput: value.getFileInput,
         openFilePicker: value.openFilePicker,
         isOnline: value.isOnline,
+        motionMode: value.motionMode,
     })
     setContext(SourceKey, {
         activeSource: value.activeSource,
@@ -198,6 +222,7 @@ export function provideUploaderContext(value: IUploaderContext): void {
     })
     setContext(FilesKey, {
         files: value.files,
+        leavingFileIds: value.leavingFileIds,
         setFiles: value.setFiles,
         replaceFiles: value.replaceFiles,
         resetState: value.resetState,
@@ -216,6 +241,12 @@ export function provideUploaderContext(value: IUploaderContext): void {
         setIsAddingMore: value.setIsAddingMore,
         viewMode: value.viewMode,
         setViewMode: value.setViewMode,
+        sourceOverlayOpen: value.sourceOverlayOpen,
+        sourceOverlayClosing: value.sourceOverlayClosing,
+        openSourceOverlay: value.openSourceOverlay,
+        closeSourceOverlay: value.closeSourceOverlay,
+        dropRejected: value.dropRejected,
+        flagDriveDropRejected: value.flagDriveDropRejected,
     })
     setContext(EditorKey, {
         editingFile: value.editingFile,

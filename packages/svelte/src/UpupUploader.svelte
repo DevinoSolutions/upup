@@ -5,7 +5,6 @@ import { createUploaderContext } from './context/create-uploader-context'
 import { provideUploaderContext } from './context/uploader-context'
 import ImageEditorStub from './components/ImageEditorStub.svelte'
 import UploaderPanel from './components/UploaderPanel.svelte'
-import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 let props: UploaderProps = $props()
 // Props are init-time configuration (mirrors Vue's `useUploaderController(props)` and
@@ -64,7 +63,7 @@ function onInputChange(e: Event) {
                 `upup-panel-sheen upup-relative ${
                     $isDark
                         ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
-                        : 'upup-bg-gradient-to-b upup-from-white upup-to-slate-50 upup-ring-1 upup-ring-slate-200 upup-shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]'
+                        : 'upup-bg-gradient-to-b upup-from-white upup-to-[#dde6f0] upup-ring-1 upup-ring-slate-200'
                 } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                 {
                     [$slotOverrides.containerFull!]:
@@ -80,47 +79,8 @@ function onInputChange(e: Event) {
                 <ImageEditorStub />
             {/if}
 
-            {#if !props.mini && props.showBranding !== false}
-                <div
-                    data-testid="upup-branding"
-                    class="upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row"
-                >
-                    <a
-                        href="https://useupup.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="upup-flex upup-items-center upup-gap-[5px]"
-                    >
-                        {#if $isDark}
-                            <img src={logoDark} width={61} height={13} alt="logo-dark" />
-                        {:else}
-                            <img src={logoLight} width={61} height={13} alt="logo-light" />
-                        {/if}
-                    </a>
-                    <a
-                        href="https://devino.ca/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                    >
-                        <span
-                            class={cn(
-                                'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-                                {
-                                    'upup-text-gray-300 dark:upup-text-gray-300': $isDark,
-                                },
-                            )}
-                        >
-                            {ctx.translations.builtBy}
-                        </span>
-                        {#if $isDark}
-                            <img src={devinoDark} width={61} height={13} alt="logo-dark" />
-                        {:else}
-                            <img src={devinoLight} width={61} height={13} alt="logo-light" />
-                        {/if}
-                    </a>
-                </div>
-            {/if}
+            <!-- Branding renders INSIDE UploaderPanel now, so the idle
+                 dashed frame wraps it. -->
         </section>
     </div>
 

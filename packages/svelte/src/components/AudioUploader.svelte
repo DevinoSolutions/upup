@@ -7,6 +7,7 @@
   } from '../context/uploader-context'
   import { cn } from '@upupjs/core/internal'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
+  import AudioWaveform from './AudioWaveform.svelte'
 
   type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -22,7 +23,7 @@
   let mediaRecorder: MediaRecorder | null = null
   const chunks: Blob[] = []
   let timerHandle: ReturnType<typeof setInterval> | null = null
-  let streamRef: MediaStream | null = null
+  let streamRef: MediaStream | null = $state(null)
 
   onDestroy(() => {
     if (timerHandle) clearInterval(timerHandle)
@@ -144,6 +145,10 @@
           </svg>
         </div>
       </div>
+
+      {#if recordingState === 'recording' && streamRef}
+        <AudioWaveform stream={streamRef!} />
+      {/if}
 
       <span
         class={cn(

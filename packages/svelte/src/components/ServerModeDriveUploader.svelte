@@ -116,8 +116,10 @@ import { cn } from '@upupjs/core/internal'
       >
         <div
           class={cn(
-            'upup-flex upup-items-center upup-gap-2 upup-border-b upup-px-3 upup-py-2',
-            $dark ? 'upup-border-gray-700' : 'upup-border-gray-200',
+            'upup-flex upup-items-center upup-gap-2 upup-border-b upup-px-3 upup-py-2.5',
+            $dark
+              ? 'upup-border-white/[0.06] upup-text-[#e2e8f0]'
+              : 'upup-border-black/[0.06] upup-text-gray-800',
           )}
           data-upup-slot="drive-browser-header"
         >
@@ -135,7 +137,7 @@ import { cn } from '@upupjs/core/internal'
                 void refresh({ search: (e.target as HTMLInputElement).value })
               }
             }}
-            placeholder="Search..."
+            placeholder="Search…"
             class={cn(
               'upup-ml-auto upup-rounded upup-border upup-px-2 upup-py-1 upup-text-xs',
               $dark
@@ -144,7 +146,7 @@ import { cn } from '@upupjs/core/internal'
             )}
           />
         </div>
-        <div class="upup-overflow-auto">
+        <div class="upup-overflow-auto upup-p-2">
           {#if $state.status === 'error'}
             <p
               data-testid="upup-drive-error"
@@ -164,18 +166,51 @@ import { cn } from '@upupjs/core/internal'
               data-upup-slot="drive-browser-item"
               data-selected={$selected.has(file.id)}
               class={cn(
-                'upup-flex upup-w-full upup-items-center upup-gap-3 upup-border-b upup-px-4 upup-py-2 upup-text-left upup-text-sm',
-                $selected.has(file.id) && 'upup-bg-[#f0f9ff] dark:upup-bg-[#0c4a6e]/30',
-                $dark
-                  ? 'upup-border-gray-700 upup-text-gray-100 hover:upup-bg-gray-700'
-                  : 'upup-border-gray-200 hover:upup-bg-gray-50',
+                'upup-fx-hover-lift upup-mb-1.5 upup-flex upup-w-full upup-items-center upup-gap-3 upup-rounded-[11px] upup-px-3 upup-py-2.5 upup-text-left upup-text-sm upup-ring-1',
+                $selected.has(file.id)
+                  ? 'upup-bg-[#0ea5e9]/10 upup-ring-[#38bdf8]/35'
+                  : $dark
+                    ? 'upup-bg-white/[0.04] upup-text-[#e2e8f0] upup-ring-white/[0.06] hover:upup-bg-white/[0.07]'
+                    : 'upup-bg-black/[0.03] upup-text-gray-800 upup-ring-black/[0.06] hover:upup-bg-black/[0.05]',
               )}
               onclick={() =>
                 file.isFolder
                   ? void refresh({ folderId: file.id })
                   : toggle(file.id)}
             >
-              <span>{file.isFolder ? '📁' : '📄'}</span>
+              <span
+                class="upup-flex upup-h-[30px] upup-w-[30px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[8px] upup-bg-white/[0.05]"
+                aria-hidden="true"
+              >
+                {#if file.isFolder}
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="17"
+                    height="17"
+                    fill="none"
+                    stroke="#38bdf8"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>
+                {:else}
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="17"
+                    height="17"
+                    fill="none"
+                    stroke={$dark ? '#94a3b8' : '#64748b'}
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M6 3h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                    <path d="M14 3v4h4" />
+                  </svg>
+                {/if}
+              </span>
               <span class="upup-flex-1 upup-truncate">{file.name}</span>
               {#if file.size != null && !file.isFolder}
                 <span class="upup-text-xs upup-opacity-60">
@@ -185,7 +220,12 @@ import { cn } from '@upupjs/core/internal'
             </button>
           {/each}
         </div>
-        <div class="upup-flex upup-items-center upup-justify-between upup-gap-2 upup-border-t upup-p-3">
+        <div
+          class={cn(
+            'upup-flex upup-items-center upup-justify-between upup-gap-2 upup-border-t upup-p-3',
+            $dark ? 'upup-border-white/[0.06]' : 'upup-border-black/[0.06]',
+          )}
+        >
           <button
             type="button"
             class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
@@ -196,11 +236,11 @@ import { cn } from '@upupjs/core/internal'
           <button
             type="button"
             disabled={$selected.size === 0 || $transferring}
-            class="upup-rounded upup-bg-[#0ea5e9] upup-px-3 upup-py-1.5 upup-text-sm upup-text-white disabled:upup-opacity-50"
+            class="upup-fx-press upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-1.5 upup-text-sm upup-font-medium upup-text-white hover:upup-bg-[#0284c7] disabled:upup-opacity-50"
             onclick={handleTransfer}
           >
             {$transferring
-              ? 'Uploading...'
+              ? 'Uploading…'
               : `Add files${$selected.size ? ` (${$selected.size})` : ''}`}
           </button>
         </div>
