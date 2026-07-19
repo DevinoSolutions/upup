@@ -2,26 +2,34 @@
 
 import posthog from 'posthog-js'
 import { ReactNode, useEffect } from 'react'
-import { clientEnv } from '@/lib/env'
-
-const POSTHOG_KEY = clientEnv.NEXT_PUBLIC_POSTHOG_KEY
-const POSTHOG_HOST = clientEnv.NEXT_PUBLIC_POSTHOG_HOST
+import { clientDatasetCredentials } from '@/lib/analytics/dataset'
 
 // Guard against re-initialising during React Strict Mode's double-invoke.
 let initialised = false
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
-        // No-op when the key is unset so builds/boots never depend on PostHog.
-        if (!POSTHOG_KEY || typeof window === 'undefined' || initialised) return
+        if (typeof window === 'undefined' || initialised) return
+
+        // Dataset drives which project (if any) receives events. `disabled`
+        // skips init entirely; `e2e` targets the separate test project.
+        const { dataset, host, token } = clientDatasetCredentials()
+        if (dataset === 'disabled' || !token) return
 
         initialised = true
-        posthog.init(POSTHOG_KEY, {
-            api_host: POSTHOG_HOST,
+        posthog.init(token, {
+            api_host: host,
             capture_pageview: 'history_change',
             capture_pageleave: true,
             autocapture: true,
             person_profiles: 'identified_only',
+            // Session-replay privacy defaults. Replay itself stays
+            // dashboard-controlled (not force-enabled here); when a session IS
+            // recorded, inputs are masked and any [data-ph-mask] text is hidden.
+            session_recording: {
+                maskAllInputs: true,
+                maskTextSelector: '[data-ph-mask]',
+            },
         })
     }, [])
 

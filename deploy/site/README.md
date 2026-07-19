@@ -50,18 +50,21 @@ Ask-AI panel calls the deployed server (unset → falls back to
 
 Passed as `build.args`; changing one requires a landing **rebuild**.
 
-| Var                               | Purpose                                                 |
-| --------------------------------- | ------------------------------------------------------- |
-| `NEXT_PUBLIC_BASE_URL`            | Public site origin.                                     |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID`    | Google Drive picker OAuth client id.                    |
-| `NEXT_PUBLIC_GOOGLE_API_KEY`      | Google Drive picker API key.                            |
-| `NEXT_PUBLIC_GOOGLE_APP_ID`       | Google Drive picker app id.                             |
-| `NEXT_PUBLIC_ONEDRIVE_CLIENT_ID`  | OneDrive picker client id.                              |
-| `NEXT_PUBLIC_DROPBOX_CLIENT_ID`   | Dropbox chooser app key.                                |
-| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | GA measurement id (optional).                           |
-| `NEXT_PUBLIC_POSTHOG_KEY`         | PostHog project key (optional).                         |
-| `NEXT_PUBLIC_POSTHOG_HOST`        | PostHog host (defaults to `https://posthog.devino.ca`). |
-| `NEXT_PUBLIC_MASTRA_BASE_URL`     | Deployed Mastra base URL for the Ask-AI panel.          |
+| Var                                                  | Purpose                                                                             |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_URL`                               | Public site origin.                                                                 |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID`                       | Google Drive picker OAuth client id.                                                |
+| `NEXT_PUBLIC_GOOGLE_API_KEY`                         | Google Drive picker API key.                                                        |
+| `NEXT_PUBLIC_GOOGLE_APP_ID`                          | Google Drive picker app id.                                                         |
+| `NEXT_PUBLIC_ONEDRIVE_CLIENT_ID`                     | OneDrive picker client id.                                                          |
+| `NEXT_PUBLIC_DROPBOX_CLIENT_ID`                      | Dropbox chooser app key.                                                            |
+| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID`                    | GA measurement id (optional).                                                       |
+| `NEXT_PUBLIC_POSTHOG_KEY`                            | PostHog project key (optional).                                                     |
+| `NEXT_PUBLIC_POSTHOG_HOST`                           | PostHog host (defaults to `https://posthog.devino.ca`).                             |
+| `NEXT_PUBLIC_POSTHOG_DATASET`                        | Client analytics dataset (`production`/`e2e`/`disabled`), mirrors the server value. |
+| `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST`          | e2e PostHog host (used only when the dataset is `e2e`).                             |
+| `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` | e2e PostHog capture token (used only when the dataset is `e2e`).                    |
+| `NEXT_PUBLIC_MASTRA_BASE_URL`                        | Deployed Mastra base URL for the Ask-AI panel.                                      |
 
 ### Build-time — playground `NEXT_PUBLIC_*` (inlined into the client bundle)
 
@@ -85,13 +88,17 @@ and upload config.
 
 **landing** (server-mode upload route handlers):
 
-| Var                                                                   | Purpose                                                                |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                         |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                               |
-| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                    |
-| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                   |
-| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route). |
+| Var                                                                   | Purpose                                                                                            |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                                                     |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                                                           |
+| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                                                |
+| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                                               |
+| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route).                             |
+| `POSTHOG_DATASET`                                                     | Analytics dataset for the support route (`production`/`e2e`/`disabled`; optional).                 |
+| `POSTHOG_E2E_TEST_PROJECT_ID`                                         | e2e project id for ingestion verification by test scripts (optional).                              |
+| `SMTP_URL`                                                            | SMTP connection string for the support-email leg (optional — absent = email leg `not_configured`). |
+| `SUPPORT_EMAIL_TO` / `SUPPORT_EMAIL_FROM`                             | Support email destination + sender (optional; placeholders apply if unset).                        |
 
 **playground** (mounts the same `/api/upup` server-mode upload route): identical
 runtime secret set to landing — `S3_*`, `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,

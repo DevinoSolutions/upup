@@ -81,6 +81,20 @@ const serverSchema = z.object({
     DROPBOX_APP_SECRET: z.string().default(''),
     ONEDRIVE_CLIENT_ID: z.string().default(''),
     ONEDRIVE_CLIENT_SECRET: z.string().default(''),
+    // Analytics dataset isolation (see src/lib/analytics/dataset.ts). Bare
+    // list-form passthrough in compose keeps an unset value ABSENT (never the
+    // empty string), but the preprocess still guards against '' just in case.
+    POSTHOG_DATASET: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z.enum(['production', 'e2e', 'disabled']).optional(),
+    ),
+    // Server-side verification of the e2e project's ingested events (test
+    // scripts only — never used to capture from app code).
+    POSTHOG_E2E_TEST_PROJECT_ID: z.string().min(1).optional(),
+    // Support/feedback email leg (optional — absent disables the email path).
+    SMTP_URL: z.string().min(1).optional(),
+    SUPPORT_EMAIL_TO: z.string().min(1).optional(),
+    SUPPORT_EMAIL_FROM: z.string().min(1).optional(),
 })
 
 export const env: z.infer<typeof serverSchema> = (() => {
@@ -100,6 +114,13 @@ const clientSchema = z.object({
     NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().default('https://posthog.devino.ca'),
+    // Analytics dataset selector, mirrored from the server POSTHOG_DATASET at
+    // build time. Kept a plain string (not an enum) so an empty build arg can
+    // never crash the client boot — dataset.ts validates the value.
+    NEXT_PUBLIC_POSTHOG_DATASET: z.string().optional(),
+    // e2e-project credentials — used ONLY when the dataset resolves to 'e2e'.
+    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: z.string().optional(),
+    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: z.string().optional(),
     // Base URL of the deployed Mastra AI server that powers the Ask-AI panel.
     // Unset → the interactive example falls back to http://localhost:4111.
     NEXT_PUBLIC_MASTRA_BASE_URL: z.string().optional(),
@@ -116,6 +137,11 @@ const clientParsed = clientSchema.safeParse({
         process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    NEXT_PUBLIC_POSTHOG_DATASET: process.env.NEXT_PUBLIC_POSTHOG_DATASET,
+    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:
+        process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST,
+    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:
+        process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN,
     NEXT_PUBLIC_MASTRA_BASE_URL: process.env.NEXT_PUBLIC_MASTRA_BASE_URL,
 })
 export const clientEnv = clientParsed.success

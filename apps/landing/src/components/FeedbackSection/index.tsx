@@ -5,6 +5,7 @@ import {
     Github,
     ArrowRight,
     ExternalLink,
+    LifeBuoy,
 } from 'lucide-react'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
@@ -20,6 +21,14 @@ export default function FeedbackSection() {
         buttonText?: string
         actions?: { url: string; text: string }[]
     }[] = [
+        {
+            icon: <LifeBuoy className="w-5 h-5" />,
+            title: 'Contact Support',
+            description:
+                'Open a support request — problems, feature ideas, or questions',
+            action: '/support',
+            buttonText: 'Open Support',
+        },
         {
             icon: <Mail className="w-5 h-5" />,
             title: 'Email Us',
