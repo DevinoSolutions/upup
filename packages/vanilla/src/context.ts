@@ -6,6 +6,7 @@ import {
     DROPBOX_DESCRIPTOR,
     BOX_DESCRIPTOR,
     type UploadFile,
+    type UiTranslations,
 } from '@upupjs/core'
 import {
     DriveBrowserController,
@@ -13,7 +14,9 @@ import {
     normalizeUploaderOptions,
     createUploaderController,
     createChildController,
+    type CloudProvider,
 } from '@upupjs/core/internal'
+import { destroyTiles } from './lib/use-tiles-per-row'
 import type {
     CreateUploaderOptions,
     UploaderContext,
@@ -24,6 +27,16 @@ import { FileInputController } from './controllers/file-input'
 import { CameraController } from './controllers/camera'
 import { AudioRecorderController } from './controllers/audio-recorder'
 import { ScreenCaptureController } from './controllers/screen-capture'
+
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Mirrors React/svelte's DRIVE_SOURCE_LABEL_KEY —
+ *  typed against the same drive-source union core's DragDropController gates on. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
 
 export interface BuildResult {
     ctx: UploaderContext
@@ -102,6 +115,19 @@ export function buildUploaderContext(
             }),
     )
 
+    // Drop-rejection: core's DragDropController fires onReadonlyDropRejected with
+    // the drive FileSource; resolve its human provider label, then raise the toast
+    // (core store owns the 3s auto-clear). Function declaration so the deps closure
+    // below can reference it before its textual position.
+    function flagDriveDropRejected(source: FileSource) {
+        const key: keyof UiTranslations | undefined =
+            DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
+        const label = key
+            ? controller.resolved.translations[key]
+            : String(source)
+        controller.transientUi.flagDropRejected(label)
+    }
+
     const dragDropHandle = createChildController(
         () =>
             new DragDropController({
@@ -113,6 +139,9 @@ export function buildUploaderContext(
                 filesSize: () => core.files.size,
                 options: () => options,
                 props: () => ctx.props,
+                onReadonlyDropRejected: source => {
+                    flagDriveDropRejected(source)
+                },
             }),
         // No onChange: DragDropController.init() subscribes ITSELF to the orchestrator (C-1 behavior).
         // Passing onChange here would double-trigger renders.
@@ -243,6 +272,7 @@ export function buildUploaderContext(
         folderUploadAllowDrop: resolved.folderUploadAllowDrop,
         folderPickerButtonVisible: resolved.folderPickerButtonVisible,
         imageEditor: resolved.imageEditor,
+        quietCompletion: options.quietCompletion ?? false,
         onIntegrationClick: options.onIntegrationClick ?? (() => {}),
         resumable: resolved.resumable,
     }
@@ -274,6 +304,15 @@ export function buildUploaderContext(
         setViewMode: m => {
             controller.commands.setViewMode(m)
         },
+        getTransientUi: () => controller.transientUi.getSnapshot(),
+        getMotionMode: () => controller.motionGate.getSnapshot(),
+        openSourceOverlay: () => {
+            controller.transientUi.openSourceOverlay()
+        },
+        closeSourceOverlay: () => {
+            controller.transientUi.closeSourceOverlay()
+        },
+        flagDriveDropRejected,
         setFiles,
         handleFileRemove,
         handleRemoveAll,
@@ -319,6 +358,7 @@ export function buildUploaderContext(
         destroy() {
             if (destroyed) return
             destroyed = true
+            destroyTiles(ctx)
             controllers.destroyAll()
             controller.destroy()
             unsubs.forEach(u => {

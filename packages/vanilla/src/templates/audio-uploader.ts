@@ -2,10 +2,15 @@ import { html, nothing, type TemplateResult } from 'lit-html'
 import { cn } from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
+import { audioWaveform } from './audio-waveform'
 
 export function audioUploader(ctx: UploaderContext): TemplateResult {
     const a = ctx.controllers.getAudio()
     const s = a.getSnapshot()
+    // The live-waveform needs the raw MediaStream during recording. It is exposed
+    // on the controller snapshot (read defensively so this template stays
+    // type-correct even though AudioSnapshot's declared shape is owned elsewhere).
+    const stream = (s as { stream?: MediaStream | null }).stream ?? null
     const isDark = ctx.theme.getSnapshot().isDark
 
     if (s.error) {
@@ -71,6 +76,11 @@ export function audioUploader(ctx: UploaderContext): TemplateResult {
                 </svg>
             </div>
         </div>
+        ${
+            s.recordingState === 'recording' && stream
+                ? audioWaveform(stream)
+                : nothing
+        }
         <span
             class=${cn('upup-text-2xl upup-font-mono upup-tabular-nums', {
                 'upup-text-[#1b1b1b]': !isDark,

@@ -12,6 +12,7 @@ import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
 import { driveBrowserHeader } from './drive-browser-header'
 import { driveBrowserItem } from './drive-browser-item'
+import { icon } from '../icon'
 
 export interface DriveBrowserProps {
     driveFiles: DriveFolder | undefined
@@ -92,10 +93,18 @@ export function driveBrowser(
     const tr = ctx.translations
     const allowedFileTypes = ctx.props.allowedFileTypes
 
-    const ss = getDriveSearchState(ctx, dataUpupSlot)
-
     // error short-circuits the perpetual loader — the exact F-123/F-124 symptom.
     const isLoading = !error && (isClickLoading || !driveFiles)
+
+    if (isLoading) {
+        return sourceViewContainer(
+            ctx,
+            { isLoading, dataUpupSlot },
+            icon('loader'),
+        )
+    }
+
+    const ss = getDriveSearchState(ctx, dataUpupSlot)
 
     const currentFolder = path[path.length - 1]
     const items =
@@ -121,95 +130,96 @@ export function driveBrowser(
                 ctx.invalidate()
             },
         })}
+        <div
+            class=${cn(
+                // Transparent on the panel gradient — no inner box.
+                'upup-h-full upup-overflow-y-auto upup-pt-2',
+                {
+                    'upup-text-[#fafafa] dark:upup-text-[#fafafa]': isDark,
+                },
+                slot.driveBody,
+            )}
+        >
+            ${
+                // Error state: a calm centered message, not a banner strip.
+                error
+                    ? html` <div
+                          class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center upup-px-6 upup-text-center"
+                      >
+                          <p
+                              data-testid="upup-drive-error"
+                              data-upup-slot="drive-error"
+                              role="alert"
+                              class="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                          >
+                              ${t(tr.driveLoadError, {
+                                  message: error.message,
+                              })}
+                          </p>
+                      </div>`
+                    : nothing
+            }
+            ${
+                displayedItems.length > 0
+                    ? html` <ul class="upup-p-2">
+                          ${repeat(
+                              displayedItems,
+                              file => file.id,
+                              file =>
+                                  driveBrowserItem(ctx, {
+                                      item: file,
+                                      isSelected: selectedFiles.some(
+                                          f => f.id === file.id,
+                                      ),
+                                      isClickLoading:
+                                          isClickLoading || showLoader,
+                                      onClick: () => {
+                                          if (!isClickLoading && !showLoader)
+                                              handleClick(file)
+                                      },
+                                  }),
+                          )}
+                      </ul>`
+                    : nothing
+            }
+            ${
+                displayedItems.length === 0 && !error
+                    ? html` <div
+                          class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center"
+                      >
+                          <p class="upup-text-xs upup-opacity-70">
+                              ${tr.noAcceptedFilesFound}
+                          </p>
+                      </div>`
+                    : nothing
+            }
+            ${
+                hasMore
+                    ? html` <button
+                          data-testid="upup-drive-load-more"
+                          data-upup-slot="drive-load-more"
+                          class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-[#0284c7] disabled:upup-opacity-50"
+                          ?disabled=${isLoadingMore}
+                          @click=${() => {
+                              void loadMore?.()
+                          }}
+                      >
+                          ${isLoadingMore ? tr.loading : tr.loadMore}
+                      </button>`
+                    : nothing
+            }
+        </div>
+
         ${
-            path.length > 0
+            // Footer only when there is something to act on — never under an
+            // error state. Hairline divider, no inner box.
+            (selectedFiles.length > 0 || !!onSelectCurrentFolder) && !error
                 ? html` <div
                       class=${cn(
-                          'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
-                          {
-                              'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]':
-                                  isDark,
-                          },
-                          slot.driveBody,
-                      )}
-                  >
-                      ${
-                          error
-                              ? html` <p
-                                    data-testid="upup-drive-error"
-                                    data-upup-slot="drive-error"
-                                    role="alert"
-                                    class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
-                                >
-                                    ${t(tr.driveLoadError, { message: error.message })}
-                                </p>`
-                              : nothing
-                      }
-                      ${
-                          displayedItems.length > 0
-                              ? html` <ul class="upup-p-2">
-                                    ${repeat(
-                                        displayedItems,
-                                        file => file.id,
-                                        file =>
-                                            driveBrowserItem(ctx, {
-                                                item: file,
-                                                isSelected: selectedFiles.some(
-                                                    f => f.id === file.id,
-                                                ),
-                                                isClickLoading:
-                                                    isClickLoading ||
-                                                    showLoader,
-                                                onClick: () => {
-                                                    if (
-                                                        !isClickLoading &&
-                                                        !showLoader
-                                                    )
-                                                        handleClick(file)
-                                                },
-                                            }),
-                                    )}
-                                </ul>`
-                              : nothing
-                      }
-                      ${
-                          displayedItems.length === 0 && !error
-                              ? html` <div
-                                    class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center"
-                                >
-                                    <p class="upup-text-xs upup-opacity-70">
-                                        ${tr.noAcceptedFilesFound}
-                                    </p>
-                                </div>`
-                              : nothing
-                      }
-                      ${
-                          hasMore
-                              ? html` <button
-                                    data-testid="upup-drive-load-more"
-                                    data-upup-slot="drive-load-more"
-                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-[#0284c7] disabled:upup-opacity-50"
-                                    ?disabled=${isLoadingMore}
-                                    @click=${() => {
-                                        void loadMore?.()
-                                    }}
-                                >
-                                    ${isLoadingMore ? tr.loading : tr.loadMore}
-                                </button>`
-                              : nothing
-                      }
-                  </div>`
-                : nothing
-        }
-        ${
-            selectedFiles.length > 0 || !!onSelectCurrentFolder
-                ? html` <div
-                      class=${cn(
-                          'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-bg-black/[0.025] upup-px-3 upup-py-2',
-                          {
-                              'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]':
-                                  isDark,
-                          },
+                          'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-border-t upup-px-3 upup-py-2',
+                          isDark
+                              ? 'upup-border-white/[0.08] upup-text-[#fafafa]'
+                              : 'upup-border-black/[0.06]',
                           slot.driveFooter,
                       )}
                   >

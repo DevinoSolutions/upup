@@ -14,6 +14,9 @@ export interface AudioSnapshot {
     duration: number
     audioUrl: string | null
     error: string | null
+    /** Live mic stream while recording — feeds the AudioWaveform visual (mirrors
+     *  React AudioUploader's streamRef). Null when idle/recorded/torn down. */
+    stream: MediaStream | null
 }
 
 export class AudioRecorderController implements SourceController<AudioSnapshot> {
@@ -62,6 +65,7 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
                 stream.getTracks().forEach(t => {
                     t.stop()
                 })
+                this.streamRef = null
                 this.deps.invalidate()
             }
             recorder.start()
@@ -130,6 +134,7 @@ export class AudioRecorderController implements SourceController<AudioSnapshot> 
             duration: this.duration,
             audioUrl: this.audioUrl,
             error: this.error,
+            stream: this.streamRef,
         }
     }
 

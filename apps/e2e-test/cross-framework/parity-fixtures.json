@@ -389,7 +389,8 @@
                 }
             ],
             "testid": "upup-file-item",
-            "slot": "file-item"
+            "slot": "file-item",
+            "role": "listitem"
         },
         "filePreview": {
             "tag": "div",
@@ -863,7 +864,8 @@
                                         }
                                     ],
                                     "testid": "upup-file-item",
-                                    "slot": "file-item"
+                                    "slot": "file-item",
+                                    "role": "listitem"
                                 },
                                 {
                                     "tag": "div",
@@ -1045,9 +1047,11 @@
                                         }
                                     ],
                                     "testid": "upup-file-item",
-                                    "slot": "file-item"
+                                    "slot": "file-item",
+                                    "role": "listitem"
                                 }
-                            ]
+                            ],
+                            "role": "list"
                         },
                         {
                             "tag": "button",
@@ -1500,7 +1504,8 @@
                 }
             ],
             "testid": "upup-file-hero",
-            "slot": "file-hero"
+            "slot": "file-hero",
+            "role": "listitem"
         },
         "fileList": {
             "tag": "div",
@@ -1738,9 +1743,11 @@
                                         }
                                     ],
                                     "testid": "upup-file-hero",
-                                    "slot": "file-hero"
+                                    "slot": "file-hero",
+                                    "role": "listitem"
                                 }
-                            ]
+                            ],
+                            "role": "list"
                         },
                         {
                             "tag": "button",

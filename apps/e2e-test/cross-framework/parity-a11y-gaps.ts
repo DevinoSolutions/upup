@@ -11,7 +11,10 @@
  * Deleting an entry changes what the normalizer captures, so recapture the
  * fixtures (`UPDATE_PARITY=1`, react project) in the same change. The
  * `sr-only-live-region` entry (aria-live status region, healed by C1 across
- * all six frameworks) was removed under this rule on 2026-07-09.
+ * all six frameworks) was removed under this rule on 2026-07-09; the
+ * `list-role` / `listitem-role` entries (React-first list semantics, Phase 3)
+ * were removed the same way on 2026-07-19 once the vanilla default-experience
+ * port landed them — all six frameworks now render list/listitem roles.
  */
 export interface A11yGap {
     id: string
@@ -26,22 +29,7 @@ export interface A11yGap {
 // of its own -- confirmed via source grep), so it renders the SAME DOM as
 // react and genuinely carries every React-first a11y feature below. `ported`
 // lists both.
-export const A11Y_GAPS: A11yGap[] = [
-    {
-        id: 'list-role',
-        kind: 'role',
-        token: 'list',
-        reason: 'React-first list semantics (Phase 3); not yet ported to vanilla',
-        ported: ['react', 'preact', 'vue', 'svelte', 'angular'],
-    },
-    {
-        id: 'listitem-role',
-        kind: 'role',
-        token: 'listitem',
-        reason: 'React-first list semantics (Phase 3); not yet ported to vanilla',
-        ported: ['react', 'preact', 'vue', 'svelte', 'angular'],
-    },
-]
+export const A11Y_GAPS: A11yGap[] = []
 
 export const gapSkipClasses = () =>
     A11Y_GAPS.filter(g => g.kind === 'class').map(g => g.token)

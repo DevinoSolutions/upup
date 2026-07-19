@@ -22,10 +22,13 @@ describe('vanilla dropzone border recovery', () => {
         document.body.appendChild(host)
         const up = createUploader(host, { sources: ['local'], maxFiles: 5 })
         const hasBorder = () => {
-            const box = host.querySelector(
-                '[data-upup-slot="uploader-panel"]',
-            ) as HTMLElement | null
-            return !!box && box.classList.contains('upup-border')
+            // Redesign (Task 10): the empty idle dropzone shows the animated
+            // dashed SVG frame (data-upup-slot="dropzone-frame") in place of the
+            // old CSS `upup-border`. showDropzoneFrame is driven by the same
+            // absoluteHasBorder the recompute-nudge contract guards, so the
+            // frame's presence/absence tracks the border affordance exactly as
+            // the CSS class did before.
+            return !!host.querySelector('[data-upup-slot="dropzone-frame"]')
         }
         return { up, hasBorder }
     }

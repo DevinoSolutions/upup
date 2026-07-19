@@ -21,7 +21,10 @@ describe('vanilla file-preview-portal — Escape closes (F-605)', () => {
         const host = document.createElement('div')
         document.body.appendChild(host)
         const up = createUploader(host, { sources: ['local'], maxFiles: 5 })
-        await up.addFiles([imageFile('photo.png')])
+        // Redesign (Task 10): the "Click to preview" affordance lives on the
+        // grid FilePreview tile, which renders at 2+ files (a single file is the
+        // hero). Seed two so the tile — and its portal trigger — exist.
+        await up.addFiles([imageFile('photo.png'), imageFile('b.png')])
         await Promise.resolve()
 
         const previewBtn = Array.from(host.querySelectorAll('button')).find(b =>
