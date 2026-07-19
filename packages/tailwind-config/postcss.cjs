@@ -68,18 +68,6 @@ function createPostcssConfig({ content }) {
                                     transform: 'translateY(0)',
                                 },
                             },
-                            'hint-pulse': {
-                                '0%, 100%': {
-                                    borderColor: 'rgba(148,163,184,0.35)',
-                                },
-                                '50%': {
-                                    borderColor: 'rgba(56,189,248,0.55)',
-                                },
-                            },
-                            'hint-bob': {
-                                '0%, 100%': { transform: 'translateY(0)' },
-                                '50%': { transform: 'translateY(-4px)' },
-                            },
                             'fx-enter': {
                                 '0%': {
                                     opacity: '0',
@@ -141,9 +129,6 @@ function createPostcssConfig({ content }) {
                         },
                         animation: {
                             'informer-in': 'informer-in 0.2s ease-out both',
-                            'hint-pulse':
-                                'hint-pulse 2.4s ease-in-out infinite',
-                            'hint-bob': 'hint-bob 2.4s ease-in-out infinite',
                             'fx-enter':
                                 'fx-enter var(--upup-fx-base) var(--upup-fx-ease) both',
                             'fx-exit':

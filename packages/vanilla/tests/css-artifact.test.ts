@@ -15,10 +15,6 @@ describe('@upupjs/vanilla CSS artifact', () => {
         // Layer-defined classes must survive the content purge:
         expect(css).toContain('.upup-panel-sheen')
         expect(css).toContain('.upup-preview-scroll')
-        // The idle-hint keyframes come from the shared postcss factory —
-        // a regression there would silently kill the animation everywhere:
-        expect(css).toContain('hint-pulse')
-        expect(css).toContain('hint-bob')
         // The fx layer is emitted ONCE by the shared tailwind-config plugin —
         // these pins fail if the plugin is missing or a framework stops
         // inheriting it:
