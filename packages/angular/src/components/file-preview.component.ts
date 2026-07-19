@@ -6,31 +6,30 @@ import {
     inject,
     OnChanges,
     SimpleChanges,
-    Type,
+    type Type,
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { DomSanitizer, type SafeStyle } from '@angular/platform-browser'
-import { type Translations } from '@upupjs/core'
+import { UploadStatus, type Translations } from '@upupjs/core'
 import {
     fileCanPreviewText,
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
     cn,
-    isUploadActive,
 } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { ProgressBarComponent } from './progress-bar.component'
 import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.component'
+import { FileSuccessCheckComponent } from './shared/file-success-check.component'
 
 /**
- * FilePreview — port of FilePreview.svelte.
- *
- * Renders the thumbnail card for a single file: thumbnail (via FilePreviewThumbnail),
- * delete/edit-image buttons, progress bar, file name/size, and a "click to preview" button.
+ * FilePreview — port of FilePreview. Grid-mode tile: thumbnail (image bg / video
+ * first-frame / non-media doc icon), delete + completion overlays, progress bar,
+ * name/size, and a click-to-preview button. No edit affordance (the image editor
+ * is react/preact-only).
  *
  * data-testid="upup-file-preview" / data-upup-slot="file-preview" preserved.
- * data-testid="upup-file-remove" on the delete button preserved.
  */
 @Component({
     selector: 'upup-file-preview',
@@ -38,34 +37,33 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
     imports: [
         ProgressBarComponent,
         FilePreviewThumbnailComponent,
+        FileSuccessCheckComponent,
         NgComponentOutlet,
     ],
     template: `
         <div
-            class="upup-inline-block"
             [class]="rootClass"
             data-testid="upup-file-preview"
             data-upup-slot="file-preview"
         >
             <div [class]="thumbnailWrapperClass" [style]="thumbnailBgStyle">
-                <!-- Whole-thumbnail click affordance: a real <button> that is a
-                     sibling of the edit/remove controls (never their ancestor), so
-                     no interactive element nests inside another (axe
-                     nested-interactive). Sits behind the action buttons
-                     (z-0 < z-10) and is transparent so the thumbnail shows through. -->
                 <button
                     type="button"
                     [attr.aria-label]="fileName"
                     class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
                     (click)="onclick.emit($event)"
                 ></button>
-                <!-- Thumbnail (image bg or object preview).
-                     Non-images render the thumbnail centered inside the card;
-                     images show via the background-image on the wrapper above.
-                     Mirrors FilePreview in react/vue/svelte/vanilla (the !isImage
-                     conditional + the h-full/items-center/justify-center/p-6 wrapper)
-                     so the static doc icon is vertically centered, not top-aligned. -->
-                @if (!isImage) {
+
+                @if (isVideo) {
+                    <video
+                        [src]="fileUrl"
+                        muted
+                        playsinline
+                        preload="metadata"
+                        class="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+                    ></video>
+                }
+                @if (!isImage && !isVideo) {
                     <div
                         class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6"
                     >
@@ -83,57 +81,37 @@ import { FilePreviewThumbnailComponent } from './file-preview-thumbnail.componen
                     </div>
                 }
 
-                <!-- Edit-image button (only for images with editor enabled) -->
-                @if (isImage && store.uiProps.imageEditor.enabled) {
+                @if (!isSuccessful) {
                     <button
-                        class="upup-absolute upup-right-1.5 upup-top-8 upup-z-10 upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center upup-rounded-full upup-bg-white upup-text-[#0284c7] upup-shadow-sm hover:upup-bg-white hover:upup-text-[#0284c7] upup-ring-1 upup-ring-black/5 disabled:upup-cursor-not-allowed disabled:upup-opacity-50"
-                        (click)="onHandleEditImage($event)"
+                        [class]="deleteButtonClass"
+                        (click)="onHandleFileRemove($event)"
                         type="button"
                         [disabled]="!!progress"
-                        [attr.aria-label]="translations.editImage"
+                        [attr.aria-label]="translations.removeFile"
+                        data-testid="upup-file-remove"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            class="upup-h-3 upup-w-3"
-                            aria-hidden="true"
-                        >
-                            <path
-                                d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z"
-                            />
-                        </svg>
+                        <ng-container
+                            [ngComponentOutlet]="fileDeleteIcon"
+                            [ngComponentOutletInputs]="deleteIconInputs"
+                        />
                     </button>
                 }
 
-                <!-- Delete / remove button -->
-                <button
-                    [class]="deleteButtonClass"
-                    (click)="onHandleFileRemove($event)"
-                    type="button"
-                    [disabled]="!!progress"
-                    [attr.aria-label]="translations.removeFile"
-                    data-testid="upup-file-remove"
-                >
-                    <ng-container [ngComponentOutlet]="fileDeleteIcon" />
-                </button>
-
-                <!-- Upload progress bar. An Angular component host always renders a DOM
-                     node, so the empty <upup-progress-bar> host would break DOM parity at
-                     idle (React's <ProgressBar> returns null there). Gate the host on the
-                     SAME condition the component uses internally (shouldShow) so it mirrors
-                     React's render exactly — including the active-upload instant where
-                     progress is still 0 but the upload is in flight. -->
-                @if (showProgressBar) {
-                    <upup-progress-bar
-                        class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
-                        progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
-                        [progress]="progress"
+                @if (isSuccessful) {
+                    <upup-file-success-check
+                        [index]="index"
+                        [size]="20"
+                        className="upup-absolute upup-left-1.5 upup-top-1.5 upup-z-10"
                     />
                 }
+
+                <upup-progress-bar
+                    [className]="'upup-absolute upup-bottom-0 upup-left-0 upup-right-0'"
+                    progressBarClassName="upup-rounded-t-none upup-rounded-b-md"
+                    [progress]="progress"
+                />
             </div>
 
-            <!-- Name + size + preview button -->
             <div class="upup-mt-1 upup-px-0.5">
                 <div [class]="nameClass">{{ fileName }}</div>
                 <div [class]="sizeClass">{{ formattedSize }}</div>
@@ -161,13 +139,13 @@ export class FilePreviewComponent implements OnChanges {
     @Input() fileUrl: string = ''
     @Input() fileSize?: number
     @Input() canPreview: boolean = false
+    @Input() index = 0
 
-    @Output() requestPreview = new EventEmitter<void>()
     @Output() onRequestPreview = new EventEmitter<void>()
     @Output() updateCanPreview = new EventEmitter<boolean>()
     @Output() onclick = new EventEmitter<MouseEvent>()
 
-    // ── derived getters ───────────────────────────────────────────────────────
+    readonly deleteIconInputs = { class: 'upup-h-5 upup-w-5' }
 
     get translations(): Translations {
         return this.store.translations()
@@ -175,6 +153,10 @@ export class FilePreviewComponent implements OnChanges {
 
     get isImage(): boolean {
         return fileGetIsImage(this.fileType)
+    }
+
+    get isVideo(): boolean {
+        return this.fileType.startsWith('video/')
     }
 
     get isPdf(): boolean {
@@ -189,43 +171,41 @@ export class FilePreviewComponent implements OnChanges {
         return fileCanPreviewText(this.fileType, this.fileName, this.fileSize)
     }
 
-    get progress(): number {
-        const map = this.store.filesProgressMap()
-        const entry = map[this.fileId]
-        if (!entry || !entry.total) return 0
-        return Math.floor((entry.loaded / entry.total) * 100)
+    get isSuccessful(): boolean {
+        return (
+            this.store.files().get(this.fileId)?.status ===
+            UploadStatus.SUCCESSFUL
+        )
     }
 
-    /**
-     * Whether to render the <upup-progress-bar> host. Mirrors
-     * ProgressBarComponent.shouldShow (and React's <ProgressBar> render condition)
-     * so the host element appears exactly when React would show the bar — including
-     * the active-upload instant where progress is still 0.
-     */
-    get showProgressBar(): boolean {
-        return !!this.progress || isUploadActive(this.store.uploadStatus())
+    get progress(): number {
+        const p = this.store.filesProgressMap()[this.fileId]
+        const loaded = p?.loaded ?? NaN
+        const total = p?.total ?? NaN
+        const pct = Math.floor((loaded / total) * 100)
+        return Number.isFinite(pct) ? pct : 0
     }
 
     get fileDeleteIcon(): Type<unknown> {
         return this.store.uiProps.icons.FileDeleteIcon as Type<unknown>
     }
 
-    get isDark(): boolean {
-        return this.store.isDark()
-    }
-
     get rootClass(): string {
         const themeSlots = this.store.slots()
-        return themeSlots.filePreview?.root ?? ''
+        return cn('upup-block upup-w-full', themeSlots.filePreview?.root ?? '')
     }
 
     get thumbnailWrapperClass(): string {
+        const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
         const filesSize = this.store.files().size
         return cn(
-            'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+            'upup-fx-hover-lift upup-relative upup-h-[160px] upup-w-full upup-overflow-hidden upup-rounded-xl upup-ring-1',
             'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+            dark
+                ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
+                : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
             {
                 [slotClasses.fileThumbnailMultiple ?? '']:
                     !!slotClasses.fileThumbnailMultiple && filesSize > 1,
@@ -240,11 +220,10 @@ export class FilePreviewComponent implements OnChanges {
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
         return cn(
-            'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-            'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-            'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-            'hover:upup-bg-white hover:upup-text-red-700',
-            'upup-ring-1 upup-ring-black/5',
+            'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+            'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
+            'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+            'hover:upup-bg-[#04080f]/65',
             'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
             slotClasses.fileDeleteButton ?? '',
             themeSlots.filePreview?.deleteButton ?? '',
@@ -252,7 +231,7 @@ export class FilePreviewComponent implements OnChanges {
     }
 
     get nameClass(): string {
-        const dark = this.isDark
+        const dark = this.store.isDark()
         const themeSlots = this.store.slots()
         return cn(
             'upup-truncate upup-text-[13px] upup-font-normal upup-leading-tight upup-text-gray-900',
@@ -262,7 +241,7 @@ export class FilePreviewComponent implements OnChanges {
     }
 
     get sizeClass(): string {
-        const dark = this.isDark
+        const dark = this.store.isDark()
         const themeSlots = this.store.slots()
         return cn(
             'upup-mt-0.5 upup-text-[11px] upup-leading-tight upup-text-gray-500',
@@ -272,7 +251,7 @@ export class FilePreviewComponent implements OnChanges {
     }
 
     get previewButtonClass(): string {
-        const dark = this.isDark
+        const dark = this.store.isDark()
         const themeSlots = this.store.slots()
         return cn(
             'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#0284c7] upup-transition-all hover:upup-text-[#0284c7] hover:upup-underline',
@@ -292,32 +271,22 @@ export class FilePreviewComponent implements OnChanges {
     }
 
     get thumbnailBgStyle(): SafeStyle | null {
-        // Mirrors svelte FilePreview.svelte: style={isImage ? `background-image: url(${fileUrl})` : undefined}
-        // Angular's style sanitizer strips url(blob:…) values, so bypass to keep the bg image.
         if (!this.isImage) return null
         return this.sanitizer.bypassSecurityTrustStyle(
             `background-image: url(${this.fileUrl})`,
         )
     }
 
-    // ── lifecycle ─────────────────────────────────────────────────────────────
-
     ngOnChanges(changes: SimpleChanges): void {
-        // Auto-signal canPreview when the file type/name changes
         if (changes['fileType'] || changes['fileName'] || changes['fileSize']) {
             this.checkAndSignalCanPreview()
         }
     }
 
-    // ── methods ───────────────────────────────────────────────────────────────
-
     private checkAndSignalCanPreview(): void {
         const should =
             this.isImage || this.isPdf || (this.isText && this.canPreviewText)
         if (should && !this.canPreview) {
-            // Defer to next microtask to avoid NG0100 ExpressionChangedAfterItHasBeenChecked —
-            // ngOnChanges fires during parent's change detection cycle; emitting synchronously
-            // would mutate parent state that Angular has already snapshotted for this cycle.
             queueMicrotask(() => {
                 this.updateCanPreview.emit(true)
             })
@@ -331,11 +300,5 @@ export class FilePreviewComponent implements OnChanges {
     onHandleFileRemove(e: MouseEvent): void {
         e.stopPropagation()
         this.store.handleFileRemove(this.fileId)
-    }
-
-    onHandleEditImage(e: MouseEvent): void {
-        e.stopPropagation()
-        const file = this.store.files().get(this.fileId)
-        if (file) this.store.openImageEditor(file)
     }
 }

@@ -48,10 +48,11 @@ export const KNOWN_DIVERGENCES: Partial<
     Record<ParityComponent, { assertOnly: string[]; reason: string }>
 > = {
     fileList: {
-        assertOnly: ['react', 'vanilla', 'preact', 'vue', 'svelte'],
+        assertOnly: ['react', 'vanilla', 'preact', 'vue', 'svelte', 'angular'],
         reason:
-            'F-711 Add-More SVG icon missing in angular header (healed in ' +
-            'vue+svelte by the T10 default-experience port); F-712 angular ' +
-            '<upup-progress-bar> host element wraps extra node',
+            'F-711/F-712 healed by the T10 default-experience port in every ' +
+            'framework: angular now renders the Add-More SVG (DefaultAddMoreIcon) ' +
+            'and routes ProgressBar positioning classes onto the inner div so the ' +
+            'transparent <upup-progress-bar> host is unwrapped (no extra node).',
     },
 }

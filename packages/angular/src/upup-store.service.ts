@@ -15,13 +15,28 @@ import {
     createUploaderController,
     type UploaderControllerOptions,
     type UploaderController,
+    type MotionMode,
+    type TransientUiSnapshot,
+    type CloudProvider,
 } from '@upupjs/core/internal'
+
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof
+ *  UiTranslations>` so the compiler enforces exhaustiveness against the same
+ *  drive-source union core's DragDropController gates on. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
 import { createUpupUpload, type UpupUploadHandle } from './lib/use-upup-upload'
 import { createSSEProcessing } from './lib/use-sse-processing'
 import { toSignalStore, type SignalStore } from './lib/to-signal-store'
 import type { UploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
 import { TrashIconComponent } from './components/icons/trash-icon.component'
+import { DefaultAddMoreIconComponent } from './components/default-add-more-icon.component'
 
 // Stable sentinel — avoids allocating a new object on every init() when style is not passed.
 const EMPTY_STYLE: Record<string, string> = {}
@@ -43,6 +58,8 @@ export class UpupStore {
     }
 
     private themeState!: SignalStore<ThemeSnapshot>
+    private transientState!: SignalStore<TransientUiSnapshot>
+    private motionState!: SignalStore<MotionMode>
     private started = false
     private destroyed = false
     private cleanups: Array<() => void> = []
@@ -82,6 +99,7 @@ export class UpupStore {
         folderUploadAllowDrop: boolean
         folderPickerButtonVisible: boolean
         showBranding: boolean
+        quietCompletion: boolean
         disableDragDrop: boolean
         className: string
         style: Record<string, string>
@@ -114,6 +132,13 @@ export class UpupStore {
     uploadedBytes!: Signal<number>
     totalBytes!: Signal<number>
     editorQueue!: Signal<OrchSnapshot['editorQueue']>
+
+    // ── transient-ui computeds (deferred removal / add-more overlay / toast) ──
+    leavingFileIds!: Signal<ReadonlySet<string>>
+    sourceOverlayOpen!: Signal<boolean>
+    sourceOverlayClosing!: Signal<boolean>
+    dropRejected!: Signal<string | null>
+    motionMode!: Signal<MotionMode>
 
     // ── themeState computeds ─────────────────────────────────────
     themeMode!: Signal<ThemeSnapshot['themeMode']>
@@ -176,9 +201,11 @@ export class UpupStore {
                     ? acceptProp
                     : acceptProp.join(','),
             mini: p.mini ?? false,
+            animations: p.animations ?? true,
             isProcessing: p.isProcessing ?? false,
             allowPreview: p.allowPreview ?? true,
             showBranding: p.showBranding ?? true,
+            quietCompletion: p.quietCompletion ?? false,
             disableDragDrop: p.disableDragDrop ?? false,
             className: p.className,
             maxFileSize: p.maxFileSize,
@@ -283,6 +310,8 @@ export class UpupStore {
         // ── Signal bridges (KEEP: toSignalStore separately for orch + theme) ──────
         this.orchState = toSignalStore(this.controller.orchestrator)
         this.themeState = toSignalStore(this.controller.theme)
+        this.transientState = toSignalStore(this.controller.transientUi)
+        this.motionState = toSignalStore(this.controller.motionGate)
 
         // ── Assign computeds AFTER stores exist ──────────────────
         this.files = computed(() => this.orchState.state().files)
@@ -319,6 +348,19 @@ export class UpupStore {
             () => this.themeState.state().slotOverrides,
         )
         this.slots = computed(() => this.themeState.state().slots)
+        this.leavingFileIds = computed(
+            () => this.transientState.state().leavingFileIds,
+        )
+        this.sourceOverlayOpen = computed(
+            () => this.transientState.state().sourceOverlayOpen,
+        )
+        this.sourceOverlayClosing = computed(
+            () => this.transientState.state().sourceOverlayClosing,
+        )
+        this.dropRejected = computed(
+            () => this.transientState.state().dropRejected,
+        )
+        this.motionMode = computed(() => this.motionState.state())
 
         // ── Factory lifecycle (orchestrator.init + theme.init + plugins + status) ──
         this.controller.init()
@@ -337,7 +379,7 @@ export class UpupStore {
         const icons = p.icons ?? {}
         const resolvedIcons = {
             ContainerAddMoreIcon:
-                icons.ContainerAddMoreIcon ?? EmptyIconComponent,
+                icons.ContainerAddMoreIcon ?? DefaultAddMoreIconComponent,
             FileDeleteIcon: icons.FileDeleteIcon ?? TrashIconComponent,
             CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIconComponent,
             CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIconComponent,
@@ -372,6 +414,7 @@ export class UpupStore {
             folderUploadAllowDrop: resolved.folderUploadAllowDrop,
             folderPickerButtonVisible: resolved.folderPickerButtonVisible,
             showBranding: p.showBranding ?? true,
+            quietCompletion: p.quietCompletion ?? false,
             disableDragDrop: p.disableDragDrop ?? false,
             className: p.className ?? '',
             style: resolvedStyle,
@@ -404,6 +447,22 @@ export class UpupStore {
     }
     setViewMode(m: 'grid' | 'list'): void {
         this.controller.commands.setViewMode(m)
+    }
+
+    // ── Add-more source overlay + drop-rejection (core transient-UI store) ──────
+    openSourceOverlay(): void {
+        this.controller.transientUi.openSourceOverlay()
+    }
+    closeSourceOverlay(): void {
+        this.controller.transientUi.closeSourceOverlay()
+    }
+    /** Core's DragDropController fires this with the read-only drive FileSource;
+     *  resolve its human provider label, then raise the 3s-auto-clear toast. */
+    flagDriveDropRejected(source: FileSource): void {
+        const key: keyof UiTranslations | undefined =
+            DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
+        const label = key ? this.translations()[key] : String(source)
+        this.controller.transientUi.flagDropRejected(label)
     }
 
     // ── File operations (delegated to controller.commands) ─────────────
@@ -480,6 +539,8 @@ export class UpupStore {
         this.controller?.destroy() // orchestrator/theme/plugins/status — idempotent
         this.orchState?.destroy()
         this.themeState?.destroy()
+        this.transientState?.destroy()
+        this.motionState?.destroy()
         this.upload?.destroy() // createUpupUpload owns core.destroy()
     }
 }

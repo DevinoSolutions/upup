@@ -22,6 +22,7 @@ import { UpupStore } from './upup-store.service'
 import type { UploaderProps } from './shared/types'
 import { EmptyIconComponent } from './components/icons/empty-icon.component'
 import { TrashIconComponent } from './components/icons/trash-icon.component'
+import { DefaultAddMoreIconComponent } from './components/default-add-more-icon.component'
 
 /** Minimal valid props — all optional fields omitted. */
 const baseProps: UploaderProps = {}
@@ -461,12 +462,13 @@ describe('UpupStore', () => {
             store.destroy()
         })
 
-        it('uiProps.icons defaults FileDeleteIcon to TrashIconComponent and the rest to EmptyIconComponent', () => {
-            // FileDeleteIcon ships a real default glyph (registry 'trash', parity with React's
-            // TbTrash). The remaining slots still default to EmptyIconComponent (no glyph yet).
+        it('uiProps.icons defaults FileDeleteIcon to TrashIconComponent, ContainerAddMoreIcon to DefaultAddMoreIconComponent, and the rest to EmptyIconComponent', () => {
+            // FileDeleteIcon ships the registry 'trash' glyph and ContainerAddMoreIcon the
+            // registry 'plus' glyph (healing F-711 — the add-more SVG now renders). The
+            // remaining slots still default to EmptyIconComponent (no glyph yet).
             const store = makeStore()
             const icons = store.uiProps.icons
-            expect(icons.ContainerAddMoreIcon).toBe(EmptyIconComponent)
+            expect(icons.ContainerAddMoreIcon).toBe(DefaultAddMoreIconComponent)
             expect(icons.FileDeleteIcon).toBe(TrashIconComponent)
             expect(icons.CameraCaptureIcon).toBe(EmptyIconComponent)
             expect(icons.CameraRotateIcon).toBe(EmptyIconComponent)

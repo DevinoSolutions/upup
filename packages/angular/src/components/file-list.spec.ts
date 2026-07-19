@@ -127,8 +127,11 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         files: () => files,
         isAddingMore: () => false,
         activeSource: () => undefined,
+        leavingFileIds: () => new Set<string>(),
+        sourceOverlayOpen: () => false,
+        sourceOverlayClosing: () => false,
         isDark: () => false,
-        viewMode: () => 'list' as const,
+        viewMode: () => 'list' as 'grid' | 'list',
         uploadStatus: () => UploadStatus.IDLE,
         uploadError: () => undefined as string | undefined,
         uploadErrorCode: () => undefined as string | undefined,
@@ -146,6 +149,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
             limit: 100,
             isProcessing: false,
             allowPreview: true,
+            quietCompletion: false,
             resumable: undefined,
             imageEditor: { enabled: false },
             icons: {
@@ -168,6 +172,7 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         retryUpload: vi.fn().mockResolvedValue(undefined),
         setViewMode: vi.fn(),
         setIsAddingMore: vi.fn(),
+        openSourceOverlay: vi.fn(),
         core: null,
     }
 }
@@ -352,7 +357,7 @@ describe('FilePreviewComponent', () => {
         const el: HTMLElement = fixture.nativeElement
         // The thumbnail wrapper is the first div with the fixed 145px box classes.
         const wrapper = el.querySelector(
-            '.upup-h-\\[145px\\]',
+            '.upup-h-\\[160px\\]',
         ) as HTMLElement | null
         expect(wrapper).not.toBeNull()
         const bg = wrapper?.style.backgroundImage ?? ''
@@ -377,7 +382,7 @@ describe('FilePreviewComponent', () => {
 
         const el: HTMLElement = fixture.nativeElement
         const wrapper = el.querySelector(
-            '.upup-h-\\[145px\\]',
+            '.upup-h-\\[160px\\]',
         ) as HTMLElement | null
         expect(wrapper).not.toBeNull()
         // No background-image set for PDFs
@@ -431,6 +436,9 @@ describe('FileItemComponent', () => {
     it('shows preview portal after openPreviewPortal()', async () => {
         const file = makeFile('f2', 'photo.png', 'image/png')
         const storeMock = makeStoreMock(new Map([['f2', file]]))
+        // The preview portal lives in the grid (FilePreview) branch, not the
+        // list (FileRow) branch — force grid mode for this test.
+        storeMock.viewMode = () => 'grid'
 
         await TestBed.configureTestingModule({
             imports: [FileItemComponent],
