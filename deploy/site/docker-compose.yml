@@ -5,8 +5,12 @@
 # its own network, so no host port mappings are declared (only `expose`).
 #
 # Values come from a `.env` file placed next to this compose file:
-#   - Build-time NEXT_PUBLIC_* args are inlined into the landing bundle.
-#   - Runtime secrets (S3_*, *_SECRET, OPENROUTER_API_KEY, ...) are read at boot.
+#   - Build-time NEXT_PUBLIC_* args are inlined into the client bundles.
+#   - Runtime secrets are passed via bare LIST-FORM environment entries (`- VAR`)
+#     so an UNSET var stays UNSET in the container. This is deliberate: the S3_*
+#     and mastra ORIGIN_TOKEN_SECRET schemas are `z.string().min(1).optional()`,
+#     so materializing an EMPTY STRING (what `${VAR:-}` produces) fails min(1)
+#     and crashes the app at boot. Bare passthrough yields absent, not empty.
 # See README.md for the full env contract.
 
 services:
@@ -25,22 +29,23 @@ services:
                 NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
                 NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-}
                 NEXT_PUBLIC_MASTRA_BASE_URL: ${NEXT_PUBLIC_MASTRA_BASE_URL:-}
+        # Bare passthrough (unset -> absent). S3_* are min(1).optional() — an
+        # empty string would crash boot; server-mode is disabled until set.
         environment:
-            NODE_ENV: production
-            PORT: 3000
-            # Server-mode upload secrets (route handlers only — never NEXT_PUBLIC_*).
-            S3_BUCKET: ${S3_BUCKET:-}
-            S3_REGION: ${S3_REGION:-}
-            S3_KEY_ID: ${S3_KEY_ID:-}
-            S3_SECRET: ${S3_SECRET:-}
-            S3_ENDPOINT: ${S3_ENDPOINT:-}
-            GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-            GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-            DROPBOX_CLIENT_ID: ${DROPBOX_CLIENT_ID:-}
-            DROPBOX_APP_SECRET: ${DROPBOX_APP_SECRET:-}
-            ONEDRIVE_CLIENT_ID: ${ONEDRIVE_CLIENT_ID:-}
-            ONEDRIVE_CLIENT_SECRET: ${ONEDRIVE_CLIENT_SECRET:-}
-            UPUP_UPLOAD_TOKEN_SECRET: ${UPUP_UPLOAD_TOKEN_SECRET:-}
+            - NODE_ENV=production
+            - PORT=3000
+            - S3_BUCKET
+            - S3_REGION
+            - S3_KEY_ID
+            - S3_SECRET
+            - S3_ENDPOINT
+            - GOOGLE_CLIENT_ID
+            - GOOGLE_CLIENT_SECRET
+            - DROPBOX_CLIENT_ID
+            - DROPBOX_APP_SECRET
+            - ONEDRIVE_CLIENT_ID
+            - ONEDRIVE_CLIENT_SECRET
+            - UPUP_UPLOAD_TOKEN_SECRET
         expose:
             - '3000'
         restart: unless-stopped
@@ -50,18 +55,22 @@ services:
             context: ../..
             dockerfile: deploy/site/Dockerfile.mastra
         environment:
-            NODE_ENV: production
-            MASTRA_HOST: 0.0.0.0
-            PORT: 4111
-            # LLM provider key for the default model (openrouter/anthropic/claude-haiku-4.5).
-            OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+            - NODE_ENV=production
+            # MUST bind 0.0.0.0 in a container — the app defaults to localhost.
+            - MASTRA_HOST=0.0.0.0
+            - PORT=4111
+            # LLM provider key for the default model (openrouter/anthropic/...).
+            - OPENROUTER_API_KEY
             # Comma-separated CORS allowlist (the landing origin must be listed).
-            ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
-            # ORIGIN_TOKEN_SECRET stays UNSET on dev → auth disabled (see README).
-            ORIGIN_TOKEN_SECRET: ${ORIGIN_TOKEN_SECRET:-}
-            DAILY_REQUEST_CAP: ${DAILY_REQUEST_CAP:-5000}
-            RATE_LIMIT_CAPACITY: ${RATE_LIMIT_CAPACITY:-30}
-            RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+            # Unset -> mastra's local-dev origin fallback.
+            - ALLOWED_ORIGINS
+            # ORIGIN_TOKEN_SECRET is intentionally omitted: mastra's schema is
+            # z.string().min(1).optional(), so auth stays DISABLED on dev. To
+            # enable it later, add a bare `- ORIGIN_TOKEN_SECRET` line and set a
+            # REAL value in the .env file (never an empty string).
+            - DAILY_REQUEST_CAP=${DAILY_REQUEST_CAP:-5000}
+            - RATE_LIMIT_CAPACITY=${RATE_LIMIT_CAPACITY:-30}
+            - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
         expose:
             - '4111'
         restart: unless-stopped
@@ -70,9 +79,33 @@ services:
         build:
             context: ../..
             dockerfile: deploy/site/Dockerfile.playground
+            args:
+                NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
+                NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_API_KEY: ${NEXT_PUBLIC_GOOGLE_API_KEY:-}
+                NEXT_PUBLIC_GOOGLE_APP_ID: ${NEXT_PUBLIC_GOOGLE_APP_ID:-}
+                NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${NEXT_PUBLIC_ONEDRIVE_CLIENT_ID:-}
+                NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${NEXT_PUBLIC_DROPBOX_CLIENT_ID:-}
+                NEXT_PUBLIC_BOX_CLIENT_ID: ${NEXT_PUBLIC_BOX_CLIENT_ID:-}
+                NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT:-}
+                NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${NEXT_PUBLIC_UPUP_USE_REAL_STORAGE:-}
+        # Same bare-passthrough rules as landing — the playground mounts an
+        # /api/upup server-mode upload route reading the same S3_*/secret block.
         environment:
-            NODE_ENV: production
-            PORT: 3000
+            - NODE_ENV=production
+            - PORT=3000
+            - S3_BUCKET
+            - S3_REGION
+            - S3_KEY_ID
+            - S3_SECRET
+            - S3_ENDPOINT
+            - GOOGLE_CLIENT_ID
+            - GOOGLE_CLIENT_SECRET
+            - DROPBOX_CLIENT_ID
+            - DROPBOX_APP_SECRET
+            - ONEDRIVE_CLIENT_ID
+            - ONEDRIVE_CLIENT_SECRET
+            - UPUP_UPLOAD_TOKEN_SECRET
         expose:
             - '3000'
         restart: unless-stopped

@@ -16,8 +16,15 @@ ports over its own network. Each service `expose`s its port for clarity.
 ## Deploying
 
 Dokploy clones the repo fresh and runs this compose file with a `.env` file
-placed **next to this compose file**. `${VAR}` interpolation fills build args
-and runtime env from that file.
+placed **next to this compose file**. `${VAR}` interpolation fills the
+build-time `NEXT_PUBLIC_*` args from that file.
+
+Runtime secrets use **bare list-form passthrough** (`- VAR`, no `=`): a var set
+in the `.env` file reaches the container, and an **unset** var stays **unset**
+(absent, not an empty string). This is required because the `S3_*` and mastra
+`ORIGIN_TOKEN_SECRET` schemas are `z.string().min(1).optional()` — an empty
+string fails `min(1)` and crashes the app at boot, whereas absent is valid and
+just disables that capability.
 
 ```bash
 docker compose -f deploy/site/docker-compose.yml build
@@ -56,6 +63,24 @@ Passed as `build.args`; changing one requires a landing **rebuild**.
 | `NEXT_PUBLIC_POSTHOG_HOST`        | PostHog host (defaults to `https://posthog.devino.ca`). |
 | `NEXT_PUBLIC_MASTRA_BASE_URL`     | Deployed Mastra base URL for the Ask-AI panel.          |
 
+### Build-time — playground `NEXT_PUBLIC_*` (inlined into the client bundle)
+
+Passed as `build.args`; changing one requires a playground **rebuild**. The
+playground reads all nine at build time — omitting them ships empty drive creds
+and upload config.
+
+| Var                                 | Purpose                                                          |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_URL`              | Public origin; server-mode upload endpoint is `<base>/api/upup`. |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID`      | Google Drive picker OAuth client id.                             |
+| `NEXT_PUBLIC_GOOGLE_API_KEY`        | Google Drive picker API key.                                     |
+| `NEXT_PUBLIC_GOOGLE_APP_ID`         | Google Drive picker app id.                                      |
+| `NEXT_PUBLIC_ONEDRIVE_CLIENT_ID`    | OneDrive picker client id.                                       |
+| `NEXT_PUBLIC_DROPBOX_CLIENT_ID`     | Dropbox chooser app key.                                         |
+| `NEXT_PUBLIC_BOX_CLIENT_ID`         | Box picker client id.                                            |
+| `NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT`  | Override upload endpoint (else derived / mock).                  |
+| `NEXT_PUBLIC_UPUP_USE_REAL_STORAGE` | `'true'` routes uploads to real server-mode S3 storage.          |
+
 ### Runtime — server-side secrets (read at boot, never in the client bundle)
 
 **landing** (server-mode upload route handlers):
@@ -68,14 +93,20 @@ Passed as `build.args`; changing one requires a landing **rebuild**.
 | `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                   |
 | `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route). |
 
+**playground** (mounts the same `/api/upup` server-mode upload route): identical
+runtime secret set to landing — `S3_*`, `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
+`DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`, `ONEDRIVE_CLIENT_ID` /
+`ONEDRIVE_CLIENT_SECRET`, `UPUP_UPLOAD_TOKEN_SECRET`. All unset unless real
+server-mode uploads are wanted on the playground.
+
 **mastra**:
 
-| Var                                                                  | Purpose                                                                              |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `OPENROUTER_API_KEY`                                                 | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).    |
-| `ALLOWED_ORIGINS`                                                    | Comma-separated CORS allowlist — the landing origin must be listed.                  |
-| `ORIGIN_TOKEN_SECRET`                                                | HMAC origin-token secret. **Stays UNSET on dev** → auth disabled. Set in production. |
-| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS` | Budget/rate-limit knobs (have sane defaults).                                        |
+| Var                                                                  | Purpose                                                                                                                                                                            |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY`                                                 | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                  |
+| `ALLOWED_ORIGINS`                                                    | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                |
+| `ORIGIN_TOKEN_SECRET`                                                | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value. |
+| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS` | Budget/rate-limit knobs (have sane defaults).                                                                                                                                      |
 
 Never commit real values — this table lists **names only**. Secrets live in the
 Dokploy `.env` next to the compose file.
