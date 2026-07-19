@@ -23,41 +23,38 @@ interface OverlayState {
 const overlayStates = new WeakMap<UploaderContext, OverlayState>()
 
 function getOverlayState(ctx: UploaderContext): OverlayState {
-    let s = overlayStates.get(ctx)
-    if (!s) {
-        s = {
-            el: null,
-            trigger: null,
-            swipeStartY: null,
-            swiped: false,
-            refCb: () => {},
-        }
-        s.refCb = (el: Element | undefined) => {
-            const next = (el as HTMLElement | undefined) ?? null
-            const prev = s!.el
-            if (next === prev) return
-            s!.el = next
-            if (next) {
-                // On open: capture the trigger and pull focus into the sheet so
-                // keyboard/SR users don't land on the inert list underneath.
-                if (
-                    !s!.trigger &&
-                    document.activeElement instanceof HTMLElement
-                )
-                    s!.trigger = document.activeElement
-                next.querySelector<HTMLElement>(
-                    'button:not([disabled])',
-                )?.focus()
-            } else {
-                // On close (element removed): restore focus to the trigger.
-                const trigger = s!.trigger
-                s!.trigger = null
-                if (trigger && trigger.isConnected) trigger.focus()
-            }
-        }
-        overlayStates.set(ctx, s)
+    const existing = overlayStates.get(ctx)
+    if (existing) return existing
+    const created: OverlayState = {
+        el: null,
+        trigger: null,
+        swipeStartY: null,
+        swiped: false,
+        refCb: () => {},
     }
-    return s
+    created.refCb = (el: Element | undefined) => {
+        const next = (el as HTMLElement | undefined) ?? null
+        const prev = created.el
+        if (next === prev) return
+        created.el = next
+        if (next) {
+            // On open: capture the trigger and pull focus into the sheet so
+            // keyboard/SR users don't land on the inert list underneath.
+            if (
+                !created.trigger &&
+                document.activeElement instanceof HTMLElement
+            )
+                created.trigger = document.activeElement
+            next.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+        } else {
+            // On close (element removed): restore focus to the trigger.
+            const trigger = created.trigger
+            created.trigger = null
+            if (trigger && trigger.isConnected) trigger.focus()
+        }
+    }
+    overlayStates.set(ctx, created)
+    return created
 }
 
 export function uploaderPanel(ctx: UploaderContext): TemplateResult {

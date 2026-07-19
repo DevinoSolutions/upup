@@ -468,16 +468,14 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
 
     readonly uploadAnnouncement = computed(() => {
         const tr = this.store.translations()
-        switch (this.store.uploadStatus()) {
-            case UploadStatus.UPLOADING:
-                return tr.announceUploadStarted
-            case UploadStatus.SUCCESSFUL:
-                return tr.announceUploadComplete
-            case UploadStatus.FAILED:
-                return tr.announceUploadFailed
-            default:
-                return ''
-        }
+        const status = this.store.uploadStatus()
+        return status === UploadStatus.UPLOADING
+            ? tr.announceUploadStarted
+            : status === UploadStatus.SUCCESSFUL
+              ? tr.announceUploadComplete
+              : status === UploadStatus.FAILED
+                ? tr.announceUploadFailed
+                : ''
     })
 
     // ── Drag handlers ──────────────────────────────────────────────────────────

@@ -461,7 +461,7 @@ export class UpupStore {
     flagDriveDropRejected(source: FileSource): void {
         const key: keyof UiTranslations | undefined =
             DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
-        const label = key ? this.translations()[key] : String(source)
+        const label = key ? this.translations()[key] : source
         this.controller.transientUi.flagDropRejected(label)
     }
 

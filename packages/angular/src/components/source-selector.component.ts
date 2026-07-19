@@ -394,6 +394,9 @@ export class SourceSelectorComponent {
                                     writable: true,
                                 })
                             } catch {
+                                // upup-catch: defineProperty can fail on exotic
+                                // File objects — fall back to plain assignment
+                                // for relativePath
                                 Object.assign(file, { relativePath: newPath })
                             }
                             collectedFiles.push(file)

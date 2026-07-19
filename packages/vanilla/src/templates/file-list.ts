@@ -162,7 +162,7 @@ export function fileList(ctx: UploaderContext): TemplateResult {
         isSingle && !!orderedFiles[0] && leavingFileIds.has(orderedFiles[0].id)
     // Quiet completion: a successful run shows ONLY the checkmark overlay.
     const quietDone =
-        !!quietCompletion && uploadStatus === UploadStatus.SUCCESSFUL
+        quietCompletion && uploadStatus === UploadStatus.SUCCESSFUL
     const canAddMore =
         limit > 1 &&
         ctx.core.files.size < limit &&

@@ -389,10 +389,20 @@ export default function useUploaderController(
     // reduced motion; the panel writes the snapshot as `data-motion` and the
     // shared CSS gates every `upup-fx-*` rule on it. `on` is the SSR/pre-mount
     // fallback (matches the gate's own default before matchMedia is read).
-    const getMotionServerSnapshot = useCallback(() => 'on' as MotionMode, [])
+    const getMotionServerSnapshot = useCallback((): MotionMode => 'on', [])
+    const subscribeMotionGate = useCallback(
+        (listener: () => void) =>
+            controller ? controller.motionGate.subscribe(listener) : () => {},
+        [controller],
+    )
+    const getMotionSnapshot = useCallback(
+        (): MotionMode =>
+            controller ? controller.motionGate.getSnapshot() : 'on',
+        [controller],
+    )
     const motionMode = useSyncExternalStore(
-        controller?.motionGate.subscribe ?? (() => () => {}),
-        controller?.motionGate.getSnapshot ?? getMotionServerSnapshot,
+        subscribeMotionGate,
+        getMotionSnapshot,
         getMotionServerSnapshot,
     )
 
@@ -405,9 +415,21 @@ export default function useUploaderController(
         () => EMPTY_TRANSIENT_UI,
         [],
     )
+    const subscribeTransientUi = useCallback(
+        (listener: () => void) =>
+            controller ? controller.transientUi.subscribe(listener) : () => {},
+        [controller],
+    )
+    const getTransientUiSnapshot = useCallback(
+        () =>
+            controller
+                ? controller.transientUi.getSnapshot()
+                : EMPTY_TRANSIENT_UI,
+        [controller],
+    )
     const transientUi = useSyncExternalStore(
-        controller?.transientUi.subscribe ?? (() => () => {}),
-        controller?.transientUi.getSnapshot ?? getTransientUiServerSnapshot,
+        subscribeTransientUi,
+        getTransientUiSnapshot,
         getTransientUiServerSnapshot,
     )
 

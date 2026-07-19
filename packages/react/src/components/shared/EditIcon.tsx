@@ -6,7 +6,11 @@ import React from 'react'
  * of the path so the three edit buttons stay byte-identical and the mandatory
  * bundle carries the markup once.
  */
-export default function EditIcon({ className }: { className?: string }) {
+export default function EditIcon({
+    className,
+}: {
+    className?: string
+}): React.JSX.Element {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"

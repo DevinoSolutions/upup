@@ -15,7 +15,10 @@
    */
   let { stream }: { stream: MediaStream } = $props()
 
-  const barEls: Array<HTMLSpanElement | null> = new Array(BAR_COUNT).fill(null)
+  const barEls: Array<HTMLSpanElement | null> = Array.from(
+    { length: BAR_COUNT },
+    () => null,
+  )
   let raf = 0
   let audioCtx: AudioContext | null = null
   let sourceNode: MediaStreamAudioSourceNode | null = null

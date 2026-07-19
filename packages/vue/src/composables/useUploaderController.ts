@@ -286,7 +286,7 @@ export default function useUploaderController(
     function flagDriveDropRejected(source: FileSource) {
         const key: keyof UiTranslations | undefined =
             DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
-        const label = key ? resolved.translations[key] : String(source)
+        const label = key ? resolved.translations[key] : source
         controller.transientUi.flagDropRejected(label)
     }
 

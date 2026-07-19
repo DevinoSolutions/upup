@@ -32,7 +32,13 @@ export function useSourceViewHeaderExtra(): Writable<HTMLElement | null> | null 
  * children of the host — matching React's createPortal / Vue's <Teleport>,
  * which insert the extras as direct siblings of the Back button.
  */
-export function portal(node: HTMLElement, target: HTMLElement | null) {
+export function portal(
+    node: HTMLElement,
+    target: HTMLElement | null,
+): {
+    update(t: HTMLElement | null): void
+    destroy(): void
+} {
     function mount(t: HTMLElement | null) {
         if (t) t.appendChild(node)
     }

@@ -21,7 +21,7 @@ export interface MotionGateParams {
         | undefined
 }
 
-export interface MotionGate extends ObservableController<MotionMode> {}
+export type MotionGate = ObservableController<MotionMode>
 
 const REDUCE_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -44,7 +44,9 @@ export function createMotionGate({
 
     const onChange = (e: { matches: boolean }) => {
         reduced = e.matches
-        listeners.forEach(l => l())
+        listeners.forEach(l => {
+            l()
+        })
     }
 
     if (matchMedia) {

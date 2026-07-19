@@ -27,7 +27,7 @@ function start(stream: MediaStream, host: HTMLElement): void {
     source.connect(analyser)
     const data = new Uint8Array(analyser.frequencyBinCount)
     const bars = Array.from(host.querySelectorAll<HTMLSpanElement>('span'))
-    let raf = 0
+    let raf: number
     const tick = () => {
         analyser.getByteFrequencyData(data)
         for (let i = 0; i < bars.length; i++) {

@@ -112,12 +112,14 @@ export default memo(function FileList() {
     // When the add-more source surface is up (overlay open, or a source chosen
     // while files exist), this list stays mounted but dimmed and inert behind it.
     const dimmed = sourceOverlayOpen || !!activeSource
-    const heroLeaving = isSingle && leavingFileIds.has(orderedFiles[0]!.id)
+    const heroFile = isSingle ? orderedFiles[0] : undefined
+    const heroLeaving =
+        heroFile !== undefined && leavingFileIds.has(heroFile.id)
     // Quiet completion (item 7): a successful run under `quietCompletion` shows
     // ONLY the checkmark overlay — Done/add-more/CTA are all suppressed and the
     // host takes over via the completion callbacks. Wins over 6a's continue flow.
     const quietDone =
-        !!quietCompletion && uploadStatus === UploadStatus.SUCCESSFUL
+        quietCompletion && uploadStatus === UploadStatus.SUCCESSFUL
     const canAddMore =
         limit > 1 &&
         files.size < limit &&
@@ -194,7 +196,7 @@ export default memo(function FileList() {
                     slotClasses.fileListContainer,
                 )}
             >
-                {isSingle ? (
+                {heroFile ? (
                     // Single-file HERO: one visual fills the content area.
                     <div
                         role="list"
@@ -204,7 +206,7 @@ export default memo(function FileList() {
                                 'upup-animate-fx-exit upup-overflow-hidden',
                         )}
                     >
-                        <FileHero file={orderedFiles[0]!} />
+                        <FileHero file={heroFile} />
                     </div>
                 ) : shouldVirtualize ? (
                     // Virtualized list: only renders visible FileItems

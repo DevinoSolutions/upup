@@ -326,7 +326,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
 
     get quietDone(): boolean {
         return (
-            !!this.store.uiProps.quietCompletion &&
+            this.store.uiProps.quietCompletion &&
             this.store.uploadStatus() === UploadStatus.SUCCESSFUL
         )
     }
@@ -412,9 +412,11 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     }
 
     get heroBranchClass(): string {
+        const first = this.orderedFiles[0]
         const heroLeaving =
             this.isSingle &&
-            this.store.leavingFileIds().has(this.orderedFiles[0]!.id)
+            first !== undefined &&
+            this.store.leavingFileIds().has(first.id)
         return cn(
             'upup-animate-fx-enter upup-flex upup-min-h-0 upup-flex-1 upup-flex-col',
             heroLeaving && 'upup-animate-fx-exit upup-overflow-hidden',
