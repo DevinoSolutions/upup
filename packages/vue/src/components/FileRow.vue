@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { cn } from '@upupjs/core/internal'
-import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
-import { fileGetIsImage } from '@upupjs/core/internal'
+import {
+    UploadStatus,
+    fileTypeIconName,
+    type IconName,
+    type UploadFile,
+    type Translations,
+} from '@upupjs/core'
+import { fileGetExtension, fileGetIsImage } from '@upupjs/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -10,8 +16,43 @@ import {
     useUploaderTheme,
     useUploaderUploadControls,
 } from '../context/uploader-context'
+import Icon from './Icon'
 import ProgressBar from './shared/ProgressBar.vue'
 import FileSuccessCheck from './shared/FileSuccessCheck.vue'
+
+const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'])
+
+/**
+ * Per-category thumbnail treatment for non-media rows so pdf / archive / audio /
+ * generic no longer all read as the same blue doc: a distinct gradient tint plus
+ * the type-specific glyph (audio uses the waveform icon; the rest use the
+ * file-<ext> registry icon, falling back to the generic file glyph).
+ */
+function nonMediaThumb(
+    type: string,
+    name: string,
+): { gradient: string; icon: IconName } {
+    const ext = fileGetExtension(type, name)
+    if (type.startsWith('audio/'))
+        return {
+            gradient: 'linear-gradient(135deg,#a855f7,#6366f1)',
+            icon: 'audio',
+        }
+    if (ext === 'pdf' || type === 'application/pdf')
+        return {
+            gradient: 'linear-gradient(135deg,#f43f5e,#ec4899)',
+            icon: 'file-pdf',
+        }
+    if (ARCHIVE_EXTENSIONS.has(ext) || type.includes('zip'))
+        return {
+            gradient: 'linear-gradient(135deg,#f59e0b,#f97316)',
+            icon: fileTypeIconName(ext === 'zip' ? 'zip' : ext),
+        }
+    return {
+        gradient: 'linear-gradient(135deg,#0ea5e9,#6366f1)',
+        icon: fileTypeIconName(ext),
+    }
+}
 
 /**
  * Compact list-mode row (spec §4 state 3, states-tour-v2.html "multiple files").
@@ -38,7 +79,20 @@ const {
     upload: { filesProgressMap },
 } = useUploaderUploadControls()
 
-const isImage = computed(() => fileGetIsImage(props.file.type ?? ''))
+const type = computed(() => props.file.type ?? '')
+const isImage = computed(() => fileGetIsImage(type.value))
+const isVideo = computed(() => type.value.startsWith('video/'))
+const isSuccessful = computed(
+    () => props.file.status === UploadStatus.SUCCESSFUL,
+)
+const thumb = computed(() => nonMediaThumb(type.value, props.file.name))
+const thumbStyle = computed(() =>
+    isImage.value
+        ? { backgroundImage: `url(${props.file.url ?? ''})` }
+        : isVideo.value
+          ? undefined
+          : { background: thumb.value.gradient },
+)
 const progress = computed(() => {
     const p = filesProgressMap.value[props.file.id]
     const loaded = p?.loaded ?? NaN
@@ -48,12 +102,6 @@ const progress = computed(() => {
     // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
     return Number.isFinite(pct) ? pct : 0
 })
-
-const rowStyle = computed(() =>
-    isImage.value
-        ? { backgroundImage: `url(${props.file.url ?? ''})` }
-        : { background: 'linear-gradient(135deg,#0ea5e9,#7c3aed)' },
-)
 
 function formatFileSize(bytes: number | undefined, t: Translations): string {
     if (!bytes || bytes === 0) return t.zeroBytes
@@ -71,48 +119,56 @@ function onRemove(e: MouseEvent) {
 
 <template>
     <div
-        :class="cn(
-            'upup-fx-hover-lift upup-flex upup-items-center upup-gap-3 upup-rounded-xl upup-px-3 upup-py-2.5 upup-ring-1',
-            dark
-                ? 'upup-bg-white/[0.04] upup-ring-white/[0.07]'
-                : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
-        )"
+        :class="
+            cn(
+                'upup-fx-hover-lift upup-flex upup-w-full upup-items-center upup-gap-3 upup-rounded-xl upup-px-3 upup-py-2.5 upup-ring-1',
+                dark
+                    ? 'upup-bg-white/[0.04] upup-ring-white/[0.07]'
+                    : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
+            )
+        "
     >
         <div
-            class="upup-flex upup-h-10 upup-w-10 upup-flex-none upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-[9px] upup-bg-center upup-bg-cover upup-bg-no-repeat"
-            :style="rowStyle"
+            class="upup-relative upup-flex upup-h-10 upup-w-10 upup-flex-none upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-[9px] upup-bg-center upup-bg-cover upup-bg-no-repeat"
+            :style="thumbStyle"
         >
-            <svg
-                v-if="!isImage"
-                viewBox="0 0 24 24"
-                width="18"
-                height="18"
-                fill="none"
-                stroke="rgba(255,255,255,0.9)"
-                stroke-width="1.6"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-            >
-                <path d="M6 3h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-                <path d="M14 3v4h4" />
-            </svg>
+            <!-- Real first-frame video thumbnail (no controls chrome). Uses the
+                 local object URL, which persists through upload (updateFile keeps
+                 `url`), so the preview survives a completed run. -->
+            <video
+                v-if="isVideo"
+                :src="file.url ?? ''"
+                muted
+                playsinline
+                preload="metadata"
+                class="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+            />
+            <Icon
+                v-if="!isImage && !isVideo"
+                :name="thumb.icon"
+                :size="20"
+                class="upup-text-white"
+            />
         </div>
 
         <div class="upup-flex upup-min-w-0 upup-flex-1 upup-flex-col upup-gap-0.5">
             <div
-                :class="cn(
-                    'upup-truncate upup-text-[13px]',
-                    dark ? 'upup-text-[#e2e8f0]' : 'upup-text-gray-900',
-                )"
+                :class="
+                    cn(
+                        'upup-truncate upup-text-[13px]',
+                        dark ? 'upup-text-[#e2e8f0]' : 'upup-text-gray-900',
+                    )
+                "
             >
                 {{ file.name }}
             </div>
             <div
-                :class="cn(
-                    'upup-text-[12px]',
-                    dark ? 'upup-text-[#94a3b8]' : 'upup-text-gray-500',
-                )"
+                :class="
+                    cn(
+                        'upup-text-[12px]',
+                        dark ? 'upup-text-[#94a3b8]' : 'upup-text-gray-500',
+                    )
+                "
             >
                 {{ formatFileSize(file.size, tr) }}
             </div>
@@ -126,27 +182,32 @@ function onRemove(e: MouseEvent) {
         </div>
 
         <FileSuccessCheck
-            v-if="file.status === UploadStatus.SUCCESSFUL"
+            v-if="isSuccessful"
             :index="index ?? 0"
-            :size="20"
+            :size="22"
             class="upup-flex-none"
         />
 
+        <!-- Once a file has uploaded successfully its delete control is gone —
+             the completion check is the only trailing affordance. -->
         <button
-            :class="cn(
-                'upup-fx-remove upup-fx-press upup-flex upup-h-[26px] upup-w-[26px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[7px]',
-                dark
-                    ? 'upup-text-[#64748b] hover:upup-bg-white/[0.06]'
-                    : 'upup-text-gray-500 hover:upup-bg-black/[0.06]',
-                'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-            )"
+            v-if="!isSuccessful"
+            :class="
+                cn(
+                    'upup-fx-remove upup-fx-press upup-flex upup-h-8 upup-w-8 upup-flex-none upup-items-center upup-justify-center upup-rounded-lg',
+                    dark
+                        ? 'upup-text-[#64748b] hover:upup-bg-white/[0.06]'
+                        : 'upup-text-gray-500 hover:upup-bg-black/[0.06]',
+                    'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                )
+            "
             @click="onRemove"
             type="button"
             :disabled="!!progress"
             :aria-label="tr.removeFile"
             data-testid="upup-file-remove"
         >
-            <component :is="FileDeleteIcon" class="upup-h-[15px] upup-w-[15px]" />
+            <component :is="FileDeleteIcon" class="upup-h-5 upup-w-5" />
         </button>
     </div>
 </template>

@@ -18,8 +18,10 @@ const props = withDefaults(
         file: UploadFile
         /** Position in the sorted list — drives the entrance stagger. */
         index?: number
+        /** True when the panel forces the row list (tiles don't fit one row). */
+        forcedList?: boolean
     }>(),
-    { index: 0 },
+    { index: 0, forcedList: false },
 )
 
 const { core } = useUploaderRuntime()
@@ -64,7 +66,11 @@ function onStopPropagation(e: MouseEvent) {
         )"
         :style="leaving ? undefined : { animationDelay: `${Math.min(index ?? 0, 8) * 40}ms` }"
     >
-        <FileRow v-if="viewMode === 'list'" :file="file" :index="index ?? 0" />
+        <FileRow
+            v-if="viewMode === 'list' || forcedList"
+            :file="file"
+            :index="index ?? 0"
+        />
         <template v-else>
             <FilePreview
                 :file-name="file.name"

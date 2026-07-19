@@ -10,14 +10,22 @@ const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
 <template>
     <div
         data-testid="upup-source-view"
-        :class="cn(
-            'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
-            {
-                'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]': isLoading && dark,
-                [slotClasses.sourceView!]: !isLoading && !!slotClasses.sourceView,
-                [slotClasses.driveLoading!]: isLoading && !!slotClasses.driveLoading,
-            },
-        )"
+        :class="
+            cn(
+                // Transparent by design: the view body sits directly on the
+                // panel's gradient chrome (the old black/[0.075] wash read as
+                // a mismatched gray block over the light gradient).
+                'upup-flex upup-items-center upup-justify-center upup-overflow-hidden',
+                {
+                    'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]':
+                        isLoading && dark,
+                    [slotClasses.sourceView ?? '']:
+                        !isLoading && !!slotClasses.sourceView,
+                    [slotClasses.driveLoading ?? '']:
+                        isLoading && !!slotClasses.driveLoading,
+                },
+            )
+        "
         v-bind="$attrs"
     >
         <slot />

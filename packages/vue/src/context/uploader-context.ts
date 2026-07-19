@@ -141,6 +141,7 @@ export type ContextProps = RequiredDefined<
     | 'enablePaste'
     | 'onError'
     | 'showBranding'
+    | 'quietCompletion'
     | 'className'
     | 'style'
     | 'disableDragDrop'

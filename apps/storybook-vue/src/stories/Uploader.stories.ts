@@ -89,6 +89,10 @@ export const Parity: Story = {
         maxFiles: 3,
         showBranding: false,
         themeMode: 'light',
+        // The image editor is react/preact-only (other frameworks stub it), so
+        // its edit-button DOM stays OUT of the cross-framework parity contract.
+        // Pin it off here even though core now defaults it on.
+        imageEditor: false,
     } as any,
 }
 
