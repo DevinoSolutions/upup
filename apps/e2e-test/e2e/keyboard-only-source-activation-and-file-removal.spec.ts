@@ -44,7 +44,7 @@ test.describe('Keyboard-only source activation and file removal', () => {
         await expect(page.locator('[data-testid="upup-root"]')).toBeVisible()
     })
 
-    test('a keyboard-only user can Tab to the Link source, open its view with Enter, and leave it again with Space on Cancel', async ({
+    test('a keyboard-only user can Tab to the Link source, open its view with Enter, and leave it again with Space on Back', async ({
         page,
     }) => {
         const linkSource = page.getByRole('button', { name: 'Link' })
@@ -61,12 +61,13 @@ test.describe('Keyboard-only source activation and file removal', () => {
         await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
 
         // Space must also activate (native button contract) — leave the view
-        // through its Cancel control. Opening the view unmounted the focused
-        // source button, so the walk restarts from the document top.
-        const cancel = page.getByRole('button', { name: 'Cancel' })
-        await tabUntilFocused(page, cancel)
-        await expect(cancel).toBeFocused()
-        await cancel.press('Space')
+        // through its "Back" control (redesign: overlayBack, formerly "Cancel").
+        // Opening the view unmounted the focused source button, so the walk
+        // restarts from the document top.
+        const back = page.getByRole('button', { name: 'Back' })
+        await tabUntilFocused(page, back)
+        await expect(back).toBeFocused()
+        await back.press('Space')
 
         await expect(page.getByPlaceholder('Enter file url')).not.toBeVisible()
         await expect(linkSource).toBeVisible()
@@ -99,8 +100,9 @@ test.describe('Keyboard-only source activation and file removal', () => {
             mimeType: 'text/plain',
             buffer: FILE_2KB,
         })
+        // Single file → hero (redesign).
         await expect(
-            page.locator('[data-testid="upup-file-item"]'),
+            page.locator('[data-testid="upup-file-hero"]'),
         ).toBeVisible()
 
         // The remove button is pointer-revealed visually but stays in the
@@ -113,7 +115,7 @@ test.describe('Keyboard-only source activation and file removal', () => {
         await remove.press('Enter')
 
         await expect(
-            page.locator('[data-testid="upup-file-item"]'),
+            page.locator('[data-testid="upup-file-hero"]'),
         ).not.toBeVisible()
     })
 })

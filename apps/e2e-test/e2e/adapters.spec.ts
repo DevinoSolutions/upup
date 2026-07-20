@@ -45,7 +45,8 @@ test.describe('Adapter switching', () => {
     test('Cancel button returns to main view', async ({ page }) => {
         await page.click('[data-testid="upup-source-url"]')
         await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
-        await page.getByText('Cancel').click()
+        // Redesign: the source view returns via "Back" (overlayBack), not "Cancel".
+        await page.getByRole('button', { name: 'Back' }).click()
         await expect(
             page.locator('[data-testid="upup-dropzone"]'),
         ).toBeVisible()
@@ -74,8 +75,11 @@ test.describe('URL upload', () => {
             'https://example.com/sample.txt',
         )
         await page.click('button:has-text("Fetch")')
+        // A single fetched file renders the hero (redesign); dual selector.
         await expect(
-            page.locator('[data-testid="upup-file-item"]'),
+            page.locator(
+                '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+            ),
         ).toBeVisible({ timeout: 5000 })
     })
 })
@@ -129,8 +133,12 @@ test.describe('Multi-file (default limit = 10)', () => {
             .locator('[data-testid="upup-file-remove"]')
             .first()
             .click({ force: true })
+        // Removing one of two leaves a SINGLE file, which re-renders as the hero
+        // (not a card-list item) — count the remaining file across both surfaces.
         await expect(
-            page.locator('[data-testid="upup-file-item"]'),
+            page.locator(
+                '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+            ),
         ).toHaveCount(1)
     })
 })

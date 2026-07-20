@@ -11,35 +11,35 @@
         "path": "packages/react/dist/**/*.js",
         "gzip": false,
         "brotli": false,
-        "limit": "430 KB"
+        "limit": "460 KB"
     },
     {
         "name": "@upupjs/vue",
         "path": "packages/vue/dist/**/*.js",
         "gzip": false,
         "brotli": false,
-        "limit": "460 KB"
+        "limit": "490 KB"
     },
     {
         "name": "@upupjs/svelte",
         "path": "packages/svelte/dist/**/*.{js,svelte}",
         "gzip": false,
         "brotli": false,
-        "limit": "370 KB"
+        "limit": "400 KB"
     },
     {
         "name": "@upupjs/vanilla",
         "path": "packages/vanilla/dist/**/*.js",
         "gzip": false,
         "brotli": false,
-        "limit": "320 KB"
+        "limit": "360 KB"
     },
     {
         "name": "@upupjs/angular",
         "path": "packages/angular/dist/**/*.mjs",
         "gzip": false,
         "brotli": false,
-        "limit": "590 KB"
+        "limit": "650 KB"
     },
     {
         "name": "@upupjs/preact",

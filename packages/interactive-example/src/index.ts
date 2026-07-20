@@ -19,6 +19,7 @@ export {
 } from './sidebar/primitives'
 export type {
     InteractiveExampleProps,
+    AiFeedbackEvent,
     CategoryId,
     PropId,
     PrimitiveKind,

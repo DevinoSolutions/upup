@@ -15,11 +15,11 @@ import { isPlatformBrowser } from '@angular/common'
 import { cn } from '@upupjs/core/internal'
 import type { CoreEvents } from '@upupjs/core/internal'
 import { UpupStore } from './upup-store.service'
+import { SourceViewHeaderExtraService } from './context/source-view-header-extra.service'
 import type { UploaderProps } from './shared/types'
 import type { UploadFile } from '@upupjs/core'
 import { UploaderPanelComponent } from './components/uploader-panel.component'
 import { ImageEditorStubComponent } from './components/image-editor-stub.component'
-import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 // The event column is typed against the CoreEvents catalog (F-723): a retired
 // or misspelled event name in this table is now a compile error, not a
@@ -48,7 +48,7 @@ const FORWARDED: ReadonlyArray<
 @Component({
     selector: 'upup-uploader',
     standalone: true,
-    providers: [UpupStore],
+    providers: [UpupStore, SourceViewHeaderExtraService],
     imports: [UploaderPanelComponent, ImageEditorStubComponent],
     template: `
         <div
@@ -75,64 +75,6 @@ const FORWARDED: ReadonlyArray<
 
                         @if (store.uiProps?.imageEditor?.enabled) {
                             <upup-image-editor-stub />
-                        }
-
-                        @if (
-                            !store.uiProps?.mini &&
-                            store.uiProps?.showBranding !== false
-                        ) {
-                            <div
-                                data-testid="upup-branding"
-                                class="upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row"
-                            >
-                                <a
-                                    href="https://useupup.com/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="upup-flex upup-items-center upup-gap-[5px]"
-                                >
-                                    @if (store.isDark?.()) {
-                                        <img
-                                            [src]="logoDark"
-                                            width="61"
-                                            height="13"
-                                            alt="logo-dark"
-                                        />
-                                    } @else {
-                                        <img
-                                            [src]="logoLight"
-                                            width="61"
-                                            height="13"
-                                            alt="logo-light"
-                                        />
-                                    }
-                                </a>
-                                <a
-                                    href="https://devino.ca/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                                >
-                                    <span [class]="builtByClass()">
-                                        {{ store.translations?.().builtBy }}
-                                    </span>
-                                    @if (store.isDark?.()) {
-                                        <img
-                                            [src]="devinoDark"
-                                            width="61"
-                                            height="13"
-                                            alt="logo-dark"
-                                        />
-                                    } @else {
-                                        <img
-                                            [src]="devinoLight"
-                                            width="61"
-                                            height="13"
-                                            alt="logo-light"
-                                        />
-                                    }
-                                </a>
-                            </div>
                         }
                     </section>
                 </div>
@@ -161,12 +103,6 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
     storeReady = false
 
     @ViewChild('fileInput') fileInputRef?: ElementRef<HTMLInputElement>
-
-    // Expose logo data-URIs to the template
-    readonly logoDark = logoDark
-    readonly logoLight = logoLight
-    readonly devinoDark = devinoDark
-    readonly devinoLight = devinoLight
 
     @Input() set config(value: UploaderProps) {
         this.store.setConfig(value)
@@ -238,8 +174,10 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
         const slotOverrides = this.store.slotOverrides?.() ?? {}
 
         return cn(
-            `upup-shadow-wrapper upup-relative ${
-                dark ? 'upup-bg-[#232323]' : 'upup-bg-white'
+            `upup-panel-sheen upup-relative ${
+                dark
+                    ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
+                    : 'upup-bg-gradient-to-b upup-from-white upup-to-slate-50 upup-ring-1 upup-ring-slate-200 upup-shadow-[0_20px_60px_-24px_rgba(15,23,42,0.18)]'
             } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
             {
                 [slotOverrides['containerFull'] ?? '']: !!(
@@ -249,16 +187,6 @@ export class UpupUploaderComponent implements OnInit, AfterViewInit {
                 [slotOverrides['containerMini'] ?? '']: !!(
                     slotOverrides['containerMini'] && mini
                 ),
-            },
-        )
-    }
-
-    builtByClass(): string {
-        return cn(
-            'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-            {
-                'upup-text-gray-300 dark:upup-text-gray-300':
-                    this.store.isDark?.() ?? false,
             },
         )
     }

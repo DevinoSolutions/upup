@@ -10,6 +10,7 @@ import {
     type ReactNode,
 } from 'react'
 import type { FileSource, ResolvedImageEditorOptions } from '@upupjs/core'
+import type { MotionMode } from '@upupjs/core/internal'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -51,6 +52,7 @@ export type ContextProps = RequiredDefined<
     | 'onError'
     | 'icons'
     | 'showBranding'
+    | 'quietCompletion'
     | 'className'
     | 'style'
     | 'disableDragDrop'
@@ -68,6 +70,8 @@ export type ContextProps = RequiredDefined<
 export type ContextRuntime = BaseContextRuntime & {
     /** @deprecated Use openFilePicker() instead */
     inputRef: RefObject<HTMLInputElement | null>
+    /** Resolved `data-motion` value ('on' | 'off') from the core motion gate. */
+    motionMode: MotionMode
 }
 
 export type ContextSource = Omit<BaseContextSource, 'setActiveSource'> & {
@@ -76,7 +80,12 @@ export type ContextSource = Omit<BaseContextSource, 'setActiveSource'> & {
 
 export type ContextI18n = BaseContextI18n
 
-export type ContextFiles = BaseContextFiles
+export type ContextFiles = BaseContextFiles & {
+    /** Transient: file ids currently playing their exit animation. Read by
+     *  FileList (hero) and FileItem (cards) to render `upup-fx-exit`. Sourced
+     *  from the core transient-UI store (deferred removal). */
+    leavingFileIds: ReadonlySet<string>
+}
 
 export type ContextUploadControls = Omit<
     BaseContextUploadControls,
@@ -87,9 +96,24 @@ export type ContextUploadControls = Omit<
 
 export type ContextView = Omit<
     BaseContextView,
-    'setIsAddingMore' | 'setViewMode'
+    'isAddingMore' | 'setIsAddingMore' | 'setViewMode'
 > & {
-    setIsAddingMore: Dispatch<SetStateAction<boolean>>
+    /** Add-more source overlay: source surface mounted above the dimmed,
+     *  still-mounted file list. Sourced from the core transient-UI store
+     *  (replaces the retired `isAddingMore` flag in the React canon). */
+    sourceOverlayOpen: boolean
+    /** Overlay is playing its reverse close-slide before it unmounts. */
+    sourceOverlayClosing: boolean
+    openSourceOverlay: () => void
+    closeSourceOverlay: () => void
+    /** Human provider label whose read-only picker just rejected an OS drop —
+     *  drives the drop-rejection toast. Null when no rejection is showing.
+     *  Auto-clears via the core transient-UI store's 3s window. */
+    dropRejected: string | null
+    /** Raise the drop-rejection toast for a read-only drive source (resolves the
+     *  provider label, then flags the core store). Wired to core's
+     *  DragDropController.onReadonlyDropRejected. */
+    flagDriveDropRejected: (source: FileSource) => void
     setViewMode: Dispatch<SetStateAction<'grid' | 'list'>>
 }
 
@@ -146,6 +170,7 @@ export function UploaderContextProvider({
             inputRef: value.inputRef,
             openFilePicker: value.openFilePicker,
             isOnline: value.isOnline,
+            motionMode: value.motionMode,
         }),
         [
             value.core,
@@ -153,6 +178,7 @@ export function UploaderContextProvider({
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- see above
             value.inputRef,
             value.isOnline,
+            value.motionMode,
             value.mode,
             value.openFilePicker,
             value.serverUrl,
@@ -181,6 +207,7 @@ export function UploaderContextProvider({
     const files = useMemo<ContextFiles>(
         () => ({
             files: value.files,
+            leavingFileIds: value.leavingFileIds,
             setFiles: value.setFiles,
             replaceFiles: value.replaceFiles,
             resetState: value.resetState,
@@ -191,6 +218,7 @@ export function UploaderContextProvider({
             value.uploadFiles,
             value.replaceFiles,
             value.files,
+            value.leavingFileIds,
             value.handleFileRemove,
             value.resetState,
             value.setFiles,
@@ -216,14 +244,22 @@ export function UploaderContextProvider({
 
     const view = useMemo<ContextView>(
         () => ({
-            isAddingMore: value.isAddingMore,
-            setIsAddingMore: value.setIsAddingMore,
+            sourceOverlayOpen: value.sourceOverlayOpen,
+            sourceOverlayClosing: value.sourceOverlayClosing,
+            openSourceOverlay: value.openSourceOverlay,
+            closeSourceOverlay: value.closeSourceOverlay,
+            dropRejected: value.dropRejected,
+            flagDriveDropRejected: value.flagDriveDropRejected,
             viewMode: value.viewMode,
             setViewMode: value.setViewMode,
         }),
         [
-            value.isAddingMore,
-            value.setIsAddingMore,
+            value.sourceOverlayOpen,
+            value.sourceOverlayClosing,
+            value.openSourceOverlay,
+            value.closeSourceOverlay,
+            value.dropRejected,
+            value.flagDriveDropRejected,
             value.setViewMode,
             value.viewMode,
         ],
@@ -274,6 +310,7 @@ export function UploaderContextProvider({
             value.props.onIntegrationClick,
             value.props.resumable,
             value.props.showBranding,
+            value.props.quietCompletion,
             value.props.sources,
             value.props.style,
         ],

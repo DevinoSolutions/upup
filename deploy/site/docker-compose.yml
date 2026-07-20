@@ -1,0 +1,131 @@
+# One-compose site contract for dev.useupup.com.
+#
+# Three services: the landing site, the Mastra AI server that powers the Ask-AI
+# panel, and the playground. Dokploy/Traefik routes to the container ports over
+# its own network, so no host port mappings are declared (only `expose`).
+#
+# Values come from a `.env` file placed next to this compose file:
+#   - Build-time NEXT_PUBLIC_* args are inlined into the client bundles.
+#   - Runtime secrets are passed via bare LIST-FORM environment entries (`- VAR`)
+#     so an UNSET var stays UNSET in the container. This is deliberate: the S3_*
+#     and mastra ORIGIN_TOKEN_SECRET schemas are `z.string().min(1).optional()`,
+#     so materializing an EMPTY STRING (what `${VAR:-}` produces) fails min(1)
+#     and crashes the app at boot. Bare passthrough yields absent, not empty.
+# See README.md for the full env contract.
+
+services:
+    landing:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.landing
+            args:
+                NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
+                NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_API_KEY: ${NEXT_PUBLIC_GOOGLE_API_KEY:-}
+                NEXT_PUBLIC_GOOGLE_APP_ID: ${NEXT_PUBLIC_GOOGLE_APP_ID:-}
+                NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${NEXT_PUBLIC_ONEDRIVE_CLIENT_ID:-}
+                NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${NEXT_PUBLIC_DROPBOX_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:-}
+                NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY:-}
+                NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-}
+                NEXT_PUBLIC_POSTHOG_DATASET: ${NEXT_PUBLIC_POSTHOG_DATASET:-}
+                NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:-}
+                NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:-}
+                NEXT_PUBLIC_MASTRA_BASE_URL: ${NEXT_PUBLIC_MASTRA_BASE_URL:-}
+        # Bare passthrough (unset -> absent). S3_* are min(1).optional() — an
+        # empty string would crash boot; server-mode is disabled until set. The
+        # POSTHOG_DATASET / SMTP_* / SUPPORT_* vars are likewise min(1).optional()
+        # (support flow: src/lib/env.ts) — bare passthrough keeps unset as absent.
+        environment:
+            - NODE_ENV=production
+            - PORT=3000
+            - S3_BUCKET
+            - S3_REGION
+            - S3_KEY_ID
+            - S3_SECRET
+            - S3_ENDPOINT
+            - GOOGLE_CLIENT_ID
+            - GOOGLE_CLIENT_SECRET
+            - DROPBOX_CLIENT_ID
+            - DROPBOX_APP_SECRET
+            - ONEDRIVE_CLIENT_ID
+            - ONEDRIVE_CLIENT_SECRET
+            - UPUP_UPLOAD_TOKEN_SECRET
+            # Support/feedback flow + analytics dataset (all optional).
+            - POSTHOG_DATASET
+            - POSTHOG_E2E_TEST_PROJECT_ID
+            - SMTP_URL
+            - SUPPORT_EMAIL_TO
+            - SUPPORT_EMAIL_FROM
+        expose:
+            - '3000'
+        restart: unless-stopped
+
+    mastra:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.mastra
+        environment:
+            - NODE_ENV=production
+            # MUST bind 0.0.0.0 in a container — the app defaults to localhost.
+            - MASTRA_HOST=0.0.0.0
+            - PORT=4111
+            # LLM provider key for the default model (openrouter/anthropic/...).
+            - OPENROUTER_API_KEY
+            # Comma-separated CORS allowlist (the landing origin must be listed).
+            # Unset -> mastra's local-dev origin fallback.
+            - ALLOWED_ORIGINS
+            # ORIGIN_TOKEN_SECRET is intentionally omitted: mastra's schema is
+            # z.string().min(1).optional(), so auth stays DISABLED on dev. To
+            # enable it later, add a bare `- ORIGIN_TOKEN_SECRET` line and set a
+            # REAL value in the .env file (never an empty string).
+            - DAILY_REQUEST_CAP=${DAILY_REQUEST_CAP:-5000}
+            - RATE_LIMIT_CAPACITY=${RATE_LIMIT_CAPACITY:-30}
+            - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
+            # PostHog AI-tracing export (all optional, bare passthrough so unset
+            # stays absent). POSTHOG_KEY/HOST/E2E_* are min(1).optional() — an
+            # empty string would fail min(1); absent just disables the exporter.
+            # POSTHOG_DATASET picks the project: production | e2e | disabled.
+            - POSTHOG_DATASET
+            - POSTHOG_KEY
+            - POSTHOG_HOST
+            - POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN
+            - POSTHOG_E2E_TEST_PROJECT_HOST
+        expose:
+            - '4111'
+        restart: unless-stopped
+
+    playground:
+        build:
+            context: ../..
+            dockerfile: deploy/site/Dockerfile.playground
+            args:
+                NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
+                NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+                NEXT_PUBLIC_GOOGLE_API_KEY: ${NEXT_PUBLIC_GOOGLE_API_KEY:-}
+                NEXT_PUBLIC_GOOGLE_APP_ID: ${NEXT_PUBLIC_GOOGLE_APP_ID:-}
+                NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${NEXT_PUBLIC_ONEDRIVE_CLIENT_ID:-}
+                NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${NEXT_PUBLIC_DROPBOX_CLIENT_ID:-}
+                NEXT_PUBLIC_BOX_CLIENT_ID: ${NEXT_PUBLIC_BOX_CLIENT_ID:-}
+                NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT:-}
+                NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${NEXT_PUBLIC_UPUP_USE_REAL_STORAGE:-}
+        # Same bare-passthrough rules as landing — the playground mounts an
+        # /api/upup server-mode upload route reading the same S3_*/secret block.
+        environment:
+            - NODE_ENV=production
+            - PORT=3000
+            - S3_BUCKET
+            - S3_REGION
+            - S3_KEY_ID
+            - S3_SECRET
+            - S3_ENDPOINT
+            - GOOGLE_CLIENT_ID
+            - GOOGLE_CLIENT_SECRET
+            - DROPBOX_CLIENT_ID
+            - DROPBOX_APP_SECRET
+            - ONEDRIVE_CLIENT_ID
+            - ONEDRIVE_CLIENT_SECRET
+            - UPUP_UPLOAD_TOKEN_SECRET
+        expose:
+            - '3000'
+        restart: unless-stopped

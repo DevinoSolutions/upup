@@ -13,6 +13,7 @@ export type IconName =
     | 'upload'
     | 'loader'
     | 'x'
+    | 'chevron-left'
     | 'trash'
     | 'camera-rotate'
     | 'capture'
@@ -20,9 +21,12 @@ export type IconName =
     | 'layout-grid'
     | 'layout-list'
     | 'folder'
+    | 'folder-filled'
     | 'search'
     | 'user'
     | 'file'
+    | 'stacked-files'
+    | 'storage'
     | 'player-play'
     | 'player-pause'
     | FileTypeIconName
@@ -56,7 +60,7 @@ export const ICONS: Record<IconName, IconDef> = {
     'my-device': {
         viewBox: '0 0 32 32',
         defaultSize: 32,
-        className: 'upup-text-[#2275d7]',
+        className: 'upup-text-[#0ea5e9]',
         inner: `
   <path d="M8.45 22.087l-1.305-6.674h17.678l-1.572 6.674H8.45zm4.975-12.412l1.083 1.765a.823.823 0 00.715.386h7.951V13.5H8.587V9.675h4.838zM26.043 13.5h-1.195v-2.598c0-.463-.336-.75-.798-.75h-8.356l-1.082-1.766A.823.823 0 0013.897 8H7.728c-.462 0-.815.256-.815.718V13.5h-.956a.97.97 0 00-.746.37.972.972 0 00-.19.81l1.724 8.565c.095.44.484.755.933.755H24c.44 0 .824-.3.929-.727l2.043-8.568a.972.972 0 00-.176-.825.967.967 0 00-.753-.38z" fill="currentcolor" fill-rule="evenodd" />
 `,
@@ -182,6 +186,16 @@ export const ICONS: Record<IconName, IconDef> = {
   `,
     },
 
+    // Tabler 'chevron-left' — drive-browser "go back one folder" affordance.
+    'chevron-left': {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...STROKE_ATTRS },
+        inner: `
+    <path d="M15 6l-6 6l6 6" />
+  `,
+    },
+
     // Tabler 'trash' (matches react-icons/tb TbTrash exactly) — default for icons.FileDeleteIcon.
     trash: {
         viewBox: '0 0 24 24',
@@ -262,6 +276,17 @@ export const ICONS: Record<IconName, IconDef> = {
   `,
     },
 
+    // Tabler 'folder-filled' — solid folder glyph for the drive browser, tinted
+    // amber at the call site so folders read unmistakably as folders.
+    'folder-filled': {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...FILLED_ATTRS },
+        inner: `
+    <path d="M9 3a1 1 0 0 1 .608 .206l.1 .087l2.706 2.707h6.586a3 3 0 0 1 2.995 2.824l.005 .176v8a3 3 0 0 1 -2.824 2.995l-.176 .005h-14a3 3 0 0 1 -2.995 -2.824l-.005 -.176v-11a3 3 0 0 1 2.824 -2.995l.176 -.005h4z" />
+  `,
+    },
+
     search: {
         viewBox: '0 0 24 24',
         defaultSize: 24,
@@ -286,6 +311,31 @@ export const ICONS: Record<IconName, IconDef> = {
         attrs: { ...STROKE_ATTRS },
         inner: `
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+  `,
+    },
+
+    // Tabler 'files' — stacked pages, used for the "N files max" limit caption.
+    'stacked-files': {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...STROKE_ATTRS },
+        inner: `
+    <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+    <path d="M18 17h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h4l5 5v7a2 2 0 0 1 -2 2z" />
+    <path d="M16 17v2a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
+  `,
+    },
+
+    // Tabler 'database' — storage cylinder, used for the "SIZE each" limit caption
+    // (a drive/storage glyph — deliberately NOT a speedometer).
+    storage: {
+        viewBox: '0 0 24 24',
+        defaultSize: 24,
+        attrs: { ...STROKE_ATTRS },
+        inner: `
+    <ellipse cx="12" cy="6" rx="8" ry="3" />
+    <path d="M4 6v6a8 3 0 0 0 16 0v-6" />
+    <path d="M4 12v6a8 3 0 0 0 16 0v-6" />
   `,
     },
 

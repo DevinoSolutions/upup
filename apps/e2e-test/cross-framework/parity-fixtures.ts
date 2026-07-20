@@ -5,7 +5,21 @@ import type { NormalizedNode } from './parity-dom'
 import type { ParityVariant } from './framework-matrix'
 
 export type ParityComponent =
-    'fileIcon' | 'filePreview' | 'fileItem' | 'fileList' | 'sourceSelector'
+    | 'fileHero'
+    | 'fileIcon'
+    | 'filePreview'
+    | 'fileItem'
+    | 'fileList'
+    | 'sourceSelector'
+
+// Each variant captures only the components its file-count state renders, so
+// the per-variant map is PARTIAL: `default` (2 files → card list) has
+// fileItem/filePreview/fileIcon/fileList; `hero` (1 file → FileHero) has
+// fileHero/fileList and never renders the card-list components. sourceSelector
+// is captured at mount for every variant. The parity spec asserts only the
+// components a variant declares (see VARIANT_PLAN), so a partial map is exact,
+// not lossy.
+type VariantFixtures = Partial<Record<ParityComponent, NormalizedNode>>
 
 // Read the canonical trees at module load via fs rather than a static JSON
 // import: Node's ESM loader requires an import attribute (`with { type: 'json' }`)
@@ -14,12 +28,9 @@ export type ParityComponent =
 const HERE = dirname(fileURLToPath(import.meta.url))
 const fixtures = JSON.parse(
     readFileSync(join(HERE, 'parity-fixtures.json'), 'utf8'),
-) as Record<ParityVariant, Record<ParityComponent, NormalizedNode>>
+) as Record<ParityVariant, VariantFixtures>
 
-export const PARITY_FIXTURES: Record<
-    ParityVariant,
-    Record<ParityComponent, NormalizedNode>
-> = fixtures
+export const PARITY_FIXTURES: Record<ParityVariant, VariantFixtures> = fixtures
 
 /**
  * Self-liquidating exception list: a component whose canon (react) fixture is
@@ -37,9 +48,11 @@ export const KNOWN_DIVERGENCES: Partial<
     Record<ParityComponent, { assertOnly: string[]; reason: string }>
 > = {
     fileList: {
-        assertOnly: ['react', 'vanilla', 'preact'],
+        assertOnly: ['react', 'vanilla', 'preact', 'vue', 'svelte', 'angular'],
         reason:
-            'F-711 Add-More SVG icon missing in vue/svelte/angular header; ' +
-            'F-712 angular <upup-progress-bar> host element wraps extra node',
+            'F-711/F-712 healed by the T10 default-experience port in every ' +
+            'framework: angular now renders the Add-More SVG (DefaultAddMoreIcon) ' +
+            'and routes ProgressBar positioning classes onto the inner div so the ' +
+            'transparent <upup-progress-bar> host is unwrapped (no extra node).',
     },
 }

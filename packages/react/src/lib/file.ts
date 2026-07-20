@@ -1,8 +1,21 @@
 import pako from 'pako'
-import type { UploadFile } from '@upupjs/core'
+import type { Translations, UploadFile } from '@upupjs/core'
 import { fileAppendParams, revokeFileUrl } from '@upupjs/core/internal'
 
 export { fileAppendParams, revokeFileUrl }
+
+/** Human-readable file size using the localized unit labels. Shared by
+ *  FilePreview (grid tile), FileRow (list) and FileHero (single-file). */
+export function formatFileSize(
+    bytes: number | undefined,
+    tr: Translations,
+): string {
+    if (!bytes || bytes === 0) return tr.zeroBytes
+    const k = 1024
+    const sizes = [tr.bytes, tr.kb, tr.mb, tr.gb]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${Math.round((bytes / Math.pow(k, i)) * 10) / 10} ${sizes[i] ?? ''}`
+}
 export {
     bytesToSize,
     sizeToBytes,

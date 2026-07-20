@@ -10,7 +10,8 @@ export const behaviorCategory: CategoryDefinition = {
         {
             id: 'mini',
             label: 'Mini mode',
-            description: 'Compact layout — fixed 1-file limit, smaller dropzone',
+            description:
+                'Compact layout — fixed 1-file limit, smaller dropzone',
             primitive: 'bool',
             defaultValue: false,
         },
@@ -24,14 +25,16 @@ export const behaviorCategory: CategoryDefinition = {
         {
             id: 'disableDragDrop',
             label: 'Disable drag and drop',
-            description: 'Keep browse/source buttons active but ignore dragged files.',
+            description:
+                'Keep browse/source buttons active but ignore dragged files.',
             primitive: 'bool',
             defaultValue: false,
         },
         {
             id: 'allowPreview',
             label: 'Allow file preview',
-            description: 'Show a thumbnail preview next to each queued file. Visible after you pick a file.',
+            description:
+                'Show a thumbnail preview next to each queued file. Visible after you pick a file.',
             primitive: 'bool',
             defaultValue: true,
         },
@@ -43,9 +46,18 @@ export const behaviorCategory: CategoryDefinition = {
             defaultValue: true,
         },
         {
+            id: 'quietCompletion',
+            label: 'Quiet completion',
+            description:
+                'On success, show only a brief checkmark — no Done button or summary. Assumes your app takes over via the completion callbacks.',
+            primitive: 'bool',
+            defaultValue: false,
+        },
+        {
             id: 'isProcessing',
             label: 'Demo: show loading state',
-            description: 'Dims the file list so you can preview the loading state. Pick a file first — the overlay only renders alongside the queue.',
+            description:
+                'Dims the file list so you can preview the loading state. Pick a file first — the overlay only renders alongside the queue.',
             primitive: 'bool',
             defaultValue: false,
         },

@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Optional Props
 
-These are the stable v2-clean optional props.
+These are the stable optional props.
 
 | Prop           | Example                                                                                |
 | -------------- | -------------------------------------------------------------------------------------- |
@@ -16,6 +16,7 @@ These are the stable v2-clean optional props.
 | `folderUpload` | `folderUpload={{ allowDrop: true, showSelectFolderButton: true }}`                     |
 | `cors`         | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: ['http://localhost:3000'] }}` |
 | `maxRetries`   | `maxRetries={3}`                                                                       |
+| `animations`   | `animations={false}`                                                                   |
 | `resumable`    | `resumable={{ protocol: 'multipart', thresholdBytes: 5 * 1024 * 1024 }}`               |
 
 ## `sources`
@@ -126,6 +127,14 @@ Retries transient upload failures per file before surfacing a failed state.
 
 ```tsx
 <UpupUploader uploadEndpoint="/api/upload-token" maxRetries={3} />
+```
+
+## `animations`
+
+Decorative motion (entrance, hover, sheen, and success effects) is on by default. Set `animations={false}` to disable it — `prefers-reduced-motion` is honored automatically, and essential motion (progress width, focus rings, and the spinner) always runs.
+
+```tsx
+<UpupUploader animations={false} />
 ```
 
 ## `resumable`

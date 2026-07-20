@@ -264,4 +264,46 @@ describe('FileManager', () => {
             expect(fm.getFiles().size).toBe(1)
         })
     })
+
+    describe('insertion order', () => {
+        // Root cause of round-7 item 3: the UI renders files in Map iteration
+        // order, so a status transition must NOT move a file. updateFile replaces
+        // the value at the SAME key (in-place), and a JS Map preserves position on
+        // an existing-key set — a delete+set would move it to the end and reorder
+        // the grid. Pin both the append-order and the update-preserves-position
+        // guarantees so a future refactor can't silently reintroduce the sort bug.
+        it('addFiles appends in insertion order', async () => {
+            const fm = new FileManager({})
+            await fm.addFiles([makeNativeFile('zebra.jpg')])
+            await fm.addFiles([makeNativeFile('apple.jpg')])
+            await fm.addFiles([makeNativeFile('mango.jpg')])
+
+            expect([...fm.getFiles().values()].map(f => f.name)).toEqual([
+                'zebra.jpg',
+                'apple.jpg',
+                'mango.jpg',
+            ])
+        })
+
+        it('updateFile keeps a file at its original position (in-place, not delete+set)', async () => {
+            const fm = new FileManager({})
+            const [a, b, c] = await fm.addFiles([
+                makeNativeFile('zebra.jpg'),
+                makeNativeFile('apple.jpg'),
+                makeNativeFile('mango.jpg'),
+            ])
+
+            // Transition the MIDDLE file — it must stay in the middle.
+            fm.updateFile(b!.id, { status: UploadStatus.SUCCESSFUL })
+
+            const order = [...fm.getFiles().values()]
+            expect(order.map(f => f.name)).toEqual([
+                'zebra.jpg',
+                'apple.jpg',
+                'mango.jpg',
+            ])
+            expect(order.map(f => f.id)).toEqual([a!.id, b!.id, c!.id])
+            expect(order[1]!.status).toBe(UploadStatus.SUCCESSFUL)
+        })
+    })
 })

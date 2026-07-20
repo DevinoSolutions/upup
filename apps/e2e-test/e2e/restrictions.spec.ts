@@ -21,12 +21,19 @@ test.describe('File type restriction', () => {
             mimeType: 'text/plain',
             buffer: Buffer.from('not an image'),
         })
-        await expect(page.locator('[data-testid="upup-file-item"]')).not.toBeVisible()
+        await expect(
+            page.locator('[data-testid="upup-file-item"]'),
+        ).not.toBeVisible()
     })
 
     test('accepts an image file', async ({ page }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', VALID_IMAGE)
-        await expect(page.locator('[data-testid="upup-file-item"]')).toBeVisible()
+        // Single accepted file renders the hero (redesign); dual selector.
+        await expect(
+            page.locator(
+                '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+            ),
+        ).toBeVisible()
     })
 })
 
@@ -41,7 +48,9 @@ test.describe('File size restriction', () => {
             mimeType: 'image/png',
             buffer: Buffer.alloc(60 * 1024, 0x89), // 60 KB
         })
-        await expect(page.locator('[data-testid="upup-file-item"]')).not.toBeVisible()
+        await expect(
+            page.locator('[data-testid="upup-file-item"]'),
+        ).not.toBeVisible()
     })
 
     test('rejects a file under the minimum size (< 1 KB)', async ({ page }) => {
@@ -50,12 +59,19 @@ test.describe('File size restriction', () => {
             mimeType: 'image/png',
             buffer: Buffer.alloc(100, 0x89), // 100 bytes
         })
-        await expect(page.locator('[data-testid="upup-file-item"]')).not.toBeVisible()
+        await expect(
+            page.locator('[data-testid="upup-file-item"]'),
+        ).not.toBeVisible()
     })
 
     test('accepts a file within the size window', async ({ page }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', VALID_IMAGE)
-        await expect(page.locator('[data-testid="upup-file-item"]')).toBeVisible()
+        // Single accepted file renders the hero (redesign); dual selector.
+        await expect(
+            page.locator(
+                '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+            ),
+        ).toBeVisible()
     })
 })
 
@@ -66,18 +82,44 @@ test.describe('File count restriction', () => {
 
     test('accepts files up to the limit', async ({ page }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', [
-            { name: 'img1.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
-            { name: 'img2.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
+            {
+                name: 'img1.png',
+                mimeType: 'image/png',
+                buffer: Buffer.alloc(2 * 1024, 0x89),
+            },
+            {
+                name: 'img2.png',
+                mimeType: 'image/png',
+                buffer: Buffer.alloc(2 * 1024, 0x89),
+            },
         ])
-        await expect(page.locator('[data-testid="upup-file-item"]')).toHaveCount(2)
+        await expect(
+            page.locator('[data-testid="upup-file-item"]'),
+        ).toHaveCount(2)
     })
 
-    test('rejects a batch when more files are added than allowed', async ({ page }) => {
+    test('rejects a batch when more files are added than allowed', async ({
+        page,
+    }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', [
-            { name: 'img1.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
-            { name: 'img2.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
-            { name: 'img3.png', mimeType: 'image/png', buffer: Buffer.alloc(2 * 1024, 0x89) },
+            {
+                name: 'img1.png',
+                mimeType: 'image/png',
+                buffer: Buffer.alloc(2 * 1024, 0x89),
+            },
+            {
+                name: 'img2.png',
+                mimeType: 'image/png',
+                buffer: Buffer.alloc(2 * 1024, 0x89),
+            },
+            {
+                name: 'img3.png',
+                mimeType: 'image/png',
+                buffer: Buffer.alloc(2 * 1024, 0x89),
+            },
         ])
-        await expect(page.locator('[data-testid="upup-file-item"]')).toHaveCount(0)
+        await expect(
+            page.locator('[data-testid="upup-file-item"]'),
+        ).toHaveCount(0)
     })
 })

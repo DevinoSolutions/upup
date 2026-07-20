@@ -59,15 +59,21 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                     <!-- Body: file/folder list or empty message -->
                     @if (!!path()?.length) {
                         <div [class]="bodyClass">
+                            <!-- Error state: a calm centered message, not a
+                                 banner strip over an empty list. -->
                             @if (!!error?.()) {
-                                <p
-                                    data-testid="upup-drive-error"
-                                    data-upup-slot="drive-error"
-                                    role="alert"
-                                    class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                                <div
+                                    class="upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center upup-px-6 upup-text-center"
                                 >
-                                    {{ errorText }}
-                                </p>
+                                    <p
+                                        data-testid="upup-drive-error"
+                                        data-upup-slot="drive-error"
+                                        role="alert"
+                                        class="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
+                                    >
+                                        {{ errorText }}
+                                    </p>
+                                </div>
                             }
                             @if (!!displayedItems().length) {
                                 <ul class="upup-p-2">
@@ -96,7 +102,7 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                                 <button
                                     data-testid="upup-drive-load-more"
                                     data-upup-slot="drive-load-more"
-                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-blue-600 disabled:upup-opacity-50"
+                                    class="upup-mx-auto upup-my-2 upup-block upup-rounded-md upup-px-3 upup-py-1.5 upup-text-sm upup-text-[#0284c7] disabled:upup-opacity-50"
                                     [disabled]="isLoadingMore?.()"
                                     (click)="loadMore?.()"
                                 >
@@ -110,8 +116,12 @@ import { DriveBrowserItemComponent } from './drive-browser-item.component'
                         </div>
                     }
 
-                    <!-- Footer: select folder, add files, cancel -->
-                    @if (!!selectedFiles().length || !!onSelectCurrentFolder) {
+                    <!-- Footer only when there is something to act on — never
+                         under an error state. Hairline divider, no inner box. -->
+                    @if (
+                        (!!selectedFiles().length || !!onSelectCurrentFolder) &&
+                        !error?.()
+                    ) {
                         <div [class]="footerClass">
                             @if (onSelectCurrentFolder) {
                                 <button
@@ -229,11 +239,10 @@ export class DriveBrowserComponent {
     get bodyClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
+        // Transparent on the panel gradient — no inner box.
         return cn(
-            'upup-h-full upup-overflow-y-scroll upup-bg-black/[0.075] upup-pt-2',
-            dark
-                ? 'upup-bg-white/10 upup-text-[#fafafa] dark:upup-bg-white/10 dark:upup-text-[#fafafa]'
-                : '',
+            'upup-h-full upup-overflow-y-auto upup-pt-2',
+            dark ? 'upup-text-[#fafafa] dark:upup-text-[#fafafa]' : '',
             slotClasses.driveBody,
         )
     }
@@ -242,10 +251,10 @@ export class DriveBrowserComponent {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-flex upup-origin-bottom upup-items-center upup-gap-2 upup-bg-black/[0.025] upup-px-3 upup-py-2',
+            'upup-flex upup-origin-bottom upup-items-center upup-justify-start upup-gap-4 upup-border-t upup-px-3 upup-py-2',
             dark
-                ? 'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]'
-                : '',
+                ? 'upup-border-white/[0.08] upup-text-[#fafafa]'
+                : 'upup-border-black/[0.06]',
             slotClasses.driveFooter,
         )
     }
@@ -253,8 +262,8 @@ export class DriveBrowserComponent {
     get selectFolderBtnClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-blue-600 upup-transition-all upup-duration-300',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            'upup-rounded-md upup-bg-transparent upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-[#0284c7] upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
         )
     }
 
@@ -262,12 +271,11 @@ export class DriveBrowserComponent {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-rounded-md upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
-            dark
-                ? 'upup-animate-pulse upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]'
-                : this.showLoader?.()
-                  ? 'upup-animate-pulse'
-                  : '',
+            'upup-rounded-md upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300',
+            {
+                'upup-animate-pulse': this.showLoader(),
+                'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark,
+            },
             slotClasses.driveAddFilesButton,
         )
     }
@@ -276,8 +284,8 @@ export class DriveBrowserComponent {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-blue-600 upup-transition-all upup-duration-300',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+            'upup-ml-auto upup-rounded-md upup-p-1 upup-text-sm upup-text-[#0284c7] upup-transition-all upup-duration-300',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
             slotClasses.driveCancelFilesButton,
         )
     }

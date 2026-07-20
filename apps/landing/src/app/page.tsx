@@ -1,11 +1,14 @@
-import { InteractiveExample } from '@upupjs/interactive-example'
 import '@upupjs/interactive-example/styles'
+import { InteractiveExampleClient } from '@/components/InteractiveExampleClient'
+import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import HomepageFeatures from '@/components/HomepageFeatures'
 import FeedbackSection from '@/components/FeedbackSection'
 import Toast from '@/components/Toast'
 import HeroSection from '@/components/HomepageHero'
 import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import StructuredData from '@/components/StructuredData'
+import FAQSection from '@/components/FAQSection'
+import Section from '@/components/ui/Section'
 
 export const metadata = {
     title: 'upup – One File Uploader for React, Vue, Svelte, Angular, Vanilla JS & Preact',
@@ -18,14 +21,17 @@ export const metadata = {
 
 export default function Home() {
     return (
-        <div className="container mx-auto">
+        <>
             <StructuredData />
             <HeroSection />
-            <InteractiveExample />
+            <Section id="demo">
+                <InteractiveExampleClient {...interactiveExampleEnvProps()} />
+            </Section>
             <HomepageFeatures />
             <StackBlitzDemoSection />
+            <FAQSection />
             <FeedbackSection />
             <Toast />
-        </div>
+        </>
     )
 }

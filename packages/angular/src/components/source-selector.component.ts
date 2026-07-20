@@ -3,107 +3,110 @@ import {
     FileSource,
     formatUiMessage as t,
     pluralUiMessage as plural,
+    type IconName,
 } from '@upupjs/core'
 import { cn, sourceNameKeys } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
-import {
-    MyDeviceIconComponent,
-    GoogleDriveIconComponent,
-    OneDriveIconComponent,
-    DropboxIconComponent,
-    BoxIconComponent,
-    LinkIconComponent,
-    CameraIconComponent,
-    AudioIconComponent,
-    ScreenCaptureIconComponent,
-} from './icons'
 import { IconComponent } from './icon.component'
-import { NgComponentOutlet } from '@angular/common'
 
 /**
- * SourceSelector — Angular port of SourceSelector.svelte + useSourceSelector composable.
+ * SourceSelector — port of SourceSelector. Centered idle surface: a prompt line
+ * (drop-here / browse / optional select-a-folder / import-from), a capped-width
+ * chip grid (one chip per configured source), and an iconified limits caption.
+ * The add-more sheet supplies its own chrome, so this no longer swaps in a
+ * header bar. No hint animations.
  *
- * Renders one tile per source in store.uiProps.sources with data-testid="upup-source-${id}".
- * Clicking a non-LOCAL tile calls store.setActiveSource(id).
- * LOCAL tile is intentionally no-op here (file picker is owned by the shell).
- *
- * Below the tiles (svelte parity), the empty-state copy block renders:
- *   - the "drag your files / browse files" line (+ optional "select a folder")
- *   - the constraint sub-copy (allowed types / count / max size)
- * Plus the "adding more files" header and the mini upload variant.
- *
- * Source tile testids (FileSource id is the suffix):
- *   upup-source-local, upup-source-googleDrive, upup-source-oneDrive,
- *   upup-source-dropbox, upup-source-box, upup-source-url,
- *   upup-source-camera, upup-source-microphone, upup-source-screen
+ * Source chip testids: upup-source-<id>. Chip + caption icons are registry
+ * glyphs rendered directly via <upup-icon>.
  */
+
+const SOURCE_ICON_NAME: Record<FileSource, IconName> = {
+    [FileSource.LOCAL]: 'my-device',
+    [FileSource.GOOGLE_DRIVE]: 'google-drive',
+    [FileSource.ONE_DRIVE]: 'one-drive',
+    [FileSource.DROPBOX]: 'dropbox',
+    [FileSource.BOX]: 'box',
+    [FileSource.URL]: 'link',
+    [FileSource.CAMERA]: 'camera',
+    [FileSource.MICROPHONE]: 'audio',
+    [FileSource.SCREEN]: 'screen-capture',
+}
+
+// Canonical chip order (mirrors React's uploadSourceObject value order), filtered
+// by the configured sources — NOT the sources-array order.
+const SOURCE_ORDER: FileSource[] = [
+    FileSource.LOCAL,
+    FileSource.GOOGLE_DRIVE,
+    FileSource.ONE_DRIVE,
+    FileSource.DROPBOX,
+    FileSource.BOX,
+    FileSource.URL,
+    FileSource.CAMERA,
+    FileSource.MICROPHONE,
+    FileSource.SCREEN,
+]
 
 interface SourceEntry {
     id: FileSource
-    label: string
-    iconType: new (...args: unknown[]) => unknown
+    name: string
+    iconName: IconName
 }
 
 @Component({
     selector: 'upup-source-selector',
     standalone: true,
-    imports: [NgComponentOutlet, IconComponent],
+    imports: [IconComponent],
     template: `
         <div
             data-testid="upup-source-selector"
             data-upup-slot="source-selector"
-            [class]="containerClass"
+            class="upup-animate-fx-view upup-relative upup-flex upup-h-full upup-flex-col upup-items-center upup-justify-center upup-gap-6 upup-rounded-lg upup-px-4 upup-py-6"
         >
-            <!-- Adding-more header (Back + label) -->
-            @if (store.isAddingMore()) {
-                <div [class]="headerClass">
+            @if (!store.uiProps.mini) {
+                <div [class]="promptClass">
+                    <span>{{ store.translations().dropFilesHere }}</span>
                     <button
                         type="button"
-                        [class]="headerBackButtonClass"
-                        (click)="onCancelAddingMore()"
+                        data-testid="upup-browse-files"
+                        [class]="linkButtonClass"
+                        (click)="handleBrowseFilesClick()"
                     >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <polyline points="15 18 9 12 15 6" />
-                        </svg>
-                        Back
+                        {{ store.translations().browseFiles }}
                     </button>
-                    <span [class]="headerLabelClass">Adding more files</span>
+                    @if (store.uiProps.folderPickerButtonVisible) {
+                        <span>{{ store.translations().or }}</span>
+                        <button
+                            type="button"
+                            [class]="linkButtonClass"
+                            (click)="handleSelectFolderClick()"
+                        >
+                            {{ store.translations().selectAFolder }}
+                        </button>
+                    }
+                    <span>{{ store.translations().orImportFrom }}</span>
                 </div>
-            }
-
-            <!-- Source tiles -->
-            @if (!store.uiProps.mini) {
-                <div [class]="listClass">
+                <div [class]="chipsListClass">
                     @for (source of chosenSources; track source.id) {
                         <button
                             type="button"
                             [attr.data-testid]="'upup-source-' + source.id"
-                            [class]="tileClass"
+                            [class]="chipClass"
                             (click)="handleSourceClick(source.id)"
                         >
-                            <ng-container
-                                *ngComponentOutlet="
-                                    source.iconType;
-                                    inputs: sourceIconInputs
-                                "
-                            ></ng-container>
-                            <span [class]="labelClass">{{ source.label }}</span>
+                            <span [class]="chipIconBoxClass">
+                                <upup-icon
+                                    [name]="source.iconName"
+                                    [class]="chipIconClass"
+                                />
+                            </span>
+                            <span [class]="chipLabelClass">{{
+                                source.name
+                            }}</span>
                         </button>
                     }
                 </div>
             }
 
-            <!-- Mini upload button OR empty-state drag/browse copy -->
             @if (store.uiProps.mini) {
                 <button
                     type="button"
@@ -117,37 +120,45 @@ interface SourceEntry {
                     />
                     <p [class]="miniTextClass">Drag or browse to upload</p>
                 </button>
-            } @else {
+            } @else if (hasLimitsCaption) {
                 <div
-                    class="upup-flex upup-flex-col upup-items-center upup-gap-1 upup-px-3 upup-text-center md:upup-gap-2 md:upup-px-[30px]"
+                    data-upup-slot="limits-caption"
+                    [class]="limitsCaptionClass"
                 >
-                    <div
-                        class="upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-1"
-                    >
-                        <span [class]="copyTextClass">{{ dragText }}</span>
-                        <button
-                            type="button"
-                            data-testid="upup-browse-files"
-                            [class]="browseButtonClass"
-                            (click)="handleBrowseFilesClick()"
+                    @if (typeConstraint) {
+                        <span>{{ typeConstraint }}</span>
+                    }
+                    @if (typeConstraint && (showFilesLimit || showSizeLimit)) {
+                        <span aria-hidden="true">&middot;</span>
+                    }
+                    @if (showFilesLimit) {
+                        <span
+                            class="upup-inline-flex upup-items-center upup-gap-1.5"
                         >
-                            {{ store.translations().browseFiles }}
-                        </button>
-                        @if (store.uiProps.folderPickerButtonVisible) {
-                            <span [class]="copyTextClass">
-                                {{ store.translations().or }}</span
-                            >
-                            <button
-                                type="button"
-                                [class]="browseButtonClass"
-                                (click)="handleSelectFolderClick()"
-                            >
-                                {{ store.translations().selectAFolder }}
-                            </button>
-                        }
-                    </div>
-                    @if (constraintLine) {
-                        <p [class]="constraintClass">{{ constraintLine }}</p>
+                            <span aria-hidden="true" class="upup-inline-flex">
+                                <upup-icon
+                                    name="stacked-files"
+                                    [class]="'upup-h-4 upup-w-4'"
+                                />
+                            </span>
+                            {{ filesMaxText }}
+                        </span>
+                    }
+                    @if (showFilesLimit && showSizeLimit) {
+                        <span aria-hidden="true">&middot;</span>
+                    }
+                    @if (showSizeLimit) {
+                        <span
+                            class="upup-inline-flex upup-items-center upup-gap-1.5"
+                        >
+                            <span aria-hidden="true" class="upup-inline-flex">
+                                <upup-icon
+                                    name="storage"
+                                    [class]="'upup-h-4 upup-w-4'"
+                                />
+                            </span>
+                            {{ sizeEachText }}
+                        </span>
                     }
                 </div>
             }
@@ -157,154 +168,139 @@ interface SourceEntry {
 export class SourceSelectorComponent {
     readonly store = inject(UpupStore)
 
-    private static readonly ICON_MAP: Record<
-        string,
-        new (...args: unknown[]) => unknown
-    > = {
-        [FileSource.LOCAL]: MyDeviceIconComponent,
-        [FileSource.GOOGLE_DRIVE]: GoogleDriveIconComponent,
-        [FileSource.ONE_DRIVE]: OneDriveIconComponent,
-        [FileSource.DROPBOX]: DropboxIconComponent,
-        [FileSource.BOX]: BoxIconComponent,
-        [FileSource.URL]: LinkIconComponent,
-        [FileSource.CAMERA]: CameraIconComponent,
-        [FileSource.MICROPHONE]: AudioIconComponent,
-        [FileSource.SCREEN]: ScreenCaptureIconComponent,
-    }
-
     get chosenSources(): SourceEntry[] {
-        const translations = this.store.translations()
+        const translations = this.store.translations() as Record<string, string>
         const sources = this.store.uiProps.sources
-        return sources
-            .map(id => {
-                const nameKey = sourceNameKeys[id]
-                const iconType = SourceSelectorComponent.ICON_MAP[id]
-                if (!iconType) return null
-                return {
-                    id,
-                    label:
-                        (translations as Record<string, string>)[nameKey] ??
-                        nameKey,
-                    iconType,
-                }
-            })
-            .filter((s): s is SourceEntry => s !== null)
-    }
-
-    get containerClass(): string {
-        const isAddingMore = this.store.isAddingMore()
-        return cn(
-            'upup-relative upup-flex upup-h-full upup-gap-3 upup-rounded-lg',
-            isAddingMore
-                ? 'upup-flex-col'
-                : 'upup-flex-col-reverse upup-items-center upup-justify-center md:upup-flex-col md:upup-gap-14',
-        )
-    }
-
-    get listClass(): string {
-        const slotClasses = this.store.slotOverrides()
-        return cn(
-            'upup-flex upup-flex-col upup-justify-center upup-gap-1 upup-w-full',
-            'md:upup-flex-row md:upup-flex-wrap md:upup-items-center md:upup-gap-[30px] md:upup-px-[30px]',
-            slotClasses.sourceButtonList,
-        )
-    }
-
-    get tileClass(): string {
-        const dark = this.store.isDark()
-        const slotClasses = this.store.slotOverrides()
-        return cn(
-            'upup-group upup-flex upup-items-center upup-gap-[6px]',
-            'upup-border-b upup-border-gray-200 upup-px-2 upup-py-1',
-            'md:upup-flex-col md:upup-justify-center md:upup-rounded-lg md:upup-border-none md:upup-p-0',
-            dark ? 'upup-border-[#6D6D6D] dark:upup-border-[#6D6D6D]' : '',
-            slotClasses.sourceButton,
-        )
-    }
-
-    get labelClass(): string {
-        const dark = this.store.isDark()
-        const slotClasses = this.store.slotOverrides()
-        return cn(
-            'upup-text-xs upup-text-[#242634] md:upup-text-sm',
-            dark ? 'upup-text-white dark:upup-text-white' : '',
-            slotClasses.sourceButtonText,
-        )
-    }
-
-    /** Inputs for the tile icon outlet — mirrors react's `slotClasses.sourceButtonIcon || undefined`. */
-    get sourceIconInputs(): Record<string, unknown> {
-        return {
-            class: this.store.slotOverrides().sourceButtonIcon || undefined,
-        }
-    }
-
-    // ── Empty-state copy + header (svelte SourceSelector.svelte parity) ─────────
-
-    get headerClass(): string {
-        const dark = this.store.isDark()
-        const slotClasses = this.store.slotOverrides()
-        return cn(
-            'upup-shadow-bottom upup-flex upup-w-full upup-items-center upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2',
-            { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
-            slotClasses.containerHeader,
-        )
-    }
-
-    get headerBackButtonClass(): string {
-        const dark = this.store.isDark()
-        const slotClasses = this.store.slotOverrides()
-        return cn(
-            'upup-flex upup-items-center upup-gap-1 upup-text-sm upup-font-medium upup-text-blue-600',
-            { 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': dark },
-            slotClasses.containerCancelButton,
-        )
-    }
-
-    get headerLabelClass(): string {
-        const dark = this.store.isDark()
-        return cn(
-            'upup-flex-1 upup-text-center upup-text-sm upup-text-[#6D6D6D]',
-            {
-                'upup-text-gray-300 dark:upup-text-gray-300': dark,
-            },
-        )
-    }
-
-    get dragText(): string {
-        const tr = this.store.translations()
-        return this.store.uiProps.limit > 1 ? tr.dragFilesOr : tr.dragFileOr
-    }
-
-    get copyTextClass(): string {
-        const dark = this.store.isDark()
-        return cn('upup-text-xs upup-text-[#0B0B0B] md:upup-text-sm', {
-            'upup-text-white dark:upup-text-white': dark,
+        return SOURCE_ORDER.filter(id => sources.includes(id)).map(id => {
+            const nameKey = sourceNameKeys[id]
+            return {
+                id,
+                name: translations[nameKey] ?? nameKey,
+                iconName: SOURCE_ICON_NAME[id],
+            }
         })
     }
 
-    get browseButtonClass(): string {
-        const dark = this.store.isDark()
-        return cn(
-            'upup-cursor-pointer upup-text-xs upup-font-semibold upup-text-[#0E2ADD] md:upup-text-sm',
-            { 'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': dark },
+    // ── Limits caption ──────────────────────────────────────────────────────────
+
+    get typeConstraint(): string | null {
+        const allowed = this.store.uiProps.allowedFileTypes
+        if (!allowed || allowed === '*/*' || allowed === '*') return null
+        const humanized = allowed
+            .split(',')
+            .map(s => s.trim())
+            .map(m => {
+                if (m.startsWith('.')) return m
+                const [type, sub] = m.split('/')
+                if (!type || !sub) return m
+                if (sub === '*')
+                    return type.charAt(0).toUpperCase() + type.slice(1) + 's'
+                return sub.toUpperCase()
+            })
+            .join(', ')
+        return humanized + ' only'
+    }
+
+    get showFilesLimit(): boolean {
+        return this.store.uiProps.limit > 1
+    }
+
+    get showSizeLimit(): boolean {
+        const m = this.store.uiProps.maxFileSize
+        return !!(m?.size && m?.unit)
+    }
+
+    get hasLimitsCaption(): boolean {
+        return (
+            !!this.typeConstraint || this.showFilesLimit || this.showSizeLimit
         )
     }
 
-    get constraintClass(): string {
+    get filesMaxText(): string {
+        const tr = this.store.translations()
+        const limit = this.store.uiProps.limit
+        return t(plural(tr, 'filesMax', limit), { count: limit })
+    }
+
+    get sizeEachText(): string {
+        const tr = this.store.translations()
+        const m = this.store.uiProps.maxFileSize
+        return t(tr.sizeEach, { size: m?.size ?? 0, unit: m?.unit ?? '' })
+    }
+
+    // ── Class builders ────────────────────────────────────────────────────────
+
+    get promptClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-text-center upup-text-xs upup-text-[#6D6D6D] md:upup-text-sm',
-            { 'upup-text-gray-300 dark:upup-text-gray-300': dark },
+            'upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-x-1.5 upup-gap-y-1 upup-px-2 upup-text-center upup-text-base upup-font-medium md:upup-text-lg',
+            dark
+                ? 'upup-text-[#e2e8f0] dark:upup-text-[#e2e8f0]'
+                : 'upup-text-[#242634]',
+        )
+    }
+
+    get linkButtonClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-cursor-pointer upup-rounded upup-font-semibold focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8]',
+            dark
+                ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]'
+                : 'upup-text-[#0284c7]',
+        )
+    }
+
+    get chipsListClass(): string {
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-6 upup-gap-y-5',
+            slotClasses.sourceButtonList ?? '',
+        )
+    }
+
+    get chipClass(): string {
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
+            slotClasses.sourceButton ?? '',
+        )
+    }
+
+    get chipIconBoxClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
+            dark
+                ? 'upup-bg-white/[0.055] upup-ring-white/[0.06] group-hover:upup-bg-white/[0.09] dark:upup-bg-white/[0.055] dark:upup-ring-white/[0.06]'
+                : 'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50',
+        )
+    }
+
+    get chipIconClass(): string {
+        const slotClasses = this.store.slotOverrides()
+        return cn('upup-h-10 upup-w-10', slotClasses.sourceButtonIcon ?? '')
+    }
+
+    get chipLabelClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-text-xs upup-leading-none',
+            dark
+                ? 'upup-text-[#94a3b8] dark:upup-text-[#94a3b8]'
+                : 'upup-text-[#6D6D6D]',
+            slotClasses.sourceButtonText ?? '',
         )
     }
 
     get miniIconClass(): string {
         const dark = this.store.isDark()
-        return cn('upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20', {
-            'upup-text-[#0B0B0B]': !dark,
-            'upup-text-white dark:upup-text-white': dark,
-        })
+        return cn(
+            'upup-h-16 upup-w-16 md:upup-h-20 md:upup-w-20',
+            dark
+                ? 'upup-text-white dark:upup-text-white'
+                : 'upup-text-[#0B0B0B]',
+        )
     }
 
     get miniTextClass(): string {
@@ -315,55 +311,18 @@ export class SourceSelectorComponent {
         })
     }
 
-    /** Constraint sub-copy: humanized allowed types + count + max size (svelte parity). */
-    get constraintLine(): string {
-        const tr = this.store.translations()
-        const { allowedFileTypes, limit, maxFileSize } = this.store.uiProps
-        const parts: string[] = []
-        if (
-            allowedFileTypes &&
-            allowedFileTypes !== '*/*' &&
-            allowedFileTypes !== '*'
-        ) {
-            const humanized = allowedFileTypes
-                .split(',')
-                .map(s => s.trim())
-                .map(m => {
-                    if (m.startsWith('.')) return m
-                    const [type, sub] = m.split('/')
-                    if (type === undefined || sub === undefined) return m
-                    if (sub === '*')
-                        return (
-                            type.charAt(0).toUpperCase() + type.slice(1) + 's'
-                        )
-                    return sub.toUpperCase()
-                })
-                .join(', ')
-            parts.push(humanized + ' only')
-        }
-        if (limit > 1) {
-            parts.push(t(tr.addDocumentsHere, { limit }))
-        }
-        if (maxFileSize?.size) {
-            parts.push(
-                t(plural(tr, 'maxFileSizeAllowed', limit), {
-                    size: maxFileSize.size,
-                    unit: maxFileSize.unit,
-                }),
-            )
-        }
-        return parts.join(', ')
+    get limitsCaptionClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-flex upup-flex-wrap upup-items-center upup-justify-center upup-gap-x-2.5 upup-gap-y-1 upup-px-3 upup-text-center upup-text-xs',
+            dark
+                ? 'upup-text-[#94a3b8] dark:upup-text-[#94a3b8]'
+                : 'upup-text-[#6D6D6D]',
+        )
     }
 
-    // ── Handlers ────────────────────────────────────────────────────────────────
+    // ── Handlers ──────────────────────────────────────────────────────────────
 
-    /**
-     * Unified tile click handler — 1:1 port of svelte useSourceSelector.handleSourceClick:
-     *   onIntegrationClick(sourceId)
-     *   core?.emit('source-click', { sourceId })
-     *   if (sourceId === LOCAL) openFilePicker() else setActiveSource(sourceId)
-     * Fires for EVERY source (including LOCAL) — no dead button.
-     */
     handleSourceClick(sourceId: FileSource): void {
         this.store.uiProps.onIntegrationClick(sourceId)
         this.store.core.emit('source-click', { sourceId })
@@ -372,10 +331,6 @@ export class SourceSelectorComponent {
         } else {
             this.store.setActiveSource(sourceId)
         }
-    }
-
-    onCancelAddingMore(): void {
-        this.store.setIsAddingMore(false)
     }
 
     handleBrowseFilesClick(): void {
@@ -408,7 +363,7 @@ export class SourceSelectorComponent {
                 async function getFiles(
                     dirHandle: IterableDirHandle,
                     path = '',
-                ) {
+                ): Promise<void> {
                     for await (const entry of dirHandle.values()) {
                         const newPath = path
                             ? `${path}/${entry.name}`
@@ -439,8 +394,9 @@ export class SourceSelectorComponent {
                                     writable: true,
                                 })
                             } catch {
-                                // upup-catch: defineProperty rejected (non-configurable
-                                // slot) — fall back to a plain assign
+                                // upup-catch: defineProperty can fail on exotic
+                                // File objects — fall back to plain assignment
+                                // for relativePath
                                 Object.assign(file, { relativePath: newPath })
                             }
                             collectedFiles.push(file)

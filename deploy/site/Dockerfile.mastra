@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+#
+# Mastra AI server (Hono) image for the one-compose site contract.
+# Build context is the monorepo ROOT (see docker-compose.yml build.context: ../..).
+#
+# `mastra build` emits a bundled server at apps/mastra/.mastra/output/index.mjs.
+# The output is not guaranteed to inline every dependency, so we keep the built
+# workspace (node_modules) in the runtime stage and run the bundle from there —
+# correctness over image size.
+#
+# All mastra config is RUNTIME env (OPENROUTER_API_KEY, ALLOWED_ORIGINS, host/
+# port, rate/budget knobs) injected by compose — nothing is baked at build time.
+
+FROM node:20.20.2-slim AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS build
+COPY . .
+RUN pnpm install --frozen-lockfile
+# turbo builds ^build workspace deps first, then `mastra build`.
+RUN pnpm exec turbo run build --filter=@upupjs/mastra
+
+FROM build AS runtime
+ENV NODE_ENV=production
+# MUST bind 0.0.0.0 in a container — the app defaults to localhost otherwise.
+ENV MASTRA_HOST=0.0.0.0
+ENV PORT=4111
+EXPOSE 4111
+WORKDIR /app/apps/mastra
+CMD ["node", ".mastra/output/index.mjs"]

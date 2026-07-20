@@ -7,7 +7,9 @@ import {
     ElementRef,
     ChangeDetectorRef,
     ChangeDetectionStrategy,
+    type Type,
 } from '@angular/core'
+import { NgComponentOutlet } from '@angular/common'
 import {
     Virtualizer,
     observeElementRect,
@@ -20,36 +22,42 @@ import {
     pluralUiMessage as plural,
     UploadStatus,
     type UploadFile,
-    type Translations,
 } from '@upupjs/core'
 import { isUploadActive, cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'
 import { FileItemComponent } from './file-item.component'
-import { PlayerPlayFilledIconComponent } from './icons/player-play-filled-icon.component'
-import { PlayerPauseFilledIconComponent } from './icons/player-pause-filled-icon.component'
-import { XIconComponent } from './icons/x-icon.component'
-import { NgComponentOutlet } from '@angular/common'
+import { FileHeroComponent } from './file-hero.component'
+import { FileSuccessCheckComponent } from './shared/file-success-check.component'
+import { IconComponent } from './icon.component'
+import { isListViewForced } from '../lib/view-mode'
+import { TilesPerRowObserver } from '../lib/use-tiles-per-row'
 
 const VIRTUAL_SCROLL_THRESHOLD = 20
 const ESTIMATED_ITEM_HEIGHT = 76
 
+function formatBytes(bytes: number): string {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i] ?? ''}`
+}
+
+function formatEta(seconds: number): string {
+    if (seconds <= 0 || !isFinite(seconds)) return ''
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    if (m > 0) return `${m}m ${s}s left`
+    return `${s}s left`
+}
+
 /**
- * FileList — port of FileList.svelte + vanilla file-list.ts virtualizer wiring.
- *
- * Virtualization strategy (mirrors vanilla @tanstack/virtual-core approach):
- *   1. Create a Virtualizer imperatively in ngAfterViewInit after the scroll
- *      container is available via @ViewChild.
- *   2. Call _willUpdate() + _didMount() on creation (wires ResizeObserver +
- *      scroll listeners). Store the cleanup returned by _didMount().
- *   3. onChange callback calls cdr.markForCheck() so Angular re-renders
- *      virtual items reactively.
- *   4. On file count / shouldVirtualize change we call v.setOptions + _willUpdate()
- *      (mirrors vanilla's getVirtualizer() update branch).
- *   5. ngOnDestroy calls the cleanup fn (disconnects ResizeObserver + scroll listeners).
- *
- * data-testid="upup-file-list" and all sub-slot testids preserved.
+ * FileList — port of FileList. Renders in core insertion order (no sort). Single
+ * file → FileHero; multiple → fluid auto-fit grid (inline gridTemplateColumns) or
+ * forced list. Adaptive: the tiles-per-row ResizeObserver forces the row list when
+ * a grid row would overflow the fixed-height panel (header then hides the toggle).
  */
 @Component({
     selector: 'upup-file-list',
@@ -59,24 +67,50 @@ const ESTIMATED_ITEM_HEIGHT = 76
         UploaderHeaderComponent,
         ProgressBarComponent,
         FileItemComponent,
-        PlayerPlayFilledIconComponent,
-        PlayerPauseFilledIconComponent,
-        XIconComponent,
+        FileHeroComponent,
+        FileSuccessCheckComponent,
+        IconComponent,
         NgComponentOutlet,
     ],
     template: `
         <div
             data-testid="upup-file-list"
             data-upup-slot="file-list"
+            [attr.inert]="dimmed ? '' : null"
             [class]="fileListClass"
         >
-            <upup-uploader-header [handleCancel]="handleCancelFn" />
+            <div role="status" aria-live="polite" class="upup-sr-only">
+                {{ selectionCountText }}
+            </div>
 
-            <!-- Scroll container — @ViewChild binds this ref for the virtualizer -->
+            <upup-uploader-header
+                [handleCancel]="handleCancelFn"
+                [forcedList]="forcedList"
+                [hideAddMore]="quietDone"
+            />
+
+            @if (quietDone) {
+                <div
+                    data-testid="upup-complete-check"
+                    data-upup-slot="complete-check"
+                    role="status"
+                    [class]="completeCheckClass"
+                >
+                    <upup-file-success-check [size]="56" />
+                    <span [class]="completeTextClass">{{
+                        store.translations().announceUploadComplete
+                    }}</span>
+                </div>
+            }
+
             <div #scrollContainer [class]="scrollContainerClass">
-                @if (shouldVirtualize && virtualizer) {
-                    <!-- Virtualized list: one absolute-positioned row per virtual item -->
+                @if (isSingle) {
+                    <div role="list" [class]="heroBranchClass">
+                        <upup-file-hero [file]="orderedFiles[0]" />
+                    </div>
+                } @else if (shouldVirtualize && virtualizer) {
                     <div
+                        role="list"
                         data-upup-slot="file-list-virtual"
                         [style]="virtualContainerStyle"
                         [class]="innerListClass"
@@ -87,35 +121,58 @@ const ESTIMATED_ITEM_HEIGHT = 76
                                 [style]="virtualRowStyle(vi)"
                             >
                                 <upup-file-item
-                                    [file]="sortedFiles[vi.index]"
+                                    [file]="orderedFiles[vi.index]"
+                                    [index]="vi.index"
+                                    [forcedList]="forcedList"
                                 />
                             </div>
                         }
                     </div>
                 } @else {
-                    <!-- Standard (non-virtual) list -->
-                    <div [class]="standardInnerClass">
-                        @for (file of sortedFiles; track file.id) {
-                            <upup-file-item [file]="file" />
+                    <div
+                        role="list"
+                        [style.grid-template-columns]="gridTemplateColumns"
+                        [class]="standardInnerClass"
+                    >
+                        @for (
+                            file of orderedFiles;
+                            track file.id;
+                            let i = $index
+                        ) {
+                            <upup-file-item
+                                [file]="file"
+                                [index]="i"
+                                [forcedList]="forcedList"
+                            />
                         }
                     </div>
                 }
+
+                @if (canAddMore) {
+                    <button
+                        data-testid="upup-add-more"
+                        data-placement="footer"
+                        data-upup-slot="add-more"
+                        [class]="footerAddMoreClass"
+                        (click)="store.openSourceOverlay()"
+                        [disabled]="isUploading || store.uiProps.isProcessing"
+                    >
+                        <ng-container
+                            [ngComponentOutlet]="containerAddMoreIcon"
+                        />
+                        {{ store.translations().addMore }}
+                    </button>
+                }
             </div>
 
-            <!-- Footer: upload / retry / done + pause/cancel controls + ETA -->
             <div [class]="footerClass">
-                <!-- Upload button -->
-                @if (
-                    store.uploadStatus() !== UploadStatus.SUCCESSFUL &&
-                    store.uploadStatus() !== UploadStatus.FAILED
-                ) {
+                @if (showUploadButton) {
                     <button
                         data-testid="upup-upload-btn"
                         [class]="uploadButtonClass"
                         (click)="onUploadClick()"
                         [disabled]="
                             isUploadActive(store.uploadStatus()) ||
-                            store.uploadStatus() === UploadStatus.PAUSED ||
                             store.uiProps.isProcessing
                         "
                     >
@@ -123,7 +180,6 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     </button>
                 }
 
-                <!-- Upload-error message -->
                 @if (
                     store.uploadStatus() === UploadStatus.FAILED &&
                     store.uploadError()
@@ -138,7 +194,6 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     </p>
                 }
 
-                <!-- Retry button -->
                 @if (store.uploadStatus() === UploadStatus.FAILED) {
                     <button
                         data-testid="upup-retry-btn"
@@ -149,8 +204,10 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     </button>
                 }
 
-                <!-- Done button -->
-                @if (store.uploadStatus() === UploadStatus.SUCCESSFUL) {
+                @if (
+                    store.uploadStatus() === UploadStatus.SUCCESSFUL &&
+                    !store.uiProps.quietCompletion
+                ) {
                     <button
                         [class]="doneButtonClass"
                         (click)="store.handleDone()"
@@ -159,78 +216,54 @@ const ESTIMATED_ITEM_HEIGHT = 76
                     </button>
                 }
 
-                <!-- Pause / cancel / ETA area -->
                 <div class="upup-flex upup-flex-1 upup-flex-col upup-gap-1">
                     <div class="upup-flex upup-items-center upup-gap-2">
-                        @if (
-                            store.uiProps.resumable?.protocol === 'multipart' &&
-                            (isUploadActive(store.uploadStatus()) ||
-                                store.uploadStatus() === UploadStatus.PAUSED)
-                        ) {
+                        @if (store.uploadStatus() === UploadStatus.UPLOADING) {
                             <button
-                                data-testid="upup-upload-pause-toggle"
-                                [class]="pauseToggleClass"
-                                (click)="
-                                    store.uploadStatus() === UploadStatus.PAUSED
-                                        ? store.handleResume()
-                                        : store.handlePause()
-                                "
-                                [attr.aria-label]="
-                                    store.uploadStatus() === UploadStatus.PAUSED
-                                        ? store.translations().resumeUpload
-                                        : store.translations().pauseUpload
-                                "
-                                [attr.title]="
-                                    store.uploadStatus() === UploadStatus.PAUSED
-                                        ? store.translations().resumeUpload
-                                        : store.translations().pauseUpload
-                                "
+                                data-testid="upup-upload-cancel"
+                                [class]="cancelButtonClass"
+                                (click)="store.handlePause()"
+                                [attr.aria-label]="store.translations().cancel"
+                                [title]="store.translations().cancel"
                             >
-                                @if (
-                                    store.uploadStatus() === UploadStatus.PAUSED
-                                ) {
-                                    <upup-player-play-filled-icon [size]="14" />
-                                } @else {
-                                    <upup-player-pause-filled-icon
-                                        [size]="14"
-                                    />
-                                }
-                            </button>
-
-                            <button
-                                data-testid="upup-upload-cancel-btn"
-                                [class]="cancelBtnClass"
-                                (click)="store.handleCancel()"
-                            >
-                                <upup-x-icon [size]="14" />
+                                <upup-icon name="x" [size]="14" />
+                                {{ store.translations().cancel }}
                             </button>
                         }
-
+                        @if (store.uploadStatus() === UploadStatus.PAUSED) {
+                            <button
+                                data-testid="upup-upload-resume"
+                                [class]="resumeButtonClass"
+                                (click)="store.handleResume()"
+                                [attr.aria-label]="
+                                    store.translations().resumeUpload
+                                "
+                                [title]="store.translations().resumeUpload"
+                            >
+                                <upup-icon name="player-play" [size]="14" />
+                                {{ store.translations().resumeUpload }}
+                            </button>
+                        }
                         <upup-progress-bar
-                            class="upup-flex-1"
+                            [className]="'upup-flex-1'"
                             progressBarClassName="upup-rounded"
                             [progress]="store.totalProgress()"
                             [showValue]="true"
                         />
-
-                        @if (showProgressText) {
-                            <span [class]="progressTextClass">
-                                {{ progressText }}
-                            </span>
-                        }
                     </div>
-
-                    @if (
-                        isUploadActive(store.uploadStatus()) &&
-                        store.uploadEta() > 0
-                    ) {
-                        <span class="upup-text-[11px] upup-text-gray-500">{{
-                            etaText
-                        }}</span>
-                    }
-
-                    @if (store.uploadStatus() === UploadStatus.PAUSED) {
-                        <span>{{ store.translations().paused }}</span>
+                    @if (showBytesRow) {
+                        <div [class]="bytesRowClass">
+                            <span>{{ bytesText }}</span>
+                            @if (
+                                isUploadActive(store.uploadStatus()) &&
+                                store.uploadEta() > 0
+                            ) {
+                                <span>{{ etaText }}</span>
+                            }
+                            @if (store.uploadStatus() === UploadStatus.PAUSED) {
+                                <span>{{ store.translations().paused }}</span>
+                            }
+                        </div>
                     }
                 </div>
             </div>
@@ -241,41 +274,99 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     readonly store = inject(UpupStore)
     private cdr = inject(ChangeDetectorRef)
 
-    // Expose for template
     readonly UploadStatus = UploadStatus
     readonly isUploadActive = isUploadActive
 
     @ViewChild('scrollContainer')
     scrollContainerRef?: ElementRef<HTMLDivElement>
 
-    // ── Virtualizer state ─────────────────────────────────────────────────────
+    private readonly tiles = new TilesPerRowObserver()
+
     virtualizer: Virtualizer<HTMLDivElement, HTMLDivElement> | null = null
     private virtualizerCleanup: (() => void) | null = null
-    /** Current virtual items — refreshed each render cycle by getVirtualItems(). */
     virtualItems: VirtualItem[] = []
-    /** ngDoCheck change guards — avoid re-sorting + _willUpdate() every CD tick. */
     private prevVirtCount = -1
     private prevShouldVirt = false
 
-    // ── Derived from store (called in template) ────────────────────────────────
+    // ── Derived from store (insertion order — NO sort) ──────────────────────────
 
-    get sortedFiles(): UploadFile[] {
-        return Array.from(this.store.files().values()).sort((a, b) => {
-            const pa = a.relativePath ?? a.name
-            const pb = b.relativePath ?? b.name
-            return pa.localeCompare(pb) || a.name.localeCompare(b.name)
-        })
+    get orderedFiles(): UploadFile[] {
+        return Array.from(this.store.files().values())
+    }
+
+    get isSingle(): boolean {
+        return this.orderedFiles.length === 1
+    }
+
+    get forcedList(): boolean {
+        return isListViewForced(
+            this.orderedFiles.length,
+            this.tiles.tilesPerRow(),
+        )
+    }
+
+    get effectiveViewMode(): 'grid' | 'list' {
+        return this.forcedList ? 'list' : this.store.viewMode()
     }
 
     get shouldVirtualize(): boolean {
         return (
-            this.sortedFiles.length >= VIRTUAL_SCROLL_THRESHOLD &&
-            this.store.viewMode() !== 'grid'
+            this.orderedFiles.length >= VIRTUAL_SCROLL_THRESHOLD &&
+            this.effectiveViewMode !== 'grid'
         )
     }
 
-    get translations(): Translations {
-        return this.store.translations()
+    get isUploading(): boolean {
+        return isUploadActive(this.store.uploadStatus())
+    }
+
+    get dimmed(): boolean {
+        return this.store.sourceOverlayOpen() || !!this.store.activeSource()
+    }
+
+    get quietDone(): boolean {
+        return (
+            this.store.uiProps.quietCompletion &&
+            this.store.uploadStatus() === UploadStatus.SUCCESSFUL
+        )
+    }
+
+    get canAddMore(): boolean {
+        return (
+            this.store.uiProps.limit > 1 &&
+            this.store.files().size < this.store.uiProps.limit &&
+            !this.isUploading &&
+            !this.store.uiProps.isProcessing &&
+            !this.quietDone
+        )
+    }
+
+    get containerAddMoreIcon(): Type<unknown> {
+        return this.store.uiProps.icons.ContainerAddMoreIcon as Type<unknown>
+    }
+
+    get selectionCountText(): string {
+        const tr = this.store.translations()
+        const count = this.store.files().size
+        return t(plural(tr, 'filesSelected', count), { count })
+    }
+
+    get showUploadButton(): boolean {
+        const s = this.store.uploadStatus()
+        return (
+            s !== UploadStatus.SUCCESSFUL &&
+            s !== UploadStatus.FAILED &&
+            s !== UploadStatus.PAUSED &&
+            !this.isUploading
+        )
+    }
+
+    get showBytesRow(): boolean {
+        const s = this.store.uploadStatus()
+        return (
+            (isUploadActive(s) || s === UploadStatus.PAUSED) &&
+            this.store.totalBytes() > 0
+        )
     }
 
     // ── Virtualizer computed styles ───────────────────────────────────────────
@@ -289,16 +380,23 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         return `position: absolute; top: 0; left: 0; width: 100%; transform: translateY(${vi.start}px); padding-bottom: 12px;`
     }
 
+    get gridTemplateColumns(): string | null {
+        return this.store.files().size > 1 && this.effectiveViewMode === 'grid'
+            ? 'repeat(auto-fit, minmax(160px, 1fr))'
+            : null
+    }
+
     // ── Class builders ────────────────────────────────────────────────────────
 
     get fileListClass(): string {
-        const isAddingMore = this.store.isAddingMore()
-        const activeSource = this.store.activeSource()
-        const files = this.store.files()
         const themeSlots = this.store.slots()
         return cn(
             'upup-relative upup-flex upup-h-full upup-flex-col upup-rounded-lg upup-shadow',
-            { 'upup-hidden': isAddingMore || !!activeSource || !files.size },
+            {
+                'upup-hidden': !this.store.files().size,
+                'upup-opacity-50 upup-blur-[2px] upup-pointer-events-none':
+                    this.dimmed,
+            },
             themeSlots.fileList?.root ?? '',
         )
     }
@@ -307,9 +405,21 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-bg-black/[0.075] upup-p-3',
-            { 'upup-bg-white/10 dark:upup-bg-white/10': dark },
+            'upup-preview-scroll upup-flex upup-flex-1 upup-flex-col upup-overflow-y-auto upup-p-3',
+            dark ? 'upup-bg-transparent' : 'upup-bg-black/[0.075]',
             slotClasses.fileListContainer ?? '',
+        )
+    }
+
+    get heroBranchClass(): string {
+        const first = this.orderedFiles[0]
+        const heroLeaving =
+            this.isSingle &&
+            first !== undefined &&
+            this.store.leavingFileIds().has(first.id)
+        return cn(
+            'upup-animate-fx-enter upup-flex upup-min-h-0 upup-flex-1 upup-flex-col',
+            heroLeaving && 'upup-animate-fx-exit upup-overflow-hidden',
         )
     }
 
@@ -325,24 +435,50 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
     get standardInnerClass(): string {
         const isProcessing = this.store.uiProps.isProcessing
         const slotClasses = this.store.slotOverrides()
-        const sortedFiles = this.sortedFiles
-        const grid = this.store.viewMode() === 'grid'
+        const grid =
+            this.store.files().size > 1 && this.effectiveViewMode === 'grid'
         return cn(
             isProcessing ? 'upup-pointer-events-none upup-opacity-75' : '',
-            'upup-flex upup-flex-col upup-gap-3 upup-font-[Arial,Helvetica,sans-serif]',
-            {
-                'md:upup-grid md:upup-gap-y-6': sortedFiles.length > 1 && grid,
-                'md:upup-grid-cols-2': sortedFiles.length > 1 && grid,
-                'upup-flex-1': sortedFiles.length === 1,
-            },
+            'upup-font-[Arial,Helvetica,sans-serif]',
+            grid
+                ? 'upup-grid upup-gap-4'
+                : 'upup-flex upup-flex-col upup-gap-3',
             {
                 [slotClasses.fileListContainerInnerMultiple ?? '']:
                     !!slotClasses.fileListContainerInnerMultiple &&
-                    sortedFiles.length > 1,
+                    this.store.files().size > 1,
                 [slotClasses.fileListContainerInnerSingle ?? '']:
                     !!slotClasses.fileListContainerInnerSingle &&
-                    sortedFiles.length === 1,
+                    this.store.files().size === 1,
             },
+        )
+    }
+
+    get footerAddMoreClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-fx-hover-lift upup-fx-press upup-mt-2.5 upup-flex upup-flex-none upup-items-center upup-justify-center upup-gap-2 upup-whitespace-nowrap upup-rounded-xl upup-border-[1.5px] upup-border-dashed upup-px-3 upup-py-2 upup-text-[13px] upup-font-medium',
+            dark
+                ? 'upup-border-white/[0.16] upup-text-[#94a3b8]'
+                : 'upup-border-black/[0.16] upup-text-gray-500',
+            slotClasses.containerAddMoreButton ?? '',
+        )
+    }
+
+    get completeCheckClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-absolute upup-inset-0 upup-z-20 upup-flex upup-flex-col upup-items-center upup-justify-center upup-gap-2 upup-rounded-lg upup-backdrop-blur-[1px]',
+            dark ? 'upup-bg-[#04080f]/40' : 'upup-bg-white/50',
+        )
+    }
+
+    get completeTextClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-text-sm upup-font-medium',
+            dark ? 'upup-text-[#e2e8f0]' : 'upup-text-[#1e293b]',
         )
     }
 
@@ -360,8 +496,8 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-            { 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]': dark },
+            'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+            { 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark },
             slotClasses.uploadButton ?? '',
         )
     }
@@ -370,7 +506,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+            'upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-full upup-bg-red-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
             { 'upup-bg-red-500 dark:upup-bg-red-500': dark },
             slotClasses.uploadButton ?? '',
         )
@@ -380,24 +516,16 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-blue-600 upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
-            { 'upup-bg-[#30C5F7] dark:upup-bg-[#30C5F7]': dark },
+            'upup-fx-sheen-sweep upup-fx-press upup-disabled:animate-pulse upup-ml-auto upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-2 upup-text-sm upup-font-medium upup-text-white',
+            { 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark },
             slotClasses.uploadDoneButton ?? '',
         )
     }
 
-    get pauseToggleClass(): string {
+    get cancelButtonClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-gray-200 upup-text-gray-700 upup-transition-colors hover:upup-bg-gray-300',
-            { 'upup-bg-white/10 upup-text-white hover:upup-bg-white/20': dark },
-        )
-    }
-
-    get cancelBtnClass(): string {
-        const dark = this.store.isDark()
-        return cn(
-            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center upup-rounded-full upup-bg-red-100 upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
+            'upup-fx-press upup-flex upup-h-7 upup-items-center upup-gap-1 upup-whitespace-nowrap upup-rounded-full upup-bg-red-100 upup-px-3 upup-text-xs upup-font-medium upup-text-red-700 upup-transition-colors hover:upup-bg-red-200',
             {
                 'upup-bg-red-500/20 upup-text-red-100 hover:upup-bg-red-500/30':
                     dark,
@@ -405,52 +533,49 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         )
     }
 
-    get showProgressText(): boolean {
-        return (
-            isUploadActive(this.store.uploadStatus()) ||
-            this.store.uploadStatus() === UploadStatus.PAUSED
+    get resumeButtonClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-fx-press upup-flex upup-h-7 upup-items-center upup-gap-1 upup-whitespace-nowrap upup-rounded-full upup-bg-[#0ea5e9] upup-px-3 upup-text-xs upup-font-medium upup-text-white upup-transition-colors',
+            { 'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark },
         )
     }
 
-    get progressTextClass(): string {
+    get bytesRowClass(): string {
         const dark = this.store.isDark()
-        return cn('upup-text-[11px] upup-text-gray-500', {
-            'upup-text-gray-400': dark,
-        })
+        return cn(
+            'upup-flex upup-items-center upup-justify-between upup-text-[11px] upup-text-gray-500',
+            { 'upup-text-gray-400': dark },
+        )
     }
 
-    get progressText(): string {
+    get bytesText(): string {
+        const uploaded = formatBytes(this.store.uploadedBytes())
+        const total = formatBytes(this.store.totalBytes())
         const speed = this.store.uploadSpeed()
-        if (!speed) return ''
-        const tr = this.translations
-        const mb = speed / (1024 * 1024)
-        return `${mb.toFixed(1)} ${tr.mb}/s`
+        const speedPart = speed > 0 ? ` · ${formatBytes(speed)}/s` : ''
+        return `${uploaded} of ${total}${speedPart}`
     }
 
     get etaText(): string {
-        const eta = this.store.uploadEta()
-        if (eta <= 0 || !isFinite(eta)) return ''
-        const m = Math.floor(eta / 60)
-        const s = eta % 60
-        if (m > 0) return `${m}m ${s}s left`
-        return `${s}s left`
+        return formatEta(this.store.uploadEta())
     }
 
     get uploadButtonText(): string {
-        const tr = this.translations
+        const tr = this.store.translations()
         const count = this.store.files().size
         return t(plural(tr, 'uploadFiles', count), { count })
     }
 
     get retryButtonText(): string {
-        const tr = this.translations
+        const tr = this.store.translations()
         return this.store.uiProps.resumable?.protocol === 'multipart'
             ? tr.resumeUpload
             : tr.retryUpload
     }
 
     get uploadErrorText(): string {
-        const tr = this.translations
+        const tr = this.store.translations()
         const code = this.store.uploadErrorCode()
         const message = this.store.uploadError() ?? ''
         return code
@@ -458,12 +583,9 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
             : t(tr.uploadFailed, { message })
     }
 
-    // Bound fn for UploaderHeader (avoids arrow-fn re-creation in template)
     readonly handleCancelFn = (): void => {
         this.store.handleCancel()
     }
-
-    // ── Upload action handlers ─────────────────────────────────────────────────
 
     onUploadClick(): void {
         void this.store.startUpload().catch(() => undefined)
@@ -473,22 +595,22 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         void this.store.retryUpload().catch(() => undefined)
     }
 
-    // ── Virtualizer lifecycle ─────────────────────────────────────────────────
+    // ── Virtualizer + tiles-per-row lifecycle ──────────────────────────────────
 
     ngAfterViewInit(): void {
+        this.tiles.observe(this.scrollContainerRef?.nativeElement ?? null)
         this.initVirtualizer()
     }
 
     ngOnDestroy(): void {
+        this.tiles.destroy()
         this.destroyVirtualizer()
     }
 
     private initVirtualizer(): void {
         const scrollEl = this.scrollContainerRef?.nativeElement
         if (!scrollEl) return
-
-        const count = this.sortedFiles.length
-
+        const count = this.orderedFiles.length
         const v = new Virtualizer<HTMLDivElement, HTMLDivElement>({
             count,
             getScrollElement: () => scrollEl,
@@ -499,24 +621,13 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
             observeElementOffset,
             scrollToFn: elementScroll,
             onChange: () => {
-                // Refresh virtual items and trigger Angular's change detection.
-                // Mirrors vanilla's onChange: () => ctx.invalidate()
                 this.virtualItems = v.getVirtualItems()
                 this.cdr.markForCheck()
             },
         })
-
-        // _willUpdate() wires scroll element (attaches ResizeObserver + scroll
-        // listeners via observeElementRect/observeElementOffset). Must be called
-        // before first render — mirrors vanilla pattern.
         v._willUpdate()
-
-        // _didMount() returns the public cleanup fn (disconnects ResizeObserver +
-        // removes scroll listeners). Store it for ngOnDestroy.
         this.virtualizerCleanup = v._didMount()
-
         this.virtualizer = v
-        // Seed virtualItems for first render
         this.virtualItems = v.getVirtualItems()
         this.cdr.markForCheck()
     }
@@ -529,18 +640,13 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         this.virtualizer = null
     }
 
-    // ── ngDoCheck: sync virtualizer with current file list ────────────────────
-    // Guarded: only re-runs setOptions + _willUpdate() when the raw file COUNT or
-    // the virtualization GATE actually changed. Computing the gate from the raw
-    // files().size (not the O(n log n) sortedFiles getter) keeps this cheap and
-    // prevents the self-amplifying re-sort-on-every-scroll-tick footgun.
     ngDoCheck(): void {
         const v = this.virtualizer
         if (!v) return
-        const count = this.store.files().size // raw count, no sort
+        const count = this.store.files().size
         const sv =
             count >= VIRTUAL_SCROLL_THRESHOLD &&
-            this.store.viewMode() !== 'grid'
+            this.effectiveViewMode !== 'grid'
         if (count === this.prevVirtCount && sv === this.prevShouldVirt) return
         this.prevVirtCount = count
         this.prevShouldVirt = sv

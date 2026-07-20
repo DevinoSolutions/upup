@@ -28,6 +28,50 @@ const PNG_1x1 = Buffer.from(
 )
 const PDF_BYTES = Buffer.from('%PDF-1.4\n%minimal\n', 'utf8')
 
+// data-testid for each parity component (the normalizer keys off these).
+const COMPONENT_TESTID: Record<ParityComponent, string> = {
+    sourceSelector: 'upup-source-selector',
+    fileItem: 'upup-file-item',
+    filePreview: 'upup-file-preview',
+    fileIcon: 'upup-file-icon',
+    fileList: 'upup-file-list',
+    fileHero: 'upup-file-hero',
+}
+
+// Per-variant seeding + the components that variant's file-count state renders.
+// sourceSelector is captured at mount (files.size === 0) for EVERY variant, so
+// it is not listed here. `components[0]` is the anchor awaited before capture.
+//   - default: 2 files → card list (fileItem embeds filePreview + fileIcon) + fileList.
+//   - hero:    1 file  → FileHero (single-file preview) + fileList; the card-list
+//              components (fileItem/filePreview/fileIcon) never render here.
+const VARIANT_PLAN: Record<
+    ParityVariant,
+    {
+        files: { name: string; mimeType: string; buffer: Buffer }[]
+        components: readonly ParityComponent[]
+        /** Screenshot state label for the populated capture. */
+        seededState: string
+    }
+> = {
+    default: {
+        files: [
+            { name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 },
+            {
+                name: 'parity.pdf',
+                mimeType: 'application/pdf',
+                buffer: PDF_BYTES,
+            },
+        ],
+        components: ['fileItem', 'filePreview', 'fileIcon', 'fileList'],
+        seededState: 'image-and-pdf-files-added',
+    },
+    hero: {
+        files: [{ name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 }],
+        components: ['fileHero', 'fileList'],
+        seededState: 'single-image-file-hero',
+    },
+}
+
 async function clearCrashRecovery(page: Page) {
     await page.evaluate(
         () =>
@@ -125,13 +169,16 @@ test.describe('cross-framework DOM + a11y parity', () => {
                 state: 'mount-source-selector',
             })
 
-            // SourceSelector is present at mount (files.size === 0).
+            // SourceSelector is present at mount (files.size === 0) for every variant.
             const sourceSelector = await normalize(
                 page,
                 '[data-testid="upup-source-selector"]',
             )
 
-            // Add an image (→ FilePreview) and a PDF (→ FileItem + FileIcon).
+            const plan = VARIANT_PLAN[variant]
+
+            // Seed the variant's files. default: image + PDF → card list; hero:
+            // one image → FileHero. Anchor = the first populated component.
             const fileInput = page.locator('[data-testid="upup-file-input"]')
             if ((await fileInput.count()) === 0) {
                 const localSource = page.locator(
@@ -142,51 +189,33 @@ test.describe('cross-framework DOM + a11y parity', () => {
             await fileInput
                 .first()
                 .waitFor({ state: 'attached', timeout: 15_000 })
-            await fileInput.first().setInputFiles([
-                { name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 },
-                {
-                    name: 'parity.pdf',
-                    mimeType: 'application/pdf',
-                    buffer: PDF_BYTES,
-                },
-            ])
+            await fileInput.first().setInputFiles(plan.files)
 
+            const anchor = plan.components[0]!
             await expect(
-                page.locator('[data-testid="upup-file-item"]').first(),
+                page
+                    .locator(`[data-testid="${COMPONENT_TESTID[anchor]}"]`)
+                    .first(),
             ).toBeVisible({ timeout: 15_000 })
 
-            // Visual layer (snapvisor): the populated file list — image preview
-            // plus PDF icon row — in every framework, same name contract.
+            // Visual layer (snapvisor): the populated file state for this variant
+            // (card list for default, single-file hero for hero) — same name
+            // contract across every framework.
             await captureProductStateScreenshot(page, {
                 suite: 'cross-framework',
                 framework: fw.name,
                 flow: `uploader-parity-${variant}`,
-                state: 'image-and-pdf-files-added',
+                state: plan.seededState,
             })
 
-            const fileItem = await normalize(
-                page,
-                '[data-testid="upup-file-item"]',
-            )
-            const filePreview = await normalize(
-                page,
-                '[data-testid="upup-file-preview"]',
-            )
-            const fileIcon = await normalize(
-                page,
-                '[data-testid="upup-file-icon"]',
-            )
-            const fileList = await normalize(
-                page,
-                '[data-testid="upup-file-list"]',
-            )
-
-            const captured: Record<ParityComponent, NormalizedNode> = {
+            const captured: Partial<Record<ParityComponent, NormalizedNode>> = {
                 sourceSelector,
-                fileItem,
-                filePreview,
-                fileIcon,
-                fileList,
+            }
+            for (const component of plan.components) {
+                captured[component] = await normalize(
+                    page,
+                    `[data-testid="${COMPONENT_TESTID[component]}"]`,
+                )
             }
 
             // Capture mode (react only): seed/refresh the fixtures for this variant, then hand-edit to target.
@@ -237,53 +266,33 @@ test.describe('cross-framework DOM + a11y parity', () => {
                 ).toBe(gap.ported.includes(fw.name))
             }
 
-            // Soft assertions so a single run reports ALL five component mismatches at
-            // once (the composite fileItem embeds the fileIcon + filePreview subtrees, so
-            // a hard assert would mask the leaf results behind the first failure).
+            // Soft assertions so a single run reports ALL of the variant's
+            // component mismatches at once (default's composite fileItem embeds
+            // the fileIcon + filePreview subtrees, so a hard assert would mask
+            // the leaf results behind the first failure). Assert exactly the
+            // components this variant rendered: sourceSelector (mount) plus the
+            // variant's populated set. fileList carries the documented
+            // F-711/F-712 divergences (KNOWN_DIVERGENCES) — react/preact
+            // hard-asserted, the others inverse-forced so the exception can't
+            // silently outlive the bugs it names.
             //
             // Fix 4 (D1): the hidden file input is `upup-hidden` (display:none) + aria-hidden
             // + tabindex=-1 — invisible plumbing. React/Vue render it inside SourceSelector;
             // Svelte/Angular own it in the shell. The normalizer skips `upup-hidden` subtrees,
             // so this asserts the VISIBLE + a11y SourceSelector contract only. The input's DOM
             // location stays a per-framework implementation detail (no runtime-contract rewrite).
-            assertComponentParity(
-                variant,
+            for (const component of [
                 'sourceSelector',
-                captured.sourceSelector,
-                fw.name,
-                'SourceSelector parity',
-            )
-            assertComponentParity(
-                variant,
-                'fileItem',
-                captured.fileItem,
-                fw.name,
-                'FileItem parity',
-            )
-            assertComponentParity(
-                variant,
-                'filePreview',
-                captured.filePreview,
-                fw.name,
-                'FilePreview parity',
-            )
-            assertComponentParity(
-                variant,
-                'fileIcon',
-                captured.fileIcon,
-                fw.name,
-                'FileIcon parity',
-            )
-            // fileList: react/preact hard-asserted; vue/svelte/vanilla/angular carry the
-            // documented F-711/F-712 divergences (KNOWN_DIVERGENCES) -- inverse forcing
-            // check keeps the exception from silently outliving the bugs it names.
-            assertComponentParity(
-                variant,
-                'fileList',
-                captured.fileList,
-                fw.name,
-                'FileList parity',
-            )
+                ...plan.components,
+            ] as ParityComponent[]) {
+                assertComponentParity(
+                    variant,
+                    component,
+                    captured[component]!,
+                    fw.name,
+                    `${component} parity`,
+                )
+            }
         })
     }
 })

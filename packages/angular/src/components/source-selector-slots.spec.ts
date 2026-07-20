@@ -70,9 +70,12 @@ describe('SourceSelectorComponent — source* theme slots', () => {
     it('applies sourceButtonText override to the tile label', async () => {
         store = makeThemedStore()
         const el = await mount()
-        const label = el.querySelector(
+        // Chip structure: <button><span.icon-box><svg/></span><span.label/></button>
+        // — the label is the LAST span (the icon box span comes first).
+        const spans = el.querySelectorAll(
             '[data-testid="upup-source-local"] span',
-        )!
+        )
+        const label = spans[spans.length - 1]!
         expect(label.classList.contains('test-slot-text')).toBe(true)
     })
 

@@ -16,12 +16,18 @@ import {
     StringInput,
     NestedConfig,
 } from './sidebar/primitives'
-import type { InteractiveExampleProps, ToggleEntry } from './types'
+import type { CategoryId, InteractiveExampleProps, ToggleEntry } from './types'
 
 function renderEntry(entry: ToggleEntry) {
     switch (entry.primitive) {
         case 'bool':
-            return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} />
+            return (
+                <BoolToggle
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                />
+            )
         case 'number':
             return (
                 <NumberInput
@@ -57,7 +63,9 @@ function renderEntry(entry: ToggleEntry) {
                     key={entry.id}
                     propId={entry.id}
                     label={entry.label}
-                    placeholder={entry.options?.placeholder as string | undefined}
+                    placeholder={
+                        entry.options?.placeholder as string | undefined
+                    }
                 />
             )
         case 'nested':
@@ -74,12 +82,14 @@ function renderEntry(entry: ToggleEntry) {
 
 function Shell({
     defaultExpanded,
+    hiddenCategories,
     showCodeTab,
     showEventsTab,
     previewWidth,
     aiAssistant,
 }: {
     defaultExpanded: NonNullable<InteractiveExampleProps['defaultExpanded']>
+    hiddenCategories: CategoryId[]
     showCodeTab: boolean
     showEventsTab: boolean
     previewWidth: number | 'auto'
@@ -96,7 +106,7 @@ function Shell({
     useEffect(() => {
         const el = mainRef.current
         if (!el || typeof ResizeObserver === 'undefined') return
-        const ro = new ResizeObserver((entries) => {
+        const ro = new ResizeObserver(entries => {
             for (const e of entries) {
                 setColHeight(Math.round(e.contentRect.height))
             }
@@ -106,7 +116,7 @@ function Shell({
     }, [])
 
     const shellStyle: React.CSSProperties | undefined = colHeight
-        ? ({ ['--ie-side-height' as any]: `${colHeight}px` })
+        ? { ['--ie-side-height' as any]: `${colHeight}px` }
         : undefined
 
     return (
@@ -115,7 +125,10 @@ function Shell({
             data-ai={aiEnabled ? 'on' : 'off'}
             style={shellStyle}
         >
-            <Sidebar defaultExpanded={defaultExpanded} />
+            <Sidebar
+                defaultExpanded={defaultExpanded}
+                hiddenCategories={hiddenCategories}
+            />
             <div ref={mainRef} className="upup-ie-main">
                 <div className="upup-ie-tabs">
                     <button
@@ -148,7 +161,11 @@ function Shell({
                     {/* Always render UploaderPreview so the uploader stays mounted
                         across tab switches (SSE processors, upload state, etc.
                         survive). Hide it visually when another tab is active. */}
-                    <div style={tab === 'preview' ? undefined : { display: 'none' }}>
+                    <div
+                        style={
+                            tab === 'preview' ? undefined : { display: 'none' }
+                        }
+                    >
                         <UploaderPreview width={previewWidth} />
                     </div>
                     {tab === 'code' && showCodeTab && <CodeTab />}
@@ -159,6 +176,9 @@ function Shell({
                 <AssistantPanel
                     mastraBaseUrl={aiAssistant?.mastraBaseUrl}
                     agentId={aiAssistant?.agentId}
+                    appId={aiAssistant?.appId}
+                    posthogDistinctId={aiAssistant?.posthogDistinctId}
+                    onAiFeedback={aiAssistant?.onAiFeedback}
                 />
             )}
         </div>
@@ -173,11 +193,13 @@ function FocusMode({
     previewWidth: number | 'auto'
 }) {
     const entries = focus
-        .map((id) => findEntry(id))
+        .map(id => findEntry(id))
         .filter((e): e is ToggleEntry => e != null)
     return (
         <div className="upup-ie-focus">
-            <div className="upup-ie-focus-toggles">{entries.map(renderEntry)}</div>
+            <div className="upup-ie-focus-toggles">
+                {entries.map(renderEntry)}
+            </div>
             <UploaderPreview width={previewWidth} />
         </div>
     )
@@ -185,6 +207,7 @@ function FocusMode({
 
 export function InteractiveExample({
     defaultExpanded = [],
+    hiddenCategories = [],
     showCodeTab = true,
     showEventsTab = true,
     focus,
@@ -200,6 +223,7 @@ export function InteractiveExample({
                 ) : (
                     <Shell
                         defaultExpanded={defaultExpanded}
+                        hiddenCategories={hiddenCategories}
                         showCodeTab={showCodeTab}
                         showEventsTab={showEventsTab}
                         previewWidth={previewWidth}

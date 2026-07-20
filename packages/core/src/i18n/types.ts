@@ -49,7 +49,15 @@ export interface DropzoneMessages {
     dragFilesHere: string
     browseFiles: string
     dragOrBrowse: string
+    /** Heading lead-in before the inline "browse files" link. */
+    dropFilesHere: string
+    /** Heading tail after "browse files", introducing the source chips. */
+    orImportFrom: string
     selectAFolder: string
+    /** ICU: "{count, plural, one {# file max} other {# files max}}" */
+    filesMax: string
+    /** ICU: "{size} {unit} each" — per-file size limit caption. */
+    sizeEach: string
     /** ICU: "Max {size} {unit} {count, plural, one {file is allowed} other {files are allowed}}" */
     maxFileSizeAllowed: string
     /** ICU: "Min {size} {unit}" */
@@ -68,16 +76,24 @@ export interface DropzoneMessages {
     addDocumentsHere: string
     /** ICU: "Drop files here or click to browse" */
     dropAriaLabel: string
+    /** Drag-over prompt shown while a file is dragged over the panel. */
+    dropToUpload: string
 }
 
 export interface HeaderMessages {
     removeAllFiles: string
     addingMoreFiles: string
+    /** Navigation "Back" — closes the add-more source overlay. */
+    overlayBack: string
     /** ICU: "{count, plural, one {# file selected} other {# files selected}}" */
     filesSelected: string
     addMore: string
     switchToListView: string
     switchToGridView: string
+    /** Short label shown next to the icon on the ACTIVE view-toggle segment
+     *  (the inactive segment stays icon-only). Keep it to one short word. */
+    viewGrid: string
+    viewList: string
 }
 
 export interface FileListMessages {
@@ -126,6 +142,8 @@ export interface DriveBrowserMessages {
     /** ICU: "Couldn't load files: {message}" */
     loadError: string
     loadMore: string
+    /** ICU: "We can't add files to your {provider}" — read-only drive-picker drop rejection. */
+    dropRejected: string
 }
 
 export interface UrlMessages {

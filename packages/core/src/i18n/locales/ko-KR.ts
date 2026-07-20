@@ -27,7 +27,11 @@ export const koKR: LocaleBundle = {
             dragFilesHere: '파일을 여기에 드래그',
             browseFiles: '파일 찾아보기',
             dragOrBrowse: '드래그 또는 찾아보기로 업로드',
+            dropFilesHere: '여기에 파일을 놓거나,',
+            orImportFrom: '또는 가져오기:',
             selectAFolder: '폴더 선택',
+            filesMax: '{count, plural, other {최대 #개 파일}}',
+            sizeEach: '개당 {size} {unit}',
             maxFileSizeAllowed: '최대 {size} {unit} 파일 허용',
             minFileSizeDisplay: '최소 {size} {unit}',
             allowedFileTypes: '허용 유형: {types}',
@@ -39,14 +43,18 @@ export const koKR: LocaleBundle = {
             addDocumentsHere:
                 '여기에 문서를 추가하세요. 최대 {limit}개 파일까지 업로드 가능합니다',
             dropAriaLabel: '파일을 여기에 드롭하거나 클릭하여 찾아보기',
+            dropToUpload: '여기에 파일을 놓으세요',
         },
         header: {
             removeAllFiles: '모든 파일 삭제',
             addingMoreFiles: '파일 추가 중',
+            overlayBack: '뒤로',
             filesSelected: '{count, plural, other {#개 파일 선택됨}}',
             addMore: '더 추가',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: '그리드',
+            viewList: '목록',
         },
         fileList: {
             uploadFiles: '{count, plural, other {#개 파일 업로드}}',
@@ -83,6 +91,7 @@ export const koKR: LocaleBundle = {
                 '{provider}에서 인증하여 업로드할 파일을 선택하세요',
             signInWith: '{provider}로 로그인',
             loadError: "Couldn't load files: {message}",
+            dropRejected: '{provider}에 파일을 추가할 수 없습니다',
             loadMore: 'Load more',
         },
         url: {

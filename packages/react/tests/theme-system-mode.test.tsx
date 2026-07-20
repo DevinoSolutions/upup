@@ -39,7 +39,10 @@ describe('theme.mode="system"', () => {
             const uploader = container.querySelector(
                 '[data-testid="upup-container"]',
             )
-            expect(uploader?.className).toContain('upup-bg-[#232323]')
+            // Dark chrome is the gradient default (from-#141b2e) plus the
+            // dark sheen modifier — both are emitted only on the resolved-dark branch.
+            expect(uploader?.className).toContain('upup-from-[#141b2e]')
+            expect(uploader?.className).toContain('upup-panel-sheen-dark')
         })
     })
 })

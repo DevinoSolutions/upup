@@ -15,6 +15,7 @@
         "cross-framework",
         "visual",
         "drive-sandbox",
+        "landing",
         "*.config.ts"
     ]
 }

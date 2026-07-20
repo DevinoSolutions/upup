@@ -31,7 +31,12 @@ export const frFR: LocaleBundle = {
                 '{count, plural, one {Glissez votre fichier ici} other {Glissez vos fichiers ici}}',
             browseFiles: 'parcourir les fichiers',
             dragOrBrowse: 'Glissez ou parcourez pour t\u00E9l\u00E9verser',
+            dropFilesHere: 'D\u00E9posez les fichiers ici,',
+            orImportFrom: 'ou importez depuis :',
             selectAFolder: 's\u00E9lectionner un dossier',
+            filesMax:
+                '{count, plural, one {# fichier max.} other {# fichiers max.}}',
+            sizeEach: '{size} {unit} chacun',
             maxFileSizeAllowed:
                 'Max {size} {unit} {count, plural, one {fichier autoris\u00E9} other {fichiers autoris\u00E9s}}',
             minFileSizeDisplay: 'Min {size} {unit}',
@@ -47,16 +52,20 @@ export const frFR: LocaleBundle = {
                 "Ajoutez vos documents ici, vous pouvez t\u00E9l\u00E9verser jusqu'\u00E0 {limit} fichiers max",
             dropAriaLabel:
                 'D\u00E9posez les fichiers ici ou cliquez pour parcourir',
+            dropToUpload: 'D\u00E9posez vos fichiers ici',
         },
 
         header: {
             removeAllFiles: 'Supprimer tous les fichiers',
             addingMoreFiles: 'Ajout de fichiers suppl\u00E9mentaires',
+            overlayBack: 'Retour',
             filesSelected:
                 '{count, plural, one {# fichier s\u00E9lectionn\u00E9} other {# fichiers s\u00E9lectionn\u00E9s}}',
             addMore: 'Ajouter plus',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Grille',
+            viewList: 'Liste',
         },
 
         fileList: {
@@ -98,6 +107,8 @@ export const frFR: LocaleBundle = {
                 'Authentifiez-vous avec {provider} pour s\u00E9lectionner des fichiers \u00E0 t\u00E9l\u00E9verser',
             signInWith: 'Se connecter avec {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected:
+                'Nous ne pouvons pas ajouter de fichiers à votre {provider}',
             loadMore: 'Load more',
         },
 

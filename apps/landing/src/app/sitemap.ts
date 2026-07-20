@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { FRAMEWORK_IDS } from '@/lib/frameworks'
 
 const SITE_URL = 'https://useupup.com'
 
@@ -34,6 +35,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'weekly',
             priority: 1,
         },
+        // Per-framework landing pages (/react, /vue, …) — high-value entry points.
+        ...FRAMEWORK_IDS.map((id): MetadataRoute.Sitemap[number] => ({
+            url: `${SITE_URL}/${id}`,
+            lastModified,
+            changeFrequency: 'weekly',
+            priority: 0.9,
+        })),
         {
             url: `${SITE_URL}/privacy`,
             lastModified,

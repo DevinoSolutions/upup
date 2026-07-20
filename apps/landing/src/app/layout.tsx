@@ -7,8 +7,8 @@ import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
 import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
-import SplashCursor from '@/components/SplashCursor'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -165,7 +165,7 @@ export default function RootLayout({
                 )}
             </head>
             <body
-                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
+                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)]`}
                 suppressHydrationWarning={true}
                 data-hydration-stable="true"
                 key="main-body"
@@ -173,10 +173,10 @@ export default function RootLayout({
                 <PostHogProvider>
                     <Providers>
                         <ThemeProvider>
-                            <SplashCursor />
-                            <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
+                            <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
                                 <Navbar />
                                 {children}
+                                <Footer />
                             </div>
                         </ThemeProvider>
                     </Providers>

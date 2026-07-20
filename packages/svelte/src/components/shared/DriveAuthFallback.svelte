@@ -47,9 +47,9 @@ import { cn } from '@upupjs/core/internal'
     <button
       type="button"
       class={cn(
-        'upup-rounded-md upup-bg-blue-600 upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-blue-700',
+        'upup-rounded-md upup-bg-[#0ea5e9] upup-px-4 upup-py-2 upup-text-sm upup-font-medium upup-text-white upup-transition-all upup-duration-300 hover:upup-bg-[#0284c7]',
         {
-          'upup-bg-[#30C5F7] hover:upup-bg-[#1eb4e6] dark:upup-bg-[#30C5F7] dark:hover:upup-bg-[#1eb4e6]': $dark,
+          'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8] dark:hover:upup-bg-[#0ea5e9]': $dark,
         },
       )}
       onclick={onRetry}

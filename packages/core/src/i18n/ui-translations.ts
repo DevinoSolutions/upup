@@ -23,19 +23,28 @@ export type UiTranslations = {
     dragFileOr: string
     dragFilesOr: string
     browseFiles: string
+    dropFilesHere: string
+    orImportFrom: string
     or: string
     selectAFolder: string
     maxFileSizeAllowed_one: string
     maxFileSizeAllowed_other: string
+    filesMax_one: string
+    filesMax_other: string
+    sizeEach: string
     addDocumentsHere: string
+    dropToUpload: string
     builtBy: string
     removeAllFiles: string
     addingMoreFiles: string
+    overlayBack: string
     filesSelected_one: string
     filesSelected_other: string
     addMore: string
     switchToListView: string
     switchToGridView: string
+    viewGrid: string
+    viewList: string
     dropzoneLabel: string
     uploadFiles_one: string
     uploadFiles_other: string
@@ -67,6 +76,7 @@ export type UiTranslations = {
     authenticatePrompt: string
     signInWith: string
     driveLoadError: string
+    dropRejected: string
     loadMore: string
     enterFileUrl: string
     fetch: string
@@ -228,6 +238,8 @@ export function flattenTranslatorToUiTranslations(
         dragFileOr: tr('dropzone.dragFilesOr', { count: 1 }),
         dragFilesOr: tr('dropzone.dragFilesOr', { count: 2 }),
         browseFiles: tr('dropzone.browseFiles'),
+        dropFilesHere: tr('dropzone.dropFilesHere'),
+        orImportFrom: tr('dropzone.orImportFrom'),
         selectAFolder: tr('dropzone.selectAFolder'),
         maxFileSizeAllowed_one: tr('dropzone.maxFileSizeAllowed', {
             size: '{{size}}',
@@ -239,16 +251,26 @@ export function flattenTranslatorToUiTranslations(
             unit: '{{unit}}',
             count: 2,
         }),
+        filesMax_one: countPluralForm('dropzone.filesMax', 1),
+        filesMax_other: countPluralForm('dropzone.filesMax', 2),
+        sizeEach: tr('dropzone.sizeEach', {
+            size: '{{size}}',
+            unit: '{{unit}}',
+        }),
         addDocumentsHere: tr('dropzone.addDocumentsHere', {
             limit: '{{limit}}',
         }),
+        dropToUpload: tr('dropzone.dropToUpload'),
         removeAllFiles: tr('header.removeAllFiles'),
         addingMoreFiles: tr('header.addingMoreFiles'),
+        overlayBack: tr('header.overlayBack'),
         filesSelected_one: countPluralForm('header.filesSelected', 1),
         filesSelected_other: countPluralForm('header.filesSelected', 2),
         addMore: tr('header.addMore'),
         switchToListView: tr('header.switchToListView'),
         switchToGridView: tr('header.switchToGridView'),
+        viewGrid: tr('header.viewGrid'),
+        viewList: tr('header.viewList'),
         dropzoneLabel: tr('dropzone.dropAriaLabel'),
         uploadFiles_one: countPluralForm('fileList.uploadFiles', 1),
         uploadFiles_other: countPluralForm('fileList.uploadFiles', 2),
@@ -285,6 +307,9 @@ export function flattenTranslatorToUiTranslations(
         signInWith: tr('driveBrowser.signInWith', { provider: '{{provider}}' }),
         driveLoadError: tr('driveBrowser.loadError', {
             message: '{{message}}',
+        }),
+        dropRejected: tr('driveBrowser.dropRejected', {
+            provider: '{{provider}}',
         }),
         loadMore: tr('driveBrowser.loadMore'),
         enterFileUrl: tr('url.enterFileUrl'),

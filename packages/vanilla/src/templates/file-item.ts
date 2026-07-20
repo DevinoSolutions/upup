@@ -5,11 +5,12 @@ import {
     fileGetIsPdf,
     fileGetIsText,
     fileCanPreviewText,
+    cn,
 } from '@upupjs/core/internal'
-import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { filePreview } from './file-preview'
 import { filePreviewPortal, type TextState } from './file-preview-portal'
+import { fileRow } from './file-row'
 
 export interface FileItemState {
     canPreview: boolean
@@ -45,10 +46,15 @@ function stateFor(file: UploadFile): FileItemState {
 export function fileItem(
     ctx: UploaderContext,
     file: UploadFile,
+    index = 0,
+    forcedList = false,
 ): TemplateResult {
     const state = stateFor(file)
     const slot = ctx.theme.getSnapshot().slotOverrides
     const filesSize = ctx.core.files.size
+    const viewMode = ctx.orchestrator.getSnapshot().viewMode
+    const leaving = ctx.getTransientUi().leavingFileIds.has(file.id)
+
     const openPortal = () => {
         state.showPreviewPortal = true
         ctx.core.emit('file-preview-open', {
@@ -79,11 +85,17 @@ export function fileItem(
     const stop = (e: MouseEvent) => {
         e.stopPropagation()
     }
+
+    const useRow = viewMode === 'list' || forcedList
+
     return html` <div
         data-testid="upup-file-item"
         data-upup-slot="file-item"
+        role="listitem"
         class=${cn(
+            'upup-animate-fx-enter',
             'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
+            leaving && 'upup-animate-fx-exit upup-overflow-hidden',
             {
                 [slot.fileItemMultiple ?? '']:
                     !!slot.fileItemMultiple && filesSize > 1,
@@ -91,20 +103,28 @@ export function fileItem(
                     !!slot.fileItemSingle && filesSize === 1,
             },
         )}
+        style=${leaving ? nothing : `animation-delay: ${Math.min(index, 8) * 40}ms`}
     >
-        ${filePreview(ctx, file, state, { onRequestPreview: openPortal })}
         ${
-            state.canPreview && state.showPreviewPortal
-                ? filePreviewPortal(ctx, {
-                      fileType: file.type,
-                      fileUrl: file.url ?? '',
-                      fileName: file.name,
-                      fileSize: file.size,
-                      onClose: closePortal,
-                      onStopPropagation: stop,
-                      cell: state,
-                  })
-                : nothing
+            useRow
+                ? fileRow(ctx, file, index)
+                : html`${filePreview(ctx, file, state, {
+                      onRequestPreview: openPortal,
+                      index,
+                  })}
+                  ${
+                      state.canPreview && state.showPreviewPortal
+                          ? filePreviewPortal(ctx, {
+                                fileType: file.type,
+                                fileUrl: file.url ?? '',
+                                fileName: file.name,
+                                fileSize: file.size,
+                                onClose: closePortal,
+                                onStopPropagation: stop,
+                                cell: state,
+                            })
+                          : nothing
+                  }`
         }
     </div>`
 }

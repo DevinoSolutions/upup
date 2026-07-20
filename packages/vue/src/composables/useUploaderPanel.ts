@@ -10,6 +10,7 @@ import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
+    useUploaderView,
 } from '../context/uploader-context'
 
 interface UseUploaderPanelReturn {
@@ -25,6 +26,7 @@ interface UseUploaderPanelReturn {
 export default function useUploaderPanel(): UseUploaderPanelReturn {
     const { core, orchestrator } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
+    const { flagDriveDropRejected } = useUploaderView()
     const options = useUploaderOptions()
     const { disableDragDrop, isProcessing, folderUploadAllowDrop } = options
 
@@ -41,6 +43,9 @@ export default function useUploaderPanel(): UseUploaderPanelReturn {
         filesSize: () => orchestrator.getSnapshot().files.size,
         options: () => options,
         props: () => ({ disableDragDrop, isProcessing, folderUploadAllowDrop }),
+        onReadonlyDropRejected: source => {
+            flagDriveDropRejected(source)
+        },
     })
 
     const snapshot = shallowRef(controller.getSnapshot())

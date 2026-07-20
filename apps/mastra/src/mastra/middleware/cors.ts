@@ -1,4 +1,11 @@
-type Context = { req: { method: string; header: (name: string) => string | undefined; url: string }; header: (name: string, value: string) => void }
+type Context = {
+    req: {
+        method: string
+        header: (name: string) => string | undefined
+        url: string
+    }
+    header: (name: string, value: string) => void
+}
 type Next = () => Promise<void>
 import { env } from '../../lib/env.js'
 
@@ -13,12 +20,15 @@ import { env } from '../../lib/env.js'
 export function corsMiddleware() {
     const raw = env.ALLOWED_ORIGINS?.trim()
     const allowList = raw
-        ? raw.split(',').map((s) => s.trim()).filter(Boolean)
+        ? raw
+              .split(',')
+              .map(s => s.trim())
+              .filter(Boolean)
         : [
               'http://localhost:5173',
               'http://localhost:3000',
               'http://localhost:4321',
-              'http://localhost:53004', // apps/playground (PLAYGROUND_PORT in local-dev/.env.ports)
+              'http://localhost:53056', // apps/playground (PLAYGROUND_PORT in local-dev/.env.ports)
           ]
 
     return async (c: Context, next: Next) => {

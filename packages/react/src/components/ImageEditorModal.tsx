@@ -248,8 +248,10 @@ export default memo(function ImageEditorModal(props: Props) {
             >
                 <div
                     className={cn(
-                        'upup-relative upup-flex upup-h-[90vh] upup-w-[90vw] upup-max-w-5xl upup-flex-col upup-overflow-hidden upup-rounded-xl upup-shadow-2xl',
-                        dark ? 'upup-bg-[#232323]' : 'upup-bg-white',
+                        'upup-relative upup-flex upup-h-[90vh] upup-w-[90vw] upup-max-w-5xl upup-flex-col upup-overflow-hidden upup-rounded-xl upup-shadow-2xl upup-ring-1',
+                        dark
+                            ? 'upup-bg-[#232323] upup-ring-white/[0.08]'
+                            : 'upup-bg-white upup-ring-black/10',
                     )}
                     data-upup-theme={dark ? 'dark' : 'light'}
                     onClick={handleContentClick}
@@ -285,8 +287,8 @@ export default memo(function ImageEditorModal(props: Props) {
                                     className={cn(
                                         'upup-h-8 upup-w-8 upup-animate-spin upup-rounded-full upup-border-2 upup-border-t-transparent',
                                         dark
-                                            ? 'upup-border-gray-500'
-                                            : 'upup-border-gray-300',
+                                            ? 'upup-border-[#38bdf8]'
+                                            : 'upup-border-[#0ea5e9]',
                                     )}
                                 />
                             </div>

@@ -2,18 +2,21 @@ import {
     ref,
     shallowRef,
     computed,
+    watch,
     onMounted,
     onUnmounted,
     defineComponent,
     h,
     type Ref,
 } from 'vue'
-import { FileSource, type UploadFile } from '@upupjs/core'
+import { FileSource, type UploadFile, type UiTranslations } from '@upupjs/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
     type OrchestratorState,
     type UploaderControllerOptions,
+    type TransientUiSnapshot,
+    type CloudProvider,
 } from '@upupjs/core/internal'
 import type { UploaderProps } from '../shared/types'
 import type { IUploaderContext } from '../context/uploader-context'
@@ -40,7 +43,33 @@ const DefaultFileDeleteIcon = defineComponent({
             }),
 })
 
+/** Default 'add more' glyph — renders the shared registry 'plus' icon (parity with
+ *  React's DefaultPlusIconComponent). Forwards the consumer's class/attrs to the svg. */
+const DefaultAddMoreIcon = defineComponent({
+    name: 'UpupDefaultAddMoreIcon',
+    inheritAttrs: false,
+    setup:
+        (_props, { attrs }) =>
+        () =>
+            h(Icon, {
+                name: 'plus',
+                class: attrs.class as string | undefined,
+                size: attrs.size as number | undefined,
+            }),
+})
+
 const EMPTY_STYLE: Record<string, string> = {}
+
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof
+ *  UiTranslations>` so the compiler enforces exhaustiveness against the same
+ *  drive-source union core's DragDropController gates on. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
 
 export default function useUploaderController(
     props: UploaderProps,
@@ -49,11 +78,13 @@ export default function useUploaderController(
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
+        animations = true,
         maxFiles,
         isProcessing = false,
         allowPreview = true,
         folderUpload,
         showBranding = true,
+        quietCompletion = false,
         disableDragDrop = false,
         className,
         style,
@@ -147,9 +178,11 @@ export default function useUploaderController(
         allowedFileTypes:
             typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
         mini,
+        animations,
         isProcessing,
         allowPreview,
         showBranding,
+        quietCompletion,
         disableDragDrop,
         className,
         maxFileSize: maxFileSizeProp,
@@ -234,6 +267,29 @@ export default function useUploaderController(
         state.value = controller.orchestrator.getSnapshot()
     })
 
+    // ── Subscribe to the transient-UI store (deferred removal / overlay / toast) ─
+    const transientUi = shallowRef<TransientUiSnapshot>(
+        controller.transientUi.getSnapshot(),
+    )
+    const unsubTransient = controller.transientUi.subscribe(() => {
+        transientUi.value = controller.transientUi.getSnapshot()
+    })
+
+    // ── Subscribe to the motion gate (data-motion resolution) ────
+    const motionMode = shallowRef(controller.motionGate.getSnapshot())
+    const unsubMotion = controller.motionGate.subscribe(() => {
+        motionMode.value = controller.motionGate.getSnapshot()
+    })
+
+    // Drop-rejection: core's DragDropController decides WHICH source rejects; the
+    // host resolves the human provider label and raises the toast (core store).
+    function flagDriveDropRejected(source: FileSource) {
+        const key: keyof UiTranslations | undefined =
+            DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
+        const label = key ? resolved.translations[key] : source
+        controller.transientUi.flagDropRejected(label)
+    }
+
     // ── Subscribe to theme state (Vue pattern: shallowRef + subscribe) ────────
     const themeState = shallowRef(controller.theme.getSnapshot())
     let unsubTheme: (() => void) | null = null
@@ -247,6 +303,18 @@ export default function useUploaderController(
         unsubTheme?.()
     })
 
+    // ── Re-resolve on theme-prop change (post-mount) ─────────────
+    // The controller (hence its ThemeStore) is created once, so a `theme` prop
+    // change after mount would otherwise never reach the live store. ThemeStore
+    // short-circuits structurally-equal configs, so an inlined object literal
+    // (e.g. :theme="{ mode: 'dark' }") per render costs nothing.
+    watch(
+        () => props.theme,
+        theme => {
+            controller.theme.setThemeConfig(theme)
+        },
+    )
+
     // ── Lifecycle via factory (idempotent init/destroy) ──────────
     // controller.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
@@ -258,6 +326,8 @@ export default function useUploaderController(
     onUnmounted(() => {
         controller.destroy()
         unsub()
+        unsubTransient()
+        unsubMotion()
     })
 
     // ── Input ref (Vue-specific) ────────────────────────────────
@@ -270,7 +340,7 @@ export default function useUploaderController(
 
     // ── Icons resolution (framework-specific; Vue uses EmptyIcon stubs) ──────
     const resolvedIcons = computed(() => ({
-        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? EmptyIcon,
+        ContainerAddMoreIcon: icons.ContainerAddMoreIcon ?? DefaultAddMoreIcon,
         FileDeleteIcon: icons.FileDeleteIcon ?? DefaultFileDeleteIcon,
         CameraCaptureIcon: icons.CameraCaptureIcon ?? EmptyIcon,
         CameraRotateIcon: icons.CameraRotateIcon ?? EmptyIcon,
@@ -288,6 +358,7 @@ export default function useUploaderController(
         serverUrl: resolved.serverUrl,
         inputRef,
         openFilePicker,
+        motionMode: computed(() => motionMode.value),
         // Reactive so consumers re-render when the active source changes.
         activeSource: computed(() => state.value.activeSource),
         setActiveSource: (source: FileSource | undefined) => {
@@ -301,6 +372,18 @@ export default function useUploaderController(
         setViewMode: (m: 'grid' | 'list') => {
             controller.commands.setViewMode(m)
         },
+        sourceOverlayOpen: computed(() => transientUi.value.sourceOverlayOpen),
+        sourceOverlayClosing: computed(
+            () => transientUi.value.sourceOverlayClosing,
+        ),
+        openSourceOverlay: () => {
+            controller.transientUi.openSourceOverlay()
+        },
+        closeSourceOverlay: () => {
+            controller.transientUi.closeSourceOverlay()
+        },
+        dropRejected: computed(() => transientUi.value.dropRejected),
+        flagDriveDropRejected,
         isOnline: computed(() => state.value.isOnline),
         translations: resolved.translations,
         translator: resolved.translator,
@@ -318,6 +401,7 @@ export default function useUploaderController(
             slots: themeState.value.slots,
         },
         files: computed(() => state.value.files),
+        leavingFileIds: computed(() => transientUi.value.leavingFileIds),
         // handleSetSelectedFiles self-handles addFiles errors and never rejects;
         // route any unexpected rejection to onError to honor the void contract.
         setFiles: (newFiles: File[]) => {
@@ -399,6 +483,7 @@ export default function useUploaderController(
             folderUploadAllowDrop: resolved.folderUploadAllowDrop,
             folderPickerButtonVisible: resolved.folderPickerButtonVisible,
             showBranding,
+            quietCompletion,
             disableDragDrop,
             className: className ?? '',
             style: resolvedStyle,

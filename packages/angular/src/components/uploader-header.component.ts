@@ -1,39 +1,23 @@
-import { Component, Input, inject, Type } from '@angular/core'
+import { Component, Input, inject, type Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@upupjs/core'
-import { isUploadActive } from '@upupjs/core/internal'
+import { isUploadActive, cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
-import { LayoutGridIconComponent } from './icons/layout-grid-icon.component'
-import { LayoutListIconComponent } from './icons/layout-list-icon.component'
+import { IconComponent } from './icon.component'
 
 /**
- * Header bar for the main upload box — port of UploaderHeader.svelte.
+ * Header bar for the file-list screen — port of shared/UploaderHeader.
  *
- * Svelte original:
- *   {#if !mini} <div data-testid="upup-header" …> … </div> {/if}
- *
- * Reads (from store):
- *   - store.uiProps.mini, store.uiProps.limit, store.uiProps.isProcessing
- *   - store.uiProps.icons.ContainerAddMoreIcon
- *   - store.slotOverrides()  → containerHeader / containerCancelButton / containerAddMoreButton
- *   - store.isDark()
- *   - store.files()          → size
- *   - store.isAddingMore()
- *   - store.viewMode()
- *   - store.uploadStatus()   → isUploading
- *   - store.translations()   → tr
- *
- * Input:
- *   - handleCancel (() => void) — passed from the parent (UploaderPanel) on cancel button click.
+ * Renders the remove-all button, the file-count label, a two-segment grid|list
+ * view toggle (aria-pressed; active segment shows its i18n label at md+), and a
+ * dashed add-more button that opens the source overlay. Hidden entirely in mini
+ * mode. `forcedList` hides the toggle when the tiles no longer fit one row;
+ * `hideAddMore` suppresses the add-more control in quiet-completion mode.
  */
 @Component({
     selector: 'upup-uploader-header',
     standalone: true,
-    imports: [
-        LayoutGridIconComponent,
-        LayoutListIconComponent,
-        NgComponentOutlet,
-    ],
+    imports: [NgComponentOutlet, IconComponent],
     template: `
         @if (!store.uiProps.mini) {
             <div
@@ -41,57 +25,83 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
                 data-upup-slot="header"
                 [class]="headerClass"
             >
-                <!-- Cancel / remove-all button (left) -->
                 <button
                     [class]="cancelButtonClass"
                     (click)="handleCancel()"
                     [disabled]="isUploading || store.uiProps.isProcessing"
                 >
-                    {{ cancelText }}
+                    {{ store.translations().removeAllFiles }}
                 </button>
-
-                <!-- File count / adding-more label (centre) -->
-                <span [class]="labelClass">
-                    @if (store.isAddingMore()) {
-                        {{ store.translations().addingMoreFiles }}
-                    }
-                    @if (!store.isAddingMore()) {
-                        {{ fileCountText }}
-                    }
-                </span>
-
-                <!-- Right controls: view-mode toggle + add-more -->
+                <span [class]="labelClass">{{ fileCountText }}</span>
                 <div
                     class="upup-col-start-3 upup-col-end-5 upup-flex upup-items-center upup-justify-end upup-gap-2 md:upup-col-start-4"
                 >
-                    <!-- View-mode toggle (only when >1 file) -->
-                    @if (store.files().size > 1) {
-                        <button
-                            [class]="viewModeButtonClass"
-                            (click)="toggleViewMode()"
-                            [title]="
-                                store.viewMode() === 'grid'
-                                    ? store.translations().switchToListView
-                                    : store.translations().switchToGridView
+                    @if (store.files().size > 1 && !forcedList) {
+                        <div
+                            role="group"
+                            [attr.aria-label]="
+                                store.translations().switchToGridView
                             "
+                            data-upup-slot="view-toggle"
+                            [class]="toggleGroupClass"
                         >
-                            @if (store.viewMode() === 'grid') {
-                                <upup-icon-layout-list [size]="16" />
-                            } @else {
-                                <upup-icon-layout-grid [size]="16" />
-                            }
-                        </button>
+                            <button
+                                data-testid="upup-view-toggle-grid"
+                                [attr.aria-label]="
+                                    store.translations().switchToGridView
+                                "
+                                [attr.aria-pressed]="
+                                    store.viewMode() === 'grid'
+                                "
+                                [title]="store.translations().switchToGridView"
+                                [class]="gridToggleClass"
+                                (click)="store.setViewMode('grid')"
+                            >
+                                <upup-icon name="layout-grid" [size]="15" />
+                                @if (store.viewMode() === 'grid') {
+                                    <span
+                                        class="upup-hidden upup-text-xs upup-font-medium upup-leading-none md:upup-inline"
+                                        >{{
+                                            store.translations().viewGrid
+                                        }}</span
+                                    >
+                                }
+                            </button>
+                            <button
+                                data-testid="upup-view-toggle-list"
+                                [attr.aria-label]="
+                                    store.translations().switchToListView
+                                "
+                                [attr.aria-pressed]="
+                                    store.viewMode() === 'list'
+                                "
+                                [title]="store.translations().switchToListView"
+                                [class]="listToggleClass"
+                                (click)="store.setViewMode('list')"
+                            >
+                                <upup-icon name="layout-list" [size]="15" />
+                                @if (store.viewMode() === 'list') {
+                                    <span
+                                        class="upup-hidden upup-text-xs upup-font-medium upup-leading-none md:upup-inline"
+                                        >{{
+                                            store.translations().viewList
+                                        }}</span
+                                    >
+                                }
+                            </button>
+                        </div>
                     }
-
-                    <!-- Add-more button -->
                     @if (
-                        !store.isAddingMore() &&
                         store.uiProps.limit > 1 &&
-                        !isLimitReached
+                        !isLimitReached &&
+                        !hideAddMore
                     ) {
                         <button
+                            data-testid="upup-add-more"
+                            data-placement="header"
+                            data-upup-slot="add-more"
                             [class]="addMoreButtonClass"
-                            (click)="store.setIsAddingMore(true)"
+                            (click)="store.openSourceOverlay()"
                             [disabled]="
                                 isUploading || store.uiProps.isProcessing
                             "
@@ -110,10 +120,13 @@ import { LayoutListIconComponent } from './icons/layout-list-icon.component'
 export class UploaderHeaderComponent {
     readonly store = inject(UpupStore)
 
-    /** Passed by the parent (UploaderPanel) — called when the cancel/remove-all button is clicked. */
+    /** Passed by the parent (FileList) — called on the remove-all button click. */
     @Input() handleCancel: () => void = () => {}
-
-    // ── Derived getters ────────────────────────────────────────────────────────
+    /** True when the panel forces the row list (tiles don't fit one row) — the
+     *  grid/list toggle is hidden in that state. */
+    @Input() forcedList = false
+    /** True in quiet-completion mode after success — hides the add-more control. */
+    @Input() hideAddMore = false
 
     get isUploading(): boolean {
         return isUploadActive(this.store.uploadStatus())
@@ -121,11 +134,6 @@ export class UploaderHeaderComponent {
 
     get isLimitReached(): boolean {
         return this.store.uiProps.limit === this.store.files().size
-    }
-
-    get cancelText(): string {
-        const tr = this.store.translations()
-        return this.store.isAddingMore() ? tr.cancel : tr.removeAllFiles
     }
 
     get fileCountText(): string {
@@ -138,74 +146,69 @@ export class UploaderHeaderComponent {
         return this.store.uiProps.icons.ContainerAddMoreIcon as Type<unknown>
     }
 
-    toggleViewMode(): void {
-        this.store.setViewMode(
-            this.store.viewMode() === 'grid' ? 'list' : 'grid',
-        )
-    }
-
-    // ── Class builders ─────────────────────────────────────────────────────────
-
     get headerClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
-        return [
-            'upup-shadow-bottom upup-left-0 upup-right-0 upup-top-0 upup-z-10',
-            'upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between',
-            'upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 md:upup-grid-rows-1',
-            dark ? 'upup-bg-white/5 dark:upup-bg-white/5' : '',
+        return cn(
+            'upup-shadow-bottom upup-left-0 upup-right-0 upup-top-0 upup-z-10 upup-grid upup-grid-cols-4 upup-grid-rows-2 upup-items-center upup-justify-between upup-rounded-t-lg upup-bg-black/[0.025] upup-px-3 upup-py-2 md:upup-grid-rows-1',
+            { 'upup-bg-white/5 dark:upup-bg-white/5': dark },
             slotClasses.containerHeader ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 
     get cancelButtonClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
-        return [
-            'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2',
-            'upup-p-1 upup-text-left upup-text-sm upup-text-blue-600',
-            'md:upup-col-end-2 md:upup-row-start-1',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+        return cn(
+            'upup-max-md upup-col-start-1 upup-col-end-3 upup-row-start-2 upup-p-1 upup-text-left upup-text-sm upup-text-[#0284c7] md:upup-col-end-2 md:upup-row-start-1',
+            { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark },
             slotClasses.containerCancelButton ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 
     get labelClass(): string {
         const dark = this.store.isDark()
-        return [
+        return cn(
             'upup-col-span-4 upup-text-center upup-text-sm upup-text-[#6D6D6D] md:upup-col-span-2',
-            dark ? 'upup-text-gray-300 dark:upup-text-gray-300' : '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+            { 'upup-text-gray-300 dark:upup-text-gray-300': dark },
+        )
     }
 
-    get viewModeButtonClass(): string {
+    get toggleGroupClass(): string {
         const dark = this.store.isDark()
-        return [
-            'upup-flex upup-h-7 upup-w-7 upup-items-center upup-justify-center',
-            'upup-rounded upup-text-gray-500 upup-transition-colors hover:upup-bg-black/10',
-            dark ? 'upup-text-gray-300 hover:upup-bg-white/10' : '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        return cn(
+            'upup-flex upup-items-center upup-gap-0.5 upup-rounded-lg upup-p-0.5',
+            dark ? 'upup-bg-white/[0.06]' : 'upup-bg-black/[0.05]',
+        )
+    }
+
+    private segmentClass(active: boolean): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-flex upup-h-6 upup-items-center upup-justify-center upup-gap-1 upup-rounded-md upup-px-1.5 upup-transition-colors',
+            active
+                ? 'upup-bg-[#0ea5e9] upup-text-white'
+                : dark
+                  ? 'upup-text-gray-300 hover:upup-bg-white/10'
+                  : 'upup-text-gray-500 hover:upup-bg-black/10',
+        )
+    }
+
+    get gridToggleClass(): string {
+        return this.segmentClass(this.store.viewMode() === 'grid')
+    }
+
+    get listToggleClass(): string {
+        return this.segmentClass(this.store.viewMode() === 'list')
     }
 
     get addMoreButtonClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
-        return [
-            'upup-flex upup-items-center upup-gap-1 upup-rounded-md upup-border',
-            'upup-border-dashed upup-border-blue-400/50 upup-px-2 upup-py-1',
-            'upup-text-sm upup-text-blue-600',
-            dark ? 'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]' : '',
+        return cn(
+            'upup-fx-hover-lift upup-fx-press upup-inline-flex upup-shrink-0 upup-items-center upup-gap-1 upup-whitespace-nowrap upup-rounded-md upup-border upup-border-dashed upup-border-[#38bdf8]/50 upup-px-2 upup-py-1 upup-text-sm upup-leading-none upup-text-[#0284c7]',
+            { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark },
             slotClasses.containerAddMoreButton ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 }

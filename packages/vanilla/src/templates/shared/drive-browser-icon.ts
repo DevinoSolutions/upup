@@ -19,12 +19,10 @@ export function driveBrowserIcon(
     const isDark = ctx.theme.getSnapshot().isDark
 
     if (isFolder) {
+        // Amber filled folder in both themes — folders read unmistakably as
+        // folders.
         return html` <i class="upup-flex-grow upup-text-lg">
-            ${icon('folder', {
-                class: cn({
-                    'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': isDark,
-                }),
-            })}
+            ${icon('folder-filled', { class: 'upup-text-[#fbbf24]' })}
         </i>`
     }
 

@@ -31,7 +31,12 @@ export const deDE: LocaleBundle = {
                 '{count, plural, one {Datei hierher ziehen} other {Dateien hierher ziehen}}',
             browseFiles: 'Dateien durchsuchen',
             dragOrBrowse: 'Ziehen oder durchsuchen zum Hochladen',
+            dropFilesHere: 'Dateien hier ablegen,',
+            orImportFrom: 'oder importieren aus:',
             selectAFolder: 'Ordner ausw\u00E4hlen',
+            filesMax:
+                '{count, plural, one {max. # Datei} other {max. # Dateien}}',
+            sizeEach: 'je {size} {unit}',
             maxFileSizeAllowed:
                 'Maximal {size} {unit} {count, plural, one {Datei erlaubt} other {Dateien erlaubt}}',
             minFileSizeDisplay: 'Min. {size} {unit}',
@@ -47,16 +52,20 @@ export const deDE: LocaleBundle = {
             addDocumentsHere:
                 'Dokumente hier hinzuf\u00FCgen, maximal {limit} Dateien',
             dropAriaLabel: 'Dateien hier ablegen oder klicken zum Durchsuchen',
+            dropToUpload: 'Dateien hier ablegen',
         },
 
         header: {
             removeAllFiles: 'Alle Dateien entfernen',
             addingMoreFiles: 'Weitere Dateien hinzuf\u00FCgen',
+            overlayBack: 'Zur\u00FCck',
             filesSelected:
                 '{count, plural, one {# Datei ausgew\u00E4hlt} other {# Dateien ausgew\u00E4hlt}}',
             addMore: 'Mehr hinzuf\u00FCgen',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Raster',
+            viewList: 'Liste',
         },
 
         fileList: {
@@ -98,6 +107,8 @@ export const deDE: LocaleBundle = {
                 'Authentifizieren Sie sich mit {provider}, um Dateien zum Hochladen auszuw\u00E4hlen',
             signInWith: 'Anmelden mit {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected:
+                'Wir können keine Dateien zu Ihrem {provider} hinzufügen',
             loadMore: 'Load more',
         },
 

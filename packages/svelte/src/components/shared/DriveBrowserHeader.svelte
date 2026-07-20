@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { writable } from 'svelte/store'
   import { type DriveFolder, type DriveUser } from '@upupjs/core'
 import { cn } from '@upupjs/core/internal'
   import {
@@ -6,6 +7,10 @@ import { cn } from '@upupjs/core/internal'
     useUploaderSource,
     useUploaderTheme,
   } from '../../context/uploader-context'
+  import {
+    useSourceViewHeaderExtra,
+    portal,
+  } from '../../context/source-view-header-extra'
   import Icon from '../Icon.svelte'
 
   const {
@@ -29,100 +34,157 @@ import { cn } from '@upupjs/core/internal'
   const { setActiveSource } = useUploaderSource()
   const { translations: tr } = useUploaderI18n()
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+
+  const headerExtraStore =
+    useSourceViewHeaderExtra() ?? writable<HTMLElement | null>(null)
+
+  // Once navigated into a folder we show a Back affordance + the current folder
+  // name, not a full breadcrumb trail (long provider folder names blew the row
+  // up, and multi-level jumps weren't worth the fragility).
+  const navigated = $derived(path.length > 1)
+  const currentFolder = $derived(path[path.length - 1])
+  const hasFilter = $derived(searchTerm.trim().length > 0)
+
+  // Collapsed/expanded search lives here; the term itself stays in DriveBrowser.
+  let searchOpen = $state(false)
+  let searchInputEl = $state<HTMLInputElement | null>(null)
+
+  // Focus the field the moment it expands.
+  $effect(() => {
+    if (searchOpen && searchInputEl) searchInputEl.focus()
+  })
+
+  function onLogout() {
+    void handleSignOut()
+    setActiveSource(undefined)
+  }
 </script>
 
 {#if user}
   <div data-upup-slot="drive-browser-header">
-    <div
-      class={cn(
-        'upup-shadow-bottom upup-grid upup-grid-cols-[1fr,auto] upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
-        {
-          'upup-bg-white/5 upup-text-[#FAFAFA] dark:upup-bg-white/5 dark:upup-text-[#FAFAFA]': $dark,
-        },
-        $slotClasses.driveHeader,
-      )}
-    >
-      {#if !!path}
-        <div class="upup-flex upup-items-center upup-gap-1">
-          {#each path as p, i (p.id)}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-            <p
-              class={cn(
-                'upup-group upup-flex upup-shrink-0 upup-cursor-pointer upup-gap-1 upup-truncate',
-                {
-                  'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': $dark,
-                },
-              )}
-              style:max-width="{100 / path.length}%"
-              style:pointer-events={i === path.length - 1 ? 'none' : 'auto'}
-              onclick={() => setPath(path.slice(0, i + 1))}
-            >
-              <span class="upup-group-hover:upup-underline upup-truncate">
-                {p.name}
-              </span>
-              {#if i !== path.length - 1}
-                {' '}&gt;{' '}
-              {/if}
-            </p>
-          {/each}
-        </div>
-      {/if}
-      <div class="upup-flex upup-items-center upup-gap-2">
-        <div class="upup-relative upup-flex upup-h-8 upup-w-8 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full">
+    <!-- Account controls live in the SourceView header row (portal), next to
+         Back, separated by a hairline — not in their own strip. -->
+    {#if $headerExtraStore}
+      <div style="display: contents" use:portal={$headerExtraStore}>
+        <div
+          class="upup-relative upup-flex upup-h-6 upup-w-6 upup-items-center upup-justify-center upup-overflow-hidden upup-rounded-full"
+        >
           {#if !!user.picture}
             <img
               alt={user.name}
               src={user.picture}
               class="upup-bg-center upup-object-cover"
             />
-          {/if}
-          {#if !user.picture}
+          {:else}
             <Icon name="user" class="upup-text-xl" />
           {/if}
         </div>
-
         <button
           class={cn(
-            'upup-hover:upup-underline upup-text-blue-600',
-            {
-              'upup-text-[#30C5F7] dark:upup-text-[#30C5F7]': $dark,
-            },
+            'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+            { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': $dark },
             $slotClasses.driveLogoutButton,
           )}
-          onclick={() => { handleSignOut(); setActiveSource(undefined) }}
+          onclick={onLogout}
         >
           {tr.logOut}
         </button>
+        <span
+          aria-hidden="true"
+          class={cn('upup-h-4 upup-w-px', $dark ? 'upup-bg-white/15' : 'upup-bg-black/15')}
+        ></span>
       </div>
-    </div>
+    {/if}
 
-    {#if showSearch}
+    {#if showSearch || navigated}
       <div
         class={cn(
-          'upup-relative upup-h-fit upup-bg-black/[0.025] upup-px-3 upup-py-2',
-          {
-            'upup-bg-white/5 upup-text-[#fafafa] dark:upup-bg-white/5 dark:upup-text-[#fafafa]': $dark,
-          },
-          $slotClasses.driveSearchContainer,
+          'upup-flex upup-items-center upup-gap-2.5 upup-px-3 upup-py-2 upup-text-xs upup-font-medium upup-text-[#333]',
+          { 'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]': $dark },
+          $slotClasses.driveHeader,
         )}
       >
-        <input
-          type="search"
-          name="upup-drive-search"
-          aria-label={tr.search}
-          class={cn(
-            'upup-h-fit upup-w-full upup-rounded-md upup-bg-black/[0.025] upup-px-3 upup-py-2 upup-pl-8 upup-text-xs upup-outline-none upup-transition-all upup-duration-300',
-            {
-              'upup-bg-white/5 upup-text-[#6D6D6D] dark:upup-bg-white/5 dark:upup-text-[#6D6D6D]': $dark,
-            },
-            $slotClasses.driveSearchInput,
-          )}
-          placeholder={tr.search}
-          value={searchTerm}
-          oninput={(e) => onSearch((e.target as HTMLInputElement).value)}
-        />
-        <Icon name="search" class="upup-absolute upup-left-5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+        {#if navigated}
+          <button
+            type="button"
+            data-testid="upup-drive-back"
+            data-upup-slot="drive-back"
+            aria-label={tr.overlayBack}
+            class={cn(
+              'upup-fx-hover-lift upup-fx-press upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+              $dark
+                ? 'upup-text-[#e2e8f0] hover:upup-bg-white/[0.08]'
+                : 'upup-text-[#334155] hover:upup-bg-black/[0.05]',
+            )}
+            onclick={() => setPath(path.slice(0, -1))}
+          >
+            <Icon name="chevron-left" />
+          </button>
+        {/if}
+        {#if navigated && !searchOpen}
+          <span
+            data-upup-slot="drive-current-folder"
+            title={currentFolder?.name}
+            class="upup-min-w-0 upup-flex-1 upup-truncate upup-font-medium"
+          >
+            {currentFolder?.name}
+          </span>
+        {/if}
+        {#if navigated && showSearch && !searchOpen}
+          <button
+            type="button"
+            data-testid="upup-drive-search-toggle"
+            data-upup-slot="drive-search-toggle"
+            aria-label={tr.search}
+            aria-expanded="false"
+            class={cn(
+              'upup-fx-hover-lift upup-fx-press upup-ml-auto upup-flex upup-h-7 upup-w-7 upup-shrink-0 upup-items-center upup-justify-center upup-rounded-lg',
+              hasFilter
+                ? 'upup-text-[#0ea5e9]'
+                : $dark
+                  ? 'upup-text-[#94a3b8] hover:upup-bg-white/[0.08]'
+                  : 'upup-text-[#64748b] hover:upup-bg-black/[0.05]',
+            )}
+            onclick={() => (searchOpen = true)}
+          >
+            <Icon name="search" />
+          </button>
+        {/if}
+        {#if showSearch && (!navigated || searchOpen)}
+          <div
+            class={cn(
+              'upup-relative upup-min-w-0 upup-flex-1',
+              navigated && 'upup-fx-search-expand',
+              $slotClasses.driveSearchContainer,
+            )}
+          >
+            <input
+              bind:this={searchInputEl}
+              type="search"
+              name="upup-drive-search"
+              data-testid="upup-drive-search-input"
+              data-upup-slot="drive-search-input"
+              aria-label={tr.search}
+              class={cn(
+                'upup-w-full upup-rounded-lg upup-px-3 upup-py-1.5 upup-pl-8 upup-text-xs upup-outline-none upup-ring-1 upup-transition-shadow focus:upup-ring-2 focus:upup-ring-[#38bdf8]',
+                $dark
+                  ? 'upup-bg-white/[0.06] upup-text-[#e2e8f0] upup-ring-white/[0.1] placeholder:upup-text-[#64748b]'
+                  : 'upup-bg-white upup-text-[#0f172a] upup-ring-black/[0.08] placeholder:upup-text-[#94a3b8]',
+                $slotClasses.driveSearchInput,
+              )}
+              placeholder={tr.search}
+              value={searchTerm}
+              oninput={(e) => onSearch((e.target as HTMLInputElement).value)}
+              onkeydown={(e) => {
+                if (e.key === 'Escape') searchOpen = false
+              }}
+              onblur={() => {
+                if (!searchTerm) searchOpen = false
+              }}
+            />
+            <Icon name="search" class="upup-absolute upup-left-2.5 upup-top-1/2 upup--translate-y-1/2 upup-text-[#939393]" />
+          </div>
+        {/if}
       </div>
     {/if}
   </div>

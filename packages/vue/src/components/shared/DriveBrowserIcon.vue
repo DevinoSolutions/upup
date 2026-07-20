@@ -17,12 +17,9 @@ function handleImgError(e: Event) {
 
 <template>
     <i v-if="props.file.isFolder" class="upup-flex-grow upup-text-lg">
-        <Icon
-            name="folder"
-            :class="cn({
-                'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
-            })"
-        />
+        <!-- Amber filled folder in both themes — folders read
+             unmistakably as folders. -->
+        <Icon name="folder-filled" class="upup-text-[#fbbf24]" />
     </i>
     <i v-else-if="!props.file.thumbnail" class="upup-flex-grow upup-text-lg">
         <Icon

@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { get } from 'svelte/store'
-  import type { Translations } from '@upupjs/core'
+  import { UploadStatus, type Translations } from '@upupjs/core'
   import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn } from '@upupjs/core/internal'
   import {
-    useUploaderEditor,
     useUploaderFiles,
     useUploaderI18n,
     useUploaderOptions,
@@ -12,6 +10,7 @@
   } from '../context/uploader-context'
   import FilePreviewThumbnail from './FilePreviewThumbnail.svelte'
   import ProgressBar from './shared/ProgressBar.svelte'
+  import FileSuccessCheck from './shared/FileSuccessCheck.svelte'
 
   let {
     fileName,
@@ -23,6 +22,7 @@
     onRequestPreview,
     onUpdateCanPreview,
     onclick,
+    index = 0,
   }: {
     fileName: string
     fileType: string
@@ -33,16 +33,16 @@
     onRequestPreview?: () => void
     onUpdateCanPreview?: (val: boolean) => void
     onclick?: () => void
+    /** Position in the sorted list — drives the completion-check stagger. */
+    index?: number
   } = $props()
 
   const { handleFileRemove, files } = useUploaderFiles()
   const { translations: tr } = useUploaderI18n()
-  const { openImageEditor } = useUploaderEditor()
   const { upload: { filesProgressMap } } = useUploaderUploadControls()
   const {
     icons: { FileDeleteIcon },
     allowPreview,
-    imageEditor,
   } = useUploaderOptions()
   const {
     isDark: isDarkTheme,
@@ -51,6 +51,7 @@
   } = useUploaderTheme()
 
   const isImage = $derived(fileGetIsImage(fileType))
+  const isVideo = $derived(fileType.startsWith('video/'))
   const isPdf = $derived(fileGetIsPdf(fileType, fileName))
   const isText = $derived(fileGetIsText(fileType, fileName))
   const canPreviewText = $derived(fileCanPreviewText(fileType, fileName, fileSize))
@@ -64,9 +65,17 @@
 
   const progress = $derived.by(() => {
     const fileProgress = $filesProgressMap[fileId]
-    if (!fileProgress) return NaN
-    return Math.floor((fileProgress.loaded / fileProgress.total) * 100)
+    const loaded = fileProgress?.loaded ?? NaN
+    const total = fileProgress?.total ?? NaN
+    const pct = Math.floor((loaded / total) * 100)
+    // No progress entry ⇒ NaN; total === 0 ⇒ Infinity. Either would render
+    // width:NaN%/aria-valuenow=NaN in ProgressBar while an upload is active.
+    return Number.isFinite(pct) ? pct : 0
   })
+
+  const isSuccessful = $derived(
+    $files.get(fileId)?.status === UploadStatus.SUCCESSFUL,
+  )
 
   function formatFileSize(bytes: number | undefined, tr: Translations) {
     if (!bytes || bytes === 0) return tr.zeroBytes
@@ -80,23 +89,20 @@
     e.stopPropagation()
     handleFileRemove(fileId)
   }
-
-  function onHandleEditImage(e: MouseEvent) {
-    e.stopPropagation()
-    const file = get(files).get(fileId)
-    if (file) openImageEditor(file)
-  }
 </script>
 
 <div
-  class={cn('upup-inline-block', $themeSlots?.filePreview?.root)}
+  class={cn('upup-block upup-w-full', $themeSlots?.filePreview?.root)}
   data-testid="upup-file-preview"
   data-upup-slot="file-preview"
 >
   <div
     class={cn(
-      'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+      'upup-fx-hover-lift upup-relative upup-h-[160px] upup-w-full upup-overflow-hidden upup-rounded-xl upup-ring-1',
       'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+      $isDarkTheme
+        ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
+        : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
       {
         [$slotClasses.fileThumbnailMultiple ?? '']: !!$slotClasses.fileThumbnailMultiple && $files.size > 1,
         [$slotClasses.fileThumbnailSingle ?? '']: !!$slotClasses.fileThumbnailSingle && $files.size === 1,
@@ -111,7 +117,18 @@
       class="upup-absolute upup-inset-0 upup-z-0 upup-cursor-pointer"
       {onclick}
     ></button>
-    {#if !isImage}
+    {#if isVideo}
+      <!-- First-frame video thumbnail — no controls chrome (the native
+           player pill read as broken CSS in a 145px tile). -->
+      <video
+        src={fileUrl}
+        muted
+        playsinline
+        preload="metadata"
+        class="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+      ></video>
+    {/if}
+    {#if !isImage && !isVideo}
       <div class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6">
         <FilePreviewThumbnail
           {canPreview}
@@ -127,52 +144,36 @@
       </div>
     {/if}
 
-    {#if isImage && imageEditor.enabled}
+    <!-- Delete disappears once the file has uploaded successfully — the
+         completion check is then the only overlay affordance. -->
+    {#if !isSuccessful}
       <button
         class={cn(
-          'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
-          'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-          'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
-          'hover:upup-bg-white hover:upup-text-blue-700',
-          'upup-ring-1 upup-ring-black/5',
+          'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+          'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
+          'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+          'hover:upup-bg-[#04080f]/65',
           'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+          $slotClasses.fileDeleteButton,
+          $themeSlots?.filePreview?.deleteButton,
         )}
-        onclick={onHandleEditImage}
+        onclick={onHandleFileRemove}
         type="button"
         disabled={!!progress}
-        aria-label={tr.editImage}
+        aria-label={tr.removeFile}
+        data-testid="upup-file-remove"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          class="upup-h-3 upup-w-3"
-          aria-hidden="true"
-        >
-          <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
-        </svg>
+        <FileDeleteIcon class="upup-h-5 upup-w-5" />
       </button>
     {/if}
 
-    <button
-      class={cn(
-        'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-        'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-        'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-        'hover:upup-bg-white hover:upup-text-red-700',
-        'upup-ring-1 upup-ring-black/5',
-        'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-        $slotClasses.fileDeleteButton,
-        $themeSlots?.filePreview?.deleteButton,
-      )}
-      onclick={onHandleFileRemove}
-      type="button"
-      disabled={!!progress}
-      aria-label={tr.removeFile}
-      data-testid="upup-file-remove"
-    >
-      <FileDeleteIcon class="upup-h-3 upup-w-3" />
-    </button>
+    {#if isSuccessful}
+      <FileSuccessCheck
+        {index}
+        size={20}
+        class="upup-absolute upup-left-1.5 upup-top-1.5 upup-z-10"
+      />
+    {/if}
 
     <ProgressBar
       class="upup-absolute upup-bottom-0 upup-left-0 upup-right-0"
@@ -204,8 +205,8 @@
       <button
         type="button"
         class={cn(
-          'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
-          { 'upup-text-[#4A9EFF] hover:upup-text-blue-300': $isDarkTheme },
+          'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#0284c7] upup-transition-all hover:upup-text-[#0284c7] hover:upup-underline',
+          { 'upup-text-[#38bdf8] hover:upup-text-[#7dd3fc]': $isDarkTheme },
           $themeSlots?.filePreview?.previewButton,
         )}
         onclick={() => onRequestPreview?.()}

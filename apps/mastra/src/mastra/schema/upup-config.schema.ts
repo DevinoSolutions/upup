@@ -86,6 +86,7 @@ export const UpupConfigSchema = z
         theme: Theme.optional(),
 
         showBranding: z.boolean().optional(),
+        quietCompletion: z.boolean().optional(),
         locale: z.string().optional(),
     })
     .strict()
@@ -110,11 +111,14 @@ export function renderSchemaForPrompt(): string {
             maxFiles: 'positive integer',
             maxRetries: 'non-negative integer',
             sources: 'array of: ' + Source.options.join(', '),
-            resumable: '{ protocol: multipart|tus, chunkSizeBytes?: number, endpoint?: string }',
+            resumable:
+                '{ protocol: multipart|tus, chunkSizeBytes?: number, endpoint?: string }',
             imageEditor:
                 '{ enabled?: boolean, display?: inline|modal, autoOpen?: never|single|all }',
             theme: '{ mode?: light|dark|system, primary?: hex, radius?: none|sm|md|lg|xl|full }',
             showBranding: 'boolean',
+            quietCompletion:
+                'boolean — on success show only a checkmark, no Done button/summary',
             locale: 'BCP-47 tag (e.g. en-US, fr-FR)',
         },
         null,

@@ -1,10 +1,11 @@
 import { onMount, onDestroy } from 'svelte'
 import { derived } from 'svelte/store'
-import { FileSource, type UploadFile } from '@upupjs/core'
+import { FileSource, type UploadFile, type UiTranslations } from '@upupjs/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
     type UploaderControllerOptions,
+    type CloudProvider,
 } from '@upupjs/core/internal'
 import type { Component } from 'svelte'
 import type { UploaderProps } from '../shared/types'
@@ -14,18 +15,32 @@ import { useSSEProcessing } from '../composables/useSSEProcessing'
 import { toReadable } from '../lib/to-readable'
 import EmptyIcon from '../components/EmptyIcon.svelte'
 import TrashIcon from '../components/TrashIcon.svelte'
+import DefaultAddMoreIcon from '../components/DefaultAddMoreIcon.svelte'
 
 const EMPTY_STYLE: Record<string, string> = {}
+
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof
+ *  UiTranslations>` so the compiler enforces exhaustiveness against the same
+ *  drive-source union core's DragDropController gates on. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
 
 export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
+        animations = true,
         isProcessing = false,
         allowPreview = true,
         folderUpload,
         showBranding = true,
+        quietCompletion = false,
         disableDragDrop = false,
         className,
         style,
@@ -118,9 +133,11 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         allowedFileTypes:
             typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
         mini,
+        animations,
         isProcessing,
         allowPreview,
         showBranding,
+        quietCompletion,
         disableDragDrop,
         className,
         maxFileSize: maxFileSizeProp,
@@ -202,6 +219,22 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Subscribe to theme state (toReadable handles sub/unsub) ──
     const themeState = toReadable(controller.theme)
 
+    // ── Subscribe to the transient-UI store (deferred removal / overlay / toast) ─
+    const transientState = toReadable(controller.transientUi)
+
+    // ── Subscribe to the motion gate (data-motion resolution) ────
+    const motionState = toReadable(controller.motionGate)
+
+    // Drop-rejection: core's DragDropController fires onReadonlyDropRejected with
+    // the drive FileSource; resolve its human provider label, then raise the
+    // toast (core store owns the 3s auto-clear).
+    function flagDriveDropRejected(source: FileSource) {
+        const key: keyof UiTranslations | undefined =
+            DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
+        const label = key ? resolved.translations[key] : source
+        controller.transientUi.flagDropRejected(label)
+    }
+
     // ── Lifecycle via factory (idempotent init/destroy) ──────────
     // controller.init() owns: orchestrator.init, theme.init, plugin registration,
     //   status-change dedup, crash recovery.
@@ -229,7 +262,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── Icons resolution (framework-specific) ───────────────────
     const resolvedIcons = {
         ContainerAddMoreIcon:
-            icons.ContainerAddMoreIcon ?? (EmptyIcon as Component),
+            icons.ContainerAddMoreIcon ?? (DefaultAddMoreIcon as Component),
         FileDeleteIcon: icons.FileDeleteIcon ?? (TrashIcon as Component),
         CameraCaptureIcon: icons.CameraCaptureIcon ?? (EmptyIcon as Component),
         CameraRotateIcon: icons.CameraRotateIcon ?? (EmptyIcon as Component),
@@ -263,6 +296,20 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             controller.commands.setViewMode(m)
         },
         isOnline: derived(orchState, $s => $s.isOnline),
+        motionMode: motionState,
+        sourceOverlayOpen: derived(transientState, $s => $s.sourceOverlayOpen),
+        sourceOverlayClosing: derived(
+            transientState,
+            $s => $s.sourceOverlayClosing,
+        ),
+        openSourceOverlay: () => {
+            controller.transientUi.openSourceOverlay()
+        },
+        closeSourceOverlay: () => {
+            controller.transientUi.closeSourceOverlay()
+        },
+        dropRejected: derived(transientState, $s => $s.dropRejected),
+        flagDriveDropRejected,
         translations: resolved.translations,
         translator: resolved.translator,
         lang: resolved.lang,
@@ -279,7 +326,11 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             slotOverrides: derived(themeState, $s => $s.slotOverrides),
             slots: derived(themeState, $s => $s.slots),
         },
+        setThemeConfig: config => {
+            controller.theme.setThemeConfig(config)
+        },
         files: derived(orchState, $s => $s.files),
+        leavingFileIds: derived(transientState, $s => $s.leavingFileIds),
         // ContextFiles.setFiles is fire-and-forget (`=> void`); route the async
         // command's rejection to onError rather than floating the promise.
         setFiles: (newFiles: File[]) => {
@@ -363,6 +414,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             folderUploadAllowDrop: resolved.folderUploadAllowDrop,
             folderPickerButtonVisible: resolved.folderPickerButtonVisible,
             showBranding,
+            quietCompletion,
             disableDragDrop,
             className: className ?? '',
             style: resolvedStyle,

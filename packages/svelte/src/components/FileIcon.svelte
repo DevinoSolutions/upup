@@ -12,8 +12,8 @@ import { cn } from '@upupjs/core/internal'
   const { isDark: dark } = useUploaderTheme()
 
   const iconClass = $derived(
-    cn('upup-text-5xl upup-text-blue-600', className, {
-      'upup-text-[#59D1F9] dark:upup-text-[#59D1F9]': $dark,
+    cn('upup-text-5xl upup-text-[#0284c7]', className, {
+      'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': $dark,
     }),
   )
 </script>

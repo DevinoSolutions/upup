@@ -33,6 +33,8 @@ type Story = StoryObj<any>
 // All controls live — tweak everything from the SB controls panel.
 export const Playground: Story = {}
 
+export const PlaygroundHero: Story = {}
+
 // ── 2. Basic ──────────────────────────────────────────────────────────────────
 // Minimal local-only, single-file, no branding.
 export const Basic: Story = {
@@ -138,7 +140,20 @@ export const Parity: Story = {
         maxFiles: 3,
         showBranding: false,
         themeMode: 'light',
+        // The image editor is react/preact-only (other frameworks stub it), so
+        // its edit-button DOM stays OUT of the cross-framework parity contract.
+        // Pin it off here even though core now defaults it on.
+        imageEditor: false,
     },
+}
+
+// Parity fixture for the single-file HERO state (exactly one file → FileHero,
+// not the card list). IDENTICAL args to `Parity`; the parity spec seeds one
+// file for this variant instead of two. Locale/theme match `Parity` so only the
+// file-count-driven DOM differs.
+export const ParityHero: Story = {
+    parameters: { ...Parity.parameters },
+    args: { ...Parity.args },
 }
 
 // ── 12. RealUploadServerDrive ─────────────────────────────────────────────────

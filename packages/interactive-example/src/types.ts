@@ -78,11 +78,29 @@ export type CategoryDefinition = {
 
 export type UpupConfig = Partial<UploaderProps>
 
+/**
+ * A thumbs rating or follow-up comment on a completed AI response. The package
+ * stays analytics-agnostic: it hands the host a ready-to-capture `{ name,
+ * properties }` pair and the host forwards it to PostHog (or wherever). All
+ * property values are strings so a capture layer can pass them through
+ * untouched; absent correlation ids are OMITTED, never sent as empty/fake.
+ */
+export interface AiFeedbackEvent {
+    name: 'ai_response_rated' | 'ai_response_feedback_comment'
+    properties: Record<string, string>
+}
+
 export type InteractiveExampleProps = {
     defaultExpanded?: CategoryId[]
     showCodeTab?: boolean
     /** Show the Events tab next to Preview/Code. Default true. */
     showEventsTab?: boolean
+    /**
+     * Category sections to remove from the sidebar entirely (both tiers).
+     * Used by the per-framework landing pages to hide the image-editor
+     * controls where the editor isn't available (react/preact-only island).
+     */
+    hiddenCategories?: CategoryId[]
     focus?: PropId[]
     initialConfig?: UpupConfig
     previewWidth?: number | 'auto'
@@ -95,5 +113,22 @@ export type InteractiveExampleProps = {
         enabled?: boolean
         mastraBaseUrl?: string
         agentId?: string
+        /**
+         * App identifier tagged onto AI traces + feedback events (`app_id`).
+         * Defaults to `'upup'` when unset.
+         */
+        appId?: string
+        /**
+         * PostHog distinct id of the current visitor, supplied by the host so
+         * the AI trace's distinct id matches whoever later rates the response.
+         * The package never touches PostHog itself; absent -> `'anonymous'`.
+         */
+        posthogDistinctId?: string
+        /**
+         * Called when a visitor rates (thumbs up/down) or comments on a
+         * completed AI response. The host forwards it to analytics. Absent ->
+         * the thumbs UI is not rendered.
+         */
+        onAiFeedback?: (event: AiFeedbackEvent) => void
     }
 }

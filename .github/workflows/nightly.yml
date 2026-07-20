@@ -332,6 +332,77 @@ jobs:
     # branch-protection input (nightly has no PR) — it exists so one signal
     # summarizes the night. Mastra-Evals is green-with-notice when the key is
     # absent; that is an explicit documented skip, not a silent pass.
+    Landing-Feedback:
+        name: Landing feedback e2e + PostHog ingestion (capture token; explicit skip without it)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+            - name: Detect PostHog e2e capture token
+              id: creds
+              env:
+                  NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+              run: |
+                  if [ -n "$NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN" ]; then
+                    echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "present=false" >> "$GITHUB_OUTPUT"
+                    echo "::notice title=Landing feedback e2e skipped::NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN secret is not configured — the landing feedback + shared-PostHog ingestion suite did NOT run. The landing/mastra unit suites still ran in main.yml. Without the read-only query key the ingestion assertions self-skip inside the suite."
+                    echo "## Landing feedback e2e: SKIPPED (no PostHog e2e capture token)" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+
+            - name: Setup pnpm
+              if: steps.creds.outputs.present == 'true'
+              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+
+            - name: Setup Node.js
+              if: steps.creds.outputs.present == 'true'
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm install --frozen-lockfile
+
+            - name: Build the packages the landing dev server consumes (core/react/server dist)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upupjs/core --filter @upupjs/react --filter @upupjs/server build
+
+            - name: Build the Mastra server (the thumbs flow boots its built output on :4144)
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upupjs/mastra build
+
+            - name: Install Playwright Chromium
+              if: steps.creds.outputs.present == 'true'
+              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+
+            - name: Run landing feedback e2e + shared-PostHog ingestion verification
+              if: steps.creds.outputs.present == 'true'
+              env:
+                  # The landing webServer picks the e2e dataset from these; the
+                  # thumbs flow needs OPENROUTER (else it self-skips green); the
+                  # ingestion spec needs the read-only query key (else it
+                  # self-skips green — a present-but-invalid key reds).
+                  NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${{ secrets.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST }}
+                  NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ secrets.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+                  POSTHOG_E2E_TEST_PROJECT_ID: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_ID }}
+                  POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY }}
+                  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+              run: pnpm run e2e:landing
+
+            - name: Upload Playwright report
+              if: failure() && steps.creds.outputs.present == 'true'
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: landing-feedback-playwright-artifacts
+                  path: |
+                      apps/e2e-test/playwright-report/
+                      apps/e2e-test/test-results/
+                  retention-days: 14
+
     Nightly-Status:
         name: Nightly Status Check
         runs-on: ubuntu-latest
@@ -342,6 +413,7 @@ jobs:
                 Smoke-Packages,
                 Mastra-Evals,
                 Drive-Sandbox,
+                Landing-Feedback,
             ]
         if: always()
         steps:
@@ -351,7 +423,8 @@ jobs:
                      [ "${{ needs.Storybook-Builds.result }}" != "success" ] || \
                      [ "${{ needs.Smoke-Packages.result }}" != "success" ] || \
                      [ "${{ needs.Mastra-Evals.result }}" != "success" ] || \
-                     [ "${{ needs.Drive-Sandbox.result }}" != "success" ]; then
+                     [ "${{ needs.Drive-Sandbox.result }}" != "success" ] || \
+                     [ "${{ needs.Landing-Feedback.result }}" != "success" ]; then
                     echo "One or more nightly jobs failed"
                     exit 1
                   fi
