@@ -28,13 +28,23 @@ export function takeToken(id: string): boolean {
     return true
 }
 
-/** Best-effort client IP from forwarding headers (proxy/CDN in front). */
+/**
+ * Client IP for the rate-limit key. Trust model: the site is fronted by ONE
+ * trusted reverse proxy (Dokploy's Traefik), which APPENDS the real peer
+ * address as the LAST x-forwarded-for entry. The first entry (and x-real-ip)
+ * are client-settable and were a spoofable bypass of the token bucket — never
+ * key on them. cf-connecting-ip is honored only when present (Cloudflare
+ * overwrites it unconditionally when it is the front door; a direct-to-origin
+ * forgery of it still lands in the same per-value bucket, so it cannot widen
+ * the limit beyond one extra bucket per forged value).
+ */
 export function clientIpFromHeaders(headers: Headers): string {
     const cf = headers.get('cf-connecting-ip')
-    if (cf) return cf
+    if (cf) return cf.trim()
     const xff = headers.get('x-forwarded-for')
-    if (xff) return xff.split(',')[0]?.trim() || 'unknown'
-    const real = headers.get('x-real-ip')
-    if (real) return real
+    if (xff) {
+        const hops = xff.split(',')
+        return hops[hops.length - 1]?.trim() || 'unknown'
+    }
     return 'unknown'
 }
