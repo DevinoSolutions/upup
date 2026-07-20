@@ -30,6 +30,14 @@ const serverSchema = z.object({
     POSTHOG_HOST: z.string().min(1).optional(),
     POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: z.string().min(1).optional(),
     POSTHOG_E2E_TEST_PROJECT_HOST: z.string().min(1).optional(),
+    // e2e project READ key (query:read personal API key) — used ONLY by the
+    // ingestion-verification harness. Its presence on a production/disabled
+    // runtime is a hard misconfiguration (observability.ts throws): a test-only
+    // query credential must never ride a production runtime.
+    POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY: z
+        .string()
+        .min(1)
+        .optional(),
 })
 
 const parsed = serverSchema.safeParse(process.env)

@@ -91,6 +91,14 @@ const serverSchema = z.object({
     // Server-side verification of the e2e project's ingested events (test
     // scripts only — never used to capture from app code).
     POSTHOG_E2E_TEST_PROJECT_ID: z.string().min(1).optional(),
+    // e2e project READ key (query:read personal API key) used ONLY by the
+    // ingestion-verification test harness. Its presence on a production or
+    // disabled runtime is a hard misconfiguration (dataset.ts throws): a
+    // test-only query credential must never ride a production runtime.
+    POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY: z
+        .string()
+        .min(1)
+        .optional(),
     // Support/feedback email leg (optional — absent disables the email path).
     SMTP_URL: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),

@@ -81,8 +81,13 @@ export async function POST(req: Request): Promise<Response> {
     const distinctId = data.posthogDistinctId || `anonymous:${feedbackId}`
 
     // 4 — the two legs run INDEPENDENTLY; one failing never blocks the other.
+    // testRunId / testScenario are merged into the event ONLY on the e2e
+    // dataset (captureServerEvent gates them); inert on production/disabled.
     const [phSettled, emailSettled] = await Promise.allSettled([
-        captureServerEvent(SUPPORT_REQUEST_SUBMITTED, distinctId, properties),
+        captureServerEvent(SUPPORT_REQUEST_SUBMITTED, distinctId, properties, {
+            testRunId: data.testRunId,
+            testScenario: data.testScenario,
+        }),
         sendSupportEmail({
             feedbackId,
             type: data.type,

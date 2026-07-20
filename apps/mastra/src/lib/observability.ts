@@ -33,6 +33,40 @@ function credentialsFor(dataset: PosthogDataset): {
     }
 }
 
+const QUERY_KEY_ENV =
+    'POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY'
+
+/**
+ * Hard runtime-isolation guards, mirroring the landing app's dataset boundary:
+ *
+ *   1. The e2e query READ key must never ride a `production` / `disabled`
+ *      runtime — a test-only credential leaking into a real runtime is an
+ *      operator error, so we throw BY NAME.
+ *   2. The `e2e` dataset REQUIRES its own capture token; it never falls back to
+ *      production credentials.
+ */
+function assertDatasetIsolation(
+    dataset: PosthogDataset,
+    token: string | undefined,
+): void {
+    if (
+        dataset !== 'e2e' &&
+        env.POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY
+    ) {
+        throw new Error(
+            `[observability] The e2e query read key (${QUERY_KEY_ENV}) is set on a "${dataset}" runtime. ` +
+                `This test-only credential must never ride a production/disabled runtime — ` +
+                `unset it, or run with POSTHOG_DATASET=e2e.`,
+        )
+    }
+    if (dataset === 'e2e' && !token) {
+        throw new Error(
+            '[observability] POSTHOG_DATASET=e2e requires POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN. ' +
+                'Refusing to fall back to production credentials.',
+        )
+    }
+}
+
 export interface ObservabilityConfig {
     /** Spread into `new Mastra({...})`. Absent when tracing is off. */
     observability?: Observability
@@ -63,6 +97,7 @@ export interface ObservabilityConfig {
 export function buildObservability(): ObservabilityConfig {
     const dataset = resolveDataset()
     const { token, host } = credentialsFor(dataset)
+    assertDatasetIsolation(dataset, token)
     if (dataset === 'disabled' || !token) return {}
 
     const exporter = new PosthogExporter({

@@ -88,17 +88,18 @@ and upload config.
 
 **landing** (server-mode upload route handlers):
 
-| Var                                                                   | Purpose                                                                                            |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                                                     |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                                                           |
-| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                                                |
-| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                                               |
-| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route).                             |
-| `POSTHOG_DATASET`                                                     | Analytics dataset for the support route (`production`/`e2e`/`disabled`; optional).                 |
-| `POSTHOG_E2E_TEST_PROJECT_ID`                                         | e2e project id for ingestion verification by test scripts (optional).                              |
-| `SMTP_URL`                                                            | SMTP connection string for the support-email leg (optional — absent = email leg `not_configured`). |
-| `SUPPORT_EMAIL_TO` / `SUPPORT_EMAIL_FROM`                             | Support email destination + sender (optional; placeholders apply if unset).                        |
+| Var                                                                   | Purpose                                                                                                                                                                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                                                                                                                                                                     |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                                                                                                                                                                           |
+| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                                                                                                                                                                |
+| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                                                                                                                                                               |
+| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route).                                                                                                                                             |
+| `POSTHOG_DATASET`                                                     | Analytics dataset for the support route (`production`/`e2e`/`disabled`; optional).                                                                                                                                 |
+| `POSTHOG_E2E_TEST_PROJECT_ID`                                         | e2e project id for ingestion verification by test scripts (optional).                                                                                                                                              |
+| `POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY`           | Read-only (query:read) key for the ingestion-verification e2e spec. **Test-harness only — NEVER set on a production/disabled deploy**: the dataset isolation guard throws by name if a non-e2e runtime carries it. |
+| `SMTP_URL`                                                            | SMTP connection string for the support-email leg (optional — absent = email leg `not_configured`).                                                                                                                 |
+| `SUPPORT_EMAIL_TO` / `SUPPORT_EMAIL_FROM`                             | Support email destination + sender (optional; placeholders apply if unset).                                                                                                                                        |
 
 **playground** (mounts the same `/api/upup` server-mode upload route): identical
 runtime secret set to landing — `S3_*`, `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
@@ -108,15 +109,16 @@ server-mode uploads are wanted on the playground.
 
 **mastra**:
 
-| Var                                                                        | Purpose                                                                                                                                                                            |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPENROUTER_API_KEY`                                                       | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                  |
-| `ALLOWED_ORIGINS`                                                          | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                |
-| `ORIGIN_TOKEN_SECRET`                                                      | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value. |
-| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS`       | Budget/rate-limit knobs (have sane defaults).                                                                                                                                      |
-| `POSTHOG_DATASET`                                                          | AI-tracing dataset: `production` / `e2e` / `disabled`. Unset with no `POSTHOG_KEY` → tracing off (exporter never constructed).                                                     |
-| `POSTHOG_KEY` / `POSTHOG_HOST`                                             | Production PostHog project key + host (used when the dataset resolves to `production`).                                                                                            |
-| `POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` / `POSTHOG_E2E_TEST_PROJECT_HOST` | Separate e2e PostHog project — used ONLY when the dataset is `e2e`, so automated runs never pollute production.                                                                    |
+| Var                                                                        | Purpose                                                                                                                                                                                   |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY`                                                       | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                         |
+| `ALLOWED_ORIGINS`                                                          | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                       |
+| `ORIGIN_TOKEN_SECRET`                                                      | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value.        |
+| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS`       | Budget/rate-limit knobs (have sane defaults).                                                                                                                                             |
+| `POSTHOG_DATASET`                                                          | AI-tracing dataset: `production` / `e2e` / `disabled`. Unset with no `POSTHOG_KEY` → tracing off (exporter never constructed).                                                            |
+| `POSTHOG_KEY` / `POSTHOG_HOST`                                             | Production PostHog project key + host (used when the dataset resolves to `production`).                                                                                                   |
+| `POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` / `POSTHOG_E2E_TEST_PROJECT_HOST` | Separate e2e PostHog project — used ONLY when the dataset is `e2e`, so automated runs never pollute production.                                                                           |
+| `POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY`                | Read-only query key for e2e ingestion verification. **Test-harness only — NEVER set on a production/disabled deploy**: `observability.ts` throws by name if a non-e2e runtime carries it. |
 
 Never commit real values — this table lists **names only**. Secrets live in the
 Dokploy `.env` next to the compose file.

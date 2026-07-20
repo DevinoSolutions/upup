@@ -2,10 +2,17 @@
 
 import { useRef, useState } from 'react'
 import posthog from 'posthog-js'
-import { toast } from 'react-toastify'
+import { readE2ETestContext } from '@/lib/analytics/dataset'
 import { SUPPORT_TYPES, type SupportType } from '@/lib/support/schema'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
+
+// Feedback renders INLINE (role=status/alert panels under the form), not as
+// toasts: react-toastify v11 under the Turbopack dev server silently drops
+// toast() calls into a mounted container, and a support form's outcome should
+// persist on screen anyway rather than auto-dismiss.
+type Notice =
+    { kind: 'success' | 'warning' | 'error'; text: string } | undefined
 
 interface SupportResponseBody {
     ok: boolean
@@ -42,6 +49,8 @@ export default function SupportForm() {
     const [email, setEmail] = useState('')
     const [website, setWebsite] = useState('') // honeypot
     const [status, setStatus] = useState<FormStatus>('idle')
+    const [notice, setNotice] = useState<Notice>(undefined)
+    const [warning, setWarning] = useState<string | undefined>(undefined)
 
     // One id per submission lifecycle: kept across retries, regenerated only
     // after a confirmed success.
@@ -52,16 +61,28 @@ export default function SupportForm() {
         if (inFlightRef.current) return
 
         if (!message.trim()) {
-            toast.error('Please add a message before sending.')
+            setNotice({
+                kind: 'error',
+                text: 'Please add a message before sending.',
+            })
             return
         }
         if (wantsReply && !email.trim()) {
-            toast.error('Please add an email so we can reply.')
+            setNotice({
+                kind: 'error',
+                text: 'Please add an email so we can reply.',
+            })
             return
         }
 
         inFlightRef.current = true
         setStatus('submitting')
+        setNotice(undefined)
+        setWarning(undefined)
+
+        // Present only during an e2e run (the spec seeds localStorage); the
+        // route merges these into the captured event on the e2e dataset only.
+        const e2eContext = readE2ETestContext()
 
         const payload = {
             type,
@@ -77,6 +98,8 @@ export default function SupportForm() {
                     ? window.location.pathname
                     : undefined,
             website,
+            testRunId: e2eContext.testRunId,
+            testScenario: e2eContext.testScenario,
         }
 
         try {
@@ -101,12 +124,12 @@ export default function SupportForm() {
     }
 
     const onSuccess = (body: SupportResponseBody) => {
-        toast.success('Thanks — we got it.')
+        setNotice({ kind: 'success', text: 'Thanks — we got it.' })
         // Analytics failure is internal (already logged server-side); the user
         // still succeeded. But a wanted reply that could not be delivered gets
         // a heads-up.
         if (wantsReply && body.email === 'failed') {
-            toast.warn(
+            setWarning(
                 "Recorded, but direct reply delivery failed — we'll follow up via the recorded request.",
             )
         }
@@ -123,9 +146,10 @@ export default function SupportForm() {
     const onFailure = () => {
         // Keep every field intact and reuse the SAME feedbackId so a retry is
         // idempotent server-side.
-        toast.error(
-            'Something went wrong sending your request. Your message is safe — try again.',
-        )
+        setNotice({
+            kind: 'error',
+            text: 'Something went wrong sending your request. Your message is safe — try again.',
+        })
         setStatus('error')
     }
 
@@ -232,6 +256,29 @@ export default function SupportForm() {
                 aria-hidden="true"
                 className="pointer-events-none absolute -left-[9999px] h-0 w-0 opacity-0"
             />
+
+            {!!notice && (
+                <p
+                    role={notice.kind === 'success' ? 'status' : 'alert'}
+                    data-testid="support-notice"
+                    className={
+                        notice.kind === 'success'
+                            ? 'rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm font-medium text-green-700 dark:text-green-400'
+                            : 'rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400'
+                    }
+                >
+                    {notice.text}
+                </p>
+            )}
+            {!!warning && (
+                <p
+                    role="status"
+                    data-testid="support-warning"
+                    className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-700 dark:text-amber-400"
+                >
+                    {warning}
+                </p>
+            )}
 
             <div className="flex items-center gap-3">
                 <button

@@ -58,6 +58,20 @@ export const supportRequestSchema = z
         posthogDistinctId: z.string().max(200).optional(),
         route: z.string().max(200).optional(),
         website: z.string().max(500).optional(),
+        // E2E correlation channel — honored ONLY on the `e2e` dataset (the route
+        // merges them into the captured event's properties there and ignores
+        // them everywhere else). Constrained charset keeps them safe as event
+        // property values / query filters.
+        testRunId: z
+            .string()
+            .max(100)
+            .regex(/^[A-Za-z0-9:_-]+$/)
+            .optional(),
+        testScenario: z
+            .string()
+            .max(100)
+            .regex(/^[A-Za-z0-9:_-]+$/)
+            .optional(),
     })
     .refine(data => !data.wantsReply || Boolean(data.email), {
         message: 'Email is required when you request a reply.',

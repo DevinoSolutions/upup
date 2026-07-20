@@ -24,6 +24,7 @@ const MANAGED_ENV = [
     'NEXT_PUBLIC_POSTHOG_DATASET',
     'NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST',
     'NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN',
+    'POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY',
     'SMTP_URL',
     'SUPPORT_EMAIL_TO',
     'SUPPORT_EMAIL_FROM',
@@ -195,6 +196,45 @@ describe('POST /api/upup-support', () => {
         expect(h.postHogCtor).not.toHaveBeenCalled()
         expect(body.posthog).toBe('failed')
         expect(body.email).toBe('not_configured')
+    })
+
+    it('merges testRunId / testScenario into the captured event on the e2e dataset', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(
+                payload({
+                    testRunId: 'e2e:1700000000-abc',
+                    testScenario: 'support-happy-path',
+                }),
+            ),
+        )
+        expect(res.status).toBe(200)
+
+        const captureArg = h.captureMock.mock.calls[0][0]
+        expect(captureArg.properties.test_run_id).toBe('e2e:1700000000-abc')
+        expect(captureArg.properties.test_scenario).toBe('support-happy-path')
+        expect(captureArg.properties.environment).toBe('e2e')
+    })
+
+    it('ignores testRunId / testScenario on the production dataset', async () => {
+        const POST = await loadRoute({
+            POSTHOG_DATASET: 'production',
+            NEXT_PUBLIC_POSTHOG_KEY: 'phc_prod_key',
+            NEXT_PUBLIC_POSTHOG_HOST: 'https://prod.posthog.test',
+        })
+        const res = await POST(
+            makeRequest(
+                payload({
+                    testRunId: 'e2e:1700000000-abc',
+                    testScenario: 'support-happy-path',
+                }),
+            ),
+        )
+        expect(res.status).toBe(200)
+
+        const captureArg = h.captureMock.mock.calls[0][0]
+        expect(captureArg.properties.test_run_id).toBeUndefined()
+        expect(captureArg.properties.test_scenario).toBeUndefined()
     })
 
     it('never puts the submitter email into the captured event properties', async () => {
