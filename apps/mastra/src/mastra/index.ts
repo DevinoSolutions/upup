@@ -1,5 +1,6 @@
 import { Mastra } from '@mastra/core'
 import { env } from '../lib/env.js'
+import { buildObservability } from '../lib/observability.js'
 import { playgroundAgent } from './agents/playground-agent.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { authMiddleware } from './middleware/auth.js'
@@ -18,9 +19,16 @@ import { schemaRoute } from './routes/schema.js'
  *   - Per-IP rate limiter (token bucket, in-memory)
  *   - Daily request budget (in-memory, resets UTC midnight)
  *   - Custom routes: /healthz, /schema
+ *   - PostHog AI-tracing export (dataset-gated; off when no key — see
+ *     ../lib/observability.ts). `environment` tags every trace with the
+ *     dataset name so e2e traces stay isolable from production.
  */
+const { observability, environment } = buildObservability()
+
 export const mastra = new Mastra({
     agents: { playgroundAgent },
+    ...(observability ? { observability } : {}),
+    ...(environment ? { environment } : {}),
     server: {
         port: env.PORT,
         host: env.MASTRA_HOST,

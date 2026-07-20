@@ -27,6 +27,16 @@ export type ChatMessage = {
     patches?: AssistantPatchEvent[]
     /** True while the assistant is still streaming this turn. */
     pending?: boolean
+    /**
+     * True when this assistant turn is the honest "agent unavailable" error
+     * (not a real answer). Error turns never get thumbs.
+     */
+    error?: boolean
+    /**
+     * The Mastra AI-trace id for this assistant turn, used to correlate a
+     * thumbs rating back to the trace in PostHog. Absent when tracing is off.
+     */
+    traceId?: string
 }
 
 type UseMastraChatOptions = {
@@ -37,12 +47,33 @@ type UseMastraChatOptions = {
      * was applied so the consumer can merge it into ConfigContext.
      */
     onPatch: (event: AssistantPatchEvent) => void
+    /** App identifier tagged onto the AI trace metadata (`app_id`). */
+    appId?: string
+    /**
+     * PostHog distinct id of the visitor, forwarded as the trace's `userId`
+     * (-> PostHog distinct id) so a later rating groups under the same person.
+     */
+    distinctId?: string | undefined
 }
 
 const newId = () =>
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
         ? crypto.randomUUID()
         : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+/**
+ * A 32-hex-character trace id (Mastra accepts 1-32 hex chars for
+ * `tracingOptions.traceId`). We assign it client-side so the client
+ * deterministically knows the real trace id without depending on the response
+ * surfacing one — it is the id the trace is actually recorded under, not a
+ * fabricated value.
+ */
+const newTraceId = () =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID().replace(/-/g, '')
+        : `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`
+              .replace(/[^0-9a-f]/g, '')
+              .slice(0, 32)
 
 /**
  * Minimal chat hook talking directly to a Mastra agent's stream endpoint.
@@ -56,10 +87,16 @@ export function useMastraChat({
     baseUrl,
     agentId,
     onPatch,
+    appId,
+    distinctId,
 }: UseMastraChatOptions) {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isStreaming, setIsStreaming] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    // One conversation id per chat lifecycle, created lazily on first send and
+    // rolled over by reset(). It becomes the trace's `$ai_session_id` and the
+    // `$ai_session_id` on every thumbs event, so PostHog groups a conversation.
+    const [conversationId, setConversationId] = useState<string | null>(null)
     const abortRef = useRef<AbortController | null>(null)
 
     const client = useMemo(() => new MastraClient({ baseUrl }), [baseUrl])
@@ -70,6 +107,10 @@ export function useMastraChat({
             if (!trimmed || isStreaming) return
 
             setError(null)
+            const convId = conversationId ?? newId()
+            if (!conversationId) setConversationId(convId)
+            const traceId = newTraceId()
+
             const userMsg: ChatMessage = {
                 id: newId(),
                 role: 'user',
@@ -95,10 +136,36 @@ export function useMastraChat({
                 // token-streaming for fewer moving parts and a simpler
                 // tool-result hand-off. The Mastra response shape we rely on
                 // here was verified end-to-end during Phase 1 smoke tests.
+                //
+                // tracingOptions carries the request-scoped correlation the
+                // PostHog exporter reads: metadata.userId -> distinct id,
+                // metadata.sessionId -> $ai_session_id; the rest is spread onto
+                // the $ai_trace properties. traceId pins the trace to our
+                // client-known id (1-32 hex) so a rating can reference it.
                 const agent = client.getAgent(agentId)
-                const response: any = await agent.generate(trimmed)
+                const distinct = distinctId || 'anonymous'
+                const response: any = await agent.generate(trimmed, {
+                    tracingOptions: {
+                        traceId,
+                        metadata: {
+                            userId: distinct,
+                            sessionId: convId,
+                            posthog_distinct_id: distinct,
+                            conversation_id: convId,
+                            app_id: appId ?? 'upup',
+                            agent_id: agentId,
+                        },
+                    },
+                } as Parameters<typeof agent.generate>[1])
 
                 const text: string = response?.text ?? ''
+                // Prefer the trace id the server reports; fall back to the one
+                // we assigned via tracingOptions.traceId (the trace is recorded
+                // under it either way — never a fabricated value).
+                const resolvedTraceId: string =
+                    typeof response?.traceId === 'string' && response.traceId
+                        ? response.traceId
+                        : traceId
                 const patches: AssistantPatchEvent[] = []
 
                 // Mastra reports the same tool result in two places —
@@ -136,7 +203,13 @@ export function useMastraChat({
                 setMessages(prev =>
                     prev.map(m =>
                         m.id === asstId
-                            ? { ...m, text, patches, pending: false }
+                            ? {
+                                  ...m,
+                                  text,
+                                  patches,
+                                  pending: false,
+                                  traceId: resolvedTraceId,
+                              }
                             : m,
                     ),
                 )
@@ -145,11 +218,17 @@ export function useMastraChat({
                 const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
                 setError(friendly)
                 // Render the honest error AS the assistant turn — never a canned
-                // patch (round-8 item 2).
+                // patch (round-8 item 2). Flag it so no thumbs attach to a
+                // non-answer.
                 setMessages(prev =>
                     prev.map(m =>
                         m.id === asstId
-                            ? { ...m, text: friendly, pending: false }
+                            ? {
+                                  ...m,
+                                  text: friendly,
+                                  pending: false,
+                                  error: true,
+                              }
                             : m,
                     ),
                 )
@@ -158,7 +237,15 @@ export function useMastraChat({
                 abortRef.current = null
             }
         },
-        [agentId, client, isStreaming, onPatch],
+        [
+            agentId,
+            appId,
+            client,
+            conversationId,
+            distinctId,
+            isStreaming,
+            onPatch,
+        ],
     )
 
     const cancel = useCallback(() => {
@@ -170,7 +257,9 @@ export function useMastraChat({
         setMessages([])
         setError(null)
         setIsStreaming(false)
+        // A cleared conversation starts a new session on the next send.
+        setConversationId(null)
     }, [])
 
-    return { messages, isStreaming, error, send, cancel, reset }
+    return { messages, isStreaming, error, conversationId, send, cancel, reset }
 }

@@ -108,12 +108,15 @@ server-mode uploads are wanted on the playground.
 
 **mastra**:
 
-| Var                                                                  | Purpose                                                                                                                                                                            |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPENROUTER_API_KEY`                                                 | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                  |
-| `ALLOWED_ORIGINS`                                                    | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                |
-| `ORIGIN_TOKEN_SECRET`                                                | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value. |
-| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS` | Budget/rate-limit knobs (have sane defaults).                                                                                                                                      |
+| Var                                                                        | Purpose                                                                                                                                                                            |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY`                                                       | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                  |
+| `ALLOWED_ORIGINS`                                                          | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                |
+| `ORIGIN_TOKEN_SECRET`                                                      | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value. |
+| `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS`       | Budget/rate-limit knobs (have sane defaults).                                                                                                                                      |
+| `POSTHOG_DATASET`                                                          | AI-tracing dataset: `production` / `e2e` / `disabled`. Unset with no `POSTHOG_KEY` → tracing off (exporter never constructed).                                                     |
+| `POSTHOG_KEY` / `POSTHOG_HOST`                                             | Production PostHog project key + host (used when the dataset resolves to `production`).                                                                                            |
+| `POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` / `POSTHOG_E2E_TEST_PROJECT_HOST` | Separate e2e PostHog project — used ONLY when the dataset is `e2e`, so automated runs never pollute production.                                                                    |
 
 Never commit real values — this table lists **names only**. Secrets live in the
 Dokploy `.env` next to the compose file.

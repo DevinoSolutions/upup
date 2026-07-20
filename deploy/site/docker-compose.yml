@@ -82,6 +82,15 @@ services:
             - DAILY_REQUEST_CAP=${DAILY_REQUEST_CAP:-5000}
             - RATE_LIMIT_CAPACITY=${RATE_LIMIT_CAPACITY:-30}
             - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
+            # PostHog AI-tracing export (all optional, bare passthrough so unset
+            # stays absent). POSTHOG_KEY/HOST/E2E_* are min(1).optional() — an
+            # empty string would fail min(1); absent just disables the exporter.
+            # POSTHOG_DATASET picks the project: production | e2e | disabled.
+            - POSTHOG_DATASET
+            - POSTHOG_KEY
+            - POSTHOG_HOST
+            - POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN
+            - POSTHOG_E2E_TEST_PROJECT_HOST
         expose:
             - '4111'
         restart: unless-stopped

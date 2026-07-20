@@ -1,5 +1,5 @@
-import { InteractiveExample } from '@upupjs/interactive-example'
 import '@upupjs/interactive-example/styles'
+import { InteractiveExampleClient } from '@/components/InteractiveExampleClient'
 import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import HomepageFeatures from '@/components/HomepageFeatures'
 import FeedbackSection from '@/components/FeedbackSection'
@@ -25,7 +25,7 @@ export default function Home() {
             <StructuredData />
             <HeroSection />
             <Section id="demo">
-                <InteractiveExample {...interactiveExampleEnvProps()} />
+                <InteractiveExampleClient {...interactiveExampleEnvProps()} />
             </Section>
             <HomepageFeatures />
             <StackBlitzDemoSection />

@@ -176,6 +176,9 @@ function Shell({
                 <AssistantPanel
                     mastraBaseUrl={aiAssistant?.mastraBaseUrl}
                     agentId={aiAssistant?.agentId}
+                    appId={aiAssistant?.appId}
+                    posthogDistinctId={aiAssistant?.posthogDistinctId}
+                    onAiFeedback={aiAssistant?.onAiFeedback}
                 />
             )}
         </div>

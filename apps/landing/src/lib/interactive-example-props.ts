@@ -3,6 +3,7 @@ import type {
     UpupConfig,
 } from '@upupjs/interactive-example'
 import { clientEnv } from './env'
+import { APP_ID } from './analytics/contract'
 
 type CloudDrives = NonNullable<UpupConfig['cloudDrives']>
 
@@ -58,12 +59,16 @@ export function interactiveExampleEnvProps(
     return {
         ...base,
         ...(initialConfig ? { initialConfig } : {}),
-        ...(clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL
-            ? {
-                  aiAssistant: {
-                      mastraBaseUrl: clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL,
-                  },
-              }
-            : {}),
+        // Always tag the AI panel with the landing app id so traces + thumbs
+        // events share an `app_id`. The client-only pieces (visitor distinct
+        // id + the onAiFeedback sink) are injected by InteractiveExampleClient,
+        // not here — a function prop can't cross the RSC boundary.
+        aiAssistant: {
+            ...base?.aiAssistant,
+            appId: APP_ID,
+            ...(clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL
+                ? { mastraBaseUrl: clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL }
+                : {}),
+        },
     }
 }
