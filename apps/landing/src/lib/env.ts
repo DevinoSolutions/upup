@@ -100,6 +100,11 @@ const serverSchema = z.object({
         .min(1)
         .optional(),
     // Support/feedback email leg (optional — absent disables the email path).
+    // Two transports, REST preferred: the UseSend REST API (USESEND_API_URL +
+    // USESEND_API_KEY) or a generic SMTP_URL. A self-hosted UseSend is HTTP-only
+    // behind a CDN, so REST is the routable path; SMTP_URL stays as a fallback.
+    USESEND_API_URL: z.string().min(1).optional(),
+    USESEND_API_KEY: z.string().min(1).optional(),
     SMTP_URL: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),
     SUPPORT_EMAIL_FROM: z.string().min(1).optional(),

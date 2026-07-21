@@ -51,9 +51,12 @@ services:
             - ONEDRIVE_CLIENT_ID
             - ONEDRIVE_CLIENT_SECRET
             - UPUP_UPLOAD_TOKEN_SECRET
-            # Support/feedback flow + analytics dataset (all optional).
+            # Support/feedback flow + analytics dataset (all optional). Email
+            # leg prefers the UseSend REST API (USESEND_*) over SMTP_URL.
             - POSTHOG_DATASET
             - POSTHOG_E2E_TEST_PROJECT_ID
+            - USESEND_API_URL
+            - USESEND_API_KEY
             - SMTP_URL
             - SUPPORT_EMAIL_TO
             - SUPPORT_EMAIL_FROM

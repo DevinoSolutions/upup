@@ -24,19 +24,36 @@ export interface SupportEmailInput {
 }
 
 /**
- * Deliver a support request by email when SMTP is configured. Returns
- * `not_configured` (distinct from `failed`) when SMTP_URL is absent, so the
- * route can tell "we chose not to email" from "the send broke". Never throws.
+ * Deliver a support request by email. Two transports are supported, tried in
+ * order: the UseSend REST API (USESEND_API_URL + USESEND_API_KEY) — preferred,
+ * because a self-hosted UseSend is HTTP-only behind a CDN with no reachable
+ * SMTP endpoint — then a generic SMTP_URL. Returns `not_configured` (distinct
+ * from `failed`) when NEITHER is set, so the route can tell "we chose not to
+ * email" from "the send broke". Never throws.
  */
 export async function sendSupportEmail(
     input: SupportEmailInput,
 ): Promise<EmailLegStatus> {
-    const smtpUrl = env.SMTP_URL
-    if (!smtpUrl) return 'not_configured'
-
     const from = env.SUPPORT_EMAIL_FROM || DEFAULT_FROM
     const to = env.SUPPORT_EMAIL_TO || DEFAULT_TO
     const subject = `[upup support] ${input.type} — ${input.feedbackId}`
+    const text = buildBody(input)
+
+    if (env.USESEND_API_URL && env.USESEND_API_KEY) {
+        return sendViaUseSend({
+            apiUrl: env.USESEND_API_URL,
+            apiKey: env.USESEND_API_KEY,
+            from,
+            to,
+            subject,
+            text,
+            replyTo: input.email,
+            feedbackId: input.feedbackId,
+        })
+    }
+
+    const smtpUrl = env.SMTP_URL
+    if (!smtpUrl) return 'not_configured'
 
     try {
         const transport = nodemailer.createTransport(smtpUrl)
@@ -45,7 +62,7 @@ export async function sendSupportEmail(
             to,
             ...(input.email ? { replyTo: input.email } : {}),
             subject,
-            text: buildBody(input),
+            text,
         })
         return 'ok'
     } catch (error) {
@@ -54,6 +71,60 @@ export async function sendSupportEmail(
             error instanceof Error ? error.message : error,
         )
         return 'failed'
+    }
+}
+
+/**
+ * Send through the UseSend REST API (Resend-compatible `POST /api/v1/emails`).
+ * A self-hosted UseSend validates the Bearer key against its own DB, so this is
+ * the correct transport for a CDN-fronted, HTTP-only deployment where the SMTP
+ * proxy is not routable. Never throws — maps every outcome to a leg status.
+ */
+async function sendViaUseSend(msg: {
+    apiUrl: string
+    apiKey: string
+    from: string
+    to: string
+    subject: string
+    text: string
+    replyTo?: string
+    feedbackId: string
+}): Promise<EmailLegStatus> {
+    const endpoint = `${msg.apiUrl.replace(/\/+$/, '')}/api/v1/emails`
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 15000)
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                authorization: `Bearer ${msg.apiKey}`,
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: msg.from,
+                to: msg.to,
+                subject: msg.subject,
+                text: msg.text,
+                ...(msg.replyTo ? { replyTo: msg.replyTo } : {}),
+            }),
+            signal: controller.signal,
+        })
+        if (!res.ok) {
+            const detail = await res.text().catch(() => '')
+            console.error(
+                `[support] usesend send failed for ${msg.feedbackId}: ${res.status} ${detail.slice(0, 300)}`,
+            )
+            return 'failed'
+        }
+        return 'ok'
+    } catch (error) {
+        console.error(
+            `[support] usesend send errored for ${msg.feedbackId}:`,
+            error instanceof Error ? error.message : error,
+        )
+        return 'failed'
+    } finally {
+        clearTimeout(timeout)
     }
 }
 
