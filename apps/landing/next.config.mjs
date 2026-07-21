@@ -1,5 +1,6 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createMDX } from 'fumadocs-mdx/next'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const repoRoot = join(__dirname, '../..')
@@ -50,4 +51,40 @@ const nextConfig = {
     },
 }
 
-export default nextConfig
+const withMDX = createMDX()
+
+/**
+ * fumadocs-mdx 15.2.0 (npm latest, verified no newer dist-tag exists) emits
+ * turbopack rule conditions for its *.json/*.yaml meta-loader using a `query`
+ * key — a webpack `resourceQuery`-style match that next@16.1.6's
+ * TurbopackRuleCondition schema no longer accepts (only all/any/not/path/
+ * content/builtin — see node_modules/next/dist/server/config-shared.d.ts).
+ * Turbopack panics parsing the config without this fix. Rewrite the
+ * offending conditions to an equivalent `path` restriction scoped to the
+ * docs content dir, since content/docs is the only place fumadocs generates
+ * meta.json/meta.yaml imports for. Delete this shim once fumadocs-mdx ships
+ * a Next-16-compatible Turbopack adapter (re-test by removing it and
+ * building — if the build still passes AND no "Unrecognized key(s)"
+ * warning appears, the upstream fix has landed).
+ */
+function sanitizeTurbopackRules(config) {
+    const rules = config.turbopack?.rules
+    if (!rules) return config
+    for (const rule of Object.values(rules)) {
+        if (
+            rule &&
+            typeof rule === 'object' &&
+            rule.condition &&
+            'query' in rule.condition
+        ) {
+            const { query, ...rest } = rule.condition
+            rule.condition =
+                Object.keys(rest).length > 0
+                    ? { ...rest, path: '**/content/docs/**' }
+                    : { path: '**/content/docs/**' }
+        }
+    }
+    return config
+}
+
+export default sanitizeTurbopackRules(withMDX(nextConfig))
