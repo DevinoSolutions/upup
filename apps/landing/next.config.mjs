@@ -71,17 +71,18 @@ function sanitizeTurbopackRules(config) {
     const rules = config.turbopack?.rules
     if (!rules) return config
     for (const rule of Object.values(rules)) {
+        // Only a top-level `query` key is stripped. A future fumadocs version
+        // nesting conditions under all/any/not would slip past this shim and
+        // Turbopack would panic loudly again — re-handle it then.
         if (
             rule &&
             typeof rule === 'object' &&
             rule.condition &&
             'query' in rule.condition
         ) {
-            const { query, ...rest } = rule.condition
-            rule.condition =
-                Object.keys(rest).length > 0
-                    ? { ...rest, path: '**/content/docs/**' }
-                    : { path: '**/content/docs/**' }
+            const rest = { ...rule.condition }
+            delete rest.query
+            rule.condition = { ...rest, path: '**/content/docs/**' }
         }
     }
     return config
