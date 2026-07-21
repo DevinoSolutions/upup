@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { source } from '@/lib/docs/source'
+import { nodeToText, toSidebarTree } from '@/lib/docs/sidebar-tree'
 import { getMDXComponents } from '@/components/docs/mdx-components'
+import { DocsBreadcrumb } from '@/components/docs/DocsBreadcrumb'
+import { DocsToc } from '@/components/docs/DocsToc'
 
 const SITE_URL = 'https://useupup.com'
 
@@ -47,10 +50,30 @@ export default async function DocsPage(props: {
     const page = source.getPage(slug)
     if (!page) notFound()
     const MDX = page.data.body
+    const tree = toSidebarTree(source.pageTree)
+    const url = `/docs${slug?.length ? `/${slug.join('/')}` : ''}`
+    // TOC titles are ReactNode in fumadocs — flatten to strings before they
+    // cross into the client <DocsToc>.
+    const toc = page.data.toc.map(item => ({
+        title: nodeToText(item.title),
+        url: item.url,
+        depth: item.depth,
+    }))
+
     return (
-        <article className="prose prose-invert min-w-0 max-w-none">
-            <h1>{page.data.title}</h1>
-            <MDX components={getMDXComponents()} />
-        </article>
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
+            <div className="min-w-0">
+                <DocsBreadcrumb tree={tree} url={url} />
+                <article className="prose max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-pre:border prose-pre:border-black/10 dark:prose-pre:border-white/10">
+                    <h1>{page.data.title}</h1>
+                    <MDX components={getMDXComponents()} />
+                </article>
+            </div>
+            <aside className="hidden lg:block">
+                <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-8">
+                    <DocsToc items={toc} />
+                </div>
+            </aside>
+        </div>
     )
 }
