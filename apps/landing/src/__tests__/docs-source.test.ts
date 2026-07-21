@@ -5,7 +5,9 @@ describe('docs source', () => {
     it('loads pages from content/docs', () => {
         const pages = source.getPages()
         expect(pages.length).toBeGreaterThan(0)
-        expect(source.getPage([])).toBeDefined() // index.mdx
+        const indexPage = source.getPage([]) // index.mdx
+        expect(indexPage).toBeDefined()
+        expect(indexPage?.data.body).toBeDefined()
     })
 
     it('every page has title frontmatter', () => {

@@ -29,14 +29,16 @@ export function Callout({
     )
 }
 
+const EXTERNAL_HREF = /^(https?:)?\/\//
+
 export function getMDXComponents(): MDXComponents {
     return {
         Callout,
         a: ({ href = '', ...props }) =>
-            href.startsWith('/') || href.startsWith('#') ? (
-                <Link href={href} {...props} />
-            ) : (
+            EXTERNAL_HREF.test(href) || href.startsWith('mailto:') ? (
                 <a href={href} target="_blank" rel="noreferrer" {...props} />
+            ) : (
+                <Link href={href} {...props} />
             ),
     }
 }

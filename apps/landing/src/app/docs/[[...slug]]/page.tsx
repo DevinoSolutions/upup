@@ -3,6 +3,12 @@ import type { Metadata } from 'next'
 import { source } from '@/lib/docs/source'
 import { getMDXComponents } from '@/components/docs/mdx-components'
 
+const SITE_URL = 'https://useupup.com'
+
+// content/docs is the only source of docs slugs; anything not generated
+// from it 404s rather than falling through to a dynamic render.
+export const dynamicParams = false
+
 export function generateStaticParams() {
     return source.generateParams()
 }
@@ -13,9 +19,24 @@ export async function generateMetadata(props: {
     const { slug } = await props.params
     const page = source.getPage(slug)
     if (!page) return {}
+
+    const title = `${page.data.title} | upup docs`
+    const description = page.data.description
+    const url = `${SITE_URL}/docs${slug?.length ? `/${slug.join('/')}` : ''}`
+    const image = 'https://useupup.com/img/social-card.png'
+
     return {
-        title: `${page.data.title} | upup docs`,
-        description: page.data.description,
+        title,
+        description,
+        alternates: { canonical: url },
+        openGraph: {
+            title,
+            description,
+            url,
+            type: 'website',
+            siteName: 'upup',
+            images: [image],
+        },
     }
 }
 
