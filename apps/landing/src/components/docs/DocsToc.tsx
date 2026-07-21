@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export interface TocItem {
     title: string
@@ -12,7 +12,10 @@ export function DocsToc({ items }: { items: TocItem[] }) {
     const [activeId, setActiveId] = useState('')
     // Only depth ≤3 headings are rendered — observe exactly those so a deeper
     // heading can never become the active id with no row to show it.
-    const visible = items.filter(item => item.depth <= 3)
+    const visible = useMemo(
+        () => items.filter(item => item.depth <= 3),
+        [items],
+    )
 
     useEffect(() => {
         if (visible.length < 2) return
@@ -40,7 +43,7 @@ export function DocsToc({ items }: { items: TocItem[] }) {
         )
         headings.forEach(h => observer.observe(h))
         return () => observer.disconnect()
-    }, [items])
+    }, [visible])
 
     if (visible.length < 2) return null
 
