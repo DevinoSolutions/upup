@@ -76,12 +76,19 @@ export function DiagramFrame({
                     className="h-auto w-full text-gray-700 dark:text-gray-300"
                 >
                     <defs>
+                        {/* userSpaceOnUse (not the default objectBoundingBox):
+                            a perfectly horizontal path has a zero-height bbox,
+                            which makes an objectBoundingBox gradient degenerate
+                            and paint nothing. Spanning 0..width in user space
+                            fixes that and lets each accent path pick up its
+                            positional slice of the blue->teal sweep. */}
                         <linearGradient
                             id={gradientId}
-                            x1="0"
-                            y1="0"
-                            x2="1"
-                            y2="0"
+                            gradientUnits="userSpaceOnUse"
+                            x1={0}
+                            y1={0}
+                            x2={width}
+                            y2={0}
                         >
                             <stop offset="0%" stopColor="#2563eb" />
                             <stop offset="100%" stopColor="#14b8a6" />
