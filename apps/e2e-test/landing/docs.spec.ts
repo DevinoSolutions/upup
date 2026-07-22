@@ -126,4 +126,44 @@ test.describe('docs', () => {
         })
         await expect(demo.getByText('hello.txt')).toBeVisible()
     })
+
+    test('ask-ai panel answers (mocked agent) and survives navigation', async ({
+        page,
+    }) => {
+        await page.route('**/api/agents/docs-agent/generate', route =>
+            route.fulfill({
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    text: 'Use the tus strategy. See [Resumable uploads](/docs/resumable-uploads/).',
+                }),
+            }),
+        )
+        await page.goto('/docs/getting-started/')
+        // Two DOM mounts share this testid (mobile-menu + desktop sidebar);
+        // at the default desktop e2e viewport only the desktop one is
+        // visible — the mobile mount sits inside a `lg:hidden` container.
+        await page
+            .locator('[data-testid="docs-ask-ai-trigger"]:visible')
+            .first()
+            .click()
+        const drawer = page.getByTestId('docs-ask-ai-drawer')
+        await expect(drawer).toBeVisible()
+        await drawer.getByTestId('docs-ask-ai-input').fill('resumable uploads?')
+        await drawer.getByTestId('docs-ask-ai-send').click()
+        const citation = drawer.getByRole('link', {
+            name: 'Resumable uploads',
+        })
+        await expect(citation).toBeVisible()
+        await citation.click()
+        await expect(page).toHaveURL(/\/docs\/resumable-uploads\/$/)
+        await expect(drawer).toBeVisible()
+        await expect(drawer.getByText('resumable uploads?')).toBeVisible()
+    })
+
+    test('architecture diagram renders on the modes guide', async ({
+        page,
+    }) => {
+        await page.goto('/docs/guides/modes/')
+        await expect(page.locator('[data-docs-diagram="modes"]')).toBeVisible()
+    })
 })

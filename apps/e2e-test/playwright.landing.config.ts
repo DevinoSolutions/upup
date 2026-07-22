@@ -68,6 +68,10 @@ export default defineConfig({
             NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:
                 process.env
                     .NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN ?? '',
+            // Also what makes the docs project's Ask-AI drawer render as
+            // "configured": docs.spec.ts never talks to this port for real —
+            // it mocks the agent route with page.route, which intercepts
+            // before any real network call, so nothing actually hits 4144.
             NEXT_PUBLIC_MASTRA_BASE_URL: `http://localhost:${MASTRA_PORT}`,
         },
     },
