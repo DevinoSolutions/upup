@@ -26,8 +26,8 @@ export function DocsChrome({
 
     return (
         <div
-            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 transition-[padding] duration-300 ${
-                aiOpen ? '2xl:pr-[404px]' : ''
+            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 transition-[padding,max-width] duration-300 ${
+                aiOpen ? '2xl:max-w-[1532px] 2xl:pr-[404px]' : ''
             }`}
         >
             {/* Mobile: the sidebar collapses behind a native disclosure above the
