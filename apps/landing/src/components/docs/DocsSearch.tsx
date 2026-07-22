@@ -24,6 +24,25 @@ interface SearchResult {
 // split on fumadocs' own <mark>...</mark> wrapper and render every other
 // segment as escaped React text — anything that isn't a `<mark>` match
 // becomes inert visible text rather than executable markup.
+// highlightMarkdown entity-escapes some tokens (backticks in nested inline
+// markdown arrive as &#x60;), which the escaped-text rendering below would
+// otherwise show literally. Decoding is safe here BECAUSE the result is only
+// ever rendered as React text (never innerHTML) — a decoded `<` stays inert.
+// `&amp;` decodes last so double-escaped sequences don't decode twice.
+function decodeEntities(text: string): string {
+    return text
+        .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) =>
+            String.fromCodePoint(parseInt(hex, 16)),
+        )
+        .replace(/&#(\d+);/g, (_, dec: string) =>
+            String.fromCodePoint(parseInt(dec, 10)),
+        )
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+}
+
 function HighlightedContent({ content }: { content: string }) {
     const parts = content.split(/(<mark>[\s\S]*?<\/mark>)/g)
     return (
@@ -31,9 +50,9 @@ function HighlightedContent({ content }: { content: string }) {
             {parts.map((part, i) => {
                 const match = /^<mark>([\s\S]*?)<\/mark>$/.exec(part)
                 return match ? (
-                    <mark key={i}>{match[1]}</mark>
+                    <mark key={i}>{decodeEntities(match[1])}</mark>
                 ) : (
-                    <span key={i}>{part}</span>
+                    <span key={i}>{decodeEntities(part)}</span>
                 )
             })}
         </>

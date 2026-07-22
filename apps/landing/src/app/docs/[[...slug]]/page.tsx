@@ -64,7 +64,11 @@ export default async function DocsPage(props: {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
             <div className="min-w-0">
                 <DocsBreadcrumb tree={tree} url={url} />
-                <article className="prose max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-pre:border prose-pre:border-black/10 dark:prose-pre:border-white/10">
+                {/* prose-code:before/after content-none: the typography
+                    plugin's default renders literal backtick glyphs around
+                    inline code; the chip styling replaces them, scoped via
+                    :not(pre)>code so fenced blocks keep their own styling. */}
+                <article className="prose max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-pre:border prose-pre:border-black/10 dark:prose-pre:border-white/10 prose-code:before:content-none prose-code:after:content-none [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-black/[0.06] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:font-normal dark:[&_:not(pre)>code]:bg-white/10">
                     <h1>{page.data.title}</h1>
                     <MDX components={getMDXComponents()} />
                 </article>
