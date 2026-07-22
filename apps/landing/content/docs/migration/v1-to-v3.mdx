@@ -202,7 +202,7 @@ Most handlers keep their names and shapes. Two are worth a closer look:
 | v1 event                | v3 event                | Change                                                                                                                                                                                                                                          |
 | ----------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `onFileRemove`          | `onFileRemoved`         | Renamed to past tense — the old spelling is gone, not aliased.                                                                                                                                                                                  |
-| `onFilesUploadComplete` | `onFilesUploadComplete` | Name and shape unchanged. Its argument is a list of files in both versions; v1 typed it `FileWithParams[]` (and v1's own docs mislabeled the items as storage "keys"), v3 types it `UploadFile[]` — the same type swap every file handler gets. |
+| `onFilesUploadComplete` | `onFilesUploadComplete` | Name unchanged; item type changed. Its argument is a list of files in both versions; v1 typed it `FileWithParams[]` (and v1's own docs mislabeled the items as storage "keys"), v3 types it `UploadFile[]` — the same type swap every file handler gets. |
 
 Unchanged names: `onFilesSelected`, `onFileClick`, `onFileTypeMismatch`,
 `onFileUploadComplete`, `onFileUploadStart`, `onFileUploadProgress`,
@@ -352,22 +352,26 @@ Server mode is **secure-by-default**: `/presign` and `/multipart/init` return
 different object or a larger body.
 
 <Callout type="info" title="Security upgrade">
-In v1, cloud-drive integration was client-side only: the Google Drive
-`clientId`/`apiKey` and OneDrive `clientId` were public identifiers shipped to
-the browser (which is the normal client-side OAuth model — those are not
-secrets). What v1 could **not** do is keep the OAuth **client secret** and the
-drive access tokens off the client. v3 server mode does: the client talks to
-your `serverUrl` for OAuth and drive access, and `@upupjs/server` performs the
-OAuth exchange and stores tokens in your `TokenStore`. For storage, both modes still upload the
-file bytes directly to storage via a presigned URL — the difference is that in
-server mode `@upupjs/server` issues that URL, holding the storage credentials
-server-side exactly as your v1 `tokenEndpoint` did, and binds it to an HMAC
-token (a key + uploadId + size envelope). What server mode _additionally_
-proxies is cloud-drive transfers: the server fetches the drive file and writes
-it to storage itself, so drive access tokens never reach the browser. Move to
-server mode when you need credential isolation, per-user token scoping, or
-server-side scanning/compliance. Client mode (`uploadEndpoint`) remains a valid,
-first-class choice.
+- **v1's client-direct model:** cloud-drive integration was client-side only —
+  the Google Drive `clientId`/`apiKey` and OneDrive `clientId` were public
+  identifiers shipped to the browser (the normal client-side OAuth model;
+  those are not secrets).
+- **What v1 couldn't do:** keep the OAuth **client secret** and the drive
+  access tokens off the client.
+- **What v3 server mode adds:** the client talks to your `serverUrl` for OAuth
+  and drive access, and `@upupjs/server` performs the OAuth exchange and
+  stores tokens in your `TokenStore`. It also proxies cloud-drive transfers —
+  the server fetches the drive file and writes it to storage itself, so drive
+  access tokens never reach the browser.
+- **What stays the same for storage:** both modes still upload file bytes
+  directly to storage via a presigned URL. In server mode, `@upupjs/server`
+  issues that URL — holding the storage credentials server-side exactly as
+  your v1 `tokenEndpoint` did — and binds it to an HMAC token (a key +
+  uploadId + size envelope).
+
+Move to server mode when you need credential isolation, per-user token
+scoping, or server-side scanning/compliance. Client mode (`uploadEndpoint`)
+remains a valid, first-class choice.
 </Callout>
 
 <Callout type="note">
