@@ -1,0 +1,247 @@
+---
+title: Theming
+description: Style the upup uploader with the theme prop — light/dark/system modes, design tokens exposed as CSS variables, per-component slot class overrides, and the stable data-upup-slot DOM hooks for raw CSS.
+---
+
+upup gives you three layers of control, from coarse to surgical:
+
+1. **`mode`** — switch the built-in light / dark / system palette.
+2. **`tokens`** — override design tokens (colors, radius, shadow, spacing),
+   surfaced as `--upup-*` CSS variables.
+3. **`slots`** — inject your own class names into specific components.
+
+All three live on one prop — `theme` — which every framework's uploader
+accepts. React additionally exports a standalone `UpupThemeProvider` for
+headless compositions.
+
+## The `theme` prop
+
+Pass a `UpupThemeConfig` to `<UpupUploader>`. In React the uploader wraps its
+subtree in a theme provider for you — you do not need `UpupThemeProvider`
+unless you are building your own UI (see [Headless](#headless-upupthemeprovider)).
+
+```tsx
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            uploadEndpoint="/api/upload-token"
+            theme={{
+                mode: 'system',
+                tokens: {
+                    color: {
+                        primary: '#7C3AED',
+                        primaryHover: '#6D28D9',
+                    },
+                    radius: { md: '10px' },
+                },
+            }}
+        />
+    )
+}
+```
+
+`UpupThemeConfig` is:
+
+```ts
+interface UpupThemeConfig {
+    mode?: 'light' | 'dark' | 'system'
+    tokens?: DeepPartial<UpupThemeTokens>
+    slots?: DeepPartial<UpupThemeSlots>
+}
+```
+
+Every field is a deep-partial: override only what you want; the rest fall back
+to the preset for the active mode.
+
+## Mode (light / dark / system)
+
+`mode` selects the base palette and is the switch for the built-in look:
+
+- `'light'` (default) and `'dark'` are fixed.
+- `'system'` follows the OS `prefers-color-scheme` and updates live when it
+  changes. It is SSR-safe: it renders light on the server and first client
+  paint (no hydration mismatch), then resolves the real preference after mount.
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" theme={{ mode: 'dark' }} />
+```
+
+## Tokens
+
+Tokens are the design primitives. They are grouped into `color`, `radius`,
+`shadow`, and `spacing`:
+
+```ts
+interface UpupThemeTokens {
+    color: {
+        surface: string
+        surfaceAlt: string
+        primary: string
+        primaryHover: string
+        text: string
+        textMuted: string
+        border: string
+        borderActive: string
+        danger: string
+        success: string
+        dragBg: string
+        overlay: string
+    }
+    radius: { sm: string; md: string; lg: string; full: string }
+    shadow: { sm: string; md: string; lg: string }
+    spacing: { xs: string; sm: string; md: string; lg: string }
+}
+```
+
+Your `tokens` are merged onto the active mode preset and emitted as CSS
+custom properties on the uploader root, named `--upup-<group>-<key>` (camelCase
+keys become kebab-case). For example `color.primaryHover` becomes
+`--upup-color-primary-hover`, and `radius.md` becomes `--upup-radius-md`. That
+means you can also read them from your own CSS:
+
+```css
+.my-wrapper button.custom {
+    background: var(--upup-color-primary);
+    border-radius: var(--upup-radius-md);
+}
+```
+
+Set the light/dark base with `mode`; use `tokens` to tune the palette and to
+expose those variables to your slot classes and custom CSS. Tokens apply on top
+of whichever mode resolves — they don't select a mode. To vary a value per mode,
+drive `mode`/`tokens` from your own state, or write mode-scoped CSS that reads
+the `--upup-*` variables.
+
+## Slots
+
+Slots override the class names on individual pieces of the UI without touching
+the token system. `theme.slots` is keyed by component, then by the slot within
+it:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    theme={{
+        slots: {
+            sourceSelector: {
+                sourceButton: 'my-source-btn',
+            },
+            fileList: {
+                uploadButton: 'my-upload-btn',
+            },
+            filePreview: {
+                deleteButton: 'my-delete-btn',
+            },
+            progressBar: {
+                fill: 'my-progress-fill',
+            },
+        },
+    }}
+/>
+```
+
+The class names you provide are appended to the component's own classes. The
+full set of component keys and their slots is the `UpupThemeSlots` type
+(exported from `@upupjs/core`); `UpupSlotPath` is the union of every valid
+`"component.slot"` string. Components include `uploader`, `sourceSelector`,
+`sourceView`, `fileList`, `filePreview`, `progressBar`, `driveBrowser`,
+`cameraUploader`, `audioUploader`, `screenCaptureUploader`, `urlUploader`, and
+`imageEditor`.
+
+## CSS-level overrides via DOM hooks
+
+Every rendered piece carries a stable `data-upup-slot` attribute, and the
+key interactive elements carry a `data-testid`. These strings are part of
+upup's cross-framework DOM contract — identical across React, Vue, Svelte,
+Angular, Vanilla, and Preact — so CSS written against them survives framework
+swaps:
+
+```css
+/* Target the panel and the source picker by their stable slot hooks. */
+[data-upup-slot='uploader-panel'] {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+[data-upup-slot='source-selector'] {
+    gap: 1rem;
+}
+[data-upup-slot='progress-bar'] {
+    --upup-color-primary: #16a34a;
+}
+```
+
+Common `data-upup-slot` values include `root`, `uploader-panel`, `header`,
+`source-selector`, `source-view`, `file-list`, `file-preview`, `progress-bar`,
+`url-uploader`, `camera-uploader`, and `drive-browser-item`. Provider-specific
+ones use the kebab wire form, e.g. `google-drive-uploader` and
+`one-drive-uploader`. Testids like `upup-root`, `upup-dropzone`,
+`upup-upload-btn`, and `upup-browse-files` are handy for both CSS and tests.
+
+> upup's own utility classes are emitted with an `upup-` prefix (its Tailwind
+> preset is prefixed to avoid colliding with your app's styles). Don't rely on
+> those internal utility class names — target `data-upup-slot` /
+> `data-testid` or use `theme.slots` instead.
+
+### The `className` prop
+
+`<UpupUploader>` accepts a single `className` string applied to the root
+container — useful for outer layout (width, margins). There is **no**
+`classNames` map prop; per-element class overrides go through `theme.slots`,
+and `className` is only the root.
+
+```tsx
+<UpupUploader className="mx-auto max-w-xl" uploadEndpoint="/api/upload-token" />
+```
+
+## Headless: `UpupThemeProvider`
+
+If you build your own UI with the headless hook (see [Headless](/docs/guides/headless/))
+but still want upup's tokens and dark-mode resolution, wrap your tree in
+`UpupThemeProvider` (exported from `@upupjs/react`). It resolves the theme,
+emits the `--upup-*` variables, and sets `data-theme="light|dark"` on its root
+element:
+
+```tsx
+import { UpupThemeProvider } from '@upupjs/react'
+
+function App() {
+    return (
+        <UpupThemeProvider theme={{ mode: 'system' }}>
+            <MyCustomUploader />
+        </UpupThemeProvider>
+    )
+}
+```
+
+Its props are exactly `{ theme?: UpupThemeConfig; children }`.
+
+## Framework support
+
+The `theme` prop is shared across all frameworks — it is part of the common
+`UploaderBaseProps`. How you pass it follows each framework's binding syntax:
+
+| Framework  | How to pass the theme                             | Standalone provider    |
+| ---------- | ------------------------------------------------- | ---------------------- |
+| React      | `<UpupUploader theme={{ ... }} />`                | `UpupThemeProvider`    |
+| Vue        | `<UpupUploader :theme="{ ... }" />`               | — (wrapped internally) |
+| Svelte     | `<UpupUploader theme={{ ... }} />`                | — (wrapped internally) |
+| Angular    | `<upup-uploader [config]="{ theme: { ... } }" />` | — (wrapped internally) |
+| Vanilla JS | `createUploader('#el', { theme: { ... } })`       | — (wrapped internally) |
+
+Only React exposes a separate `UpupThemeProvider`; the other frameworks apply
+the theme entirely through their uploader. The resolved `mode`, `isDark`,
+token, and slot state are the same in every framework because they come from
+the shared core theme store. See the per-framework
+[quickstarts](/docs/quickstarts/) for the full mount pattern.
+
+Preact re-exports `@upupjs/react`, so it behaves identically to the React row
+(including `UpupThemeProvider`).
+
+## Next steps
+
+- [Headless Usage](/docs/guides/headless/) — build your own UI on the engine and wrap it
+  in `UpupThemeProvider`.
+- [Localization (i18n)](/docs/localization/) — translate and override the copy in
+  the components you are theming.

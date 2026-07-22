@@ -1,0 +1,11 @@
+{
+    "pages": [
+        "modes",
+        "server-mode-setup",
+        "error-monitoring",
+        "storage-providers",
+        "server-auth",
+        "theming",
+        "headless"
+    ]
+}

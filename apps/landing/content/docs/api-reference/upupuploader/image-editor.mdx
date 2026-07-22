@@ -1,0 +1,35 @@
+---
+title: Image Editor
+description: Enable in-uploader cropping, rotation, flip, and annotation with the imageEditor prop — available in the React and Preact packages only.
+---
+
+Enable the image editor with the `imageEditor` prop.
+
+<Callout type="note" title="React / Preact only">
+The image editor ships in `@upupjs/react` and `@upupjs/preact` only (Preact
+loads the real React editor as a lazy island). The Vue, Svelte, Angular, and
+Vanilla packages intentionally stub it — a deliberate ruling, not a gap.
+</Callout>
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    imageEditor={{
+        enabled: true,
+        crop: true,
+        rotate: true,
+    }}
+/>
+```
+
+Edited files flow back through core validation before upload.
+
+```ts
+type ImageEditorOptions = {
+    enabled?: boolean
+    crop?: boolean
+    rotate?: boolean
+    flip?: boolean
+    annotate?: boolean
+}
+```

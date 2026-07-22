@@ -1,0 +1,11 @@
+{
+    "pages": [
+        "required-props",
+        "event-handlers",
+        "icon-prop",
+        "optional-props",
+        "image-editor",
+        "classnames",
+        "ref-api"
+    ]
+}

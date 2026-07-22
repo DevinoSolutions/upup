@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 
 const CALLOUT_STYLES: Record<string, string> = {
     note: 'border-sky-500/40 bg-sky-500/5',
@@ -34,6 +34,14 @@ const EXTERNAL_HREF = /^(https?:)?\/\//
 export function getMDXComponents(): MDXComponents {
     return {
         Callout,
+        // Wide reference tables (type signatures, provider matrices) exceed the
+        // mobile viewport; scroll them horizontally in their own container so a
+        // table never forces the whole page to scroll sideways.
+        table: (props: ComponentProps<'table'>) => (
+            <div className="my-4 overflow-x-auto">
+                <table {...props} />
+            </div>
+        ),
         a: ({ href = '', ...props }) =>
             EXTERNAL_HREF.test(href) || href.startsWith('mailto:') ? (
                 <a href={href} target="_blank" rel="noreferrer" {...props} />
