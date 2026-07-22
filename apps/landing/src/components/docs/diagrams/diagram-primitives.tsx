@@ -30,12 +30,17 @@ function useDiagram(): DiagramCtx {
 export function DiagramFrame({
     name,
     label,
+    width,
     minWidth,
     height,
     children,
 }: {
     name: string
     label: string
+    // The intrinsic coordinate width (viewBox). Keep it at/under the ~584px
+    // docs article column so the diagram renders 1:1 with no desktop h-scroll.
+    width: number
+    // CSS floor: below this the frame scrolls instead of squishing (mobile).
     minWidth: number
     height: number
     children: ReactNode
@@ -66,7 +71,7 @@ export function DiagramFrame({
                     data-docs-diagram={name}
                     role="img"
                     aria-label={label}
-                    viewBox={`0 0 ${minWidth} ${height}`}
+                    viewBox={`0 0 ${width} ${height}`}
                     style={{ minWidth }}
                     className="h-auto w-full text-gray-700 dark:text-gray-300"
                 >

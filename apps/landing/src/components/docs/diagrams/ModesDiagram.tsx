@@ -4,19 +4,20 @@ import { DiagramFrame, Flow, Muted, Node } from './diagram-primitives'
 
 // Client mode vs server mode: two labelled rows sharing the same storage
 // destination on the right. The accent (blue->teal) arrow marks the hop that
-// actually carries the file bytes.
+// actually carries the file bytes. Sized to fit the ~584px docs column.
 export function ModesDiagram() {
     return (
         <DiagramFrame
             name="modes"
             label="Client mode vs server mode upload flow"
-            minWidth={880}
-            height={260}
+            width={570}
+            minWidth={560}
+            height={250}
         >
-            {/* Row captions */}
+            {/* Client mode row */}
             <Muted
-                x={12}
-                y={69}
+                x={10}
+                y={30}
                 anchor="start"
                 size={11}
                 opacity={0.7}
@@ -24,9 +25,27 @@ export function ModesDiagram() {
             >
                 Client mode
             </Muted>
+            <Node x={10} y={45} width={100} height={48} label="Browser" />
+            <Flow
+                d="M110 69 L419 69"
+                variant="accent"
+                label="direct upload"
+                labelX={265}
+                labelY={59}
+            />
+            <Node
+                x={425}
+                y={45}
+                width={130}
+                height={48}
+                label="S3-compatible"
+                sub="storage"
+            />
+
+            {/* Server mode row */}
             <Muted
-                x={12}
-                y={194}
+                x={10}
+                y={150}
                 anchor="start"
                 size={11}
                 opacity={0.7}
@@ -34,53 +53,35 @@ export function ModesDiagram() {
             >
                 Server mode
             </Muted>
-
-            {/* Client mode row */}
-            <Node x={130} y={42} width={110} height={46} label="Browser" />
+            <Node x={10} y={165} width={100} height={48} label="Browser" />
             <Flow
-                d="M244 65 L654 65"
-                variant="accent"
-                label="direct upload"
-                labelX={449}
-                labelY={55}
-            />
-            <Node
-                x={660}
-                y={42}
-                width={210}
-                height={46}
-                label="S3-compatible storage"
-            />
-
-            {/* Server mode row */}
-            <Node x={130} y={167} width={110} height={46} label="Browser" />
-            <Flow
-                d="M244 190 L344 190"
+                d="M110 189 L174 189"
                 label="signed request"
-                labelX={294}
-                labelY={180}
+                labelX={142}
+                labelY={179}
             />
             <Node
-                x={350}
-                y={167}
-                width={210}
-                height={46}
+                x={180}
+                y={165}
+                width={175}
+                height={48}
                 label="Your server"
                 sub="@upupjs/server"
             />
             <Flow
-                d="M564 190 L654 190"
+                d="M355 189 L419 189"
                 variant="accent"
                 label="presigned PUT"
-                labelX={609}
-                labelY={180}
+                labelX={387}
+                labelY={179}
             />
             <Node
-                x={660}
-                y={167}
-                width={210}
-                height={46}
-                label="S3-compatible storage"
+                x={425}
+                y={165}
+                width={130}
+                height={48}
+                label="S3-compatible"
+                sub="storage"
             />
         </DiagramFrame>
     )
