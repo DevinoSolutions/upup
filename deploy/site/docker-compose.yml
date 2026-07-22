@@ -78,6 +78,10 @@ services:
             # Comma-separated CORS allowlist (the landing origin must be listed).
             # Unset -> mastra's local-dev origin fallback.
             - ALLOWED_ORIGINS
+            # Deployed docs origin the docs-agent's search-docs tool fetches
+            # `/docs/llms-full.txt` from. Bare passthrough — the schema default
+            # (https://dev.useupup.com) covers an unset var.
+            - DOCS_BASE_URL
             # ORIGIN_TOKEN_SECRET is intentionally omitted: mastra's schema is
             # z.string().min(1).optional(), so auth stays DISABLED on dev. To
             # enable it later, add a bare `- ORIGIN_TOKEN_SECRET` line and set a

@@ -2,6 +2,7 @@ import { Mastra } from '@mastra/core'
 import { env } from '../lib/env.js'
 import { buildObservability } from '../lib/observability.js'
 import { playgroundAgent } from './agents/playground-agent.js'
+import { docsAgent } from './agents/docs-agent.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { authMiddleware } from './middleware/auth.js'
 import { rateLimitMiddleware } from './middleware/rate-limit.js'
@@ -26,7 +27,7 @@ import { schemaRoute } from './routes/schema.js'
 const { observability, environment } = buildObservability()
 
 export const mastra = new Mastra({
-    agents: { playgroundAgent },
+    agents: { playgroundAgent, docsAgent },
     ...(observability ? { observability } : {}),
     ...(environment ? { environment } : {}),
     server: {
