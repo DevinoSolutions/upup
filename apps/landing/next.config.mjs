@@ -25,6 +25,24 @@ const nextConfig = {
         root: repoRoot,
     },
     async rewrites() {
+        // llms.txt / llms-full.txt: served from a dedicated docs-llms route
+        // group so the catch-all `/docs/[[...slug]]` fumadocs route never
+        // sees them. The llms.txt convention's canonical location is the site
+        // root, so those two are rewritten there too, alongside the /docs/
+        // copies referenced from within the docs themselves.
+        const llmsRewrites = [
+            { source: '/docs/llms.txt', destination: '/docs-llms/llms.txt' },
+            {
+                source: '/docs/llms-full.txt',
+                destination: '/docs-llms/llms-full.txt',
+            },
+            { source: '/llms.txt', destination: '/docs-llms/llms.txt' },
+            {
+                source: '/llms-full.txt',
+                destination: '/docs-llms/llms-full.txt',
+            },
+        ]
+
         if (isDev) {
             return {
                 beforeFiles: [
@@ -36,6 +54,7 @@ const nextConfig = {
                         source: '/documentation/:path*',
                         destination: `${docsOrigin}/documentation/:path*`,
                     },
+                    ...llmsRewrites,
                 ],
                 afterFiles: [],
                 fallback: [],
@@ -47,6 +66,7 @@ const nextConfig = {
                 source: '/documentation/:path*',
                 destination: '/documentation/index.html',
             },
+            ...llmsRewrites,
         ]
     },
 }
