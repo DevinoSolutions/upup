@@ -17,6 +17,9 @@ const serverSchema = z.object({
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
     MASTRA_API_URL: z.string().default('http://localhost:4111'),
     AGENT_ID: z.string().default('playground-agent'),
+    // Deployed docs origin the search-docs tool fetches `/docs/llms-full.txt`
+    // from. Defaults so an unset/bare-passthrough deploy env stays valid.
+    DOCS_BASE_URL: z.string().url().default('https://dev.useupup.com'),
     EVAL_FAIL_THRESHOLD: z.coerce.number().min(0).max(1).default(0.1),
     // PostHog AI-tracing export. Dataset picks which project (if any) receives
     // traces; the exporter is OFF entirely on `disabled` or a missing token.
