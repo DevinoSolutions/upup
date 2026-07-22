@@ -183,7 +183,7 @@ export function DocsHome() {
                     <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                         Documentation
                     </p>
-                    <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">
+                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
                         Everything you need to{' '}
                         <span className={GRADIENT_TEXT}>ship uploads</span>
                     </h1>
@@ -221,7 +221,7 @@ export function DocsHome() {
                         <Link
                             key={fw.slug}
                             href={`/docs/quickstarts/${fw.slug}/`}
-                            className="flex items-center gap-2 rounded-lg border border-black/5 px-3 py-2.5 text-sm transition-colors hover:border-black/10 dark:border-white/10 dark:hover:border-white/20"
+                            className="flex items-center gap-2 rounded-lg border border-black/5 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:border-black/10 dark:border-white/10 dark:text-gray-200 dark:hover:border-white/20"
                         >
                             <fw.Icon
                                 size={18}
