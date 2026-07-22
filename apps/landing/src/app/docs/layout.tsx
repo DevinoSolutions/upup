@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { Search } from 'lucide-react'
 import { source } from '@/lib/docs/source'
 import { toSidebarTree } from '@/lib/docs/sidebar-tree'
 import { DocsSidebar } from '@/components/docs/DocsSidebar'
+import { DocsSearch } from '@/components/docs/DocsSearch'
 
 // The site header (Navbar) is rendered globally in the root layout, so docs
 // pages inherit it — this layout only builds the docs-specific chrome and clears
@@ -19,7 +19,7 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
                     Documentation menu
                 </summary>
                 <div className="space-y-3 pt-3">
-                    <SearchPlaceholder />
+                    <DocsSearch />
                     <DocsSidebar tree={tree} />
                 </div>
             </details>
@@ -28,31 +28,12 @@ export default function DocsLayout({ children }: { children: ReactNode }) {
                 {/* Desktop sidebar — sticky under the fixed site header. */}
                 <aside className="hidden lg:block">
                     <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-8">
-                        <SearchPlaceholder />
+                        <DocsSearch />
                         <DocsSidebar tree={tree} />
                     </div>
                 </aside>
                 <div className="min-w-0">{children}</div>
             </div>
         </div>
-    )
-}
-
-// Reserved spot for the docs search trigger (wired in the next task). Inert for
-// now so the layout holds its place without pretending to work.
-function SearchPlaceholder() {
-    return (
-        <button
-            type="button"
-            disabled
-            aria-label="Search docs (coming soon)"
-            className="flex w-full items-center gap-2 rounded-md border border-black/5 px-3 py-2 text-sm text-gray-400 dark:border-white/10 dark:text-gray-500"
-        >
-            <Search className="h-4 w-4" />
-            <span>Search…</span>
-            <kbd className="ml-auto rounded border border-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:border-white/10">
-                ⌘K
-            </kbd>
-        </button>
     )
 }
