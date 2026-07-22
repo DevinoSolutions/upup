@@ -2,6 +2,8 @@ import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
 import type { ComponentProps, ReactNode } from 'react'
 
+import { DocsUploaderDemo } from './DocsUploaderDemo'
+
 const CALLOUT_STYLES: Record<string, string> = {
     note: 'border-sky-500/40 bg-sky-500/5',
     tip: 'border-emerald-500/40 bg-emerald-500/5',
@@ -34,6 +36,7 @@ const EXTERNAL_HREF = /^(https?:)?\/\//
 export function getMDXComponents(): MDXComponents {
     return {
         Callout,
+        DocsUploaderDemo,
         // Wide reference tables (type signatures, provider matrices) exceed the
         // mobile viewport; scroll them horizontally in their own container so a
         // table never forces the whole page to scroll sideways.
