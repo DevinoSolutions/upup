@@ -17,6 +17,29 @@ interface SearchResult {
     url: string
 }
 
+// fumadocs' highlighter performs NO escaping — its own docs say the content
+// is "assumed already sanitized", but a real run proves otherwise: raw HTML
+// written in docs inline-code (e.g. an <img onerror=...> example) reaches
+// this field as a live tag. So `content` must never hit innerHTML. Instead,
+// split on fumadocs' own <mark>...</mark> wrapper and render every other
+// segment as escaped React text — anything that isn't a `<mark>` match
+// becomes inert visible text rather than executable markup.
+function HighlightedContent({ content }: { content: string }) {
+    const parts = content.split(/(<mark>[\s\S]*?<\/mark>)/g)
+    return (
+        <>
+            {parts.map((part, i) => {
+                const match = /^<mark>([\s\S]*?)<\/mark>$/.exec(part)
+                return match ? (
+                    <mark key={i}>{match[1]}</mark>
+                ) : (
+                    <span key={i}>{part}</span>
+                )
+            })}
+        </>
+    )
+}
+
 export function DocsSearch() {
     const router = useRouter()
     const [open, setOpen] = useState(false)
@@ -58,7 +81,7 @@ export function DocsSearch() {
 
     useEffect(() => {
         setActiveIndex(0)
-    }, [results.length])
+    }, [search])
 
     useEffect(() => {
         const active = listRef.current?.querySelector<HTMLElement>(
@@ -165,20 +188,17 @@ export function DocsSearch() {
                                                 : ''
                                         }`}
                                     >
-                                        {/* fumadocs' search server embeds match highlights as inline
-                                            <mark> tags in `content` — rendered as HTML so the
-                                            highlight shows instead of literal tag text. Content is
-                                            our own indexed docs copy, not user input. */}
                                         <span
                                             className={
                                                 result.type === 'page'
                                                     ? 'font-medium text-gray-900 [&_mark]:bg-amber-200/70 [&_mark]:text-inherit dark:text-white dark:[&_mark]:bg-amber-500/30'
                                                     : 'text-gray-600 [&_mark]:bg-amber-200/70 [&_mark]:text-inherit dark:text-gray-400 dark:[&_mark]:bg-amber-500/30'
                                             }
-                                            dangerouslySetInnerHTML={{
-                                                __html: result.content,
-                                            }}
-                                        />
+                                        >
+                                            <HighlightedContent
+                                                content={result.content}
+                                            />
+                                        </span>
                                     </button>
                                 ))
                             )}
