@@ -34,6 +34,12 @@ export default defineConfig({
         trace: 'retain-on-failure',
     },
     projects: [
+        // docs.spec.ts has no PostHog/dataset dependency — it runs standalone,
+        // independent of the flows -> ingestion ordering below.
+        {
+            name: 'docs',
+            testMatch: /docs\.spec\.ts$/,
+        },
         {
             name: 'flows',
             testMatch: /(support-flow|thumbs-flow)\.spec\.ts$/,

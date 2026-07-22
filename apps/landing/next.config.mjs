@@ -8,9 +8,6 @@ const repoRoot = join(__dirname, '../..')
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV !== 'production'
 
-const docsPort = process.env.DOCS_PORT || '53002'
-const docsOrigin = `http://localhost:${docsPort}`
-
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -30,7 +27,7 @@ const nextConfig = {
         // sees them. The llms.txt convention's canonical location is the site
         // root, so those two are rewritten there too, alongside the /docs/
         // copies referenced from within the docs themselves.
-        const llmsRewrites = [
+        return [
             { source: '/docs/llms.txt', destination: '/docs-llms/llms.txt' },
             {
                 source: '/docs/llms-full.txt',
@@ -42,31 +39,46 @@ const nextConfig = {
                 destination: '/docs-llms/llms-full.txt',
             },
         ]
-
-        if (isDev) {
-            return {
-                beforeFiles: [
-                    {
-                        source: '/documentation',
-                        destination: `${docsOrigin}/documentation/`,
-                    },
-                    {
-                        source: '/documentation/:path*',
-                        destination: `${docsOrigin}/documentation/:path*`,
-                    },
-                    ...llmsRewrites,
-                ],
-                afterFiles: [],
-                fallback: [],
-            }
-        }
-
+    },
+    // The legacy Docusaurus app (apps/docs) that used to serve /documentation
+    // is gone; every old URL permanently redirects into the new /docs surface
+    // that now lives in this app. Specific sources are listed before the
+    // wildcard so they win the match. A single `:path*` source (no separate
+    // slashed variant needed) covers both a bare and a trailing-slash legacy
+    // request — verified live: with trailingSlash:true, Next's OWN trailing-
+    // slash redirect runs BEFORE this one for an unslashed request (it
+    // normalizes `/documentation/x` -> `/documentation/x/` first, a 308),
+    // then this rule fires (-> `/docs/x`, 308), then trailingSlash normalizes
+    // the destination too (-> `/docs/x/`, 308) — 3 hops total but the same
+    // final URL a slashed request reaches in 2 (this rule fires directly,
+    // then one trailingSlash hop appends the slash).
+    async redirects() {
         return [
             {
-                source: '/documentation/:path*',
-                destination: '/documentation/index.html',
+                source: '/documentation',
+                destination: '/docs/',
+                permanent: true,
             },
-            ...llmsRewrites,
+            {
+                source: '/documentation/llms.txt',
+                destination: '/llms.txt',
+                permanent: true,
+            },
+            {
+                source: '/documentation/llms-full.txt',
+                destination: '/llms-full.txt',
+                permanent: true,
+            },
+            {
+                source: '/documentation/migration/v2-to-v2.1',
+                destination: '/docs/migration/v1-to-v3/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/:path*',
+                destination: '/docs/:path*',
+                permanent: true,
+            },
         ]
     },
 }

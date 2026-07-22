@@ -305,7 +305,7 @@ export default function StackBlitzDemoSection() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
                                 target="_blank"
-                                href="/documentation"
+                                href="/docs/"
                                 className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
                             >
                                 <Code className="w-5 h-5" />

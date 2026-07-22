@@ -20,7 +20,7 @@ export default function Navbar() {
         <>
             <li>
                 <Link
-                    href="/documentation"
+                    href="/docs/"
                     className="block px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors duration-200 rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                     onClick={() => setNavbarOpen(false)}
                 >

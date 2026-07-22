@@ -3,10 +3,9 @@ import { FRAMEWORK_IDS } from '@/lib/frameworks'
 
 const SITE_URL = 'https://useupup.com'
 
-// Key documentation entry points (served by the docs app under /documentation).
-// The docs app publishes its own full sitemap at
-// https://useupup.com/documentation/sitemap.xml (also referenced from robots.txt);
-// these are the high-value pages we surface directly from the root sitemap.
+// Key documentation entry points (served by this app under /docs). Fumadocs
+// has no separate sub-sitemap here — these are the high-value pages we
+// surface directly from the root sitemap.
 const docsPaths = [
     'getting-started',
     'guides/server-mode-setup',
@@ -49,7 +48,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.3,
         },
         ...docsPaths.map((path): MetadataRoute.Sitemap[number] => ({
-            url: `${SITE_URL}/documentation/${path}`,
+            url: `${SITE_URL}/docs/${path}/`,
             lastModified,
             changeFrequency: 'monthly',
             priority: 0.7,
