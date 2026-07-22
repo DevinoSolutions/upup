@@ -5,6 +5,7 @@ import { nodeToText, toSidebarTree } from '@/lib/docs/sidebar-tree'
 import { getMDXComponents } from '@/components/docs/mdx-components'
 import { DocsBreadcrumb } from '@/components/docs/DocsBreadcrumb'
 import { DocsToc } from '@/components/docs/DocsToc'
+import { DocsHome } from '@/components/docs/DocsHome'
 
 const SITE_URL = 'https://useupup.com'
 
@@ -49,6 +50,7 @@ export default async function DocsPage(props: {
     const { slug } = await props.params
     const page = source.getPage(slug)
     if (!page) notFound()
+    if (!slug?.length) return <DocsHome />
     const MDX = page.data.body
     const tree = toSidebarTree(source.pageTree)
     const url = `/docs${slug?.length ? `/${slug.join('/')}` : ''}`
