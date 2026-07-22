@@ -1,7 +1,8 @@
 {
+    "title": "API reference",
     "pages": [
-        "upupuploader",
         "s3-generate-presigned-url",
-        "azure-generate-sas-url"
+        "azure-generate-sas-url",
+        "upupuploader"
     ]
 }
