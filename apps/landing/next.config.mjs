@@ -77,6 +77,32 @@ const nextConfig = {
                 destination: '/docs/migration/v1-to-v3/',
                 permanent: true,
             },
+            // Docusaurus generated-index (category) pages have no counterpart
+            // in the new tree — sections are sidebar folders without index
+            // pages — so each legacy section URL maps to the section's first
+            // page (meta.json order). Two shapes existed: default
+            // `/category/<label>` URLs and custom-slug URLs (quickstarts,
+            // comparisons). Must precede the wildcard below.
+            {
+                source: '/documentation/quickstarts',
+                destination: '/docs/quickstarts/react/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/comparisons',
+                destination: '/docs/comparisons/upup-vs-uppy/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/category/api-reference',
+                destination: '/docs/api-reference/s3-generate-presigned-url/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/category/upupuploader',
+                destination: '/docs/api-reference/upupuploader/required-props/',
+                permanent: true,
+            },
             {
                 source: '/documentation/:path*',
                 destination: '/docs/:path*',

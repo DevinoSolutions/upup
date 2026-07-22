@@ -18,6 +18,34 @@ test.describe('docs', () => {
         expect(followed.status()).toBe(200)
     })
 
+    test('legacy category/section index URLs land on a real page', async ({
+        request,
+    }) => {
+        // Docusaurus generated-index pages have no counterpart in the new
+        // tree; each maps to its section's first page (meta.json order). The
+        // wildcard alone would send these to /docs/category/* 404s.
+        const cases: Array<[string, RegExp]> = [
+            ['/documentation/quickstarts', /\/docs\/quickstarts\/react\/$/],
+            [
+                '/documentation/comparisons',
+                /\/docs\/comparisons\/upup-vs-uppy\/$/,
+            ],
+            [
+                '/documentation/category/api-reference',
+                /\/docs\/api-reference\/s3-generate-presigned-url\/$/,
+            ],
+            [
+                '/documentation/category/upupuploader',
+                /\/docs\/api-reference\/upupuploader\/required-props\/$/,
+            ],
+        ]
+        for (const [legacy, target] of cases) {
+            const followed = await request.get(legacy)
+            expect(followed.url(), `${legacy} final URL`).toMatch(target)
+            expect(followed.status(), `${legacy} final status`).toBe(200)
+        }
+    })
+
     test('docs page renders chrome and content', async ({ page }) => {
         await page.goto('/docs/getting-started/')
         await expect(
