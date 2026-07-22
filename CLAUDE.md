@@ -85,7 +85,9 @@ additionally compose its `reactHooksConfig` named export — kept out of the
 shared default because vue/svelte composables are also named `use*` and would
 false-positive against `react-hooks/rules-of-hooks`).
 
-Apps (`apps/`): `playground` (main dev app), `landing`, `docs`, `e2e-test`
+Apps (`apps/`): `playground` (main dev app), `landing` (also hosts the docs —
+MDX content under `apps/landing/content/docs/`, served at `/docs` by
+fumadocs-core headless; there is no longer a standalone docs app), `e2e-test`
 (Playwright: deep React suite + cross-framework parity), `storybook-react/vue/
 svelte/vanilla/angular/preact` (per-framework style-parity references),
 `next-example`, `mastra` (agents/tools for the interactive playground).
@@ -215,9 +217,9 @@ before suspecting your change. Known load-sensitive cases:
 timeouts when the whole suite runs but pass alone; six-storybook cf boots
 can throw transient Windows `STATUS_STACK_BUFFER_OVERRUN`s.
 
-Dev loops: `pnpm run dev` (playground + landing + docs + package watchers),
-`pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook` for the
-framework storybooks.
+Dev loops: `pnpm run dev` (playground + landing (docs included) + package
+watchers), `pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook`
+for the framework storybooks.
 
 ## Verification discipline
 

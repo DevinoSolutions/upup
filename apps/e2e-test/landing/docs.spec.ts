@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // Proves the docs surface that now lives at /docs inside this landing app:
 // the legacy Docusaurus /documentation URLs permanently redirect (the old
-// apps/docs app is deleted in the next task), the fumadocs chrome (sidebar +
+// standalone apps/docs app has been deleted), the fumadocs chrome (sidebar +
 // search) renders real content, and the llms.txt convention path is served.
 
 test.describe('docs', () => {

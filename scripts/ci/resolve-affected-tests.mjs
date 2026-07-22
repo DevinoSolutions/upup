@@ -204,12 +204,14 @@ export const IMPACT_RULES = [
 
     // ── LIGHT_DIR → NONE (dev-only apps + repo metadata) ─────────────────
     {
+        // apps/landing/ also covers the docs (MDX under content/docs, served
+        // at /docs by fumadocs) — a docs-content edit stays light like any
+        // other marketing-site change.
         name: 'dev-app',
         tier: TIER.LIGHT_DIR,
         suites: 'NONE',
         test: path =>
             path.startsWith('apps/landing/') ||
-            path.startsWith('apps/docs/') ||
             path.startsWith('apps/playground/') ||
             path.startsWith('apps/next-example/') ||
             path.startsWith('apps/mastra/'),

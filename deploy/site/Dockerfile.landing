@@ -49,8 +49,9 @@ ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
 
 COPY . .
 RUN pnpm install --frozen-lockfile
-# Builds @upupjs/core → react → server → interactive-example → docs → landing
-# (turbo dependency graph). Docs output lands in apps/landing/public/documentation.
+# Builds @upupjs/core → react → server → interactive-example → landing
+# (turbo dependency graph). The docs (MDX under apps/landing/content/docs) are
+# compiled into the landing Next build by fumadocs — no separate docs step.
 RUN pnpm run build:landing
 
 FROM build AS runtime

@@ -122,8 +122,7 @@ const EXTENSIONS = new Set([
 // Paths that may legitimately NAME retired vocabulary (never USE it).
 const EXCLUDED_PATHS = [
     'scripts/check-retired-vocab.mjs', // this file is the token list
-    'apps/docs/docs/migration/', // migration guides teach old -> new
-    'apps/landing/content/docs/migration/', // ported fumadocs migration guide (same subject matter); the apps/docs entry above self-liquidates once Task 10 deletes the old tree
+    'apps/landing/content/docs/migration/', // fumadocs migration guide teaches old -> new
 ]
 
 const EXCLUDED_SUFFIXES = ['CHANGELOG.md'] // release history is immutable

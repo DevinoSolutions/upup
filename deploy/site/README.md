@@ -3,11 +3,11 @@
 This directory is the single deployment contract for **dev.useupup.com**. One
 `docker compose` stack builds and runs three services from the monorepo:
 
-| Service      | Image                   | Internal port | What it serves                                                                            |
-| ------------ | ----------------------- | ------------- | ----------------------------------------------------------------------------------------- |
-| `landing`    | `Dockerfile.landing`    | `3000`        | The marketing site + interactive demo (Next.js). Bundles the docs under `/documentation`. |
-| `mastra`     | `Dockerfile.mastra`     | `4111`        | The Mastra AI server behind the Ask-AI panel (Hono).                                      |
-| `playground` | `Dockerfile.playground` | `3000`        | The developer playground (Next.js).                                                       |
+| Service      | Image                   | Internal port | What it serves                                                                          |
+| ------------ | ----------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| `landing`    | `Dockerfile.landing`    | `3000`        | The marketing site + interactive demo (Next.js). Serves the docs at `/docs` (fumadocs). |
+| `mastra`     | `Dockerfile.mastra`     | `4111`        | The Mastra AI server behind the Ask-AI panel (Hono).                                    |
+| `playground` | `Dockerfile.playground` | `3000`        | The developer playground (Next.js).                                                     |
 
 All three build from the **monorepo root** as context (`build.context: ../..`).
 No host port mappings are declared — Dokploy/Traefik routes to the container

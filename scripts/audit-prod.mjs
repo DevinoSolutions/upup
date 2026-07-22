@@ -2,7 +2,7 @@
 // Prod-scoped dependency audit for the PUBLISHED surface only (F-182).
 // Fails (exit 1) on any HIGH/CRITICAL advisory whose dependency path is rooted
 // at a publishable @upupjs/* package's production tree. Dev-only advisories
-// (docusaurus/next/storybook/mastra + private packages) are ignored by design —
+// (next/storybook/mastra + private packages) are ignored by design —
 // they never ship to npm consumers.
 import { spawnSync } from 'node:child_process'
 import { readFileSync, readdirSync } from 'node:fs'

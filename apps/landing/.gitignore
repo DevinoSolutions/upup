@@ -19,7 +19,6 @@
 
 # production
 /build
-/public/documentation
 /upup-landing-docs/public/sw.js
 # misc
 .DS_Store

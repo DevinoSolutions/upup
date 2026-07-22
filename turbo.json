@@ -31,13 +31,6 @@
                 "!.next/cache/**"
             ]
         },
-        "@upupjs/docs#build": {
-            "dependsOn": ["^build"],
-            "outputs": ["build/**", "../landing/public/documentation/**"]
-        },
-        "@upupjs/landing#build": {
-            "dependsOn": ["^build", "@upupjs/docs#build"]
-        },
         "@upupjs/playground#build": {
             "dependsOn": ["^build"]
         },

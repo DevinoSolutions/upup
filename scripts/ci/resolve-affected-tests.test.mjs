@@ -211,6 +211,10 @@ const LIGHT_CASES = [
         path: 'apps/landing/src/routes/index.astro',
     },
     {
+        name: 'a docs content change stays light because the MDX docs live inside the landing app (served at /docs by fumadocs), outside the test gates',
+        path: 'apps/landing/content/docs/getting-started.mdx',
+    },
+    {
         name: 'a next-example app change stays light because the demo app ships nothing the gate consumes',
         path: 'apps/next-example/app/page.tsx',
     },

@@ -10,7 +10,6 @@ packages/*/node_modules
 **/build
 packages/*/dist
 packages/upup/dist-node
-apps/landing/public/documentation
 coverage
 playwright-report
 test-results/

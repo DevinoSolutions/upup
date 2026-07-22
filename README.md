@@ -108,7 +108,7 @@ Express, Fastify, and Hono handlers ship as subpath exports
 (`@upupjs/server/express`, `@upupjs/server/fastify`, `@upupjs/server/hono`), and
 `@upupjs/next` wraps both the App and Pages routers.
 
-> **Full docs → [useupup.com/documentation/getting-started](https://useupup.com/documentation/getting-started)** · **Server Mode setup → [`apps/docs/docs/guides/server-mode-setup.md`](apps/docs/docs/guides/server-mode-setup.md)**
+> **Full docs → [useupup.com/docs/getting-started](https://useupup.com/docs/getting-started)** · **Server Mode setup → [`apps/landing/content/docs/guides/server-mode-setup.mdx`](apps/landing/content/docs/guides/server-mode-setup.mdx)**
 
 ## Features
 
@@ -153,8 +153,7 @@ upup/
 ├── packages/next/     # @upupjs/next    — client re-export + /server route handlers
 ├── packages/server/   # @upupjs/server  — server-mode endpoints (S3 presign/proxy, drive OAuth)
 ├── apps/playground/   # Main dev app
-├── apps/landing/      # Marketing site (useupup.com)
-├── apps/docs/         # Documentation site
+├── apps/landing/      # Marketing site (useupup.com) + docs served at /docs (fumadocs; MDX in content/docs)
 ├── apps/e2e-test/     # Playwright: deep React suite + cross-framework parity harness
 └── turbo.json         # Build pipeline
 ```
