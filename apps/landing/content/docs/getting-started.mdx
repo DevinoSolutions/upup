@@ -49,6 +49,14 @@ objects through callbacks and hooks.
 
 Calling `upload()` without a target returns a typed no-target error.
 
+## What happens to your file
+
+Whichever target you pick, every file runs through the same client-side pipeline
+before it leaves the browser — validated, optionally compressed (HEIC images are
+converted), then uploaded, with the heavy work offloaded to a web worker.
+
+<PipelineDiagram />
+
 ## Client uploads
 
 Use `uploadEndpoint` when your app signs upload URLs and the browser uploads

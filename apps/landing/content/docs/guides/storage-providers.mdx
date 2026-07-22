@@ -17,7 +17,11 @@ storage for you. Which one to pick, and what changes on the wire, is covered in
 [Client Mode vs Server Mode](/docs/guides/modes/).
 
 This page focuses on server mode, where the storage provider is a
-`createUpupHandler` config value.
+`createUpupHandler` config value. Cloud-drive sources land in that same storage:
+after the user consents, the server exchanges the OAuth token and streams the
+picked file straight into your bucket — the bytes never pass through the browser.
+
+<DriveOAuthDiagram />
 
 ## Supported providers
 
