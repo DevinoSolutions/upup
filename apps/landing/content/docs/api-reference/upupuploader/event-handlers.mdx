@@ -12,7 +12,7 @@ React events mirror core upload state.
     onUploadStart={() => console.log('started')}
     onFileUploadComplete={file => console.log(file)}
     onUploadComplete={files => console.log(files)}
-    onError={error => console.error(error)}
+    onError={message => console.error(message)}
 />
 ```
 
@@ -27,6 +27,6 @@ Common handlers:
 | `onFilesUploadProgress` | Aggregate byte progress across the batch.                |
 | `onFileUploadComplete`  | One file succeeds.                                       |
 | `onUploadComplete`      | All files succeed.                                       |
-| `onError`               | Validation, config, network, or provider failure occurs. |
+| `onError`               | A validation, config, network, or provider failure occurs; delivers a message string. |
 
 File objects use the `UploadFile` contract from `@upupjs/core/contracts`.

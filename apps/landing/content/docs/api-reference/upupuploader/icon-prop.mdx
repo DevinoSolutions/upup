@@ -14,14 +14,14 @@ Recommended icon library suites include:
 - [Lucide Icons](https://lucide.dev/)
 </Callout>
 
-| Key | Example | Type | Status | Default value |
-| --- | ------- | ---- | ------ | ------------- |
-| [CameraCaptureIcon](#cameracaptureicon) | `icons={{CameraCaptureIcon: FaCamera}}` | `FC<{ className?: string }>` | optional | `TbCapture` |
-| [CameraDeleteIcon](#cameradeleteicon) | `icons={{CameraDeleteIcon: MdDelete}}` | `FC<{ className?: string }>` | optional | `TbTrash` |
-| [CameraRotateIcon](#camerarotateicon) | `icons={{CameraRotateIcon: FaCameraRotate}}` | `FC<{ className?: string }>` | optional | `TbCameraRotate` |
-| [ContainerAddMoreIcon](#containeraddmoreicon) | `icons={{ContainerAddMoreIcon: IoAdd}}` | `FC<{ className?: string }>` | optional | `TbPlus` |
-| [FileDeleteIcon](#filedeleteicon) | `icons={{FileDeleteIcon: TiDelete}}` | `FC<{ className?: string }>` | optional | `TbTrash` |
-| [LoaderIcon](#loadericon) | `icons={{LoaderIcon: TbLoader2}}` | `FC<{ className?: string }>` | optional | `TbLoader` |
+| Key | Example | Type | Default value |
+| --- | ------- | ---- | ------------- |
+| [CameraCaptureIcon](#cameracaptureicon) | `icons={{CameraCaptureIcon: FaCamera}}` | `FC<{ className?: string }>` | `TbCapture` |
+| [CameraDeleteIcon](#cameradeleteicon) | `icons={{CameraDeleteIcon: MdDelete}}` | `FC<{ className?: string }>` | `TbTrash` |
+| [CameraRotateIcon](#camerarotateicon) | `icons={{CameraRotateIcon: FaCameraRotate}}` | `FC<{ className?: string }>` | `TbCameraRotate` |
+| [ContainerAddMoreIcon](#containeraddmoreicon) | `icons={{ContainerAddMoreIcon: IoAdd}}` | `FC<{ className?: string }>` | `TbPlus` |
+| [FileDeleteIcon](#filedeleteicon) | `icons={{FileDeleteIcon: TiDelete}}` | `FC<{ className?: string }>` | `TbTrash` |
+| [LoaderIcon](#loadericon) | `icons={{LoaderIcon: TbLoader2}}` | `FC<{ className?: string }>` | `TbLoader` |
 
 ## `CameraCaptureIcon`
 
@@ -29,7 +29,7 @@ Custom icon for the camera capture button.
 
 **Example override:**
 
-```javascript
+```tsx
 import { FaCamera } from 'react-icons/fa'
 
 <UpupUploader
@@ -61,7 +61,7 @@ Animated icon shown during file processing.
 
 **Customization example:**
 
-```javascript
+```tsx
 import { ImSpinner8 } from 'react-icons/im'
 
 <UpupUploader

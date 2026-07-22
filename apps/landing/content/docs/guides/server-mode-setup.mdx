@@ -61,6 +61,12 @@ export const GET = handler
 export const POST = handler
 ```
 
+<Callout type="note">
+`getUserId` (or `auth`) is required once you set `providers` or `tokenStore` — it
+scopes tokens per user, and without it the upload routes return `403 AUTH_REQUIRED`.
+See [Server auth](/docs/guides/server-auth/).
+</Callout>
+
 The handler routes on path suffix: `/presign`, `/multipart/*`,
 `/auth/:provider`, `/auth/:provider/cb`, `/files/:provider`,
 `/files/:provider/transfer`. All paths are relative to the folder you
