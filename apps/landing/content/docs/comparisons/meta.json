@@ -1,0 +1,9 @@
+{
+    "title": "Comparisons",
+    "pages": [
+        "upup-vs-uppy",
+        "upup-vs-filepond",
+        "upup-vs-react-dropzone",
+        "upup-vs-uploadthing"
+    ]
+}
