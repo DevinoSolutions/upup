@@ -87,4 +87,43 @@ test.describe('docs', () => {
         expect(res.status()).toBe(200)
         expect(await res.text()).toContain('/docs/getting-started/')
     })
+
+    test('docs home renders hero, framework grid, and section cards navigate', async ({
+        page,
+    }) => {
+        await page.goto('/docs/')
+        await expect(
+            page.getByRole('heading', { level: 1, name: /ship uploads/i }),
+        ).toBeVisible()
+        const grid = page.getByTestId('docs-framework-grid')
+        await expect(grid.getByRole('link')).toHaveCount(7)
+        // Section cards fade in via framer-motion's whileInView — click()
+        // auto-scrolls and auto-waits as part of its own actionability check,
+        // so no separate scrollIntoViewIfNeeded call is needed (a standalone
+        // one raced the animation's re-render and threw a stale-handle error).
+        const gettingStartedCard = page
+            .getByTestId('docs-section-cards')
+            .getByRole('link', { name: /getting started/i })
+        await gettingStartedCard.click()
+        await expect(page).toHaveURL(/\/docs\/getting-started\/$/)
+    })
+
+    test('live uploader demo accepts a file without a backend', async ({
+        page,
+    }) => {
+        await page.goto('/docs/getting-started/')
+        const demo = page.getByTestId('docs-uploader-demo')
+        // The uploader is dynamically imported client-side (ssr:false) and
+        // shows a "Loading demo…" placeholder first, so the real input isn't
+        // attached yet on navigation. setInputFiles only requires the element
+        // to be attached (not visible) and auto-waits for that, so no manual
+        // scroll/visibility wait is needed here either. Same contract testid
+        // the deep e2e suite drives (apps/e2e-test/e2e/file-interactions.spec.ts).
+        await demo.locator('[data-testid="upup-file-input"]').setInputFiles({
+            name: 'hello.txt',
+            mimeType: 'text/plain',
+            buffer: Buffer.from('hello docs'),
+        })
+        await expect(demo.getByText('hello.txt')).toBeVisible()
+    })
 })
