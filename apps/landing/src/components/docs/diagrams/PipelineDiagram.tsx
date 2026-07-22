@@ -11,7 +11,7 @@ export function PipelineDiagram() {
             name="pipeline"
             label="What happens to a file before upload"
             width={520}
-            minWidth={560}
+            minWidth={520}
             height={230}
         >
             {/* Row 1 */}

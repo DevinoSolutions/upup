@@ -142,12 +142,17 @@ test.describe('docs', () => {
         // Two DOM mounts share this testid (mobile-menu + desktop sidebar);
         // at the default desktop e2e viewport only the desktop one is
         // visible — the mobile mount sits inside a `lg:hidden` container.
-        await page
+        // The click can land before React hydration attaches the handler on a
+        // cold compile (seen once under full-suite load), so retry the
+        // click-then-open pair until the drawer actually responds.
+        const trigger = page
             .locator('[data-testid="docs-ask-ai-trigger"]:visible')
             .first()
-            .click()
         const drawer = page.getByTestId('docs-ask-ai-drawer')
-        await expect(drawer).toBeVisible()
+        await expect(async () => {
+            await trigger.click()
+            await expect(drawer).toBeVisible({ timeout: 2000 })
+        }).toPass()
         await drawer.getByTestId('docs-ask-ai-input').fill('resumable uploads?')
         await drawer.getByTestId('docs-ask-ai-send').click()
         const citation = drawer.getByRole('link', {

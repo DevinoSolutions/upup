@@ -81,6 +81,12 @@ export function buildLlmsIndex(): string {
     return lines.join('\n') + '\n'
 }
 
+// The '\n---\n' page delimiter is parsed by the mastra docs-agent's
+// search-docs tool (apps/mastra/src/mastra/tools/search-docs.ts). A bare
+// `---` line INSIDE a docs page body (MDX thematic break, or a `---` line in
+// a fenced YAML example) would silently truncate that page's corpus entry at
+// the split — keep bodies free of standalone `---` lines, or change both
+// sides together.
 export function buildLlmsFull(): string {
     return loadPages()
         .map(page => `# ${page.title}\n${pageUrl(page.slug)}\n\n${page.body}`)

@@ -117,6 +117,19 @@ function renderLink(url: string, label: string, key: number) {
             </Link>
         )
     }
+    // Model output is untrusted: a javascript:/data: URL in a markdown link
+    // must never become a clickable anchor — render it as inert text instead.
+    try {
+        const protocol = new URL(url).protocol
+        if (
+            protocol !== 'http:' &&
+            protocol !== 'https:' &&
+            protocol !== 'mailto:'
+        )
+            return <span key={key}>{label}</span>
+    } catch {
+        return <span key={key}>{label}</span>
+    }
     return (
         <a
             key={key}

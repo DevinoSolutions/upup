@@ -40,10 +40,15 @@ export function useDocsChat() {
                         method: 'POST',
                         headers: { 'content-type': 'application/json' },
                         body: JSON.stringify({
-                            messages: history.map(m => ({
-                                role: m.role,
-                                content: m.content,
-                            })),
+                            // Error bubbles are UI-only — replaying "Something
+                            // went wrong" to the agent as a real assistant turn
+                            // degrades every follow-up after a failure.
+                            messages: history
+                                .filter(m => !m.error)
+                                .map(m => ({
+                                    role: m.role,
+                                    content: m.content,
+                                })),
                         }),
                     },
                 )
