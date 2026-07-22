@@ -54,6 +54,9 @@ const nextConfig = {
     // then one trailingSlash hop appends the slash).
     async redirects() {
         return [
+            // The wildcard `/documentation/:path*` rule below also covers the
+            // bare path (`:path*` matches zero segments) — this explicit entry
+            // is kept for clarity, not necessity.
             {
                 source: '/documentation',
                 destination: '/docs/',
