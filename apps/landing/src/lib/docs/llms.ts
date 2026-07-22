@@ -46,6 +46,9 @@ function pageUrl(slug: string): string {
     return slug ? `${baseUrl()}/docs/${slug}/` : `${baseUrl()}/docs/`
 }
 
+// Un-memoized full-tree walk+parse is safe ONLY because both consumers are
+// force-static build-time routes; do not call from a request-time path
+// without adding caching.
 function loadPages(): DocPage[] {
     return walk(CONTENT_DIR)
         .sort()

@@ -13,12 +13,19 @@ describe('llms corpus', () => {
         const full = buildLlmsFull()
         expect(full).toContain('@upupjs/react')
         expect(full).toContain('createUpupHandler')
+        // Sanity floor, not exact — catches an empty/truncated corpus.
         expect(full.length).toBeGreaterThan(20_000)
     })
 
-    it('index and full cover the same 36 pages', () => {
+    it('index lists 36 pages and full contains all 36 page bodies', () => {
+        // Pinned to the docs page inventory (same count as docs-source.test.ts) —
+        // bump deliberately when pages are added/removed.
         const index = buildLlmsIndex()
         const linkCount = (index.match(/^- \[/gm) ?? []).length
         expect(linkCount).toBe(36)
+
+        const full = buildLlmsFull()
+        const pageCount = (full.match(/\n---\n/g)?.length ?? 0) + 1
+        expect(pageCount).toBe(36)
     })
 })
