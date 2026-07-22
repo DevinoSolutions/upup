@@ -21,7 +21,7 @@
 
 <p align="center">
   <a href="https://useupup.com">Website</a> ·
-  <a href="https://useupup.com/documentation/getting-started">Docs</a> ·
+  <a href="https://useupup.com/docs/getting-started">Docs</a> ·
   <a href="https://useupup.com#demo">Live Demo</a> ·
   <a href="https://discord.gg/ny5WUE9ayc">Discord</a>
 </p>
@@ -41,17 +41,17 @@ backend with an HMAC-signed trust model (Server Mode via
 
 Pick the package for your framework — the component API and rendered DOM are identical across all of them:
 
-| Package           | Install                 | Get started                                                                 |
-| ----------------- | ----------------------- | --------------------------------------------------------------------------- |
-| `@upupjs/react`   | `npm i @upupjs/react`   | [React quickstart](https://useupup.com/documentation/quickstarts/react)     |
-| `@upupjs/vue`     | `npm i @upupjs/vue`     | [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)         |
-| `@upupjs/svelte`  | `npm i @upupjs/svelte`  | [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)   |
-| `@upupjs/angular` | `npm i @upupjs/angular` | [Angular quickstart](https://useupup.com/documentation/quickstarts/angular) |
-| `@upupjs/vanilla` | `npm i @upupjs/vanilla` | [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla) |
-| `@upupjs/preact`  | `npm i @upupjs/preact`  | [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)   |
-| `@upupjs/next`    | `npm i @upupjs/next`    | Client re-export + `/server` route handlers (App & Pages routers)           |
-| `@upupjs/core`    | `npm i @upupjs/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme               |
-| `@upupjs/server`  | `npm i @upupjs/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model               |
+| Package           | Install                 | Get started                                                        |
+| ----------------- | ----------------------- | ------------------------------------------------------------------ |
+| `@upupjs/react`   | `npm i @upupjs/react`   | [React quickstart](https://useupup.com/docs/quickstarts/react)     |
+| `@upupjs/vue`     | `npm i @upupjs/vue`     | [Vue quickstart](https://useupup.com/docs/quickstarts/vue)         |
+| `@upupjs/svelte`  | `npm i @upupjs/svelte`  | [Svelte quickstart](https://useupup.com/docs/quickstarts/svelte)   |
+| `@upupjs/angular` | `npm i @upupjs/angular` | [Angular quickstart](https://useupup.com/docs/quickstarts/angular) |
+| `@upupjs/vanilla` | `npm i @upupjs/vanilla` | [Vanilla quickstart](https://useupup.com/docs/quickstarts/vanilla) |
+| `@upupjs/preact`  | `npm i @upupjs/preact`  | [Preact quickstart](https://useupup.com/docs/quickstarts/preact)   |
+| `@upupjs/next`    | `npm i @upupjs/next`    | Client re-export + `/server` route handlers (App & Pages routers)  |
+| `@upupjs/core`    | `npm i @upupjs/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme      |
+| `@upupjs/server`  | `npm i @upupjs/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model      |
 
 ## Quick start (React)
 

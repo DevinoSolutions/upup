@@ -58,8 +58,8 @@ The `use*` uploader composables (`useUpupUpload`, `useUploaderFiles`,
 
 ## Links
 
-- [Vue quickstart](https://useupup.com/documentation/quickstarts/vue)
-- [Documentation](https://useupup.com/documentation/)
+- [Vue quickstart](https://useupup.com/docs/quickstarts/vue)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

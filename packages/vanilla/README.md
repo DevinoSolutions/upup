@@ -61,8 +61,8 @@ createUploader('#uploader', {
 
 ## Links
 
-- [Vanilla quickstart](https://useupup.com/documentation/quickstarts/vanilla)
-- [Documentation](https://useupup.com/documentation/)
+- [Vanilla quickstart](https://useupup.com/docs/quickstarts/vanilla)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

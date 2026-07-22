@@ -71,8 +71,8 @@ hooks).
 
 ## Links
 
-- [Preact quickstart](https://useupup.com/documentation/quickstarts/preact)
-- [Documentation](https://useupup.com/documentation/)
+- [Preact quickstart](https://useupup.com/docs/quickstarts/preact)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

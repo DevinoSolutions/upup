@@ -51,8 +51,8 @@ helpers, and the `FileSource`, `StorageProvider`, and `UploadStatus` enums.
 
 ## Links
 
-- [Svelte quickstart](https://useupup.com/documentation/quickstarts/svelte)
-- [Documentation](https://useupup.com/documentation/)
+- [Svelte quickstart](https://useupup.com/docs/quickstarts/svelte)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

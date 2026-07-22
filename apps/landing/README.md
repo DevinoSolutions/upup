@@ -1,6 +1,6 @@
 # Website
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+This website is built using [Next.js](https://nextjs.org/), the marketing site + docs (fumadocs, served at `/docs`) for useupup.com.
 
 ### Installation
 
