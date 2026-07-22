@@ -3,11 +3,15 @@
         "index",
         "getting-started",
         "quickstarts",
+        "guides",
+        "api-reference",
         "code-examples",
         "error-handling",
         "resumable-uploads",
         "localization",
         "credentials-configuration",
-        "ai-assistants"
+        "ai-assistants",
+        "comparisons",
+        "migration"
     ]
 }
