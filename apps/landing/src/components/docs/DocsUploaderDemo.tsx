@@ -1,6 +1,10 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+// The uploader's stylesheet is imported per-module everywhere in landing
+// (see Uploader.tsx) — without this, a docs page that mounts only the demo
+// renders the uploader unstyled.
+import '@upupjs/react/styles'
 
 // The real uploader, loaded client-only so docs pages stay static-light. The
 // homepage demo proves this exact creds-free config (packages/interactive-example/
