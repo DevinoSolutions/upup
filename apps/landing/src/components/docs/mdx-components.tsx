@@ -8,6 +8,7 @@ import { DriveOAuthDiagram } from './diagrams/DriveOAuthDiagram'
 import { ModesDiagram } from './diagrams/ModesDiagram'
 import { PipelineDiagram } from './diagrams/PipelineDiagram'
 import { TrustModelDiagram } from './diagrams/TrustModelDiagram'
+import { PlaygroundCta } from './PlaygroundCta'
 
 const CALLOUT_STYLES: Record<string, string> = {
     note: 'border-sky-500/40 bg-sky-500/5',
@@ -46,6 +47,7 @@ export function getMDXComponents(): MDXComponents {
         PipelineDiagram,
         TrustModelDiagram,
         DriveOAuthDiagram,
+        PlaygroundCta,
         // Syntax-highlighted code card: shiki tokens come from fumadocs-mdx
         // (see source.config.ts + the .shiki activation CSS in globals.css);
         // CodeBlock adds the language label + copy button.
