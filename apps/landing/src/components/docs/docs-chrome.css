@@ -1,0 +1,38 @@
+/* Thin, theme-aware scrollbar for the docs sidebar and table-of-contents
+   scroll containers. Replaces the chunky native Windows scrollbar without
+   touching the page-level scrollbar. Themed by the .dark class toggle. */
+
+.docs-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(209 213 219) transparent; /* gray-300 thumb */
+}
+
+.docs-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.docs-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.docs-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(209 213 219); /* gray-300 */
+    border-radius: 9999px;
+}
+
+.docs-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175); /* gray-400 */
+}
+
+.dark .docs-scrollbar {
+    scrollbar-color: rgb(75 85 99) transparent; /* gray-600 thumb */
+}
+
+.dark .docs-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99); /* gray-600 */
+}
+
+.dark .docs-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(107 114 128); /* gray-500 */
+}

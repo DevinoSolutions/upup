@@ -48,7 +48,7 @@ export function DocsToc({ items }: { items: TocItem[] }) {
     if (visible.length < 2) return null
 
     return (
-        <nav aria-label="On this page" className="text-sm">
+        <nav aria-label="On this page" className="docs-scrollbar text-sm">
             <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 On this page
             </p>

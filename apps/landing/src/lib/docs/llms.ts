@@ -13,7 +13,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_DIR = join(__dirname, '../../../content/docs')
 const DEFAULT_BASE_URL = 'https://useupup.com'
 
-interface DocPage {
+export interface DocPage {
     slug: string
     title: string
     description: string
@@ -46,10 +46,10 @@ function pageUrl(slug: string): string {
     return slug ? `${baseUrl()}/docs/${slug}/` : `${baseUrl()}/docs/`
 }
 
-// Un-memoized full-tree walk+parse is safe ONLY because both consumers are
-// force-static build-time routes; do not call from a request-time path
-// without adding caching.
-function loadPages(): DocPage[] {
+// Un-memoized full-tree walk+parse is safe ONLY because consumers are
+// force-static build-time routes (llms.txt, llms-full.txt, docs-md); do not
+// call from a request-time path without adding caching.
+export function loadPages(): DocPage[] {
     return walk(CONTENT_DIR)
         .sort()
         .map(file => {

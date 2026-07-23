@@ -6,8 +6,13 @@ import { getMDXComponents } from '@/components/docs/mdx-components'
 import { DocsBreadcrumb } from '@/components/docs/DocsBreadcrumb'
 import { DocsToc } from '@/components/docs/DocsToc'
 import { DocsHome } from '@/components/docs/DocsHome'
+import { DocsPageNav } from '@/components/docs/DocsPageNav'
+import { DocsCopyPage } from '@/components/docs/DocsCopyPage'
 
 const SITE_URL = 'https://useupup.com'
+// content/docs is edited on the canonical master branch on GitHub.
+const GITHUB_EDIT_BASE =
+    'https://github.com/DevinoSolutions/upup/edit/master/apps/landing/content/docs'
 
 // content/docs is the only source of docs slugs; anything not generated
 // from it 404s rather than falling through to a dynamic render.
@@ -54,6 +59,10 @@ export default async function DocsPage(props: {
     const MDX = page.data.body
     const tree = toSidebarTree(source.pageTree)
     const url = `/docs${slug?.length ? `/${slug.join('/')}` : ''}`
+    const slugPath = slug.join('/')
+    const githubEditUrl = `${GITHUB_EDIT_BASE}/${slugPath}.mdx`
+    // trailingSlash:true — hit the canonical URL directly so the fetch skips a 308.
+    const mdUrl = `/docs-md/${slugPath}/`
     // TOC titles are ReactNode in fumadocs — flatten to strings before they
     // cross into the client <DocsToc>.
     const toc = page.data.toc.map(item => ({
@@ -65,7 +74,12 @@ export default async function DocsPage(props: {
     return (
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
             <div className="min-w-0">
-                <DocsBreadcrumb tree={tree} url={url} />
+                {/* Breadcrumb carries its own mb-6; the flex row only pairs it
+                    with the copy button, so no extra bottom margin here. */}
+                <div className="flex items-start justify-between gap-4">
+                    <DocsBreadcrumb tree={tree} url={url} />
+                    <DocsCopyPage mdUrl={mdUrl} />
+                </div>
                 {/* prose-code:before/after content-none: the typography
                     plugin's default renders literal backtick glyphs around
                     inline code; the chip styling replaces them, scoped via
@@ -74,9 +88,14 @@ export default async function DocsPage(props: {
                     <h1>{page.data.title}</h1>
                     <MDX components={getMDXComponents()} />
                 </article>
+                <DocsPageNav
+                    tree={tree}
+                    url={url}
+                    githubEditUrl={githubEditUrl}
+                />
             </div>
             <aside className="hidden lg:block">
-                <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-8">
+                <div className="docs-scrollbar sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto pb-8">
                     <DocsToc items={toc} />
                 </div>
             </aside>

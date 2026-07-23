@@ -9,7 +9,7 @@ export type { SidebarNode }
 export function DocsSidebar({ tree }: { tree: SidebarNode[] }) {
     const pathname = usePathname()
     return (
-        <nav aria-label="Docs" className="text-sm">
+        <nav aria-label="Docs" className="docs-scrollbar text-sm">
             <ul className="space-y-0.5">
                 {tree.map((node, i) => (
                     <SidebarNodeView
