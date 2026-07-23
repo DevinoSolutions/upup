@@ -3,10 +3,14 @@
 /**
  * Impact map for CI test routing.
  *
- * Decides, from a PR's changed files, which of three heavy suites must run:
- *   e2e   — Playwright deep + cross-framework suites (apps/e2e-test)
- *   minio — the real-MinIO server integration steps of the E2E job
- *   smoke — the npm-tarball consumer (Smoke-Packages)
+ * Decides, from a PR's changed files, which suites must run:
+ *   e2e     — Playwright deep + cross-framework suites (apps/e2e-test)
+ *   minio   — the real-MinIO server integration steps of the E2E job
+ *   smoke   — the npm-tarball consumer (Smoke-Packages)
+ *   docsE2e — the landing `docs` Playwright project (Docs-E2E); cheap,
+ *             secret-less, boots the landing app and drives /docs. On for a
+ *             change to the landing app (incl. content/docs), the landing e2e
+ *             harness, or any package the landing app consumes.
  *
  * Fail-open is the core safety property: a path that matches no rule runs
  * EVERYTHING. An unknown/new directory can never silently skip coverage.
@@ -23,8 +27,8 @@
  *       Force every suite (workflow_dispatch / manual re-run).
  *   --json   Emit {suites, reasons, changedFiles} to stdout; no side effects.
  *
- * Default (non-json) output appends `e2e|minio|smoke=true|false` to the file at
- * $GITHUB_OUTPUT (when set), appends a markdown table to $GITHUB_STEP_SUMMARY
+ * Default (non-json) output appends `e2e|minio|smoke|docsE2e=true|false` to the
+ * file at $GITHUB_OUTPUT (when set), appends a markdown table to $GITHUB_STEP_SUMMARY
  * (when set), and always prints a human-readable per-suite reason table.
  *
  * Exit 0 in every resolved case (empty diff included → all suites false).
@@ -39,8 +43,9 @@ import { parseArgs } from 'node:util'
 
 // ── Suites ───────────────────────────────────────────────────────────────
 
-/** The three routable heavy suites, in stable display order. */
-export const SUITES = ['e2e', 'minio', 'smoke']
+/** The routable suites, in stable display order. `docsE2e` is the cheap docs
+ * job; the other three are the heavy MinIO/cross-framework/tarball suites. */
+export const SUITES = ['e2e', 'minio', 'smoke', 'docsE2e']
 
 // ── Tiers & precedence ───────────────────────────────────────────────────
 //
@@ -201,6 +206,31 @@ export const IMPACT_RULES = [
             path === 'scripts/package-smoke-consumer.mjs' ||
             path.startsWith('scripts/lib/'),
     },
+    {
+        // The docs live in apps/landing (MDX under content/docs, served at
+        // /docs by fumadocs) and are proven by the `docs` Playwright project in
+        // apps/e2e-test/landing. The landing app also renders a live creds-free
+        // uploader demo built from @upupjs/{core,react,server} + the private
+        // interactive-example, so a change to ANY landing-consumed package can
+        // regress the docs surface — those are exactly apps/landing/package.json's
+        // workspace deps. TARGETED (not LIGHT) so it outranks the LIGHT_DIR
+        // dev-app / interactive-example rules by tier and its lone `docsE2e`
+        // suite unions with whatever heavy suites those same files already
+        // carry (core → e2e+minio+smoke, react → e2e+smoke), leaving the
+        // existing heavy-suite verdicts byte-identical. UNIVERSAL and fail-open
+        // include docsE2e for free (they route to every SUITES entry).
+        name: 'docs-e2e',
+        tier: TIER.TARGETED,
+        suites: ['docsE2e'],
+        test: path =>
+            path.startsWith('apps/landing/') ||
+            path.startsWith('apps/e2e-test/landing/') ||
+            path === 'apps/e2e-test/playwright.landing.config.ts' ||
+            path.startsWith('packages/core/') ||
+            path.startsWith('packages/react/') ||
+            path.startsWith('packages/server/') ||
+            path.startsWith('packages/interactive-example/'),
+    },
 
     // ── LIGHT_DIR → NONE (dev-only apps + repo metadata) ─────────────────
     {
@@ -287,21 +317,21 @@ export function resolveFile(path) {
  * @param {{ forceAll?: boolean }} [options]
  */
 export function resolveAffected(changedFiles, options = {}) {
-    const suites = { e2e: false, minio: false, smoke: false }
+    const suites = Object.fromEntries(SUITES.map(s => [s, false]))
 
     if (options.forceAll) {
         for (const s of SUITES) suites[s] = true
         const reason = 'forced (--all / workflow_dispatch)'
         return {
             suites,
-            reasons: { e2e: reason, minio: reason, smoke: reason },
+            reasons: Object.fromEntries(SUITES.map(s => [s, reason])),
             changedFiles: [...changedFiles],
             unmatched: [],
             forcedAll: true,
         }
     }
 
-    const triggers = { e2e: [], minio: [], smoke: [] }
+    const triggers = Object.fromEntries(SUITES.map(s => [s, []]))
     const unmatched = []
     for (const file of changedFiles) {
         const resolved = resolveFile(file)

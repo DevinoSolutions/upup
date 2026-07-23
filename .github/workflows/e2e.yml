@@ -27,6 +27,7 @@ jobs:
             e2e: ${{ steps.resolve.outputs.e2e }}
             minio: ${{ steps.resolve.outputs.minio }}
             smoke: ${{ steps.resolve.outputs.smoke }}
+            docsE2e: ${{ steps.resolve.outputs.docsE2e }}
         steps:
             - name: Checkout the repository (full history for merge-base diff)
               uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -165,6 +166,58 @@ jobs:
             - name: Package smoke (packs all 9, isolated consumer, vite build, dist-shape asserts)
               run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
 
+    # The docs live at /docs inside apps/landing (fumadocs). This job runs the
+    # `docs` Playwright project ONLY — the landing config's other projects
+    # (flows/ingestion) need live PostHog creds and MUST NOT run here. The docs
+    # project is secret-less: its Ask-AI drawer is mocked via page.route and the
+    # landing env schema (apps/landing/src/lib/env.ts) tolerates every PostHog /
+    # OAuth secret being absent, so no env file is provisioned. Cheap replacement
+    # for the heavy suites on a docs-only PR; runs in nightly.yml too (unrouted).
+    Docs-E2E:
+        name: Docs E2E (landing /docs Playwright project)
+        runs-on: ubuntu-latest
+        needs: [Resolve-Affected]
+        if: needs.Resolve-Affected.outputs.docsE2e == 'true'
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # The landing dev server (playwright.landing.config.ts webServer)
+            # resolves these three workspace deps from their built dist — same
+            # set nightly.yml's Landing-Feedback job builds before booting it.
+            - name: Build the packages the landing dev server consumes (core/react/server dist)
+              run: pnpm --filter @upupjs/core --filter @upupjs/react --filter @upupjs/server build
+
+            - name: Install Playwright Chromium
+              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+
+            # Flag-position --project (never the `-- --project` pnpm-forwarding
+            # form, which Playwright reads as filename filters — see CLAUDE.md).
+            - name: Run the docs Playwright project (secret-less; agent mocked via page.route)
+              run: pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.landing.config.ts --project docs
+
+            - name: Upload Playwright report
+              if: failure()
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: docs-e2e-playwright-artifacts
+                  path: |
+                      apps/e2e-test/playwright-report/
+                      apps/e2e-test/test-results/
+                  retention-days: 14
+
     # Rollup aggregator for this workflow (F-780): main.yml's Status-Check spans
     # only main.yml jobs, so E2E + Smoke-Packages were aggregated by nothing.
     # Branch protection must require BOTH this job AND main.yml's Status Check.
@@ -174,7 +227,7 @@ jobs:
     E2E-Status:
         name: E2E Status Check
         runs-on: ubuntu-latest
-        needs: [Resolve-Affected, E2E, Smoke-Packages]
+        needs: [Resolve-Affected, E2E, Smoke-Packages, Docs-E2E]
         if: always()
         steps:
             - name: Check status (respecting resolver-sanctioned skips)
@@ -184,6 +237,8 @@ jobs:
                   E2E_WANTED: ${{ needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true' }}
                   SMOKE_RESULT: ${{ needs.Smoke-Packages.result }}
                   SMOKE_WANTED: ${{ needs.Resolve-Affected.outputs.smoke }}
+                  DOCS_RESULT: ${{ needs.Docs-E2E.result }}
+                  DOCS_WANTED: ${{ needs.Resolve-Affected.outputs.docsE2e }}
               run: |
                   fail=0
                   if [ "$RESOLVE_RESULT" != "success" ]; then
@@ -206,6 +261,7 @@ jobs:
                   }
                   check "E2E" "$E2E_RESULT" "$E2E_WANTED"
                   check "Smoke-Packages" "$SMOKE_RESULT" "$SMOKE_WANTED"
+                  check "Docs-E2E" "$DOCS_RESULT" "$DOCS_WANTED"
                   if [ "$fail" -ne 0 ]; then
                     echo "E2E status check failed"
                     exit 1
