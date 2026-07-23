@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { CodeBlock } from './CodeBlock'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
+import { FrameworkTabs } from './FrameworkTabs'
 import { DriveOAuthDiagram } from './diagrams/DriveOAuthDiagram'
 import { ModesDiagram } from './diagrams/ModesDiagram'
 import { PipelineDiagram } from './diagrams/PipelineDiagram'
@@ -43,6 +44,7 @@ export function getMDXComponents(): MDXComponents {
     return {
         Callout,
         DocsUploaderDemo,
+        FrameworkTabs,
         ModesDiagram,
         PipelineDiagram,
         TrustModelDiagram,
