@@ -1,0 +1,4 @@
+{
+    "$note": "Framework-coverage carve-outs for check-coverage.mjs. Each entry is { topic, file, reason } and suppresses the missing-file failure for exactly that (topic, file). INVERSE-FORCED: an entry whose topic no longer exists, or whose file DOES now exist, turns the gate red so stale carve-outs self-liquidate. Ships EMPTY — getting-started carries all seven frameworks.",
+    "exceptions": []
+}
