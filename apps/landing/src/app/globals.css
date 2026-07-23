@@ -376,3 +376,27 @@ body {
         height: 600px;
     }
 }
+
+/* ── Docs code blocks (CodeBlock.tsx) ──────────────────────────────
+   fumadocs-mdx emits dual-theme shiki tokens as --shiki-light /
+   --shiki-dark custom properties on each span, but the rule that turns
+   those variables into an actual `color` normally ships with fumadocs-ui,
+   which is forbidden here (Tailwind v4). Wire it by hand.
+
+   The docs code card renders dark navy in BOTH page themes (the typography
+   plugin keeps `pre` dark whether or not prose-invert is active), so the
+   github-dark token colours are used throughout — guaranteed contrast on
+   the navy card and one code path to reason about. Custom properties
+   inherit, so line spans without their own token fall back to the pre's
+   --shiki-dark. */
+.upup-code {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+}
+.upup-code > pre {
+    margin: 0;
+}
+.upup-code .shiki,
+.upup-code .shiki span {
+    color: var(--shiki-dark);
+}

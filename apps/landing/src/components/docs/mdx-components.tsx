@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
 import type { ComponentProps, ReactNode } from 'react'
 
+import { CodeBlock } from './CodeBlock'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
 import { DriveOAuthDiagram } from './diagrams/DriveOAuthDiagram'
 import { ModesDiagram } from './diagrams/ModesDiagram'
@@ -45,6 +46,10 @@ export function getMDXComponents(): MDXComponents {
         PipelineDiagram,
         TrustModelDiagram,
         DriveOAuthDiagram,
+        // Syntax-highlighted code card: shiki tokens come from fumadocs-mdx
+        // (see source.config.ts + the .shiki activation CSS in globals.css);
+        // CodeBlock adds the language label + copy button.
+        pre: (props: ComponentProps<'pre'>) => <CodeBlock {...props} />,
         // Wide reference tables (type signatures, provider matrices) exceed the
         // mobile viewport; scroll them horizontally in their own container so a
         // table never forces the whole page to scroll sideways.
