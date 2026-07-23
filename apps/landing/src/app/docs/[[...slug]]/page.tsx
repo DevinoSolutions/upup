@@ -72,7 +72,7 @@ export default async function DocsPage(props: {
     }))
 
     return (
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10">
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_200px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_220px] xl:gap-14">
             <div className="min-w-0">
                 {/* Breadcrumb carries its own mb-6; the flex row only pairs it
                     with the copy button, so no extra bottom margin here. */}

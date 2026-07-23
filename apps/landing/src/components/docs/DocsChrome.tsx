@@ -26,8 +26,8 @@ export function DocsChrome({
 
     return (
         <div
-            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 transition-[padding,max-width] duration-300 ${
-                aiOpen ? '2xl:max-w-[1532px] 2xl:pr-[404px]' : ''
+            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 transition-[padding,max-width] duration-300 xl:max-w-[1400px] xl:px-10 ${
+                aiOpen ? '2xl:max-w-[1804px] 2xl:pr-[404px]' : ''
             }`}
         >
             {/* Mobile: the sidebar collapses behind a native disclosure above the
@@ -46,7 +46,7 @@ export function DocsChrome({
                 </div>
             </details>
 
-            <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+            <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[260px_minmax(0,1fr)] xl:gap-14">
                 {/* Desktop sidebar — sticky under the fixed site header. */}
                 <aside className="hidden lg:block">
                     <div className="docs-scrollbar sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-8">
