@@ -1,0 +1,18 @@
+// Fixture standing in for apps/landing/next.config.mjs — only the
+// `async redirects()` block is scanned by check-links.mjs.
+const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/old/guide',
+                destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/:path*',
+                destination: '/docs/:path*',
+                permanent: true,
+            },
+        ]
+    },
+}
