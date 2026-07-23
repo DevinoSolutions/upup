@@ -400,3 +400,21 @@ body {
 .upup-code .shiki span {
     color: var(--shiki-dark);
 }
+/* Wide snippets overflow horizontally; the native scrollbar is a chunky
+   light strip across the always-dark card. Thin dark thumb instead —
+   dark-only variant of docs-chrome.css's .docs-scrollbar. */
+.upup-code > pre {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+.upup-code > pre::-webkit-scrollbar {
+    height: 8px;
+}
+.upup-code > pre::-webkit-scrollbar-track {
+    background: transparent;
+}
+.upup-code > pre::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.22);
+    border-radius: 9999px;
+}
