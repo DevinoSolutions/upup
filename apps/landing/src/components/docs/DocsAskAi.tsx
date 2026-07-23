@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
     ArrowUp,
+    Check,
+    Copy,
     Sparkles,
     ThumbsDown,
     ThumbsUp,
@@ -46,9 +48,10 @@ function questionForIndex(messages: DocsChatMessage[], index: number): string {
 }
 
 // Assistant rendering: NO innerHTML anywhere — everything is React text nodes,
-// same XSS posture as DocsSearch. Parse order is fenced code → links → inline
-// code → plain text.
-function MessageBody({ content }: { content: string }) {
+// same XSS posture as DocsSearch. Parse order is: fenced code (whole blocks) →
+// block-level (paragraphs / ordered / unordered lists) → inline (bold → links →
+// inline code → plain text).
+export function MessageBody({ content }: { content: string }) {
     const segments = content.split(/(```[\s\S]*?```)/g)
     return (
         <>
@@ -64,15 +67,119 @@ function MessageBody({ content }: { content: string }) {
                             code = code.slice(nl + 1)
                     }
                     return (
-                        <pre
+                        <CodeBlock
                             key={i}
-                            className="my-2 overflow-x-auto rounded-md border border-black/10 p-3 text-xs dark:border-white/10"
-                        >
-                            <code>{code.replace(/^\n+|\n+$/g, '')}</code>
-                        </pre>
+                            code={code.replace(/^\n+|\n+$/g, '')}
+                        />
                     )
                 }
-                return <TextWithLinks key={i} text={seg} />
+                return <BlockText key={i} text={seg} />
+            })}
+        </>
+    )
+}
+
+type Block =
+    | { type: 'ol'; items: string[] }
+    | { type: 'ul'; items: string[] }
+    | { type: 'p'; text: string }
+
+// Group a non-fence text segment into block-level nodes. Consecutive lines with
+// an ordered (`1. ` / `1) `) or unordered (`- ` / `* `) marker form a single
+// list; a blank line ends a paragraph run; every other run of lines is a
+// paragraph (soft-wrapped into one line — HTML collapses the single newlines
+// anyway). List markers are stripped; each item's remaining text still flows
+// through the inline pipeline.
+export function parseBlocks(text: string): Block[] {
+    const blocks: Block[] = []
+    let para: string[] = []
+    const flushPara = () => {
+        if (para.length) {
+            blocks.push({ type: 'p', text: para.join(' ') })
+            para = []
+        }
+    }
+    for (const line of text.split('\n')) {
+        const ol = /^\s*\d+[.)]\s+(.*)$/.exec(line)
+        const ul = /^\s*[-*]\s+(.*)$/.exec(line)
+        if (ol) {
+            flushPara()
+            const last = blocks[blocks.length - 1]
+            if (last && last.type === 'ol') last.items.push(ol[1])
+            else blocks.push({ type: 'ol', items: [ol[1]] })
+        } else if (ul) {
+            flushPara()
+            const last = blocks[blocks.length - 1]
+            if (last && last.type === 'ul') last.items.push(ul[1])
+            else blocks.push({ type: 'ul', items: [ul[1]] })
+        } else if (line.trim() === '') {
+            flushPara()
+        } else {
+            para.push(line.trim())
+        }
+    }
+    flushPara()
+    return blocks
+}
+
+function BlockText({ text }: { text: string }) {
+    const blocks = parseBlocks(text)
+    if (blocks.length === 0) return null
+    return (
+        <>
+            {blocks.map((block, i) => {
+                if (block.type === 'ol')
+                    return (
+                        <ol
+                            key={i}
+                            className="my-2 list-decimal space-y-1 pl-5 first:mt-0 last:mb-0"
+                        >
+                            {block.items.map((item, j) => (
+                                <li key={j}>
+                                    <TextInline text={item} />
+                                </li>
+                            ))}
+                        </ol>
+                    )
+                if (block.type === 'ul')
+                    return (
+                        <ul
+                            key={i}
+                            className="my-2 list-disc space-y-1 pl-5 first:mt-0 last:mb-0"
+                        >
+                            {block.items.map((item, j) => (
+                                <li key={j}>
+                                    <TextInline text={item} />
+                                </li>
+                            ))}
+                        </ul>
+                    )
+                return (
+                    <p key={i} className="my-2 first:mt-0 last:mb-0">
+                        <TextInline text={block.text} />
+                    </p>
+                )
+            })}
+        </>
+    )
+}
+
+// Inline pipeline entry: bold is the outermost split so `**text**` (including
+// bold that wraps inline code or a link) becomes a <strong> whose children run
+// through the rest of the inline chain (links → inline code → text).
+function TextInline({ text }: { text: string }) {
+    const parts = text.split(/(\*\*[\s\S]+?\*\*)/g)
+    return (
+        <>
+            {parts.map((part, i) => {
+                const bold = /^\*\*([\s\S]+?)\*\*$/.exec(part)
+                if (bold)
+                    return (
+                        <strong key={i} className="font-semibold">
+                            <TextWithLinks text={bold[1]} />
+                        </strong>
+                    )
+                return <TextWithLinks key={i} text={part} />
             })}
         </>
     )
@@ -161,6 +268,65 @@ function TextWithCode({ text }: { text: string }) {
                 return <span key={i}>{part}</span>
             })}
         </>
+    )
+}
+
+// A fenced code block: horizontal scroll is contained INSIDE the <pre> (the
+// bubble/drawer itself never scrolls sideways) and a small copy control lifts
+// the raw fence text — the exact string we already hold — onto the clipboard.
+function CodeBlock({ code }: { code: string }) {
+    return (
+        <div className="group relative my-2 first:mt-0 last:mb-0">
+            <pre className="max-w-full overflow-x-auto rounded-md border border-black/10 p-3 pr-9 text-xs dark:border-white/10">
+                <code>{code}</code>
+            </pre>
+            <CopyButton text={code} />
+        </div>
+    )
+}
+
+function CopyButton({ text }: { text: string }) {
+    const [copied, setCopied] = useState(false)
+    const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    useEffect(
+        () => () => {
+            if (timer.current) clearTimeout(timer.current)
+        },
+        [],
+    )
+    function copy() {
+        void navigator.clipboard
+            ?.writeText(text)
+            .then(() => {
+                setCopied(true)
+                if (timer.current) clearTimeout(timer.current)
+                timer.current = setTimeout(() => setCopied(false), 1500)
+            })
+            .catch(() => {})
+    }
+    return (
+        <button
+            type="button"
+            aria-label={copied ? 'Copied' : 'Copy code'}
+            onClick={copy}
+            className="absolute right-1.5 top-1.5 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100"
+        >
+            {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+            ) : (
+                <Copy className="h-3.5 w-3.5" />
+            )}
+        </button>
+    )
+}
+
+// A pulsing caret shown on the in-progress assistant bubble while tokens stream.
+function StreamingCursor() {
+    return (
+        <span
+            aria-hidden
+            className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-0.5 rounded-sm bg-gray-500 align-baseline motion-safe:animate-pulse dark:bg-gray-400"
+        />
     )
 }
 
@@ -328,65 +494,80 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                                 </p>
                                             ) : (
                                                 <>
-                                                    <div className="text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+                                                    <div className="min-w-0 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
                                                         <MessageBody
                                                             content={m.content}
                                                         />
+                                                        {m.streaming ? (
+                                                            m.content ? (
+                                                                <StreamingCursor />
+                                                            ) : (
+                                                                <TypingIndicator />
+                                                            )
+                                                        ) : null}
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <ThumbButton
-                                                            active={
-                                                                votes[m.id] ===
-                                                                'up'
-                                                            }
-                                                            voted={
-                                                                !!votes[m.id]
-                                                            }
-                                                            label="Good answer"
-                                                            onClick={() =>
-                                                                vote(
-                                                                    m.id,
-                                                                    'up',
-                                                                    questionForIndex(
-                                                                        messages,
-                                                                        index,
-                                                                    ),
-                                                                    m.content,
-                                                                )
-                                                            }
-                                                        >
-                                                            <ThumbsUp className="h-3.5 w-3.5" />
-                                                        </ThumbButton>
-                                                        <ThumbButton
-                                                            active={
-                                                                votes[m.id] ===
-                                                                'down'
-                                                            }
-                                                            voted={
-                                                                !!votes[m.id]
-                                                            }
-                                                            label="Bad answer"
-                                                            onClick={() =>
-                                                                vote(
-                                                                    m.id,
-                                                                    'down',
-                                                                    questionForIndex(
-                                                                        messages,
-                                                                        index,
-                                                                    ),
-                                                                    m.content,
-                                                                )
-                                                            }
-                                                        >
-                                                            <ThumbsDown className="h-3.5 w-3.5" />
-                                                        </ThumbButton>
-                                                    </div>
+                                                    {m.streaming ? null : (
+                                                        <div className="flex items-center gap-1">
+                                                            <ThumbButton
+                                                                active={
+                                                                    votes[
+                                                                        m.id
+                                                                    ] === 'up'
+                                                                }
+                                                                voted={
+                                                                    !!votes[
+                                                                        m.id
+                                                                    ]
+                                                                }
+                                                                label="Good answer"
+                                                                onClick={() =>
+                                                                    vote(
+                                                                        m.id,
+                                                                        'up',
+                                                                        questionForIndex(
+                                                                            messages,
+                                                                            index,
+                                                                        ),
+                                                                        m.content,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <ThumbsUp className="h-3.5 w-3.5" />
+                                                            </ThumbButton>
+                                                            <ThumbButton
+                                                                active={
+                                                                    votes[
+                                                                        m.id
+                                                                    ] === 'down'
+                                                                }
+                                                                voted={
+                                                                    !!votes[
+                                                                        m.id
+                                                                    ]
+                                                                }
+                                                                label="Bad answer"
+                                                                onClick={() =>
+                                                                    vote(
+                                                                        m.id,
+                                                                        'down',
+                                                                        questionForIndex(
+                                                                            messages,
+                                                                            index,
+                                                                        ),
+                                                                        m.content,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <ThumbsDown className="h-3.5 w-3.5" />
+                                                            </ThumbButton>
+                                                        </div>
+                                                    )}
                                                 </>
                                             )}
                                         </li>
                                     ),
                                 )}
-                                {pending ? (
+                                {pending && !messages.some(m => m.streaming) ? (
                                     <li aria-label="Assistant is typing">
                                         <TypingIndicator />
                                     </li>
