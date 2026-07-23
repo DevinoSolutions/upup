@@ -289,4 +289,35 @@ test.describe('docs', () => {
         // The literal fence markers must never survive into the rendered text.
         expect(await drawer.innerText()).not.toContain('**')
     })
+
+    test('framework tabs honor the ?fw deep link and persist across navigation', async ({
+        page,
+    }) => {
+        // The deep link wins over any stored choice, but it is applied in a
+        // post-mount effect (avoids a hydration mismatch), so the svelte tab
+        // isn't selected on the very first paint — retry until the effect runs.
+        await page.goto('/docs/getting-started/?fw=svelte')
+        const svelteTab = page.getByTestId('docs-framework-tab-svelte')
+        await expect(async () => {
+            await expect(svelteTab).toHaveAttribute('aria-selected', 'true')
+        }).toPass({ timeout: 15_000 })
+
+        // The onClick handler attaches at hydration; a click landing before it
+        // is a no-op, so retry the click-then-assert pair. Selecting vue also
+        // writes it to localStorage (the shared reader-wide choice).
+        const vueTab = page.getByTestId('docs-framework-tab-vue')
+        await expect(async () => {
+            await vueTab.click()
+            await expect(vueTab).toHaveAttribute('aria-selected', 'true')
+        }).toPass({ timeout: 15_000 })
+
+        // Leave the topic and come back WITHOUT a ?fw param: the stored choice
+        // (vue) must be re-applied from localStorage on the fresh mount.
+        await page.goto('/docs/guides/theming/')
+        await page.goto('/docs/getting-started/')
+        const vueTabAgain = page.getByTestId('docs-framework-tab-vue')
+        await expect(async () => {
+            await expect(vueTabAgain).toHaveAttribute('aria-selected', 'true')
+        }).toPass({ timeout: 15_000 })
+    })
 })
