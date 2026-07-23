@@ -10,7 +10,18 @@ upup gives you three layers of control, from coarse to surgical:
    surfaced as `--upup-*` CSS variables.
 3. **`slots`** — inject your own class names into specific components.
 
-<DocsUploaderDemo />
+<DocsUploaderDemo
+    theme={{
+        mode: 'dark',
+        tokens: {
+            color: {
+                primary: '#7C3AED',
+                primaryHover: '#6D28D9',
+            },
+            radius: { md: '10px' },
+        },
+    }}
+/>
 
 All three live on one prop — `theme` — which every framework's uploader
 accepts. React additionally exports a standalone `UpupThemeProvider` for
