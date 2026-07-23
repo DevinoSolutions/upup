@@ -130,6 +130,14 @@ test.describe('docs', () => {
     test('ask-ai panel answers (mocked agent) and survives navigation', async ({
         page,
     }) => {
+        // The chat hook (use-docs-chat.ts) now tries the streaming endpoint
+        // first and only falls back to /generate when the stream can't be
+        // opened. 404 the stream so this test deterministically exercises the
+        // /generate fallback path it was written for; the stream path has its
+        // own test below.
+        await page.route('**/api/agents/docs-agent/stream', route =>
+            route.fulfill({ status: 404, body: '' }),
+        )
         await page.route('**/api/agents/docs-agent/generate', route =>
             route.fulfill({
                 contentType: 'application/json',
@@ -170,5 +178,110 @@ test.describe('docs', () => {
     }) => {
         await page.goto('/docs/guides/modes/')
         await expect(page.locator('[data-docs-diagram="modes"]')).toBeVisible()
+    })
+
+    test('article code blocks carry copy chrome and a language label', async ({
+        page,
+    }) => {
+        // CodeBlock.tsx wraps every shiki <pre> in `.upup-code`, adding a
+        // language label and a copy button. The button is opacity-0 until
+        // group-hover, so presence is asserted structurally (attached +
+        // aria-label) rather than through a synthetic hover.
+        await page.goto('/docs/quickstarts/react/')
+        const block = page.locator('.upup-code').first()
+        await expect(block).toBeVisible()
+        // aria-label starts as "Copy code" (flips to "Copied" only post-click).
+        await expect(
+            block.getByRole('button', { name: 'Copy code' }),
+        ).toBeAttached()
+        // The language label is the non-button span inside the hover overlay
+        // (`pointer-events-none` row) — never a shiki token span inside <pre>.
+        const label = block.locator('.pointer-events-none span').first()
+        await expect(label).toBeVisible()
+        await expect(label).toHaveText(/^[a-z0-9+#-]+$/i)
+    })
+
+    test('prev/next nav walks the sidebar sequence both directions', async ({
+        page,
+    }) => {
+        await page.goto('/docs/guides/theming/')
+        const nav = page.getByRole('navigation', {
+            name: 'Previous and next page',
+        })
+        // Cards are real next/link <a href> anchors (SSR-rendered), so the
+        // click navigates without waiting on hydration.
+        await nav.getByRole('link').filter({ hasText: 'Next' }).click()
+        await expect(page).toHaveURL(/\/docs\/guides\/headless\//)
+        // The reverse edge: the headless page's Previous card must point back
+        // to the theming guide, proving the sequence is symmetric.
+        const prev = page
+            .getByRole('navigation', { name: 'Previous and next page' })
+            .getByRole('link')
+            .filter({ hasText: 'Previous' })
+        await expect(prev).toHaveAttribute(
+            'href',
+            /\/docs\/guides\/theming\/?$/,
+        )
+    })
+
+    test('copy-page markdown twin is served as text/markdown', async ({
+        request,
+    }) => {
+        // The DocsCopyPage button fetches this force-static route; it prepends
+        // the frontmatter title as an H1 (route.ts), so the body opens with it.
+        const res = await request.get('/docs-md/getting-started/')
+        expect(res.status()).toBe(200)
+        expect(res.headers()['content-type']).toContain('text/markdown')
+        expect(await res.text()).toContain('# Getting Started')
+    })
+
+    test('playground CTA links into the homepage live editor', async ({
+        page,
+    }) => {
+        await page.goto('/docs/quickstarts/react/')
+        const cta = page.getByTestId('docs-playground-cta')
+        await expect(cta).toBeAttached()
+        await expect(cta).toHaveAttribute('href', '/#live-editor')
+    })
+
+    test('ask-ai streams a markdown answer (strong, list, link)', async ({
+        page,
+    }) => {
+        // Exercises the primary streaming path: the hook reads text/event-stream
+        // and only `text-delta` events contribute answer text. The markdown
+        // renderer (MessageBody) must turn **…** into <strong>, numbered lines
+        // into an <ol>, and never leak the raw `**` markers into the DOM.
+        const sse =
+            'data: {"type":"start"}\n\n' +
+            'data: {"type":"text-delta","payload":{"text":"**Use tus** for resumable uploads.\\n\\n"}}\n\n' +
+            'data: {"type":"text-delta","payload":{"text":"1. Install the package\\n"}}\n\n' +
+            'data: {"type":"text-delta","payload":{"text":"2. Enable the strategy\\n\\n"}}\n\n' +
+            'data: {"type":"text-delta","payload":{"text":"See [Resumable uploads](/docs/resumable-uploads/)."}}\n\n' +
+            'data: {"type":"finish"}\n\n'
+        await page.route('**/api/agents/docs-agent/stream', route =>
+            route.fulfill({ contentType: 'text/event-stream', body: sse }),
+        )
+        await page.goto('/docs/getting-started/')
+        const trigger = page
+            .locator('[data-testid="docs-ask-ai-trigger"]:visible')
+            .first()
+        const drawer = page.getByTestId('docs-ask-ai-drawer')
+        // Same cold-hydration guard as the fallback test: retry the open until
+        // the drawer actually responds.
+        await expect(async () => {
+            await trigger.click()
+            await expect(drawer).toBeVisible({ timeout: 2000 })
+        }).toPass()
+        await drawer.getByTestId('docs-ask-ai-input').fill('resumable uploads?')
+        await drawer.getByTestId('docs-ask-ai-send').click()
+        // Bold → <strong>.
+        await expect(
+            drawer.locator('strong').filter({ hasText: 'Use tus' }),
+        ).toBeVisible()
+        // Numbered lines → a single <ol> with one <li> per step (the per-message
+        // <li>s live under a <ul>, so scoping to `ol li` isolates the answer).
+        await expect(drawer.locator('ol li')).toHaveCount(2)
+        // The literal fence markers must never survive into the rendered text.
+        expect(await drawer.innerText()).not.toContain('**')
     })
 })
