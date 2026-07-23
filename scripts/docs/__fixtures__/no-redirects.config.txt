@@ -1,0 +1,6 @@
+// A next.config with NO `async redirects()` block — exercises the scanner's
+// zero-extraction failure path (the legacy redirect map is a permanent
+// fixture, so extracting nothing means the scanner broke).
+export default {
+    reactStrictMode: true,
+}

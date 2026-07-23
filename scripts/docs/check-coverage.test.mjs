@@ -20,6 +20,15 @@ test('a topic carrying all seven canonical files passes with no failures', () =>
     assert.equal(counts.filesPresent, CANONICAL_FILES.length)
 })
 
+test('a missing or emptied registry fails EMPTY_REGISTRY instead of passing vacuously', () => {
+    const { failures } = checkCoverage({
+        snippetsDir: fixture('does-not-exist'),
+        exceptions: [],
+    })
+    assert.equal(failures.length, 1)
+    assert.equal(failures[0].kind, 'EMPTY_REGISTRY')
+})
+
 test('a topic missing frameworks reports one MISSING failure per absent file', () => {
     const { failures } = checkCoverage({ snippetsDir: PARTIAL, exceptions: [] })
     const missing = failures.filter(f => f.kind === 'MISSING')

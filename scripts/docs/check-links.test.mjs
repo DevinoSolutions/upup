@@ -45,6 +45,16 @@ test('a corpus of valid links, anchors, and redirects passes with no failures', 
     assert.equal(counts.redirectsChecked, 1)
 })
 
+test('a config the redirects scanner cannot parse fails instead of dropping the leg to zero', () => {
+    const { failures } = checkDocsLinks({
+        contentDir: fixture('valid', 'content'),
+        nextConfigPath: fixture('no-redirects.config.txt'),
+    })
+    const scanner = failures.filter(f => f.kind === 'REDIRECT')
+    assert.equal(scanner.length, 1)
+    assert.match(scanner[0].reason, /scanner no longer matches/)
+})
+
 test('a link to a nonexistent page is reported as a LINK failure', () => {
     const { failures } = checkDocsLinks(BROKEN)
     const link = failures.find(f => f.kind === 'LINK')

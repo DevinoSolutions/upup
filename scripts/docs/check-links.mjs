@@ -301,6 +301,20 @@ export function checkDocsLinks({
 
     // Redirect map: every concrete /docs/... destination must resolve.
     const redirects = extractRedirects(readFileSync(nextConfigPath, 'utf8'))
+    // extractRedirects text-scans for `async redirects()` + single-quoted
+    // pairs; a config refactor (rename, double quotes, template literals)
+    // would silently drop the redirect leg to zero. The legacy map is a
+    // permanent fixture, so zero extracted pairs means the SCANNER broke,
+    // not that the redirects went away — fail loudly instead of degrading.
+    if (redirects.length === 0) {
+        failures.push({
+            kind: 'REDIRECT',
+            file: nextConfigPath,
+            line: 0,
+            link: '(none)',
+            reason: 'no source/destination pairs extracted from next.config.mjs — the redirects() scanner no longer matches the config; update extractRedirects()',
+        })
+    }
     let redirectsChecked = 0
     for (const { source, destination } of redirects) {
         if (destination.includes(':')) continue // wildcard/param pass-through
