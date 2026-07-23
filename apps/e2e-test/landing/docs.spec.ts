@@ -281,6 +281,11 @@ test.describe('docs', () => {
         // Numbered lines → a single <ol> with one <li> per step (the per-message
         // <li>s live under a <ul>, so scoping to `ol li` isolates the answer).
         await expect(drawer.locator('ol li')).toHaveCount(2)
+        // A markdown link inside a streamed chunk must render as a real
+        // anchor (the link pipeline runs on streamed text too).
+        await expect(
+            drawer.getByRole('link', { name: 'Resumable uploads' }),
+        ).toBeVisible()
         // The literal fence markers must never survive into the rendered text.
         expect(await drawer.innerText()).not.toContain('**')
     })

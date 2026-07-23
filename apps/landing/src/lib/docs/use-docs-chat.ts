@@ -164,6 +164,15 @@ export function useDocsChat() {
                             const { done, value } = await reader.read()
                             if (done) break
                             buffer += decoder.decode(value, { stream: true })
+                            // A well-formed SSE event is tiny; a buffer that
+                            // grows past 1 MB without a blank-line delimiter
+                            // means a misbehaving backend — abort rather than
+                            // grow unbounded (throw lands in the catch below,
+                            // keeping any already-streamed partial).
+                            if (buffer.length > 1_000_000) {
+                                reader.cancel().catch(() => {})
+                                throw new Error('sse buffer overflow')
+                            }
                             let sep: number
                             while ((sep = buffer.indexOf('\n\n')) !== -1) {
                                 const evt = buffer.slice(0, sep)
