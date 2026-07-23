@@ -49,7 +49,7 @@ export function DocsChrome({
             <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
                 {/* Desktop sidebar — sticky under the fixed site header. */}
                 <aside className="hidden lg:block">
-                    <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-8">
+                    <div className="docs-scrollbar sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-8">
                         <DocsSearch />
                         <AskAiTrigger
                             testId="docs-ask-ai-trigger"
