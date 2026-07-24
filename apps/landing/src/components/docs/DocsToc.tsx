@@ -68,7 +68,7 @@ export function DocsToc({ items }: { items: TocItem[] }) {
                                 className={`block border-l py-0.5 pl-3 transition-colors ${
                                     active
                                         ? 'border-gray-900 text-gray-900 dark:border-white dark:text-white'
-                                        : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                                        : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                                 }`}
                             >
                                 {item.title}

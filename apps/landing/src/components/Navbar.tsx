@@ -2,6 +2,7 @@
 
 import { useState, useContext, useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Menu, X, Github } from 'lucide-react'
 import { ThemeContext } from '@/lib/contexts'
@@ -11,6 +12,12 @@ export default function Navbar() {
     const [navbarOpen, setNavbarOpen] = useState(false)
     const [mounted, setMounted] = useState(false)
     const { isDarkMode } = useContext(ThemeContext)
+    const pathname = usePathname()
+    // Docs pages scroll dark code blocks under the fixed header; a translucent
+    // + blurred nav smears them into a gray smudge in light mode. On /docs the
+    // header goes effectively opaque with a hairline border so nothing bleeds
+    // through — the marketing pages keep the translucent glass look.
+    const isDocs = pathname?.startsWith('/docs') ?? false
 
     useEffect(() => {
         setMounted(true)
@@ -69,7 +76,13 @@ export default function Navbar() {
     )
 
     return (
-        <nav className="fixed top-0 w-full z-50 bg-white/75 dark:bg-gray-950/75 backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/50 transition-colors duration-300">
+        <nav
+            className={`fixed top-0 w-full z-50 border-b transition-colors duration-300 ${
+                isDocs
+                    ? 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800/60'
+                    : 'bg-white/75 dark:bg-gray-950/75 backdrop-blur-xl border-gray-200/20 dark:border-gray-800/50'
+            }`}
+        >
             <div className="mx-auto max-w-6xl px-6">
                 <div className="flex items-center justify-between h-24">
                     {/* Logo */}

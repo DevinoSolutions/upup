@@ -428,7 +428,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
             </div>
 
             {!configured ? (
-                <div className="flex-1 overflow-y-auto px-4 py-6">
+                <div className="docs-scrollbar flex-1 overflow-y-auto px-4 py-6">
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                         Ask AI isn&apos;t configured in this environment.
                     </p>

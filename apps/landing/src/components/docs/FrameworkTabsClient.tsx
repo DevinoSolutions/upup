@@ -1,7 +1,24 @@
 'use client'
 
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import type { IconType } from 'react-icons'
+import { SiNextdotjs } from 'react-icons/si'
 import { Check, Copy } from 'lucide-react'
+import { FRAMEWORKS } from '@/lib/frameworks'
+
+// Per-tab brand icon, sourced from the one framework registry the home
+// "Pick your framework" pills also read (Next.js is docs-only, so its brand
+// icon is appended locally). A tab without a registered icon just renders its
+// label — the strip degrades cleanly.
+const TAB_ICON: Record<string, { Icon: IconType; brand?: string }> = {
+    react: { Icon: FRAMEWORKS.react.Icon, brand: FRAMEWORKS.react.brand },
+    vue: { Icon: FRAMEWORKS.vue.Icon, brand: FRAMEWORKS.vue.brand },
+    svelte: { Icon: FRAMEWORKS.svelte.Icon, brand: FRAMEWORKS.svelte.brand },
+    angular: { Icon: FRAMEWORKS.angular.Icon, brand: FRAMEWORKS.angular.brand },
+    vanilla: { Icon: FRAMEWORKS.vanilla.Icon, brand: FRAMEWORKS.vanilla.brand },
+    preact: { Icon: FRAMEWORKS.preact.Icon, brand: FRAMEWORKS.preact.brand },
+    next: { Icon: SiNextdotjs },
+}
 
 export interface FrameworkTab {
     /** Canonical framework id — also the `?fw=` deep-link value. */
@@ -111,10 +128,11 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
             <div
                 role="tablist"
                 aria-label="Framework"
-                className="flex flex-wrap gap-x-1 border-b border-black/5 dark:border-white/10"
+                className="flex flex-wrap gap-x-0.5 border-b border-gray-200 dark:border-white/10"
             >
                 {tabs.map(tab => {
                     const isActive = tab.fw === active.fw
+                    const icon = TAB_ICON[tab.fw]
                     return (
                         <button
                             key={tab.fw}
@@ -126,12 +144,24 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
                             tabIndex={isActive ? 0 : -1}
                             data-testid={`docs-framework-tab-${tab.fw}`}
                             onClick={() => choose(tab.fw)}
-                            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                            className={`-mb-px flex items-center gap-1.5 rounded-t-md border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                 isActive
-                                    ? 'border-gray-900 text-gray-900 dark:border-white dark:text-white'
-                                    : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                                    ? 'border-blue-600 text-gray-900 dark:border-blue-400 dark:text-white'
+                                    : 'border-transparent text-gray-500 hover:bg-black/[0.03] hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/[0.04] dark:hover:text-white'
                             }`}
                         >
+                            {icon ? (
+                                <icon.Icon
+                                    size={15}
+                                    aria-hidden
+                                    className={isActive ? '' : 'opacity-70'}
+                                    style={
+                                        icon.brand
+                                            ? { color: icon.brand }
+                                            : undefined
+                                    }
+                                />
+                            ) : null}
                             {tab.label}
                         </button>
                     )

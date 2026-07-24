@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { GRADIENT_TEXT, H3_HEADING } from '@/components/ui/SectionHeading'
-import { ICON_CHIP } from '@/components/ui/recipes'
 import { FRAMEWORKS } from '@/lib/frameworks'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
 
@@ -174,7 +173,7 @@ export function DocsHome() {
         <div>
             {/* HERO */}
             <motion.div
-                className="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-12"
+                className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12"
                 variants={heroContainer}
                 initial={reduce ? false : 'hidden'}
                 animate="visible"
@@ -207,37 +206,43 @@ export function DocsHome() {
                             API reference
                         </Link>
                     </div>
+
+                    {/* Framework picker lives inside the hero's left column,
+                        directly under the CTA — puts the #1 docs action above
+                        the fold and fills the space beside the tall demo. */}
+                    <div data-testid="docs-framework-grid" className="mt-10">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                            Pick your framework
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            {FRAMEWORK_LINKS.map(fw => (
+                                <Link
+                                    key={fw.slug}
+                                    href={`/docs/quickstarts/${fw.slug}/`}
+                                    className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm dark:border-white/10 dark:bg-transparent dark:text-gray-200 dark:hover:border-white/25 dark:hover:bg-white/[0.04]"
+                                >
+                                    <fw.Icon
+                                        size={18}
+                                        aria-hidden
+                                        style={
+                                            fw.brand
+                                                ? { color: fw.brand }
+                                                : undefined
+                                        }
+                                    />
+                                    <span>{fw.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
                 </motion.div>
                 <motion.div variants={column}>
                     <DocsUploaderDemo />
                 </motion.div>
             </motion.div>
 
-            {/* FRAMEWORK GRID */}
-            <div data-testid="docs-framework-grid" className="mt-16">
-                <h2 className={H3_HEADING}>Pick your framework</h2>
-                <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-                    {FRAMEWORK_LINKS.map(fw => (
-                        <Link
-                            key={fw.slug}
-                            href={`/docs/quickstarts/${fw.slug}/`}
-                            className="flex items-center gap-2 rounded-lg border border-black/5 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:border-black/10 dark:border-white/10 dark:text-gray-200 dark:hover:border-white/20"
-                        >
-                            <fw.Icon
-                                size={18}
-                                aria-hidden
-                                style={
-                                    fw.brand ? { color: fw.brand } : undefined
-                                }
-                            />
-                            <span>{fw.name}</span>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-
             {/* SECTION CARDS */}
-            <div data-testid="docs-section-cards" className="mt-16">
+            <div data-testid="docs-section-cards" className="mt-14">
                 <h2 className={H3_HEADING}>Browse the docs</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {SECTION_CARDS.map((c, i) => (
@@ -251,11 +256,9 @@ export function DocsHome() {
                         >
                             <Link
                                 href={c.href}
-                                className="flex h-full flex-col rounded-xl border border-black/5 p-5 transition-colors hover:border-black/10 dark:border-white/10 dark:hover:border-white/20"
+                                className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-5 transition-all hover:border-gray-300 hover:shadow-sm dark:border-white/10 dark:bg-transparent dark:hover:border-white/25 dark:hover:bg-white/[0.04]"
                             >
-                                <span
-                                    className={`${ICON_CHIP} h-10 w-10 rounded-lg`}
-                                >
+                                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                                     <c.Icon className="h-5 w-5" />
                                 </span>
                                 <span className="mt-4 font-medium text-gray-900 dark:text-white">

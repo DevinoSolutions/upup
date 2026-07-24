@@ -93,7 +93,7 @@ function AskAiTrigger({
             type="button"
             data-testid={testId}
             onClick={onClick}
-            className="flex w-full items-center gap-2 rounded-md border border-black/5 px-3 py-2 text-sm text-gray-500 transition-colors hover:border-black/10 hover:text-gray-700 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+            className="flex w-full items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/[0.16]"
         >
             <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>Ask AI</span>

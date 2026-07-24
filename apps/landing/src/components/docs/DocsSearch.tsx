@@ -140,11 +140,11 @@ export function DocsSearch() {
                 type="button"
                 aria-label="Search docs"
                 onClick={() => setOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md border border-black/5 px-3 py-2 text-sm text-gray-500 transition-colors hover:border-black/10 hover:text-gray-700 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+                className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-transparent dark:text-gray-400 dark:hover:border-white/25 dark:hover:text-gray-200"
             >
                 <Search className="h-4 w-4" />
                 <span>Search…</span>
-                <kbd className="ml-auto rounded border border-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:border-white/10">
+                <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
                     ⌘K
                 </kbd>
             </button>
