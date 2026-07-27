@@ -39,9 +39,10 @@ export default function Uploader({
     const currentTheme = theme || 'blue'
     const useRealStorage =
         clientEnv.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE === 'true'
-    const serverUrl = clientEnv.NEXT_PUBLIC_BASE_URL
-        ? clientEnv.NEXT_PUBLIC_BASE_URL + '/api/upup'
-        : '/api/upup'
+    // Always same-origin: the playground serves its own /api/upup route, and
+    // the @upupjs/server handler here configures no CORS allowlist — an
+    // absolute foreign base URL (e.g. the landing origin) fails preflight.
+    const serverUrl = '/api/upup'
 
     const customSlots = {
         uploader: {
