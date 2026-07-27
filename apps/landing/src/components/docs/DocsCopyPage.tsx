@@ -1,15 +1,22 @@
 'use client'
 
-import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
+import { useCopied } from './useCopied'
 
 // "Copy page" — fetches the page's raw-markdown twin (the force-static
 // /docs-md route) and writes it to the clipboard, with a brief copied state.
-// Own tiny copied-state on purpose; shares no component with the other docs
-// chrome so it stays self-contained.
+// Deliberately shares no COMPONENT with the other docs chrome — it is a
+// text-labelled toolbar button, not a code-card overlay, so it stays
+// self-contained. It does borrow useCopied for the momentary flags, which is
+// where the unmount-safe timer lives; `failed` is its own second flag, since
+// only this button can fail (the others copy from memory or the DOM).
 export function DocsCopyPage({ mdUrl }: { mdUrl: string }) {
-    const [copied, setCopied] = useState(false)
-    const [failed, setFailed] = useState(false)
+    const { copied, markCopied } = useCopied(2000)
+    const {
+        copied: failed,
+        markCopied: markFailed,
+        reset: clearFailed,
+    } = useCopied(2000)
 
     async function copy() {
         try {
@@ -17,12 +24,10 @@ export function DocsCopyPage({ mdUrl }: { mdUrl: string }) {
             if (!res.ok) throw new Error(`HTTP ${res.status}`)
             const markdown = await res.text()
             await navigator.clipboard.writeText(markdown)
-            setFailed(false)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
+            clearFailed()
+            markCopied()
         } catch {
-            setFailed(true)
-            setTimeout(() => setFailed(false), 2000)
+            markFailed()
         }
     }
 

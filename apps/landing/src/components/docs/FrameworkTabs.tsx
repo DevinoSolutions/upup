@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { highlight } from 'fumadocs-core/highlight'
+import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
 import { FrameworkTabsClient, type FrameworkTab } from './FrameworkTabsClient'
 
 // Mirrors the shiki themes fumadocs-mdx applies to article code fences —
@@ -21,57 +22,88 @@ const SHIKI_THEMES = { light: 'github-light', dark: 'github-dark' } as const
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const SNIPPETS_DIR = join(__dirname, '../../../content/docs/_snippets')
 
-// Canonical framework order, each with its snippet filename and highlight
-// language. A framework shows up only when its file is present in the topic
-// dir, so a topic can offer a subset with no extra wiring.
-const FRAMEWORKS: ReadonlyArray<{
-    fw: string
-    label: string
-    file: string
-    lang: string
-}> = [
-    { fw: 'react', label: 'React', file: 'react.tsx', lang: 'tsx' },
-    { fw: 'vue', label: 'Vue', file: 'vue.vue', lang: 'vue' },
-    { fw: 'svelte', label: 'Svelte', file: 'svelte.svelte', lang: 'svelte' },
-    { fw: 'angular', label: 'Angular', file: 'angular.ts', lang: 'ts' },
-    { fw: 'vanilla', label: 'Vanilla JS', file: 'vanilla.ts', lang: 'ts' },
-    { fw: 'preact', label: 'Preact', file: 'preact.tsx', lang: 'tsx' },
-    { fw: 'next', label: 'Next.js', file: 'next.tsx', lang: 'tsx' },
-]
+// The SAME carve-out list the coverage gate reads. A snippet file may be absent
+// only when scripts/docs/check-coverage.mjs also sanctions it, so this
+// component and the gate can never disagree about what is allowed to be
+// missing. Loading mirrors the gate's loadExceptions(): an absent file means no
+// carve-outs (the strictest reading), malformed JSON throws.
+const COVERAGE_EXCEPTIONS_PATH = join(
+    __dirname,
+    '../../../../../scripts/docs/coverage-exceptions.json',
+)
 
-function readSnippet(topic: string, file: string): string | null {
-    try {
-        return readFileSync(join(SNIPPETS_DIR, topic, file), 'utf-8').replace(
-            /\s+$/,
-            '',
+// Read per render rather than memoized: one tiny JSON file per <FrameworkTabs>
+// embed at build time is free, and a module-scope cache would make an edit to
+// the exceptions list invisible until the dev server restarts.
+function suppressedPairs(): Set<string> {
+    let entries: Array<{ topic: string; file: string }> = []
+    if (existsSync(COVERAGE_EXCEPTIONS_PATH)) {
+        const parsed = JSON.parse(
+            readFileSync(COVERAGE_EXCEPTIONS_PATH, 'utf-8'),
         )
-    } catch {
-        return null
+        entries = Array.isArray(parsed) ? parsed : (parsed.exceptions ?? [])
     }
+    return new Set(entries.map(e => `${e.topic}/${e.file}`))
+}
+
+// Missing content is a build-time defect, not a runtime state: this is a server
+// component rendered while the docs are prerendered, so a bad topic name or a
+// renamed snippet file must fail the build LOUDLY. Silently rendering nothing
+// (or quietly dropping a framework's tab) is how a docs page ships with a
+// framework missing and nobody notices.
+function readSnippet(topic: string, file: string): string | null {
+    const path = join(SNIPPETS_DIR, topic, file)
+    // Absence is the one condition a carve-out can excuse; every other read
+    // failure (permissions, a directory in the file's place) propagates.
+    if (!existsSync(path)) return null
+    return readFileSync(path, 'utf-8').replace(/\s+$/, '')
 }
 
 export async function FrameworkTabs({ topic }: { topic: string }) {
+    const topicDir = join(SNIPPETS_DIR, topic)
+    if (!existsSync(topicDir) || !statSync(topicDir).isDirectory()) {
+        throw new Error(
+            `<FrameworkTabs topic="${topic}"> — no snippet directory at ${topicDir}. ` +
+                `Create it with the canonical framework files, or fix the topic name in the MDX.`,
+        )
+    }
+
+    const suppressed = suppressedPairs()
     const tabs: FrameworkTab[] = []
-    for (const meta of FRAMEWORKS) {
-        const code = readSnippet(topic, meta.file)
-        if (code === null) continue
+    for (const meta of DOCS_FRAMEWORK_LIST) {
+        const code = readSnippet(topic, meta.docsFile)
+        if (code === null) {
+            if (suppressed.has(`${topic}/${meta.docsFile}`)) continue
+            throw new Error(
+                `<FrameworkTabs topic="${topic}"> — missing snippet "${meta.docsFile}" ` +
+                    `for ${meta.name} in ${topicDir}. Add the file, or record a ` +
+                    `{ topic, file, reason } carve-out in scripts/docs/coverage-exceptions.json ` +
+                    `(the same list the docs:snippets:coverage gate enforces).`,
+            )
+        }
         // Highlighted server-side with the SAME shiki themes fumadocs-mdx uses
         // for article code fences (github-light / github-dark, defaultColor
         // false), so a tab card is visually identical to a `.upup-code` block.
         // The result is a server-rendered ReactNode handed to the client tab.
         const highlighted = await highlight(code, {
-            lang: meta.lang,
+            lang: meta.docsLang,
             themes: SHIKI_THEMES,
             defaultColor: false,
         })
         tabs.push({
-            fw: meta.fw,
-            label: meta.label,
-            lang: meta.lang,
+            fw: meta.id,
+            label: meta.name,
+            lang: meta.docsLang,
             code,
             highlighted,
         })
     }
-    if (tabs.length === 0) return null
+    if (tabs.length === 0) {
+        throw new Error(
+            `<FrameworkTabs topic="${topic}"> — every framework is carved out in ` +
+                `scripts/docs/coverage-exceptions.json, so the strip would render empty. ` +
+                `Remove the embed or add snippets.`,
+        )
+    }
     return <FrameworkTabsClient tabs={tabs} />
 }

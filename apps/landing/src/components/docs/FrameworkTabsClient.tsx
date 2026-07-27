@@ -2,23 +2,19 @@
 
 import { useEffect, useId, useState, type ReactNode } from 'react'
 import type { IconType } from 'react-icons'
-import { SiNextdotjs } from 'react-icons/si'
-import { Check, Copy } from 'lucide-react'
-import { FRAMEWORKS } from '@/lib/frameworks'
+import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
+import { CodeCardControls } from './CodeCardControls'
 
-// Per-tab brand icon, sourced from the one framework registry the home
-// "Pick your framework" pills also read (Next.js is docs-only, so its brand
-// icon is appended locally). A tab without a registered icon just renders its
-// label — the strip degrades cleanly.
-const TAB_ICON: Record<string, { Icon: IconType; brand?: string }> = {
-    react: { Icon: FRAMEWORKS.react.Icon, brand: FRAMEWORKS.react.brand },
-    vue: { Icon: FRAMEWORKS.vue.Icon, brand: FRAMEWORKS.vue.brand },
-    svelte: { Icon: FRAMEWORKS.svelte.Icon, brand: FRAMEWORKS.svelte.brand },
-    angular: { Icon: FRAMEWORKS.angular.Icon, brand: FRAMEWORKS.angular.brand },
-    vanilla: { Icon: FRAMEWORKS.vanilla.Icon, brand: FRAMEWORKS.vanilla.brand },
-    preact: { Icon: FRAMEWORKS.preact.Icon, brand: FRAMEWORKS.preact.brand },
-    next: { Icon: SiNextdotjs },
-}
+// Per-tab brand icon, derived from the one docs framework registry the /docs
+// "Pick your framework" pills also read. A tab without a registered icon just
+// renders its label — the strip degrades cleanly.
+const TAB_ICON: Record<string, { Icon: IconType; brand?: string }> =
+    Object.fromEntries(
+        DOCS_FRAMEWORK_LIST.map(fw => [
+            fw.id,
+            { Icon: fw.Icon, brand: fw.brand },
+        ]),
+    )
 
 export interface FrameworkTab {
     /** Canonical framework id — also the `?fw=` deep-link value. */
@@ -62,7 +58,6 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
     // (canonical order puts React first) and reconcile the persisted /
     // deep-linked choice in an effect after mount — avoids a hydration mismatch.
     const [selected, setSelected] = useState(tabs[0].fw)
-    const [copied, setCopied] = useState(false)
     const baseId = useId()
 
     useEffect(() => {
@@ -109,16 +104,6 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
     const active = tabs.find(t => t.fw === selected) ?? tabs[0]
     const panelId = `${baseId}-panel`
     const activeTabId = `${baseId}-tab-${active.fw}`
-
-    async function copy() {
-        try {
-            await navigator.clipboard.writeText(active.code)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 1600)
-        } catch {
-            // Clipboard API unavailable in insecure contexts — no-op.
-        }
-    }
 
     return (
         <div
@@ -176,23 +161,10 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
                 tabIndex={0}
                 className="upup-code group relative"
             >
-                <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2">
-                    <span className="select-none rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-white/40">
-                        {active.lang}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={copy}
-                        aria-label={copied ? 'Copied' : 'Copy code'}
-                        className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100"
-                    >
-                        {copied ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                        ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                        )}
-                    </button>
-                </div>
+                <CodeCardControls
+                    language={active.lang}
+                    getText={() => active.code}
+                />
                 {/* Server-produced ReactNode (build-time repo content) — not a
                     raw-HTML sink; no user or model input ever reaches here. */}
                 {active.highlighted}

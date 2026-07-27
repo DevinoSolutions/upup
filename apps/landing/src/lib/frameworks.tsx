@@ -6,6 +6,7 @@ import {
     SiAngular,
     SiJavascript,
     SiPreact,
+    SiNextdotjs,
 } from 'react-icons/si'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,6 +36,14 @@ export interface FrameworkMeta {
     file: string
     /** Minimal, verified client-mode snippet from the package README. */
     code: string
+    /**
+     * Snippet file inside content/docs/_snippets/<topic>/, e.g. "vue.vue".
+     * One of the seven canonical names the docs gates key on — keep in sync
+     * with CANONICAL_FILES in scripts/docs/check-coverage.mjs.
+     */
+    docsFile: string
+    /** Shiki language for that snippet file, e.g. "vue". */
+    docsLang: string
     /** The image editor is a real-React island — React/Preact only. */
     hasImageEditor: boolean
     /** Framework-specific hero sub-line. */
@@ -105,6 +114,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/react',
         file: 'Uploader.tsx',
         code: REACT_CODE,
+        docsFile: 'react.tsx',
+        docsLang: 'tsx',
         hasImageEditor: true,
         tagline:
             'A headless-core React file uploader with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
@@ -117,6 +128,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/vue',
         file: 'Uploader.vue',
         code: VUE_CODE,
+        docsFile: 'vue.vue',
+        docsLang: 'vue',
         hasImageEditor: false,
         tagline:
             'A native Vue file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
@@ -129,6 +142,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/svelte',
         file: 'Uploader.svelte',
         code: SVELTE_CODE,
+        docsFile: 'svelte.svelte',
+        docsLang: 'svelte',
         hasImageEditor: false,
         tagline:
             'A native Svelte file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
@@ -141,6 +156,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/angular',
         file: 'app.component.ts',
         code: ANGULAR_CODE,
+        docsFile: 'angular.ts',
+        docsLang: 'ts',
         hasImageEditor: false,
         tagline:
             'A native Angular file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
@@ -153,6 +170,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/vanilla',
         file: 'uploader.ts',
         code: VANILLA_CODE,
+        docsFile: 'vanilla.ts',
+        docsLang: 'ts',
         hasImageEditor: false,
         tagline:
             'A framework-free file uploader for plain JavaScript & TypeScript — drag & drop, cloud drives, and secure server-mode uploads.',
@@ -165,6 +184,8 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         pkg: '@upupjs/preact',
         file: 'App.tsx',
         code: PREACT_CODE,
+        docsFile: 'preact.tsx',
+        docsLang: 'tsx',
         hasImageEditor: true,
         tagline:
             'A Preact file uploader (React-compatible) with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
@@ -184,6 +205,56 @@ export const FRAMEWORK_LIST: FrameworkMeta[] = [
 ]
 
 export const FRAMEWORK_IDS: FrameworkId[] = FRAMEWORK_LIST.map(f => f.id)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Docs view of the registry.
+//
+// The docs surfaces (the <FrameworkTabs> strip, its client tab bar, and the
+// "Pick your framework" pills on /docs) need a SUPERSET of FRAMEWORK_LIST:
+// Next.js ships no UI package of its own — it re-exports @upupjs/react and adds
+// route handlers — so it has no marketing page or hero snippet, but it does
+// have a docs quickstart and a canonical snippet file. It is therefore appended
+// here rather than added to FRAMEWORKS, which stays "frameworks with a native
+// UI package".
+//
+// This narrower shape is what every docs consumer reads, so labels, icons,
+// brand colours, order, and the `?fw=`/quickstart-slug ids are declared exactly
+// once. Do not re-transcribe any of them at a call site.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface DocsFrameworkMeta {
+    /** Canonical id — the `?fw=` value AND the /docs/quickstarts/<id>/ slug. */
+    id: string
+    /** Display name shown in tab strips and pills. */
+    name: string
+    /** Snippet file inside content/docs/_snippets/<topic>/. */
+    docsFile: string
+    /** Shiki language for that snippet file. */
+    docsLang: string
+    /** Official brand logo (react-icons/si). */
+    Icon: IconType
+    /** Official brand colour, when the framework has one. */
+    brand?: string
+}
+
+/** Next.js — docs-only: a quickstart and snippets, but no @upupjs/next UI. */
+const NEXT_DOCS_FRAMEWORK: DocsFrameworkMeta = {
+    id: 'next',
+    name: 'Next.js',
+    docsFile: 'next.tsx',
+    docsLang: 'tsx',
+    Icon: SiNextdotjs,
+}
+
+/**
+ * Docs framework order: the six native-UI packages (React first — the visual
+ * canon), then Next.js. Matches CANONICAL_FILES in
+ * scripts/docs/check-coverage.mjs, which gates that every topic ships all seven.
+ */
+export const DOCS_FRAMEWORK_LIST: DocsFrameworkMeta[] = [
+    ...FRAMEWORK_LIST,
+    NEXT_DOCS_FRAMEWORK,
+]
 
 export function getFramework(id: string): FrameworkMeta | undefined {
     return (FRAMEWORKS as Record<string, FrameworkMeta>)[id]

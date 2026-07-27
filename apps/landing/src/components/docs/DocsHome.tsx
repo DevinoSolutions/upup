@@ -1,8 +1,6 @@
 'use client'
 
-import type { IconType } from 'react-icons'
 import Link from 'next/link'
-import { SiNextdotjs } from 'react-icons/si'
 import {
     ArrowRight,
     ArrowRightLeft,
@@ -19,57 +17,13 @@ import {
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { GRADIENT_TEXT, H3_HEADING } from '@/components/ui/SectionHeading'
-import { FRAMEWORKS } from '@/lib/frameworks'
+import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
 
-// Quickstart links. The slug is the docs route segment (/docs/quickstarts/<slug>/)
-// and is declared independently of FRAMEWORKS ids — the six shared icons/brands
-// are still sourced from the one framework registry, and Next.js (docs-only, no
-// UI package) is appended locally.
-const FRAMEWORK_LINKS: {
-    slug: string
-    name: string
-    Icon: IconType
-    brand?: string
-}[] = [
-    {
-        slug: 'react',
-        name: 'React',
-        Icon: FRAMEWORKS.react.Icon,
-        brand: FRAMEWORKS.react.brand,
-    },
-    {
-        slug: 'vue',
-        name: 'Vue',
-        Icon: FRAMEWORKS.vue.Icon,
-        brand: FRAMEWORKS.vue.brand,
-    },
-    {
-        slug: 'svelte',
-        name: 'Svelte',
-        Icon: FRAMEWORKS.svelte.Icon,
-        brand: FRAMEWORKS.svelte.brand,
-    },
-    {
-        slug: 'angular',
-        name: 'Angular',
-        Icon: FRAMEWORKS.angular.Icon,
-        brand: FRAMEWORKS.angular.brand,
-    },
-    {
-        slug: 'vanilla',
-        name: 'Vanilla JS',
-        Icon: FRAMEWORKS.vanilla.Icon,
-        brand: FRAMEWORKS.vanilla.brand,
-    },
-    {
-        slug: 'preact',
-        name: 'Preact',
-        Icon: FRAMEWORKS.preact.Icon,
-        brand: FRAMEWORKS.preact.brand,
-    },
-    { slug: 'next', name: 'Next.js', Icon: SiNextdotjs },
-]
+// Quickstart links come straight from the docs framework registry: a
+// framework's id IS its docs route segment (/docs/quickstarts/<id>/), so the
+// pills, the <FrameworkTabs> strip, and the `?fw=` deep link all key on the
+// same value and nothing here is hand-transcribed.
 
 const SECTION_CARDS: {
     title: string
@@ -215,10 +169,10 @@ export function DocsHome() {
                             Pick your framework
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
-                            {FRAMEWORK_LINKS.map(fw => (
+                            {DOCS_FRAMEWORK_LIST.map(fw => (
                                 <Link
-                                    key={fw.slug}
-                                    href={`/docs/quickstarts/${fw.slug}/`}
+                                    key={fw.id}
+                                    href={`/docs/quickstarts/${fw.id}/`}
                                     className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm dark:border-white/10 dark:bg-transparent dark:text-gray-200 dark:hover:border-white/25 dark:hover:bg-white/[0.04]"
                                 >
                                     <fw.Icon
