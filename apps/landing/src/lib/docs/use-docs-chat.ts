@@ -65,11 +65,17 @@ export function useDocsChat() {
     const [pending, setPending] = useState(false)
     const counter = useRef(0)
     const abortRef = useRef<AbortController | null>(null)
+    // `pending` is render state: two submits in the same tick (Enter plus a
+    // click, a double-tap) both read the pre-update `false` and fire two
+    // requests against one transcript. The ref flips synchronously, so the
+    // second call sees the first already in flight.
+    const inFlightRef = useRef(false)
 
     const send = useCallback(
         async (content: string) => {
             const base = clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL
-            if (!base || pending) return
+            if (!base || pending || inFlightRef.current) return
+            inFlightRef.current = true
 
             const userMsg: DocsChatMessage = {
                 id: `m${++counter.current}`,
@@ -207,6 +213,7 @@ export function useDocsChat() {
                     if (!(await runGenerate())) finishError()
                 }
             } finally {
+                inFlightRef.current = false
                 setPending(false)
                 abortRef.current = null
             }
@@ -217,6 +224,7 @@ export function useDocsChat() {
     const clear = useCallback(() => {
         abortRef.current?.abort()
         abortRef.current = null
+        inFlightRef.current = false
         setMessages([])
         setPending(false)
     }, [])

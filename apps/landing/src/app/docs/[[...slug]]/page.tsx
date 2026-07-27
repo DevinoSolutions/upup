@@ -58,8 +58,10 @@ export default async function DocsPage(props: {
     if (!slug?.length) return <DocsHome />
     const MDX = page.data.body
     const tree = toSidebarTree(source.pageTree)
-    const url = `/docs${slug?.length ? `/${slug.join('/')}` : ''}`
+    // The empty-slug case already returned <DocsHome/> above, so slug is
+    // non-empty from here on.
     const slugPath = slug.join('/')
+    const url = `/docs/${slugPath}`
     const githubEditUrl = `${GITHUB_EDIT_BASE}/${slugPath}.mdx`
     // trailingSlash:true — hit the canonical URL directly so the fetch skips a 308.
     const mdUrl = `/docs-md/${slugPath}/`

@@ -47,9 +47,12 @@ export function DocsUploaderDemo({
     // guide's demo) COMPOSES on top and wins — its own `mode`/tokens/slots are
     // preserved, and only an unset `mode` falls back to the site's.
     const { isDarkMode } = useContext(ThemeContext)
+    // Spread FIRST, then resolve `mode`: with the site mode written before the
+    // spread, a caller passing an explicit `{ mode: undefined }` overwrote it
+    // with undefined and the panel fell back to light on a dark page.
     const composedTheme: UpupThemeConfig = {
-        mode: isDarkMode ? 'dark' : 'light',
         ...theme,
+        mode: theme?.mode ?? (isDarkMode ? 'dark' : 'light'),
     }
 
     return (

@@ -21,7 +21,12 @@ const geistMono = Geist_Mono({
 })
 
 export const viewport: Viewport = {
-    themeColor: '#ffffff',
+    // Media-conditional so the browser chrome follows the page's own theme
+    // instead of pinning white behind a dark page.
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: '#05070d' },
+    ],
 }
 
 export const metadata: Metadata = {
@@ -54,7 +59,6 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <meta name="theme-color" content="#ffffff" />
                 {/* Script to handle browser extension conflicts before hydration */}
                 <Script id="extension-handler" strategy="beforeInteractive">
                     {`
@@ -93,52 +97,56 @@ export default function RootLayout({
           `}
                 </Script>
 
-                {/* Client-side script to handle dark mode and browser extension conflicts */}
+                {/* Pre-hydration theme paint.
+                    MUST STAY IN SYNC with src/lib/theme.ts — this is the same
+                    resolve + apply logic, inlined because a beforeInteractive
+                    script cannot import a module. Any change to resolveTheme /
+                    applyTheme belongs here too. Note the classList add/remove:
+                    assigning documentElement.className would clobber every
+                    other class on <html>. */}
                 <Script id="theme-script" strategy="beforeInteractive">
                     {`
             (function() {
-              try {
-                // Prevent Grammarly and other extensions from causing hydration issues
-                const originalObserver = window.MutationObserver;
-                let themeSet = false;
-                
-                function setTheme() {
-                  if (themeSet) return;
-                  
-                  // Check localStorage for user preference
-                  const savedTheme = localStorage.getItem('theme');
-                  // Check system preference
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  // Default to system preference if no saved theme
-                  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-                  
-                  // Set the theme class on document element
-                  document.documentElement.className = theme;
-                  localStorage.setItem('theme', theme);
-                  
-                  // Mark as hydration ready to prevent conflicts
-                  document.documentElement.setAttribute('data-theme-ready', 'true');
-                  themeSet = true;
-                }
-                
-                // Set theme immediately
-                setTheme();
-                
-                // Also set it when DOM is ready in case first attempt failed
-                if (document.readyState !== 'loading') {
-                  setTheme();
-                } else {
-                  document.addEventListener('DOMContentLoaded', setTheme);
-                }
-                
-              } catch (e) {
-                // Fallback to light mode if anything fails
+              var themeSet = false;
+
+              function setTheme() {
+                if (themeSet) return;
+
+                // resolveTheme(): stored preference, else the OS preference,
+                // else light.
+                var theme = 'light';
                 try {
-                  document.documentElement.className = 'light';
-                  document.documentElement.setAttribute('data-theme-ready', 'true');
-                } catch (fallbackError) {
-                  console.warn('Theme setting failed:', fallbackError);
+                  var saved = localStorage.getItem('theme');
+                  if (saved === 'dark' || saved === 'light') theme = saved;
+                  else theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                } catch (e) {
+                  try {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  } catch (e2) {
+                    theme = 'light';
+                  }
                 }
+
+                // applyTheme(theme)
+                var root = document.documentElement;
+                root.classList.remove('light', 'dark');
+                root.classList.add(theme);
+                try {
+                  localStorage.setItem('theme', theme);
+                } catch (e) {
+                  // Persistence is best-effort.
+                }
+
+                // Mark as hydration ready to prevent conflicts
+                root.setAttribute('data-theme-ready', 'true');
+                themeSet = true;
+              }
+
+              setTheme();
+
+              // Also set it when DOM is ready in case the first attempt failed
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setTheme);
               }
             })();
           `}

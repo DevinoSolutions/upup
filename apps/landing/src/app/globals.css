@@ -9,11 +9,16 @@
    override here would leak dark values into the light theme on a
    dark-OS device — the class is the only theme signal. */
 :root {
+    /* Native widgets (scrollbars, inputs, textareas, form controls) follow the
+       class-based theme instead of the OS setting — without this a dark page
+       renders light scrollbars and light-chrome form controls. */
+    color-scheme: light;
     --bg-base: #f8fafc;
     --fg-base: #171717;
 }
 
 .dark {
+    color-scheme: dark;
     --bg-base: #05070d;
     --fg-base: #ededed;
 }

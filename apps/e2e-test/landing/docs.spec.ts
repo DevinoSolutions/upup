@@ -70,11 +70,14 @@ test.describe('docs', () => {
             await expect(dialog).toBeVisible({ timeout: 1_000 })
         }).toPass({ timeout: 15_000 })
 
-        await dialog.getByRole('textbox').fill('theming')
-        // Results render as buttons (DocsSearch.tsx), not links — the first hit
-        // is the Theming guide's own page-level result.
+        // The input is an ARIA 1.2 combobox (role="combobox" + aria-controls /
+        // aria-activedescendant), so it resolves as `combobox`, not `textbox`.
+        await dialog.getByRole('combobox').fill('theming')
+        // Results render as <button role="option"> inside the listbox
+        // (DocsSearch.tsx), not links — the first hit is the Theming guide's
+        // own page-level result.
         await dialog
-            .getByRole('button', { name: /theming/i })
+            .getByRole('option', { name: /theming/i })
             .first()
             .click()
         await expect(page).toHaveURL(/\/docs\/guides\/theming\//)

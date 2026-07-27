@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search } from 'lucide-react'
 import { useDocsSearch } from 'fumadocs-core/search/client'
@@ -65,6 +65,11 @@ export function DocsSearch() {
     const [activeIndex, setActiveIndex] = useState(0)
     const inputRef = useRef<HTMLInputElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
+    // ARIA 1.2 combobox wiring: the input owns the listbox by id and points at
+    // the active row, so a screen reader announces the highlighted result as
+    // ArrowUp/Down move through it (the visual highlight alone is silent).
+    const listId = useId()
+    const optionId = (index: number) => `${listId}-option-${index}`
 
     // useDocsSearch debounces `search` internally (100ms default) before
     // querying, so no extra debounce timer is needed here.
@@ -169,14 +174,48 @@ export function DocsSearch() {
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 onKeyDown={handleInputKeyDown}
+                                role="combobox"
+                                aria-expanded={results.length > 0}
+                                aria-controls={listId}
+                                aria-autocomplete="list"
+                                aria-activedescendant={
+                                    results.length > 0
+                                        ? optionId(activeIndex)
+                                        : undefined
+                                }
                                 aria-label="Search documentation"
                                 placeholder="Search documentation…"
                                 className="w-full bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-white dark:placeholder:text-gray-500"
                             />
                         </div>
 
+                        {/* Result count / empty state as a live region: the
+                            visible copy below is inside the listbox, which a
+                            screen reader reads only on navigation, so the
+                            outcome of a query would otherwise pass silently. */}
+                        <div
+                            role="status"
+                            aria-live="polite"
+                            className="sr-only"
+                        >
+                            {search.length === 0
+                                ? ''
+                                : results.length === 0
+                                  ? `No results for ${search}.`
+                                  : `${results.length} ${results.length === 1 ? 'result' : 'results'}.`}
+                        </div>
+
+                        {/* Only a listbox once it actually holds options — an
+                            empty-state paragraph is not a valid listbox child. */}
                         <div
                             ref={listRef}
+                            id={listId}
+                            role={results.length > 0 ? 'listbox' : undefined}
+                            aria-label={
+                                results.length > 0
+                                    ? 'Search results'
+                                    : undefined
+                            }
                             className="max-h-96 overflow-y-auto p-2"
                         >
                             {search.length === 0 ? (
@@ -192,6 +231,9 @@ export function DocsSearch() {
                                     <button
                                         key={result.id}
                                         type="button"
+                                        role="option"
+                                        id={optionId(index)}
+                                        aria-selected={index === activeIndex}
                                         data-index={index}
                                         onClick={() => navigate(result.url)}
                                         onMouseEnter={() =>

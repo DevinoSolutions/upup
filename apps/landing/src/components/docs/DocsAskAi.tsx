@@ -342,7 +342,27 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
     const [votes, setVotes] = useState<Record<string, 'up' | 'down'>>({})
     const bodyRef = useRef<HTMLDivElement>(null)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const returnFocusRef = useRef<HTMLElement | null>(null)
     const configured = !!clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL
+
+    // Opening moves focus into the composer and remembers where it came from;
+    // closing hands focus back to whatever opened the drawer (normally the
+    // trigger button) so keyboard users don't land back at the top of the
+    // document. Deliberately not a focus trap — the drawer is non-modal
+    // (role="complementary"), so tabbing out of it is allowed.
+    useEffect(() => {
+        if (open) {
+            returnFocusRef.current =
+                document.activeElement instanceof HTMLElement
+                    ? document.activeElement
+                    : null
+            textareaRef.current?.focus()
+            return
+        }
+        const previous = returnFocusRef.current
+        returnFocusRef.current = null
+        previous?.focus()
+    }, [open])
 
     // Auto-scroll to the newest content whenever the transcript grows.
     useEffect(() => {
@@ -392,6 +412,12 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
             role="complementary"
             aria-label="Ask AI"
             aria-hidden={!open}
+            onKeyDown={e => {
+                if (e.key === 'Escape') {
+                    e.stopPropagation()
+                    onClose()
+                }
+            }}
             className={`fixed right-0 top-24 bottom-0 z-40 flex w-[380px] max-w-full flex-col border-l border-black/5 bg-[var(--bg-base)] motion-safe:transition-transform motion-safe:duration-300 dark:border-white/10 ${
                 open ? 'translate-x-0' : 'invisible translate-x-full'
             }`}
