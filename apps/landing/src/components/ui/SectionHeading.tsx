@@ -15,6 +15,10 @@ interface SectionHeadingProps {
     title: ReactNode
     subtitle?: ReactNode
     align?: 'center' | 'left'
+    /** Heading level. Sections inside a page that already has an h1 keep the
+     *  h2 default; a page whose only heading IS this one passes 'h1' so the
+     *  document is not h1-less. Purely semantic — the classes are identical. */
+    as?: 'h1' | 'h2'
     /** Extra classes for the heading block. Do NOT pass a bottom margin here —
      *  the baked `mb-12 sm:mb-16` owns the heading→content gap and a className
      *  `mb-*` collides with it (stylesheet-order-indeterminate). */
@@ -26,6 +30,7 @@ export default function SectionHeading({
     title,
     subtitle,
     align = 'center',
+    as: Heading = 'h2',
     className = '',
 }: SectionHeadingProps) {
     const alignment =
@@ -42,9 +47,9 @@ export default function SectionHeading({
                     {badge}
                 </span>
             )}
-            <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-[2.75rem] dark:text-white">
+            <Heading className="text-4xl font-bold tracking-tight text-gray-900 sm:text-[2.75rem] dark:text-white">
                 {title}
-            </h2>
+            </Heading>
             {subtitle && (
                 <p className="mt-4 text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
                     {subtitle}

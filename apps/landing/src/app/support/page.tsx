@@ -14,6 +14,7 @@ export default function SupportPage() {
         <main className="min-h-[70vh] bg-[var(--bg-base)]">
             <Section>
                 <SectionHeading
+                    as="h1"
                     badge={
                         <>
                             <span className="h-2 w-2 rounded-full bg-green-500" />

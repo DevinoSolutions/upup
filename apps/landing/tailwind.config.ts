@@ -1,10 +1,25 @@
 /** @type {import('tailwindcss').Config} */
 
+const defaultTheme = require('tailwindcss/defaultTheme')
+
 module.exports = {
     darkMode: 'class',
     content: ['./src/**/*.{js,jsx,ts,tsx,css}', './content/docs/**/*.mdx'],
     theme: {
         extend: {
+            // next/font/google (app/layout.tsx) stamps these variables on
+            // <body>; font-sans / font-mono resolve to Geist with the stock
+            // Tailwind stacks as fallback.
+            fontFamily: {
+                sans: [
+                    'var(--font-geist-sans)',
+                    ...defaultTheme.fontFamily.sans,
+                ],
+                mono: [
+                    'var(--font-geist-mono)',
+                    ...defaultTheme.fontFamily.mono,
+                ],
+            },
             keyframes: {
                 bounceSlow: {
                     '0%, 100%': {

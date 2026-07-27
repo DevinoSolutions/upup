@@ -83,8 +83,13 @@ export default async function DocsPage(props: {
                 {/* prose-code:before/after content-none: the typography
                     plugin's default renders literal backtick glyphs around
                     inline code; the chip styling replaces them, scoped via
-                    :not(pre)>code so fenced blocks keep their own styling. */}
-                <article className="prose max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-pre:border prose-pre:border-black/10 dark:prose-pre:border-white/10 prose-code:before:content-none prose-code:after:content-none [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-black/[0.06] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:font-normal dark:[&_:not(pre)>code]:bg-white/10">
+                    :not(pre)>code so fenced blocks keep their own styling.
+                    overflow-wrap:anywhere lets a chip holding a long
+                    unbreakable token (scope URLs, callback URLs) break mid-
+                    string — without it the chip overflows its line box and
+                    pans the whole page sideways on a phone. Fenced blocks are
+                    excluded: they scroll inside their own pre. */}
+                <article className="prose max-w-none dark:prose-invert prose-headings:scroll-mt-28 prose-pre:border prose-pre:border-black/10 dark:prose-pre:border-white/10 prose-code:before:content-none prose-code:after:content-none [&_:not(pre)>code]:rounded [&_:not(pre)>code]:bg-black/[0.06] [&_:not(pre)>code]:px-1.5 [&_:not(pre)>code]:py-0.5 [&_:not(pre)>code]:font-normal [&_:not(pre)>code]:[overflow-wrap:anywhere] dark:[&_:not(pre)>code]:bg-white/10">
                     <h1>{page.data.title}</h1>
                     <MDX components={getMDXComponents()} />
                 </article>

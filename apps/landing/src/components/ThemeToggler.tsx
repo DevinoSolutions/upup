@@ -1,6 +1,6 @@
 import { ThemeContext } from '@/lib/contexts'
 import { motion } from 'framer-motion'
-import {useContext} from 'react'
+import { useContext } from 'react'
 import { MdDarkMode, MdOutlineLightMode } from 'react-icons/md'
 
 interface ThemeTogglerProps {
@@ -17,6 +17,9 @@ const ThemeToggler = ({
     const { switchTheme } = useContext(ThemeContext)
     return (
         <button
+            aria-label={
+                isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+            }
             className="flex items-center justify-center rounded-full transition-all duration-300"
             onClick={switchTheme}
         >

@@ -139,6 +139,7 @@ export default function Navbar() {
                         {/* Mobile Menu Button */}
                         <button
                             aria-label="Toggle navigation"
+                            aria-expanded={navbarOpen}
                             className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                             onClick={() => setNavbarOpen(!navbarOpen)}
                         >

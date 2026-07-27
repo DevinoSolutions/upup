@@ -1,56 +1,42 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@variant dark (&:where(.dark &, .dark & *));
-
-:root {
-    --background: #ffffff;
-    --foreground: #171717;
-}
-
-@font-face {
-    font-family: 'Geist';
-    src:
-        url('./fonts/GeistVF.woff') format('woff'),
-        url('./fonts/GeistMonoVF.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-@theme inline {
-    --color-background: var(--background);
-    --color-foreground: var(--foreground);
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --background: #0a0a0a;
-        --foreground: #ededed;
-    }
-}
 
 /* ── Dark-radiant design tokens ──────────────────────────────────
    Themed by the .dark class toggle (app/theme-provider.tsx sets
    documentElement.className), NOT prefers-color-scheme. :root holds
-   the light values; .dark overrides them. */
+   the light values; .dark overrides them. A prefers-color-scheme
+   override here would leak dark values into the light theme on a
+   dark-OS device — the class is the only theme signal. */
 :root {
     --bg-base: #f8fafc;
+    --fg-base: #171717;
 }
 
 .dark {
     --bg-base: #05070d;
+    --fg-base: #ededed;
 }
 
 html {
     scroll-behavior: smooth;
 }
 body {
-    background: var(--background);
-    color: var(--foreground);
-    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg-base);
+    color: var(--fg-base);
+    /* Geist is loaded by next/font/google in app/layout.tsx, which stamps
+       --font-geist-sans on <body>; the tailwind config exposes the same
+       stack as font-sans. */
+    font-family:
+        var(--font-geist-sans),
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        'Segoe UI',
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
 }
 
 @layer utilities {
