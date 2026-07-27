@@ -82,7 +82,7 @@
         "@vitest/coverage-v8": "^4.1.2",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",
-        "postcss": "^8.5.2",
+        "postcss": "^8.5.18",
         "postcss-cli": "^11.0.1",
         "tsup": "^8.4.0",
         "@types/node": "^20.19.37",
