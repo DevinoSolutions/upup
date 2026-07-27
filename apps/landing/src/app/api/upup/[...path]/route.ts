@@ -7,6 +7,36 @@ function handler() {
 
     const required = requireServerEnv(['UPUP_UPLOAD_TOKEN_SECRET'] as const)
 
+    // Only pass providers that are fully configured — the handler refuses
+    // empty-string secrets at construct time, so a half-configured provider
+    // (id without secret) would take the whole upload surface down with it.
+    const providers = {
+        ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
+            ? {
+                  googleDrive: {
+                      clientId: env.GOOGLE_CLIENT_ID,
+                      clientSecret: env.GOOGLE_CLIENT_SECRET,
+                  },
+              }
+            : {}),
+        ...(env.DROPBOX_CLIENT_ID && env.DROPBOX_APP_SECRET
+            ? {
+                  dropbox: {
+                      appKey: env.DROPBOX_CLIENT_ID,
+                      appSecret: env.DROPBOX_APP_SECRET,
+                  },
+              }
+            : {}),
+        ...(env.ONEDRIVE_CLIENT_ID && env.ONEDRIVE_CLIENT_SECRET
+            ? {
+                  oneDrive: {
+                      clientId: env.ONEDRIVE_CLIENT_ID,
+                      clientSecret: env.ONEDRIVE_CLIENT_SECRET,
+                  },
+              }
+            : {}),
+    }
+
     _handler = createUpupNextHandler({
         storage: {
             type: 'backblaze',
@@ -19,20 +49,7 @@ function handler() {
         uploadTokenSecret: required.UPUP_UPLOAD_TOKEN_SECRET,
         allowAnonymous: true,
         allowAnonymousUploads: true,
-        providers: {
-            googleDrive: {
-                clientId: env.GOOGLE_CLIENT_ID,
-                clientSecret: env.GOOGLE_CLIENT_SECRET,
-            },
-            dropbox: {
-                appKey: env.DROPBOX_CLIENT_ID,
-                appSecret: env.DROPBOX_APP_SECRET,
-            },
-            oneDrive: {
-                clientId: env.ONEDRIVE_CLIENT_ID,
-                clientSecret: env.ONEDRIVE_CLIENT_SECRET,
-            },
-        },
+        providers,
     })
 
     return _handler
