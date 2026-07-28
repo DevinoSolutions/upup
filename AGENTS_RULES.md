@@ -51,9 +51,20 @@ records site/QA quirks that don't fit there.
   Dokploy compose app (push to origin/dev → autodeploy). When polling a deploy, use a
   marker string that exists ONLY in the new build — old builds share most markup and
   will false-positive generic markers.
-- dev-playground has NO storage/signing env configured: uploads fail with
-  `NO_UPLOAD_TARGET` by design until env is provided. The UI flow (file add, preview,
-  error surface, retry) still works and is testable without it.
+- dev-playground uploads are REAL (2026-07-27): the client presigns via its own
+  `/api/upup/presign` (baked `NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT`) and PUTs directly to
+  the Backblaze B2 dev bucket, whose existing `allowDevAccess` CORS rule permits any
+  origin. Automated tests that upload should clean up their objects (S3 DeleteObject).
+- The `@upupjs/server` handler REFUSES empty-string provider secrets at construct
+  time, and a construct throw 500s EVERY route — including plain presign. App routes
+  must only pass a provider when both its id and secret are set (fixed in both
+  `/api/upup` routes, c2f53f6b); don't reintroduce an unconditional providers block.
+  Google/OneDrive drive flows on the deployed compose stay off until their
+  `*_CLIENT_SECRET` vars are added to the Dokploy env.
+- The landing's own `/api/upup/presign` 404s (with `x-upup-request-id` present):
+  `trailingSlash: true` 308-redirects the POST to `/presign/`, which the handler
+  router doesn't match. Harmless while the landing demo is mock-only; fix belongs
+  with the site-wide trailing-slash follow-up.
 
 ## Browser-automation traps on the dev box
 
