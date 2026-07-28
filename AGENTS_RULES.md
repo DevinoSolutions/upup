@@ -59,8 +59,14 @@ records site/QA quirks that don't fit there.
   time, and a construct throw 500s EVERY route — including plain presign. App routes
   must only pass a provider when both its id and secret are set (fixed in both
   `/api/upup` routes, c2f53f6b); don't reintroduce an unconditional providers block.
-  Google/OneDrive drive flows on the deployed compose stay off until their
-  `*_CLIENT_SECRET` vars are added to the Dokploy env.
+- Server-mode drive OAuth is LIVE on the deployed compose for Google Drive + Dropbox
+  (2026-07-28): `GOOGLE_CLIENT_SECRET` was added to the Dokploy env and both routes
+  wire `InMemoryTokenStore` (203e4324) — demo-grade, per-process, sessions reset on
+  container restart. `/api/upup/auth/google-drive` 302s to accounts.google.com;
+  `/auth/one-drive` is a clean 400 "OneDrive not configured" (no local
+  ONEDRIVE_CLIENT_SECRET exists). Completing a real consent additionally requires the
+  callback URL (`.../api/upup/auth/<provider>/cb`) to be registered in the Google /
+  Dropbox app consoles — a human, console-side step; never automate the consent.
 - The landing's own `/api/upup/presign` 404s (with `x-upup-request-id` present):
   `trailingSlash: true` 308-redirects the POST to `/presign/`, which the handler
   router doesn't match. Harmless while the landing demo is mock-only; fix belongs
