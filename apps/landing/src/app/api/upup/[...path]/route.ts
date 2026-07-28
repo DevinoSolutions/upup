@@ -1,3 +1,4 @@
+import { InMemoryTokenStore } from '@upupjs/server'
 import { createUpupNextHandler } from '@upupjs/server/next'
 import { env, requireServerEnv } from '@/lib/env'
 
@@ -50,6 +51,9 @@ function handler() {
         allowAnonymous: true,
         allowAnonymousUploads: true,
         providers,
+        // Demo-grade token store: in-memory, per-process — drive OAuth sessions
+        // reset on container restart. A real deployment supplies a Redis/DB store.
+        tokenStore: new InMemoryTokenStore(),
     })
 
     return _handler
