@@ -87,6 +87,33 @@ describe('createUpupHandler', () => {
     })
 })
 
+// Next.js apps with trailingSlash:true 308-redirect POST /presign to
+// /presign/ with method and body preserved — the router matches the
+// slash-stripped path instead of 404ing the redirected request.
+describe('trailing-slash route tolerance', () => {
+    it('handles presign POST with a trailing slash', async () => {
+        const handler = createUpupHandler(config)
+        const req = new Request('http://localhost/api/upup/presign/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: 'test.jpg',
+                size: 1024,
+                type: 'image/jpeg',
+            }),
+        })
+        const res = await handler(req)
+        expect(res.status).toBe(200)
+    })
+
+    it('still 404s unknown routes with a trailing slash', async () => {
+        const handler = createUpupHandler(config)
+        const req = new Request('http://localhost/unknown/', { method: 'GET' })
+        const res = await handler(req)
+        expect(res.status).toBe(404)
+    })
+})
+
 const configWithProviders = {
     ...config,
     allowAnonymous: true,

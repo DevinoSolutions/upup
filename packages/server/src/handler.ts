@@ -75,7 +75,11 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
 
     return async (req: Request): Promise<Response> => {
         const url = new URL(req.url)
-        const path = url.pathname
+        // Frameworks with trailing-slash normalization (Next.js
+        // trailingSlash:true) 308 a POST /presign to /presign/ with method and
+        // body preserved — match routes on the slash-stripped path so the
+        // redirected request doesn't 404.
+        const path = url.pathname.replace(/\/+$/, '') || '/'
         const res = createResponder(req, config)
 
         try {

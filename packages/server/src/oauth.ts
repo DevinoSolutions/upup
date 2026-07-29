@@ -107,7 +107,10 @@ function callbackUrlFor(req: Request, provider: string): string {
     // (/auth/:provider) and the callback (/auth/:provider/cb) — otherwise the
     // token-exchange redirect_uri doubles the path and Google rejects it with
     // redirect_uri_mismatch. Mirrors the router's own /auth match (line ~128).
-    const base = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+(?:\/cb)?$/, '')}`
+    // The optional trailing slash mirrors the router's slash-stripped matching
+    // (Next trailingSlash:true 308s /auth/x to /auth/x/) — without it the
+    // stray slash survives into base and the derived redirect_uri.
+    const base = `${url.origin}${url.pathname.replace(/\/auth\/[\w-]+(?:\/cb)?\/?$/, '')}`
     return `${base}/auth/${provider}/cb`
 }
 
