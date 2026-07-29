@@ -64,13 +64,29 @@ records site/QA quirks that don't fit there.
   wire `InMemoryTokenStore` (203e4324) — demo-grade, per-process, sessions reset on
   container restart. `/api/upup/auth/google-drive` 302s to accounts.google.com;
   `/auth/one-drive` is a clean 400 "OneDrive not configured" (no local
-  ONEDRIVE_CLIENT_SECRET exists). Completing a real consent additionally requires the
-  callback URL (`.../api/upup/auth/<provider>/cb`) to be registered in the Google /
-  Dropbox app consoles — a human, console-side step; never automate the consent.
-- The landing's own `/api/upup/presign` 404s (with `x-upup-request-id` present):
-  `trailingSlash: true` 308-redirects the POST to `/presign/`, which the handler
-  router doesn't match. Harmless while the landing demo is mock-only; fix belongs
-  with the site-wide trailing-slash follow-up.
+  ONEDRIVE_CLIENT_SECRET exists). Both `/api/upup` routes pass `trustProxy: true`
+  (1f96820f) — without it, `req.url` inside the container is localhost:3000 and the
+  derived OAuth `redirect_uri` pointed at localhost; Traefik's `x-forwarded-*` now
+  supplies the public origin per-domain. Completing a real consent still requires the
+  emitted callback URL (`https://dev[-playground].useupup.com/api/upup/auth/
+<provider>/cb`) to be registered in the Google / Dropbox app consoles — a human,
+  console-side step; never automate the consent.
+- Landing `/api/upup/*` works THROUGH the trailingSlash 308 since 811f32da: Next
+  308s POST `/presign` to `/presign/` (method+body preserved) and the
+  `@upupjs/server` router now matches the slash-stripped path (it used to 404 —
+  landing uploads and drive OAuth were both dead on the deployed site). The
+  canonical/OG/sitemap/JSON-LD base URL is `src/lib/site-url.ts` (siteUrl /
+  canonicalUrl) — never hardcode `https://useupup.com` in a new surface.
+- Deploy-poll marker trap: metadata-derived markers are NOT proven-new — Next
+  normalizes canonical/sitemap URLs under `trailingSlash: true`, so the OLD build
+  already emitted slashed canonicals and a canonical-slash marker false-positived.
+  Behavioral flips (a status code that only the new code can produce) are the
+  reliable markers.
+- Deploys can hang (not abort) at "Corepack is about to download pnpm" — a registry
+  network stall with no timeout; one sat `running` 45+ min with a byte-frozen log.
+  Diagnose via `ssh root@devino "tail .../compose-*.log"`; remediate with Dokploy
+  compose-killBuild + compose-redeploy of the same commit (second attempt built
+  clean in ~7 min).
 
 ## Browser-automation traps on the dev box
 
