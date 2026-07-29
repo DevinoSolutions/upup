@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
-import { clientEnv } from '@/lib/env'
+import { siteUrl } from '@/lib/site-url'
 
 // Filesystem-based (not fumadocs-based) so this works identically under
 // vitest and under Next — fumadocs' `.source/server` is a generated file
@@ -11,7 +11,6 @@ import { clientEnv } from '@/lib/env'
 // process.cwd(), which differs between vitest's and Next's working dirs.
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const CONTENT_DIR = join(__dirname, '../../../content/docs')
-const DEFAULT_BASE_URL = 'https://useupup.com'
 
 export interface DocPage {
     slug: string
@@ -38,12 +37,8 @@ function slugFromPath(filePath: string): string {
     return withoutExt === 'index' ? '' : withoutExt
 }
 
-function baseUrl(): string {
-    return clientEnv.NEXT_PUBLIC_BASE_URL || DEFAULT_BASE_URL
-}
-
 function pageUrl(slug: string): string {
-    return slug ? `${baseUrl()}/docs/${slug}/` : `${baseUrl()}/docs/`
+    return slug ? `${siteUrl()}/docs/${slug}/` : `${siteUrl()}/docs/`
 }
 
 // Un-memoized full-tree walk+parse is safe ONLY because consumers are

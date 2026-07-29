@@ -1,7 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { FRAMEWORK_IDS } from '@/lib/frameworks'
-
-const SITE_URL = 'https://useupup.com'
+import { canonicalUrl } from '@/lib/site-url'
 
 // Key documentation entry points (served by this app under /docs). Fumadocs
 // has no separate sub-sitemap here — these are the high-value pages we
@@ -29,26 +28,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     return [
         {
-            url: `${SITE_URL}/`,
+            url: canonicalUrl(),
             lastModified,
             changeFrequency: 'weekly',
             priority: 1,
         },
         // Per-framework landing pages (/react, /vue, …) — high-value entry points.
         ...FRAMEWORK_IDS.map((id): MetadataRoute.Sitemap[number] => ({
-            url: `${SITE_URL}/${id}`,
+            url: canonicalUrl(id),
             lastModified,
             changeFrequency: 'weekly',
             priority: 0.9,
         })),
         {
-            url: `${SITE_URL}/privacy`,
+            url: canonicalUrl('privacy'),
             lastModified,
             changeFrequency: 'yearly',
             priority: 0.3,
         },
         ...docsPaths.map((path): MetadataRoute.Sitemap[number] => ({
-            url: `${SITE_URL}/docs/${path}/`,
+            url: canonicalUrl(`docs/${path}`),
             lastModified,
             changeFrequency: 'monthly',
             priority: 0.7,

@@ -9,13 +9,14 @@ import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import StructuredData from '@/components/StructuredData'
 import FAQSection from '@/components/FAQSection'
 import Section from '@/components/ui/Section'
+import { canonicalUrl } from '@/lib/site-url'
 
 export const metadata = {
     title: 'upup – One File Uploader for React, Vue, Svelte, Angular, Vanilla JS & Preact',
     description:
         'One open-source, MIT-licensed file uploader with a headless core and byte-identical native UI for six frameworks. Drag-and-drop, cloud drives (Google Drive, OneDrive, Dropbox, Box), camera, screen capture, and secure server-mode uploads to S3-compatible storage.',
     alternates: {
-        canonical: 'https://useupup.com/',
+        canonical: canonicalUrl(),
     },
 }
 

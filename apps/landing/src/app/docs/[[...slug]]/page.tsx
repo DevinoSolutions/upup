@@ -8,8 +8,8 @@ import { DocsToc } from '@/components/docs/DocsToc'
 import { DocsHome } from '@/components/docs/DocsHome'
 import { DocsPageNav } from '@/components/docs/DocsPageNav'
 import { DocsCopyPage } from '@/components/docs/DocsCopyPage'
+import { canonicalUrl, siteUrl } from '@/lib/site-url'
 
-const SITE_URL = 'https://useupup.com'
 // content/docs is edited on the canonical master branch on GitHub.
 const GITHUB_EDIT_BASE =
     'https://github.com/DevinoSolutions/upup/edit/master/apps/landing/content/docs'
@@ -31,8 +31,8 @@ export async function generateMetadata(props: {
 
     const title = `${page.data.title} | upup docs`
     const description = page.data.description
-    const url = `${SITE_URL}/docs${slug?.length ? `/${slug.join('/')}` : ''}`
-    const image = 'https://useupup.com/img/social-card.png'
+    const url = canonicalUrl(slug?.length ? `docs/${slug.join('/')}` : 'docs')
+    const image = `${siteUrl()}/img/social-card.png`
 
     return {
         title,

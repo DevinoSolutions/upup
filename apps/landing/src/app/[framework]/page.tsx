@@ -12,8 +12,7 @@ import FeedbackSection from '@/components/FeedbackSection'
 import FAQSection from '@/components/FAQSection'
 import Toast from '@/components/Toast'
 import Section from '@/components/ui/Section'
-
-const SITE_URL = 'https://useupup.com'
+import { canonicalUrl, siteUrl } from '@/lib/site-url'
 
 // Only the known framework slugs render; anything else 404s (static routes like
 // /privacy and /mobile-demo still take precedence over this dynamic segment).
@@ -34,8 +33,8 @@ export async function generateMetadata({
 
     const title = `${fw.name} File Uploader — upup`
     const description = `${fw.tagline} Open-source & MIT-licensed — npm install ${fw.pkg}.`
-    const url = `${SITE_URL}/${fw.id}`
-    const image = 'https://useupup.com/img/social-card.png'
+    const url = canonicalUrl(fw.id)
+    const image = `${siteUrl()}/img/social-card.png`
 
     return {
         title,

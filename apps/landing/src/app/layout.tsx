@@ -2,6 +2,7 @@
 import { Metadata, Viewport } from 'next'
 import './globals.css'
 import { siteConfig } from '@/lib/siteConfig'
+import { canonicalUrl, siteUrl } from '@/lib/site-url'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
@@ -30,15 +31,15 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://useupup.com'),
+    metadataBase: new URL(siteUrl()),
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
         title: 'upup – One File Uploader for Every Framework',
         description:
             'One open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage. MIT-licensed.',
-        images: ['https://useupup.com/img/social-card.png'],
-        url: 'https://useupup.com/',
+        images: [`${siteUrl()}/img/social-card.png`],
+        url: canonicalUrl(),
         type: 'website',
         siteName: 'upup',
     },
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
         title: 'upup – One File Uploader for Every Framework',
         description:
             'One uploader, native UI for React, Vue, Svelte, Angular, Vanilla JS & Preact. Headless core, cloud drives, and secure server-mode uploads to any S3-compatible storage. Open-source, MIT.',
-        images: ['https://useupup.com/img/social-card.png'],
+        images: [`${siteUrl()}/img/social-card.png`],
     },
 }
 

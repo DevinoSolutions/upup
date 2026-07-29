@@ -4,8 +4,8 @@
 // plugins (Google Drive, OneDrive, Dropbox, Box).
 
 import { faqs } from '@/lib/faqs'
+import { canonicalUrl } from '@/lib/site-url'
 
-const SITE_URL = 'https://useupup.com'
 const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
 
 const softwareApplication = {
@@ -16,7 +16,7 @@ const softwareApplication = {
     operatingSystem: 'Web',
     description:
         'Open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Includes cloud-drive sources, camera, screen capture, and secure server-mode uploads to any S3-compatible storage.',
-    url: SITE_URL,
+    url: canonicalUrl(),
     license: 'https://opensource.org/licenses/MIT',
     offers: {
         '@type': 'Offer',
@@ -45,7 +45,7 @@ export default function StructuredData({
     const app = framework
         ? {
               ...softwareApplication,
-              url: `${SITE_URL}/${framework.id}`,
+              url: canonicalUrl(framework.id),
               description: `Open-source ${framework.name} file uploader (${framework.pkg}) with a headless core. The same uploader ships native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact, with cloud-drive sources, camera, screen capture, and secure server-mode uploads to any S3-compatible storage.`,
           }
         : softwareApplication
