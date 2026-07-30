@@ -59,29 +59,46 @@ records site/QA quirks that don't fit there.
   time, and a construct throw 500s EVERY route — including plain presign. App routes
   must only pass a provider when both its id and secret are set (fixed in both
   `/api/upup` routes, c2f53f6b); don't reintroduce an unconditional providers block.
-- Server-mode drive OAuth is LIVE on the deployed compose for Google Drive +
-  Dropbox (2026-07-28) + Box (2026-07-30): `GOOGLE_CLIENT_SECRET`, then
-  `BOX_CLIENT_ID`/`BOX_CLIENT_SECRET`, were added to the Dokploy env and both
-  routes wire `InMemoryTokenStore` (203e4324) — demo-grade, per-process,
-  sessions reset on container restart. `/api/upup/auth/google-drive` 302s to
-  accounts.google.com; `/auth/one-drive` is a clean 400 "OneDrive not
-  configured" (no local ONEDRIVE_CLIENT_SECRET exists — the ONE provider still
-  dark). Both `/api/upup` routes pass `trustProxy: true`
-  (1f96820f) — without it, `req.url` inside the container is localhost:3000 and the
-  derived OAuth `redirect_uri` pointed at localhost; Traefik's `x-forwarded-*` now
-  supplies the public origin per-domain. The callback URLs
-  (`https://dev[-playground].useupup.com/api/upup/auth/<provider>/cb`) ARE
-  registered (2026-07-30): Google client `716672485589-…vs5lr5` (project
-  OAuthAppUpUp), Dropbox app **upup-oauth `6rcdlj7qhxh9yku`**, and Box app
-  **upup-oauth (id 2636865)** on the maintainer's Box account — all
-  authorize URLs verified accepted (no redirect_uri_mismatch). The former
-  Dropbox app `8oqtlukxuuatirk` belongs to an account the maintainer cannot
-  access — its console can never be edited, so do NOT switch back to it; the
-  compose env + all local env files now point at `6rcdlj7qhxh9yku`. The Box
-  account's other app ("Default App") is the Client Credentials drive-sandbox
-  service account — CCG cannot run the user-facing auth-code flow, so never
-  point BOX_CLIENT_ID at it. The consent click itself stays human-only — never
-  automate it.
+- Server-mode drive OAuth is LIVE on the deployed compose for ALL FOUR
+  providers — Google Drive + Dropbox (2026-07-28), Box + OneDrive
+  (2026-07-30): every `/api/upup/auth/<provider>` 302s to its IdP on both
+  origins. Both routes wire `InMemoryTokenStore` (203e4324) — demo-grade,
+  per-process, sessions reset on container restart — and pass
+  `trustProxy: true` (1f96820f) — without it, `req.url` inside the container
+  is localhost:3000 and the derived OAuth `redirect_uri` pointed at
+  localhost; Traefik's `x-forwarded-*` supplies the public origin per-domain.
+  The provider app registry (all verified — server `/cb` URIs registered AND
+  authorize URLs accepted; the consent click itself stays human-only, never
+  automate it):
+    - Google: client `716672485589-…vs5lr5`, GCP project OAuthAppUpUp.
+    - Dropbox: app **upup-oauth `6rcdlj7qhxh9yku`**. The former app
+      `8oqtlukxuuatirk` belongs to an account the maintainer cannot access —
+      do NOT switch back to it.
+    - Box: app **upup-oauth (id 2636865)** on the maintainer's Box account.
+      That account's other app ("Default App") is the Client Credentials
+      drive-sandbox service account — CCG cannot run the user-facing
+      auth-code flow, so never point BOX_CLIENT_ID at it.
+    - OneDrive: Azure app registration **upup-oauth
+      `90da7d0a-280a-4efc-83f5-d4098dfc4145`** in the devino.ca tenant,
+      signInAudience AzureADandPersonalMicrosoftAccount (the `/common`
+      endpoint needs that tier), delegated Files.Read.All + offline_access
+      admin-consented. The OLD id `99ee7f72` is homed under the personal
+      account amin.devino@outlook.com — uneditable from devino.ca, do NOT
+      switch back. `upup-sandbox` (`3b0c48b2`) is the nightly CI harness
+      app — never add production URIs to it.
+      CLIENT-mode popup redirects are registered too (2026-07-30): the popup
+      plugins redirect to `<origin>/box_redirect` / `/dp_redirect` /
+      `/od_redirect` (SPA platform on Azure), all registered for both origins on
+      the respective apps — a 404 page there is fine, the plugin only polls the
+      popup URL for the code. Playground drive TILES grey out when their
+      `NEXT_PUBLIC_*_CLIENT_ID` build arg is empty — that var lives in the
+      Dokploy env build-time section and needs a rebuild to take effect.
+      Console-automation notes: the master browser profile's Box/portal logins
+      expire — a login wall mid-task means STOP and ask the human; on the
+      Dropbox console `type_text` can land zero characters (read back `.value`,
+      fall back to paste), and its app URL must be the query-param form
+      `developers/apps/info?app_key=…` (the path form 302s to login even when
+      authenticated).
 - Landing `/api/upup/*` works THROUGH the trailingSlash 308 since 811f32da: Next
   308s POST `/presign` to `/presign/` (method+body preserved) and the
   `@upupjs/server` router now matches the slash-stripped path (it used to 404 —
