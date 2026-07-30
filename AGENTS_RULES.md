@@ -67,10 +67,15 @@ records site/QA quirks that don't fit there.
   ONEDRIVE_CLIENT_SECRET exists). Both `/api/upup` routes pass `trustProxy: true`
   (1f96820f) — without it, `req.url` inside the container is localhost:3000 and the
   derived OAuth `redirect_uri` pointed at localhost; Traefik's `x-forwarded-*` now
-  supplies the public origin per-domain. Completing a real consent still requires the
-  emitted callback URL (`https://dev[-playground].useupup.com/api/upup/auth/
-<provider>/cb`) to be registered in the Google / Dropbox app consoles — a human,
-  console-side step; never automate the consent.
+  supplies the public origin per-domain. The callback URLs
+  (`https://dev[-playground].useupup.com/api/upup/auth/<provider>/cb`) ARE
+  registered (2026-07-30): Google client `716672485589-…vs5lr5` (project
+  OAuthAppUpUp) and Dropbox app **upup-oauth `6rcdlj7qhxh9yku`** — both
+  authorize URLs verified accepted (no redirect_uri_mismatch). The former
+  Dropbox app `8oqtlukxuuatirk` belongs to an account the maintainer cannot
+  access — its console can never be edited, so do NOT switch back to it; the
+  compose env + all local env files now point at `6rcdlj7qhxh9yku`. The consent
+  click itself stays human-only — never automate it.
 - Landing `/api/upup/*` works THROUGH the trailingSlash 308 since 811f32da: Next
   308s POST `/presign` to `/presign/` (method+body preserved) and the
   `@upupjs/server` router now matches the slash-stripped path (it used to 404 —
