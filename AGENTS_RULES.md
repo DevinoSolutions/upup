@@ -88,6 +88,12 @@ records site/QA quirks that don't fit there.
   landing uploads and drive OAuth were both dead on the deployed site). The
   canonical/OG/sitemap/JSON-LD base URL is `src/lib/site-url.ts` (siteUrl /
   canonicalUrl) — never hardcode `https://useupup.com` in a new surface.
+- New-runtime-env-var trap: `deploy/site/docker-compose.yml` WHITELISTS runtime
+  env per service (bare list form). Saving a var in the Dokploy compose env
+  alone never reaches the containers — it must ALSO be added to BOTH services'
+  `environment:` lists. Symptom is silent: the deploy goes green and the app
+  behaves exactly as if the var were unset (Box burned 25 min on this,
+  df9b8721).
 - Deploy-poll marker trap: metadata-derived markers are NOT proven-new — Next
   normalizes canonical/sitemap URLs under `trailingSlash: true`, so the OLD build
   already emitted slashed canonicals and a canonical-slash marker false-positived.
