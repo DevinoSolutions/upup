@@ -59,23 +59,29 @@ records site/QA quirks that don't fit there.
   time, and a construct throw 500s EVERY route — including plain presign. App routes
   must only pass a provider when both its id and secret are set (fixed in both
   `/api/upup` routes, c2f53f6b); don't reintroduce an unconditional providers block.
-- Server-mode drive OAuth is LIVE on the deployed compose for Google Drive + Dropbox
-  (2026-07-28): `GOOGLE_CLIENT_SECRET` was added to the Dokploy env and both routes
-  wire `InMemoryTokenStore` (203e4324) — demo-grade, per-process, sessions reset on
-  container restart. `/api/upup/auth/google-drive` 302s to accounts.google.com;
-  `/auth/one-drive` is a clean 400 "OneDrive not configured" (no local
-  ONEDRIVE_CLIENT_SECRET exists). Both `/api/upup` routes pass `trustProxy: true`
+- Server-mode drive OAuth is LIVE on the deployed compose for Google Drive +
+  Dropbox (2026-07-28) + Box (2026-07-30): `GOOGLE_CLIENT_SECRET`, then
+  `BOX_CLIENT_ID`/`BOX_CLIENT_SECRET`, were added to the Dokploy env and both
+  routes wire `InMemoryTokenStore` (203e4324) — demo-grade, per-process,
+  sessions reset on container restart. `/api/upup/auth/google-drive` 302s to
+  accounts.google.com; `/auth/one-drive` is a clean 400 "OneDrive not
+  configured" (no local ONEDRIVE_CLIENT_SECRET exists — the ONE provider still
+  dark). Both `/api/upup` routes pass `trustProxy: true`
   (1f96820f) — without it, `req.url` inside the container is localhost:3000 and the
   derived OAuth `redirect_uri` pointed at localhost; Traefik's `x-forwarded-*` now
   supplies the public origin per-domain. The callback URLs
   (`https://dev[-playground].useupup.com/api/upup/auth/<provider>/cb`) ARE
   registered (2026-07-30): Google client `716672485589-…vs5lr5` (project
-  OAuthAppUpUp) and Dropbox app **upup-oauth `6rcdlj7qhxh9yku`** — both
+  OAuthAppUpUp), Dropbox app **upup-oauth `6rcdlj7qhxh9yku`**, and Box app
+  **upup-oauth (id 2636865)** on the maintainer's Box account — all
   authorize URLs verified accepted (no redirect_uri_mismatch). The former
   Dropbox app `8oqtlukxuuatirk` belongs to an account the maintainer cannot
   access — its console can never be edited, so do NOT switch back to it; the
-  compose env + all local env files now point at `6rcdlj7qhxh9yku`. The consent
-  click itself stays human-only — never automate it.
+  compose env + all local env files now point at `6rcdlj7qhxh9yku`. The Box
+  account's other app ("Default App") is the Client Credentials drive-sandbox
+  service account — CCG cannot run the user-facing auth-code flow, so never
+  point BOX_CLIENT_ID at it. The consent click itself stays human-only — never
+  automate it.
 - Landing `/api/upup/*` works THROUGH the trailingSlash 308 since 811f32da: Next
   308s POST `/presign` to `/presign/` (method+body preserved) and the
   `@upupjs/server` router now matches the slash-stripped path (it used to 404 —
