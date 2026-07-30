@@ -81,6 +81,8 @@ const serverSchema = z.object({
     DROPBOX_APP_SECRET: z.string().default(''),
     ONEDRIVE_CLIENT_ID: z.string().default(''),
     ONEDRIVE_CLIENT_SECRET: z.string().default(''),
+    BOX_CLIENT_ID: z.string().default(''),
+    BOX_CLIENT_SECRET: z.string().default(''),
 })
 
 export const env: z.infer<typeof serverSchema> = (() => {

@@ -40,6 +40,14 @@ function handler() {
                   },
               }
             : {}),
+        ...(env.BOX_CLIENT_ID && env.BOX_CLIENT_SECRET
+            ? {
+                  box: {
+                      clientId: env.BOX_CLIENT_ID,
+                      clientSecret: env.BOX_CLIENT_SECRET,
+                  },
+              }
+            : {}),
     }
 
     _handler = createUpupNextHandler(

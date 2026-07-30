@@ -81,6 +81,8 @@ const serverSchema = z.object({
     DROPBOX_APP_SECRET: z.string().default(''),
     ONEDRIVE_CLIENT_ID: z.string().default(''),
     ONEDRIVE_CLIENT_SECRET: z.string().default(''),
+    BOX_CLIENT_ID: z.string().default(''),
+    BOX_CLIENT_SECRET: z.string().default(''),
     // Analytics dataset isolation (see src/lib/analytics/dataset.ts). Bare
     // list-form passthrough in compose keeps an unset value ABSENT (never the
     // empty string), but the preprocess still guards against '' just in case.
