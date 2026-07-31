@@ -52,6 +52,11 @@ interface SourceEntry {
     iconName: IconName
 }
 
+// Regular chips fit at most 4 per row inside the max-w-[420px] grid, so up to 8
+// sources wrap into balanced rows; 9 would wrap 4/4/1. Past this count the chips
+// switch to the compact size, which fits 5 per row (5/4).
+const COMPACT_SOURCE_THRESHOLD = 8
+
 @Component({
     selector: 'upup-source-selector',
     standalone: true,
@@ -181,6 +186,10 @@ export class SourceSelectorComponent {
         })
     }
 
+    private get compact(): boolean {
+        return this.chosenSources.length > COMPACT_SOURCE_THRESHOLD
+    }
+
     // ── Limits caption ──────────────────────────────────────────────────────────
 
     get typeConstraint(): string | null {
@@ -253,7 +262,9 @@ export class SourceSelectorComponent {
     get chipsListClass(): string {
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-3 upup-gap-y-4',
+            this.compact
+                ? 'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-3 upup-gap-y-4'
+                : 'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-6 upup-gap-y-5',
             slotClasses.sourceButtonList ?? '',
         )
     }
@@ -261,7 +272,9 @@ export class SourceSelectorComponent {
     get chipClass(): string {
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
+            this.compact
+                ? 'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none'
+                : 'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
             slotClasses.sourceButton ?? '',
         )
     }
@@ -269,7 +282,9 @@ export class SourceSelectorComponent {
     get chipIconBoxClass(): string {
         const dark = this.store.isDark()
         return cn(
-            'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors',
+            this.compact
+                ? 'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors'
+                : 'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
             dark
                 ? 'upup-bg-white/[0.055] upup-ring-white/[0.06] group-hover:upup-bg-white/[0.09] dark:upup-bg-white/[0.055] dark:upup-ring-white/[0.06]'
                 : 'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50',
@@ -278,7 +293,10 @@ export class SourceSelectorComponent {
 
     get chipIconClass(): string {
         const slotClasses = this.store.slotOverrides()
-        return cn('upup-h-8 upup-w-8', slotClasses.sourceButtonIcon ?? '')
+        return cn(
+            this.compact ? 'upup-h-8 upup-w-8' : 'upup-h-10 upup-w-10',
+            slotClasses.sourceButtonIcon ?? '',
+        )
     }
 
     get chipLabelClass(): string {

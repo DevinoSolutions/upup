@@ -10,9 +10,19 @@
 // run the 4b overflow sweep for that variant, and do a live per-framework
 // visual check (the harness catches DOM structure, never geometry/spacing).
 
-/** UI variants the parity + overflow harnesses are keyed by. */
-export type ParityVariant = 'default' | 'hero'
-export const PARITY_VARIANTS: readonly ParityVariant[] = ['default', 'hero']
+/**
+ * UI variants the parity + overflow harnesses are keyed by.
+ *   - default: 2 configured sources, 2 seeded files → large chips + card list.
+ *   - hero:    2 configured sources, 1 seeded file  → large chips + FileHero.
+ *   - crowded: 9 configured sources, 1 seeded file  → COMPACT chips (the
+ *              source-chip grid switches density above 8 sources) + FileHero.
+ */
+export type ParityVariant = 'default' | 'hero' | 'crowded'
+export const PARITY_VARIANTS: readonly ParityVariant[] = [
+    'default',
+    'hero',
+    'crowded',
+]
 
 export interface FrameworkEntry {
     /** Playwright project name AND the `@upupjs/storybook-<name>` package suffix. */
@@ -33,6 +43,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'react-uploader--parity',
             hero: 'react-uploader--parity-hero',
+            crowded: 'react-uploader--parity-crowded',
         },
     },
     {
@@ -42,6 +53,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'vue-uploader--parity',
             hero: 'vue-uploader--parity-hero',
+            crowded: 'vue-uploader--parity-crowded',
         },
     },
     {
@@ -51,6 +63,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'svelte-uploader--parity',
             hero: 'svelte-uploader--parity-hero',
+            crowded: 'svelte-uploader--parity-crowded',
         },
     },
     {
@@ -60,6 +73,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'vanilla-uploader--parity',
             hero: 'vanilla-uploader--parity-hero',
+            crowded: 'vanilla-uploader--parity-crowded',
         },
     },
     {
@@ -69,6 +83,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'angular-uploader--parity',
             hero: 'angular-uploader--parity-hero',
+            crowded: 'angular-uploader--parity-crowded',
         },
     },
     {
@@ -78,6 +93,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
         parityStoryIds: {
             default: 'preact-uploader--parity',
             hero: 'preact-uploader--parity-hero',
+            crowded: 'preact-uploader--parity-crowded',
         },
     },
 ]

@@ -35,6 +35,26 @@ export const Playground: Story = {}
 
 export const PlaygroundHero: Story = {}
 
+// The `crowded` variant's Playground: all nine sources, so the source-chip grid
+// sits on the COMPACT density branch (>8 sources) while the sweep measures each
+// media view. The four the 4b sweep drives (url/camera/microphone/screen) must
+// stay in this list.
+export const PlaygroundCrowded: Story = {
+    args: {
+        sources: [
+            'local',
+            'googleDrive',
+            'oneDrive',
+            'dropbox',
+            'box',
+            'url',
+            'camera',
+            'microphone',
+            'screen',
+        ],
+    },
+}
+
 // ── 2. Basic ──────────────────────────────────────────────────────────────────
 // Minimal local-only, single-file, no branding.
 export const Basic: Story = {
@@ -154,6 +174,29 @@ export const Parity: Story = {
 export const ParityHero: Story = {
     parameters: { ...Parity.parameters },
     args: { ...Parity.args },
+}
+
+// Parity fixture for the COMPACT source-chip density. Identical to `Parity`
+// except for the source count: nine configured sources put the chip grid on the
+// compact branch (>8), where `Parity`/`ParityHero`'s two sources pin the large
+// branch. The parity spec seeds one file here (same as `hero`), so the mount
+// SourceSelector capture is the only thing that differs between the two.
+export const ParityCrowded: Story = {
+    parameters: { ...Parity.parameters },
+    args: {
+        ...Parity.args,
+        sources: [
+            'local',
+            'googleDrive',
+            'oneDrive',
+            'dropbox',
+            'box',
+            'url',
+            'camera',
+            'microphone',
+            'screen',
+        ],
+    },
 }
 
 // ── 12. RealUploadServerDrive ─────────────────────────────────────────────────

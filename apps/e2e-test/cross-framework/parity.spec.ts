@@ -11,7 +11,7 @@ import {
 } from './framework-matrix'
 import { normalizeElement, type NormalizedNode } from './parity-dom'
 import {
-    PARITY_FIXTURES,
+    variantCanon,
     KNOWN_DIVERGENCES,
     type ParityComponent,
 } from './parity-fixtures'
@@ -44,6 +44,12 @@ const COMPONENT_TESTID: Record<ParityComponent, string> = {
 //   - default: 2 files → card list (fileItem embeds filePreview + fileIcon) + fileList.
 //   - hero:    1 file  → FileHero (single-file preview) + fileList; the card-list
 //              components (fileItem/filePreview/fileIcon) never render here.
+//   - crowded: same 1-file plan as hero. The variant exists for the MOUNT
+//              capture: its story configures 9 sources, which puts the
+//              source-chip grid on the compact density branch (>8 sources),
+//              while `default`/`hero` (2 sources) pin the large branch. The
+//              populated state is density-independent, so reusing hero's plan
+//              keeps the two captures directly comparable.
 const VARIANT_PLAN: Record<
     ParityVariant,
     {
@@ -66,6 +72,11 @@ const VARIANT_PLAN: Record<
         seededState: 'image-and-pdf-files-added',
     },
     hero: {
+        files: [{ name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 }],
+        components: ['fileHero', 'fileList'],
+        seededState: 'single-image-file-hero',
+    },
+    crowded: {
         files: [{ name: 'parity.png', mimeType: 'image/png', buffer: PNG_1x1 }],
         components: ['fileHero', 'fileList'],
         seededState: 'single-image-file-hero',
@@ -99,7 +110,7 @@ async function normalize(
 }
 
 /**
- * Asserts `captured` against `PARITY_FIXTURES[component]` for a framework,
+ * Asserts `captured` against the variant's canon fixture for a framework,
  * honoring KNOWN_DIVERGENCES: frameworks in `assertOnly` get the normal
  * equality check; the OTHERS get the inverse forcing check — if an excepted
  * framework's capture starts matching canon, that's the divergence healing,
@@ -113,7 +124,7 @@ function assertComponentParity(
     fwName: string,
     label: string,
 ) {
-    const canon = PARITY_FIXTURES[variant][component]
+    const canon = variantCanon(variant)[component]
     const divergence = KNOWN_DIVERGENCES[component]
     if (!divergence || divergence.assertOnly.includes(fwName)) {
         expect.soft(captured, label).toEqual(canon)

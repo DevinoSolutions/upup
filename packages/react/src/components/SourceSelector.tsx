@@ -12,6 +12,11 @@ import {
 } from '../context/UploaderContext'
 import useSourceSelector from '../hooks/useSourceSelector'
 
+// Regular chips fit at most 4 per row inside the max-w-[420px] grid, so up to 8
+// sources wrap into balanced rows; 9 would wrap 4/4/1. Past this count the chips
+// switch to the compact size, which fits 5 per row (5/4).
+const COMPACT_SOURCE_THRESHOLD = 8
+
 export default function SourceSelector(): React.ReactElement | null {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- inputRef is required for direct webkitdirectory/directory DOM wiring; openFilePicker() cannot toggle those attributes
     const { core, inputRef, openFilePicker } = useUploaderRuntime()
@@ -56,6 +61,7 @@ export default function SourceSelector(): React.ReactElement | null {
     const hasLimitsCaption = !!typeConstraint || showFilesLimit || showSizeLimit
     const { chosenSources, handleSourceClick, handleInputFileChange } =
         useSourceSelector()
+    const compact = chosenSources.length > COMPACT_SOURCE_THRESHOLD
 
     const handleBrowseFilesClick = useCallback(() => {
         if (inputRef.current) {
@@ -217,7 +223,9 @@ export default function SourceSelector(): React.ReactElement | null {
                     </div>
                     <div
                         className={cn(
-                            'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-3 upup-gap-y-4',
+                            compact
+                                ? 'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-3 upup-gap-y-4'
+                                : 'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-6 upup-gap-y-5',
                             slotClasses.sourceButtonList,
                         )}
                     >
@@ -231,7 +239,9 @@ export default function SourceSelector(): React.ReactElement | null {
                                     // glow here: the chip button box is
                                     // transparent (icon + label), so the shadow
                                     // would halo empty space, not a card.
-                                    'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
+                                    compact
+                                        ? 'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none'
+                                        : 'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
                                     slotClasses.sourceButton,
                                 )}
                                 onClick={() => {
@@ -240,7 +250,9 @@ export default function SourceSelector(): React.ReactElement | null {
                             >
                                 <span
                                     className={cn(
-                                        'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors',
+                                        compact
+                                            ? 'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors'
+                                            : 'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
                                         {
                                             'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
                                                 !dark,
@@ -252,9 +264,12 @@ export default function SourceSelector(): React.ReactElement | null {
                                     <SourceIcon
                                         className={cn(
                                             // The registry glyphs carry ~30% internal
-                                            // viewBox padding; the 32px box keeps the
-                                            // visible glyph reading confidently sized.
-                                            'upup-h-8 upup-w-8',
+                                            // viewBox padding; the 32px (compact) /
+                                            // 40px (regular) box keeps the visible
+                                            // glyph reading confidently sized.
+                                            compact
+                                                ? 'upup-h-8 upup-w-8'
+                                                : 'upup-h-10 upup-w-10',
                                             slotClasses.sourceButtonIcon,
                                         )}
                                     />

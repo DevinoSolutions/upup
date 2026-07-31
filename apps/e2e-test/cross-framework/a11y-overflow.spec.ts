@@ -211,11 +211,12 @@ test.describe('cross-framework a11y + overflow', () => {
     // capture (getDisplayMedia) is not driveable headlessly, so its initial view state
     // is measured (live preview verified interactively in a prior session).
     //
-    // Covers geometry at each PARITY_VARIANTS density. `default` navigates today's
-    // exact playground story (zero behavior change); a future density adds a
-    // `<fw>-uploader--playground-<variant>` story per framework plus a live
-    // per-framework overflow + spacing/touch-target check (this sweep only ever
-    // catches outright clip, never cramped spacing).
+    // Covers geometry at each PARITY_VARIANTS density. `default` navigates the
+    // bare playground story; every other variant navigates its own
+    // `<fw>-uploader--playground-<variant>` story (e.g. `crowded`, whose nine
+    // configured sources put the chip grid on the compact branch). Adding a
+    // density still owes a live per-framework overflow + spacing/touch-target
+    // check — this sweep only ever catches outright clip, never cramped spacing.
     const MEDIA_VIEWS = [
         { src: 'camera', slot: 'camera-uploader' },
         { src: 'microphone', slot: 'audio-uploader' },
