@@ -64,7 +64,7 @@
                     "classes": [
                         "upup-flex",
                         "upup-flex-wrap",
-                        "upup-gap-x-4",
+                        "upup-gap-x-3",
                         "upup-gap-y-4",
                         "upup-items-start",
                         "upup-justify-center",
@@ -1209,7 +1209,7 @@
                     "classes": [
                         "upup-flex",
                         "upup-flex-wrap",
-                        "upup-gap-x-4",
+                        "upup-gap-x-3",
                         "upup-gap-y-4",
                         "upup-items-start",
                         "upup-justify-center",

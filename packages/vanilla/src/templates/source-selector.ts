@@ -218,7 +218,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                           </div>
                           <div
                               class=${cn(
-                                  'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-4 upup-gap-y-4',
+                                  'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-3 upup-gap-y-4',
                                   slot.sourceButtonList,
                               )}
                           >
