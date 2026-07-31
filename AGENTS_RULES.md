@@ -90,9 +90,16 @@ records site/QA quirks that don't fit there.
       plugins redirect to `<origin>/box_redirect` / `/dp_redirect` /
       `/od_redirect` (SPA platform on Azure), all registered for both origins on
       the respective apps — a 404 page there is fine, the plugin only polls the
-      popup URL for the code. Playground drive TILES grey out when their
-      `NEXT_PUBLIC_*_CLIENT_ID` build arg is empty — that var lives in the
-      Dokploy env build-time section and needs a rebuild to take effect.
+      popup URL for the code. Drive TILES grey out when their
+      `NEXT_PUBLIC_*_CLIENT_ID` build arg is empty — and a public provider
+      var must land in the FULL chain or it silently stays '' in the bundle:
+      app env schema (`src/lib/env.ts`, BOTH apps) → `Dockerfile.landing`
+      AND `Dockerfile.playground` ARG+ENV → both compose services'
+      `build.args` → Dokploy env build-time section → rebuild. Box shipped
+      with only the playground half wired (fixed d9281f93 — the landing demo
+      kept a greyed Box tile for a day). Since d9281f93 the landing demo also
+      seeds `sources` with every credentialed drive (mirrors the playground)
+      so configured providers are ON by default.
       Console-automation notes: the master browser profile's Box/portal logins
       expire — a login wall mid-task means STOP and ask the human; on the
       Dropbox console `type_text` can land zero characters (read back `.value`,
