@@ -126,6 +126,7 @@ const clientSchema = z.object({
     NEXT_PUBLIC_GOOGLE_APP_ID: z.string().default(''),
     NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: z.string().default(''),
     NEXT_PUBLIC_DROPBOX_CLIENT_ID: z.string().default(''),
+    NEXT_PUBLIC_BOX_CLIENT_ID: z.string().default(''),
     NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().default('https://posthog.devino.ca'),
@@ -148,6 +149,7 @@ const clientParsed = clientSchema.safeParse({
     NEXT_PUBLIC_GOOGLE_APP_ID: process.env.NEXT_PUBLIC_GOOGLE_APP_ID,
     NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID,
     NEXT_PUBLIC_DROPBOX_CLIENT_ID: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
+    NEXT_PUBLIC_BOX_CLIENT_ID: process.env.NEXT_PUBLIC_BOX_CLIENT_ID,
     NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:
         process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,

@@ -33,6 +33,9 @@ function cloudDrivesFromEnv(): CloudDrives | undefined {
     if (clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID) {
         drives.dropbox = { clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID }
     }
+    if (clientEnv.NEXT_PUBLIC_BOX_CLIENT_ID) {
+        drives.box = { clientId: clientEnv.NEXT_PUBLIC_BOX_CLIENT_ID }
+    }
     return Object.keys(drives).length > 0 ? drives : undefined
 }
 
@@ -52,8 +55,23 @@ export function interactiveExampleEnvProps(
 ): InteractiveExampleProps {
     const cloudDrives = cloudDrivesFromEnv()
     const baseInitial = base?.initialConfig
+    // Drives with credentials are enabled BY DEFAULT: seed `sources` with
+    // every configured drive (mirrors the playground's seeding) so the demo
+    // shows them without the visitor touching the Sources panel. A base that
+    // sets its own `sources` still wins.
     const initialConfig: UpupConfig | undefined = cloudDrives
-        ? { ...(baseInitial ?? {}), cloudDrives }
+        ? {
+              ...(baseInitial ?? {}),
+              cloudDrives,
+              sources: baseInitial?.sources ?? [
+                  'local',
+                  ...(Object.keys(cloudDrives) as (keyof CloudDrives)[]),
+                  'url',
+                  'camera',
+                  'microphone',
+                  'screen',
+              ],
+          }
         : baseInitial
 
     return {

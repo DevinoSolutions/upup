@@ -29,6 +29,9 @@ const customFields = {
         dropbox: {
             clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
         },
+        box: {
+            clientId: clientEnv.NEXT_PUBLIC_BOX_CLIENT_ID,
+        },
     },
 }
 
@@ -49,7 +52,15 @@ export default function Uploader({
     limit,
     mini,
     theme = 'blue',
-    sources = ['local', 'googleDrive', 'oneDrive', 'url', 'camera'],
+    sources = [
+        'local',
+        'googleDrive',
+        'oneDrive',
+        'dropbox',
+        'box',
+        'url',
+        'camera',
+    ],
     allowPreview = true,
     shouldCompress = false,
     fileSizeLimit = 25,
