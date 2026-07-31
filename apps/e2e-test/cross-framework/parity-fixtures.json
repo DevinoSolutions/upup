@@ -64,8 +64,8 @@
                     "classes": [
                         "upup-flex",
                         "upup-flex-wrap",
-                        "upup-gap-x-6",
-                        "upup-gap-y-5",
+                        "upup-gap-x-4",
+                        "upup-gap-y-4",
                         "upup-items-start",
                         "upup-justify-center",
                         "upup-max-w-[420px]"
@@ -80,11 +80,11 @@
                                 "upup-fx-hover-lift",
                                 "upup-fx-icon-nudge",
                                 "upup-fx-press",
-                                "upup-gap-[9px]",
+                                "upup-gap-[7px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-rounded-[14px]",
-                                "upup-w-[66px]"
+                                "upup-rounded-[12px]",
+                                "upup-w-[62px]"
                             ],
                             "children": [
                                 {
@@ -92,22 +92,22 @@
                                     "classes": [
                                         "upup-bg-white",
                                         "upup-flex",
-                                        "upup-h-[52px]",
+                                        "upup-h-[42px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
-                                        "upup-rounded-[14px]",
+                                        "upup-rounded-[12px]",
                                         "upup-transition-colors",
-                                        "upup-w-[52px]"
+                                        "upup-w-[42px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-10",
+                                                "upup-h-8",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-10"
+                                                "upup-w-8"
                                             ],
                                             "children": []
                                         }
@@ -136,11 +136,11 @@
                                 "upup-fx-hover-lift",
                                 "upup-fx-icon-nudge",
                                 "upup-fx-press",
-                                "upup-gap-[9px]",
+                                "upup-gap-[7px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-rounded-[14px]",
-                                "upup-w-[66px]"
+                                "upup-rounded-[12px]",
+                                "upup-w-[62px]"
                             ],
                             "children": [
                                 {
@@ -148,22 +148,19 @@
                                     "classes": [
                                         "upup-bg-white",
                                         "upup-flex",
-                                        "upup-h-[52px]",
+                                        "upup-h-[42px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
-                                        "upup-rounded-[14px]",
+                                        "upup-rounded-[12px]",
                                         "upup-transition-colors",
-                                        "upup-w-[52px]"
+                                        "upup-w-[42px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": [
-                                                "upup-h-10",
-                                                "upup-w-10"
-                                            ],
+                                            "classes": ["upup-h-8", "upup-w-8"],
                                             "children": []
                                         }
                                     ]
@@ -1212,8 +1209,8 @@
                     "classes": [
                         "upup-flex",
                         "upup-flex-wrap",
-                        "upup-gap-x-6",
-                        "upup-gap-y-5",
+                        "upup-gap-x-4",
+                        "upup-gap-y-4",
                         "upup-items-start",
                         "upup-justify-center",
                         "upup-max-w-[420px]"
@@ -1228,11 +1225,11 @@
                                 "upup-fx-hover-lift",
                                 "upup-fx-icon-nudge",
                                 "upup-fx-press",
-                                "upup-gap-[9px]",
+                                "upup-gap-[7px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-rounded-[14px]",
-                                "upup-w-[66px]"
+                                "upup-rounded-[12px]",
+                                "upup-w-[62px]"
                             ],
                             "children": [
                                 {
@@ -1240,22 +1237,22 @@
                                     "classes": [
                                         "upup-bg-white",
                                         "upup-flex",
-                                        "upup-h-[52px]",
+                                        "upup-h-[42px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
-                                        "upup-rounded-[14px]",
+                                        "upup-rounded-[12px]",
                                         "upup-transition-colors",
-                                        "upup-w-[52px]"
+                                        "upup-w-[42px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
                                             "classes": [
-                                                "upup-h-10",
+                                                "upup-h-8",
                                                 "upup-text-[#0ea5e9]",
-                                                "upup-w-10"
+                                                "upup-w-8"
                                             ],
                                             "children": []
                                         }
@@ -1284,11 +1281,11 @@
                                 "upup-fx-hover-lift",
                                 "upup-fx-icon-nudge",
                                 "upup-fx-press",
-                                "upup-gap-[9px]",
+                                "upup-gap-[7px]",
                                 "upup-group",
                                 "upup-items-center",
-                                "upup-rounded-[14px]",
-                                "upup-w-[66px]"
+                                "upup-rounded-[12px]",
+                                "upup-w-[62px]"
                             ],
                             "children": [
                                 {
@@ -1296,22 +1293,19 @@
                                     "classes": [
                                         "upup-bg-white",
                                         "upup-flex",
-                                        "upup-h-[52px]",
+                                        "upup-h-[42px]",
                                         "upup-items-center",
                                         "upup-justify-center",
                                         "upup-ring-1",
                                         "upup-ring-black/[0.07]",
-                                        "upup-rounded-[14px]",
+                                        "upup-rounded-[12px]",
                                         "upup-transition-colors",
-                                        "upup-w-[52px]"
+                                        "upup-w-[42px]"
                                     ],
                                     "children": [
                                         {
                                             "tag": "svg",
-                                            "classes": [
-                                                "upup-h-10",
-                                                "upup-w-10"
-                                            ],
+                                            "classes": ["upup-h-8", "upup-w-8"],
                                             "children": []
                                         }
                                     ]

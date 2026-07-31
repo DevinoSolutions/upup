@@ -217,11 +217,11 @@ export default function SourceSelector(): React.ReactElement | null {
                     </div>
                     <div
                         className={cn(
-                            'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-6 upup-gap-y-5',
+                            'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-4 upup-gap-y-4',
                             slotClasses.sourceButtonList,
                         )}
                     >
-                        {chosenSources.map(({ Icon, id, name }) => (
+                        {chosenSources.map(({ Icon: SourceIcon, id, name }) => (
                             <button
                                 key={id}
                                 type="button"
@@ -231,7 +231,7 @@ export default function SourceSelector(): React.ReactElement | null {
                                     // glow here: the chip button box is
                                     // transparent (icon + label), so the shadow
                                     // would halo empty space, not a card.
-                                    'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
+                                    'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
                                     slotClasses.sourceButton,
                                 )}
                                 onClick={() => {
@@ -240,7 +240,7 @@ export default function SourceSelector(): React.ReactElement | null {
                             >
                                 <span
                                     className={cn(
-                                        'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
+                                        'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors',
                                         {
                                             'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
                                                 !dark,
@@ -249,12 +249,12 @@ export default function SourceSelector(): React.ReactElement | null {
                                         },
                                     )}
                                 >
-                                    <Icon
+                                    <SourceIcon
                                         className={cn(
                                             // The registry glyphs carry ~30% internal
-                                            // viewBox padding; the 40px box keeps the
+                                            // viewBox padding; the 32px box keeps the
                                             // visible glyph reading confidently sized.
-                                            'upup-h-10 upup-w-10',
+                                            'upup-h-8 upup-w-8',
                                             slotClasses.sourceButtonIcon,
                                         )}
                                     />

@@ -218,7 +218,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                           </div>
                           <div
                               class=${cn(
-                                  'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-6 upup-gap-y-5',
+                                  'upup-flex upup-max-w-[420px] upup-flex-wrap upup-items-start upup-justify-center upup-gap-x-4 upup-gap-y-4',
                                   slot.sourceButtonList,
                               )}
                           >
@@ -230,7 +230,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                           type="button"
                                           data-testid=${`upup-source-${id}`}
                                           class=${cn(
-                                              'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
+                                              'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[62px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[7px] upup-rounded-[12px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
                                               slot.sourceButton,
                                           )}
                                           @click=${() => {
@@ -239,7 +239,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                       >
                                           <span
                                               class=${cn(
-                                                  'upup-flex upup-h-[52px] upup-w-[52px] upup-items-center upup-justify-center upup-rounded-[14px] upup-ring-1 upup-transition-colors',
+                                                  'upup-flex upup-h-[42px] upup-w-[42px] upup-items-center upup-justify-center upup-rounded-[12px] upup-ring-1 upup-transition-colors',
                                                   {
                                                       'upup-bg-white upup-ring-black/[0.07] group-hover:upup-bg-slate-50':
                                                           !isDark,
@@ -250,7 +250,7 @@ export function sourceSelector(ctx: UploaderContext): TemplateResult {
                                           >
                                               ${Icon({
                                                   class: cn(
-                                                      'upup-h-10 upup-w-10',
+                                                      'upup-h-8 upup-w-8',
                                                       slot.sourceButtonIcon,
                                                   ),
                                               })}
