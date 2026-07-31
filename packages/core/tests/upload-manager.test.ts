@@ -4,7 +4,11 @@ import type {
     CredentialStrategy,
     UploadStrategy,
 } from '../src/contracts-strategies'
-import type { UploadFile } from '@upupjs/core'
+// Value import at module scope: pulling the barrel inside a test body made
+// its first cold transform count against the 5s test timeout (flaked twice
+// under pre-commit load on the primary dev box). Nothing here mocks the
+// barrel, so a top-level import is equivalent and pays the cost up front.
+import { UpupNetworkError, type UploadFile } from '@upupjs/core'
 
 // Helper to create a minimal UploadFile using a plain object
 function makeFile(id: string, name: string): UploadFile {
@@ -169,8 +173,6 @@ describe('UploadManager', () => {
     })
 
     it('retries on retryable UpupNetworkError', async () => {
-        const { UpupNetworkError } = await import('@upupjs/core')
-
         let callCount = 0
         const flakyUpload = vi.fn().mockImplementation(async () => {
             callCount++
@@ -193,8 +195,6 @@ describe('UploadManager', () => {
     })
 
     it('calls onFileError, completes other files, then throws a batch error', async () => {
-        const { UpupNetworkError } = await import('@upupjs/core')
-
         let callIdx = 0
         const partialFailUpload = vi.fn().mockImplementation(async () => {
             callIdx++
