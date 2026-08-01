@@ -1,0 +1,13 @@
+// Fixture standing in for apps/landing/next.config.mjs — the redirect target
+// below points at a page that does not exist in the fixture content tree.
+const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/old/x',
+                destination: '/docs/does-not-exist/',
+                permanent: true,
+            },
+        ]
+    },
+}

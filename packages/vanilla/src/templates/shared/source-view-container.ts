@@ -15,9 +15,12 @@ export function sourceViewContainer(
         data-testid=${opts.dataTestid ?? 'upup-source-view'}
         data-upup-slot=${opts.dataUpupSlot ?? ''}
         class=${cn(
-            'upup-flex upup-items-center upup-justify-center upup-overflow-hidden upup-bg-black/[0.075]',
+            // Transparent by design: the view body sits directly on the panel's
+            // gradient chrome (the old black/[0.075] wash read as a mismatched
+            // gray block over the light gradient).
+            'upup-flex upup-items-center upup-justify-center upup-overflow-hidden',
             {
-                'upup-bg-white/10 upup-text-[#FAFAFA] dark:upup-bg-white/10 dark:upup-text-[#FAFAFA]':
+                'upup-text-[#FAFAFA] dark:upup-text-[#FAFAFA]':
                     isLoading && isDark,
                 [slot.sourceView ?? '']: !isLoading && !!slot.sourceView,
                 [slot.driveLoading ?? '']: isLoading && !!slot.driveLoading,

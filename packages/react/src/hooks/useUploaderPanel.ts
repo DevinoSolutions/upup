@@ -13,6 +13,7 @@ import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
+    useUploaderView,
 } from '../context/UploaderContext'
 
 const EMPTY_SNAPSHOT: DragDropSnapshot = {
@@ -32,11 +33,12 @@ export default function useUploaderPanel(): DragDropSnapshot & {
 } {
     const { core, orchestrator } = useUploaderRuntime()
     const { setFiles } = useUploaderFiles()
+    const { flagDriveDropRejected } = useUploaderView()
     const options = useUploaderOptions()
 
     // Keep the latest values for the controller to read fresh (React re-reads each render).
-    const latest = useRef({ setFiles, options })
-    latest.current = { setFiles, options }
+    const latest = useRef({ setFiles, options, flagDriveDropRejected })
+    latest.current = { setFiles, options, flagDriveDropRejected }
 
     // Construct lazily, only once core + orchestrator exist (both are null on the first render).
     const controllerRef = useRef<DragDropController | null>(null)
@@ -57,6 +59,9 @@ export default function useUploaderPanel(): DragDropSnapshot & {
                 folderUploadAllowDrop:
                     latest.current.options.folderUploadAllowDrop,
             }),
+            onReadonlyDropRejected: source => {
+                latest.current.flagDriveDropRejected(source)
+            },
         })
     }
     const controller = controllerRef.current

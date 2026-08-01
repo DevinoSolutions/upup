@@ -101,8 +101,13 @@ test.describe('Visual product states — upload lifecycle', () => {
         page,
     }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
+        // Single selected file renders the hero (redesign); dual selector.
         await expect(
-            page.locator('[data-testid="upup-file-item"]').first(),
+            page
+                .locator(
+                    '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+                )
+                .first(),
         ).toBeVisible()
         await captureProductStateScreenshot(page, {
             ...DEEP_REACT,

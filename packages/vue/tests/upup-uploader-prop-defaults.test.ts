@@ -17,6 +17,17 @@ beforeAll(() => {
         removeListener: () => {},
         dispatchEvent: () => false,
     }))
+    // jsdom has no ResizeObserver; UploaderPanel's file list measures its scroll
+    // container (tiles-per-row) via one, so the real-panel branding mount below
+    // needs a stub. The measurement is a no-op here — no files, no layout.
+    vi.stubGlobal(
+        'ResizeObserver',
+        class {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        },
+    )
 })
 
 // Probe rendered inside the uploader's default slot: reads the resolved option
@@ -53,9 +64,10 @@ describe('UpupUploader boolean-prop defaults (Vue Boolean-coercion parity)', () 
     })
 
     it('renders the branding block when showBranding is omitted (not coerced off)', () => {
-        const wrapper = mount(UpupUploader, {
-            slots: { default: () => h('div') },
-        })
+        // Branding now renders INSIDE UploaderPanel (gated on no active source /
+        // no files), so mount the real panel — no slot override — with an empty
+        // uploader. Absent showBranding must still resolve true and paint it.
+        const wrapper = mount(UpupUploader)
         expect(wrapper.find('[data-testid="upup-branding"]').exists()).toBe(
             true,
         )

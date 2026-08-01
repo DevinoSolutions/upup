@@ -1,6 +1,6 @@
 # Website
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+This app is built using [Next.js](https://nextjs.org/) — the interactive dev playground for exercising the upup uploader.
 
 ### Installation
 

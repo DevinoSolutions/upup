@@ -260,6 +260,20 @@ describe('GET /auth/:provider redirect', () => {
         expect(res.status).toBe(400)
     })
 
+    it('matches a trailing-slash path (Next trailingSlash:true 308) with a clean redirect_uri', async () => {
+        const handler = createUpupHandler(baseConfig())
+        const res = await handler(
+            new Request('http://localhost/api/upup/auth/google-drive/', {
+                method: 'GET',
+            }),
+        )
+        expect(res.status).toBe(302)
+        const location = new URL(res.headers.get('Location')!)
+        expect(location.searchParams.get('redirect_uri')).toBe(
+            'http://localhost/api/upup/auth/google-drive/cb',
+        )
+    })
+
     it('500s when tokenStore missing', async () => {
         // exactOptionalPropertyTypes forbids an explicit `tokenStore: undefined`
         // -- destructure it away instead so the key is genuinely absent, which is

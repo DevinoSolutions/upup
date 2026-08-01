@@ -23,6 +23,8 @@ import type {
     ThemeStore,
     DriveBrowserController,
     DragDropController,
+    TransientUiSnapshot,
+    MotionMode,
 } from '@upupjs/core/internal'
 
 // Dropzone controller now lives in @upupjs/core (hoisted in Workstream C-1 Unit 2).
@@ -66,6 +68,14 @@ export interface CreateUploaderOptions extends Omit<
     showBranding?: boolean
     disableDragDrop?: boolean
     mini?: boolean
+    /** Motion master switch. `false` disables every upup-fx animation (writes
+     *  data-motion="off"); the OS reduced-motion preference also forces off.
+     *  Default true. Not part of CoreOptions — resolved by normalizeUploaderOptions. */
+    animations?: boolean
+    /** Quiet-completion mode: a successful run shows ONLY the checkmark overlay
+     *  (no Done/add-more/CTA); the host takes over via the completion callbacks.
+     *  Default false. */
+    quietCompletion?: boolean
     isProcessing?: boolean
     allowPreview?: boolean
     folderUpload?: { allowDrop?: boolean; showSelectFolderButton?: boolean }
@@ -140,6 +150,7 @@ export interface UploaderContextProps {
     folderUploadAllowDrop: boolean
     folderPickerButtonVisible: boolean
     imageEditor: ResolvedImageEditorOptions
+    quietCompletion: boolean
     onIntegrationClick: (sourceId: string) => void
     resumable: CoreOptions['resumable']
 }
@@ -163,6 +174,18 @@ export interface UploaderContext {
     setActiveSource(a: FileSource | undefined): void
     setIsAddingMore(v: boolean): void
     setViewMode(m: 'grid' | 'list'): void
+    /** Current transient-UI snapshot (deferred removal / add-more overlay / drop
+     *  toast). Read in render; the render loop re-subscribes via controller.subscribe. */
+    getTransientUi(): TransientUiSnapshot
+    /** Current motion-gate resolution ('on' | 'off'); the panel writes it as
+     *  data-motion so the shared CSS gates every upup-fx-* rule. */
+    getMotionMode(): MotionMode
+    /** Add-more source overlay commands (core transient-UI store; idempotent). */
+    openSourceOverlay(): void
+    closeSourceOverlay(): void
+    /** Raise the drive drop-rejection toast for `source` (resolves the human
+     *  provider label, then core owns the 3s auto-clear). */
+    flagDriveDropRejected(source: FileSource): void
     setFiles(files: File[]): Promise<void>
     handleFileRemove(fileId: string): void
     handleRemoveAll(): void

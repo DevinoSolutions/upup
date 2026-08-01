@@ -2,104 +2,17 @@
 
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Copy, Terminal } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
+import {
+    FRAMEWORK_LIST,
+    type FrameworkId,
+    type FrameworkMeta,
+} from '@/lib/frameworks'
 
-// One uploader, native UI per framework. Every snippet below is the verified
-// minimal Client-Mode usage from that package's README (component/import names
-// pinned by each package's public-api test). Do not invent APIs here.
-type Framework = {
-    id: string
-    name: string
-    pkg: string
-    file: string
-    code: string
-}
-
-const FRAMEWORKS: Framework[] = [
-    {
-        id: 'react',
-        name: 'React',
-        pkg: '@upupjs/react',
-        file: 'Uploader.tsx',
-        code: `'use client'
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
-
-export default function Uploader() {
-  return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
-}`,
-    },
-    {
-        id: 'vue',
-        name: 'Vue',
-        pkg: '@upupjs/vue',
-        file: 'Uploader.vue',
-        code: `<script setup lang="ts">
-import { UpupUploader } from '@upupjs/vue'
-import '@upupjs/vue/styles'
-</script>
-
-<template>
-  <UpupUploader provider="aws" upload-endpoint="/api/upload-token" />
-</template>`,
-    },
-    {
-        id: 'svelte',
-        name: 'Svelte',
-        pkg: '@upupjs/svelte',
-        file: 'Uploader.svelte',
-        code: `<script lang="ts">
-  import { UpupUploader } from '@upupjs/svelte'
-  import '@upupjs/svelte/styles'
-</script>
-
-<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`,
-    },
-    {
-        id: 'angular',
-        name: 'Angular',
-        pkg: '@upupjs/angular',
-        file: 'app.component.ts',
-        code: `import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upupjs/angular'
-// Load styles once: add '@upupjs/angular/styles' to angular.json → "styles"
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [UpupUploaderComponent],
-  template: \`<upup-uploader
-    [config]="{ provider: 'aws', uploadEndpoint: '/api/upload-token' }"
-  />\`,
-})
-export class AppComponent {}`,
-    },
-    {
-        id: 'vanilla',
-        name: 'Vanilla JS',
-        pkg: '@upupjs/vanilla',
-        file: 'uploader.ts',
-        code: `import { createUploader } from '@upupjs/vanilla'
-import '@upupjs/vanilla/styles'
-
-createUploader('#uploader', {
-  provider: 'aws',
-  uploadEndpoint: '/api/upload-token',
-})`,
-    },
-    {
-        id: 'preact',
-        name: 'Preact',
-        pkg: '@upupjs/preact',
-        file: 'App.tsx',
-        code: `import { UpupUploader } from '@upupjs/preact'
-import '@upupjs/preact/styles'
-
-export function App() {
-  return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
-}`,
-    },
-]
+// The per-framework list (id/name/pkg/file/code) is the single source of truth
+// in src/lib/frameworks — imported here so the home snippets, the framework
+// strip, and the /{framework} pages never drift.
+const FRAMEWORKS: FrameworkMeta[] = FRAMEWORK_LIST
 
 // Small, dependency-free, deterministic (SSR-safe) tokenizer. It only colors
 // what is lexically unambiguous across TS/JSX/Vue/Svelte — strings, line
@@ -218,18 +131,17 @@ function HighlightedCode({ code }: { code: string }) {
     )
 }
 
-export default function FrameworkSnippets() {
-    const [activeId, setActiveId] = useState('react')
+export default function FrameworkSnippets({
+    initialId = 'react',
+}: Readonly<{ initialId?: FrameworkId }> = {}) {
+    const [activeId, setActiveId] = useState(initialId)
     const [copiedCode, setCopiedCode] = useState(false)
-    const [copiedInstall, setCopiedInstall] = useState(false)
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
     const active = useMemo(
         () => FRAMEWORKS.find(f => f.id === activeId) ?? FRAMEWORKS[0],
         [activeId],
     )
-
-    const installCommand = `npm i ${active.pkg}`
 
     const copy = useCallback((text: string, mark: (v: boolean) => void) => {
         if (typeof window !== 'undefined' && navigator.clipboard) {
@@ -322,10 +234,10 @@ export default function FrameworkSnippets() {
                 role="tabpanel"
                 id="framework-tabpanel"
                 aria-labelledby={`framework-tab-${activeId}`}
-                className="relative bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden text-left"
+                className="relative bg-white dark:bg-gray-900 border border-black/5 dark:border-white/10 rounded-2xl overflow-hidden text-left"
             >
                 {/* Window bar */}
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-50/80 dark:bg-gray-800/80 border-b border-gray-200/70 dark:border-gray-700/70">
+                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/[0.03] border-b border-black/5 dark:border-white/10">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="flex items-center gap-1.5 shrink-0">
                             <div className="w-3 h-3 bg-red-500 rounded-full" />
@@ -383,27 +295,6 @@ export default function FrameworkSnippets() {
                         </motion.div>
                     </AnimatePresence>
                 </div>
-            </div>
-
-            {/* Install line */}
-            <div className="mt-3 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-gray-900/90 dark:bg-black/50 border border-gray-800 dark:border-gray-700">
-                <div className="flex items-center gap-2.5 min-w-0">
-                    <Terminal className="w-4 h-4 text-gray-500 shrink-0" />
-                    <code className="text-sm font-mono text-gray-200 truncate select-all">
-                        {installCommand}
-                    </code>
-                </div>
-                <button
-                    onClick={() => copy(installCommand, setCopiedInstall)}
-                    aria-label="Copy install command"
-                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors shrink-0"
-                >
-                    {copiedInstall ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                        <Copy className="w-4 h-4 text-gray-400" />
-                    )}
-                </button>
             </div>
         </motion.div>
     )

@@ -211,17 +211,23 @@ describe('axe — FileList', () => {
 })
 
 describe('axe — FilePreview', () => {
-    it('has no violations for a single file preview', async () => {
+    it('has no violations for the grid-tile file preview', async () => {
         const { container } = renderUploader()
         const input = container.querySelector(
             '[data-testid="upup-file-input"]',
         ) as HTMLInputElement
 
-        const file = new File([new Uint8Array(2048).fill(120)], 'preview.txt', {
+        // Two files → the card list (grid tiles = FilePreview). One file renders
+        // the hero instead (covered by the hero axe test below), so this scans
+        // the tile path with ≥2 files.
+        const file1 = new File([new Uint8Array(2048).fill(120)], 'a.txt', {
+            type: 'text/plain',
+        })
+        const file2 = new File([new Uint8Array(2048).fill(120)], 'b.txt', {
             type: 'text/plain',
         })
 
-        stubFileInput(input, [file])
+        stubFileInput(input, [file1, file2])
 
         // Wait for FileItem (and thus FilePreview) to render inside FileList
         await waitFor(() => {
@@ -230,6 +236,29 @@ describe('axe — FilePreview', () => {
         })
 
         const results = await scanSlot(container, 'file-preview')
+        expect(results).toHaveNoViolations()
+    })
+})
+
+describe('axe — FileHero', () => {
+    it('has no violations for the single-file hero', async () => {
+        const { container } = renderUploader()
+        const input = container.querySelector(
+            '[data-testid="upup-file-input"]',
+        ) as HTMLInputElement
+
+        const file = new File([new Uint8Array(2048).fill(120)], 'hero.txt', {
+            type: 'text/plain',
+        })
+
+        stubFileInput(input, [file])
+
+        await waitFor(() => {
+            const h = container.querySelector('[data-upup-slot="file-hero"]')
+            if (!h) throw new Error('file-hero slot not yet rendered')
+        })
+
+        const results = await scanSlot(container, 'file-hero')
         expect(results).toHaveNoViolations()
     })
 })

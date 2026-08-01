@@ -11,6 +11,21 @@ type ResolvedLightDark = Omit<UpupResolvedTheme, 'mode'> & {
     mode: 'light' | 'dark'
 }
 
+/**
+ * Structural equality for two theme configs. Configs are tiny, so JSON.stringify
+ * of `tokens`/`slots` (plus a direct `mode` compare) is enough. Lets
+ * setThemeConfig short-circuit when a consumer inlines a fresh object literal
+ * (e.g. theme={{ mode: 'dark' }}) on every render without an actual change.
+ */
+function themeConfigEqual(a?: UpupThemeConfig, b?: UpupThemeConfig): boolean {
+    if (a === b) return true
+    return (
+        a?.mode === b?.mode &&
+        JSON.stringify(a?.tokens) === JSON.stringify(b?.tokens) &&
+        JSON.stringify(a?.slots) === JSON.stringify(b?.slots)
+    )
+}
+
 export interface ThemeStoreState {
     themeMode: 'light' | 'dark'
     isDark: boolean
@@ -68,6 +83,7 @@ export class ThemeStore {
 
     /** Re-resolve when the host's theme config prop changes. */
     setThemeConfig(config?: UpupThemeConfig): void {
+        if (themeConfigEqual(this.config, config)) return
         this.config = config
         this.recompute()
     }

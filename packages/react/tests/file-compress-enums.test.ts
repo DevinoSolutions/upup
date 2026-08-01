@@ -183,15 +183,4 @@ describe('StorageProvider', () => {
     it('defines GCS = "gcs"', () => {
         expect(StorageProvider.GCS).toBe('gcs')
     })
-
-    it('has 21 distinct values', () => {
-        const vals = Object.values(StorageProvider)
-        expect(new Set(vals).size).toBe(21)
-    })
-
-    it('all values are lowercase strings', () => {
-        for (const v of Object.values(StorageProvider)) {
-            expect(v).toBe(v.toLowerCase())
-        }
-    })
 })

@@ -17,12 +17,8 @@ import { cn, b64EncodeUnicode } from '@upupjs/core/internal'
 
 {#if file.isFolder}
   <i class="upup-flex-grow upup-text-lg">
-    <Icon
-      name="folder"
-      class={cn({
-        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': $dark,
-      })}
-    />
+    <!-- Amber filled folder in both themes — folders read unmistakably as folders. -->
+    <Icon name="folder-filled" class="upup-text-[#fbbf24]" />
   </i>
 {:else if !file.thumbnail}
   <i class="upup-flex-grow upup-text-lg">

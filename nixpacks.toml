@@ -5,7 +5,7 @@ providers = ["node"]
 nixPkgs = ["nodejs_20", "pnpm"]
 
 [phases.build]
-cmds = ["pnpm run build"]
+cmds = ["pnpm run build:landing"]
 
 [start]
-cmd = "pnpm start"
+cmd = "pnpm --filter @upupjs/landing run start"

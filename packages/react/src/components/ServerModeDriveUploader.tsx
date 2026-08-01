@@ -94,10 +94,10 @@ export default function ServerModeDriveUploader({
                 >
                     <div
                         className={cn(
-                            'upup-flex upup-items-center upup-gap-2 upup-border-b upup-px-3 upup-py-2',
+                            'upup-flex upup-items-center upup-gap-2 upup-border-b upup-px-3 upup-py-2.5',
                             dark
-                                ? 'upup-border-gray-700'
-                                : 'upup-border-gray-200',
+                                ? 'upup-border-white/[0.06] upup-text-[#e2e8f0]'
+                                : 'upup-border-black/[0.06] upup-text-gray-800',
                         )}
                         data-upup-slot="drive-browser-header"
                     >
@@ -128,7 +128,7 @@ export default function ServerModeDriveUploader({
                             )}
                         />
                     </div>
-                    <div className="upup-overflow-auto">
+                    <div className="upup-overflow-auto upup-p-2">
                         {state.status === 'error' && (
                             <p
                                 data-testid="upup-drive-error"
@@ -149,39 +149,86 @@ export default function ServerModeDriveUploader({
                                     : state.message}
                             </p>
                         )}
-                        {files.map(file => (
-                            <button
-                                key={file.id}
-                                type="button"
-                                onClick={() => {
-                                    file.isFolder
-                                        ? void refresh({ folderId: file.id })
-                                        : toggle(file.id)
-                                }}
-                                data-upup-slot="drive-browser-item"
-                                data-selected={selected.has(file.id)}
-                                className={cn(
-                                    'upup-flex upup-w-full upup-items-center upup-gap-3 upup-border-b upup-px-4 upup-py-2 upup-text-left upup-text-sm',
-                                    selected.has(file.id) &&
-                                        'upup-bg-blue-50 dark:upup-bg-blue-900/30',
-                                    dark
-                                        ? 'upup-border-gray-700 upup-text-gray-100 hover:upup-bg-gray-700'
-                                        : 'upup-border-gray-200 hover:upup-bg-gray-50',
-                                )}
-                            >
-                                <span>{file.isFolder ? '📁' : '📄'}</span>
-                                <span className="upup-flex-1 upup-truncate">
-                                    {file.name}
-                                </span>
-                                {file.size != null && !file.isFolder && (
-                                    <span className="upup-text-xs upup-opacity-60">
-                                        {formatBytes(file.size)}
+                        {files.map(file => {
+                            const isSelected = selected.has(file.id)
+                            return (
+                                <button
+                                    key={file.id}
+                                    type="button"
+                                    onClick={() => {
+                                        file.isFolder
+                                            ? void refresh({
+                                                  folderId: file.id,
+                                              })
+                                            : toggle(file.id)
+                                    }}
+                                    data-upup-slot="drive-browser-item"
+                                    data-selected={isSelected}
+                                    className={cn(
+                                        // Panel-chrome row (states-tour-3 .st3-prow).
+                                        'upup-fx-hover-lift upup-mb-1.5 upup-flex upup-w-full upup-items-center upup-gap-3 upup-rounded-[11px] upup-px-3 upup-py-2.5 upup-text-left upup-text-sm upup-ring-1',
+                                        isSelected
+                                            ? 'upup-bg-[#0ea5e9]/10 upup-ring-[#38bdf8]/35'
+                                            : dark
+                                              ? 'upup-bg-white/[0.04] upup-text-[#e2e8f0] upup-ring-white/[0.06] hover:upup-bg-white/[0.07]'
+                                              : 'upup-bg-black/[0.03] upup-text-gray-800 upup-ring-black/[0.06] hover:upup-bg-black/[0.05]',
+                                    )}
+                                >
+                                    <span
+                                        className="upup-flex upup-h-[30px] upup-w-[30px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[8px] upup-bg-white/[0.05]"
+                                        aria-hidden="true"
+                                    >
+                                        {file.isFolder ? (
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                width="17"
+                                                height="17"
+                                                fill="none"
+                                                stroke="#38bdf8"
+                                                strokeWidth="1.7"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                            </svg>
+                                        ) : (
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                width="17"
+                                                height="17"
+                                                fill="none"
+                                                stroke={
+                                                    dark ? '#94a3b8' : '#64748b'
+                                                }
+                                                strokeWidth="1.6"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                <path d="M6 3h8l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                                                <path d="M14 3v4h4" />
+                                            </svg>
+                                        )}
                                     </span>
-                                )}
-                            </button>
-                        ))}
+                                    <span className="upup-flex-1 upup-truncate">
+                                        {file.name}
+                                    </span>
+                                    {file.size != null && !file.isFolder && (
+                                        <span className="upup-text-xs upup-opacity-60">
+                                            {formatBytes(file.size)}
+                                        </span>
+                                    )}
+                                </button>
+                            )
+                        })}
                     </div>
-                    <div className="upup-flex upup-items-center upup-justify-between upup-gap-2 upup-border-t upup-p-3">
+                    <div
+                        className={cn(
+                            'upup-flex upup-items-center upup-justify-between upup-gap-2 upup-border-t upup-p-3',
+                            dark
+                                ? 'upup-border-white/[0.06]'
+                                : 'upup-border-black/[0.06]',
+                        )}
+                    >
                         <button
                             type="button"
                             onClick={onBack}
@@ -193,7 +240,7 @@ export default function ServerModeDriveUploader({
                             type="button"
                             disabled={selected.size === 0 || transferring}
                             onClick={() => void handleTransfer()}
-                            className="upup-rounded upup-bg-blue-600 upup-px-3 upup-py-1.5 upup-text-sm upup-text-white disabled:upup-opacity-50"
+                            className="upup-fx-press upup-rounded-lg upup-bg-[#0ea5e9] upup-px-3 upup-py-1.5 upup-text-sm upup-font-medium upup-text-white hover:upup-bg-[#0284c7] disabled:upup-opacity-50"
                         >
                             {transferring
                                 ? 'Uploading…'

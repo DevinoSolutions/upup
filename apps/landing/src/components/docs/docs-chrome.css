@@ -1,0 +1,49 @@
+/* Thin, theme-aware scrollbar for the docs sidebar, table-of-contents, and
+   Ask-AI scroll containers. Invisible at rest (transparent track AND thumb) so
+   no chunky pill sits between the sidebar and content; the thumb fades in only
+   while the pointer is over the scroller. Max 6px, no visible track ever.
+   Themed by the .dark class toggle. */
+
+.docs-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent; /* invisible at rest */
+}
+
+.docs-scrollbar:hover {
+    scrollbar-color: rgb(209 213 219) transparent; /* gray-300 thumb on hover */
+}
+
+.docs-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.docs-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.docs-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent; /* hidden until hover */
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+}
+
+.docs-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(209 213 219); /* gray-300 */
+}
+
+.docs-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(156 163 175); /* gray-400 while dragging */
+}
+
+.dark .docs-scrollbar:hover {
+    scrollbar-color: rgb(75 85 99) transparent; /* gray-600 thumb */
+}
+
+.dark .docs-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99); /* gray-600 */
+}
+
+.dark .docs-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128); /* gray-500 */
+}

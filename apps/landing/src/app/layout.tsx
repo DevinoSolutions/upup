@@ -2,13 +2,14 @@
 import { Metadata, Viewport } from 'next'
 import './globals.css'
 import { siteConfig } from '@/lib/siteConfig'
+import { canonicalUrl, siteUrl } from '@/lib/site-url'
 import { Geist, Geist_Mono } from 'next/font/google'
 import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
 import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
-import SplashCursor from '@/components/SplashCursor'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -21,19 +22,24 @@ const geistMono = Geist_Mono({
 })
 
 export const viewport: Viewport = {
-    themeColor: '#ffffff',
+    // Media-conditional so the browser chrome follows the page's own theme
+    // instead of pinning white behind a dark page.
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+        { media: '(prefers-color-scheme: dark)', color: '#05070d' },
+    ],
 }
 
 export const metadata: Metadata = {
-    metadataBase: new URL('https://useupup.com'),
+    metadataBase: new URL(siteUrl()),
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
         title: 'upup – One File Uploader for Every Framework',
         description:
             'One open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage. MIT-licensed.',
-        images: ['https://useupup.com/img/social-card.png'],
-        url: 'https://useupup.com/',
+        images: [`${siteUrl()}/img/social-card.png`],
+        url: canonicalUrl(),
         type: 'website',
         siteName: 'upup',
     },
@@ -42,7 +48,7 @@ export const metadata: Metadata = {
         title: 'upup – One File Uploader for Every Framework',
         description:
             'One uploader, native UI for React, Vue, Svelte, Angular, Vanilla JS & Preact. Headless core, cloud drives, and secure server-mode uploads to any S3-compatible storage. Open-source, MIT.',
-        images: ['https://useupup.com/img/social-card.png'],
+        images: [`${siteUrl()}/img/social-card.png`],
     },
 }
 
@@ -54,7 +60,6 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <meta name="theme-color" content="#ffffff" />
                 {/* Script to handle browser extension conflicts before hydration */}
                 <Script id="extension-handler" strategy="beforeInteractive">
                     {`
@@ -93,52 +98,56 @@ export default function RootLayout({
           `}
                 </Script>
 
-                {/* Client-side script to handle dark mode and browser extension conflicts */}
+                {/* Pre-hydration theme paint.
+                    MUST STAY IN SYNC with src/lib/theme.ts — this is the same
+                    resolve + apply logic, inlined because a beforeInteractive
+                    script cannot import a module. Any change to resolveTheme /
+                    applyTheme belongs here too. Note the classList add/remove:
+                    assigning documentElement.className would clobber every
+                    other class on <html>. */}
                 <Script id="theme-script" strategy="beforeInteractive">
                     {`
             (function() {
-              try {
-                // Prevent Grammarly and other extensions from causing hydration issues
-                const originalObserver = window.MutationObserver;
-                let themeSet = false;
-                
-                function setTheme() {
-                  if (themeSet) return;
-                  
-                  // Check localStorage for user preference
-                  const savedTheme = localStorage.getItem('theme');
-                  // Check system preference
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  // Default to system preference if no saved theme
-                  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-                  
-                  // Set the theme class on document element
-                  document.documentElement.className = theme;
-                  localStorage.setItem('theme', theme);
-                  
-                  // Mark as hydration ready to prevent conflicts
-                  document.documentElement.setAttribute('data-theme-ready', 'true');
-                  themeSet = true;
-                }
-                
-                // Set theme immediately
-                setTheme();
-                
-                // Also set it when DOM is ready in case first attempt failed
-                if (document.readyState !== 'loading') {
-                  setTheme();
-                } else {
-                  document.addEventListener('DOMContentLoaded', setTheme);
-                }
-                
-              } catch (e) {
-                // Fallback to light mode if anything fails
+              var themeSet = false;
+
+              function setTheme() {
+                if (themeSet) return;
+
+                // resolveTheme(): stored preference, else the OS preference,
+                // else light.
+                var theme = 'light';
                 try {
-                  document.documentElement.className = 'light';
-                  document.documentElement.setAttribute('data-theme-ready', 'true');
-                } catch (fallbackError) {
-                  console.warn('Theme setting failed:', fallbackError);
+                  var saved = localStorage.getItem('theme');
+                  if (saved === 'dark' || saved === 'light') theme = saved;
+                  else theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                } catch (e) {
+                  try {
+                    theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                  } catch (e2) {
+                    theme = 'light';
+                  }
                 }
+
+                // applyTheme(theme)
+                var root = document.documentElement;
+                root.classList.remove('light', 'dark');
+                root.classList.add(theme);
+                try {
+                  localStorage.setItem('theme', theme);
+                } catch (e) {
+                  // Persistence is best-effort.
+                }
+
+                // Mark as hydration ready to prevent conflicts
+                root.setAttribute('data-theme-ready', 'true');
+                themeSet = true;
+              }
+
+              setTheme();
+
+              // Also set it when DOM is ready in case the first attempt failed
+              if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setTheme);
               }
             })();
           `}
@@ -165,7 +174,7 @@ export default function RootLayout({
                 )}
             </head>
             <body
-                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased dark:bg-slate-950`}
+                className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)]`}
                 suppressHydrationWarning={true}
                 data-hydration-stable="true"
                 key="main-body"
@@ -173,10 +182,10 @@ export default function RootLayout({
                 <PostHogProvider>
                     <Providers>
                         <ThemeProvider>
-                            <SplashCursor />
-                            <div className="flex flex-col min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-950 dark:to-slate-900">
+                            <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
                                 <Navbar />
                                 {children}
+                                <Footer />
                             </div>
                         </ThemeProvider>
                     </Providers>

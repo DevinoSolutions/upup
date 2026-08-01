@@ -130,7 +130,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 
 .upup-ie-shell {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: 300px minmax(0, 1fr);
     gap: 20px;
     align-items: start;
 }
@@ -139,7 +139,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
    sidebar and AI panel cap their height so they sit flush with the
    preview card, scrolling internally. */
 .upup-ie-shell.has-ai {
-    grid-template-columns: 320px minmax(0, 1fr) 380px;
+    grid-template-columns: 300px minmax(0, 1fr) 320px;
 }
 
 .upup-ie-sidebar {
@@ -1588,6 +1588,132 @@ html.dark .upup-ie-ai-panel,
     margin-right: 4px;
 }
 
+.upup-ie-ai-feedback {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.upup-ie-ai-feedback-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.upup-ie-ai-feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-input);
+    color: var(--ie-fg-muted);
+    cursor: pointer;
+    transition:
+        color 0.12s,
+        border-color 0.12s,
+        background 0.12s;
+}
+
+.upup-ie-ai-feedback-btn:hover {
+    color: var(--ie-fg);
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-ai-feedback-btn.is-selected {
+    color: var(--ie-accent-fg);
+    background: var(--ie-accent);
+    border-color: var(--ie-accent);
+}
+
+/* Once rated, the unpicked thumb fades and stops inviting clicks. */
+.upup-ie-ai-feedback[data-rated] .upup-ie-ai-feedback-btn:not(.is-selected) {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.upup-ie-ai-feedback-thanks {
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-ai-comment {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 95%;
+}
+
+.upup-ie-ai-comment-label {
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-ai-comment-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.upup-ie-ai-comment textarea {
+    flex: 1;
+    resize: none;
+    background: var(--ie-input-bg);
+    border: 1px solid var(--ie-input-border);
+    color: var(--ie-fg);
+    padding: 6px 8px;
+    border-radius: var(--ie-radius-input);
+    font: 12px var(--ie-font);
+}
+
+.upup-ie-ai-comment textarea:focus {
+    outline: none;
+    border-color: var(--ie-accent);
+}
+
+.upup-ie-ai-comment-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.upup-ie-ai-comment-submit {
+    padding: 4px 10px;
+    background: var(--ie-accent);
+    color: var(--ie-accent-fg);
+    border: none;
+    border-radius: var(--ie-radius-input);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.upup-ie-ai-comment-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upup-ie-ai-comment-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    background: transparent;
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-input);
+    color: var(--ie-fg-muted);
+    cursor: pointer;
+}
+
+.upup-ie-ai-comment-dismiss:hover {
+    color: var(--ie-fg);
+    border-color: var(--ie-accent);
+}
+
 .upup-ie-ai-error {
     margin: 0 14px 8px;
     padding: 8px 12px;
@@ -1641,7 +1767,7 @@ html.dark .upup-ie-ai-panel,
 @media (max-width: 1100px) {
     /* Stack AI panel under the preview when the viewport gets tight. */
     .upup-ie-shell.has-ai {
-        grid-template-columns: 320px minmax(0, 1fr);
+        grid-template-columns: 300px minmax(0, 1fr);
     }
     .upup-ie-ai-panel {
         grid-column: 1 / -1;

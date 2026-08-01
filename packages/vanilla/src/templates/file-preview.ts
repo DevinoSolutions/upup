@@ -1,10 +1,12 @@
 import { html, nothing } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
 import type { UploadFile, Translations } from '@upupjs/core'
+import { UploadStatus } from '@upupjs/core'
 import { fileGetIsImage, cn } from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'
+import { fileSuccessCheck } from './shared/file-success-check'
 import { icon } from './icon'
 
 function formatFileSize(bytes: number | undefined, tr: Translations): string {
@@ -19,12 +21,13 @@ export function filePreview(
     ctx: UploaderContext,
     file: UploadFile,
     state: { canPreview: boolean },
-    opts: { onRequestPreview: () => void },
+    opts: { onRequestPreview: () => void; index?: number },
 ): TemplateResult {
     const tr = ctx.translations
     const slot = ctx.theme.getSnapshot().slotOverrides
     const themeSlots = ctx.theme.getSnapshot().slots
     const { isDark } = ctx.theme.getSnapshot()
+    const index = opts.index ?? 0
 
     const fileType = file.type
     const fileName = file.name
@@ -33,12 +36,17 @@ export function filePreview(
     const fileId = file.id
 
     const isImage = fileGetIsImage(fileType)
+    const isVideo = (fileType ?? '').startsWith('video/')
     const filesSize = ctx.core.files.size
 
     const m = ctx.orchestrator.getSnapshot().filesProgressMap[fileId]
-    const progress = m ? Math.floor((m.loaded / m.total) * 100) : 0
+    const loaded = m?.loaded ?? NaN
+    const total = m?.total ?? NaN
+    const pctRaw = Math.floor((loaded / total) * 100)
+    const progress = Number.isFinite(pctRaw) ? pctRaw : 0
 
-    const { allowPreview, imageEditor, isProcessing } = ctx.props
+    const isSuccessful = file.status === UploadStatus.SUCCESSFUL
+    const { allowPreview } = ctx.props
 
     const onCanPreview = () => {
         state.canPreview = true
@@ -50,23 +58,21 @@ export function filePreview(
         ctx.handleFileRemove(fileId)
     }
 
-    const onHandleEditImage = (e: MouseEvent) => {
-        e.stopPropagation()
-        ctx.orchestrator.openImageEditor(file)
-    }
-
-    // no-op — vanilla has no onFileClick option in v1; keeps markup parity
+    // no-op — vanilla has no onFileClick option; keeps markup parity
     const onFileClick = () => {}
 
     return html` <div
-        class=${cn('upup-inline-block', themeSlots.filePreview?.root)}
+        class=${cn('upup-block upup-w-full', themeSlots.filePreview?.root)}
         data-testid="upup-file-preview"
         data-upup-slot="file-preview"
     >
         <div
             class=${cn(
-                'upup-relative upup-h-[145px] upup-w-[145px] upup-overflow-hidden upup-rounded-lg upup-bg-white upup-shadow-sm',
+                'upup-fx-hover-lift upup-relative upup-h-[160px] upup-w-full upup-overflow-hidden upup-rounded-xl upup-ring-1',
                 'upup-bg-contain upup-bg-center upup-bg-no-repeat',
+                isDark
+                    ? 'upup-bg-white/[0.055] upup-ring-white/[0.08]'
+                    : 'upup-bg-black/[0.04] upup-ring-black/[0.06]',
                 {
                     [slot.fileThumbnailMultiple ?? '']:
                         !!slot.fileThumbnailMultiple && filesSize > 1,
@@ -84,7 +90,18 @@ export function filePreview(
                 @click=${onFileClick}
             ></button>
             ${
-                !isImage
+                isVideo
+                    ? html`<video
+                          src=${fileUrl}
+                          muted
+                          playsinline
+                          preload="metadata"
+                          class="upup-pointer-events-none upup-absolute upup-inset-0 upup-h-full upup-w-full upup-object-cover"
+                      ></video>`
+                    : nothing
+            }
+            ${
+                !isImage && !isVideo
                     ? html`
                           <div
                               class="upup-flex upup-h-full upup-items-center upup-justify-center upup-p-6"
@@ -106,56 +123,36 @@ export function filePreview(
                     : nothing
             }
             ${
-                isImage && imageEditor.enabled
+                !isSuccessful
                     ? html` <button
                           class=${cn(
-                              'upup-absolute upup-right-1.5 upup-top-8 upup-z-10',
-                              'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                              'upup-rounded-full upup-bg-white upup-text-blue-600 upup-shadow-sm',
-                              'hover:upup-bg-white hover:upup-text-blue-700',
-                              'upup-ring-1 upup-ring-black/5',
+                              'upup-fx-remove upup-fx-press upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
+                              'upup-flex upup-h-[30px] upup-w-[30px] upup-items-center upup-justify-center',
+                              'upup-rounded-[8px] upup-bg-[#04080f]/40 upup-text-[#e2e8f0]',
+                              'hover:upup-bg-[#04080f]/65',
                               'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
+                              slot.fileDeleteButton,
+                              themeSlots.filePreview?.deleteButton,
                           )}
-                          @click=${onHandleEditImage}
+                          @click=${onHandleFileRemove}
                           type="button"
-                          ?disabled=${!!progress || isProcessing}
-                          aria-label=${tr.editImage}
+                          ?disabled=${!!progress}
+                          aria-label=${tr.removeFile}
+                          data-testid="upup-file-remove"
                       >
-                          <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              class="upup-h-3 upup-w-3"
-                              aria-hidden="true"
-                          >
-                              <path
-                                  d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z"
-                              />
-                          </svg>
+                          ${icon('trash', { class: 'upup-h-5 upup-w-5' })}
                       </button>`
                     : nothing
             }
-
-            <button
-                class=${cn(
-                    'upup-absolute upup-right-1.5 upup-top-1.5 upup-z-10',
-                    'upup-flex upup-h-5 upup-w-5 upup-items-center upup-justify-center',
-                    'upup-rounded-full upup-bg-white upup-text-red-600 upup-shadow-sm',
-                    'hover:upup-bg-white hover:upup-text-red-700',
-                    'upup-ring-1 upup-ring-black/5',
-                    'disabled:upup-cursor-not-allowed disabled:upup-opacity-50',
-                    slot.fileDeleteButton,
-                    themeSlots.filePreview?.deleteButton,
-                )}
-                @click=${onHandleFileRemove}
-                type="button"
-                ?disabled=${!!progress}
-                aria-label=${tr.removeFile}
-                data-testid="upup-file-remove"
-            >
-                ${icon('trash', { class: 'upup-h-3 upup-w-3' })}
-            </button>
-
+            ${
+                isSuccessful
+                    ? fileSuccessCheck({
+                          index,
+                          size: 20,
+                          class: 'upup-absolute upup-left-1.5 upup-top-1.5 upup-z-10',
+                      })
+                    : nothing
+            }
             ${progressBar(ctx, {
                 progress,
                 class: 'upup-absolute upup-bottom-0 upup-left-0 upup-right-0',
@@ -187,9 +184,9 @@ export function filePreview(
                     ? html` <button
                           type="button"
                           class=${cn(
-                              'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#2563eb] upup-transition-all hover:upup-text-blue-700 hover:upup-underline',
+                              'upup-mt-1 upup-text-[11px] upup-font-normal upup-leading-tight upup-text-[#0284c7] upup-transition-all hover:upup-text-[#0284c7] hover:upup-underline',
                               {
-                                  'upup-text-[#4A9EFF] hover:upup-text-blue-300':
+                                  'upup-text-[#38bdf8] hover:upup-text-[#7dd3fc]':
                                       isDark,
                               },
                               themeSlots.filePreview?.previewButton,

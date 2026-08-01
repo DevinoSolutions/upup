@@ -147,6 +147,52 @@ describe('DragDropController', () => {
         expect(core.emit).not.toHaveBeenCalled()
     })
 
+    it('ignores a dragleave whose destination is still inside the panel (no flicker)', () => {
+        const { deps, core } = makeDeps()
+        const c = new DragDropController(deps)
+        c.handleDragOver(dragEvent())
+        expect(c.getSnapshot().isDragging).toBe(true)
+        // Structural Element/Node fakes — core tests run in the node env (no
+        // DOM), and the controller's guard is deliberately duck-typed.
+        const child = { name: 'child' }
+        const panel = { contains: (n: unknown) => n === child }
+        // Crossing panel → child fires dragleave with the child as the
+        // destination; the drag-over state must survive it.
+        const inside = {
+            preventDefault: vi.fn(),
+            currentTarget: panel,
+            relatedTarget: child,
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(inside)
+        expect(c.getSnapshot().isDragging).toBe(true)
+        expect(core.emit).not.toHaveBeenCalledWith('drag-leave', {})
+        // Leaving to an element outside the panel ends it.
+        const outside = {
+            preventDefault: vi.fn(),
+            currentTarget: panel,
+            relatedTarget: { name: 'outside' },
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(outside)
+        expect(c.getSnapshot().isDragging).toBe(false)
+        expect(core.emit).toHaveBeenCalledWith('drag-leave', {})
+    })
+
+    it('clears the drag state on a dragleave with no destination (left the window)', () => {
+        const { deps } = makeDeps()
+        const c = new DragDropController(deps)
+        c.handleDragOver(dragEvent())
+        const offWindow = {
+            preventDefault: vi.fn(),
+            currentTarget: { contains: () => false },
+            relatedTarget: null,
+            dataTransfer: { files: [], dropEffect: '', items: [] },
+        } as unknown as DragEvent
+        c.handleDragLeave(offWindow)
+        expect(c.getSnapshot().isDragging).toBe(false)
+    })
+
     it('handleDrop routes dropped files to setFiles + emits drop', async () => {
         const { deps, setFiles, core } = makeDeps()
         const c = new DragDropController(deps)
@@ -155,6 +201,46 @@ describe('DragDropController', () => {
         expect(setFiles).toHaveBeenCalledTimes(1)
         expect(core.emit).toHaveBeenCalledWith('drop', expect.anything())
         expect(c.getSnapshot().isDragging).toBe(false)
+    })
+
+    it('rejects a file drop while a read-only drive picker is active (toast, no add)', async () => {
+        const { deps, orch, setFiles, core } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        orch._set({ activeSource: FileSource.GOOGLE_DRIVE })
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        expect(onReadonlyDropRejected).toHaveBeenCalledWith(
+            FileSource.GOOGLE_DRIVE,
+        )
+        expect(setFiles).not.toHaveBeenCalled()
+        expect(core.emit).not.toHaveBeenCalledWith('drop', expect.anything())
+    })
+
+    it('does NOT reject a drop when the active source is not a drive picker (camera)', async () => {
+        const { deps, orch, setFiles } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        orch._set({ activeSource: FileSource.CAMERA })
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        // camera falls through to the `disabled` (active source) guard — the drop
+        // is ignored, not rejected: no toast, no add.
+        expect(onReadonlyDropRejected).not.toHaveBeenCalled()
+        expect(setFiles).not.toHaveBeenCalled()
+    })
+
+    it('accepts a drop (no rejection) when no source is active — idle / file list', async () => {
+        const { deps, setFiles } = makeDeps()
+        const onReadonlyDropRejected = vi.fn()
+        deps.onReadonlyDropRejected = onReadonlyDropRejected
+        const c = new DragDropController(deps)
+        const f = new File(['x'], 'a.txt', { type: 'text/plain' })
+        await c.handleDrop(dragEvent([f]))
+        expect(onReadonlyDropRejected).not.toHaveBeenCalled()
+        expect(setFiles).toHaveBeenCalledTimes(1)
     })
 
     it('handlePaste renames image.png / nameless clipboard files', () => {

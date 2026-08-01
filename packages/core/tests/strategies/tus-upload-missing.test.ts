@@ -36,5 +36,10 @@ describe('TusUpload — optional dep missing', () => {
             vi.doUnmock('tus-js-client')
             vi.resetModules()
         }
-    })
+        // 15s: the dynamic import of the module under test happens INSIDE the
+        // test window, so its first cold transform of the src graph counts
+        // against the timeout — measured at 4.6s under OneDrive/AV latency on
+        // the primary dev box, blowing the 5s default while the test logic
+        // itself completes in well under a second.
+    }, 15_000)
 })

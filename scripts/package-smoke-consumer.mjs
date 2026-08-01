@@ -25,14 +25,18 @@ const tarballDir = join(smokeRoot, 'tarballs')
 const consumerDir = join(smokeRoot, 'consumer')
 const pnpmExecPath = process.env.npm_execpath
 const kib = 1024
-// Re-based 450→500 KiB 2026-07-07: the P12/P19 i18n registry puts all nine
-// locale bundles on core's mandatory path BY DESIGN (the string-locale API —
-// `locale: 'fr-FR'` — resolves synchronously from LOCALE_REGISTRY), which
-// grew the measured entry to 486.9 KiB against a budget set pre-registry
-// (2026-05-10). ~13 KiB headroom absorbs one more locale (~5 KiB each);
-// anything larger must be a deliberate re-base, not a bump-to-green.
-// Whether locales belong on the mandatory path at all is deferred with F-701.
-const consumerEntryChunkBudget = 500 * kib
+// Re-based 450→500 KiB 2026-07-07 (P12/P19 i18n registry puts all nine locale
+// bundles on core's mandatory path BY DESIGN — the string-locale API,
+// `locale: 'fr-FR'`, resolves synchronously from LOCALE_REGISTRY). Re-based
+// 500→560 KiB 2026-07-19: the default-experience redesign added the upup-fx
+// animation layer + new default UI (FileHero/FileRow/waveform/success-check) to
+// react's mandatory path, growing the measured consumer entry to 513.4 KiB.
+// Per-package size-limit (react 460 KB) still passes with headroom (measured
+// 430); this consumer-entry number bundles react + app + runtime, so it runs
+// ahead of the package budget. 560 absorbs react filling its own 460 budget
+// (+~30) plus margin; anything larger must be a deliberate re-base, not a
+// bump-to-green. Whether locales belong on the mandatory path is deferred (F-701).
+const consumerEntryChunkBudget = 560 * kib
 const consumerOptionalChunkBudget = 1600 * kib
 
 function assertInsideRepo(target) {

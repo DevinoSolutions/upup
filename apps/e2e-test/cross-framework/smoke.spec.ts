@@ -69,9 +69,17 @@ test.describe('cross-framework smoke', () => {
             buffer: FILE_2KB,
         })
 
-        // File registered in the list (tolerant of double-processing: >= 1 item).
+        // File registered in the UI (tolerant of double-processing: >= 1 match).
+        // One file renders the single-file HERO (`upup-file-hero`) in frameworks
+        // that carry the Phase 3 redesign, and a card row (`upup-file-item`) in
+        // frameworks not yet ported — accept either so the smoke stays a pure
+        // "real upload works" signal across the T10 port window and after it.
         await expect(
-            page.locator('[data-testid="upup-file-item"]').first(),
+            page
+                .locator(
+                    '[data-testid="upup-file-hero"], [data-testid="upup-file-item"]',
+                )
+                .first(),
         ).toBeVisible({ timeout: 15_000 })
 
         // Primary success signal: the real PUT to MinIO returned 200.

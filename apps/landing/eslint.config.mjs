@@ -2,7 +2,7 @@ import tseslint from 'typescript-eslint'
 import { reactHooksConfig, appEnvConfig } from '@upupjs/eslint-config'
 
 export default tseslint.config(
-    { ignores: ['.next/**', 'public/**'] },
+    { ignores: ['.next/**', 'public/**', '.source/**'] },
     ...tseslint.configs.recommended,
     ...reactHooksConfig,
     // F-783: enforce the process.env ban (raw reads must go through src/lib/env.ts).

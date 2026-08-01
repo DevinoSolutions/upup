@@ -122,7 +122,7 @@ const EXTENSIONS = new Set([
 // Paths that may legitimately NAME retired vocabulary (never USE it).
 const EXCLUDED_PATHS = [
     'scripts/check-retired-vocab.mjs', // this file is the token list
-    'apps/docs/docs/migration/', // migration guides teach old -> new
+    'apps/landing/content/docs/migration/', // fumadocs migration guide teaches old -> new
 ]
 
 const EXCLUDED_SUFFIXES = ['CHANGELOG.md'] // release history is immutable
@@ -145,11 +145,6 @@ const KNOWN_EXCEPTIONS = [
             'onFileRemove',
         ],
         reason: 'the retired-name eslint bans (identifier, property, and string-literal layers) name their own targets',
-    },
-    {
-        file: 'packages/interactive-example/src/ai/localAssistant.ts',
-        tokens: ['onedrive'],
-        reason: 'matches USER-TYPED intent text; the assistant aliases onedrive / one drive / one-drive so a user can type any spelling',
     },
 ]
 

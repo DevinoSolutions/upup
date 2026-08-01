@@ -22,12 +22,9 @@ export default function DriveBrowserIcon({
     if (isFolder)
         return (
             <i className="upup-flex-grow upup-text-lg">
-                <Icon
-                    name="folder"
-                    className={cn({
-                        'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]': dark,
-                    })}
-                />
+                {/* Amber filled folder in both themes — folders read
+                    unmistakably as folders. */}
+                <Icon name="folder-filled" className="upup-text-[#fbbf24]" />
             </i>
         )
     if (!src)

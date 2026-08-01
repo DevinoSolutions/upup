@@ -274,7 +274,7 @@ export interface TokenStore {
 
 ## Links
 
-- [Documentation](https://useupup.com/documentation/)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

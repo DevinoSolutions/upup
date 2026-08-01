@@ -104,8 +104,8 @@ site origin for `PUT` (and `GET` for previews). This is bucket configuration, no
 
 ## Links
 
-- [Next.js quickstart](https://useupup.com/documentation/quickstarts/next)
-- [Documentation](https://useupup.com/documentation/)
+- [Next.js quickstart](https://useupup.com/docs/quickstarts/next)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createUploader } from '../src/create-uploader'
 
 // Regression coverage for the cached-snapshot dropzone border at the vanilla seam.
@@ -22,10 +22,13 @@ describe('vanilla dropzone border recovery', () => {
         document.body.appendChild(host)
         const up = createUploader(host, { sources: ['local'], maxFiles: 5 })
         const hasBorder = () => {
-            const box = host.querySelector(
-                '[data-upup-slot="uploader-panel"]',
-            ) as HTMLElement | null
-            return !!box && box.classList.contains('upup-border')
+            // Redesign (Task 10): the empty idle dropzone shows the animated
+            // dashed SVG frame (data-upup-slot="dropzone-frame") in place of the
+            // old CSS `upup-border`. showDropzoneFrame is driven by the same
+            // absoluteHasBorder the recompute-nudge contract guards, so the
+            // frame's presence/absence tracks the border affordance exactly as
+            // the CSS class did before.
+            return !!host.querySelector('[data-upup-slot="dropzone-frame"]')
         }
         return { up, hasBorder }
     }
@@ -37,8 +40,11 @@ describe('vanilla dropzone border recovery', () => {
         await Promise.resolve()
         expect(hasBorder()).toBe(false) // file present → no border
         up.removeFile(up.getState().files[0]!.id)
-        await Promise.resolve()
-        expect(hasBorder()).toBe(true) // last file gone → border returns
+        // Deferred-removal contract (core transient-ui-state, commit 34362f92):
+        // the file leaves only after the ~200ms exit window, so the empty-state
+        // border returns once true removal fires (jsdom has no matchMedia ⇒
+        // motion 'on'). Task 10 will render upup-fx-exit during it.
+        await vi.waitFor(() => expect(hasBorder()).toBe(true)) // last file gone → border returns
         up.destroy()
     })
 

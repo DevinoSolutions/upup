@@ -1,0 +1,59 @@
+---
+title: Required Props
+description: UpupUploader runs with no upload target as a local file collector; for real uploads, configure exactly one of uploadEndpoint, serverUrl, or resumable.endpoint.
+---
+
+`UpupUploader` can run as a local file collector with no upload target. In that case users select files and you read the selected `File` objects from callbacks or hooks.
+
+For actual uploads, configure exactly one target:
+
+| Prop                 | Type     | Use                                                                                                                        |
+| -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `uploadEndpoint`     | `string` | Client-hosted presign route. The browser requests an upload URL, then uploads bytes directly to storage.                   |
+| `serverUrl`          | `string` | Server-hosted upup route from `@upupjs/server`. Your server owns provider calls, storage credentials, and transfer policy. |
+| `resumable.endpoint` | `string` | External tus service endpoint when `resumable={{ protocol: 'tus', endpoint }}` is used.                                    |
+
+`provider` is required only when the selected target or server handler needs to know which storage backend to use.
+
+## Client upload target
+
+```tsx
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Uploader() {
+    return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+}
+```
+
+The presign request body includes file details plus optional `metadata`:
+
+```ts
+type PresignRequest = {
+    name: string
+    type: string
+    size: number
+    metadata?: Record<string, unknown>
+}
+```
+
+The response must include the upload URL and may include signed upload headers:
+
+```ts
+type PresignedUrlResponse = {
+    key: string
+    uploadUrl: string
+    uploadHeaders?: Record<string, string>
+    publicUrl?: string
+    downloadUrl?: string
+    expiresIn: number
+}
+```
+
+## Server upload target
+
+```tsx
+<UpupUploader provider="aws" mode="server" serverUrl="/api/upup" />
+```
+
+`serverUrl` should point to a handler created by `@upupjs/server`.

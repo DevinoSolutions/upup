@@ -67,8 +67,8 @@ describe('lightPreset structure', () => {
         expect(lightPreset.color.surface).toBe('#FFFFFF')
     })
 
-    it('primary is the brand blue (#1849D6)', () => {
-        expect(lightPreset.color.primary).toBe('#1849D6')
+    it('primary is the sky-family accent (#0284c7)', () => {
+        expect(lightPreset.color.primary).toBe('#0284c7')
     })
 
     it('all color values are non-empty strings', () => {
@@ -111,8 +111,8 @@ describe('darkPreset structure', () => {
         expect(darkPreset.color.surface).toBe('#1A1A2E')
     })
 
-    it('primary is the dark-mode cyan (#30C5F7)', () => {
-        expect(darkPreset.color.primary).toBe('#30C5F7')
+    it('primary is the dark-mode sky accent (#38bdf8)', () => {
+        expect(darkPreset.color.primary).toBe('#38bdf8')
     })
 
     it('text is white in dark mode', () => {

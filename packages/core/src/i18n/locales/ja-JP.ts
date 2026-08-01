@@ -32,7 +32,14 @@ export const jaJP: LocaleBundle = {
             browseFiles: '\u53C2\u7167',
             dragOrBrowse:
                 '\u30C9\u30E9\u30C3\u30B0\u307E\u305F\u306F\u53C2\u7167\u3057\u3066\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9',
+            dropFilesHere:
+                '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7\u3001',
+            orImportFrom:
+                '\u307E\u305F\u306F\u30A4\u30F3\u30DD\u30FC\u30C8\u5143\uFF1A',
             selectAFolder: '\u30D5\u30A9\u30EB\u30C0\u3092\u9078\u629E',
+            filesMax:
+                '{count, plural, other {\u6700\u5927 # \u30D5\u30A1\u30A4\u30EB}}',
+            sizeEach: '\u5404 {size} {unit}',
             maxFileSizeAllowed:
                 '\u6700\u5927 {size} {unit} \u306E\u30D5\u30A1\u30A4\u30EB\u304C\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u53EF\u80FD\u3067\u3059',
             minFileSizeDisplay: '\u6700\u5C0F {size} {unit}',
@@ -50,16 +57,21 @@ export const jaJP: LocaleBundle = {
                 '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7\u3059\u308B\u304B\u3001\u8CBC\u308A\u4ED8\u3051\u308B\u304B\u3001\u53C2\u7167\u3059\u308B\u304B\u3001\u4EE5\u4E0B\u304B\u3089\u30A4\u30F3\u30DD\u30FC\u30C8\u3057\u3066\u304F\u3060\u3055\u3044',
             dropAriaLabel:
                 '\u30D5\u30A1\u30A4\u30EB\u3092\u3053\u3053\u306B\u30C9\u30ED\u30C3\u30D7\u307E\u305F\u306F\u30AF\u30EA\u30C3\u30AF\u3057\u3066\u53C2\u7167',
+            dropToUpload:
+                '\u3053\u3053\u306B\u30D5\u30A1\u30A4\u30EB\u3092\u30C9\u30ED\u30C3\u30D7',
         },
 
         header: {
             removeAllFiles: '\u3059\u3079\u3066\u524A\u9664',
             addingMoreFiles: '\u30D5\u30A1\u30A4\u30EB\u3092\u8FFD\u52A0\u4E2D',
+            overlayBack: '\u623B\u308B',
             filesSelected:
                 '{count, plural, other {# \u30D5\u30A1\u30A4\u30EB\u9078\u629E\u6E08\u307F}}',
             addMore: '\u8FFD\u52A0',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'グリッド',
+            viewList: 'リスト',
         },
 
         fileList: {
@@ -104,6 +116,7 @@ export const jaJP: LocaleBundle = {
                 '{provider} \u3067\u8A8D\u8A3C\u3057\u3066\u30D5\u30A1\u30A4\u30EB\u3092\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u7528\u306B\u9078\u629E',
             signInWith: '{provider} \u3067\u30B5\u30A4\u30F3\u30A4\u30F3',
             loadError: "Couldn't load files: {message}",
+            dropRejected: '{provider} にファイルを追加できません',
             loadMore: 'Load more',
         },
 

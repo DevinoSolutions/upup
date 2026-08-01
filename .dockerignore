@@ -1,0 +1,28 @@
+# Build context excludes for the deploy/site images. Everything here is either
+# regenerated inside the image (pnpm install + turbo build) or is host-only
+# workspace/test noise that must never enter a deploy image.
+node_modules
+**/node_modules
+.git
+.github
+**/.next
+**/dist
+**/dist-node
+**/build
+.turbo
+**/.turbo
+**/.mastra
+**/storybook-static
+test-results
+**/test-results
+.playwright-mcp
+coverage
+**/coverage
+docs/superpowers
+apps/e2e-test/screenshots
+apps/e2e-test/test-results
+# Local env/secret files — never bake into an image.
+**/.env
+**/.env.*
+!**/.env.example
+local-dev

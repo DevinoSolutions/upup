@@ -62,8 +62,8 @@ and `UploadStatus` enums.
 
 ## Links
 
-- [Angular quickstart](https://useupup.com/documentation/quickstarts/angular)
-- [Documentation](https://useupup.com/documentation/)
+- [Angular quickstart](https://useupup.com/docs/quickstarts/angular)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

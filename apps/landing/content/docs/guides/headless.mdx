@@ -1,0 +1,242 @@
+---
+title: Headless Usage
+description: Build your own uploader UI on top of upup's engine — the useUpupUpload React hook, driving UpupCore directly in any runtime, and the webWorker, HEIC, and resumable pipeline opt-ins.
+---
+
+The upup UI is optional. Under it sits a framework-agnostic engine —
+`@upupjs/core` — that owns file state, file-size and type limits, the processing pipeline
+(hashing, HEIC, EXIF, thumbnails, compression), retries, progress, multipart
+and resumable uploads, and cloud-drive sources. Go headless when you want your
+own components and layout but keep all of that machinery.
+
+Two paths:
+
+- **React** — the `useUpupUpload` hook gives you state and commands, plus
+  prop-getters for a dropzone.
+- **Any runtime** — construct `UpupCore` directly (Node, a Web Worker, or a
+  framework upup doesn't ship a hook for).
+
+## `useUpupUpload` (React)
+
+```tsx
+import { useUpupUpload } from '@upupjs/react'
+import '@upupjs/react/styles' // only if you reuse upup's utility classes
+
+function MyUploader() {
+    const {
+        files,
+        status,
+        progress,
+        error,
+        getRootProps,
+        getInputProps,
+        upload,
+        removeFile,
+    } = useUpupUpload({
+        uploadEndpoint: '/api/upload-token',
+        provider: 'aws',
+        limit: 5,
+        maxFileSize: { size: 25, unit: 'MB' },
+        allowedFileTypes: 'image/*',
+    })
+
+    return (
+        <div>
+            <div {...getRootProps()}>
+                <input {...getInputProps()} />
+                Drag files here or click to browse
+            </div>
+
+            <ul>
+                {files.map(file => (
+                    <li key={file.id}>
+                        {file.name} — {file.status}
+                        <button onClick={() => removeFile(file.id)}>
+                            remove
+                        </button>
+                    </li>
+                ))}
+            </ul>
+
+            <progress value={progress.percentage} max={100} />
+            {error && <p role="alert">{error.message}</p>}
+
+            <button onClick={() => upload()}>Upload {status}</button>
+        </div>
+    )
+}
+```
+
+### What the hook returns
+
+`useUpupUpload(options)` returns a `UseUpupUploadReturn`:
+
+- **State** — `files: UploadFile[]`, `status: UploadStatus`,
+  `progress: { totalFiles; completedFiles; percentage }`, `error: UpupError | null`.
+- **File commands** — `addFiles(files)`, `setFiles(files)`, `removeFile(id)`,
+  `removeAll()`, `reorderFiles(fileIds)`.
+- **Upload commands** — `upload()`, `pause()`, `resume()`, `cancel()`,
+  `retry(fileId?)`. `upload()` and `retry()` resolve to the resulting
+  `UploadFile[]`.
+- **Events** — `on(event, handler)` returns an unsubscribe function. Bare
+  names (e.g. `'state-change'`, `'upload-progress'`, `'upload-error'`) are
+  typed; namespaced `'<provider>:<event>'` names pass through.
+- **Prop getters** — `getRootProps()`, `getInputProps()`, `getDropzoneProps()`
+  spread onto your own elements to wire drag/drop, click-to-browse, and the
+  hidden file input.
+- **Escape hatch** — `core: UpupCore`, the underlying engine instance, plus
+  `ext` for plugin-contributed methods.
+
+A `UploadFile` extends the native `File`, so `file.name`, `file.size`, and
+`file.type` work alongside upup's additions: `file.id`, `file.status`,
+`file.source`, `file.key`, and `file.metadata`. `UploadStatus` is the enum
+`IDLE | PROCESSING | READY | UPLOADING | PAUSED | SUCCESSFUL | FAILED`.
+
+### Options
+
+The hook's options are the engine's `CoreOptions` plus a few convenience
+callbacks (`onFileAdded`, `onFileRemoved`, `onUploadProgress`,
+`onUploadComplete`, `onWarn`) and drag/paste toggles (`enablePaste`,
+`disableDragDrop`). The upload target and pipeline options match the visual
+uploader: `uploadEndpoint`, `serverUrl`, `provider`, `mode`, `metadata`,
+`webWorker`, `heicConversion`, `resumable`, `locale`, `cloudDrives`.
+
+> **File limits at the engine level.** The visual `<UpupUploader maxFiles={5}>`
+> prop maps to the core option `limit`. In the headless hook you set `limit`
+> (a number), and `maxFileSize` / `minFileSize` as `{ size, unit }` objects
+> (e.g. `{ size: 25, unit: 'MB' }`), not a plain number.
+
+## Driving `UpupCore` directly
+
+`UpupCore` and its `CoreOptions` type are part of the public `@upupjs/core`
+entry, so you can run the whole engine with no framework at all — a plain
+script, a Web Worker, or a framework upup has no dedicated hook for. This is
+the same class the React hook wraps.
+
+```ts
+import { UpupCore } from '@upupjs/core'
+import type { CoreOptions } from '@upupjs/core'
+
+const options: CoreOptions = {
+    uploadEndpoint: '/api/upload-token',
+    provider: 'aws',
+    limit: 10,
+}
+
+const core = new UpupCore(options)
+
+// Re-render / react to any state change.
+const unsubscribe = core.on('state-change', () => {
+    console.log(core.status, core.progress.percentage)
+})
+core.on('upload-all-complete', files => {
+    console.log(
+        'done:',
+        files.map(f => f.key),
+    )
+})
+
+await core.addFiles([myFile])
+await core.upload()
+
+// Later, on unmount:
+unsubscribe()
+core.destroy()
+```
+
+`UpupCore` exposes the commands the hook forwards — `addFiles`, `setFiles`,
+`removeFile`, `removeAll`, `reorderFiles`, `upload`, `pause`, `resume`,
+`cancel`, `retry` — plus the `files` map (`[...core.files.values()]`), the
+`status` / `progress` / `error` getters, and `on(event, handler)`.
+
+**`destroy()` is terminal.** After it, upload/resume/retry/`addFiles`/`setFiles`
+throw, and internal resources are released. Create a fresh core per mount — the
+framework packages already do this for you.
+
+Building your own UI but want upup's tokens and dark-mode? Wrap it in
+[`UpupThemeProvider`](/docs/guides/theming/#headless-upupthemeprovider).
+
+### Headless in other frameworks
+
+`new UpupCore(...)` is the universal answer, but each native package also
+exposes framework-idiomatic accessors you can use to compose your own UI:
+
+- **Vanilla JS** — `createUploader(target, options)` returns an instance with
+  `getState()`, `subscribe()`, `addFiles()`, `upload()`, `pause()`, `resume()`,
+  `cancel()`, `retry()`, and `destroy()`.
+- **Vue / Svelte** — context hooks such as `useUploaderFiles` and
+  `useUploaderUploadControls` read the uploader's state within its provider.
+- **Angular** — `UpupStore` plus the signal-store helpers.
+
+See each framework's [quickstart](/docs/quickstarts/vue/) for the exact
+imports.
+
+## Pipeline opt-ins
+
+The heavy capabilities are off the mandatory path and enabled per option. They
+work the same whether you use `useUpupUpload`, `UpupCore`, or the visual
+`<UpupUploader>`.
+
+### Web Worker offload
+
+`webWorker` moves the file pipeline (hash / HEIC / EXIF / thumbnail / compress)
+off the main thread. It defaults to **auto**: workers are used when the runtime
+supports them, with a transparent main-thread fallback otherwise. Set it to
+`false` to force the main thread, or tune the per-task fallback timeout with
+`workerTimeoutMs` (default `30000`).
+
+```ts
+useUpupUpload({
+    uploadEndpoint: '/api/upload-token',
+    webWorker: true, // auto (the default); `false` forces the main thread
+})
+```
+
+### HEIC → JPEG
+
+`heicConversion: true` converts HEIC/HEIF images to JPEG before upload. The
+decoder ships as an **optional dependency** (`libheif-js`) that the pipeline
+loads with a dynamic `import()` from `@upupjs/core/steps/heic` only when the
+option is on — so it never enters your base bundle. Install it alongside core:
+
+```sh
+pnpm add libheif-js
+```
+
+```ts
+useUpupUpload({ uploadEndpoint: '/api/upload-token', heicConversion: true })
+```
+
+### Resumable uploads (tus)
+
+`resumable` enables chunked, resumable transfers. For the [tus](https://tus.io)
+protocol, set `protocol: 'tus'` and an `endpoint`; the tus client is the
+**optional dependency** `tus-js-client`, lazily imported from
+`@upupjs/core/strategies/tus-upload` when configured. (The other protocol,
+`'multipart'`, resumes S3/server-mode multipart uploads and needs no extra
+dependency.)
+
+```sh
+pnpm add tus-js-client
+```
+
+```ts
+useUpupUpload({
+    provider: 'aws',
+    resumable: {
+        protocol: 'tus',
+        endpoint: 'https://tus.example.com/files/',
+        chunkSizeBytes: 5 * 1024 * 1024,
+    },
+})
+```
+
+See [Resumable Uploads](/docs/resumable-uploads/) for the full protocol
+comparison and server requirements.
+
+## Next steps
+
+- [Localization (i18n)](/docs/localization/) — the `locale` option and message
+  overrides for your custom UI.
+- [Error Monitoring](/docs/guides/error-monitoring/) — handle the `error: UpupError`
+  your hook exposes and wire it into your tracker.

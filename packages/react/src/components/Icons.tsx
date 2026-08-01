@@ -34,3 +34,11 @@ export const ScreenCaptureIcon = ({
 }: SourceIconProps): ReactElement => (
     <Icon name="screen-capture" className={className} />
 )
+export const StackedFilesIcon = ({
+    className,
+}: SourceIconProps): ReactElement => (
+    <Icon name="stacked-files" className={className} />
+)
+export const StorageIcon = ({ className }: SourceIconProps): ReactElement => (
+    <Icon name="storage" className={className} />
+)

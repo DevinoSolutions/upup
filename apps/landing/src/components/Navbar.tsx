@@ -1,26 +1,33 @@
-"use client";
+'use client'
 
-import { useState, useContext, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Menu, X, Github } from "lucide-react";
-import { ThemeContext } from "@/lib/contexts";
-import ThemeToggler from "@/components/ThemeToggler";
+import { useState, useContext, useEffect } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import Image from 'next/image'
+import { Menu, X, Github } from 'lucide-react'
+import { ThemeContext } from '@/lib/contexts'
+import ThemeToggler from '@/components/ThemeToggler'
 
 export default function Navbar() {
-    const [navbarOpen, setNavbarOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
-    const { isDarkMode } = useContext(ThemeContext);
+    const [navbarOpen, setNavbarOpen] = useState(false)
+    const [mounted, setMounted] = useState(false)
+    const { isDarkMode } = useContext(ThemeContext)
+    const pathname = usePathname()
+    // Docs pages scroll dark code blocks under the fixed header; a translucent
+    // + blurred nav smears them into a gray smudge in light mode. On /docs the
+    // header goes effectively opaque with a hairline border so nothing bleeds
+    // through — the marketing pages keep the translucent glass look.
+    const isDocs = pathname?.startsWith('/docs') ?? false
 
     useEffect(() => {
-        setMounted(true);
-    }, []);
+        setMounted(true)
+    }, [])
 
     const navLinks = (
         <>
             <li>
                 <Link
-                    href="/documentation"
+                    href="/docs/"
                     className="block px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors duration-200 rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
                     onClick={() => setNavbarOpen(false)}
                 >
@@ -66,24 +73,45 @@ export default function Navbar() {
                 </Link>
             </li>
         </>
-    );
+    )
 
     return (
-        <nav className="fixed top-0 w-full z-50  backdrop-blur-xl border-b border-gray-200/20 dark:border-gray-800/50 transition-colors duration-300">
-            <div className="max-w-7xl mx-auto px-6">
-                <div className="flex items-center justify-between h-24  ">
+        <nav
+            className={`fixed top-0 w-full z-50 border-b transition-colors duration-300 ${
+                isDocs
+                    ? 'bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800/60'
+                    : 'bg-white/75 dark:bg-gray-950/75 backdrop-blur-xl border-gray-200/20 dark:border-gray-800/50'
+            }`}
+        >
+            <div className="mx-auto max-w-6xl px-6">
+                <div className="flex items-center justify-between h-24">
                     {/* Logo */}
                     <div className="flex items-center">
                         <Link href="/">
                             {mounted ? (
                                 isDarkMode ? (
-                                    <Image src="/img/logo-dark.png" alt="Upup" width={120} height={120} />
+                                    <Image
+                                        src="/img/logo-dark.png"
+                                        alt="Upup"
+                                        width={120}
+                                        height={120}
+                                    />
                                 ) : (
-                                    <Image src="/img/logo.png" alt="Upup" width={120} height={120} />
+                                    <Image
+                                        src="/img/logo.png"
+                                        alt="Upup"
+                                        width={120}
+                                        height={120}
+                                    />
                                 )
                             ) : (
                                 // Default logo during hydration to prevent mismatch
-                                <Image src="/img/logo.png" alt="Upup" width={120} height={120} />
+                                <Image
+                                    src="/img/logo.png"
+                                    alt="Upup"
+                                    width={120}
+                                    height={120}
+                                />
                             )}
                         </Link>
                     </div>
@@ -111,6 +139,7 @@ export default function Navbar() {
                         {/* Mobile Menu Button */}
                         <button
                             aria-label="Toggle navigation"
+                            aria-expanded={navbarOpen}
                             className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                             onClick={() => setNavbarOpen(!navbarOpen)}
                         >
@@ -128,9 +157,7 @@ export default function Navbar() {
             {navbarOpen && (
                 <div className="lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-200/20 dark:border-gray-800/50">
                     <div className="px-6 py-6 space-y-4">
-                        <ul className="space-y-4">
-                            {navLinks}
-                        </ul>
+                        <ul className="space-y-4">{navLinks}</ul>
 
                         {/* Mobile CTA */}
                         <div className="pt-4 border-t border-gray-200/50 dark:border-gray-800/50">
@@ -146,5 +173,5 @@ export default function Navbar() {
                 </div>
             )}
         </nav>
-    );
+    )
 }

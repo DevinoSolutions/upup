@@ -61,6 +61,31 @@ type Story = StoryObj
 
 export const Playground: Story = {}
 
+// Per-variant Playground for the a11y-overflow 4b sweep (keys on
+// `<fw>-uploader--playground-<variant>`). Same defaults as Playground; the
+// distinct story id is the only thing the sweep needs.
+export const PlaygroundHero: Story = {}
+
+// The `crowded` variant's Playground: all nine sources, so the source-chip grid
+// sits on the COMPACT density branch (>8 sources) while the sweep measures each
+// media view. The four the 4b sweep drives (url/camera/microphone/screen) must
+// stay in this list.
+export const PlaygroundCrowded: Story = {
+    args: {
+        sources: [
+            'local',
+            'googleDrive',
+            'oneDrive',
+            'dropbox',
+            'box',
+            'url',
+            'camera',
+            'microphone',
+            'screen',
+        ],
+    },
+}
+
 export const Basic: Story = {
     args: { sources: ['local'], showBranding: false, maxFiles: 1 },
 }
@@ -149,6 +174,42 @@ export const Parity: Story = {
         maxFiles: 3,
         showBranding: false,
         themeMode: 'light',
+        // The image editor is react/preact-only (other frameworks stub it), so
+        // its edit-button DOM stays OUT of the cross-framework parity contract.
+        // Pin it off here even though core now defaults it on.
+        imageEditor: false,
+    },
+}
+
+// Parity fixture for the single-file HERO state (exactly one file → FileHero,
+// not the card list). IDENTICAL args to `Parity`; the parity spec seeds one
+// file for this variant instead of two. Shallow-spread so the two stories never
+// share an args/parameters reference.
+export const ParityHero: Story = {
+    parameters: { ...Parity.parameters },
+    args: { ...Parity.args },
+}
+
+// Parity fixture for the COMPACT source-chip density. Identical to `Parity`
+// except for the source count: nine configured sources put the chip grid on the
+// compact branch (>8), where `Parity`/`ParityHero`'s two sources pin the large
+// branch. The parity spec seeds one file here (same as `hero`), so the mount
+// SourceSelector capture is the only thing that differs between the two.
+export const ParityCrowded: Story = {
+    parameters: { ...Parity.parameters },
+    args: {
+        ...Parity.args,
+        sources: [
+            'local',
+            'googleDrive',
+            'oneDrive',
+            'dropbox',
+            'box',
+            'url',
+            'camera',
+            'microphone',
+            'screen',
+        ],
     },
 }
 

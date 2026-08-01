@@ -85,7 +85,9 @@ additionally compose its `reactHooksConfig` named export — kept out of the
 shared default because vue/svelte composables are also named `use*` and would
 false-positive against `react-hooks/rules-of-hooks`).
 
-Apps (`apps/`): `playground` (main dev app), `landing`, `docs`, `e2e-test`
+Apps (`apps/`): `playground` (main dev app), `landing` (also hosts the docs —
+MDX content under `apps/landing/content/docs/`, served at `/docs` by
+fumadocs-core headless; there is no longer a standalone docs app), `e2e-test`
 (Playwright: deep React suite + cross-framework parity), `storybook-react/vue/
 svelte/vanilla/angular/preact` (per-framework style-parity references),
 `next-example`, `mastra` (agents/tools for the interactive playground).
@@ -215,9 +217,9 @@ before suspecting your change. Known load-sensitive cases:
 timeouts when the whole suite runs but pass alone; six-storybook cf boots
 can throw transient Windows `STATUS_STACK_BUFFER_OVERRUN`s.
 
-Dev loops: `pnpm run dev` (playground + landing + docs + package watchers),
-`pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook` for the
-framework storybooks.
+Dev loops: `pnpm run dev` (playground + landing (docs included) + package
+watchers), `pnpm run dev:playground` for the quick loop, `pnpm run dev:storybook`
+for the framework storybooks.
 
 ## Verification discipline
 
@@ -288,9 +290,17 @@ pnpm run e2e:minio:down  # NOTE: uses -v — wipes the bucket volume
 and compares normalized DOM + a11y against `parity-fixtures.json`. React is the
 source of truth. After an intentional UI change:
 
-1. Set `UPDATE_PARITY=1` and run the parity spec with `--project react`
-   (`pnpm --filter @upupjs/e2e-test test:e2e:cf -- --project react`) — fixtures are
-   rewritten from React's DOM.
+1. Set `UPDATE_PARITY=1` and run the parity spec against React only, invoking
+   Playwright directly so the `--project` flag lands in flag position:
+   `pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.crossframework.config.ts --project react`
+   — fixtures are rewritten from React's DOM. Do NOT use the
+   `test:e2e:cf -- --project react` script form: pnpm forwards the literal `--`
+   and Playwright reads `--project react` as positional filename filters, so only
+   `preact-island.spec.ts` matches "react", the run exits 0, and
+   `parity-fixtures.json` is left UNTOUCHED — a false green that has burned us
+   twice. The success signal for a regen is that `parity-fixtures.json`'s content
+   actually changes (its mtime flips); an exit-0 run that leaves the fixtures
+   untouched means the filter never matched the parity spec.
 2. Review the `parity-fixtures.json` diff like code.
 3. Unset the env var and run the full cross-framework suite — all six must pass.
 
@@ -400,6 +410,38 @@ the suites actually drive):
   codemod method). Do not introduce new `Adapter*`/`Root*` names, and do not
   partially rename — a vocabulary change must sweep all packages, locales, and
   parity fixtures in one pass.
+- Motion/fx contract (T13, 2026-07-18): the animation layer is ONE shared
+  vocabulary defined SOLELY in `packages/tailwind-config/postcss.cjs` — a copy
+  of any fx rule in a package's `tailwind.css` is a defect. Two class families,
+  both cross-framework DOM/CSS contract strings: `upup-fx-*` component rules
+  (`upup-fx-hover-lift`, `upup-fx-press`, `upup-fx-icon-nudge`,
+  `upup-fx-sheen-sweep`, `upup-fx-remove`, `upup-fx-progress-fill`,
+  `upup-fx-overlay-slide`, `upup-fx-overlay-close-slide`, `upup-fx-essential`)
+  and `upup-animate-fx-*` keyframe utilities
+  (`-enter`/`-exit`/`-view`/`-pop`/`-draw`/`-sheen`/`-dash-march`/`-rec-pulse`).
+  Components render these classes UNCONDITIONALLY — the CSS kill rule is the ONE
+  gate; there is NO JS motion branching in components. Core
+  (`uploader/motion-gate.ts`) resolves the single `data-motion="on"|"off"`
+  attribute onto the uploader-panel element (`off` when `animations === false`
+  OR `(prefers-reduced-motion: reduce)`, else `on`); the emitted gate is
+  `[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.upup-fx-essential)`
+  (plus its `::after` twin and a `prefers-reduced-motion` defense-in-depth copy).
+  `upup-fx-essential` must stay safelisted forever — it is referenced ONLY inside
+  `:not()`, no markup may ever carry it, and it is the candidate that forces the
+  kill-switch + reduced-motion rules to emit. Timing lives ONLY in the
+  `--upup-fx-*` tokens on `.upup-scope` (`--upup-fx-fast` 150ms /
+  `--upup-fx-base` 200ms / `--upup-fx-overlay` 350ms /
+  `--upup-fx-ease` cubic-bezier(0.22, 1, 0.36, 1)) — a hardcoded duration inside
+  an fx rule is a defect. The token rule governs interaction/transition timings;
+  the sanctioned literal-duration carve-out is the infinite ambient loops plus
+  the one-shot draw (`fx-sheen` 1.6s, `fx-dash-march` 8s, `fx-rec-pulse` 1.4s,
+  `fx-draw` 400ms). Two-phase transitions are owned by core `later()` timers; DOM
+  `animationend`/`transitionend` listeners are banned. `animations?: boolean` is
+  the ONE public prop (default true), identical across all six frameworks;
+  `prefers-reduced-motion` also forces motion off regardless of the prop. Pinned
+  by `packages/vanilla/tests/css-artifact.test.ts` (the fx class + token +
+  kill-rule inventory in the built artifact) — there is NO tailwind-config pin
+  test, so that vanilla artifact test is the sole guard.
 
 How sweeps are done: a small Node codemod — exact-substring replacement,
 longest-name-first ordering, an explicit KEEP-list for intentional exceptions —

@@ -12,11 +12,11 @@ import { toast } from 'react-toastify'
 
 const customFields = {
     // Point at the mounted @upupjs/server handler (src/app/api/upup/[...path]/route.ts);
-    // the client derives /presign and /multipart/* from this base. The previous
-    // /api/getPresignedUrl path does not exist in this app, so every upload 404'd.
-    serverUrl: clientEnv.NEXT_PUBLIC_BASE_URL
-        ? clientEnv.NEXT_PUBLIC_BASE_URL + '/api/upup'
-        : '/api/upup',
+    // the client derives /presign and /multipart/* from this base. Relative on
+    // purpose — same-origin by construction, so a NEXT_PUBLIC_BASE_URL that
+    // drifts from the serving origin can't turn uploads cross-origin (the
+    // handler sets no CORS allowlist). Same fix as the playground's Uploader.
+    serverUrl: '/api/upup',
     cloudDrives: {
         googleDrive: {
             clientId: clientEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -28,6 +28,9 @@ const customFields = {
         },
         dropbox: {
             clientId: clientEnv.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
+        },
+        box: {
+            clientId: clientEnv.NEXT_PUBLIC_BOX_CLIENT_ID,
         },
     },
 }
@@ -49,7 +52,15 @@ export default function Uploader({
     limit,
     mini,
     theme = 'blue',
-    sources = ['local', 'googleDrive', 'oneDrive', 'url', 'camera'],
+    sources = [
+        'local',
+        'googleDrive',
+        'oneDrive',
+        'dropbox',
+        'box',
+        'url',
+        'camera',
+    ],
     allowPreview = true,
     shouldCompress = false,
     fileSizeLimit = 25,

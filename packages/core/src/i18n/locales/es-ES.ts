@@ -31,7 +31,12 @@ export const esES: LocaleBundle = {
                 '{count, plural, one {Arrastra tu archivo aqu\u00ED} other {Arrastra tus archivos aqu\u00ED}}',
             browseFiles: 'buscar archivos',
             dragOrBrowse: 'Arrastra o busca para subir',
+            dropFilesHere: 'Suelta los archivos aquí,',
+            orImportFrom: 'o importa desde:',
             selectAFolder: 'seleccionar una carpeta',
+            filesMax:
+                '{count, plural, one {máx. # archivo} other {máx. # archivos}}',
+            sizeEach: '{size} {unit} cada uno',
             maxFileSizeAllowed:
                 'M\u00E1x. {size} {unit} {count, plural, one {archivo permitido} other {archivos permitidos}}',
             minFileSizeDisplay: 'M\u00EDn. {size} {unit}',
@@ -47,16 +52,20 @@ export const esES: LocaleBundle = {
             addDocumentsHere:
                 'A\u00F1ade tus documentos aqu\u00ED, puedes subir hasta {limit} archivos m\u00E1x.',
             dropAriaLabel: 'Suelta archivos aqu\u00ED o haz clic para buscar',
+            dropToUpload: 'Suelta tus archivos aqu\u00ED',
         },
 
         header: {
             removeAllFiles: 'Eliminar todos los archivos',
             addingMoreFiles: 'A\u00F1adiendo m\u00E1s archivos',
+            overlayBack: 'Atr\u00E1s',
             filesSelected:
                 '{count, plural, one {# archivo seleccionado} other {# archivos seleccionados}}',
             addMore: 'A\u00F1adir m\u00E1s',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'Cuadrícula',
+            viewList: 'Lista',
         },
 
         fileList: {
@@ -98,6 +107,7 @@ export const esES: LocaleBundle = {
                 'Autent\u00EDcate con {provider} para seleccionar archivos para subir',
             signInWith: 'Iniciar sesi\u00F3n con {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected: 'No podemos añadir archivos a tu {provider}',
             loadMore: 'Load more',
         },
 

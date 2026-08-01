@@ -1,21 +1,18 @@
 import { Component, Input, inject } from '@angular/core'
-import { isUploadActive } from '@upupjs/core/internal'
+import { isUploadActive, cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 
 /**
- * Progress bar — port of ProgressBar.svelte.
+ * Progress bar — port of shared/ProgressBar.
  *
- * Svelte original:
- *   {#if !!progress || isUploadActive($uploadStatus)}
- *     <div data-testid="upup-progress-bar" role="progressbar" aria-valuenow={progress} …>
- *       <div class="…track…"><div style="width: {progress}%" class="…fill…"></div></div>
- *       {#if !!showValue}<p>{progress}%</p>{/if}
- *     </div>
- *   {/if}
+ * The `className` positioning classes land on the INNER container div via the
+ * @Input (never `class=` on the host), so the transparent `<upup-progress-bar>`
+ * host is unwrapped by the parity normalizer and the DOM matches React's div
+ * (F-712). At idle (no progress, not uploading) shouldShow is false, so the host
+ * renders empty and contributes nothing — matching React's `null` return.
  *
  * Reads: store.uploadStatus(), store.isDark(), store.slotOverrides(), store.slots(),
- *        store.translations() (for aria-label).
- * Inputs: progress (required), showValue (default false), progressBarClassName, className.
+ *        store.translations() (aria-label).
  */
 @Component({
     selector: 'upup-progress-bar',
@@ -34,6 +31,13 @@ import { UpupStore } from '../upup-store.service'
             >
                 <div [class]="trackClass">
                     <div [style.width.%]="progress" [class]="fillClass"></div>
+                    @if (isUploadActive(store.uploadStatus())) {
+                        <div
+                            aria-hidden="true"
+                            class="upup-animate-fx-sheen upup-pointer-events-none upup-absolute upup-inset-y-0 upup-left-0 upup-w-2/5"
+                            style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)"
+                        ></div>
+                    }
                 </div>
                 @if (showValue) {
                     <p [class]="textClass">{{ progress }}%</p>
@@ -50,6 +54,8 @@ export class ProgressBarComponent {
     @Input() progressBarClassName: string = ''
     @Input() className: string = ''
 
+    readonly isUploadActive = isUploadActive
+
     get shouldShow(): boolean {
         return !!this.progress || isUploadActive(this.store.uploadStatus())
     }
@@ -57,52 +63,48 @@ export class ProgressBarComponent {
     get containerClass(): string {
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
-        return [
+        return cn(
             'upup-flex upup-items-center upup-gap-2',
             this.className,
             slotClasses.progressBarContainer ?? '',
             themeSlots.progressBar?.root ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 
     get trackClass(): string {
+        const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
-        return [
-            'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
+        return cn(
+            'upup-relative upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px]',
+            dark ? 'upup-bg-white/[0.12]' : 'upup-bg-[#F5F5F5]',
             this.progressBarClassName,
             slotClasses.progressBar ?? '',
             themeSlots.progressBar?.track ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 
     get fillClass(): string {
+        const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
-        return [
-            'upup-h-full upup-bg-[#8EA5E7]',
+        return cn(
+            'upup-fx-progress-fill upup-fx-essential upup-h-full',
+            dark ? 'upup-bg-[#38bdf8]' : 'upup-bg-[#0ea5e9]',
             slotClasses.progressBarInner ?? '',
             themeSlots.progressBar?.fill ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 
     get textClass(): string {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         const themeSlots = this.store.slots()
-        return [
+        return cn(
             'upup-text-xs upup-font-semibold',
             dark ? 'upup-text-white' : '',
             slotClasses.progressBarText ?? '',
             themeSlots.progressBar?.text ?? '',
-        ]
-            .filter(Boolean)
-            .join(' ')
+        )
     }
 }

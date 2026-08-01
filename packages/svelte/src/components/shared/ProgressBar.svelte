@@ -41,7 +41,8 @@
   >
     <div
       class={cn(
-        'upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px] upup-bg-[#F5F5F5]',
+        'upup-relative upup-h-[6px] upup-flex-1 upup-overflow-hidden upup-rounded-[4px]',
+        $dark ? 'upup-bg-white/[0.12]' : 'upup-bg-[#F5F5F5]',
         progressBarClassName,
         $slotClasses.progressBar,
         $themeSlots?.progressBar?.track,
@@ -50,11 +51,19 @@
       <div
         style={`width: ${progress}%`}
         class={cn(
-          'upup-h-full upup-bg-[#8EA5E7]',
+          'upup-fx-progress-fill upup-fx-essential upup-h-full',
+          $dark ? 'upup-bg-[#38bdf8]' : 'upup-bg-[#0ea5e9]',
           $slotClasses.progressBarInner,
           $themeSlots?.progressBar?.fill,
         )}
       ></div>
+      {#if isUploadActive($uploadStatus)}
+        <div
+          aria-hidden="true"
+          class="upup-animate-fx-sheen upup-pointer-events-none upup-absolute upup-inset-y-0 upup-left-0 upup-w-2/5"
+          style="background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent)"
+        ></div>
+      {/if}
     </div>
     {#if !!showValue}
       <p

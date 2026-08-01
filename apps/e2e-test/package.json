@@ -11,7 +11,8 @@
         "test:e2e:cf": "playwright test --config playwright.crossframework.config.ts",
         "test:e2e:cf:ui": "playwright test --config playwright.crossframework.config.ts --ui",
         "test:e2e:a11y": "playwright test --config playwright.a11y-overflow.config.ts",
-        "test:e2e:drive-sandbox": "playwright test --config playwright.drive-sandbox.config.ts"
+        "test:e2e:drive-sandbox": "playwright test --config playwright.drive-sandbox.config.ts",
+        "test:e2e:landing": "playwright test --config playwright.landing.config.ts"
     },
     "dependencies": {
         "@upupjs/react": "workspace:*",

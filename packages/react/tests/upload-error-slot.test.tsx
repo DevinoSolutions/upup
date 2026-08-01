@@ -31,14 +31,18 @@ vi.mock('../src/context/UploaderContext', () => ({
         FAILED: 'FAILED',
     },
     useUploaderView: () => ({
-        isAddingMore: false,
         viewMode: 'list',
+        setViewMode: () => {},
+        sourceOverlayOpen: false,
+        openSourceOverlay: () => {},
+        closeSourceOverlay: () => {},
     }),
     useUploaderSource: () => ({
         activeSource: null,
     }),
     useUploaderFiles: () => ({
         files: makeFilesMap(1),
+        leavingFileIds: new Set<string>(),
     }),
     useUploaderI18n: () => ({
         translations: {
@@ -75,6 +79,8 @@ vi.mock('../src/context/UploaderContext', () => ({
         isProcessing: false,
         maxRetries: 0,
         resumable: undefined,
+        limit: 5,
+        icons: { ContainerAddMoreIcon: () => null },
     }),
     useUploaderTheme: () => ({
         isDark: false,
@@ -86,6 +92,13 @@ vi.mock('../src/context/UploaderContext', () => ({
 vi.mock('../src/components/FileItem', () => ({
     default: ({ file }: { file: UploadFile }) => (
         <div data-testid="file-item">{file.name}</div>
+    ),
+}))
+// A single file now renders the hero; stub it so this footer-focused suite
+// stays independent of hero internals (mirrors the FileItem stub above).
+vi.mock('../src/components/FileHero', () => ({
+    default: ({ file }: { file: UploadFile }) => (
+        <div data-testid="file-hero">{file.name}</div>
     ),
 }))
 vi.mock('../src/components/shared/UploaderHeader', () => ({

@@ -3,9 +3,18 @@ import { render } from '@testing-library/react'
 import React from 'react'
 import type { UploadFile } from '@upupjs/core'
 
-// Mutable state so individual tests can control file count + viewMode
+// Mutable state so individual tests can control file count + viewMode + the
+// measured tiles-per-row (the adaptive grid→list seam; jsdom has no layout).
 let _fileCount = 0
 let _viewMode: 'list' | 'grid' = 'list'
+let _tilesPerRow = 0
+
+// The grid→list decision is driven by the measured tiles-per-row. FileList
+// measures it via useTilesPerRow (ResizeObserver), absent in jsdom — mock the
+// seam so each test drives the rule directly.
+vi.mock('../src/lib/use-tiles-per-row', () => ({
+    useTilesPerRow: () => _tilesPerRow,
+}))
 
 function makeFile(id: string) {
     return { id, name: `file-${id}.txt`, size: 1000, type: 'text/plain' }
@@ -27,14 +36,18 @@ vi.mock('../src/context/UploaderContext', () => ({
         FAILED: 'FAILED',
     },
     useUploaderView: () => ({
-        isAddingMore: false,
         viewMode: _viewMode,
+        setViewMode: () => {},
+        sourceOverlayOpen: false,
+        openSourceOverlay: () => {},
+        closeSourceOverlay: () => {},
     }),
     useUploaderSource: () => ({
         activeSource: null,
     }),
     useUploaderFiles: () => ({
         files: makeFilesMap(_fileCount),
+        leavingFileIds: new Set<string>(),
     }),
     useUploaderI18n: () => ({
         translations: {
@@ -67,6 +80,8 @@ vi.mock('../src/context/UploaderContext', () => ({
         isProcessing: false,
         maxRetries: 0,
         resumable: undefined,
+        limit: 100,
+        icons: { ContainerAddMoreIcon: () => null },
     }),
     useUploaderTheme: () => ({
         isDark: false,
@@ -95,6 +110,7 @@ describe('FileList — virtual scrolling', () => {
     beforeEach(() => {
         _fileCount = 0
         _viewMode = 'list'
+        _tilesPerRow = 0
     })
 
     it('does NOT use virtual scroll when files < threshold (19 files, list)', () => {
@@ -118,12 +134,28 @@ describe('FileList — virtual scrolling', () => {
         ).not.toBeNull()
     })
 
-    it('does NOT use virtual scroll in grid mode even with many files', () => {
+    it('forces the row list when tiles do not fit one row: many files virtualize even in grid mode', () => {
         _fileCount = 30
         _viewMode = 'grid'
+        _tilesPerRow = 3 // 30 > 3 → the tile grid can't fit one row → forced list
+        const { container } = render(<FileList />)
+        // The tiles no longer fit one row of the fixed panel, so the row list
+        // (and its virtualization) engages regardless of the user's toggle.
+        expect(
+            container.querySelector('[data-upup-slot="file-list-virtual"]'),
+        ).not.toBeNull()
+    })
+
+    it('honors grid mode when the tiles fit one row (no virtualization)', () => {
+        _fileCount = 4
+        _viewMode = 'grid'
+        _tilesPerRow = 4 // 4 <= 4 → tiles fit one row → grid honored
         const { container } = render(<FileList />)
         expect(
             container.querySelector('[data-upup-slot="file-list-virtual"]'),
         ).toBeNull()
+        expect(
+            container.querySelectorAll('[data-testid="file-item"]').length,
+        ).toBe(4)
     })
 })

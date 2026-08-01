@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy } from '@angular/core'
 import { cn } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { SourceViewContainerComponent } from './source-view-container.component'
+import { AudioWaveformComponent } from './audio-waveform.component'
 
 type RecordingState = 'idle' | 'recording' | 'recorded'
 
@@ -25,7 +26,7 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
 @Component({
     selector: 'upup-audio-uploader',
     standalone: true,
-    imports: [SourceViewContainerComponent],
+    imports: [SourceViewContainerComponent, AudioWaveformComponent],
     template: `
         @if (error) {
             <!-- Error state -->
@@ -64,6 +65,10 @@ type RecordingState = 'idle' | 'recording' | 'recorded'
                             </svg>
                         </div>
                     </div>
+
+                    @if (recordingState === 'recording' && streamRef) {
+                        <upup-audio-waveform [stream]="streamRef" />
+                    }
 
                     <span [class]="timerClass">{{ formatTime(duration) }}</span>
 
@@ -130,7 +135,8 @@ export class AudioUploaderComponent implements OnDestroy {
     private mediaRecorder: MediaRecorder | null = null
     private chunks: Blob[] = []
     private timerHandle: ReturnType<typeof setInterval> | null = null
-    private streamRef: MediaStream | null = null
+    /** Exposed to the template so the live waveform can read the mic stream. */
+    protected streamRef: MediaStream | null = null
 
     ngOnDestroy(): void {
         if (this.timerHandle) clearInterval(this.timerHandle)
@@ -235,7 +241,7 @@ export class AudioUploaderComponent implements OnDestroy {
             'upup-flex upup-h-24 upup-w-24 upup-items-center upup-justify-center upup-rounded-full',
             {
                 'upup-bg-red-500/20': this.recordingState === 'recording',
-                'upup-bg-blue-500/20':
+                'upup-bg-[#0ea5e9]/20':
                     this.recordingState === 'idle' ||
                     this.recordingState === 'recorded',
             },
@@ -248,7 +254,7 @@ export class AudioUploaderComponent implements OnDestroy {
             {
                 'upup-animate-pulse upup-bg-red-500':
                     this.recordingState === 'recording',
-                'upup-bg-blue-500':
+                'upup-bg-[#0ea5e9]':
                     this.recordingState === 'idle' ||
                     this.recordingState === 'recorded',
             },
@@ -264,9 +270,9 @@ export class AudioUploaderComponent implements OnDestroy {
 
     get startButtonClass(): string {
         return cn(
-            'upup-rounded-lg upup-bg-blue-600 upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-6 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
             {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]':
                     this.store.isDark(),
             },
         )
@@ -274,9 +280,9 @@ export class AudioUploaderComponent implements OnDestroy {
 
     get addButtonClass(): string {
         return cn(
-            'upup-rounded-lg upup-bg-blue-600 upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-blue-700',
+            'upup-rounded-lg upup-bg-[#0ea5e9] upup-px-4 upup-py-2.5 upup-text-sm upup-font-medium upup-text-white upup-transition-colors hover:upup-bg-[#0284c7]',
             {
-                'upup-bg-[#59D1F9] hover:upup-bg-[#40b8e0] dark:upup-bg-[#59D1F9]':
+                'upup-bg-[#38bdf8] hover:upup-bg-[#0ea5e9] dark:upup-bg-[#38bdf8]':
                     this.store.isDark(),
             },
         )

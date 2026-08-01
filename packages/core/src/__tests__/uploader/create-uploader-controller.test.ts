@@ -148,7 +148,13 @@ describe('createUploaderController', () => {
         root.commands.handleResume()
         root.commands.handleDone()
         root.commands.resetState()
+        // handleFileRemove now defers through transientUi (the exit animation),
+        // but removal still ends at the orchestrator — the single owner. Advance
+        // past the exit window to observe the deferred delegation.
+        vi.useFakeTimers()
         root.commands.handleFileRemove('file-2')
+        vi.advanceTimersByTime(200)
+        vi.useRealTimers()
         expect(spies.startUpload).toHaveBeenCalledTimes(1)
         expect(spies.retryUpload).toHaveBeenCalledWith('file-1')
         expect(spies.handleCancel).toHaveBeenCalledTimes(1)
@@ -242,5 +248,50 @@ describe('createUploaderController', () => {
         core.emit('state-change', {})
         expect(b).toHaveBeenCalled()
         root.destroy()
+    })
+
+    it('handleFileRemove defers the real removal through transientUi (animated path)', async () => {
+        const { root, core } = build()
+        root.init()
+        await core.addFiles([new File(['x'], 'a.txt')])
+        const id = [...core.files.keys()][0] ?? ''
+        vi.useFakeTimers()
+        root.commands.handleFileRemove(id)
+        // Marked leaving immediately; the real file is still present.
+        expect(root.transientUi.getSnapshot().leavingFileIds.has(id)).toBe(true)
+        expect(core.files.has(id)).toBe(true)
+        // Only after the exit window does the orchestrator path actually remove.
+        vi.advanceTimersByTime(200)
+        expect(core.files.has(id)).toBe(false)
+        expect(root.transientUi.getSnapshot().leavingFileIds.has(id)).toBe(
+            false,
+        )
+        vi.useRealTimers()
+        root.destroy()
+    })
+
+    it('handleFileRemove is immediate when animations:false (reduced motion)', async () => {
+        const { root, core } = build({ animations: false })
+        root.init()
+        await core.addFiles([new File(['x'], 'a.txt')])
+        const id = [...core.files.keys()][0] ?? ''
+        root.commands.handleFileRemove(id)
+        expect(core.files.has(id)).toBe(false)
+        expect(root.transientUi.getSnapshot().leavingFileIds.size).toBe(0)
+        root.destroy()
+    })
+
+    it('destroy tears down transient UI timers (a pending removal never completes)', async () => {
+        const { root, core } = build()
+        root.init()
+        await core.addFiles([new File(['x'], 'a.txt')])
+        const id = [...core.files.keys()][0] ?? ''
+        vi.useFakeTimers()
+        root.commands.handleFileRemove(id)
+        expect(root.transientUi.getSnapshot().leavingFileIds.has(id)).toBe(true)
+        expect(() => root.destroy()).not.toThrow()
+        vi.advanceTimersByTime(500)
+        expect(core.files.has(id)).toBe(true) // removal timer was cancelled
+        vi.useRealTimers()
     })
 })

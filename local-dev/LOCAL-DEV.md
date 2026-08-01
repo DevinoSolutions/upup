@@ -6,13 +6,12 @@ Running several projects side by side (for example `shorty` and `upup`) quickly 
 
 For UpUp we use the `53000` range:
 
-| Service / Tool             | Env var(s)              | Default | Notes                                                                                                                |
-| -------------------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| Landing (Next.js)          | `PORT` / `LANDING_PORT` | 53000   | Next reads `PORT`. We also copy it into `LANDING_PORT` for reference.                                                |
-| Documentation (Docusaurus) | `PORT` / `DOCS_PORT`    | 53002   | Docusaurus reads `PORT`; `DOCS_PORT` just documents the assignment.                                                  |
-| Playground (Next.js)       | `PLAYGROUND_PORT`       | 53004   | Standalone `@upupjs/playground` app. Auto-picks next free port if reserved (e.g. Windows Hyper-V holds 53088–53187). |
-| Dev upload backend         | `UPUP_DEV_SERVER_PORT`  | 53010   | Used when running the dev upload backend in `packages/server`.                                                       |
-| Storybook (component lib)  | `STORYBOOK_PORT`        | 53050   | Optional, only when you run `pnpm --filter @upupjs/storybook-react storybook`.                                       |
+| Service / Tool            | Env var(s)              | Default | Notes                                                                                                                |
+| ------------------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
+| Landing (Next.js)         | `PORT` / `LANDING_PORT` | 53000   | Next reads `PORT`. We also copy it into `LANDING_PORT` for reference. Serves the docs at `/docs` (fumadocs).         |
+| Playground (Next.js)      | `PLAYGROUND_PORT`       | 53004   | Standalone `@upupjs/playground` app. Auto-picks next free port if reserved (e.g. Windows Hyper-V holds 53088–53187). |
+| Dev upload backend        | `UPUP_DEV_SERVER_PORT`  | 53010   | Used when running the dev upload backend in `packages/server`.                                                       |
+| Storybook (component lib) | `STORYBOOK_PORT`        | 53050   | Optional, only when you run `pnpm --filter @upupjs/storybook-react storybook`.                                       |
 
 Feel free to extend this list as new local services are added—just stay inside the same range so it is obvious which project owns a given port.
 
@@ -25,27 +24,23 @@ local-dev/
   LOCAL-DEV.md
   ports/
     landing.env   # sets PORT=53000 for the Next.js app
-    docs.env      # sets PORT=53002 for Docusaurus
 ```
 
 ```bash
 # install deps
 pnpm install
 
-# start everything (landing + docs + playground + package watcher)
+# start everything (landing + playground + package watcher)
 pnpm dev
 ```
 
-The root `pnpm dev` command automatically loads `local-dev/.env.ports`, so both the landing app and the docs boot on their reserved ports. If you want to override any value, create a local copy (e.g. `local-dev/.env.ports.local`) and export it before running the scripts, or temporarily set the env var in your shell.
+The root `pnpm dev` command automatically loads `local-dev/.env.ports`, so every app boots on its reserved port. If you want to override any value, create a local copy (e.g. `local-dev/.env.ports.local`) and export it before running the scripts, or temporarily set the env var in your shell.
 
 ### Individual apps
 
 ```bash
-# landing only
+# landing only (docs are served from it at /docs)
 pnpm --filter @upupjs/landing dev
-
-# docs only
-pnpm --filter @upupjs/docs dev
 
 # component package storybook
 pnpm --filter @upupjs/storybook-react storybook -- --port $STORYBOOK_PORT

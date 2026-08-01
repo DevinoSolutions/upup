@@ -63,8 +63,8 @@ custom UIs on the same engine.
 
 ## Links
 
-- [React quickstart](https://useupup.com/documentation/quickstarts/react)
-- [Documentation](https://useupup.com/documentation/)
+- [React quickstart](https://useupup.com/docs/quickstarts/react)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

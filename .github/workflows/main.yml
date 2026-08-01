@@ -259,6 +259,52 @@ jobs:
             - name: Knip
               run: pnpm run knip
 
+    Docs-Gate:
+        name: Docs sync gate
+        runs-on: ubuntu-latest
+        needs: [Prettier-check]
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            # Cheap checks first — no build needed (docs links, api<->docs drift,
+            # per-topic snippet coverage).
+            - name: Docs link integrity
+              run: pnpm run docs:links:check
+
+            - name: API<->docs sync
+              run: pnpm run docs:api-sync:check
+
+            - name: Snippet coverage
+              run: pnpm run docs:snippets:coverage
+
+            # check-snippets.mjs type-checks every doc snippet against the built
+            # package dist, so the packages must be built first.
+            - name: Build
+              run: pnpm run build
+              env:
+                  MINIO_ROOT_USER: upupadmin
+                  MINIO_ROOT_PASSWORD: upupadmin123
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_E2E_ENDPOINT: http://localhost:9100
+
+            - name: Snippet typecheck (needs built dist)
+              run: pnpm run docs:snippets:check
+
     Status-Check:
         name: Status Check
         runs-on: ubuntu-latest
@@ -273,6 +319,7 @@ jobs:
                 Dependency-Audit,
                 Lint,
                 Knip,
+                Docs-Gate,
             ]
         if: always()
         steps:
@@ -286,7 +333,8 @@ jobs:
                      [ "${{ needs.Bundle-Size.result }}" != "success" ] || \
                      [ "${{ needs.Dependency-Audit.result }}" != "success" ] || \
                      [ "${{ needs.Lint.result }}" != "success" ] || \
-                     [ "${{ needs.Knip.result }}" != "success" ]; then
+                     [ "${{ needs.Knip.result }}" != "success" ] || \
+                     [ "${{ needs.Docs-Gate.result }}" != "success" ]; then
                     echo "One or more jobs failed"
                     exit 1
                   fi

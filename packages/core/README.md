@@ -67,7 +67,7 @@ subpaths, so they never weigh down the main entry.
 
 ## Links
 
-- [Documentation](https://useupup.com/documentation/)
+- [Documentation](https://useupup.com/docs/)
 - [Source & monorepo](https://github.com/DevinoSolutions/upup)
 
 ## License

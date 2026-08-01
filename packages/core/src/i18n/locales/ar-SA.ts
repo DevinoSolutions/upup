@@ -35,7 +35,14 @@ export const arSA: LocaleBundle = {
                 '\u062A\u0635\u0641\u062D \u0627\u0644\u0645\u0644\u0641\u0627\u062A',
             dragOrBrowse:
                 '\u0627\u0633\u062D\u0628 \u0623\u0648 \u062A\u0635\u0641\u062D \u0644\u0644\u0631\u0641\u0639',
+            dropFilesHere:
+                '\u0623\u0641\u0644\u062A \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0647\u0646\u0627\u060C',
+            orImportFrom:
+                '\u0623\u0648 \u0627\u0633\u062A\u0648\u0631\u062F \u0645\u0646:',
             selectAFolder: '\u0627\u062E\u062A\u0631 \u0645\u062C\u0644\u062F',
+            filesMax:
+                '{count, plural, one {# \u0645\u0644\u0641 \u0643\u062D\u062F \u0623\u0642\u0635\u0649} other {# \u0645\u0644\u0641\u0627\u062A \u0643\u062D\u062F \u0623\u0642\u0635\u0649}}',
+            sizeEach: '{size} {unit} \u0644\u0643\u0644 \u0645\u0644\u0641',
             maxFileSizeAllowed:
                 '\u0627\u0644\u062D\u062F \u0627\u0644\u0623\u0642\u0635\u0649 {size} {unit} {count, plural, one {\u0645\u0644\u0641 \u0645\u0633\u0645\u0648\u062D} other {\u0645\u0644\u0641\u0627\u062A \u0645\u0633\u0645\u0648\u062D\u0629}}',
             minFileSizeDisplay:
@@ -54,6 +61,8 @@ export const arSA: LocaleBundle = {
                 '\u0623\u0636\u0641 \u0645\u0633\u062A\u0646\u062F\u0627\u062A\u0643 \u0647\u0646\u0627\u060C \u064A\u0645\u0643\u0646\u0643 \u0631\u0641\u0639 \u062D\u062A\u0649 {limit} \u0645\u0644\u0641\u0627\u062A \u0643\u062D\u062F \u0623\u0642\u0635\u0649',
             dropAriaLabel:
                 '\u0623\u0633\u0642\u0637 \u0627\u0644\u0645\u0644\u0641\u0627\u062A \u0647\u0646\u0627 \u0623\u0648 \u0627\u0646\u0642\u0631 \u0644\u0644\u062A\u0635\u0641\u062D',
+            dropToUpload:
+                '\u0623\u0641\u0644\u062A \u0645\u0644\u0641\u0627\u062A\u0643 \u0647\u0646\u0627',
         },
 
         header: {
@@ -61,12 +70,15 @@ export const arSA: LocaleBundle = {
                 '\u062D\u0630\u0641 \u062C\u0645\u064A\u0639 \u0627\u0644\u0645\u0644\u0641\u0627\u062A',
             addingMoreFiles:
                 '\u0625\u0636\u0627\u0641\u0629 \u0645\u0644\u0641\u0627\u062A \u0623\u062E\u0631\u0649',
+            overlayBack: '\u0631\u062C\u0648\u0639',
             filesSelected:
                 '{count, plural, one {# \u0645\u0644\u0641 \u0645\u062D\u062F\u062F} other {# \u0645\u0644\u0641\u0627\u062A \u0645\u062D\u062F\u062F\u0629}}',
             addMore:
                 '\u0625\u0636\u0627\u0641\u0629 \u0627\u0644\u0645\u0632\u064A\u062F',
             switchToListView: 'Switch to list view',
             switchToGridView: 'Switch to grid view',
+            viewGrid: 'شبكة',
+            viewList: 'قائمة',
         },
 
         fileList: {
@@ -115,6 +127,7 @@ export const arSA: LocaleBundle = {
             signInWith:
                 '\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 {provider}',
             loadError: "Couldn't load files: {message}",
+            dropRejected: 'لا يمكننا إضافة ملفات إلى {provider}',
             loadMore: 'Load more',
         },
 

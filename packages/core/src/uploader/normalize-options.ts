@@ -28,6 +28,7 @@ export function normalizeUploaderOptions(
     const acceptProp =
         (options.allowedFileTypes as string | string[] | undefined) ?? '*'
     const mini = options.mini ?? false
+    const animations = options.animations ?? true
     const resolvedSources = options.sources
         ? (options.sources
               .map(s => normalizeSource(s))
@@ -55,7 +56,11 @@ export function normalizeUploaderOptions(
         // wider redundant declared type.)
         const ie = options.imageEditor as
             boolean | ImageEditorOptions | null | undefined
-        if (ie === true)
+        // OMITTED (undefined) now defaults ON (round-8 item 1): the editor is a
+        // headline feature and Filerobot is still only loaded lazily when the
+        // editor is actually opened (principle 6). Explicit `false`/`null` from a
+        // caller STILL disables — only the absence of the option flips.
+        if (ie === undefined || ie === true)
             return { enabled: true, autoOpen: 'never', display: 'inline' }
         if (typeof ie === 'object' && ie !== null) {
             const o = ie as Partial<ResolvedImageEditorOptions> & {
@@ -88,6 +93,7 @@ export function normalizeUploaderOptions(
 
     const resolved: UploaderResolved = {
         mini,
+        animations,
         sources: resolvedSources,
         allowedFileTypes: accept,
         limit,

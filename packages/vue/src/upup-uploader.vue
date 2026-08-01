@@ -5,7 +5,6 @@ import useUploaderController from './composables/useUploaderController'
 import { provideUploaderContext } from './context/uploader-context'
 import UploaderPanel from './components/UploaderPanel.vue'
 import ImageEditorStub from './components/ImageEditorStub.vue'
-import { devinoDark, devinoLight, logoDark, logoLight } from './assets/logos'
 
 // Vue types each optional `boolean` prop as `Boolean`, so an ABSENT prop is
 // coerced to `false` — which would defeat the intended `true` defaults
@@ -52,10 +51,10 @@ function onInputChange(e: Event) {
                 data-testid="upup-container"
                 aria-labelledby="drop-instructions"
                 :class="cn(
-                    `upup-shadow-wrapper upup-relative ${
+                    `upup-panel-sheen upup-relative ${
                         ctx.theme.isDark.value
-                            ? 'upup-bg-[#232323]'
-                            : 'upup-bg-white'
+                            ? 'upup-panel-sheen-dark upup-bg-gradient-to-b upup-from-[#141b2e] upup-to-[#0a0e1a] upup-ring-1 upup-ring-white/10 upup-shadow-[0_24px_70px_-24px_rgba(2,6,23,0.85)]'
+                            : 'upup-bg-gradient-to-b upup-from-white upup-to-[#dde6f0] upup-ring-1 upup-ring-slate-200'
                     } upup-flex upup-h-full upup-w-full upup-select-none upup-flex-col upup-gap-3 upup-overflow-hidden upup-rounded-2xl upup-px-5 upup-py-4`,
                     {
                         [ctx.theme.slotOverrides.containerFull!]:
@@ -73,65 +72,8 @@ function onInputChange(e: Event) {
 
                 <ImageEditorStub v-if="ctx.props.imageEditor.enabled" />
 
-                <div
-                    v-if="!ctx.props.mini && ctx.props.showBranding !== false"
-                    data-testid="upup-branding"
-                    class="upup-flex upup-w-full upup-flex-col upup-items-center upup-justify-between upup-gap-1 md:upup-flex-row"
-                >
-                    <a
-                        href="https://useupup.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="upup-flex upup-items-center upup-gap-[5px]"
-                    >
-                        <img
-                            v-if="ctx.theme.isDark.value"
-                            :src="logoDark"
-                            :width="61"
-                            :height="13"
-                            alt="logo-dark"
-                        />
-                        <img
-                            v-else
-                            :src="logoLight"
-                            :width="61"
-                            :height="13"
-                            alt="logo-light"
-                        />
-                    </a>
-                    <a
-                        href="https://devino.ca/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="upup-flex upup-flex-row upup-items-center upup-justify-end upup-gap-1"
-                    >
-                        <span
-                            :class="cn(
-                                'upup-mr-0.5 upup-text-xs upup-leading-5 upup-text-[#6D6D6D] md:upup-text-sm',
-                                {
-                                    'upup-text-gray-300 dark:upup-text-gray-300':
-                                        ctx.theme.isDark.value,
-                                },
-                            )"
-                        >
-                            {{ ctx.translations.builtBy }}
-                        </span>
-                        <img
-                            v-if="ctx.theme.isDark.value"
-                            :src="devinoDark"
-                            :width="61"
-                            :height="13"
-                            alt="logo-dark"
-                        />
-                        <img
-                            v-else
-                            :src="devinoLight"
-                            :width="61"
-                            :height="13"
-                            alt="logo-light"
-                        />
-                    </a>
-                </div>
+                <!-- Branding renders INSIDE UploaderPanel now, so the idle
+                     dashed frame wraps it. -->
             </section>
         </div>
 

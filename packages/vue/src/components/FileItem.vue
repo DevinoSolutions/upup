@@ -1,27 +1,39 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { UploadFile } from '@upupjs/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
     useUploaderRuntime,
     useUploaderTheme,
+    useUploaderView,
 } from '../context/uploader-context'
 import { cn } from '@upupjs/core/internal'
 import FilePreview from './FilePreview.vue'
 import FilePreviewPortal from './FilePreviewPortal.vue'
+import FileRow from './FileRow.vue'
 
-const props = defineProps<{
-    file: UploadFile
-}>()
+const props = withDefaults(
+    defineProps<{
+        file: UploadFile
+        /** Position in the sorted list — drives the entrance stagger. */
+        index?: number
+        /** True when the panel forces the row list (tiles don't fit one row). */
+        forcedList?: boolean
+    }>(),
+    { index: 0, forcedList: false },
+)
 
 const { core } = useUploaderRuntime()
-const { files } = useUploaderFiles()
+const { files, leavingFileIds } = useUploaderFiles()
+const { viewMode } = useUploaderView()
 const { onFileClick } = useUploaderOptions()
 const { slotOverrides: slotClasses } = useUploaderTheme()
 
 const showPreviewPortal = ref(false)
 const canPreview = ref(false)
+
+const leaving = computed(() => leavingFileIds.value.has(props.file.id))
 
 function openPreviewPortal() {
     showPreviewPortal.value = true
@@ -42,33 +54,45 @@ function onStopPropagation(e: MouseEvent) {
     <div
         data-testid="upup-file-item"
         data-upup-slot="file-item"
+        role="listitem"
         :class="cn(
+            'upup-animate-fx-enter',
             'upup-relative upup-flex upup-flex-1 upup-flex-col upup-items-start upup-gap-1 upup-bg-transparent',
+            leaving && 'upup-animate-fx-exit upup-overflow-hidden',
             {
                 [slotClasses.fileItemMultiple!]: slotClasses.fileItemMultiple && files.size > 1,
                 [slotClasses.fileItemSingle!]: slotClasses.fileItemSingle && files.size === 1,
             },
         )"
+        :style="leaving ? undefined : { animationDelay: `${Math.min(index ?? 0, 8) * 40}ms` }"
     >
-        <FilePreview
-            :file-name="file.name"
-            :file-type="file.type ?? ''"
-            :file-id="file.id"
-            :file-url="file.url ?? ''"
-            :file-size="file.size"
-            :can-preview="canPreview"
-            :on-request-preview="openPreviewPortal"
-            @update:can-preview="canPreview = $event"
-            @click="onFileClick(file)"
+        <FileRow
+            v-if="viewMode === 'list' || forcedList"
+            :file="file"
+            :index="index ?? 0"
         />
-        <FilePreviewPortal
-            v-if="canPreview && showPreviewPortal"
-            :file-type="file.type ?? ''"
-            :file-url="file.url ?? ''"
-            :file-name="file.name"
-            :file-size="file.size"
-            @close="closePreviewPortal"
-            @stop-propagation="onStopPropagation"
-        />
+        <template v-else>
+            <FilePreview
+                :file-name="file.name"
+                :file-type="file.type ?? ''"
+                :file-id="file.id"
+                :file-url="file.url ?? ''"
+                :file-size="file.size"
+                :index="index ?? 0"
+                :can-preview="canPreview"
+                :on-request-preview="openPreviewPortal"
+                @update:can-preview="canPreview = $event"
+                @click="onFileClick(file)"
+            />
+            <FilePreviewPortal
+                v-if="canPreview && showPreviewPortal"
+                :file-type="file.type ?? ''"
+                :file-url="file.url ?? ''"
+                :file-name="file.name"
+                :file-size="file.size"
+                @close="closePreviewPortal"
+                @stop-propagation="onStopPropagation"
+            />
+        </template>
     </div>
 </template>

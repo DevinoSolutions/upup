@@ -25,6 +25,7 @@ disagree, fix the drift in the same PR.
 | Test-quality guard            | `scripts/ci/test-quality-guard.mjs`                                                                                                                       | no committed `.only`, silent skips, tautologies, vague names, unjustified sleeps, integration-layer mocks; regen guards stay present; no `continue-on-error`                                                                                                                                                                                                                                                                                                                     | `pnpm run test:quality`                                                               |
 | Mastra deterministic          | `apps/mastra/src/**/*.test.ts`                                                                                                                            | config-patch tool zod boundary, middleware guards, schema↔core drift, canned-prompt key validity — offline, zero LLM calls                                                                                                                                                                                                                                                                                                                                                       | `pnpm --filter @upupjs/mastra test`                                                   |
 | Mastra LLM evals              | `apps/mastra/src/evals/run.ts` (~20 canned prompts)                                                                                                       | the live agent produces patches with required/forbidden keys                                                                                                                                                                                                                                                                                                                                                                                                                     | `pnpm --filter @upupjs/mastra eval` (live server + paid key; nightly-only in CI)      |
+| Landing feedback + ingestion  | `apps/e2e-test/landing/*.spec.ts` (own config, serial; env-gated on the shared PostHog e2e project)                                                       | the /support form (happy path, reply-guard, double-submit, forced-502 retry with same feedbackId) + the Ask-AI thumbs flow (rating lock, comment, thanks) drive REAL ingestion into the shared e2e project, then a serial spec VERIFIES via the PostHog Query API that this run's events (matched by `test_run_id`) actually landed; skips green without creds, reds on a configured-but-broken query key                                                                        | `pnpm run e2e:landing` (nightly-only in CI)                                           |
 | Playground deep suite         | `apps/playground/e2e`                                                                                                                                     | broad mobile-viewport product flows                                                                                                                                                                                                                                                                                                                                                                                                                                              | local-only (F-704)                                                                    |
 
 Every one of the nine publishable packages also pins its exact public export
@@ -226,13 +227,15 @@ OAuth apps, buckets, or customer data in any test, and never commit a credential
 
 Configured optional credentials:
 
-| Secret / env var                                                                            | Used by                                                     | Purpose                                                                                                              | Behavior when absent                                                                                    |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `OPENROUTER_API_KEY` (Actions secret)                                                       | nightly `Mastra-Evals` job                                  | drives ~20 canned prompts through the live agent (paid LLM calls, model `anthropic/claude-haiku-4.5` via OpenRouter) | job green with a loud `::notice` + step-summary line saying the evals did NOT run                       |
-| `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (local `.env.minio`)                              | interactive local drive checks                              | optional googleDrive provider on the local e2e harness                                                               | harness runs OAuth-free                                                                                 |
-| `VITE_GOOGLE_*`, `VITE_ONEDRIVE_*`, `VITE_DROPBOX_*`, `VITE_BOX_*` (local)                  | storybooks (`cloudDrivesFromEnv`)                           | real sign-in screens in local storybooks                                                                             | empty-string providers still render the sign-in UI                                                      |
-| `UPUP_TEST_{BOX,DROPBOX,GDRIVE,ONEDRIVE}_*` (Actions secrets / local `local-dev/.env.test`) | nightly `Drive-Sandbox` job + `pnpm run drive:sandbox:test` | live list/folder-nav/search/download byte-integrity for `drive-clients.ts` against disposable sandbox drives         | that provider is skipped green (per-provider); the whole job is green with a `::notice` if none are set |
-| `GH_SECRETS_WRITE_PAT` (Actions secret; fine-grained, repo Secrets: read+write)             | nightly `Drive-Sandbox` OneDrive rotation step              | persists OneDrive's rotated refresh token back to the secret so it survives to the next run                          | OneDrive is skipped and its stored refresh token is left untouched (never consumed)                     |
+| Secret / env var                                                                                                                                   | Used by                                                     | Purpose                                                                                                              | Behavior when absent                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY` (Actions secret)                                                                                                              | nightly `Mastra-Evals` job + `Landing-Feedback` thumbs flow | drives ~20 canned prompts through the live agent (paid LLM calls, model `anthropic/claude-haiku-4.5` via OpenRouter) | job green with a loud `::notice` + step-summary line saying the evals did NOT run; the thumbs flow self-skips green |
+| `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_{HOST,CAPTURE_TOKEN}` + `POSTHOG_E2E_TEST_PROJECT_ID` (Actions secrets / local `local-dev/.env.posthog-e2e`) | nightly `Landing-Feedback` job                              | boot the landing (+ mastra) on the shared PostHog e2e project so the feedback/thumbs flows SEND real e2e events      | the whole `Landing-Feedback` job is green with a `::notice` when the capture token is absent                        |
+| `POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY` (Actions secret / local, `query:read` scope)                                           | `ingestion-verification.spec.ts`                            | reads the PostHog Query API to VERIFY this run's events landed (matched by `test_run_id`)                            | the ingestion assertions self-skip green with a loud `::notice`; a present-but-invalid key REDS                     |
+| `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` (local `.env.minio`)                                                                                     | interactive local drive checks                              | optional googleDrive provider on the local e2e harness                                                               | harness runs OAuth-free                                                                                             |
+| `VITE_GOOGLE_*`, `VITE_ONEDRIVE_*`, `VITE_DROPBOX_*`, `VITE_BOX_*` (local)                                                                         | storybooks (`cloudDrivesFromEnv`)                           | real sign-in screens in local storybooks                                                                             | empty-string providers still render the sign-in UI                                                                  |
+| `UPUP_TEST_{BOX,DROPBOX,GDRIVE,ONEDRIVE}_*` (Actions secrets / local `local-dev/.env.test`)                                                        | nightly `Drive-Sandbox` job + `pnpm run drive:sandbox:test` | live list/folder-nav/search/download byte-integrity for `drive-clients.ts` against disposable sandbox drives         | that provider is skipped green (per-provider); the whole job is green with a `::notice` if none are set             |
+| `GH_SECRETS_WRITE_PAT` (Actions secret; fine-grained, repo Secrets: read+write)                                                                    | nightly `Drive-Sandbox` OneDrive rotation step              | persists OneDrive's rotated refresh token back to the secret so it survives to the next run                          | OneDrive is skipped and its stored refresh token is left untouched (never consumed)                                 |
 
 Cloud-drive OAuth (Google/OneDrive/Dropbox/Box) is interactive by design: a
 human performs the one-time consent (clicking "Allow" in their own browser);
@@ -246,6 +249,39 @@ Box uses a Client Credentials service account (no refresh token); OneDrive's
 refresh token rotates and is written back each night (needs `GH_SECRETS_WRITE_PAT`).
 The sandbox accounts are created by the maintainer — never from production.
 Full walkthrough: `docs/drive-sandbox-setup.md`.
+
+## Landing feedback e2e + shared PostHog E2E project
+
+`apps/e2e-test/landing/` drives the landing app's feedback surfaces end to end
+and — unlike a "the POST returned 200" check — proves the analytics **actually
+ingested**. It talks to `#Shared_Apps_E2E_Testing` (one PostHog project shared
+by all Devino apps' automated tests; synthetic data only, never production).
+
+- **Runtime isolation.** The landing (`dataset.ts`) and mastra
+  (`observability.ts`) dataset boundaries hard-enforce that the `e2e` dataset
+  uses only its own project's capture creds (never a production fallback) and
+  that the read-only query key never rides a `production`/`disabled` runtime —
+  either violation throws by name. Unit-covered in
+  `apps/landing/tests/analytics-isolation.test.ts` and
+  `apps/mastra/src/lib/observability.test.ts`.
+- **Correlation channel (`e2e` dataset only).** Each run mints a
+  `test_run_id` shaped `e2e:<timestamp>-<random>`; the spec seeds
+  `localStorage['upup:e2e-test-context']` (`{testRunId, testScenario}`) via
+  `addInitScript`. The browser registers `app_id`/`environment`/`test_run_id`/
+  `test_scenario` as PostHog super-properties; the /support route accepts
+  optional `testRunId`/`testScenario` body fields (`[A-Za-z0-9:_-]{1,100}`) and
+  merges them into the captured event ONLY on the `e2e` dataset. Synthetic
+  identity convention: `distinct_id = e2e:upup-landing:<test-run-id>:<scenario>`.
+- **Specs.** `support-flow.spec.ts` (happy path, reply-guard, double-submit,
+  forced-502 retry with same feedbackId), `thumbs-flow.spec.ts` (live Mastra on
+  :4144 — needs `OPENROUTER_API_KEY`, self-skips green otherwise), and
+  `ingestion-verification.spec.ts` (runs LAST via a project dependency; bounded
+  `expect.poll` against the Query API, filtered by this run's `test_run_id`).
+- **Gating.** Absent capture token → the whole nightly `Landing-Feedback` job
+  skips green with a `::notice`. Absent query key → the ingestion assertions
+  self-skip green; a present-but-invalid key REDS (a real POST is never proof —
+  only the query result is). Env names live in `local-dev/.env.posthog-e2e.example`.
+- **Run:** `pnpm run e2e:landing` (loads `local-dev/.env.posthog-e2e`).
 
 ## Debugging Playwright failures
 

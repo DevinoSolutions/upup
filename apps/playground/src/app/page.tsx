@@ -63,7 +63,21 @@ export default function Home() {
         clientEnv.NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT ?? mockUploadEndpoint(params)
     const initialConfig = {
         uploadEndpoint,
-        ...(cloudDrives ? { cloudDrives } : {}),
+        // Seed the drive tiles ON when the host has credentials — the point of
+        // the env wiring is testing the pickers locally without sidebar setup.
+        ...(cloudDrives
+            ? {
+                  cloudDrives,
+                  sources: [
+                      'local',
+                      ...Object.keys(cloudDrives),
+                      'url',
+                      'camera',
+                      'microphone',
+                      'screen',
+                  ],
+              }
+            : {}),
     } as never
 
     return (

@@ -14,6 +14,7 @@ import {
     resolveTheme,
     flattenSlotsToClassNames,
     type UploadFile,
+    type UiTranslations,
 } from '@upupjs/core'
 import {
     normalizeUploaderOptions,
@@ -22,6 +23,9 @@ import {
     type UploaderControllerOptions,
     type OrchestratorState,
     type ThemeStoreState,
+    type MotionMode,
+    type TransientUiSnapshot,
+    type CloudProvider,
 } from '@upupjs/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
@@ -64,6 +68,27 @@ const DefaultTrashIconComponent = (props: {
 const EMPTY_THEME_SLOTS = {}
 const EMPTY_STYLE = {}
 
+/** Read-only drive provider → flattened i18n label key (the human provider name
+ *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof
+ *  UiTranslations>` so the compiler enforces exhaustiveness against the same
+ *  drive-source union core's DragDropController gates on — a new provider fails
+ *  typecheck here until its label key is wired. */
+const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
+    googleDrive: 'googleDrive',
+    oneDrive: 'oneDrive',
+    dropbox: 'dropbox',
+    box: 'box',
+}
+
+/** Stable server/pre-mount snapshot for the transient-UI store (matches the
+ *  core unit's initial shape: nothing leaving, no overlay, no rejection). */
+const EMPTY_TRANSIENT_UI: TransientUiSnapshot = {
+    leavingFileIds: new Set<string>(),
+    sourceOverlayOpen: false,
+    sourceOverlayClosing: false,
+    dropRejected: null,
+}
+
 /** Stable server snapshot for SSR (useSyncExternalStore third arg). */
 const SERVER_SNAPSHOT: OrchestratorState = {
     files: new Map(),
@@ -104,12 +129,14 @@ export default function useUploaderController(
     const {
         allowedFileTypes: acceptProp = '*',
         mini = false,
+        animations = true,
         theme,
         maxFiles,
         isProcessing = false,
         allowPreview = true,
         folderUpload,
         showBranding = true,
+        quietCompletion = false,
         disableDragDrop = false,
         className,
         style,
@@ -211,9 +238,11 @@ export default function useUploaderController(
                     ? acceptProp
                     : acceptProp.join(','),
             mini,
+            animations,
             isProcessing,
             allowPreview,
             showBranding,
+            quietCompletion,
             disableDragDrop,
             className,
             maxFileSize: maxFileSizeProp,
@@ -355,6 +384,55 @@ export default function useUploaderController(
         getThemeServerSnapshot,
     )
 
+    // ── Subscribe to the motion gate (data-motion resolution) ──
+    // The gate resolves `off` iff `animations={false}` OR the OS asks for
+    // reduced motion; the panel writes the snapshot as `data-motion` and the
+    // shared CSS gates every `upup-fx-*` rule on it. `on` is the SSR/pre-mount
+    // fallback (matches the gate's own default before matchMedia is read).
+    const getMotionServerSnapshot = useCallback((): MotionMode => 'on', [])
+    const subscribeMotionGate = useCallback(
+        (listener: () => void) =>
+            controller ? controller.motionGate.subscribe(listener) : () => {},
+        [controller],
+    )
+    const getMotionSnapshot = useCallback(
+        (): MotionMode =>
+            controller ? controller.motionGate.getSnapshot() : 'on',
+        [controller],
+    )
+    const motionMode = useSyncExternalStore(
+        subscribeMotionGate,
+        getMotionSnapshot,
+        getMotionServerSnapshot,
+    )
+
+    // ── Subscribe to the transient-UI store (deferred removal / overlay / toast) ──
+    // Core owns the timing: `handleFileRemove` marks a file `leaving` for the
+    // exit-animation window before the real removal fires. Components read
+    // `leavingFileIds` to render `upup-fx-exit`; `sourceOverlayOpen`/`dropRejected`
+    // feed later states (Tasks 7-8). The empty snapshot is the SSR/pre-mount value.
+    const getTransientUiServerSnapshot = useCallback(
+        () => EMPTY_TRANSIENT_UI,
+        [],
+    )
+    const subscribeTransientUi = useCallback(
+        (listener: () => void) =>
+            controller ? controller.transientUi.subscribe(listener) : () => {},
+        [controller],
+    )
+    const getTransientUiSnapshot = useCallback(
+        () =>
+            controller
+                ? controller.transientUi.getSnapshot()
+                : EMPTY_TRANSIENT_UI,
+        [controller],
+    )
+    const transientUi = useSyncExternalStore(
+        subscribeTransientUi,
+        getTransientUiSnapshot,
+        getTransientUiServerSnapshot,
+    )
+
     // ── Single lifecycle effect (replaces 4 old effects) ─────────
     // init()/destroy() are idempotent + re-entrant; safe for React 18/19 StrictMode double-mount.
     //
@@ -375,6 +453,15 @@ export default function useUploaderController(
         }
     }, [controller])
 
+    // ── Re-resolve on theme-prop change (post-mount) ─────────────
+    // The controller (hence its ThemeStore) is created once, so a `theme` prop
+    // change after mount would otherwise never reach the live store. ThemeStore
+    // short-circuits structurally-equal configs, so an inlined object literal
+    // (e.g. theme={{ mode: 'dark' }}) per render costs nothing.
+    useEffect(() => {
+        controller?.theme.setThemeConfig(theme)
+    }, [controller, theme])
+
     // ── Input ref (React-specific) ──────────────────────────────
     const inputRef = useRef<HTMLInputElement>(null)
     const openFilePicker = useCallback(() => {
@@ -384,6 +471,9 @@ export default function useUploaderController(
     // ── Commands (delegate to factory commands) ──────────────────
     const handleSetSelectedFiles = useCallback(
         (newFiles: File[]) => {
+            // Overlay close-on-add is owned by core's handleSetSelectedFiles
+            // command (count-increase + no-active-source gate) so every framework
+            // inherits it — do not re-add it here.
             void controller?.commands.handleSetSelectedFiles(newFiles)
         },
         [controller],
@@ -482,20 +572,26 @@ export default function useUploaderController(
             },
             [controller],
         )
-    const setIsAddingMore: Dispatch<SetStateAction<boolean>> = useCallback(
-        (value: SetStateAction<boolean>) => {
-            if (typeof value === 'function') {
-                controller?.commands.setIsAddingMore(
-                    value(
-                        controller.orchestrator.getSnapshot().isAddingMore ??
-                            false,
-                    ),
-                )
-            } else {
-                controller?.commands.setIsAddingMore(value)
-            }
+    // Add-more source overlay commands (core transient-UI store; idempotent).
+    const openSourceOverlay = useCallback(() => {
+        controller?.transientUi.openSourceOverlay()
+    }, [controller])
+    const closeSourceOverlay = useCallback(() => {
+        controller?.transientUi.closeSourceOverlay()
+    }, [controller])
+    // Drop-rejection: core's DragDropController decides WHICH source rejects; the
+    // host resolves the human provider label and raises the toast (core store).
+    const flagDriveDropRejected = useCallback(
+        (source: FileSource) => {
+            // core only calls this for drive sources; FileSource's drive values
+            // are exactly the CloudProvider strings, but the enum type doesn't
+            // structurally overlap the literal union — index by value.
+            const key: keyof UiTranslations | undefined =
+                DRIVE_SOURCE_LABEL_KEY[source as unknown as CloudProvider]
+            const label = key ? resolved.translations[key] : source
+            controller?.transientUi.flagDropRejected(label)
         },
-        [controller],
+        [controller, resolved.translations],
     )
     const setViewMode: Dispatch<SetStateAction<'grid' | 'list'>> = useCallback(
         (value: SetStateAction<'grid' | 'list'>) => {
@@ -550,11 +646,16 @@ export default function useUploaderController(
         openFilePicker,
         activeSource: state.activeSource,
         setActiveSource,
-        isAddingMore: state.isAddingMore,
-        setIsAddingMore,
+        sourceOverlayOpen: transientUi.sourceOverlayOpen,
+        sourceOverlayClosing: transientUi.sourceOverlayClosing,
+        openSourceOverlay,
+        closeSourceOverlay,
+        dropRejected: transientUi.dropRejected,
+        flagDriveDropRejected,
         viewMode: state.viewMode,
         setViewMode,
         isOnline: state.isOnline,
+        motionMode,
         translations: resolved.translations,
         translator: resolved.translator,
         lang: resolved.lang,
@@ -568,6 +669,7 @@ export default function useUploaderController(
             slots: themeState.slots ?? EMPTY_THEME_SLOTS,
         },
         files: state.files,
+        leavingFileIds: transientUi.leavingFileIds,
         setFiles: handleSetSelectedFiles,
         uploadFiles,
         resetState,
@@ -618,6 +720,7 @@ export default function useUploaderController(
             folderUploadAllowDrop: resolved.folderUploadAllowDrop,
             folderPickerButtonVisible: resolved.folderPickerButtonVisible,
             showBranding,
+            quietCompletion,
             disableDragDrop,
             className: className ?? '',
             style: resolvedStyle,

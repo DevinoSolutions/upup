@@ -19,7 +19,6 @@
 
 # production
 /build
-/public/documentation
 /upup-landing-docs/public/sw.js
 # misc
 .DS_Store
@@ -44,3 +43,7 @@ yarn-error.log*
 next-env.d.ts
 
 /.idea
+
+# fumadocs generated source
+.source/
+source.generated.*

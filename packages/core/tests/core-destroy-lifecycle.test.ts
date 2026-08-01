@@ -1,16 +1,14 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upupjs/core'
-import type { PluginManager } from '../src/plugin'
 import type { CrashRecoveryManager } from '../src/crash-recovery'
 import type { PipelineEngine } from '../src/pipeline/engine'
 
 const makeFile = (name: string) => new File(['x'], name, { type: 'text/plain' })
 
 // Reaches into UpupCore's private fields for lifecycle assertions the public
-// API doesn't expose (plugin registry + manager refs released on destroy).
+// API doesn't expose (manager refs released on destroy).
 type CoreInternals = {
-    pluginManager: PluginManager
     crashRecovery: CrashRecoveryManager | null
     pipelineEngine: PipelineEngine | null
 }
@@ -55,23 +53,6 @@ describe('UpupCore — destroy lifecycle', () => {
         // Emitting after destroy — handler should NOT fire (listeners cleared)
         core.emit('files-added', [])
         expect(handler).not.toHaveBeenCalled()
-    })
-
-    it('extensions are cleared after destroy', () => {
-        const core = new UpupCore({})
-        core.use({
-            name: 'test-ext',
-            init: () => {
-                ;(
-                    core as unknown as CoreInternals
-                ).pluginManager.registerExtension('test', {
-                    val: () => 1,
-                })
-            },
-        })
-        expect(core.getExtension('test')).toBeDefined()
-        core.destroy()
-        expect(core.getExtension('test')).toBeUndefined()
     })
 
     it('progress returns zero after destroy', async () => {

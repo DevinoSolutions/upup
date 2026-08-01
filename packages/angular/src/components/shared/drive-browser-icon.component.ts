@@ -2,7 +2,7 @@ import { Component, Input, inject } from '@angular/core'
 import { type DriveFile } from '@upupjs/core'
 import { b64EncodeUnicode } from '@upupjs/core/internal'
 import { UpupStore } from '../../upup-store.service'
-import { FolderIconComponent } from '../icons/folder-icon.component'
+import { FolderFilledIconComponent } from '../icons/folder-filled-icon.component'
 import { FileIconSvgComponent } from '../icons/file-icon-svg.component'
 
 /**
@@ -14,11 +14,13 @@ import { FileIconSvgComponent } from '../icons/file-icon-svg.component'
 @Component({
     selector: 'upup-drive-browser-icon',
     standalone: true,
-    imports: [FolderIconComponent, FileIconSvgComponent],
+    imports: [FolderFilledIconComponent, FileIconSvgComponent],
     template: `
         @if (file.isFolder) {
             <i class="upup-flex-grow upup-text-lg">
-                <upup-folder-icon [class]="folderIconClass" />
+                <!-- Amber filled folder in both themes — folders read
+                     unmistakably as folders. -->
+                <upup-folder-filled-icon class="upup-text-[#fbbf24]" />
             </i>
         } @else if (!file.thumbnail) {
             <i class="upup-flex-grow upup-text-lg">
@@ -38,12 +40,6 @@ export class DriveBrowserIconComponent {
     private store = inject(UpupStore)
 
     @Input({ required: true }) file!: DriveFile
-
-    get folderIconClass(): string {
-        return this.store.isDark()
-            ? 'upup-text-[#6D6D6D] dark:upup-text-[#6D6D6D]'
-            : ''
-    }
 
     get fileIconClass(): string {
         return this.store.isDark()

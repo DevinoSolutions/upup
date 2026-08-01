@@ -197,9 +197,9 @@ export class CameraUploaderComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
+            'upup-mt-2 upup-flex upup-w-1/3 upup-flex-col upup-items-center upup-justify-center upup-rounded-md upup-bg-[#0ea5e9] upup-p-2 upup-text-white upup-transition-all upup-duration-300',
             {
-                'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': dark,
+                'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark,
             },
             slotClasses.cameraCaptureButton,
         )
@@ -217,9 +217,9 @@ export class CameraUploaderComponent implements AfterViewInit, OnDestroy {
         const dark = this.store.isDark()
         const slotClasses = this.store.slotOverrides()
         return cn(
-            'upup-mt-2 upup-w-full upup-rounded-md upup-bg-blue-600 upup-p-2 upup-text-white upup-transition-all upup-duration-300',
+            'upup-mt-2 upup-w-full upup-rounded-md upup-bg-[#0ea5e9] upup-p-2 upup-text-white upup-transition-all upup-duration-300',
             {
-                'upup-bg-[#59D1F9] dark:upup-bg-[#59D1F9]': dark,
+                'upup-bg-[#38bdf8] dark:upup-bg-[#38bdf8]': dark,
             },
             slotClasses.cameraAddButton,
         )

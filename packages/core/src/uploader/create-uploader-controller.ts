@@ -1,6 +1,8 @@
 import { UploaderOrchestrator } from '../orchestrator/uploader-orchestrator'
 import type { OrchestratorCallbacks } from '../orchestrator/types'
 import { ThemeStore } from '../theme/theme-store'
+import { createMotionGate } from './motion-gate'
+import { createTransientUiState } from './transient-ui-state'
 import { GoogleDrivePlugin } from '../drives/google-drive-plugin'
 import { DropboxPlugin } from '../drives/dropbox-plugin'
 import { BoxPlugin } from '../drives/box-plugin'
@@ -91,6 +93,19 @@ export function createUploaderController(
             : undefined)
     const theme = new ThemeStore(themeConfig)
 
+    // ── Motion gate + transient UI state ──
+    // The motion gate resolves the ONE reduced-motion verdict; transient UI
+    // defers file removal through it so the exit animation can play (and
+    // collapses to an immediate removal when motion is off). Framework call
+    // sites keep calling `handleFileRemove` — the deferral lives in the command.
+    const motionGate = createMotionGate({ animations: resolved.animations })
+    const transientUi = createTransientUiState({
+        motion: () => motionGate.getSnapshot(),
+        reallyRemove: fileId => {
+            orchestrator.removeFile(fileId)
+        },
+    })
+
     // ── Plugin registration (#7) ──
     const drivePlugins: Array<{ destroy(): void }> = []
     function registerPlugins() {
@@ -154,8 +169,22 @@ export function createUploaderController(
 
     const commands: UploaderCommands = {
         async handleSetSelectedFiles(newFiles: File[]) {
+            const before = core.files.size
             try {
                 await core.addFiles(newFiles)
+                // Close the add-more overlay once files actually merge in, but
+                // ONLY on the device-pick / drop path — those add files with no
+                // active source. Camera / screen-capture / drive add files WHILE
+                // their source view is open (activeSource set); that view stays up
+                // until the user dismisses it, so we leave the overlay in place.
+                // A rejected-all add doesn't change the count, so the overlay also
+                // stays open to try again.
+                if (
+                    core.files.size > before &&
+                    !orchestrator.getSnapshot().activeSource
+                ) {
+                    transientUi.closeSourceOverlay()
+                }
             } catch (error) {
                 const message =
                     error instanceof Error ? error.message : String(error)
@@ -197,7 +226,8 @@ export function createUploaderController(
         // run, and owns the done/state-reset emissions. Re-implementing any of
         // these here re-creates the drifting second copy pass 2 removed.
         handleFileRemove(fileId: string) {
-            orchestrator.removeFile(fileId)
+            // deferred exit animation; removal still ends at orchestrator via reallyRemove
+            transientUi.removeFileAnimated(fileId)
         },
         handleRemoveAll() {
             core.removeAll()
@@ -275,6 +305,8 @@ export function createUploaderController(
             core.on('state-change', notifyAll),
             orchestrator.subscribe(notifyAll),
             theme.subscribe(notifyAll),
+            motionGate.subscribe(notifyAll),
+            transientUi.subscribe(notifyAll),
         ]
     }
 
@@ -330,6 +362,8 @@ export function createUploaderController(
         })
         tearDownFanIn()
         orchestrator.destroy()
+        transientUi.destroy()
+        motionGate.destroy()
         theme.destroy()
         // NOTE: core is owned by the host; the host destroys it
     }
@@ -353,6 +387,8 @@ export function createUploaderController(
         core,
         orchestrator,
         theme,
+        motionGate,
+        transientUi,
         resolved,
         commands,
         registerFileInput,

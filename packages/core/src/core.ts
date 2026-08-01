@@ -212,7 +212,24 @@ export class UpupCore {
                     }
                 }
                 this.emitter.emit('files-added', added)
-                this.emitter.emit('state-change', { files: this.files })
+                // Continue-after-upload (F-810): once a run reached a terminal
+                // status, adding fresh still-pending files must return the run
+                // to IDLE so the upload CTA reappears. The already-completed
+                // files keep their SUCCESSFUL status/key — the next upload()
+                // only re-sends the pending ones (see runUpload).
+                const wasTerminal =
+                    this._status === UploadStatus.SUCCESSFUL ||
+                    this._status === UploadStatus.FAILED
+                if (wasTerminal && added.some(f => f.key == null)) {
+                    this._status = UploadStatus.IDLE
+                    this._error = null
+                    this.emitter.emit('state-change', {
+                        files: this.files,
+                        status: this._status,
+                    })
+                } else {
+                    this.emitter.emit('state-change', { files: this.files })
+                }
             }
             const rejectedCount = files.length - added.length
             if (rejectedCount > 0) {
@@ -523,8 +540,11 @@ export class UpupCore {
                               }
                             : undefined,
                     }
+                    // Only process files that still need uploading — re-running
+                    // upload() after a partial/complete run must not re-process
+                    // (or below, re-PUT) files that already succeeded (F-810).
                     const processed = await this.pipelineEngine.processAll(
-                        [...this.files.values()],
+                        [...this.files.values()].filter(f => f.key == null),
                         context,
                     )
                     this.fileManager.applyProcessed(processed)
@@ -537,8 +557,12 @@ export class UpupCore {
             this._status = UploadStatus.UPLOADING
             this.emitter.emit('state-change', { status: this._status })
 
-            // Only run actual uploads if credentials/endpoint are configured
-            await this.uploadFiles([...this.files.values()])
+            // Only upload the still-pending files (those without a `key`). An
+            // already-successful file keeps its key and is left untouched, so a
+            // second upload() after "add more" sends only the new files (F-810).
+            await this.uploadFiles(
+                [...this.files.values()].filter(f => f.key == null),
+            )
 
             this._status = UploadStatus.SUCCESSFUL
             this._error = null
