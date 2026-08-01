@@ -1,6 +1,6 @@
 {
     "name": "@upupjs/react",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "description": "React file uploader with drag-and-drop, cloud-drive sources, resumable uploads, image editor, theming, and ICU i18n.",
     "keywords": [
         "file-upload",
