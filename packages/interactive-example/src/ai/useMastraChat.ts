@@ -56,10 +56,15 @@ type UseMastraChatOptions = {
     distinctId?: string | undefined
 }
 
+// crypto.randomUUID needs a secure context; getRandomValues does not, so the
+// fallback stays cryptographically random on plain-http dev hosts.
+export const randomHex = (bytes: number): string =>
+    Array.from(crypto.getRandomValues(new Uint8Array(bytes)), b =>
+        b.toString(16).padStart(2, '0'),
+    ).join('')
+
 const newId = () =>
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-        ? crypto.randomUUID()
-        : `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    'randomUUID' in crypto ? crypto.randomUUID() : `msg-${randomHex(12)}`
 
 /**
  * A 32-hex-character trace id (Mastra accepts 1-32 hex chars for
@@ -69,11 +74,9 @@ const newId = () =>
  * fabricated value.
  */
 const newTraceId = () =>
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    'randomUUID' in crypto
         ? crypto.randomUUID().replace(/-/g, '')
-        : `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`
-              .replace(/[^0-9a-f]/g, '')
-              .slice(0, 32)
+        : randomHex(16)
 
 /**
  * Minimal chat hook talking directly to a Mastra agent's stream endpoint.

@@ -209,7 +209,8 @@ function renderLink(url: string, label: string, key: number) {
         try {
             const u = new URL(url)
             if (
-                u.hostname.endsWith('useupup.com') &&
+                (u.hostname === 'useupup.com' ||
+                    u.hostname.endsWith('.useupup.com')) &&
                 (u.pathname === '/docs' || u.pathname.startsWith('/docs/'))
             )
                 internalPath = `${u.pathname}${u.search}${u.hash}`

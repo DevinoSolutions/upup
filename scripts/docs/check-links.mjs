@@ -160,8 +160,14 @@ function headingIdFor(slugger, rawHeadingText) {
         .replace(/\*([^*]+)\*/g, '$1')
         .replace(/__([^_]+)__/g, '$1')
         .replace(/_([^_]+)_/g, '$1')
-        .replace(/<[^>]+>/g, '')
-        .trim()
+    // Strip inline HTML tags to a fixpoint: a single pass over `<[^>]+>` can
+    // leave a reassembled tag behind (e.g. `<sp<b>an>`), so repeat until stable.
+    let previous
+    do {
+        previous = text
+        text = text.replace(/<[^>]+>/g, '')
+    } while (text !== previous)
+    text = text.trim()
     return slugger.slug(text)
 }
 

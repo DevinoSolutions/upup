@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { ThumbsUp, ThumbsDown, X } from 'lucide-react'
 import { ConfigContext } from '../state/ConfigContext'
-import { useMastraChat, type ChatMessage } from './useMastraChat'
+import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
 import type { AiFeedbackEvent } from '../types'
 
@@ -22,9 +22,7 @@ type AssistantPanelProps = {
 const FEEDBACK_MODEL = 'anthropic/claude-haiku-4.5'
 
 const newFeedbackId = () =>
-    typeof crypto !== 'undefined' && 'randomUUID' in crypto
-        ? crypto.randomUUID()
-        : `fb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+    'randomUUID' in crypto ? crypto.randomUUID() : `fb-${randomHex(9)}`
 
 /**
  * Thumbs up/down (plus an optional follow-up comment on thumbs-down) for one
