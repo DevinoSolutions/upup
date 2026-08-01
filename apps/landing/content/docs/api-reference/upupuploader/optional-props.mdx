@@ -1,105 +1,76 @@
 ---
 title: Optional Props
-description: The stable optional UpupUploader props — sources, cloudDrives, i18n, theme, metadata, folderUpload, cors, maxRetries, animations, and resumable.
+description: The complete optional-prop reference for UpupUploader — behavior, file validation, the processing pipeline, upload reliability, sources, appearance, localization, plus the headless-only engine options.
 ---
 
-These are the stable optional props.
+Every prop on this page is optional. The three upload-target props (`uploadEndpoint`, `serverUrl`, `resumable.endpoint`) and `provider` are covered in [Required Props](/docs/api-reference/upupuploader/required-props/); the 34 `on*` callbacks are covered in [Events & Callbacks](/docs/api-reference/events/).
 
-| Prop           | Example                                                                                 |
-| -------------- | --------------------------------------------------------------------------------------- |
-| `sources`      | `sources={['local', 'url', 'googleDrive']}`                                             |
-| `cloudDrives`  | `cloudDrives={{ googleDrive: { clientId, apiKey, appId } }}`                             |
-| `i18n`         | `i18n={{ locale: frFR, overrides: { browseFiles: 'choisir des fichiers' } }}`           |
-| `theme`        | `theme={{ mode: 'dark', slots: { uploader: { root: '...' } } }}`                         |
-| `metadata`     | `metadata={{ projectId: 'p_123' }}`                                                     |
-| `folderUpload` | `folderUpload={{ allowDrop: true, showSelectFolderButton: true }}`                      |
-| `cors`         | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: ['http://localhost:3000'] }}`  |
-| `maxRetries`   | `maxRetries={3}`                                                                        |
-| `animations`   | `animations={false}`                                                                    |
-| `resumable`    | `resumable={{ protocol: 'multipart', thresholdBytes: 5 * 1024 * 1024 }}`                |
+Props are identical across React, Vue, Svelte, Angular, Vanilla, Preact, and Next — only `icons` and `style` differ in type per framework. Examples below use React syntax.
 
-## `sources`
+## Index
 
-Controls which source panels are available. Canonical IDs are:
+- **Behavior** — [`mode`](#mode), [`autoUpload`](#autoupload), [`quietCompletion`](#quietcompletion), [`enablePaste`](#enablepaste), [`disableDragDrop`](#disabledragdrop), [`folderUpload`](#folderupload), [`onBeforeFileAdded`](#onbeforefileadded)
+- **Files & validation** — [`maxFiles`](#maxfiles), [`allowedFileTypes`](#allowedfiletypes), [`maxFileSize`](#maxfilesize), [`minFileSize`](#minfilesize), [`maxTotalFileSize`](#maxtotalfilesize), [`contentDeduplication`](#contentdeduplication)
+- **Processing pipeline** — [`imageCompression`](#imagecompression), [`heicConversion`](#heicconversion), [`stripExifData`](#stripexifdata), [`thumbnailGenerator`](#thumbnailgenerator), [`checksumVerification`](#checksumverification), [`webWorker`](#webworker), [`imageEditor`](#imageeditor), [`processingEndpoint`](#processingendpoint), [`processingTimeout`](#processingtimeout)
+- **Upload & reliability** — [`maxRetries`](#maxretries), [`maxConcurrentUploads`](#maxconcurrentuploads), [`resumable`](#resumable), [`crashRecovery`](#crashrecovery), [`metadata`](#metadata), [`cors`](#cors)
+- **Sources & drives** — [`sources`](#sources), [`cloudDrives`](#clouddrives)
+- **Appearance & UI** — [`theme`](#theme), [`animations`](#animations), [`mini`](#mini), [`className`](#classname), [`style`](#style), [`icons`](#icons), [`allowPreview`](#allowpreview), [`showBranding`](#showbranding), [`isProcessing`](#isprocessing)
+- **Localization** — [`i18n`](#i18n)
+- **Headless-only (not component props)** — [`plugins`](#plugins), [`pipeline`](#pipeline), [`workerTimeoutMs`](#workertimeoutms), [`isSuccessfulCall`](#issuccessfulcall)
 
-```ts
-type FileSource =
-    | 'local'
-    | 'url'
-    | 'camera'
-    | 'microphone'
-    | 'screen'
-    | 'googleDrive'
-    | 'oneDrive'
-    | 'dropbox'
-    | 'box'
-```
+## Behavior
 
-## `cloudDrives`
+### `mode`
 
-Browser-safe cloud provider configuration for client mode.
+`mode?: 'client' | 'server'` — default `'client'`, or `'server'` when `serverUrl` is set and `uploadEndpoint` is not.
+
+In client mode the browser talks to storage directly and your server only signs URLs. In server mode the browser talks only to `serverUrl`, which proxies drive APIs and storage writes. Pick server mode when you cannot expose OAuth client secrets to the browser, or when uploads must pass through your own compliance or scanning layer. See [Client Mode vs Server Mode](/docs/guides/modes/).
 
 ```tsx
-<UpupUploader
-    sources={['local', 'googleDrive']}
-    cloudDrives={{
-        googleDrive: {
-            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
-            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID!,
-        },
-    }}
-/>
+<UpupUploader mode="server" serverUrl="/api/upup" />
 ```
 
-Use `serverUrl` for OAuth client secrets, token storage, server-side transfers, and compliance workflows.
+### `autoUpload`
 
-## `i18n`
+`autoUpload?: boolean` — default `false`.
 
-Locale bundles are exported from `@upupjs/core/i18n`.
+Starts the upload immediately when files are selected, so the user never presses an upload button. Combine with [`quietCompletion`](#quietcompletion) when the uploader is embedded in a form your app controls.
 
 ```tsx
-import { frFR } from '@upupjs/core/i18n'
-
-;<UpupUploader
-    i18n={{
-        locale: frFR,
-        overrides: {
-            browseFiles: 'choisir des fichiers',
-        },
-    }}
-/>
+<UpupUploader uploadEndpoint="/api/upload-token" autoUpload />
 ```
 
-## `theme`
+### `quietCompletion`
 
-`theme.mode` supports `light`, `dark`, and `system`. Use `theme.slots` for component classes — the slot map is keyed by component, then by the slot within it.
+`quietCompletion?: boolean` — default `false`.
+
+When `true`, a successful run shows only a brief checkmark over the panel — no Done button, no summary, no follow-up calls to action. Use it when your app takes over after upload via the completion callbacks or events. The default `false` keeps the normal Done/continue-after-upload flow.
 
 ```tsx
-<UpupUploader
-    theme={{
-        mode: 'system',
-        slots: {
-            uploader: { root: 'rounded-lg border' },
-        },
-    }}
-/>
+<UpupUploader autoUpload quietCompletion onFilesUploadComplete={handleDone} />
 ```
 
-## `metadata`
+### `enablePaste`
 
-`metadata` is sent with presign and multipart init requests.
+`enablePaste?: boolean` — default `false`.
+
+Accepts clipboard paste (Ctrl+V / Cmd+V) as a file source. Pasted files run through the same validation, `onBeforeFileAdded` filter, and pipeline as picked files.
 
 ```tsx
-<UpupUploader
-    uploadEndpoint="/api/upload-token"
-    metadata={{ projectId: 'p_123', visibility: 'private' }}
-/>
+<UpupUploader enablePaste />
 ```
 
-## `folderUpload`
+### `disableDragDrop`
 
-`allowDrop` controls folder traversal when a user drops a directory onto the uploader. `showSelectFolderButton` controls whether the My Device source shows an explicit Select Folder action.
+`disableDragDrop?: boolean` — default `false`.
+
+Turns off drag-and-drop while keeping the browse/click path fully functional. Useful when the uploader sits inside a surface that owns its own drag behavior (a kanban card, a rich-text editor).
+
+### `folderUpload`
+
+`folderUpload?: { allowDrop?: boolean; showSelectFolderButton?: boolean }` — both default `false`.
+
+`allowDrop` controls directory traversal when a user drops a folder onto the uploader. `showSelectFolderButton` controls whether the My Device source shows an explicit Select folder action.
 
 ```tsx
 <UpupUploader
@@ -107,38 +78,210 @@ import { frFR } from '@upupjs/core/i18n'
 />
 ```
 
-## `cors`
+### `onBeforeFileAdded`
 
-Automatic CORS configuration is dangerous because it can mutate bucket policy. It must be explicitly enabled and scoped.
+`onBeforeFileAdded?: (file: File) => boolean | File | undefined | Promise<boolean | File | undefined>`
+
+An async filter called once per file before it enters the file list. Return `false` to reject the file, a `File` to substitute a different one (renamed, re-wrapped, pre-scrubbed), or `true`/`undefined` to accept it unchanged. It runs before size and type validation, so it is the right place for rules the built-in restrictions cannot express.
 
 ```tsx
 <UpupUploader
-    cors={{
-        dangerouslyAutoConfigure: true,
-        allowedOrigins: ['http://localhost:3000'],
+    onBeforeFileAdded={async file => {
+        if (file.name.startsWith('~$')) return false
+        return new File([file], file.name.toLowerCase(), { type: file.type })
     }}
 />
 ```
 
-## `maxRetries`
+This is the one file-gating callback documented here because it changes what gets added rather than reporting what happened. Every other `on*` prop lives in [Events & Callbacks](/docs/api-reference/events/).
 
-Retries transient upload failures per file before surfacing a failed state.
+## Files & validation
+
+### `maxFiles`
+
+`maxFiles?: number` — default `10`.
+
+The maximum number of files that can be in the list at once. Values below `1` are clamped to `1`, and [`mini`](#mini) forces the limit to `1` regardless of what you pass. When the resolved limit is `1` the underlying file input drops its `multiple` attribute. Attempts to exceed the limit surface through `onRestrictionFailed` with reason `LIMIT_EXCEEDED`.
+
+```tsx
+<UpupUploader maxFiles={25} />
+```
+
+### `allowedFileTypes`
+
+`allowedFileTypes?: string | string[]` — default `'*'`.
+
+MIME patterns, file extensions, or preset names. Arrays are joined with commas; each comma-separated token is resolved against the preset table, and anything that is not a preset name passes through verbatim, so presets and raw patterns can be mixed freely.
+
+```tsx
+<UpupUploader allowedFileTypes={['images', 'documents', '.dwg']} />
+```
+
+Preset names available from `@upupjs/core`'s `ACCEPT_PRESETS`: `images`, `video`, `audio`, `documents`, `spreadsheets`, `presentations`, `archives`, `code`, `fonts`, `3d`, `design`, `ebooks`, `photography`, `animation`, `ar`, `vector`, `cad`, `gis`, `data`, `markup`, `subtitles`, `email`, `calendar`, `contacts`, `disk`, `ml`, `database`, `certificates`, `firmware`, `executable`, `config`, `financial`, `scientific`, `medical`.
+
+A rejected file fires `onFileTypeMismatch` and `onRestrictionFailed` with reason `TYPE_MISMATCH`.
+
+### `maxFileSize`
+
+`maxFileSize?: { size: number; unit: 'B' | 'KB' | 'MB' | 'GB' | 'TB' | 'PB' | 'EB' | 'ZB' | 'YB' }` — default `{ size: 1, unit: 'GB' }`.
+
+Per-file ceiling. Oversized files are rejected before upload and reported through `onRestrictionFailed` with reason `FILE_TOO_LARGE`.
+
+```tsx
+<UpupUploader maxFileSize={{ size: 200, unit: 'MB' }} />
+```
+
+### `minFileSize`
+
+`minFileSize?: { size: number; unit: 'B' | 'KB' | 'MB' | 'GB' | ... }` — no default (no floor).
+
+Per-file floor, using the same `{ size, unit }` shape. Rejections report reason `FILE_TOO_SMALL`. Useful for catching truncated or zero-byte files before they reach storage.
+
+### `maxTotalFileSize`
+
+`maxTotalFileSize?: { size: number; unit: 'B' | 'KB' | 'MB' | 'GB' | ... }` — no default.
+
+A ceiling on the combined size of everything currently in the list, checked as files are added. This is the right knob for per-submission quotas; `maxFileSize` alone cannot stop fifty acceptable files from adding up.
+
+```tsx
+<UpupUploader
+    maxFileSize={{ size: 100, unit: 'MB' }}
+    maxTotalFileSize={{ size: 1, unit: 'GB' }}
+/>
+```
+
+### `contentDeduplication`
+
+`contentDeduplication?: boolean` — default `false`.
+
+Hashes each incoming file's bytes (SHA-256 via WebCrypto, with a non-cryptographic fallback where `crypto.subtle` is unavailable) and drops any file whose content already exists in the list. Because it is content-based, it catches the same file added twice under different names — which name-based checks miss.
+
+## Processing pipeline
+
+Pipeline steps run in a fixed order before upload: HEIC conversion, EXIF stripping, compression, thumbnail generation, then hashing. Each step's module is loaded lazily, so a step you do not enable costs nothing in your bundle.
+
+### `imageCompression`
+
+`imageCompression?: boolean` — default `false`.
+
+Re-encodes images before upload. Defaults are quality `0.82` and a longest-edge cap of `1920` pixels. If a target byte size is configured, the step retries in `0.12` quality decrements down to a floor of `0.35` until the output fits. When no size target and no dimension cap are set and the re-encode came out larger than the original, the original file is uploaded untouched.
+
+```tsx
+<UpupUploader imageCompression />
+```
+
+The prop is typed as a boolean. To tune `quality`, `maxWidthOrHeight`, or `maxSizeMB`, pass the object form to the engine directly through the headless API — see [Headless Usage](/docs/guides/headless/).
+
+```ts
+const core = new UpupCore({
+    imageCompression: { quality: 0.7, maxWidthOrHeight: 2560, maxSizeMB: 2 },
+})
+```
+
+### `heicConversion`
+
+`heicConversion?: boolean` — default `false`.
+
+Converts HEIC/HEIF images (the default iPhone camera format) to JPEG so they render in every browser. The decoder (`libheif-js`) is an optional dependency loaded on demand, so enabling this adds nothing to the mandatory bundle. Decode failures surface as a `pipeline-error` diagnostic rather than failing the upload.
+
+### `stripExifData`
+
+`stripExifData?: boolean` — default `false`.
+
+Removes EXIF metadata — including GPS coordinates, device model, and capture timestamps — from images before they leave the browser. Enable it for anything user-generated and publicly served.
+
+### `thumbnailGenerator`
+
+`thumbnailGenerator?: boolean` — default `false`.
+
+Generates a thumbnail for each image and attaches it to the file's `metadata.thumbnailUrl` (plus a `thumbnail.file` blob). Useful when your backend wants a preview it did not have to render itself.
+
+```tsx
+<UpupUploader thumbnailGenerator onFileUploadComplete={handleUploaded} />
+```
+
+Like `imageCompression`, the prop is a boolean; the engine option accepts `{ width, height, quality }` for tuning.
+
+### `checksumVerification`
+
+`checksumVerification?: boolean` — default `false`.
+
+Computes a SHA-256 hash of each file and carries it through with the upload so your server can verify the bytes it received match the bytes the browser sent. Worth the cost on large or irreplaceable files; skip it for avatars.
+
+### `webWorker`
+
+`webWorker?: boolean` — unset or `true` means auto, `false` forces the main thread.
+
+Controls whether the pipeline (hash, HEIC, EXIF, thumbnail, compress) runs off the main thread. Auto mode uses a worker where the runtime supports it and falls back to the main thread transparently otherwise, so the UI stays responsive while a 40 MB photo re-encodes. Set `false` only when a host environment forbids workers.
+
+```tsx
+<UpupUploader imageCompression checksumVerification webWorker={false} />
+```
+
+### `imageEditor`
+
+`imageEditor?: boolean | ImageEditorOptions` — enabled by default; `display` defaults to `'inline'` and `autoOpen` to `'never'`.
+
+Opens a crop/rotate/annotate editor on selected images. Omitting the prop leaves the editor **on** — the heavy editor bundle still loads lazily, only when a user actually opens it. Passing `false` (or `null`) disables it. The object form accepts `enabled`, `display` (`'inline' | 'modal'`), `autoOpen` (`'never' | 'single' | 'always'`), `output`, `tabs`, `tools`, and the `onOpen`/`onCancel`/`onSave` hooks.
+
+```tsx
+<UpupUploader
+    imageEditor={{
+        display: 'modal',
+        autoOpen: 'single',
+        tabs: ['Adjust', 'Finetune'],
+        tools: ['Crop', 'Rotate'],
+    }}
+/>
+```
+
+The editor ships in React and Preact only; Vue, Svelte, Angular, and Vanilla accept the prop but stub the UI. See [Image Editor](/docs/api-reference/upupuploader/image-editor/).
+
+### `processingEndpoint`
+
+`processingEndpoint?: string` — no default.
+
+After each file finishes uploading, the uploader opens a Server-Sent Events connection to this URL with the storage key appended as `?key=...`. Use it to wait for server-side work — virus scanning, transcoding, thumbnail rendering — before treating the file as done. The completion event arrives through the `onFileProcessed` callback, documented in [Events & Callbacks](/docs/api-reference/events/).
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    processingEndpoint="/api/processing-status"
+    processingTimeout={120000}
+/>
+```
+
+### `processingTimeout`
+
+`processingTimeout?: number` — default `60000` (60 seconds).
+
+Maximum milliseconds to wait for the `processingEndpoint` SSE event before closing the connection. Raise it for slow pipelines like video transcoding; the file itself is already uploaded either way.
+
+## Upload & reliability
+
+### `maxRetries`
+
+`maxRetries?: number` — default `3`.
+
+Counts **retries, not attempts**: a file is tried once and then retried up to `maxRetries` times, so the default of `3` means four attempts in total before the file is marked failed. A file rejected by [`isSuccessfulCall`](#issuccessfulcall) is not retried, since a business-logic rejection is unlikely to resolve itself.
 
 ```tsx
 <UpupUploader uploadEndpoint="/api/upload-token" maxRetries={3} />
 ```
 
-## `animations`
+See [Error Handling](/docs/error-handling/) for what reaches your code after retries are exhausted.
 
-Decorative motion (entrance, hover, sheen, and success effects) is on by default. Set `animations={false}` to disable it — `prefers-reduced-motion` is honored automatically, and essential motion (progress width, focus rings, and the spinner) always runs.
+### `maxConcurrentUploads`
 
-```tsx
-<UpupUploader animations={false} />
-```
+`maxConcurrentUploads?: number` — default `3`.
 
-## `resumable`
+How many files upload in parallel. Raising it helps on fast connections with many small files; lowering it to `1` is the safest choice when your presign route is rate-limited or your storage layer meters concurrent writes.
 
-Multipart and tus are both explicit protocols.
+### `resumable`
+
+`resumable?: ResumableUploadOptions` — no default (single-shot uploads).
+
+Multipart and tus are both explicit protocols; there is no automatic selection.
 
 ```tsx
 <UpupUploader
@@ -160,3 +303,239 @@ Multipart and tus are both explicit protocols.
     }}
 />
 ```
+
+The multipart form takes `thresholdBytes`, `chunkSizeBytes`, and `persist`. The tus form requires `endpoint` and takes `chunkSizeBytes`, `retryDelays`, `storeFingerprintForResuming`, `removeFingerprintOnSuccess`, `headers`, `metadata`, and `parallelUploads`; `tus-js-client` is an optional dependency loaded on demand. Full protocol details are in [Resumable Uploads](/docs/resumable-uploads/).
+
+### `crashRecovery`
+
+`crashRecovery?: boolean` — default `false`.
+
+Persists upload state to IndexedDB so an interrupted session can resume after a page refresh or browser crash. State is saved on every state change while files are present and cleared once the run succeeds. Persistence is best-effort by design: a failed write warns in development and never breaks an upload. A normal unmount leaves the stored state intact, so the session stays recoverable.
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    resumable={{ protocol: 'multipart' }}
+    crashRecovery
+/>
+```
+
+Pair it with `resumable` — recovering the file list is only useful if the transfer itself can pick up where it stopped.
+
+The prop is a boolean. Supplying your own persistence layer instead of IndexedDB is a headless-only option: the engine's `crashRecovery` also accepts an object carrying a custom storage implementation, reachable through `new UpupCore(...)` or `useUpupUpload` — see [Headless Usage](/docs/guides/headless/).
+
+### `metadata`
+
+`metadata?: Record<string, unknown>` — no default.
+
+An arbitrary object sent with presign and multipart-init requests, so your server can attach ownership, tenancy, or routing information to the object it signs. It is the supported way to pass application context through the upload without inventing a side channel.
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    metadata={{ projectId: 'p_123', visibility: 'private' }}
+/>
+```
+
+### `cors`
+
+`cors?: { dangerouslyAutoConfigure?: boolean; allowedOrigins: string[]; allowedMethods?: string[]; allowedHeaders?: string[]; maxAgeSeconds?: number }`
+
+`allowedOrigins` is required when the object is present. `dangerouslyAutoConfigure` is named for what it does: it can mutate your bucket's CORS policy, so it must be enabled explicitly and scoped to origins you control. Treat it as a local-development convenience and configure CORS on the bucket for production — see [Credentials And CORS](/docs/credentials-configuration/).
+
+```tsx
+<UpupUploader
+    cors={{
+        dangerouslyAutoConfigure: true,
+        allowedOrigins: ['http://localhost:3000'],
+    }}
+/>
+```
+
+## Sources & drives
+
+### `sources`
+
+`sources?: UploadSource[]` — default `['local', 'url', 'camera', 'microphone', 'screen']`.
+
+Controls which source panels are available and the order they appear in. Cloud drives are **not** in the default set — listing one here also requires configuring it in [`cloudDrives`](#clouddrives) (client mode) or on your `@upupjs/server` handler (server mode). `UploadSource` is the string form of the `FileSource` enum — import `FileSource` from `@upupjs/core` if you prefer named constants over string literals. Canonical IDs are:
+
+```ts
+type UploadSource =
+    | 'local'
+    | 'url'
+    | 'camera'
+    | 'microphone'
+    | 'screen'
+    | 'googleDrive'
+    | 'oneDrive'
+    | 'dropbox'
+    | 'box'
+```
+
+```tsx
+<UpupUploader sources={['local', 'camera', 'googleDrive']} />
+```
+
+### `cloudDrives`
+
+`cloudDrives?: { googleDrive?: …; oneDrive?: …; dropbox?: …; box?: … }` — no default.
+
+Browser-safe cloud provider configuration for client mode. Google Drive takes `clientId`, `apiKey`, and `appId`; OneDrive, Dropbox, and Box each take `clientId` plus an optional `redirectUri`.
+
+```tsx
+<UpupUploader
+    sources={['local', 'googleDrive']}
+    cloudDrives={{
+        googleDrive: {
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
+            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID!,
+        },
+    }}
+/>
+```
+
+Only publishable values belong here. Use `serverUrl` for OAuth client secrets, token storage, server-side transfers, and compliance workflows — see [Server Mode — Setup](/docs/guides/server-mode-setup/).
+
+## Appearance & UI
+
+### `theme`
+
+`theme?: { mode?: 'light' | 'dark' | 'system'; tokens?: …; slots?: … }`
+
+`theme.mode` supports `light`, `dark`, and `system` (which follows `prefers-color-scheme` and updates live). `theme.tokens` overrides color, radius, shadow, and spacing values; `theme.slots` supplies per-component class overrides, keyed by component and then by the slot within it.
+
+```tsx
+<UpupUploader
+    theme={{
+        mode: 'system',
+        slots: {
+            uploader: { root: 'rounded-lg border' },
+        },
+    }}
+/>
+```
+
+Full token and slot tables are in [Theming](/docs/guides/theming/).
+
+### `animations`
+
+`animations?: boolean` — default `true`.
+
+Decorative motion (entrance, hover, sheen, and success effects) is on by default. Set `animations={false}` to disable it. `prefers-reduced-motion` is honored automatically regardless of this prop, and essential motion — progress width, focus rings, the spinner — always runs.
+
+```tsx
+<UpupUploader animations={false} />
+```
+
+### `mini`
+
+`mini?: boolean` — default `false`.
+
+Renders a compact square uploader (roughly 280 px) instead of the standard fixed-height panel. Mini mode forces a single-file limit: [`maxFiles`](#maxfiles) resolves to `1` and the file input drops `multiple`.
+
+### `className`
+
+`className?: string` — no default.
+
+Additional CSS class applied to the uploader's root container, alongside the required `upup-scope` class. Use it for layout and positioning; use [`theme`](#theme) slots for anything inside the panel.
+
+### `style`
+
+`style?: React.CSSProperties` (React/Preact/Next) or `Record<string, string>` (Vue, Svelte, Angular, Vanilla) — no default.
+
+Inline styles on the root container. This is one of the two genuinely framework-specific props; the type differs but the DOM result does not.
+
+### `icons`
+
+`icons?: UploaderIcons` — no default.
+
+Replaces individual glyphs with your own components. React accepts `ContainerAddMoreIcon`, `FileDeleteIcon`, `CameraDeleteIcon`, `CameraCaptureIcon`, `CameraRotateIcon`, and `LoaderIcon`, each a component taking `className`. The component type is framework-specific — see [Icon Prop](/docs/api-reference/upupuploader/icon-prop/).
+
+```tsx
+<UpupUploader icons={{ FileDeleteIcon: MyTrashIcon }} />
+```
+
+### `allowPreview`
+
+`allowPreview?: boolean` — default `true`.
+
+Shows an expanded preview for files that can be rendered in the browser (images, video, audio). Set it to `false` for a filename-and-size list — a reasonable choice when users upload sensitive documents on shared screens.
+
+### `showBranding`
+
+`showBranding?: boolean` — default `true`.
+
+Shows or hides the upup branding footer inside the panel.
+
+### `isProcessing`
+
+`isProcessing?: boolean` — default `false`.
+
+A host-controlled busy flag. When `true`, the uploader shows a spinner in the panel corner and stops accepting new files: drag-over, drop, and paste handlers all short-circuit. Drive it from your own async work — form submission, server validation — when the uploader should look busy for a reason the uploader itself does not know about.
+
+## Localization
+
+### `i18n`
+
+`i18n?: { bundle?: LocaleBundle; locale?: LocaleBundle | string; fallbackLocale?: LocaleBundle | string; overrides?: PartialMessages }`
+
+Locale bundles are exported from `@upupjs/core/i18n`. Passing a bundle (via `bundle` or `locale`) enables ICU pluralization, namespaced key overrides, and the correct `lang`/`dir` on the root element; `bundle` takes precedence over `locale`. A bare BCP-47 string sets `lang`/`dir` only. `fallbackLocale` fills gaps when the active bundle is missing a key, and `overrides` merges per-key replacements on top of everything else.
+
+```tsx
+import { frFR } from '@upupjs/core/i18n'
+
+;<UpupUploader
+    i18n={{
+        locale: frFR,
+        overrides: {
+            browseFiles: 'choisir des fichiers',
+        },
+    }}
+/>
+```
+
+The full key list and RTL notes are in [Localization](/docs/localization/).
+
+## Headless-only options (UpupCore / useUpupUpload)
+
+These four options are accepted by `UpupCore` but are **not** props on `<UpupUploader>` — the component's props-to-engine bridge does not forward them, so passing them to the component has no effect. Reach them by constructing the engine yourself with `new UpupCore(...)` or `useUpupUpload` — see [Headless Usage](/docs/guides/headless/).
+
+### `plugins`
+
+`plugins?: UpupPlugin[]` — no default.
+
+Plugins registered at construction. A plugin is `{ name; init?(emitter) }`; `init` receives the core event bus, not the core itself. The built-in cloud-drive plugins are registered for you when you use the component.
+
+### `pipeline`
+
+`pipeline?: PipelineStep[]` — no default.
+
+An explicit pipeline that replaces the automatic one. When you pass it, the boolean flags (`imageCompression`, `heicConversion`, and friends) no longer assemble the step list — you own the order and the contents.
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    pipeline: [myWatermarkStep(), compressStep({ quality: 0.7 })],
+})
+```
+
+### `workerTimeoutMs`
+
+`workerTimeoutMs?: number` — default `30000`.
+
+Per-task timeout for web-worker pipeline work. On timeout the task falls back to main-thread processing; it never fails the file. Raise it if you routinely process very large images on low-end devices.
+
+### `isSuccessfulCall`
+
+`isSuccessfulCall?: (response: { status: number; headers: Record<string, string>; body: unknown }) => boolean | Promise<boolean>`
+
+A custom success predicate for the storage response. Use it when a `2xx` is not sufficient proof — for example a gateway that returns `200` with an error body. A file rejected by this predicate is marked failed and is **not** retried, on the assumption a business-logic rejection will not resolve on a second attempt.
+
+## See also
+
+- [Required Props](/docs/api-reference/upupuploader/required-props/) — `uploadEndpoint`, `serverUrl`, `resumable.endpoint`, and `provider`.
+- [Events & Callbacks](/docs/api-reference/events/) — all 34 `on*` props.
+- [Ref API](/docs/api-reference/upupuploader/ref-api/) — imperative control from the host.
+- [Headless Usage](/docs/guides/headless/) — the engine behind the component.

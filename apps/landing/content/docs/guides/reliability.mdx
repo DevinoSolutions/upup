@@ -1,0 +1,305 @@
+---
+title: Reliability
+description: How upup survives flaky networks — the per-file retry policy and its backoff math, custom success predicates, upload concurrency, online/offline events, and the difference between crash recovery and multipart session resume.
+---
+
+Uploads fail for boring reasons: a tunnel, a dropped VPN, a 502 from a storage
+edge node, a laptop lid closing mid-transfer. This guide covers what upup does
+about each on its own, and which knobs you get.
+
+Two things worth separating up front, because their names sound alike and their
+jobs are not:
+
+- **Retries** happen _within_ a page session — an attempt fails, upup waits and
+  tries again.
+- **Crash recovery** happens _across_ page sessions — the tab dies, and the file
+  selection comes back on reload.
+
+## Retry policy
+
+Every file is uploaded through a retry loop of its own. A failure on one file
+never cancels the others; the run collects failures and reports them at the end.
+
+`maxRetries` is the number of **extra** attempts after the first one, so the
+total attempt count is `maxRetries + 1`. It defaults to **3** — four attempts
+in total.
+
+```tsx
+<UpupUploader
+    provider="aws"
+    uploadEndpoint="/api/upload-token"
+    maxRetries={3}
+/>
+```
+
+### Backoff math
+
+Between attempts upup sleeps on a fixed exponential curve: `100ms * 2^attempt`,
+where `attempt` is the zero-based index of the attempt that just failed. There
+is no jitter and no configurable multiplier.
+
+| Attempt | Result | Wait before next |
+| ------- | ------ | ---------------- |
+| 1       | fails  | 100 ms           |
+| 2       | fails  | 200 ms           |
+| 3       | fails  | 400 ms           |
+| 4       | fails  | — gives up       |
+
+With the default `maxRetries={3}` the whole sequence adds about 700 ms of
+waiting before a file is declared failed. Raising `maxRetries` extends the curve
+(the fifth attempt waits 800 ms, the sixth 1600 ms, and so on).
+
+### What is actually retried
+
+upup does not retry things that cannot plausibly succeed on a second try:
+
+| Situation                                      | Retried? | Why                                                          |
+| ---------------------------------------------- | -------- | ------------------------------------------------------------ |
+| Network failure with no HTTP status            | Yes      | Connection reset, DNS, CORS-level failure                    |
+| HTTP 5xx from storage                          | Yes      | Server-side transient                                        |
+| HTTP 4xx from storage                          | **No**   | Expired signature, denied, malformed — resending fails again |
+| Any non-network error thrown by the pipeline   | Yes      | Treated as potentially transient                             |
+| The upload was aborted (`cancel()`, `pause()`) | **No**   | Aborting is intentional                                      |
+| `isSuccessfulCall` returned `false`            | **No**   | Your predicate made a deliberate ruling                      |
+
+When every attempt is exhausted, the file's last error surfaces on the
+`upload-error` event, and the batch as a whole rejects with an
+`UpupUploadBatchError` carrying an `errors` array of `{ file, error }` pairs.
+
+### Manual retry
+
+Automatic retries are not the only path. `core.retry(fileId?)` re-runs failed
+work on demand — pass a file id to retry one file, or omit it to retry every
+file that has not completed. It emits a `retry` event before the run starts.
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
+
+core.on('upload-error', ({ file }) => {
+    if (file) void core.retry(file.id)
+})
+```
+
+`core.resume()` is the sibling for a paused run: it re-uploads every file that
+has no storage `key` yet. Both throw if called after `destroy()`.
+
+The shipped UI already wires this. The button appears whenever the run reaches a
+failed state — it is **not** gated on `maxRetries`, which governs how many
+automatic attempts happen _before_ that state, not whether the manual button is
+offered. It invokes `retryUpload()` regardless of protocol; only its **label**
+changes, reading **Retry** normally and **Resume** when `resumable.protocol` is
+`'multipart'`. Both labels run the same code path.
+
+Do not confuse that button with the **Resume** control shown while a run is
+_paused_ — a separate button on the genuine pause/resume path that calls
+`core.resume()`. The two share a label but not a behavior.
+
+## Custom success predicates: `isSuccessfulCall`
+
+Some upload targets answer with something other than a plain 2xx, or return a
+200 whose _body_ signals a failure. `isSuccessfulCall` lets you make the call:
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    isSuccessfulCall: response => {
+        const body = response.body as { key?: string }
+        return typeof body.key === 'string'
+    },
+})
+```
+
+Return `false` and the attempt is treated as a failure. It is **not** retried —
+a predicate that rejects is read as a deliberate verdict, not a transient
+glitch.
+
+<Callout type="warning" title="The response object is synthetic">
+    `isSuccessfulCall` does not receive the raw HTTP response. upup builds the
+    argument from the completed `UploadResult`, so `status` is always `200` and
+    `headers` is always an empty object — only `body` carries real information
+    (the `UploadResult`, with fields such as `key`, `publicUrl`, and `etag`).
+    Write your predicate against `body` alone; branching on `status` or
+    `headers` will not do what it looks like it does.
+</Callout>
+
+This also means the predicate runs only after a transfer _succeeds_ at the
+transport level. It is a post-check on the result, not a replacement for HTTP
+error handling.
+
+## Concurrency: `maxConcurrentUploads`
+
+`maxConcurrentUploads` caps how many files transfer at the same time. It
+defaults to **3**. Remaining files wait in a queue and start as slots free up.
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" maxConcurrentUploads={3} />
+```
+
+Raising it helps when you are uploading many small files against a fast link;
+lowering it to `1` serializes the run, which is the friendlier choice for
+constrained mobile connections and for servers that rate-limit presign
+requests. This limit is about _files_. Within a single multipart file, parts
+have their own separate concurrency limit of 3.
+
+## Offline and online
+
+upup listens for the browser's `online` and `offline` events and republishes
+them on the core bus as `connection-online` and `connection-offline`. Both carry
+an empty payload. The initial value is seeded from `navigator.onLine`, and the
+listeners are torn down when the uploader is destroyed.
+
+```ts
+core.on('connection-offline', () => {
+    console.warn('link down')
+})
+
+core.on('connection-online', () => {
+    console.info('link back')
+})
+```
+
+In the shipped UI this state drives a banner across the top of the panel while
+the browser reports itself offline.
+
+<Callout type="note" title="Nothing pauses automatically">
+Going offline does not pause, cancel, or defer an in-flight run, and coming
+back online does not restart one. The connectivity state is **observational** —
+it updates the banner and emits the events, and that is all. In practice an
+upload attempted while offline simply fails its network request and is picked
+up by the ordinary retry loop described above.
+
+If you want uploads to actually stop when the link drops, wire it yourself:
+call `core.pause()` on `connection-offline` and `core.resume()` on
+`connection-online`.
+
+</Callout>
+
+## Crash recovery vs. multipart session resume
+
+These two are genuinely different mechanisms with different storage, different
+scope, and — importantly for v3.1.0 — different levels of support.
+
+|                   | **Crash recovery**                  | **Multipart session resume**      |
+| ----------------- | ----------------------------------- | --------------------------------- |
+| What it restores  | The file _selection_ and its status | Progress _within_ one large file  |
+| Granularity       | Whole files                         | Individual parts                  |
+| Storage           | IndexedDB (`upup-crash-recovery`)   | `localStorage` (`upup_mp_*` keys) |
+| Survives a reload | Yes                                 | Intended to, but see below        |
+| Turned on by      | `crashRecovery`                     | —                                 |
+| Status in v3.1.0  | **Active**                          | **Not wired up**                  |
+
+### Crash recovery
+
+Crash recovery snapshots your file selection to IndexedDB so a refresh, a tab
+crash, or an accidental navigation does not lose the user's work. Enable it with
+a single prop:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" crashRecovery />
+```
+
+How it behaves:
+
+- **Saving** happens on every state change, as long as at least one file is
+  selected. When a run completes successfully the snapshot is cleared — there is
+  nothing left to recover.
+- **Restoring** is automatic in the shipped UI: when `crashRecovery` is on, the
+  uploader attempts a restore as it initializes. Driving the core yourself, call
+  `await core.restoreFromCrashRecovery()`, which resolves to `true` when a
+  snapshot was found and applied.
+- **Files that were mid-flight come back as `PAUSED`**, not as uploading. The run
+  is not resurrected; the user (or your code) decides whether to continue, and
+  those files upload again from the beginning.
+- Two events fire on a successful restore: `snapshot-restored`
+  (`{ count, status }`), then `crash-recovery-restored` (empty payload).
+
+`destroy()` deliberately leaves the stored snapshot in place, so a normal
+unmount stays recoverable. Call `core.clearCrashRecovery()` when you genuinely
+want it gone.
+
+In headless code the option also accepts an object, which is how you substitute
+your own persistence layer:
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    crashRecovery: { storage: myPersistentStorage },
+})
+```
+
+The storage object needs three async methods — `get(key)`, `set(key, value)`,
+and `delete(key)`. Omit it and upup uses IndexedDB.
+
+### Degradation on SSR and in private mode
+
+Crash recovery is **best-effort by design**. IndexedDB is absent during
+server-side rendering and can be blocked or quota-limited in private-browsing
+modes. In every one of those cases upup degrades quietly instead of failing the
+upload:
+
+- A failed save or clear is swallowed; uploads proceed normally.
+- A failed read is treated as "no snapshot", so a restore just returns `false`.
+- Failures are logged with `console.warn` in development only, so a dead
+  durability opt-in is visible while you are building and silent in production.
+
+The practical consequence: never treat a snapshot as guaranteed. Crash recovery
+is a nicety that improves the common case, not a durability contract.
+
+### Multipart session resume
+
+upup ships a `localStorage`-backed multipart session store — it fingerprints a
+file by name, size, last-modified time, and type, checkpoints the upload id and
+part size, expires entries after 24 hours, and treats corrupted JSON as "no
+session" rather than throwing.
+
+<Callout type="warning" title="Not active in v3.1.0">
+The session store exists and is tested, but **no upload strategy currently calls
+it**. The multipart strategy starts a fresh `multipart/init` on every attempt,
+and a failed attempt actively aborts the server-side upload — completed parts
+are discarded, not kept. An interrupted multipart upload therefore restarts from
+byte zero rather than continuing from the last completed part. The
+`resumable.persist` option is likewise accepted but not read.
+
+The **Resume** button label you see on a failed multipart upload is cosmetic: it
+runs the same `retryUpload()` path as **Retry** and re-uploads the whole file.
+
+Plan for full re-uploads of large files after an interruption. If you need true
+part-level resume today, use the tus protocol, which handles resumption in the
+tus client itself.
+
+</Callout>
+
+## A note on `fastAbortThreshold`
+
+`fastAbortThreshold` is accepted by the core options and forwarded internally,
+but nothing reads it in v3.1.0 — setting it has no effect on behavior. It is
+documented here only so you do not spend an afternoon tuning a value that does
+nothing. Use `maxRetries` to control how long upup persists on a failing file.
+
+## Recommended baseline
+
+For most applications the defaults are the right starting point, and the one
+line worth adding is crash recovery:
+
+```tsx
+<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" crashRecovery />
+```
+
+Reach past that when you have a specific reason: lower `maxConcurrentUploads`
+for mobile-heavy traffic or a rate-limited presign endpoint, raise `maxRetries`
+for genuinely flaky networks, and add `isSuccessfulCall` only when your upload
+target reports failure in a response body rather than a status code.
+
+## Next steps
+
+- [Resumable Uploads](/docs/resumable-uploads/) — multipart and tus protocol
+  configuration, including the thresholds that decide which strategy a file uses.
+- [Events](/docs/api-reference/events/) — the full payload reference for
+  `upload-error`, `retry`, `connection-online` / `connection-offline`,
+  `snapshot-restored`, and `crash-recovery-restored`.
+- [Error Handling](/docs/error-handling/) — the `UpupError` taxonomy and the
+  `retryable` flag behind the retry decisions above.
+- [Error Monitoring](/docs/guides/error-monitoring/) — routing these failures
+  into Sentry or another tracker.

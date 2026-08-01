@@ -29,29 +29,34 @@ picked file straight into your bucket — the bytes never pass through the brows
 except `azure` exposes an S3-compatible API and is served by `@upupjs/server`;
 `azure` is the sole exception (see [Azure Blob Storage](#azure-blob-storage-no-s3-api)).
 
-| `storage.type` | Provider                          | `endpoint`    | Served by `@upupjs/server`    |
-| -------------- | --------------------------------- | ------------- | ----------------------------- |
-| `aws`          | Amazon S3                         | not needed    | Yes                           |
-| `r2`           | Cloudflare R2                     | required      | Yes                           |
-| `minio`        | MinIO                             | required      | Yes                           |
-| `backblaze`    | Backblaze B2                      | required      | Yes                           |
-| `digitalocean` | DigitalOcean Spaces               | required      | Yes                           |
-| `wasabi`       | Wasabi                            | required      | Yes                           |
-| `gcs`          | Google Cloud Storage (S3 interop) | required      | Yes                           |
-| `supabase`     | Supabase Storage                  | required      | Yes                           |
-| `hetzner`      | Hetzner Object Storage            | required      | Yes                           |
-| `linode`       | Akamai (Linode) Object Storage    | required      | Yes                           |
-| `vultr`        | Vultr Object Storage              | required      | Yes                           |
-| `upcloud`      | UpCloud Object Storage            | required      | Yes                           |
-| `scaleway`     | Scaleway Object Storage           | required      | Yes                           |
-| `ovhcloud`     | OVHcloud Object Storage           | required      | Yes                           |
-| `alibaba`      | Alibaba Cloud OSS                 | required      | Yes                           |
-| `oracle`       | Oracle Cloud Object Storage       | required      | Yes                           |
-| `contabo`      | Contabo Object Storage            | required      | Yes                           |
-| `storj`        | Storj                             | required      | Yes                           |
-| `idrive`       | IDrive e2                         | required      | Yes                           |
-| `ceph`         | Ceph (RADOS Gateway)              | required      | Yes                           |
-| `azure`        | Azure Blob Storage                | — (no S3 API) | No — throws at construct time |
+| `storage.type` | Service                           | S3 endpoint pattern                                                      | Notes                                                                             |
+| -------------- | --------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `aws`          | Amazon S3                         | none — omit `endpoint`                                                   | The only provider that needs no endpoint. [Recipe](#aws-s3)                       |
+| `r2`           | Cloudflare R2                     | `https://<account-id>.r2.cloudflarestorage.com`                          | `region` is the literal `auto`. [Recipe](#cloudflare-r2)                          |
+| `minio`        | MinIO                             | your own server URL                                                      | Self-hosted; requires path-style. [Recipe](#minio)                                |
+| `backblaze`    | Backblaze B2                      | `https://s3.<region>.backblazeb2.com`                                    | Region looks like `us-west-004`. [Recipe](#backblaze-b2)                          |
+| `digitalocean` | DigitalOcean Spaces               | `https://<region>.digitaloceanspaces.com`                                | Region is the datacenter, e.g. `nyc3`. [Recipe](#digitalocean-spaces)             |
+| `wasabi`       | Wasabi                            | `https://s3.<region>.wasabisys.com`                                      | [Recipe](#wasabi)                                                                 |
+| `gcs`          | Google Cloud Storage (S3 interop) | `https://storage.googleapis.com`                                         | One global host; needs HMAC keys. [Recipe](#google-cloud-storage)                 |
+| `supabase`     | Supabase Storage                  | `https://<project-ref>.storage.supabase.co/storage/v1/s3`                | Path ends at `/s3`. [Recipe](#supabase-storage)                                   |
+| `hetzner`      | Hetzner Object Storage            | `https://<location>.your-objectstorage.com`                              | Location is `fsn1`, `nbg1`, or `hel1`. [Recipe](#hetzner-object-storage)          |
+| `scaleway`     | Scaleway Object Storage           | `https://s3.<region>.scw.cloud`                                          | Regions incl. `fr-par`, `nl-ams`. [Recipe](#scaleway-object-storage)              |
+| `linode`       | Akamai (Linode) Object Storage    | `https://<region>.linodeobjects.com`                                     | Host format changed in 2025 — copy it from the dashboard.                         |
+| `vultr`        | Vultr Object Storage              | `https://<region>.vultrobjects.com`                                      | Region is the datacenter, e.g. `ewr1`.                                            |
+| `upcloud`      | UpCloud Object Storage            | `https://<instance-id>.upcloudobjects.com`                               | Endpoint is per-instance — copy it from the console.                              |
+| `ovhcloud`     | OVHcloud Object Storage           | `https://s3.<region>.io.cloud.ovh.net`                                   | Regions incl. `gra`, `rbx`, `sgp`.                                                |
+| `alibaba`      | Alibaba Cloud OSS                 | `https://oss-<region>.aliyuncs.com`                                      | OSS host, no `s3.` prefix. Rejects path-style — see below.                        |
+| `oracle`       | Oracle Cloud Object Storage       | `https://<namespace>.compat.objectstorage.<region>.oci.customer-oci.com` | Sign with a Customer Secret Key, not your native OCI key.                         |
+| `contabo`      | Contabo Object Storage            | `https://<region>.contabostorage.com`                                    | Regions incl. `eu2`, `usc1`, `sin1`. Ceph-based, partial S3 coverage.             |
+| `storj`        | Storj                             | `https://gateway.storjshare.io`                                          | One global gateway; `region` is `global-1` on new projects.                       |
+| `idrive`       | IDrive e2                         | `https://s3.<region>.idrivee2.com`                                       | Host is provisioned per account — copy it from the dashboard.                     |
+| `ceph`         | Ceph (RADOS Gateway)              | your own RADOS Gateway URL                                               | Self-hosted.                                                                      |
+| `azure`        | Azure Blob Storage                | — (no S3 API)                                                            | Not servable — throws at construct time. [Details](#azure-blob-storage-no-s3-api) |
+
+Placeholders in angle brackets come from your provider's console. Where a pattern
+is marked "copy it from the dashboard", the host is provisioned per account or
+per instance and cannot be derived from your region — read the exact value off
+the console rather than assembling it.
 
 The `type` value is a label. `@upupjs/server` builds the same AWS-SDK S3 client
 for every S3-compatible value and reaches your backend through `endpoint` — it
@@ -197,10 +202,90 @@ const storage = {
 }
 ```
 
+### Google Cloud Storage
+
+GCS speaks S3 through its interoperability (XML) API on one global host. It needs
+**HMAC keys** — created under the project's Interoperability settings — not a
+service-account JSON key. GCS ignores `region`, so `auto` is a convention here
+rather than a requirement.
+
+```ts
+const storage = {
+    type: 'gcs',
+    bucket: process.env.GCS_BUCKET!,
+    region: 'auto', // ignored by GCS
+    endpoint: 'https://storage.googleapis.com',
+    accessKeyId: process.env.GCS_HMAC_ACCESS_KEY, // HMAC, not a JSON key
+    secretAccessKey: process.env.GCS_HMAC_SECRET,
+}
+```
+
+S3 multipart uploads work, but GCS never expires an abandoned one on its own —
+add a lifecycle rule so cancelled uploads don't accumulate as billable fragments.
+
+### Supabase Storage
+
+The endpoint is your project's S3 connection URL and ends at `/s3` — do not
+append the bucket to it. Region and credentials both come from the dashboard's
+Storage → S3 connection settings; the access keys are separate from your
+`anon`/`service_role` API keys.
+
+```ts
+const storage = {
+    type: 'supabase',
+    bucket: process.env.SUPABASE_BUCKET!,
+    region: process.env.SUPABASE_REGION!, // shown in the S3 connection settings
+    endpoint: `https://${process.env.SUPABASE_PROJECT_REF}.storage.supabase.co/storage/v1/s3`,
+    accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY,
+}
+```
+
+Supabase Storage has no object versioning — an overwrite or delete is permanent.
+
+### Hetzner Object Storage
+
+The location code (`fsn1`, `nbg1`, `hel1`) is both the endpoint host and the
+`region`. Hetzner addresses buckets as a subdomain, so turn path-style off.
+
+```ts
+const storage = {
+    type: 'hetzner',
+    bucket: process.env.HETZNER_BUCKET!,
+    region: process.env.HETZNER_LOCATION!, // 'fsn1' | 'nbg1' | 'hel1'
+    endpoint: `https://${process.env.HETZNER_LOCATION}.your-objectstorage.com`,
+    forcePathStyle: false, // Hetzner expects virtual-hosted-style
+    accessKeyId: process.env.HETZNER_ACCESS_KEY,
+    secretAccessKey: process.env.HETZNER_SECRET_KEY,
+}
+```
+
+### Scaleway Object Storage
+
+The region (`fr-par`, `nl-ams`, `pl-waw`, `it-mil`) appears in the endpoint host
+and in `region`. Confirm the exact endpoint in your Scaleway console — it is
+printed on the bucket's page.
+
+```ts
+const storage = {
+    type: 'scaleway',
+    bucket: process.env.SCW_BUCKET!,
+    region: process.env.SCW_REGION!, // e.g. 'fr-par'
+    endpoint: `https://s3.${process.env.SCW_REGION}.scw.cloud`,
+    accessKeyId: process.env.SCW_ACCESS_KEY,
+    secretAccessKey: process.env.SCW_SECRET_KEY,
+}
+```
+
 ### Any other S3-compatible service
 
-Anything with an S3 API works, whether or not it's in the enum. Ask your provider
-for four things:
+The remaining enum values — `linode`, `vultr`, `upcloud`, `ovhcloud`, `alibaba`,
+`oracle`, `contabo`, `storj`, `idrive`, `ceph` — need no recipe of their own:
+they take the same four fields, and only the `endpoint` differs (the patterns are
+in the [table above](#supported-providers)). The same template covers any store
+that isn't in the enum at all, since `storage.type` also accepts a plain string.
+
+Ask your provider for four things:
 
 - **Endpoint** — the S3 API URL (`https://…`).
 - **Region** — the region string. Some providers use `us-east-1` or `auto`.
@@ -222,11 +307,27 @@ const storage = {
 }
 ```
 
+Three quirks in that group are worth knowing before you debug them:
+
+- **Alibaba Cloud OSS rejects path-style requests outright.** Since upup turns
+  path-style on by default whenever `endpoint` is set, OSS needs an explicit
+  `forcePathStyle: false`. Vultr and OVHcloud also document virtual-hosted-style
+  addressing.
+- **Oracle Cloud signs with a Customer Secret Key**, generated separately from
+  the API signing key you use for native OCI calls — the native key will not
+  authenticate against the S3 compatibility endpoint.
+- **Coverage below the upload path varies.** Storj has no ACLs or lifecycle
+  rules, Contabo (Ceph-based) omits access logging, and UpCloud has no object
+  lock, replication, or website hosting. None of that affects uploading, but it
+  does affect what you can do with the objects afterwards.
+
 ## Azure Blob Storage (no S3 API)
 
 Azure Blob Storage does not expose an S3-compatible API, so `@upupjs/server`
-cannot serve it — `createUpupHandler` throws an `UpupConfigError` the moment you
-pass `type: 'azure'`.
+cannot serve it. `@upupjs/core` lists it in `NON_S3_STORAGE_PROVIDERS`, and
+`createUpupHandler` checks that set while it is being constructed: passing
+`type: 'azure'` throws an `UpupConfigError` at boot, before a single request is
+served, rather than failing per-request later.
 
 Use Azure in **client mode** instead: your own endpoint returns an Azure SAS URL
 shaped as upup's presign contract (including the `x-ms-blob-type: BlockBlob`

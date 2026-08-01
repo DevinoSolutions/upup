@@ -163,6 +163,15 @@ missing its bundle or a bundle that's missing its code, and
 `locale-registry.test.ts` asserts every bundle file under `locales/` is
 actually registered (the one thing the compiler can't see on its own).
 
+## Error messages
+
+User-facing error copy goes through the same system: every
+[`UpupErrorCode`](/docs/api-reference/error-codes/) maps to a key in the
+`errors` namespace (via `errorCodeToMessageKey` in `@upupjs/core/i18n`), so a
+localized bundle — or a targeted `overrides.errors` entry — changes what users
+see when an upload is rejected or fails. Override the `errors` namespace like
+any other; unknown codes fall back to a generic message.
+
 ## Next steps
 
 - [Theming](/docs/guides/theming/) — restyle the components whose copy you just

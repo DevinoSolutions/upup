@@ -1,0 +1,223 @@
+---
+title: Accessibility
+description: What upup's uploader ships by default — keyboard interaction, ARIA roles and live regions, focus management on overlays, the animations prop and prefers-reduced-motion handling — and the parts that stay your responsibility.
+---
+
+upup's accessibility semantics are not an opt-in layer. Roles, labels, live
+regions, focus handling, and the reduced-motion gate are part of the default
+render — there is no `a11y` prop to switch on, and nothing here requires extra
+markup from you.
+
+Because every framework package renders the same DOM (React is the source of
+truth and the cross-framework parity harness compares normalized DOM plus an
+accessibility snapshot for React, Vue, Svelte, Angular, Vanilla, and Preact),
+the behavior described on this page is identical in all six. A nightly CI job
+(`pnpm run e2e:a11y`) runs axe-core against every framework and fails the build
+on any new serious or critical violation.
+
+## Keyboard interaction
+
+Every actionable element in the uploader is a real `<button>` (or a real
+`<input>`), so it is in the natural tab order and responds to Enter and Space
+without custom key handling. That covers:
+
+- **Idle panel** — "browse files", "select a folder", and each source chip in
+  the source grid.
+- **File list** — the header's remove-all, the grid/list toggle segments, "add
+  more" (header and footer placements), the primary upload button, retry, done,
+  cancel while uploading, and resume while paused.
+- **Per file** — the edit-image and remove controls, plus a transparent
+  full-size button layered over each thumbnail that opens the file preview. That
+  button is a _sibling_ of the edit/remove controls, never their ancestor, so no
+  interactive element nests inside another.
+- **Cloud drives** — back, the search toggle and search field, log out, "select
+  this folder", "add files", cancel, and "load more".
+
+The source grid and the file list are plain tab order — there is no roving
+tabindex or arrow-key navigation, so Tab and Shift+Tab move between every
+control in DOM order.
+
+### Escape and other keys
+
+| Key      | Where                          | What happens                                                  |
+| -------- | ------------------------------ | ------------------------------------------------------------- |
+| `Escape` | Add-more sheet                 | Closes the sheet (ignored once the close animation has begun) |
+| `Escape` | File preview overlay           | Closes the preview (window-level listener)                    |
+| `Escape` | Image editor modal             | Closes the editor                                             |
+| `Escape` | Cloud-drive search field       | Collapses the expanded search field                           |
+| `Tab`    | Image editor modal             | Cycles inside the modal; Shift+Tab wraps backwards            |
+| `Enter`  | Server-mode drive search field | Runs the search against the provider                          |
+
+The hidden `<input type="file">` that backs the browse-files flow carries
+`aria-hidden="true"` and `tabIndex={-1}`, so keyboard users never land on it —
+they reach the picker through the visible buttons.
+
+<Callout type="warning" title="Known limitation">
+File and folder rows inside the cloud-drive browser are click-activated
+`<div>`s: they are not focusable and are not in the tab order today. If
+keyboard-only coverage of drive browsing is a hard requirement for your product,
+plan around that.
+</Callout>
+
+## Screen-reader behavior
+
+### Structure and labels
+
+The uploader panel is a labelled region — `role="region"` with an `aria-label`
+from the translation bundle — rather than an interactive element, so the
+click-to-browse affordance lives in the real buttons inside it. While a drag is
+over the panel it also carries `aria-dropeffect="copy"` (and `"none"`
+otherwise).
+
+Files are exposed as a list: each rendering branch (single-file hero, virtualized
+list, grid) wraps its items in `role="list"`, and every file is a
+`role="listitem"`. The view toggle is a `role="group"` whose two segments carry
+`aria-pressed`, so the active view is announced as a pressed state rather than
+inferred from color.
+
+Icon-only controls are labelled from i18n (`removeFile`, `editImage`, `cancel`,
+`resumeUpload`, `search`, `overlayBack`), and every decorative SVG — the dropzone
+frame, the drag prompt, the progress sheen, the success check, the caption icons
+— is `aria-hidden="true"`.
+
+Because those labels come from the translation bundle, translating the UI also
+translates what assistive technology reads. See
+[Localization](/docs/localization/).
+
+### Live regions
+
+Two visually hidden `role="status"` / `aria-live="polite"` regions announce
+state without moving focus:
+
+1. **Upload lifecycle**, on the panel: the text flips when the upload status
+   changes, announcing started, complete, or failed.
+2. **Selection count**, on the file list: announces how many files are currently
+   selected, using the same pluralized string the visible header shows.
+
+Transient and error surfaces are announced too — the drop-rejected toast and the
+quiet-completion checkmark are `role="status"`, while cloud-drive load failures
+and the drive auth fallback are `role="alert"`.
+
+### Progress
+
+Every progress bar — the footer total and the per-file bars — is a real
+progressbar:
+
+```html
+<div
+    role="progressbar"
+    aria-valuenow="42"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-label="Upload progress"
+></div>
+```
+
+The percentage is clamped to a finite number before it is rendered, so
+`aria-valuenow` is never `NaN` while a run is in flight.
+
+## Focus management
+
+### The add-more sheet
+
+Once files exist, choosing "add more" slides a source sheet over the file list.
+Opening it (or swapping the surface inside it) moves focus to the first enabled
+button in the sheet, after capturing whichever element triggered it. When the
+sheet has fully settled closed — past the reverse slide — focus returns to that
+trigger, if it is still in the document.
+
+The file list underneath stays mounted and visible but is marked `inert`, not
+merely dimmed: opacity and `pointer-events` alone would still let Tab and screen
+readers reach the hidden controls. The sheet itself is `role="dialog"` with
+`aria-modal="true"` and a label, and both are dropped during the closing
+animation so assistive technology never sees two live surfaces at once. It is
+deliberately _not_ a full focus trap — the inert list is what keeps focus from
+wandering into stale controls.
+
+### The image editor modal
+
+The image editor is a stricter modal: it records the previously focused element,
+focuses the overlay itself on mount (`tabIndex={-1}`), traps Tab within its
+focusable children in both directions, closes on Escape, and restores focus to
+the original element when it unmounts.
+
+### Smaller cases
+
+The cloud-drive search field takes focus the moment it expands, and collapses on
+blur only when it is empty — an active filter stays visible so its state is
+never silently lost.
+
+## Reduced motion
+
+Motion is governed by one public prop and one attribute.
+
+`animations` (default `true`) is the same boolean on every framework's uploader.
+Setting it to `false` turns decorative motion off:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" animations={false} />
+```
+
+Core resolves that prop together with the OS preference into a single value and
+writes it onto the uploader-panel element as `data-motion="on"` or
+`data-motion="off"`. It is `off` when `animations` is `false` **or** the
+`(prefers-reduced-motion: reduce)` media query matches — the OS preference can
+only ever turn motion off, never back on, and core subscribes to the query so a
+preference changed mid-session flips the attribute live without a remount.
+
+Components render their animation classes unconditionally; a single CSS rule
+does the disabling, which means the behavior cannot drift between frameworks:
+
+```css
+[data-motion='off']
+    :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.fx-essential) {
+    animation: none !important;
+    transition: none !important;
+}
+```
+
+A `@media (prefers-reduced-motion: reduce)` copy of that rule ships alongside it,
+so server-rendered markup is already static before hydration writes the
+attribute.
+
+**Essential indicators are never disabled.** The progress-fill width transition
+is explicitly carved out of the kill rule, and the processing spinner and focus
+rings are outside the animation-class families entirely — a reduced-motion user
+still sees progress advance, still sees the spinner turn, and still gets a
+visible focus ring.
+
+Since `data-motion` is a plain attribute on the DOM, your own CSS can key off it
+for custom elements you render around or inside the uploader:
+
+```css
+[data-motion='off'] .my-custom-overlay {
+    transition: none;
+}
+```
+
+## What you still need to do
+
+upup owns the semantics _inside_ its own root. A few things stay yours:
+
+- **Surrounding page structure.** The uploader is one labelled region; the
+  headings, landmarks, and any form that wraps it — including a visible label
+  explaining what the upload is for — belong to your page.
+- **Color contrast when you retheme.** Token overrides are applied verbatim; the
+  theme system does not validate contrast ratios. If you replace the palette,
+  check text, borders, and focus rings against your target ratio yourself. See
+  [Theming](/docs/guides/theming/).
+- **Custom copy.** If you override translation strings, keep the labelling keys
+  descriptive — they are what screen readers announce for icon-only buttons, not
+  just visible text. See [Localization](/docs/localization/).
+- **Your own slot content.** Class names injected through `theme.slots` are
+  appended, never replaced, so they can visually hide something that is still in
+  the accessibility tree. Verify anything you restyle heavily.
+
+## Next steps
+
+- [Theming](/docs/guides/theming/) — tokens, modes, and the `data-upup-slot`
+  hooks you can target from your own CSS.
+- [Localization (i18n)](/docs/localization/) — translate the strings that back
+  every ARIA label and live-region announcement.
+- [Optional props](/docs/api-reference/upupuploader/optional-props/) — the full
+  `animations` prop reference alongside the rest of the surface.

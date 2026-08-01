@@ -62,15 +62,19 @@ export const POST = handler
 ```
 
 <Callout type="note">
-`getUserId` (or `auth`) is required once you set `providers` or `tokenStore` — it
-scopes tokens per user, and without it the upload routes return `403 AUTH_REQUIRED`.
-See [Server auth](/docs/guides/server-auth/).
+    `getUserId` (or `auth`) is required once you set `providers` or `tokenStore`
+    — it scopes tokens per user, and without it the upload routes return `403
+    AUTH_REQUIRED`. See [Server auth](/docs/guides/server-auth/).
 </Callout>
 
 The handler routes on path suffix: `/presign`, `/multipart/*`,
 `/auth/:provider`, `/auth/:provider/cb`, `/files/:provider`,
-`/files/:provider/transfer`. All paths are relative to the folder you
-mount it at.
+`/files/:provider/transfer`, `/health`. All paths are relative to the
+folder you mount it at.
+
+Running Express, Fastify, Hono, the Pages Router, or a bare Node server
+instead? See [Adapter recipes](#adapter-recipes) below — same config
+object, one adapter call each.
 
 ## 3. Point the uploader at it
 
@@ -166,3 +170,376 @@ continues where they left off.
 We deliberately don't persist refresh tokens — shorter blast radius if
 `tokenStore` leaks, and no background refresh cron to maintain. The
 user's re-auth click is always one step.
+
+## Adapter recipes
+
+`createUpupHandler` is a plain `(req: Request) => Promise<Response>`
+function. Every adapter below wraps that same handler and takes the same
+config object — the one you built in step 2. Define it once and share it:
+
+```ts
+// lib/upup-config.ts
+import type { UpupServerConfig } from '@upupjs/server'
+
+export const upupConfig: UpupServerConfig = {
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    // providers, tokenStore, getUserId… as in step 2
+}
+```
+
+In a Next.js app you can author the same object through
+`defineUpupConfig` from `@upupjs/next/server` for editor autocomplete —
+it's a typed pass-through, not a second validation layer (required-field
+validation always happens inside `createUpupHandler`, so direct callers
+are protected too).
+
+### Express
+
+```ts
+import express from 'express'
+import { createUpupMiddleware } from '@upupjs/server/express'
+import { upupConfig } from './lib/upup-config'
+
+const app = express()
+
+// express.json() MUST run before the middleware: the adapter re-serializes
+// req.body, so the JSON body parser has to have populated it first.
+app.use(express.json())
+app.use('/api/upup', createUpupMiddleware(upupConfig))
+
+app.listen(3000)
+```
+
+`createUpupMiddleware` returns a standard `(req, res, next)` middleware.
+It builds the request URL from `req.originalUrl`, so mounting it under any
+prefix works — routes match on path suffix.
+
+### Fastify
+
+```ts
+import Fastify from 'fastify'
+import { createUpupPlugin } from '@upupjs/server/fastify'
+import { upupConfig } from './lib/upup-config'
+
+const fastify = Fastify()
+
+await fastify.register(createUpupPlugin(upupConfig, { path: '/api/upup/*' }))
+
+await fastify.listen({ port: 3000 })
+```
+
+`createUpupPlugin` is the one adapter that registers its own route, because
+`fastify.all` structurally requires a path. The second argument overrides
+it; the default is `/upup/*`. Fastify's built-in JSON parser already
+populates `request.body`, so no extra body-parser wiring is needed.
+
+### Hono
+
+```ts
+import { Hono } from 'hono'
+import { createUpupRoutes } from '@upupjs/server/hono'
+import { upupConfig } from './lib/upup-config'
+
+const routes = createUpupRoutes(upupConfig)
+const app = new Hono()
+
+app.all('/api/upup/*', c => routes(c.req.raw))
+
+export default app
+```
+
+Hono is web-native, so `createUpupRoutes` returns the handler unwrapped —
+hand it the raw `Request` off the context and return its `Response`.
+
+### Next.js App Router
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupNextHandler } from '@upupjs/next/server'
+import { upupConfig } from '@/lib/upup-config'
+
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)
+```
+
+`createUpupNextHandler` returns all four methods and, unlike exporting the
+bare handler, corrects the request origin behind a proxy or CDN — pass
+`baseUrl` (or `trustProxy: true` to honour `x-forwarded-*`) as a second
+argument so OAuth callbacks resolve to your public URL. On Vercel it's a
+no-op, since `req.url` is already the public origin. The same export is
+also available from `@upupjs/server/next` if you'd rather not add
+`@upupjs/next`.
+
+### Next.js Pages Router
+
+```ts
+// pages/api/upup/[...route].ts
+import { createUpupPagesHandler } from '@upupjs/next/server'
+import { upupConfig } from '@/lib/upup-config'
+
+export default createUpupPagesHandler(upupConfig)
+
+// Required: the adapter reads the raw request body itself.
+export const config = {
+    api: { bodyParser: false },
+}
+```
+
+<Callout type="warning">
+    The `bodyParser: false` export is not optional. With Next's parser left on,
+    the adapter receives a consumed stream and every POST body arrives empty.
+    `createUpupPagesHandler` accepts the same `baseUrl` / `trustProxy` options
+    as the App Router handler.
+</Callout>
+
+### Custom Node server
+
+Any other Node framework can reuse the same bridge the Express, Fastify,
+and Pages Router adapters are built on — `toWebRequest` and
+`writeWebResponse` from `@upupjs/server/node-bridge`. Don't hand-roll the
+conversion; the bridge already handles multi-value headers and skips
+`content-length` (Node recomputes it, and a copied value risks a mismatch).
+
+```ts
+import { createServer } from 'node:http'
+import { createUpupHandler } from '@upupjs/server'
+import { toWebRequest, writeWebResponse } from '@upupjs/server/node-bridge'
+import { upupConfig } from './lib/upup-config'
+
+const handler = createUpupHandler(upupConfig)
+
+createServer(async (req, res) => {
+    const chunks: Buffer[] = []
+    for await (const chunk of req) chunks.push(Buffer.from(chunk))
+
+    const webReq = toWebRequest({
+        url: new URL(req.url ?? '/', `http://${req.headers.host}`).toString(),
+        method: req.method ?? 'GET',
+        headers: req.headers,
+        // toWebRequest drops the body for GET/HEAD on its own.
+        body: chunks.length ? Buffer.concat(chunks) : undefined,
+    })
+
+    await writeWebResponse(
+        {
+            status: code => {
+                res.statusCode = code
+            },
+            setHeader: (name, value) => {
+                res.setHeader(name, value)
+            },
+            send: body => {
+                res.end(body)
+            },
+        },
+        await handler(webReq),
+    )
+}).listen(3000)
+```
+
+The sink is three methods — `status`, `setHeader`, `send` — so Express's
+`res`, Fastify's `reply`, and `NextApiResponse` all satisfy it with a thin
+rename.
+
+## Lifecycle hooks
+
+Three optional hooks let you gate uploads and react to completions:
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    hooks: {
+        onBeforeUpload: async (file, req) => true, // false rejects with 403
+        onFileUploaded: async (file, req) => {
+            // one file finished — file.key, .name, .size, .type, .url
+        },
+        onUploadComplete: async (files, req) => {
+            // a request's file(s) finished
+        },
+    },
+})
+```
+
+**Which hook fires on which path.** Read this before wiring alerting,
+billing, or webhooks on top of them — the gaps are structural, not bugs:
+
+| Route                            | `onBeforeUpload` | `onFileUploaded` | `onUploadComplete` |
+| -------------------------------- | ---------------- | ---------------- | ------------------ |
+| `POST /presign`                  | yes              | no               | no                 |
+| `POST /multipart/init`           | yes              | no               | no                 |
+| `POST /multipart/complete`       | no               | yes              | yes                |
+| `POST /files/:provider/transfer` | no               | yes              | no                 |
+
+- **`onBeforeUpload` is an admission gate, not a completion signal.** It runs
+  during metadata validation on `/presign` and `/multipart/init`, after the
+  `maxFileSize` and `allowedTypes` checks. Returning `false` responds
+  `403 Upload rejected` and nothing is presigned.
+- **`onFileUploaded` fires once per file on the two server-side-completion
+  paths only:** `/multipart/complete` (the server just finished the S3
+  multipart upload) and `/files/:provider/transfer` (the server just finished
+  streaming a cloud-drive file into S3). In both cases the server can actually
+  see the finished object.
+- **`onUploadComplete` fires only on `/multipart/complete`, always with a
+  single-element array.** The server completes one file per request and has no
+  cross-file batching concept. For a true "the whole batch is done" signal,
+  use the client-side `onUploadComplete` prop instead — that one sees the
+  entire selection.
+- **Client-direct presigned PUTs fire no server hook at all.** `POST /presign`
+  only hands the browser a URL; the bytes then go straight to S3 and the server
+  never observes completion. If you need server visibility into that path, use
+  the client-side `onUploadComplete` prop, or point `processingEndpoint` at an
+  SSE route so the client tells your server when it's done.
+- On the multipart-complete path, `file.type` is always `''` — the declared
+  MIME type isn't retained server-side once the upload completes.
+
+A hook that throws **after** a successful upload is reported through
+`onError` and swallowed, never re-coded as a 500. The object is already
+durably in S3, so a 500 would only tell the client to retry something that
+already succeeded.
+
+## Observability
+
+### The `onError` seam
+
+Every error path in the handler — 500s, invalid upload tokens, OAuth and
+token-exchange failures, failed drive-transfer aborts, health-check storage
+failures — routes through one logger:
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    onError: event => {
+        // event: route, method, status, code, message, requestId,
+        //        error: { name, message, stack }
+        myLogger.error('upup-server', event)
+    },
+})
+```
+
+If you don't supply `onError`, the default writes one structured line via
+`console.error('[upup:server]', JSON.stringify(event))` — error visibility
+is on out of the box, not something you wire up after your first incident.
+Pass a no-op to silence it.
+
+**Redaction guarantee.** An error event is only ever built from a static
+route string, the request method, the HTTP status, a machine `code`, a
+generic message, and the caught error's `name` / `message` / `stack`.
+Request bodies, drive tokens, `uploadTokenSecret`, S3 credentials,
+signatures, and `Authorization` headers are never put into an event.
+
+That contract is enforced structurally, not by convention: every event
+passes through a scrubber at the single reporting seam before it reaches
+your logger, so even an error whose message accidentally interpolated a
+credential is cleaned. It rewrites `Authorization` header dumps, bare
+`Bearer` tokens, the SigV4 `x-amz-signature` / `x-amz-credential` /
+`x-amz-security-token` params, and AWS access-key ids to `[REDACTED]`.
+It's deliberately conservative — ordinary stack frames, file paths, and
+function names survive intact. Treat it as defense in depth, not licence to
+build an event out of a secret.
+
+### Request IDs
+
+Every response the handler produces carries an `x-upup-request-id` header,
+and the same value appears as `event.requestId` in your `onError` events.
+That's the join key between a client-reported failure and your server logs —
+health responses included; there are no exceptions to the contract.
+
+### The `/health` endpoint
+
+```sh
+curl https://yourapp.com/api/upup/health
+```
+
+```json
+{
+    "status": "ok",
+    "checks": { "config": "ok", "storage": "ok" },
+    "summary": {
+        "storageType": "aws",
+        "anonymousUploads": false,
+        "anonymousDrives": false,
+        "driveProviders": 2,
+        "uploadTokenTtlSeconds": 3600
+    }
+}
+```
+
+It's unauthenticated by design — the check runs _before_ `config.auth`, so
+uptime and deploy probes work without credentials — and **always responds
+200**. The `status` field carries the real signal, so an orchestrator won't
+restart a container over a transient S3 blip.
+
+- `checks.config` is `ok` when `storage.bucket`, `storage.region`, and a
+  valid-length `uploadTokenSecret` are all present.
+- `checks.storage` is a cheap bucket-head probe (no listing, no transfer),
+  cached for 30 seconds so repeated polling doesn't hammer S3. A failed probe
+  is also reported through `onError`.
+- `summary` is labels, flags, and counts only — never a secret value.
+
+To catch cross-instance secret drift after a rolling deploy, opt into a
+fingerprint:
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    health: { exposeSecretFingerprint: true },
+})
+```
+
+That adds `uploadTokenFingerprint` — the first 8 hex characters of
+SHA-256(`uploadTokenSecret`). Two instances showing different fingerprints
+are running different secrets, which breaks multipart uploads that start on
+one and continue on another. It's a one-way hash, not the secret. Default is
+off.
+
+Full request/response shapes for every route:
+[Server HTTP API](/docs/api-reference/server-http/). For client-side error
+wiring, see [Error monitoring](/docs/guides/error-monitoring/).
+
+## Limits
+
+### `maxFileSize`
+
+Enforced on both upload paths, and on the drive path it's enforced twice:
+
+- `POST /presign` and `POST /multipart/init` reject a declared size over the
+  limit with `413 File too large` before anything is signed.
+- `POST /files/:provider/transfer` fast-rejects the drive-declared size with
+  `413`, then enforces the cap again against the bytes actually streamed. A
+  file that lies about its size is aborted mid-transfer and leaves nothing
+  behind in the bucket — the streamed-byte check is the authoritative one.
+
+### `allowedTypes`
+
+An allowlist of MIME types; `415 File type not allowed` otherwise. One shared
+policy across the upload and drive-transfer paths:
+
+- Omitted or empty → every type passes.
+- An `image/*` entry honours the wildcard.
+- An absent or empty type does **not** match a non-empty allowlist. A file
+  with no declared MIME type is rejected, never silently waved through.
+
+These are server-side policy. The client-side `maxFileSize` / file-type props
+give the user a fast local error; the server checks are what actually hold,
+since a client can be bypassed.
+
+### The drive-transfer memory bound
+
+When the server pulls a file out of a cloud drive and pushes it to S3, its
+memory envelope is fixed at **5 MiB** regardless of file size. A file whose
+size the drive reports as 5 MiB or less goes through as a single PUT (one
+buffered body); everything else — including anything the drive reports no
+size for — streams through bounded 5 MiB multipart parts, one part in memory
+at a time.
+
+This cutoff is **not configurable, deliberately**. The old
+`multipartThreshold` knob was removed because raising it reintroduced
+unbounded buffering — a memory-safety bound must not be something an
+integrator can raise away. There is no replacement setting; a 5 GB drive file
+and a 5 MB one cost the server the same memory.

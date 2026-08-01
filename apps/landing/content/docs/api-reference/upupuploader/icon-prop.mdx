@@ -8,20 +8,19 @@ The icon prop is an object used to configure what icons are shown on the UpupUpl
 Each icon element must be a valid React element that accepts an optional `className` prop for styling.
 
 <Callout type="info">
-Recommended icon library suites include:
-
-- [React Icons](https://react-icons.github.io/react-icons)
-- [Lucide Icons](https://lucide.dev/)
+    Recommended icon library suites include [React
+    Icons](https://react-icons.github.io/react-icons) and [Lucide
+    Icons](https://lucide.dev/).
 </Callout>
 
-| Key | Example | Type | Default value |
-| --- | ------- | ---- | ------------- |
-| [CameraCaptureIcon](#cameracaptureicon) | `icons={{CameraCaptureIcon: FaCamera}}` | `FC<{ className?: string }>` | `TbCapture` |
-| [CameraDeleteIcon](#cameradeleteicon) | `icons={{CameraDeleteIcon: MdDelete}}` | `FC<{ className?: string }>` | `TbTrash` |
-| [CameraRotateIcon](#camerarotateicon) | `icons={{CameraRotateIcon: FaCameraRotate}}` | `FC<{ className?: string }>` | `TbCameraRotate` |
-| [ContainerAddMoreIcon](#containeraddmoreicon) | `icons={{ContainerAddMoreIcon: IoAdd}}` | `FC<{ className?: string }>` | `TbPlus` |
-| [FileDeleteIcon](#filedeleteicon) | `icons={{FileDeleteIcon: TiDelete}}` | `FC<{ className?: string }>` | `TbTrash` |
-| [LoaderIcon](#loadericon) | `icons={{LoaderIcon: TbLoader2}}` | `FC<{ className?: string }>` | `TbLoader` |
+| Key                                           | Example                                      | Type                         | Default value    |
+| --------------------------------------------- | -------------------------------------------- | ---------------------------- | ---------------- |
+| [CameraCaptureIcon](#cameracaptureicon)       | `icons={{CameraCaptureIcon: FaCamera}}`      | `FC<{ className?: string }>` | `TbCapture`      |
+| [CameraDeleteIcon](#cameradeleteicon)         | `icons={{CameraDeleteIcon: MdDelete}}`       | `FC<{ className?: string }>` | `TbTrash`        |
+| [CameraRotateIcon](#camerarotateicon)         | `icons={{CameraRotateIcon: FaCameraRotate}}` | `FC<{ className?: string }>` | `TbCameraRotate` |
+| [ContainerAddMoreIcon](#containeraddmoreicon) | `icons={{ContainerAddMoreIcon: IoAdd}}`      | `FC<{ className?: string }>` | `TbPlus`         |
+| [FileDeleteIcon](#filedeleteicon)             | `icons={{FileDeleteIcon: TiDelete}}`         | `FC<{ className?: string }>` | `TbTrash`        |
+| [LoaderIcon](#loadericon)                     | `icons={{LoaderIcon: TbLoader2}}`            | `FC<{ className?: string }>` | `TbLoader`       |
 
 ## `CameraCaptureIcon`
 
@@ -32,7 +31,7 @@ Custom icon for the camera capture button.
 ```tsx
 import { FaCamera } from 'react-icons/fa'
 
-<UpupUploader
+;<UpupUploader
     icons={{
         CameraCaptureIcon: FaCamera,
     }}
@@ -64,7 +63,7 @@ Animated icon shown during file processing.
 ```tsx
 import { ImSpinner8 } from 'react-icons/im'
 
-<UpupUploader
+;<UpupUploader
     icons={{
         LoaderIcon: ImSpinner8,
     }}

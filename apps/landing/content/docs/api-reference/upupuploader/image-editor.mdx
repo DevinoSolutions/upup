@@ -1,35 +1,79 @@
 ---
 title: Image Editor
-description: Enable in-uploader cropping, rotation, flip, and annotation with the imageEditor prop — available in the React and Preact packages only.
+description: Enable in-uploader cropping, annotation, filters, and watermarking with the imageEditor prop — available in the React and Preact packages only.
 ---
 
-Enable the image editor with the `imageEditor` prop.
+The image editor is **on by default** in React and Preact. Pass
+`imageEditor={false}` to opt out, or an options object to configure it.
 
 <Callout type="note" title="React / Preact only">
-The image editor ships in `@upupjs/react` and `@upupjs/preact` only (Preact
-loads the real React editor as a lazy island). The Vue, Svelte, Angular, and
-Vanilla packages intentionally stub it — a deliberate ruling, not a gap.
+    The image editor ships in `@upupjs/react` and `@upupjs/preact` only (Preact
+    loads the real React editor as a lazy island). The Vue, Svelte, Angular, and
+    Vanilla packages intentionally stub it — a deliberate ruling, not a gap.
 </Callout>
 
 ```tsx
 <UpupUploader
     uploadEndpoint="/api/upload-token"
     imageEditor={{
-        enabled: true,
-        crop: true,
-        rotate: true,
+        display: 'modal',
+        autoOpen: 'single',
+        tabs: ['Adjust', 'Annotate'],
     }}
 />
 ```
 
 Edited files flow back through core validation before upload.
 
+## Options
+
 ```ts
 type ImageEditorOptions = {
     enabled?: boolean
-    crop?: boolean
-    rotate?: boolean
-    flip?: boolean
-    annotate?: boolean
+    display?: 'inline' | 'modal'
+    autoOpen?: 'never' | 'single' | 'always'
+    output?: {
+        mimeType?: string
+        quality?: number
+        fileName?: (original: File) => string
+    }
+    tabs?: (
+        'Adjust' | 'Annotate' | 'Filters' | 'Finetune' | 'Resize' | 'Watermark'
+    )[]
+    tools?: (
+        | 'Crop'
+        | 'Rotate'
+        | 'Flip'
+        | 'Brightness'
+        | 'Contrast'
+        | 'HSV'
+        | 'Blur'
+        | 'Text'
+        | 'Line'
+        | 'Rect'
+        | 'Ellipse'
+        | 'Polygon'
+        | 'Pen'
+        | 'Arrow'
+        | 'Image'
+    )[]
+    onOpen?: (file: UploadFile) => void
+    onCancel?: (file: UploadFile) => void
+    onSave?: (editedFile: UploadFile, originalFile: UploadFile) => void
 }
 ```
+
+- **`display`** (default `'inline'`) — `'inline'` swaps the editor into the
+  uploader panel; `'modal'` opens it in a portal over the page.
+- **`autoOpen`** (default `'never'`) — `'single'` opens the editor
+  automatically when exactly one image is selected; `'always'` opens it for
+  every added image; `'never'` waits for the user to click the edit
+  affordance.
+- **`output`** — controls the saved file: target `mimeType`, encode
+  `quality`, and a `fileName` callback deriving the edited file's name from
+  the original.
+- **`tabs`** / **`tools`** — restrict which editor tabs and annotation tools
+  appear; omit either to get the full set.
+- **`onOpen` / `onCancel` / `onSave`** — lifecycle callbacks; the same
+  moments are also emitted as `image-editor-open`, `image-editor-cancel`, and
+  `image-editor-save` [events](/docs/api-reference/events/).

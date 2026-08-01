@@ -1,0 +1,408 @@
+---
+title: Plugins & Extensions
+description: Extend upup's engine — the UpupPlugin lifecycle hook, registering plugins on UpupCore, contributing methods with registerExtension, and building a custom cloud-drive provider on the DrivePlugin contract and the PopupOAuthPlugin base.
+---
+
+`@upupjs/core` has two extension points. A **plugin** is an object that
+subscribes to (and emits on) the engine's event bus. An **extension** is a bag
+of methods you hang off the core so your own UI can call them. Cloud drives —
+Google Drive, OneDrive, Dropbox, Box — are plugins; the same contract is open
+to you.
+
+Everything here works identically under the visual `<UpupUploader>`, the
+[headless `useUpupUpload` hook](/docs/guides/headless/), and a bare
+`new UpupCore(...)`.
+
+## The plugin model
+
+A plugin is the smallest possible interface — a name and one optional
+lifecycle hook:
+
+```ts
+interface UpupPlugin {
+    name: string
+    init?(emitter: EventEmitter): void
+}
+```
+
+`name` is the identity used for deduplication; registering two plugins with the
+same name throws a `UpupConfigError` with code `PLUGIN_ALREADY_REGISTERED`.
+
+`init` is **the one lifecycle hook**. It is called once, at registration, and
+what it receives is core's **event bus** — not the core itself. That is the
+whole boundary: a plugin listens and emits. There is no `setup()`, no
+`beforeUpload()`, no teardown callback on `UpupPlugin`.
+
+Three consequences worth knowing before you write one:
+
+- **A plugin cannot register an extension from `init`.** It never gets a
+  reference to the core, so `core.registerExtension()` is the path — call it
+  from your app code after `use()`, or from a factory that closes over the core.
+- **A plugin has no `destroy` hook on the base contract.** `core.destroy()`
+  clears the plugin registry, but it does not call anything on your plugin.
+  (`DrivePlugin` adds a required `destroy()` because the drive controllers call
+  it explicitly.) Keep your own handle if you need cleanup.
+- **Payloads arrive untyped inside `init`.** Core hands the plugin its bus
+  through the untyped `EventEmitter` signature, so a handler's payload is
+  `unknown` even for a well-known event. Narrow it yourself — see the example
+  below.
+
+### Registering
+
+Two equivalent routes. Pass them as an option:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    plugins: [analyticsPlugin(track)],
+})
+```
+
+…or register imperatively, which returns the core for chaining:
+
+```ts
+core.use(analyticsPlugin(track)).use(anotherPlugin())
+```
+
+The `plugins` option is part of `CoreOptions`, so the React hook takes it too:
+
+```ts
+useUpupUpload({
+    uploadEndpoint: '/api/upload-token',
+    plugins: [analyticsPlugin(track)],
+})
+```
+
+Constructor-supplied plugins are registered in array order, before the first
+upload. Each registration emits the core event `plugin-registered` with the
+plugin's name — see the [event catalog](/docs/api-reference/events/) for
+everything else your plugin can listen to.
+
+### A minimal plugin
+
+An analytics listener — the canonical shape. Note the derived `Emitter` type:
+the `EventEmitter` class itself is not on the public entry, so deriving the
+parameter type from `UpupPlugin` keeps you on the public surface with no deep
+import.
+
+```ts
+import type { UpupPlugin } from '@upupjs/core'
+
+type Emitter = Parameters<NonNullable<UpupPlugin['init']>>[0]
+
+type Track = (event: string, props?: Record<string, unknown>) => void
+
+export function analyticsPlugin(track: Track): UpupPlugin {
+    return {
+        name: 'analytics',
+
+        init(emitter: Emitter) {
+            emitter.on('upload-start', () => track('upload_started'))
+
+            emitter.on('upload-success', payload => {
+                // Payloads are `unknown` on the plugin-facing bus — narrow here.
+                const { file } = payload as {
+                    file: { name: string; size: number }
+                }
+                track('upload_succeeded', { name: file.name, size: file.size })
+            })
+
+            emitter.on('upload-error', payload => {
+                const { error } = payload as { error: Error }
+                track('upload_failed', { message: error.message })
+            })
+        },
+    }
+}
+```
+
+A plugin can emit as well as listen. Anything it emits on that bus reaches
+`core.on(...)` subscribers, which is exactly how drive plugins surface their
+state to the UI. Use a namespaced name (`'myplugin:ready'`) — bare event names
+are the engine's own typed catalog and adding to it is not supported.
+
+> **Listener throws are contained.** The emitter isolates each handler, so a
+> throw in your plugin can't abort sibling listeners or escape `emit()`. In
+> development it is logged to the console; it is never re-emitted as an upload
+> failure.
+
+## Extensions
+
+An extension attaches named methods to the core so your UI can reach behavior a
+plugin added. The shape is deliberately loose:
+
+```ts
+type ExtensionMethods = Record<string, (...args: unknown[]) => unknown>
+```
+
+Register from your app code — the plugin itself can't, since `init` has no core
+reference:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
+
+core.use(analyticsPlugin(track))
+
+core.registerExtension('analytics', {
+    flush: () => track('flush'),
+    identify: (...args: unknown[]) => track('identify', { id: args[0] }),
+})
+```
+
+Read them back with `getExtension(name)`, or the `ext` map of every registered
+extension:
+
+```ts
+core.getExtension('analytics')?.flush()
+core.ext.analytics?.flush()
+```
+
+The React hook re-exposes the same map, so a headless UI needs no extra wiring:
+
+```tsx
+const { ext } = useUpupUpload({ uploadEndpoint: '/api/upload-token' })
+
+<button onClick={() => ext.analytics?.flush()}>Flush</button>
+```
+
+Because `ExtensionMethods` erases argument and return types, restore them at the
+call site with a typed accessor rather than casting inline everywhere:
+
+```ts
+type AnalyticsExt = {
+    flush: () => void
+    identify: (id: string) => void
+}
+
+const analytics = core.getExtension('analytics') as AnalyticsExt | undefined
+analytics?.identify('user_42')
+```
+
+Names are unique per core: re-registering one throws a `UpupConfigError` with
+code `EXTENSION_ALREADY_REGISTERED`. `core.destroy()` clears the plugin and
+extension registries together.
+
+## Building a custom cloud-drive provider
+
+Cloud drives are plugins that satisfy a richer contract, `DrivePlugin`, which
+extends `UpupPlugin` with the surface upup's drive controllers drive.
+
+Required members: `id`, `init(emitter)`, `destroy()`, `restoreSession()`,
+`isAuthenticated()`, `getAccessToken()`, `getUserInfo()`, `loadFiles(folderArg?)`,
+`downloadFiles(files)`, and `signOut()`. Optional, guarded at the call site:
+`authenticate()`, `authenticateViaPopup()`, `loadMoreFiles(cursor)`,
+`loadAllFilesInFolder(folderArg)`, and `getConfig()`.
+
+`downloadFiles` is where a drive meets the rest of the engine: it returns real
+`File` objects, which then flow through the normal pipeline and upload path.
+
+### Subclassing `PopupOAuthPlugin`
+
+If your provider uses browser popup OAuth2 with PKCE, don't hand-roll it.
+`PopupOAuthPlugin` is an abstract base — exported as a value from
+`@upupjs/core` — that owns the whole auth skeleton: the PKCE challenge, opening
+and polling the popup, the authorization-code exchange, `sessionStorage`
+persistence, refresh-token exchange, proactive refresh when the access token is
+within 60 seconds of expiry, and an `apiRequest` helper that retries once on a
+401 before declaring the session expired.
+
+You supply two things: a `PopupOAuthSpec` (pure data) and your provider's real
+API calls.
+
+```ts
+import { PopupOAuthPlugin, type PopupOAuthSpec } from '@upupjs/core'
+import type { DriveFile, DriveUser } from '@upupjs/core'
+
+export class AcmeDrivePlugin extends PopupOAuthPlugin {
+    readonly spec: PopupOAuthSpec = {
+        id: 'acme-drive',
+        displayName: 'Acme Drive',
+        eventPrefix: 'acme-drive',
+        popupName: 'UpupAcmeAuth',
+        authUrl: 'https://acme.example.com/oauth2/authorize',
+        tokenUrl: 'https://api.acme.example.com/oauth2/token',
+        redirectPath: '/acme_redirect',
+        storageKeys: {
+            access: 'upup_acme_access_token',
+            refresh: 'upup_acme_refresh_token',
+            expiry: 'upup_acme_token_expiry',
+        },
+        scopes: 'files.read files.write profile.read',
+        authParams: { access_type: 'offline' },
+    }
+
+    // ── List a folder. `apiRequest` adds auth and handles refresh for you. ──
+    async loadFiles(folderId = 'root') {
+        this.setState('browsing')
+
+        const res = await this.apiRequest(
+            `https://api.acme.example.com/folders/${folderId}/children`,
+            { method: 'GET' },
+        )
+        const data = (await res.json()) as {
+            items?: Record<string, unknown>[]
+            next?: string
+        }
+        const files = (data.items ?? []).map(item => this.mapEntry(item))
+
+        this.setState('authenticated')
+        this.emitter?.emit('acme-drive:files-loaded', {
+            files,
+            path: folderId,
+            hasMore: Boolean(data.next),
+            cursor: data.next,
+        })
+
+        return { files, hasMore: Boolean(data.next), cursor: data.next }
+    }
+
+    // ── Fetch bytes and hand back real Files. ──
+    async downloadFiles(driveFiles: DriveFile[]): Promise<File[]> {
+        const out: File[] = []
+        for (const driveFile of driveFiles) {
+            if (driveFile.isFolder) continue
+            const res = await this.apiRequest(
+                `https://api.acme.example.com/files/${driveFile.id}/content`,
+                { method: 'GET' },
+            )
+            const blob = await res.blob()
+            out.push(
+                new File([blob], driveFile.name, {
+                    type: blob.type || driveFile.mimeType,
+                }),
+            )
+        }
+        return out
+    }
+
+    // ── Provider hooks the base requires. ──
+    protected mapEntry(entry: Record<string, unknown>): DriveFile {
+        const isFolder = entry.type === 'folder'
+        return {
+            id: String(entry.id ?? ''),
+            name: String(entry.name ?? ''),
+            path: String(entry.path ?? ''),
+            size: isFolder ? 0 : Number(entry.size ?? 0),
+            mimeType: isFolder ? 'folder' : String(entry.mime ?? ''),
+            isFolder,
+        }
+    }
+
+    protected async fetchUserProfile(): Promise<DriveUser> {
+        const res = await this.apiRequest('https://api.acme.example.com/me', {
+            method: 'GET',
+        })
+        const data = (await res.json()) as { name?: string; email?: string }
+        return { name: data.name ?? '', email: data.email ?? '' }
+    }
+}
+```
+
+Four abstract members are what the base demands: `spec`, `loadFiles`,
+`downloadFiles`, `mapEntry`, and `fetchUserProfile`. Everything else — auth
+state, tokens, popup lifecycle — is inherited. `id` and `name` are both derived
+from `spec.id`, so `spec.id` is what deduplicates the plugin and what
+`core.getPlugin(...)` takes.
+
+Add `loadMoreFiles(cursor)` if your API paginates. The `cursor` is opaque to
+upup: encode whatever your API needs (a raw token, an offset, a next-link URL)
+and it comes back to you verbatim.
+
+Register it like any plugin:
+
+```ts
+const acme = new AcmeDrivePlugin()
+acme.configure({ clientId: process.env.NEXT_PUBLIC_ACME_CLIENT_ID! })
+core.use(acme)
+```
+
+> **Google Drive is the exception.** It uses Google Identity Services, which
+> issues access tokens with no PKCE popup and no refresh token, so
+> `GoogleDrivePlugin` is a standalone `implements DrivePlugin` rather than a
+> subclass. If your provider's auth doesn't fit the popup skeleton, implement
+> `DrivePlugin` directly — the base class is a convenience, not a requirement.
+
+### The namespaced event surface
+
+A drive plugin's events are namespaced by `spec.eventPrefix`, and the payload
+shapes are the `DriveEventMap` type. Six names, all prefixed:
+
+| Event                      | Payload                               | When                                      |
+| -------------------------- | ------------------------------------- | ----------------------------------------- |
+| `<prefix>:state-change`    | the new `DriveState`                  | any auth/browse state transition          |
+| `<prefix>:authenticated`   | the signed-in `DriveUser`             | token exchange succeeded                  |
+| `<prefix>:files-loaded`    | files, path, `hasMore`, cursor        | a folder listing landed                   |
+| `<prefix>:session-expired` | empty                                 | refresh failed or a 401 was unrecoverable |
+| `<prefix>:error`           | the `Error` plus the failing `action` | any operation failed                      |
+| `<prefix>:signed-out`      | empty                                 | `signOut()` was called                    |
+
+`DriveState` is one of `idle`, `authenticating`, `authenticated`, `browsing`,
+or `session-expired`.
+
+`PopupOAuthPlugin` emits all six for you — state changes go out through the
+protected `setState()`, and auth, refresh, and sign-out are fully handled. Your
+domain methods only need to emit `files-loaded` on a successful listing and
+`error` on a failure, as the example above does.
+
+Subscribe from anywhere with a core reference. Namespaced names pass through
+`core.on()` by design:
+
+```ts
+core.on('acme-drive:files-loaded', payload => {
+    console.log(payload)
+})
+```
+
+> **The `error` name is drive-scoped.** Drive plugins emit
+> `<prefix>:error` — never a bare `error`. The engine's single upload-failure
+> event is `upload-error`, and there is deliberately no second channel for it.
+
+## What's public today
+
+Worth stating plainly, because it decides your imports. All of these are named
+exports of the **public `@upupjs/core` entry** in 3.1.0:
+
+- `UpupPlugin`, `ExtensionMethods` (types)
+- `DrivePlugin` (type)
+- `PopupOAuthPlugin` (class, exported as a value) and `PopupOAuthSpec` (type)
+- `DriveFile`, `DriveFolder`, `DriveUser`, `DriveState`, `DriveEventMap`,
+  `DriveListPage`, `DriveBrowserError` (types)
+- The four built-in providers — `GoogleDrivePlugin`, `OneDrivePlugin`,
+  `DropboxPlugin`, `BoxPlugin` — and their config types
+
+These are **not** on the public entry, which is what shaped the recipes above:
+
+- `EventEmitter` — the reason the plugin example derives its `Emitter` type from
+  `UpupPlugin` instead of importing the class.
+- `PluginManager` — an implementation detail; you go through
+  `core.use()` / `registerExtension()` / `getExtension()` / `getPlugin()`.
+- `DriveProviderDescriptor` and `DriveBrowserController` — the machinery behind
+  the shipped drive-browser UI. The four descriptor **constants**
+  (`GOOGLE_DRIVE_DESCRIPTOR` and friends) are exported, but the descriptor type
+  is not.
+
+All three live behind `@upupjs/core/internal`, a deep-import-only subpath. It is
+importable, but it is explicitly not the stable surface — names there can change
+in a minor release.
+
+> **A custom drive won't appear as a source chip.** The shipped uploader wires
+> exactly the four known providers from the `cloudDrives` option, and
+> `FileSource` is a closed set. Your plugin registers and runs fine, and it is a
+> first-class citizen in a headless UI you build yourself — but there is no
+> registry today that adds a new provider to `<UpupUploader>`'s built-in source
+> selector.
+
+## Next steps
+
+- [Headless Usage](/docs/guides/headless/) — build the UI your custom provider
+  will live in.
+- [Events](/docs/api-reference/events/) — the full typed core-event catalog your
+  plugin subscribes to, and how namespaced drive events pass through.
+- [Error Handling](/docs/error-handling/) — the `UpupError` taxonomy your plugin
+  should throw from, including `UpupAuthError` and `UpupNetworkError`.
+- [Modes](/docs/guides/modes/) — client-mode versus server-mode drives, and
+  which one your provider should target.

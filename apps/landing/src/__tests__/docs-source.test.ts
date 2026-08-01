@@ -21,8 +21,11 @@ describe('docs source', () => {
         const pages = source.getPages()
         // Exact count of .mdx files under content/docs — a page added or
         // dropped without updating this pin is a real inventory change.
-        // 15 (batch A) + 16 (batch B) + 4 (comparisons) + 1 (migration) = 36.
-        expect(pages.length).toBe(36)
+        // 15 (batch A) + 16 (batch B) + 4 (comparisons) + 1 (migration) = 36,
+        // + 9 (2026-08 coverage sprint: events, error-codes, server-http,
+        // file-processing, sources, reliability, auth-recipes, accessibility,
+        // plugins) = 45.
+        expect(pages.length).toBe(45)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()
