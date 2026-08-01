@@ -42,9 +42,6 @@ jobs:
                   node-version-file: '.nvmrc'
                   cache: pnpm
 
-            - name: Upgrade npm for trusted publishing
-              run: npm install -g npm@11.16.0
-
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
@@ -124,29 +121,29 @@ jobs:
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run smoke:packages
 
-            # Auth: all nine @upupjs packages now exist on npm (first published
-            # 2026-07-13), so OIDC trusted publishing is the intended path. Configure
-            # a trusted publisher per package on npmjs.com (repo DevinoSolutions/upup,
-            # workflow publish.yml); then with id-token:write (above) + Node >=22.14 +
-            # npm >=11.5.1, `pnpm publish` exchanges the GitHub OIDC token automatically
-            # and no registry secret is needed. NODE_AUTH_TOKEN (NPM_TOKEN secret) stays
-            # as a fallback until every package has its trusted publisher configured —
-            # once OIDC is verified in a real release, the secret and the env below can
-            # be dropped. OIDC requires Node >=22.14, so this publish-scoped setup-node
-            # pins 22.14 (the gate steps above ran on .nvmrc / Node 20). registry-url is
-            # scoped here so install/gate steps never see a token-referencing .npmrc.
-            - name: Set up Node 22 + npm registry for OIDC/token publish
+            # Auth: OIDC trusted publishing ONLY — every @upupjs package has its
+            # trusted publisher configured on npmjs.com (repo DevinoSolutions/upup,
+            # workflow publish.yml, configured 2026-08-01). With id-token:write
+            # (above) + Node >=22.14 + npm >=11.5.1, npm exchanges the GitHub OIDC
+            # token automatically; no registry secret, no registry-url .npmrc (a
+            # token-referencing .npmrc would preempt the OIDC path). The npm
+            # upgrade MUST come after this setup-node: switching Node replaces the
+            # active npm with that Node's bundled version, which is below the
+            # trusted-publishing floor — upgrading before the switch is a no-op
+            # (that exact ordering bug broke the first 3.1.0 publish attempt).
+            - name: Set up Node 22 for OIDC publish
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
               with:
                   node-version: '22.14.0'
-                  registry-url: 'https://registry.npmjs.org'
+
+            - name: Upgrade npm for trusted publishing
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: npm install -g npm@11.16.0 && npm --version
 
             - name: Publish to npm
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run release
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Dry-run release on dev
               if: github.ref == 'refs/heads/dev'
