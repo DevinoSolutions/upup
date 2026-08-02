@@ -24,8 +24,10 @@ describe('docs source', () => {
         // 15 (batch A) + 16 (batch B) + 4 (comparisons) + 1 (migration) = 36,
         // + 9 (2026-08 coverage sprint: events, error-codes, server-http,
         // file-processing, sources, reliability, auth-recipes, accessibility,
-        // plugins) = 45.
-        expect(pages.length).toBe(45)
+        // plugins) = 45, + 19 (2026-08 SEO split: 7 guides/storage +
+        // 4 guides/auth + 4 guides/server-adapters + 3 guides/processing +
+        // writing-plugins) = 64.
+        expect(pages.length).toBe(64)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()

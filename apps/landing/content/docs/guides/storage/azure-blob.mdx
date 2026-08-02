@@ -1,0 +1,133 @@
+---
+title: Upload files to Azure Blob Storage
+description: Azure Blob Storage has no S3 API, so @upupjs/server rejects it. Upload to Azure from React, Vue, Svelte, or plain JS with upup via client mode and a SAS URL.
+---
+
+Azure Blob Storage is the one provider in upup's list that server mode cannot
+serve. It has no S3-compatible API, and `@upupjs/server` speaks only S3 — every
+upload it performs goes through an `@aws-sdk/client-s3` client. Azure still
+works with upup, through **client mode**: your endpoint returns a SAS URL shaped
+as upup's presign contract and the browser uploads straight to the blob.
+
+## Why server mode rejects it
+
+`@upupjs/core` exports `azure` as a `StorageProvider` value and also lists it in
+`NON_S3_STORAGE_PROVIDERS`. `createUpupHandler` checks that set while it is being
+constructed, so passing `type: 'azure'` throws an `UpupConfigError` at boot —
+before a single request is served — rather than failing per-request later:
+
+```text
+[@upupjs/server] storage.type "azure" has no S3-compatible API and cannot be
+served. upup uploads via the S3 API — use an S3-compatible provider
+(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.
+```
+
+This is deliberate. The alternative — accepting the value and failing on the
+first upload — hides a configuration mistake behind a runtime 500 that looks
+like a credentials problem.
+
+<Callout type="info" title="If you want server mode specifically">
+    Server mode's guarantees (credentials never reach the browser, drive →
+    storage transfers streamed server-side, one origin for the uploader) are
+    tied to the S3 API. Reaching them with an Azure account means putting an
+    S3-compatible store in front of the upload path and syncing to Azure
+    afterwards, or moving the upload bucket to any provider on the
+    [matrix](/docs/guides/storage-providers/). There is no Azure adapter to
+    enable.
+</Callout>
+
+## Client mode with a SAS URL
+
+In client mode upup asks your endpoint for a signed URL and then `PUT`s the file
+to it. Nothing in that flow is S3-specific — the contract is a URL plus the
+headers to send with it — so an Azure SAS URL fits it exactly.
+
+Point the uploader at your endpoint:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" />
+```
+
+And return a service SAS for the blob, with the headers Azure requires:
+
+```ts
+// app/api/upload-token/route.ts
+import {
+    BlobSASPermissions,
+    StorageSharedKeyCredential,
+    generateBlobSASQueryParameters,
+} from '@azure/storage-blob'
+
+const account = process.env.AZURE_STORAGE_ACCOUNT!
+const container = process.env.AZURE_STORAGE_CONTAINER!
+const credential = new StorageSharedKeyCredential(
+    account,
+    process.env.AZURE_STORAGE_KEY!,
+)
+
+export async function POST(req: Request) {
+    const body = await req.json()
+    const key = `uploads/${crypto.randomUUID()}-${body.name}`
+    const expiresIn = 3600
+
+    const sas = generateBlobSASQueryParameters(
+        {
+            containerName: container,
+            blobName: key,
+            permissions: BlobSASPermissions.parse('cw'), // create + write
+            expiresOn: new Date(Date.now() + expiresIn * 1000),
+        },
+        credential,
+    ).toString()
+
+    return Response.json({
+        key,
+        uploadUrl: `https://${account}.blob.core.windows.net/${container}/${key}?${sas}`,
+        uploadHeaders: {
+            'x-ms-blob-type': 'BlockBlob',
+            'Content-Type': body.type || 'application/octet-stream',
+        },
+        expiresIn,
+    })
+}
+```
+
+The exact response shape — every field and which are optional — is documented in
+[Azure SAS Responses](/docs/api-reference/azure-generate-sas-url/). The S3
+equivalent, for comparison, is
+[S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/).
+
+<Callout type="danger" title="x-ms-blob-type is mandatory">
+    Azure rejects a `PUT` to a blob URL that does not carry `x-ms-blob-type:
+    BlockBlob`, with a 400 that names no missing header in a way the browser
+    surfaces usefully. It must be returned in `uploadHeaders` so upup sends it —
+    this is the single most common reason an otherwise correct SAS URL fails.
+</Callout>
+
+## Storage account setup
+
+1. **Create the container.** Storage account → Containers → `+ Container`. Leave
+   the public access level Private; a SAS grants access per request.
+2. **Get a signing credential.** Access keys → key1, for the shared-key approach
+   above. A user delegation key obtained through Entra ID is the stronger
+   option and produces the same SAS URL shape.
+3. **Configure CORS.** Storage account → Resource sharing (CORS) → Blob service.
+   Allow your app's origin, the `PUT` method, the headers you send
+   (`x-ms-blob-type`, `Content-Type`), and expose `ETag`. Unlike S3, CORS here is
+   an account-level setting per service, not a per-container one.
+4. **Keep the account key server-side.** It signs SAS tokens; the browser must
+   only ever receive the finished URL.
+
+Because the client-mode contract is one signed `PUT` per file, uploads have to
+fit in a single Azure `Put Blob` request. Very large files need Azure's staged
+block flow (`Put Block` + `Put Block List`), which the presign contract does not
+model — cap file size with `maxFileSize` accordingly, and check the limit for
+your account's service version before choosing the number.
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — what changes on the wire.
+- [Other S3-compatible services](/docs/guides/storage/s3-compatible/) — if you
+  would rather use a store server mode can serve.

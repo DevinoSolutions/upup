@@ -1,55 +1,107 @@
 ---
 title: Plugins & Extensions
-description: Extend upup's engine — the UpupPlugin lifecycle hook, registering plugins on UpupCore, contributing methods with registerExtension, and building a custom cloud-drive provider on the DrivePlugin contract and the PopupOAuthPlugin base.
+description: Enable upup's built-in cloud-drive plugins with the cloudDrives config, compare client- and server-mode drives, and register third-party plugins on UpupCore.
 ---
 
 `@upupjs/core` has two extension points. A **plugin** is an object that
 subscribes to (and emits on) the engine's event bus. An **extension** is a bag
-of methods you hang off the core so your own UI can call them. Cloud drives —
-Google Drive, OneDrive, Dropbox, Box — are plugins; the same contract is open
-to you.
+of methods hung off the core so your own UI can call them. Cloud drives —
+Google Drive, OneDrive, Dropbox, Box — are plugins, and the same contract is
+open to anyone: see [Writing a Plugin](/docs/guides/writing-plugins/) if you
+want to build one.
 
-Everything here works identically under the visual `<UpupUploader>`, the
+This page is about **using** plugins: what ships in the box, how to turn the
+cloud drives on, and how to register something a third party wrote. Everything
+here works identically under the visual `<UpupUploader>`, the
 [headless `useUpupUpload` hook](/docs/guides/headless/), and a bare
 `new UpupCore(...)`.
 
-## The plugin model
+## What ships built-in
 
-A plugin is the smallest possible interface — a name and one optional
-lifecycle hook:
+Four cloud-drive plugins, all exported as classes from `@upupjs/core`:
 
-```ts
-interface UpupPlugin {
-    name: string
-    init?(emitter: EventEmitter): void
-}
+| Plugin              | Plugin id      | `cloudDrives` key | Auth model               |
+| ------------------- | -------------- | ----------------- | ------------------------ |
+| `GoogleDrivePlugin` | `google-drive` | `googleDrive`     | Google Identity Services |
+| `OneDrivePlugin`    | `one-drive`    | `oneDrive`        | popup OAuth2 + PKCE      |
+| `DropboxPlugin`     | `dropbox`      | `dropbox`         | popup OAuth2 + PKCE      |
+| `BoxPlugin`         | `box`          | `box`             | popup OAuth2 + PKCE      |
+
+The other upload sources — local files, camera, microphone, screen capture, URL
+import — are **not** plugins. They are built into the uploader and switched on
+through the `sources` prop; see [Sources](/docs/guides/sources/).
+
+Note the two spellings in that table, because both are load-bearing. The
+config key is camelCase (`googleDrive`, `oneDrive`) and the plugin id is
+kebab-case (`google-drive`, `one-drive`). `dropbox` and `box` are single words,
+so they look the same in either position.
+
+## Enabling cloud drives
+
+In client mode you never construct a drive plugin yourself. Pass a
+`cloudDrives` config and the uploader instantiates, configures, and registers
+the matching plugin for every key you supply:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    sources={['local', 'googleDrive', 'oneDrive', 'dropbox', 'box']}
+    cloudDrives={{
+        googleDrive: {
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
+            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID!,
+        },
+        oneDrive: { clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! },
+        dropbox: { clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID! },
+        box: { clientId: process.env.NEXT_PUBLIC_BOX_CLIENT_ID! },
+    }}
+/>
 ```
 
-`name` is the identity used for deduplication; registering two plugins with the
-same name throws a `UpupConfigError` with code `PLUGIN_ALREADY_REGISTERED`.
+A key you omit means that plugin is never registered, even if the source chip
+is listed. The config shapes differ slightly per provider:
 
-`init` is **the one lifecycle hook**. It is called once, at registration, and
-what it receives is core's **event bus** — not the core itself. That is the
-whole boundary: a plugin listens and emits. There is no `setup()`, no
-`beforeUpload()`, no teardown callback on `UpupPlugin`.
+- `googleDrive` — `clientId`, `apiKey`, and `appId`, all required.
+- `oneDrive`, `dropbox`, `box` — a required `clientId` plus an optional
+  `redirectUri`.
 
-Three consequences worth knowing before you write one:
+`cloudDrives` is one camelCase shape end-to-end: the same object passes through
+the framework prop, the uploader options, and down to the plugin's
+`configure()` call unchanged. It is also part of `CoreOptions`, so the headless
+hook accepts it verbatim.
 
-- **A plugin cannot register an extension from `init`.** It never gets a
-  reference to the core, so `core.registerExtension()` is the path — call it
-  from your app code after `use()`, or from a factory that closes over the core.
-- **A plugin has no `destroy` hook on the base contract.** `core.destroy()`
-  clears the plugin registry, but it does not call anything on your plugin.
-  (`DrivePlugin` adds a required `destroy()` because the drive controllers call
-  it explicitly.) Keep your own handle if you need cleanup.
-- **Payloads arrive untyped inside `init`.** Core hands the plugin its bus
-  through the untyped `EventEmitter` signature, so a handler's payload is
-  `unknown` even for a well-known event. Narrow it yourself — see the example
-  below.
+<Callout type="warning" title="Client IDs are public, secrets are not">
+    Everything in `cloudDrives` ships to the browser, which is fine for OAuth
+    client IDs and API keys but never acceptable for a client secret. If your
+    provider's flow requires a secret, you need server mode.
+</Callout>
 
-### Registering
+## Client mode versus server mode
 
-Two equivalent routes. Pass them as an option:
+The drive plugins are a **client-mode** mechanism. Which path the drive UI
+takes is decided by the uploader's mode, not by anything you configure on the
+plugin:
+
+- **Client mode.** The browser holds the OAuth tokens. The drive plugin runs in
+  the page, talks to the provider's API directly, downloads the selected files
+  as real `File` objects, and those flow through the normal pipeline and upload
+  path. This is the path `cloudDrives` configures.
+- **Server mode.** The browser talks only to your server. The drive views route
+  through `@upupjs/server`'s drive endpoints instead of a plugin — listing,
+  auth, and the drive → S3 transfer all happen server-side, and the file bytes
+  never pass through the browser. Credentials live in your server environment,
+  so no client IDs go in `cloudDrives`.
+
+Because server mode bypasses the plugin path entirely, a plugin you register
+yourself only runs in client mode. Full comparison in
+[Client Mode vs Server Mode](/docs/guides/modes/); credential setup for the
+proxied flow is in [Server Mode Setup](/docs/guides/server-mode-setup/).
+
+## Registering a plugin
+
+Two equivalent routes for anything not wired by `cloudDrives`. Pass it as an
+option:
 
 ```ts
 import { UpupCore } from '@upupjs/core'
@@ -78,55 +130,29 @@ useUpupUpload({
 Constructor-supplied plugins are registered in array order, before the first
 upload. Each registration emits the core event `plugin-registered` with the
 plugin's name — see the [event catalog](/docs/api-reference/events/) for
-everything else your plugin can listen to.
+everything else a plugin can listen to.
 
-### A minimal plugin
+Registration is keyed by the plugin's `name`, and registering two plugins with
+the same name throws a `UpupConfigError` with code
+`PLUGIN_ALREADY_REGISTERED`. Look one up with `core.getPlugin(name)`.
 
-An analytics listener — the canonical shape. Note the derived `Emitter` type:
-the `EventEmitter` class itself is not on the public entry, so deriving the
-parameter type from `UpupPlugin` keeps you on the public surface with no deep
-import.
+## Lifecycle, from the outside
 
-```ts
-import type { UpupPlugin } from '@upupjs/core'
+Three behaviors worth knowing before you drop someone else's plugin into your app:
 
-type Emitter = Parameters<NonNullable<UpupPlugin['init']>>[0]
-
-type Track = (event: string, props?: Record<string, unknown>) => void
-
-export function analyticsPlugin(track: Track): UpupPlugin {
-    return {
-        name: 'analytics',
-
-        init(emitter: Emitter) {
-            emitter.on('upload-start', () => track('upload_started'))
-
-            emitter.on('upload-success', payload => {
-                // Payloads are `unknown` on the plugin-facing bus — narrow here.
-                const { file } = payload as {
-                    file: { name: string; size: number }
-                }
-                track('upload_succeeded', { name: file.name, size: file.size })
-            })
-
-            emitter.on('upload-error', payload => {
-                const { error } = payload as { error: Error }
-                track('upload_failed', { message: error.message })
-            })
-        },
-    }
-}
-```
-
-A plugin can emit as well as listen. Anything it emits on that bus reaches
-`core.on(...)` subscribers, which is exactly how drive plugins surface their
-state to the UI. Use a namespaced name (`'myplugin:ready'`) — bare event names
-are the engine's own typed catalog and adding to it is not supported.
-
-> **Listener throws are contained.** The emitter isolates each handler, so a
-> throw in your plugin can't abort sibling listeners or escape `emit()`. In
-> development it is logged to the console; it is never re-emitted as an upload
-> failure.
+- **`init(emitter)` is the only lifecycle hook**, and it runs once at
+  registration. What the plugin receives is core's event bus, not the core
+  itself — so a plugin listens and emits, and nothing more. There is no
+  `beforeUpload` interception point.
+- **`core.destroy()` clears the plugin and extension registries**, but it does
+  not call anything on a plain plugin — the base contract has no teardown hook.
+  (Drive plugins are the exception: `DrivePlugin` requires `destroy()`, and the
+  uploader calls it on the drives it registered.) A plugin that owns a timer or
+  a socket has to hand you its own cleanup handle.
+- **A throwing listener is contained.** The emitter isolates each handler, so a
+  misbehaving plugin cannot abort sibling listeners or make `emit()` throw. In
+  development the error is logged to the console; it is never re-surfaced as an
+  upload failure.
 
 ## Extensions
 
@@ -137,8 +163,9 @@ plugin added. The shape is deliberately loose:
 type ExtensionMethods = Record<string, (...args: unknown[]) => unknown>
 ```
 
-Register from your app code — the plugin itself can't, since `init` has no core
-reference:
+Register from your app code. A plugin cannot do this for itself — `init` never
+gets a core reference — so a plugin that offers methods will document them and
+leave the wiring to you:
 
 ```ts
 import { UpupCore } from '@upupjs/core'
@@ -153,8 +180,8 @@ core.registerExtension('analytics', {
 })
 ```
 
-Read them back with `getExtension(name)`, or the `ext` map of every registered
-extension:
+Read them back with `getExtension(name)`, or through `ext`, the map of every
+registered extension:
 
 ```ts
 core.getExtension('analytics')?.flush()
@@ -183,226 +210,48 @@ analytics?.identify('user_42')
 ```
 
 Names are unique per core: re-registering one throws a `UpupConfigError` with
-code `EXTENSION_ALREADY_REGISTERED`. `core.destroy()` clears the plugin and
-extension registries together.
+code `EXTENSION_ALREADY_REGISTERED`.
 
-## Building a custom cloud-drive provider
+## Listening to a plugin
 
-Cloud drives are plugins that satisfy a richer contract, `DrivePlugin`, which
-extends `UpupPlugin` with the surface upup's drive controllers drive.
-
-Required members: `id`, `init(emitter)`, `destroy()`, `restoreSession()`,
-`isAuthenticated()`, `getAccessToken()`, `getUserInfo()`, `loadFiles(folderArg?)`,
-`downloadFiles(files)`, and `signOut()`. Optional, guarded at the call site:
-`authenticate()`, `authenticateViaPopup()`, `loadMoreFiles(cursor)`,
-`loadAllFilesInFolder(folderArg)`, and `getConfig()`.
-
-`downloadFiles` is where a drive meets the rest of the engine: it returns real
-`File` objects, which then flow through the normal pipeline and upload path.
-
-### Subclassing `PopupOAuthPlugin`
-
-If your provider uses browser popup OAuth2 with PKCE, don't hand-roll it.
-`PopupOAuthPlugin` is an abstract base — exported as a value from
-`@upupjs/core` — that owns the whole auth skeleton: the PKCE challenge, opening
-and polling the popup, the authorization-code exchange, `sessionStorage`
-persistence, refresh-token exchange, proactive refresh when the access token is
-within 60 seconds of expiry, and an `apiRequest` helper that retries once on a
-401 before declaring the session expired.
-
-You supply two things: a `PopupOAuthSpec` (pure data) and your provider's real
-API calls.
+Plugins emit on the same bus your app subscribes to, which is exactly how the
+drive plugins surface their state to the UI. Their events are namespaced by
+provider, and namespaced names pass through `core.on()` by design:
 
 ```ts
-import { PopupOAuthPlugin, type PopupOAuthSpec } from '@upupjs/core'
-import type { DriveFile, DriveUser } from '@upupjs/core'
-
-export class AcmeDrivePlugin extends PopupOAuthPlugin {
-    readonly spec: PopupOAuthSpec = {
-        id: 'acme-drive',
-        displayName: 'Acme Drive',
-        eventPrefix: 'acme-drive',
-        popupName: 'UpupAcmeAuth',
-        authUrl: 'https://acme.example.com/oauth2/authorize',
-        tokenUrl: 'https://api.acme.example.com/oauth2/token',
-        redirectPath: '/acme_redirect',
-        storageKeys: {
-            access: 'upup_acme_access_token',
-            refresh: 'upup_acme_refresh_token',
-            expiry: 'upup_acme_token_expiry',
-        },
-        scopes: 'files.read files.write profile.read',
-        authParams: { access_type: 'offline' },
-    }
-
-    // ── List a folder. `apiRequest` adds auth and handles refresh for you. ──
-    async loadFiles(folderId = 'root') {
-        this.setState('browsing')
-
-        const res = await this.apiRequest(
-            `https://api.acme.example.com/folders/${folderId}/children`,
-            { method: 'GET' },
-        )
-        const data = (await res.json()) as {
-            items?: Record<string, unknown>[]
-            next?: string
-        }
-        const files = (data.items ?? []).map(item => this.mapEntry(item))
-
-        this.setState('authenticated')
-        this.emitter?.emit('acme-drive:files-loaded', {
-            files,
-            path: folderId,
-            hasMore: Boolean(data.next),
-            cursor: data.next,
-        })
-
-        return { files, hasMore: Boolean(data.next), cursor: data.next }
-    }
-
-    // ── Fetch bytes and hand back real Files. ──
-    async downloadFiles(driveFiles: DriveFile[]): Promise<File[]> {
-        const out: File[] = []
-        for (const driveFile of driveFiles) {
-            if (driveFile.isFolder) continue
-            const res = await this.apiRequest(
-                `https://api.acme.example.com/files/${driveFile.id}/content`,
-                { method: 'GET' },
-            )
-            const blob = await res.blob()
-            out.push(
-                new File([blob], driveFile.name, {
-                    type: blob.type || driveFile.mimeType,
-                }),
-            )
-        }
-        return out
-    }
-
-    // ── Provider hooks the base requires. ──
-    protected mapEntry(entry: Record<string, unknown>): DriveFile {
-        const isFolder = entry.type === 'folder'
-        return {
-            id: String(entry.id ?? ''),
-            name: String(entry.name ?? ''),
-            path: String(entry.path ?? ''),
-            size: isFolder ? 0 : Number(entry.size ?? 0),
-            mimeType: isFolder ? 'folder' : String(entry.mime ?? ''),
-            isFolder,
-        }
-    }
-
-    protected async fetchUserProfile(): Promise<DriveUser> {
-        const res = await this.apiRequest('https://api.acme.example.com/me', {
-            method: 'GET',
-        })
-        const data = (await res.json()) as { name?: string; email?: string }
-        return { name: data.name ?? '', email: data.email ?? '' }
-    }
-}
-```
-
-Four abstract members are what the base demands: `spec`, `loadFiles`,
-`downloadFiles`, `mapEntry`, and `fetchUserProfile`. Everything else — auth
-state, tokens, popup lifecycle — is inherited. `id` and `name` are both derived
-from `spec.id`, so `spec.id` is what deduplicates the plugin and what
-`core.getPlugin(...)` takes.
-
-Add `loadMoreFiles(cursor)` if your API paginates. The `cursor` is opaque to
-upup: encode whatever your API needs (a raw token, an offset, a next-link URL)
-and it comes back to you verbatim.
-
-Register it like any plugin:
-
-```ts
-const acme = new AcmeDrivePlugin()
-acme.configure({ clientId: process.env.NEXT_PUBLIC_ACME_CLIENT_ID! })
-core.use(acme)
-```
-
-> **Google Drive is the exception.** It uses Google Identity Services, which
-> issues access tokens with no PKCE popup and no refresh token, so
-> `GoogleDrivePlugin` is a standalone `implements DrivePlugin` rather than a
-> subclass. If your provider's auth doesn't fit the popup skeleton, implement
-> `DrivePlugin` directly — the base class is a convenience, not a requirement.
-
-### The namespaced event surface
-
-A drive plugin's events are namespaced by `spec.eventPrefix`, and the payload
-shapes are the `DriveEventMap` type. Six names, all prefixed:
-
-| Event                      | Payload                               | When                                      |
-| -------------------------- | ------------------------------------- | ----------------------------------------- |
-| `<prefix>:state-change`    | the new `DriveState`                  | any auth/browse state transition          |
-| `<prefix>:authenticated`   | the signed-in `DriveUser`             | token exchange succeeded                  |
-| `<prefix>:files-loaded`    | files, path, `hasMore`, cursor        | a folder listing landed                   |
-| `<prefix>:session-expired` | empty                                 | refresh failed or a 401 was unrecoverable |
-| `<prefix>:error`           | the `Error` plus the failing `action` | any operation failed                      |
-| `<prefix>:signed-out`      | empty                                 | `signOut()` was called                    |
-
-`DriveState` is one of `idle`, `authenticating`, `authenticated`, `browsing`,
-or `session-expired`.
-
-`PopupOAuthPlugin` emits all six for you — state changes go out through the
-protected `setState()`, and auth, refresh, and sign-out are fully handled. Your
-domain methods only need to emit `files-loaded` on a successful listing and
-`error` on a failure, as the example above does.
-
-Subscribe from anywhere with a core reference. Namespaced names pass through
-`core.on()` by design:
-
-```ts
-core.on('acme-drive:files-loaded', payload => {
-    console.log(payload)
+core.on('one-drive:authenticated', ({ user }) => {
+    console.log('signed in', user?.name)
 })
 ```
 
-> **The `error` name is drive-scoped.** Drive plugins emit
-> `<prefix>:error` — never a bare `error`. The engine's single upload-failure
-> event is `upload-error`, and there is deliberately no second channel for it.
+The six drive events are `<prefix>:state-change`, `:authenticated`,
+`:files-loaded`, `:session-expired`, `:error`, and `:signed-out`, where
+`<prefix>` is the kebab-case plugin id from the table above. Payload shapes are
+documented in [Writing a Plugin](/docs/guides/writing-plugins/).
 
-## What's public today
+<Callout type="note" title="Drive failures are namespaced">
+    A drive plugin emits `<prefix>:error` — never a bare `error`. The engine's
+    single upload-failure event is `upload-error`, and there is deliberately no
+    second channel for it. See [Error Handling](/docs/error-handling/).
+</Callout>
 
-Worth stating plainly, because it decides your imports. All of these are named
-exports of the **public `@upupjs/core` entry** in 3.1.0:
-
-- `UpupPlugin`, `ExtensionMethods` (types)
-- `DrivePlugin` (type)
-- `PopupOAuthPlugin` (class, exported as a value) and `PopupOAuthSpec` (type)
-- `DriveFile`, `DriveFolder`, `DriveUser`, `DriveState`, `DriveEventMap`,
-  `DriveListPage`, `DriveBrowserError` (types)
-- The four built-in providers — `GoogleDrivePlugin`, `OneDrivePlugin`,
-  `DropboxPlugin`, `BoxPlugin` — and their config types
-
-These are **not** on the public entry, which is what shaped the recipes above:
-
-- `EventEmitter` — the reason the plugin example derives its `Emitter` type from
-  `UpupPlugin` instead of importing the class.
-- `PluginManager` — an implementation detail; you go through
-  `core.use()` / `registerExtension()` / `getExtension()` / `getPlugin()`.
-- `DriveProviderDescriptor` and `DriveBrowserController` — the machinery behind
-  the shipped drive-browser UI. The four descriptor **constants**
-  (`GOOGLE_DRIVE_DESCRIPTOR` and friends) are exported, but the descriptor type
-  is not.
-
-All three live behind `@upupjs/core/internal`, a deep-import-only subpath. It is
-importable, but it is explicitly not the stable surface — names there can change
-in a minor release.
-
-> **A custom drive won't appear as a source chip.** The shipped uploader wires
-> exactly the four known providers from the `cloudDrives` option, and
-> `FileSource` is a closed set. Your plugin registers and runs fine, and it is a
-> first-class citizen in a headless UI you build yourself — but there is no
-> registry today that adds a new provider to `<UpupUploader>`'s built-in source
-> selector.
+<Callout type="warning" title="A third-party drive won't get a source chip">
+    The shipped uploader wires exactly the four known providers from the
+    `cloudDrives` option, and `FileSource` is a closed set. A custom drive
+    plugin registers and runs fine, and it is a first-class citizen in a
+    headless UI you build yourself — but there is no registry today that adds a
+    new provider to `<UpupUploader>`'s built-in source selector.
+</Callout>
 
 ## Next steps
 
-- [Headless Usage](/docs/guides/headless/) — build the UI your custom provider
-  will live in.
-- [Events](/docs/api-reference/events/) — the full typed core-event catalog your
-  plugin subscribes to, and how namespaced drive events pass through.
-- [Error Handling](/docs/error-handling/) — the `UpupError` taxonomy your plugin
-  should throw from, including `UpupAuthError` and `UpupNetworkError`.
-- [Modes](/docs/guides/modes/) — client-mode versus server-mode drives, and
-  which one your provider should target.
+- [Writing a Plugin](/docs/guides/writing-plugins/) — the `UpupPlugin` contract,
+  the event rules, and building a custom cloud-drive provider.
+- [Sources](/docs/guides/sources/) — the non-plugin upload sources and the
+  `sources` prop that decides which chips render.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which drive path your app
+  is actually on.
+- [Events](/docs/api-reference/events/) — the full typed core-event catalog a
+  plugin can subscribe to.
+- [Headless Usage](/docs/guides/headless/) — where `core`, `on`, and `ext` are
+  handed to you directly.

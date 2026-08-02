@@ -1,0 +1,210 @@
+---
+title: Upload files to any S3-compatible storage
+description: Upload files to Wasabi, Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and any other S3-compatible store from React, Vue, or plain JS with upup.
+---
+
+`@upupjs/server` builds the same AWS-SDK S3 client for every provider and reaches
+your backend through `endpoint`. The S3 client itself never reads `storage.type` —
+the only branch on it is a construct-time guard that rejects providers with no S3
+surface (currently just `azure`, which has
+[its own path](/docs/guides/storage/azure-blob/)). Any other value passes
+through, so a store upup has never heard of works exactly as well as one in the
+enum, provided it speaks the S3 API.
+
+This page collects the providers that need no page of their own, plus the
+template for everything else. The dedicated guides are
+[AWS S3](/docs/guides/storage/aws-s3/),
+[Cloudflare R2](/docs/guides/storage/cloudflare-r2/),
+[Backblaze B2](/docs/guides/storage/backblaze-b2/),
+[DigitalOcean Spaces](/docs/guides/storage/digitalocean-spaces/), and
+[MinIO](/docs/guides/storage/minio/).
+
+Each block below is only the `storage` config — keep `uploadTokenSecret` and the
+rest of the handler from the [AWS S3 example](/docs/guides/storage/aws-s3/), and
+see [Server Mode — Setup](/docs/guides/server-mode-setup/) for the full
+walkthrough. Placeholders are environment variables: never hard-code an access
+key or a secret.
+
+## The generic recipe
+
+Ask your provider for four things:
+
+- **Endpoint** — the S3 API URL (`https://…`).
+- **Region** — the region string. Some providers use `us-east-1` or `auto`.
+- **Path-style vs virtual-hosted** — whether the endpoint expects
+  `endpoint/bucket/key` (path-style) or `bucket.endpoint/key` (virtual-hosted).
+- **Access key ID + secret access key.**
+
+```ts
+const storage = {
+    type: 'my-s3-store', // any StorageProvider value, or your own label string
+    bucket: process.env.S3_BUCKET!,
+    region: process.env.S3_REGION!, // ask your provider
+    endpoint: process.env.S3_ENDPOINT!, // the provider's S3 API URL
+    // Defaults to true when `endpoint` is set. Set false only if your provider
+    // requires virtual-hosted-style addressing.
+    forcePathStyle: true,
+    accessKeyId: process.env.S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+}
+```
+
+That is the whole integration. If uploads authenticate, everything else upup
+does — multipart, retries, cloud-drive transfers into the same bucket — works
+without further configuration.
+
+## Wasabi
+
+Wasabi's endpoint host is region-scoped (e.g. `s3.us-east-1.wasabisys.com`).
+Create the bucket in the console, then generate an access key under Access Keys;
+the secret is shown once.
+
+```ts
+const storage = {
+    type: 'wasabi',
+    bucket: process.env.WASABI_BUCKET!,
+    region: process.env.WASABI_REGION!, // e.g. 'us-east-1'
+    endpoint: `https://s3.${process.env.WASABI_REGION}.wasabisys.com`,
+    accessKeyId: process.env.WASABI_ACCESS_KEY,
+    secretAccessKey: process.env.WASABI_SECRET_KEY,
+}
+```
+
+Wasabi bills stored objects for a minimum retention period, so a workload of
+short-lived uploads costs more than the per-GB price suggests. That is a pricing
+consideration, not an upload one.
+
+## Google Cloud Storage
+
+GCS speaks S3 through its interoperability (XML) API on one global host. It needs
+**HMAC keys** — created under the project's Interoperability settings — not a
+service-account JSON key. GCS ignores `region`, so `auto` is a convention here
+rather than a requirement.
+
+```ts
+const storage = {
+    type: 'gcs',
+    bucket: process.env.GCS_BUCKET!,
+    region: 'auto', // ignored by GCS
+    endpoint: 'https://storage.googleapis.com',
+    accessKeyId: process.env.GCS_HMAC_ACCESS_KEY, // HMAC, not a JSON key
+    secretAccessKey: process.env.GCS_HMAC_SECRET,
+}
+```
+
+S3 multipart uploads work, but GCS never expires an abandoned one on its own —
+add a lifecycle rule so cancelled uploads don't accumulate as billable fragments.
+
+## Supabase Storage
+
+The endpoint is your project's S3 connection URL and ends at `/s3` — do not
+append the bucket to it. Region and credentials both come from the dashboard's
+Storage → S3 connection settings; the access keys are separate from your
+`anon`/`service_role` API keys.
+
+```ts
+const storage = {
+    type: 'supabase',
+    bucket: process.env.SUPABASE_BUCKET!,
+    region: process.env.SUPABASE_REGION!, // shown in the S3 connection settings
+    endpoint: `https://${process.env.SUPABASE_PROJECT_REF}.storage.supabase.co/storage/v1/s3`,
+    accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID,
+    secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY,
+}
+```
+
+Supabase Storage has no object versioning — an overwrite or delete is permanent.
+
+## Hetzner Object Storage
+
+The location code (`fsn1`, `nbg1`, `hel1`) is both the endpoint host and the
+`region`. Hetzner addresses buckets as a subdomain, so turn path-style off.
+
+```ts
+const storage = {
+    type: 'hetzner',
+    bucket: process.env.HETZNER_BUCKET!,
+    region: process.env.HETZNER_LOCATION!, // 'fsn1' | 'nbg1' | 'hel1'
+    endpoint: `https://${process.env.HETZNER_LOCATION}.your-objectstorage.com`,
+    forcePathStyle: false, // Hetzner expects virtual-hosted-style
+    accessKeyId: process.env.HETZNER_ACCESS_KEY,
+    secretAccessKey: process.env.HETZNER_SECRET_KEY,
+}
+```
+
+## Scaleway Object Storage
+
+The region (`fr-par`, `nl-ams`, `pl-waw`, `it-mil`) appears in the endpoint host
+and in `region`. Confirm the exact endpoint in your Scaleway console — it is
+printed on the bucket's page.
+
+```ts
+const storage = {
+    type: 'scaleway',
+    bucket: process.env.SCW_BUCKET!,
+    region: process.env.SCW_REGION!, // e.g. 'fr-par'
+    endpoint: `https://s3.${process.env.SCW_REGION}.scw.cloud`,
+    accessKeyId: process.env.SCW_ACCESS_KEY,
+    secretAccessKey: process.env.SCW_SECRET_KEY,
+}
+```
+
+## The rest of the enum
+
+These take the same four fields as the generic recipe; only `endpoint` differs.
+The full patterns are in the [provider matrix](/docs/guides/storage-providers/).
+
+- **Akamai (Linode) Object Storage** (`linode`) —
+  `https://<region>.linodeobjects.com`. The host format changed in 2025, so copy
+  it from the dashboard rather than assembling it from an older tutorial.
+- **Vultr Object Storage** (`vultr`) — `https://<region>.vultrobjects.com`, where
+  the region is a datacenter code such as `ewr1`.
+- **UpCloud Object Storage** (`upcloud`) —
+  `https://<instance-id>.upcloudobjects.com`. The endpoint is per-instance; read
+  it off the console.
+- **OVHcloud Object Storage** (`ovhcloud`) —
+  `https://s3.<region>.io.cloud.ovh.net`, regions including `gra`, `rbx`, `sgp`.
+- **Alibaba Cloud OSS** (`alibaba`) — `https://oss-<region>.aliyuncs.com`. Note
+  the OSS host has no `s3.` prefix.
+- **Oracle Cloud Object Storage** (`oracle`) —
+  `https://<namespace>.compat.objectstorage.<region>.oci.customer-oci.com`.
+- **Contabo Object Storage** (`contabo`) —
+  `https://<region>.contabostorage.com`, regions including `eu2`, `usc1`,
+  `sin1`. Ceph-based, with partial S3 coverage.
+- **Storj** (`storj`) — `https://gateway.storjshare.io`, one global gateway;
+  `region` is `global-1` on new projects.
+- **IDrive e2** (`idrive`) — `https://s3.<region>.idrivee2.com`. The host is
+  provisioned per account — copy it from the dashboard.
+- **Ceph / RADOS Gateway** (`ceph`) — your own gateway URL, self-hosted.
+
+## Quirks worth knowing before you debug them
+
+- **Alibaba Cloud OSS rejects path-style requests outright.** Since upup turns
+  path-style on by default whenever `endpoint` is set, OSS needs an explicit
+  `forcePathStyle: false`. Vultr and OVHcloud also document virtual-hosted-style
+  addressing.
+- **Oracle Cloud signs with a Customer Secret Key**, generated separately from
+  the API signing key you use for native OCI calls — the native key will not
+  authenticate against the S3 compatibility endpoint.
+- **Coverage below the upload path varies.** Storj has no ACLs or lifecycle
+  rules, Contabo (Ceph-based) omits access logging, and UpCloud has no object
+  lock, replication, or website hosting. None of that affects uploading, but it
+  does affect what you can do with the objects afterwards.
+
+<Callout type="note" title="What S3-compatible does not guarantee">
+    Every store here implements the operations upup needs — `PutObject`,
+    `GetObject`, the multipart family, and `HeadBucket` for the health route —
+    but compatibility claims cover different amounts of the API beyond that. If
+    a provider's own docs list an unsupported operation, check it against that
+    set before assuming uploads are affected; most gaps are in lifecycle,
+    versioning, and ACLs rather than in the upload path.
+</Callout>
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix, the
+  shared `storage` config reference, and troubleshooting.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.

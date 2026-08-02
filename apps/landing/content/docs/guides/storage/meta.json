@@ -1,0 +1,12 @@
+{
+    "title": "Storage",
+    "pages": [
+        "aws-s3",
+        "cloudflare-r2",
+        "backblaze-b2",
+        "digitalocean-spaces",
+        "minio",
+        "azure-blob",
+        "s3-compatible"
+    ]
+}

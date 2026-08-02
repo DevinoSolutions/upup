@@ -1,0 +1,115 @@
+---
+title: Authenticate uploads with NextAuth (Auth.js v5)
+description: Scope @upupjs/server uploads to the NextAuth session — the auth() helper in the App Router, getToken outside a request context, and the missing session.user.id.
+---
+
+In the App Router, the `auth()` helper exported from your `auth.ts` reads the
+session from Next's request context. upup calls `getUserId` _inside_ your route
+handler's execution, so that context is live and `auth()` works with no
+argument — you do not need to thread the `Request` through.
+
+## App Router
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupHandler } from '@upupjs/server'
+import { auth } from '@/auth' // export const { auth } = NextAuth(…)
+
+const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async () => {
+        const session = await auth()
+        return session?.user?.id ?? null
+    },
+})
+
+export const GET = handler
+export const POST = handler
+```
+
+No session means `auth()` resolves to `null`, the hook returns `null`, and
+`POST /presign` and `POST /multipart/init` answer **401 Unauthenticated** — no
+presigned URL is ever issued.
+
+## The missing `session.user.id`
+
+NextAuth's default session callback does not put `id` on `session.user`. If
+`session.user.id` is `undefined` at runtime, every upload is rejected as
+unauthenticated even for signed-in users. Add the id in your Auth.js config:
+
+```ts
+// auth.ts
+export const { auth, handlers } = NextAuth({
+    // …providers
+    callbacks: {
+        session({ session, token }) {
+            session.user.id = token.sub!
+            return session
+        },
+    },
+})
+```
+
+`token.sub` is the stable provider subject, which is exactly the kind of value
+upup wants: the same string for the same person on every request.
+
+## Outside a Next request context
+
+Two situations put you outside the App Router's request context: a Pages-Router
+API route bridged by `@upupjs/next`, and NextAuth-issued JWTs verified from
+another service. In both, read the token off the request with `getToken` from
+`next-auth/jwt` instead of calling `auth()`.
+
+In v5 `getToken` needs both `secret` and `salt`, where the salt is the
+session-cookie name — `authjs.session-token`, or `__Secure-authjs.session-token`
+over HTTPS:
+
+```ts
+import { getToken } from 'next-auth/jwt'
+
+getUserId: async req => {
+    const secure = new URL(req.url).protocol === 'https:'
+    const token = await getToken({
+        req: req as never,
+        secret: process.env.AUTH_SECRET!,
+        salt: secure ? '__Secure-authjs.session-token' : 'authjs.session-token',
+        secureCookie: secure,
+    })
+    return token?.sub ?? null
+},
+```
+
+<Callout type="warning" title="Salt and cookie name must match">
+    Getting the salt wrong does not throw — `getToken` simply returns `null`,
+    which upup reads as "unauthenticated" and answers 401. If signed-in users
+    are being rejected in production but not locally, check that the HTTPS
+    branch is selecting the `__Secure-` cookie name.
+</Callout>
+
+## Multipart uploads and the bound uid
+
+The id you return is baked into the HMAC upload token issued at
+`POST /multipart/init` as `uid`. Every continuation route — sign-part,
+complete, abort — re-resolves the caller through `getUserId` and compares the
+result against that bound `uid`; a mismatch is **403 `AUTH_DENIED`**. A leaked
+token therefore cannot be replayed by a different signed-in user.
+
+The practical consequence: return the stable subject (`token.sub`), never a
+value that can rotate mid-upload. A large file that starts under one id and
+continues under another fails owner binding at `complete`, with a valid session
+on both requests.
+
+## Next steps
+
+- [Auth Recipes](/docs/guides/auth-recipes/) — the hub: the hook model, the
+  `auth` gate, the anonymous opt-outs, and `TokenStore` implementations for
+  cloud-drive tokens.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — mounting the handler
+  on the App Router, the Pages Router, Express, Fastify, or Hono.
+- [Server Auth & Trust Model](/docs/guides/server-auth/) — the enforcement
+  guarantees behind the id you just returned.

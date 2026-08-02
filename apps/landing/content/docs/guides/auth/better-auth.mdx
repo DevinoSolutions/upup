@@ -1,0 +1,89 @@
+---
+title: Authenticate uploads with Better Auth
+description: Wire a Better Auth session into @upupjs/server so every upload is scoped to the signed-in user — the getUserId hook, gated sessions, uid binding.
+---
+
+Better Auth's server API takes a `Headers` object, which is exactly what upup's
+`getUserId` hook already has. Nothing is proxied or re-parsed — this is the same
+`getSession` call your own route handlers make, running inside the same request.
+
+## The handler
+
+```ts
+import { createUpupHandler } from '@upupjs/server'
+import { auth } from '@/lib/auth' // your betterAuth(...) instance
+
+export const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const session = await auth.api.getSession({ headers: req.headers })
+        return session?.user.id ?? null
+    },
+})
+```
+
+That is the whole Better Auth file-upload integration. `getSession` returns
+`null` for an absent or expired cookie, so the `?? null` branch is the
+unauthenticated path: `POST /presign` and `POST /multipart/init` answer **401
+Unauthenticated** and nothing is presigned.
+
+Mount it the way your framework expects — the recipe is identical in Next.js,
+Express, Fastify, and Hono, because the hook only ever sees a standard web
+`Request`. See [Server Mode — Setup](/docs/guides/server-mode-setup/) for the
+per-framework mounting code.
+
+## Gating on more than existence
+
+If a signed-in session is not enough — you require a verified email, an active
+plan, an org membership — return `null` from the same hook rather than adding a
+second check somewhere else. One hook, one answer:
+
+```ts
+getUserId: async req => {
+    const session = await auth.api.getSession({ headers: req.headers })
+    if (!session?.user.emailVerified) return null
+    return session.user.id
+},
+```
+
+The same shape works for a plan check (`if (!session.user.proPlan) return null`)
+or an organization lookup. Keep the hook cheap: it runs on every presign and on
+every multipart continuation request.
+
+<Callout type="warning" title="Return a stable id">
+    `session.user.id` is Better Auth's immutable primary key, which is what you
+    want. Do not substitute the email or a per-session token — the id becomes
+    the storage namespace and is baked into the upload token, so a value that
+    changes between requests breaks an in-flight multipart upload. Never return
+    the literal string `default` either; that is upup's internal
+    anonymous-namespace sentinel.
+</Callout>
+
+## What upup does with the id
+
+The returned id is enforced end to end. Object keys are namespaced by it, and
+the HMAC upload token issued at `POST /multipart/init` bakes it in as `uid`.
+Every multipart continuation route — sign-part, complete, abort — re-resolves
+the caller through this same `getUserId` hook and compares it to that bound
+`uid`. A mismatch is **403 `AUTH_DENIED`**, so a leaked upload token cannot be
+replayed by a different signed-in user.
+
+This is why a stable id matters more than a convenient one: a multipart upload
+started under one value and continued under another fails owner binding at
+`complete`, even though both requests carry a perfectly valid Better Auth
+session.
+
+## Next steps
+
+- [Auth Recipes](/docs/guides/auth-recipes/) — the hub: the hook model, the
+  `auth` gate, the anonymous opt-outs, and `TokenStore` implementations for
+  cloud-drive tokens.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — mounting the handler
+  on Next.js, Express, Fastify, or Hono.
+- [Server Auth & Trust Model](/docs/guides/server-auth/) — what the enforcement
+  actually guarantees, and what it deliberately does not protect.

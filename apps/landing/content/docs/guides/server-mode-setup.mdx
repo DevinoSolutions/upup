@@ -1,11 +1,15 @@
 ---
 title: Server Mode — Setup
-description: End-to-end mode="server" setup — mount createUpupHandler on a route, configure storage and uploadTokenSecret, and point the uploader at it.
+description: Set up mode="server" — mount createUpupHandler, configure storage, secrets, limits and hooks, then pick an adapter — Express, Fastify, Hono, or Next.js.
 ---
 
-End-to-end setup for `mode="server"`. Assumes a Next.js app; the same
-`createUpupHandler()` plugs into Express, Fastify, or Hono via the
-per-framework adapters.
+End-to-end setup for `mode="server"`. In server mode the browser talks only
+to your server: it holds the storage credentials and the cloud-drive OAuth
+secrets, and it is the trust boundary every upload passes through.
+
+This page is the hub — the config object, the routes, the limits, the hooks,
+and the observability seam. The per-framework mount recipes live on their
+own pages, linked from [Framework adapters](#framework-adapters) below.
 
 Rough time budget: **15–30 minutes** including provider OAuth
 registration.
@@ -21,7 +25,8 @@ dependency on it — your client bundle stays free of S3 SDKs.
 
 ## 2. Mount the handler
 
-**Next.js App Router**
+The example below is the Next.js App Router; every other framework takes
+the same config object through a one-line adapter.
 
 ```ts
 // app/api/upup/[...route]/route.ts
@@ -73,7 +78,7 @@ The handler routes on path suffix: `/presign`, `/multipart/*`,
 folder you mount it at.
 
 Running Express, Fastify, Hono, the Pages Router, or a bare Node server
-instead? See [Adapter recipes](#adapter-recipes) below — same config
+instead? See [Framework adapters](#framework-adapters) below — same config
 object, one adapter call each.
 
 ## 3. Point the uploader at it
@@ -104,7 +109,9 @@ For each drive you enable:
 Scopes required:
 
 - Google: `https://www.googleapis.com/auth/drive.readonly`
-- OneDrive: `Files.Read.All`
+- OneDrive: `Files.Read.All offline_access` (`offline_access` is what makes
+  Microsoft return a refresh token — without it, sessions die when the access
+  token expires)
 - Dropbox: `files.content.read files.metadata.read`
 - Box: `root_readonly`
 
@@ -154,28 +161,91 @@ createUpupHandler({
 })
 ```
 
-The server→S3 multipart cutoff is fixed and not configurable: files up
-to 5 MiB stream through as a single PUT; larger files use S3 multipart
-with 5 MiB chunks. Server memory envelope is one chunk at a time
-regardless of file size — the old `multipartThreshold` knob was removed
-so the memory bound cannot be raised away by configuration.
+The server→S3 multipart cutoff on the **cloud-drive transfer** path is
+fixed and not configurable: files up to 5 MiB stream through as a single
+PUT; larger files use S3 multipart with 5 MiB chunks. Server memory
+envelope is one chunk at a time regardless of file size — the old
+`multipartThreshold` knob was removed so the memory bound cannot be raised
+away by configuration.
 
-## 7. Re-authentication
+## 7. Large files: the multipart flow
+
+<MultipartFlowDiagram />
+
+By default a file is uploaded whole: `POST /presign` hands the browser one
+signed URL and the bytes go straight to storage. Turn on multipart
+(client-side `resumable: { protocol: 'multipart' }`, threshold 5 MiB by
+default — see [Resumable uploads](/docs/resumable-uploads/)) and the
+browser drives the four-step lifecycle above against your server instead:
+
+1. **`POST /multipart/init`** — the server starts the S3 upload and returns
+   the object key, the `uploadId`, the part size, and an **HMAC-signed
+   token**. The token binds the key, the `uploadId`, the owning user, an
+   expiry, and a size envelope. It is the only state the client carries;
+   the server keeps no session.
+2. **`POST /multipart/sign-part`** — one call per part, sending the token
+   and a part number, answered with a presigned URL for exactly that part.
+3. **The part `PUT`s go browser → storage directly.** Part bytes never
+   traverse your server on this path, so a 5 GB upload costs it nothing but
+   the signing calls. Parts are 5 MiB by default and floored at S3's 5 MiB
+   minimum; the browser uploads several in parallel and collects each
+   part's `ETag`.
+4. **`POST /multipart/complete`** — the server sums the bytes S3 actually
+   received, rejects and aborts the upload with `403` if the total falls
+   outside the token's signed envelope, and only then finalizes the object.
+   Cancelled or failed runs call `POST /multipart/abort`.
+
+Two consequences worth knowing:
+
+- **Any instance can serve any step.** The signed token replaces
+  server-side session state, so a load-balanced or serverless deployment
+  works as long as every instance shares the same `uploadTokenSecret`.
+  Different secrets across instances is the classic mid-upload failure —
+  the `/health` fingerprint below catches it.
+- **The token's owner is enforced, not just its signature.** With
+  `getUserId` configured, `sign-part`, `complete`, and `abort` all check
+  that the caller is the user the token was issued to and answer `403
+AUTH_DENIED` otherwise. Without a `getUserId` resolver, possession of the
+  token is the model.
+
+This is a different path from the cloud-drive transfer described in
+[Limits](#the-drive-transfer-memory-bound), where the server itself pulls
+bytes from a drive and pushes them to S3.
+
+## 8. Re-authentication
 
 When an OAuth access token expires, the server returns
 `401 { reauth: true }`. The React component catches this and surfaces
 the provider's "Sign in" button. One click re-auths and the user
 continues where they left off.
 
-We deliberately don't persist refresh tokens — shorter blast radius if
-`tokenStore` leaks, and no background refresh cron to maintain. The
-user's re-auth click is always one step.
+Re-auth is the fallback, not the routine: when the provider issued a
+refresh token, the server stores it alongside the access token (as a
+no-expiry entry in `tokenStore`) and refreshes proactively before drive
+calls, so users rarely see the prompt. The `reauth: true` path fires
+when there is no refresh token or the refresh itself fails.
 
-## Adapter recipes
+## Framework adapters
 
 `createUpupHandler` is a plain `(req: Request) => Promise<Response>`
-function. Every adapter below wraps that same handler and takes the same
-config object — the one you built in step 2. Define it once and share it:
+function. Every adapter wraps that same handler and takes the same config
+object — the one you built in step 2.
+
+| Framework                                                      | Entry point              | Import from              |
+| -------------------------------------------------------------- | ------------------------ | ------------------------ |
+| [Express](/docs/guides/server-adapters/express/)               | `createUpupMiddleware`   | `@upupjs/server/express` |
+| [Fastify](/docs/guides/server-adapters/fastify/)               | `createUpupPlugin`       | `@upupjs/server/fastify` |
+| [Hono](/docs/guides/server-adapters/hono/)                     | `createUpupRoutes`       | `@upupjs/server/hono`    |
+| [Next.js — App Router](/docs/guides/server-adapters/nextjs/)   | `createUpupNextHandler`  | `@upupjs/next/server`    |
+| [Next.js — Pages Router](/docs/guides/server-adapters/nextjs/) | `createUpupPagesHandler` | `@upupjs/next/server`    |
+
+Each page carries the complete mount recipe for that framework plus its own
+body-parsing, proxy-origin, and CORS notes — those genuinely differ, and
+getting them wrong is the most common first-run failure.
+
+### One config, every adapter
+
+Define the config once and share it:
 
 ```ts
 // lib/upup-config.ts
@@ -200,111 +270,14 @@ it's a typed pass-through, not a second validation layer (required-field
 validation always happens inside `createUpupHandler`, so direct callers
 are protected too).
 
-### Express
-
-```ts
-import express from 'express'
-import { createUpupMiddleware } from '@upupjs/server/express'
-import { upupConfig } from './lib/upup-config'
-
-const app = express()
-
-// express.json() MUST run before the middleware: the adapter re-serializes
-// req.body, so the JSON body parser has to have populated it first.
-app.use(express.json())
-app.use('/api/upup', createUpupMiddleware(upupConfig))
-
-app.listen(3000)
-```
-
-`createUpupMiddleware` returns a standard `(req, res, next)` middleware.
-It builds the request URL from `req.originalUrl`, so mounting it under any
-prefix works — routes match on path suffix.
-
-### Fastify
-
-```ts
-import Fastify from 'fastify'
-import { createUpupPlugin } from '@upupjs/server/fastify'
-import { upupConfig } from './lib/upup-config'
-
-const fastify = Fastify()
-
-await fastify.register(createUpupPlugin(upupConfig, { path: '/api/upup/*' }))
-
-await fastify.listen({ port: 3000 })
-```
-
-`createUpupPlugin` is the one adapter that registers its own route, because
-`fastify.all` structurally requires a path. The second argument overrides
-it; the default is `/upup/*`. Fastify's built-in JSON parser already
-populates `request.body`, so no extra body-parser wiring is needed.
-
-### Hono
-
-```ts
-import { Hono } from 'hono'
-import { createUpupRoutes } from '@upupjs/server/hono'
-import { upupConfig } from './lib/upup-config'
-
-const routes = createUpupRoutes(upupConfig)
-const app = new Hono()
-
-app.all('/api/upup/*', c => routes(c.req.raw))
-
-export default app
-```
-
-Hono is web-native, so `createUpupRoutes` returns the handler unwrapped —
-hand it the raw `Request` off the context and return its `Response`.
-
-### Next.js App Router
-
-```ts
-// app/api/upup/[...route]/route.ts
-import { createUpupNextHandler } from '@upupjs/next/server'
-import { upupConfig } from '@/lib/upup-config'
-
-export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)
-```
-
-`createUpupNextHandler` returns all four methods and, unlike exporting the
-bare handler, corrects the request origin behind a proxy or CDN — pass
-`baseUrl` (or `trustProxy: true` to honour `x-forwarded-*`) as a second
-argument so OAuth callbacks resolve to your public URL. On Vercel it's a
-no-op, since `req.url` is already the public origin. The same export is
-also available from `@upupjs/server/next` if you'd rather not add
-`@upupjs/next`.
-
-### Next.js Pages Router
-
-```ts
-// pages/api/upup/[...route].ts
-import { createUpupPagesHandler } from '@upupjs/next/server'
-import { upupConfig } from '@/lib/upup-config'
-
-export default createUpupPagesHandler(upupConfig)
-
-// Required: the adapter reads the raw request body itself.
-export const config = {
-    api: { bodyParser: false },
-}
-```
-
-<Callout type="warning">
-    The `bodyParser: false` export is not optional. With Next's parser left on,
-    the adapter receives a consumed stream and every POST body arrives empty.
-    `createUpupPagesHandler` accepts the same `baseUrl` / `trustProxy` options
-    as the App Router handler.
-</Callout>
-
 ### Custom Node server
 
-Any other Node framework can reuse the same bridge the Express, Fastify,
-and Pages Router adapters are built on — `toWebRequest` and
-`writeWebResponse` from `@upupjs/server/node-bridge`. Don't hand-roll the
-conversion; the bridge already handles multi-value headers and skips
-`content-length` (Node recomputes it, and a copied value risks a mismatch).
+Any Node framework without a dedicated adapter can reuse the same bridge
+the Express, Fastify, and Pages Router adapters are built on —
+`toWebRequest` and `writeWebResponse` from `@upupjs/server/node-bridge`.
+Don't hand-roll the conversion; the bridge already handles multi-value
+headers and skips `content-length` (Node recomputes it, and a copied value
+risks a mismatch).
 
 ```ts
 import { createServer } from 'node:http'

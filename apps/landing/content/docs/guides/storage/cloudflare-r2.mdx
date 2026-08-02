@@ -1,0 +1,95 @@
+---
+title: Upload files to Cloudflare R2
+description: Upload files to Cloudflare R2 from React, Vue, Svelte, or plain JS with upup — account-scoped endpoint, region auto, API tokens, CORS, and a copy-paste config.
+---
+
+Cloudflare R2 speaks the S3 API with zero egress fees, which makes it a common
+landing spot for user uploads that later get served back to those same users.
+For upup it is an ordinary S3-compatible backend with two quirks worth knowing
+up front: the endpoint is scoped to your account ID, and the region is the
+literal string `auto`.
+
+This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+holds the credentials. In client mode your own endpoint signs the URLs and the
+browser `PUT`s straight to R2 — see
+[Client Mode vs Server Mode](/docs/guides/modes/) for the split.
+
+## The config
+
+Only the `storage` block differs from the
+[AWS S3 example](/docs/guides/storage/aws-s3/) — keep `uploadTokenSecret` and the
+rest of the handler as they are there.
+
+```ts
+const storage = {
+    type: 'r2',
+    bucket: process.env.R2_BUCKET!,
+    region: 'auto',
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+}
+```
+
+`region: 'auto'` is not a placeholder to fill in. R2 has no per-region S3
+hostnames — a bucket's location hint (Western North America, Europe, and so on)
+affects where data lives, not how you sign for it, and the S3 API expects `auto`
+regardless. Passing a real AWS region here produces a signature error.
+
+## Console setup
+
+1. **Create the bucket.** Cloudflare dashboard → R2 → Create bucket. A location
+   hint is optional; it does not change the config above.
+2. **Copy your account ID.** It is on the R2 overview page and is the first
+   label in the endpoint hostname.
+3. **Create an API token.** R2 → Manage R2 API Tokens → Create API token, with
+   **Object Read & Write** permission. Scope it to the one bucket rather than
+   the whole account. Cloudflare shows the access key ID, the secret access key,
+   and the endpoint once — the secret is not retrievable later.
+4. **Add a CORS policy** (client mode only) under the bucket's Settings tab.
+
+### CORS (client mode only)
+
+```json
+[
+    {
+        "AllowedOrigins": ["https://your-app.com"],
+        "AllowedMethods": ["PUT", "POST", "GET", "HEAD"],
+        "AllowedHeaders": ["*"],
+        "ExposeHeaders": ["ETag"],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
+
+In server mode the browser never contacts R2, so the bucket needs no CORS policy
+at all. See [Credentials And CORS](/docs/credentials-configuration/).
+
+<Callout type="warning" title="R2 multipart parts must be equal-sized">
+    R2 requires every part of a multipart upload except the last to be exactly
+    the same size — S3 itself only enforces a 5 MiB minimum. upup's multipart
+    strategy already slices files into uniform parts (5 MiB by default), so the
+    default path is safe. If you override `resumable.chunkSizeBytes`, keep it a
+    single fixed value rather than computing a per-file or per-part size.
+</Callout>
+
+## Serving the files back
+
+R2 buckets are private by default and the config above never makes them public.
+Two supported ways to serve an uploaded object: attach a custom domain to the
+bucket (the production answer, and it puts Cloudflare's cache in front of your
+files), or enable the `r2.dev` development subdomain, which is rate-limited and
+explicitly not meant for production traffic. Either is a Cloudflare-side setting
+and has no effect on the upload path.
+
+R2 does not implement object ACLs. Anything that would be a per-object
+`public-read` on S3 is a bucket-level decision here instead.
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.

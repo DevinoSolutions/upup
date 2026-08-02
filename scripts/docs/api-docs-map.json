@@ -5,14 +5,14 @@
         "BoxPlugin": "apps/landing/content/docs/guides/plugins.mdx",
         "DropboxPlugin": "apps/landing/content/docs/guides/plugins.mdx",
         "FileSource": "apps/landing/content/docs/api-reference/events.mdx",
-        "GOOGLE_DRIVE_DESCRIPTOR": "apps/landing/content/docs/guides/plugins.mdx",
-        "GoogleDrivePlugin": "apps/landing/content/docs/guides/plugins.mdx",
+        "GOOGLE_DRIVE_DESCRIPTOR": "apps/landing/content/docs/guides/writing-plugins.mdx",
+        "GoogleDrivePlugin": "apps/landing/content/docs/guides/writing-plugins.mdx",
         "LOCALE_CODES": "apps/landing/content/docs/localization.mdx",
         "LOCALE_META": "apps/landing/content/docs/localization.mdx",
         "LOCALE_REGISTRY": "apps/landing/content/docs/localization.mdx",
-        "NON_S3_STORAGE_PROVIDERS": "apps/landing/content/docs/guides/storage-providers.mdx",
+        "NON_S3_STORAGE_PROVIDERS": "apps/landing/content/docs/guides/storage/azure-blob.mdx",
         "OneDrivePlugin": "apps/landing/content/docs/guides/plugins.mdx",
-        "PopupOAuthPlugin": "apps/landing/content/docs/guides/plugins.mdx",
+        "PopupOAuthPlugin": "apps/landing/content/docs/guides/writing-plugins.mdx",
         "StorageProvider": "apps/landing/content/docs/guides/storage-providers.mdx",
         "UploadStatus": "apps/landing/content/docs/api-reference/events.mdx",
         "UpupAuthError": "apps/landing/content/docs/api-reference/error-codes.mdx",
@@ -76,7 +76,7 @@
         "FileSource": "apps/landing/content/docs/api-reference/events.mdx",
         "StorageProvider": "apps/landing/content/docs/guides/storage-providers.mdx",
         "UploadStatus": "apps/landing/content/docs/api-reference/events.mdx",
-        "createUploader": "apps/landing/content/docs/quickstarts/vanilla.mdx"
+        "createUploader": "apps/landing/content/docs/api-reference/events.mdx"
     },
     "@upupjs/angular": {
         "FileSource": "apps/landing/content/docs/api-reference/events.mdx",
@@ -93,9 +93,9 @@
     },
     "@upupjs/next/server": {
         "InMemoryTokenStore": "apps/landing/content/docs/guides/server-auth.mdx",
-        "createUpupNextHandler": "apps/landing/content/docs/quickstarts/next.mdx",
-        "createUpupPagesHandler": "apps/landing/content/docs/guides/server-mode-setup.mdx",
-        "defineUpupConfig": "apps/landing/content/docs/quickstarts/next.mdx"
+        "createUpupNextHandler": "apps/landing/content/docs/guides/server-adapters/nextjs.mdx",
+        "createUpupPagesHandler": "apps/landing/content/docs/guides/server-adapters/nextjs.mdx",
+        "defineUpupConfig": "apps/landing/content/docs/guides/server-adapters/nextjs.mdx"
     },
     "contracts:UploaderBaseProps": {
         "allowPreview": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
@@ -127,10 +127,10 @@
         "mode": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "onBeforeFileAdded": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "onDoneClicked": "apps/landing/content/docs/api-reference/events.mdx",
-        "onError": "apps/landing/content/docs/api-reference/server-http.mdx",
+        "onError": "apps/landing/content/docs/api-reference/events.mdx",
         "onFileClick": "apps/landing/content/docs/api-reference/events.mdx",
         "onFileProcessed": "apps/landing/content/docs/api-reference/events.mdx",
-        "onFileRemoved": "apps/landing/content/docs/api-reference/upupuploader/event-handlers.mdx",
+        "onFileRemoved": "apps/landing/content/docs/api-reference/events.mdx",
         "onFileTypeMismatch": "apps/landing/content/docs/api-reference/events.mdx",
         "onFileUploadComplete": "apps/landing/content/docs/api-reference/upupuploader/event-handlers.mdx",
         "onFileUploadProgress": "apps/landing/content/docs/api-reference/events.mdx",

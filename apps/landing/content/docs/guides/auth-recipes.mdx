@@ -1,6 +1,6 @@
 ---
 title: Auth Recipes
-description: Copy-paste recipes for wiring your existing auth into @upupjs/server — Better Auth, NextAuth/Auth.js v5, Clerk, and raw JWT file uploads, plus Redis and SQL TokenStore implementations for cloud-drive tokens.
+description: Wire your existing auth into @upupjs/server — one getUserId hook, recipes for Better Auth, NextAuth, Clerk and raw JWT, plus Redis and SQL TokenStores.
 ---
 
 `@upupjs/server` never stores, reads, or replicates your app's credentials. It
@@ -15,8 +15,14 @@ that route handler, it can do inside these hooks.
 Once you return an id, upup enforces it end to end: uploads are namespaced by
 it, the HMAC upload token issued at `multipart/init` bakes it in as `uid`, and
 every multipart continuation re-checks the caller against that bound `uid`. You
-supply identity; upup supplies the enforcement. This page is the wiring — see
-[Server Auth & Trust Model](/docs/guides/server-auth/) for what that enforcement
+supply identity; upup supplies the enforcement.
+
+<AuthFlowDiagram />
+
+This page is the model and the shared pieces — the hook contract, the two
+anonymous opt-outs, and `TokenStore` implementations. The per-library wiring
+lives on its own page, linked below. See
+[Server Auth & Trust Model](/docs/guides/server-auth/) for what the enforcement
 actually guarantees, which errors it returns, and what it deliberately does not
 protect.
 
@@ -40,206 +46,31 @@ do not return the literal string `default`: that is upup's internal
 anonymous-namespace sentinel, and returning it collapses the caller into the
 shared anonymous namespace instead of their own.
 
-## Better Auth
+## Which shape do you need?
 
-Better Auth's server API takes a `Headers` object, which is exactly what the
-hook already has. Nothing is proxied or re-parsed — this is the same call your
-own route handlers make.
+Three configurations, in increasing order of strictness. Most production apps
+want the third.
 
-```ts
-import { createUpupHandler } from '@upupjs/server'
-import { auth } from '@/lib/auth' // your betterAuth(...) instance
+| Configuration                        | What happens                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| Nothing configured                   | `/presign` and `/multipart/init` answer **403 `AUTH_REQUIRED`** — secure by default |
+| `allowAnonymousUploads: true`        | Uploads run under one shared anonymous namespace, with a warning on every boot      |
+| `getUserId` (optionally with `auth`) | Uploads are namespaced per user and the multipart token is bound to that id         |
 
-export const handler = createUpupHandler({
-    storage: {
-        type: 'aws',
-        bucket: process.env.S3_BUCKET!,
-        region: process.env.S3_REGION!,
-    },
-    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
-    getUserId: async req => {
-        const session = await auth.api.getSession({ headers: req.headers })
-        return session?.user.id ?? null
-    },
-})
-```
+## Recipes
 
-That is the whole Better Auth file-upload integration. `getSession` returns
-`null` for an absent or expired cookie, so the `?? null` branch is the
-unauthenticated path and the upload is refused with a 401.
+Each page is a complete, copy-paste handler for one library — session
+validation, the `getUserId` wiring, and the multipart binding note.
 
-If you gate on more than existence — a verified email, an active plan — return
-`null` from the same hook rather than adding a second check elsewhere:
-
-```ts
-getUserId: async req => {
-    const session = await auth.api.getSession({ headers: req.headers })
-    if (!session?.user.emailVerified) return null
-    return session.user.id
-},
-```
-
-## NextAuth / Auth.js v5
-
-In the App Router, the `auth()` helper exported from your `auth.ts` reads the
-session from Next's request context. upup calls `getUserId` synchronously
-_inside_ your route handler's execution, so that context is live and `auth()`
-works with no argument — you do not need to thread the `Request` through.
-
-```ts
-// app/api/upup/[...route]/route.ts
-import { createUpupHandler } from '@upupjs/server'
-import { auth } from '@/auth' // export const { auth } = NextAuth(…)
-
-const handler = createUpupHandler({
-    storage: {
-        type: 'aws',
-        bucket: process.env.S3_BUCKET!,
-        region: process.env.S3_REGION!,
-    },
-    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
-    getUserId: async () => {
-        const session = await auth()
-        return session?.user?.id ?? null
-    },
-})
-
-export const GET = handler
-export const POST = handler
-```
-
-Note that NextAuth's default session callback does not put `id` on
-`session.user` — if `session.user.id` is `undefined`, add it in your Auth.js
-config:
-
-```ts
-// auth.ts
-export const { auth, handlers } = NextAuth({
-    // …providers
-    callbacks: {
-        session({ session, token }) {
-            session.user.id = token.sub!
-            return session
-        },
-    },
-})
-```
-
-Outside a Next request context — a Pages-Router API route bridged by
-`@upupjs/next`, or NextAuth JWTs verified from another service — read the token
-off the request instead with `getToken` from `next-auth/jwt`. In v5 it needs
-both `secret` and `salt`, where the salt is the session-cookie name
-(`authjs.session-token`, or `__Secure-authjs.session-token` over HTTPS):
-
-```ts
-import { getToken } from 'next-auth/jwt'
-
-getUserId: async req => {
-    const secure = new URL(req.url).protocol === 'https:'
-    const token = await getToken({
-        req: req as never,
-        secret: process.env.AUTH_SECRET!,
-        salt: secure ? '__Secure-authjs.session-token' : 'authjs.session-token',
-        secureCookie: secure,
-    })
-    return token?.sub ?? null
-},
-```
-
-## Clerk
-
-Clerk's backend client authenticates a plain `Request`, so the same recipe works
-in Next.js, Express, Fastify, Hono, or a worker. This is the path to use for a
-Clerk S3 upload: Clerk verifies the session, upup scopes the object key and the
-upload token to the returned `userId`.
-
-```ts
-import { createUpupHandler } from '@upupjs/server'
-import { createClerkClient } from '@clerk/backend'
-
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! })
-
-export const handler = createUpupHandler({
-    storage: {
-        type: 'aws',
-        bucket: process.env.S3_BUCKET!,
-        region: process.env.S3_REGION!,
-    },
-    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
-    getUserId: async req => {
-        const state = await clerk.authenticateRequest(req, {
-            authorizedParties: [process.env.APP_ORIGIN!],
-        })
-        if (!state.isAuthenticated) return null
-        return state.toAuth().userId ?? null
-    },
-})
-```
-
-Always pass `authorizedParties` — without it, a token minted for a different
-origin can authenticate here. Inside a Next.js app you can use the framework
-client instead (`const clerk = await clerkClient()` from `@clerk/nextjs/server`);
-`authenticateRequest` is identical on both.
-
-## Raw JWT
-
-No auth library, or a token minted by another service. Verify it with
-[`jose`](https://github.com/panva/jose) and use the subject claim as the id. The
-token can arrive as a bearer header or a cookie; check both.
-
-```ts
-import { createUpupHandler } from '@upupjs/server'
-import { jwtVerify } from 'jose'
-
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-
-function readToken(req: Request): string | null {
-    const header = req.headers.get('authorization')
-    if (header?.startsWith('Bearer ')) return header.slice(7)
-    const cookie = req.headers.get('cookie') ?? ''
-    const match = /(?:^|;\s*)session=([^;]+)/.exec(cookie)
-    return match ? decodeURIComponent(match[1]!) : null
-}
-
-export const handler = createUpupHandler({
-    storage: {
-        type: 'aws',
-        bucket: process.env.S3_BUCKET!,
-        region: process.env.S3_REGION!,
-    },
-    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
-    getUserId: async req => {
-        const token = readToken(req)
-        if (!token) return null
-        try {
-            const { payload } = await jwtVerify(token, secret, {
-                issuer: process.env.JWT_ISSUER!,
-                audience: process.env.JWT_AUDIENCE!,
-            })
-            return payload.sub ?? null
-        } catch {
-            return null // bad signature, wrong issuer, or expired
-        }
-    },
-})
-```
-
-`jwtVerify` throws on every failure mode — tampered signature, wrong
-issuer/audience, expired `exp` — so the `catch` returning `null` is the
-unauthenticated path. Never decode without verifying; `jose`'s `decodeJwt` reads
-the payload without checking the signature and must not be used here.
-
-For an asymmetric token (an identity provider signing RS256), swap the secret
-for a remote key set, which caches and rotates keys for you:
-
-```ts
-import { createRemoteJWKSet, jwtVerify } from 'jose'
-
-const jwks = createRemoteJWKSet(
-    new URL('https://issuer.example.com/.well-known/jwks.json'),
-)
-// …then: await jwtVerify(token, jwks, { issuer, audience })
-```
+- [Better Auth](/docs/guides/auth/better-auth/) — `auth.api.getSession` takes
+  the hook's `Headers` object directly; the shortest integration of the four.
+- [NextAuth / Auth.js v5](/docs/guides/auth/next-auth/) — the `auth()` helper in
+  the App Router, `getToken` outside a request context, and the
+  `session.user.id` that Auth.js does not add for you.
+- [Clerk](/docs/guides/auth/clerk/) — `authenticateRequest` on a plain
+  `Request`, so one recipe covers Next.js, Express, Fastify, Hono, and workers.
+- [Custom JWT](/docs/guides/auth/custom-jwt/) — verify it yourself with `jose`,
+  including remote JWKS for asymmetric tokens.
 
 ## Combining with `auth`
 

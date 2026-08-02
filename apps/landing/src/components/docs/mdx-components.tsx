@@ -5,10 +5,14 @@ import type { ComponentProps, ReactNode } from 'react'
 import { CodeBlock } from './CodeBlock'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
 import { FrameworkTabs } from './FrameworkTabs'
+import { AuthFlowDiagram } from './diagrams/AuthFlowDiagram'
 import { DriveOAuthDiagram } from './diagrams/DriveOAuthDiagram'
+import { ErrorTaxonomyDiagram } from './diagrams/ErrorTaxonomyDiagram'
 import { ModesDiagram } from './diagrams/ModesDiagram'
+import { MultipartFlowDiagram } from './diagrams/MultipartFlowDiagram'
 import { PipelineDiagram } from './diagrams/PipelineDiagram'
 import { TrustModelDiagram } from './diagrams/TrustModelDiagram'
+import { UploadLifecycleDiagram } from './diagrams/UploadLifecycleDiagram'
 import { PlaygroundCta } from './PlaygroundCta'
 
 const CALLOUT_STYLES: Record<string, string> = {
@@ -45,10 +49,14 @@ export function getMDXComponents(): MDXComponents {
         Callout,
         DocsUploaderDemo,
         FrameworkTabs,
+        AuthFlowDiagram,
+        DriveOAuthDiagram,
+        ErrorTaxonomyDiagram,
         ModesDiagram,
+        MultipartFlowDiagram,
         PipelineDiagram,
         TrustModelDiagram,
-        DriveOAuthDiagram,
+        UploadLifecycleDiagram,
         PlaygroundCta,
         // Syntax-highlighted code card: shiki tokens come from fumadocs-mdx
         // (see source.config.ts + the .shiki activation CSS in globals.css);

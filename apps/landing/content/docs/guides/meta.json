@@ -2,16 +2,21 @@
     "pages": [
         "modes",
         "server-mode-setup",
+        "server-adapters",
         "server-auth",
         "auth-recipes",
+        "auth",
         "storage-providers",
+        "storage",
         "file-processing",
+        "processing",
         "sources",
         "reliability",
         "error-monitoring",
         "theming",
         "accessibility",
         "headless",
-        "plugins"
+        "plugins",
+        "writing-plugins"
     ]
 }

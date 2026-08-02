@@ -1,0 +1,88 @@
+---
+title: Upload files to Backblaze B2
+description: Upload files to Backblaze B2 from React, Vue, Svelte, or plain JS with upup — application keys, the region-scoped S3 endpoint, CORS, and a copy-paste config.
+---
+
+Backblaze B2 exposes an S3-compatible API alongside its own native one. upup
+uses the S3 one, so B2 behaves like any other endpoint-configured provider —
+with one detail that trips almost everybody once: the region is not a name you
+choose, it is a code like `us-west-004` that appears inside your bucket's
+endpoint.
+
+This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+holds the credentials. See [Client Mode vs Server Mode](/docs/guides/modes/) if
+you would rather sign URLs yourself and have the browser upload directly.
+
+## The config
+
+Only the `storage` block differs from the
+[AWS S3 example](/docs/guides/storage/aws-s3/) — keep `uploadTokenSecret` and the
+rest of the handler as they are there.
+
+```ts
+const storage = {
+    type: 'backblaze',
+    bucket: process.env.B2_BUCKET!,
+    region: process.env.B2_REGION!, // e.g. 'us-west-004'
+    endpoint: `https://s3.${process.env.B2_REGION}.backblazeb2.com`,
+    accessKeyId: process.env.B2_KEY_ID,
+    secretAccessKey: process.env.B2_APPLICATION_KEY,
+}
+```
+
+The region appears twice — once as `region` and once inside the endpoint host —
+because both must agree for the signature to verify. Deriving the endpoint from
+the same env var, as above, keeps them from drifting apart.
+
+## Console setup
+
+1. **Create the bucket.** Backblaze console → Buckets → Create a Bucket. Leave
+   it **Private**: upup uploads with signed requests and never needs public
+   write.
+2. **Read the endpoint off the bucket.** The bucket's details panel shows an
+   `Endpoint` value such as `s3.us-west-004.backblazeb2.com`. The middle
+   segment is your `region` — copy it rather than guessing from the bucket's
+   advertised location.
+3. **Create an application key.** App Keys → Add a New Application Key, scoped
+   to that one bucket, with Read and Write access. Backblaze shows `keyID` and
+   `applicationKey` once. `keyID` is `accessKeyId`; `applicationKey` is
+   `secretAccessKey`.
+4. **Add CORS rules** (client mode only) from the bucket's CORS Rules panel.
+
+<Callout type="danger" title="The master application key does not work">
+    Backblaze's account-level master key is rejected by the S3-compatible API —
+    it works only with B2's native API. If uploads fail to authenticate with
+    what looks like a perfectly good key pair, check that you created a separate
+    application key rather than reusing the master one. Create the key after the
+    bucket, too, so you can scope it to that bucket.
+</Callout>
+
+### CORS (client mode only)
+
+B2's CORS rules live on the bucket, configured in the console (or with the `b2`
+CLI). Allow your app's origin for `PUT`, `POST`, `GET`, and `HEAD`, and expose
+the `ETag` response header — the browser needs to read each part's `ETag` to
+complete a multipart upload. In server mode the browser only talks to your
+server, so no CORS rule is needed at all. See
+[Credentials And CORS](/docs/credentials-configuration/).
+
+## Versions and abandoned uploads
+
+B2 keeps every version of a file. Uploading to a key that already exists does
+not replace the old object, it hides it behind a newer version, and both keep
+costing storage until a lifecycle rule removes the old ones. If your app lets
+users overwrite files, set a lifecycle rule on the bucket ("keep only the last
+version" is the usual choice) rather than assuming an overwrite frees space.
+
+Cancelled multipart uploads leave unfinished large files behind, and their parts
+are billed. B2 can clean those up on a schedule — worth enabling on any bucket
+that accepts uploads from a UI where users can close the tab mid-upload.
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.

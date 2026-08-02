@@ -17,16 +17,17 @@ describe('llms corpus', () => {
         expect(full.length).toBeGreaterThan(20_000)
     })
 
-    it('index lists 45 pages and full contains all 45 page bodies', () => {
+    it('index lists 64 pages and full contains all 64 page bodies', () => {
         // Pinned to the docs page inventory (same count as docs-source.test.ts) —
         // bump deliberately when pages are added/removed. 36 + 9 (2026-08
-        // coverage sprint) = 45.
+        // coverage sprint) + 19 (2026-08 SEO split: 7 storage + 4 auth +
+        // 4 server-adapters + 3 processing + writing-plugins) = 64.
         const index = buildLlmsIndex()
         const linkCount = (index.match(/^- \[/gm) ?? []).length
-        expect(linkCount).toBe(45)
+        expect(linkCount).toBe(64)
 
         const full = buildLlmsFull()
         const pageCount = (full.match(/\n---\n/g)?.length ?? 0) + 1
-        expect(pageCount).toBe(45)
+        expect(pageCount).toBe(64)
     })
 })

@@ -65,6 +65,11 @@ argument exists but has no fields.
 
 ## Upload lifecycle
 
+A run drives one status projection, and the events below are emitted as it moves
+between states:
+
+<UploadLifecycleDiagram />
+
 | Event                 | Payload                                                                                                                                                    | Fires when                                                                                                                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `state-change`        | `{ status?: UploadStatus; error?: Error; files?: Map<string, UploadFile>; progress?: { totalFiles: number; completedFiles: number; percentage: number } }` | Any observable state moves — the catch-all every framework binding re-renders from. Emitted alongside most other events, carrying only the slice that changed. |

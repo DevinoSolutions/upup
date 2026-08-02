@@ -1,0 +1,85 @@
+---
+title: Upload files to DigitalOcean Spaces
+description: Upload files to DigitalOcean Spaces from React, Vue, Svelte, or plain JS with upup — Spaces keys, the region endpoint, CORS, the CDN, and a copy-paste config.
+---
+
+DigitalOcean Spaces is S3-compatible object storage where the datacenter region
+is the whole configuration story: `nyc3`, `sfo3`, `ams3`, `fra1`, `sgp1`, and
+friends are simultaneously the `region` value and the endpoint hostname. Get
+those two to agree and Spaces behaves exactly like S3.
+
+This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+holds the credentials. See [Client Mode vs Server Mode](/docs/guides/modes/) if
+you would rather sign URLs yourself and have the browser upload directly.
+
+## The config
+
+Only the `storage` block differs from the
+[AWS S3 example](/docs/guides/storage/aws-s3/) — keep `uploadTokenSecret` and the
+rest of the handler as they are there.
+
+```ts
+const storage = {
+    type: 'digitalocean',
+    bucket: process.env.SPACES_BUCKET!, // the Space name
+    region: process.env.SPACES_REGION!, // e.g. 'nyc3'
+    endpoint: `https://${process.env.SPACES_REGION}.digitaloceanspaces.com`,
+    accessKeyId: process.env.SPACES_KEY,
+    secretAccessKey: process.env.SPACES_SECRET,
+}
+```
+
+`bucket` is the Space name — DigitalOcean's UI says "Space", the S3 API says
+"bucket", and they are the same thing. The endpoint host is the **region**, not
+the Space: `https://nyc3.digitaloceanspaces.com`, never
+`https://my-space.nyc3.digitaloceanspaces.com`. upup turns on path-style
+addressing whenever `endpoint` is set, so the Space name is added to the path
+for you; putting it in the hostname as well produces requests aimed at a Space
+inside a Space.
+
+## Console setup
+
+1. **Create the Space.** DigitalOcean control panel → Spaces Object Storage →
+   Create a Space, and pick the datacenter region. Set File Listing to
+   Restricted unless you specifically want the contents publicly enumerable.
+2. **Generate Spaces keys.** API → Spaces Keys → Generate New Key. The secret is
+   shown once. Newer accounts can scope a key to a single Space; scope it if you
+   can.
+3. **Add a CORS configuration** (client mode only) from the Space's Settings
+   tab.
+
+<Callout type="warning" title="A DigitalOcean API token is not a Spaces key">
+    Spaces access keys and DigitalOcean personal access tokens are different
+    credentials issued from different pages. The API token that works with
+    `doctl` and the DigitalOcean API will not authenticate an S3 request — if
+    uploads come back as 403 with credentials you are sure are correct, check
+    that they came from the Spaces Keys page.
+</Callout>
+
+### CORS (client mode only)
+
+Add an origin under the Space's Settings → CORS Configurations, allow `PUT`,
+`POST`, `GET`, and `HEAD`, and add `ETag` to the exposed headers so the browser
+can complete multipart uploads. In server mode the browser never contacts
+Spaces, so no CORS entry is needed. See
+[Credentials And CORS](/docs/credentials-configuration/).
+
+## Serving files back through the CDN
+
+Each Space can enable a CDN endpoint on a hostname of the form
+`<space>.<region>.cdn.digitaloceanspaces.com`. That is a read path only — keep
+uploading to the origin endpoint in the config above, and use the CDN hostname
+when you build URLs for users. Uploading through the CDN hostname is not
+supported.
+
+Objects are private unless you make them public, and the upload path above never
+changes an object's visibility.
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.

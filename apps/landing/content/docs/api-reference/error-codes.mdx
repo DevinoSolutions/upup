@@ -15,6 +15,10 @@ The one important exception is the rejection from `upload()` itself — see
 before you write a handler, because it is **not** an `UpupError` and carries no
 `code`.
 
+Every class that carries a code, and the one rejection that sits outside them:
+
+<ErrorTaxonomyDiagram />
+
 ## The complete code list
 
 `UpupErrorCode` has 23 members. `retryable` is the value the error object

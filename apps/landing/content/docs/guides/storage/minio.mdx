@@ -1,0 +1,108 @@
+---
+title: Upload files to MinIO
+description: Upload files to a self-hosted MinIO server from React, Vue, Svelte, or plain JS with upup — Docker setup, path-style addressing, CORS, and a copy-paste config.
+---
+
+MinIO is self-hosted S3-compatible storage, which makes it the fastest way to
+develop against real object storage without a cloud account — upup's own
+end-to-end suite uploads to a local MinIO container. Everything you configure
+here transfers to a hosted provider later: only `endpoint`, `region`, and the
+credentials change.
+
+This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+holds the credentials. See [Client Mode vs Server Mode](/docs/guides/modes/) if
+you would rather sign URLs yourself and have the browser upload directly.
+
+## The config
+
+Only the `storage` block differs from the
+[AWS S3 example](/docs/guides/storage/aws-s3/) — keep `uploadTokenSecret` and the
+rest of the handler as they are there.
+
+```ts
+const storage = {
+    type: 'minio',
+    bucket: process.env.MINIO_BUCKET!,
+    region: 'us-east-1', // MinIO's default region
+    endpoint: 'http://localhost:9100', // your MinIO S3 endpoint
+    forcePathStyle: true, // required by MinIO
+    accessKeyId: process.env.MINIO_ACCESS_KEY,
+    secretAccessKey: process.env.MINIO_SECRET_KEY,
+}
+```
+
+MinIO requires path-style addressing — requests go to `endpoint/bucket/key`, not
+`bucket.endpoint/key`. upup already defaults `forcePathStyle` to `true` whenever
+`endpoint` is set, so the line above is explicit rather than necessary. `region`
+is `us-east-1` unless you deliberately configured MinIO otherwise; it still has
+to match, because the signature covers it.
+
+## Running MinIO locally
+
+```bash
+docker run -p 9100:9000 -p 9101:9001 \
+  -e MINIO_ROOT_USER=upupadmin \
+  -e MINIO_ROOT_PASSWORD=upupadmin123 \
+  -e MINIO_API_CORS_ALLOW_ORIGIN='*' \
+  -v minio-data:/data \
+  minio/minio server /data --console-address ':9001'
+```
+
+MinIO listens on two ports and they are not interchangeable. The **S3 API** is
+on container port 9000 (published as 9100 above) and is what `endpoint` must
+point at; the **web console** is on 9001 (published as 9101) and is for humans.
+Aiming `endpoint` at the console port produces confusing HTML-instead-of-XML
+errors.
+
+Pick published ports deliberately. 9000 and 9001 are MinIO's defaults, so a
+container from another project may already own them — publishing on 9100/9101,
+as above, avoids uploading into somebody else's bucket.
+
+Create the bucket either from the console at `http://localhost:9101` or with the
+MinIO client:
+
+```bash
+mc alias set local http://localhost:9100 upupadmin upupadmin123
+mc mb local/upup-uploads
+```
+
+<Callout
+    type="warning"
+    title="The endpoint must be reachable by whoever uploads"
+>
+    In client mode the presigned URL your server signs is opened by the
+    **browser**, so `endpoint` has to be a host the browser can resolve.
+    `http://localhost:9100` works on your laptop and fails from any other
+    device, from a container on a different network, and from a phone on the
+    same Wi-Fi. Use the machine's LAN address or a hostname both sides agree on.
+    In server mode only your server connects to MinIO, so an internal Docker
+    network name such as `http://minio:9000` is fine.
+</Callout>
+
+### CORS (client mode only)
+
+MinIO takes its CORS policy from the server process, not from per-bucket rules:
+set `MINIO_API_CORS_ALLOW_ORIGIN` to a comma-separated list of origins (`*` is
+fine locally, as in the container above; name your real origins in production).
+In server mode the browser only talks to your server, so CORS never enters the
+upload path. See [Credentials And CORS](/docs/credentials-configuration/).
+
+## Going to production
+
+The root user is the equivalent of an account owner. For anything beyond local
+development, create a dedicated MinIO user with a policy limited to the upload
+bucket and use that key pair, terminate the endpoint over HTTPS, and keep the
+console port off the public internet.
+
+Because MinIO is the S3 API, moving to a hosted provider later is a change of
+three config values and nothing else — see
+[Other S3-compatible services](/docs/guides/storage/s3-compatible/).
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.

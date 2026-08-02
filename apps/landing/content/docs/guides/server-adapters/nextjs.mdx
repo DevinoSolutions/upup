@@ -1,0 +1,221 @@
+---
+title: File upload server with Next.js and S3
+description: Mount @upupjs/server in Next.js — App Router via createUpupNextHandler, Pages Router via createUpupPagesHandler, plus proxy origins, bodyParser, and CORS.
+---
+
+Next.js gets the richest adapter of the four, because it has two router
+conventions and a proxy story of its own. Both entry points come from
+`@upupjs/next/server` and take the same config object — see
+[Server mode setup](/docs/guides/server-mode-setup/) for what each option
+does.
+
+## 1. Install
+
+```sh
+pnpm add @upupjs/next
+```
+
+`@upupjs/next` depends on `@upupjs/server` (and `@upupjs/react`), so this
+one package covers both the client component and the route handlers. It
+peers on Next 15+ and React 19.
+
+<Callout type="note">
+    Server-only if you prefer: `createUpupNextHandler` is also exported from
+    `@upupjs/server/next`, so an app that only needs the App Router route can
+    install `@upupjs/server` alone. The Pages Router adapter and
+    `defineUpupConfig` live in `@upupjs/next/server` only.
+</Callout>
+
+## 2. Share one config
+
+Author it once and import it from the route file:
+
+```ts
+// lib/upup-config.ts
+import { defineUpupConfig } from '@upupjs/next/server'
+
+export const upupConfig = defineUpupConfig({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    // Required, server-only: stable, high-entropy, min 16 chars, shared
+    // across every instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const session = await getSessionFromCookie(req)
+        return session?.userId ?? null
+    },
+})
+```
+
+`defineUpupConfig` is a typed pass-through — it returns the object
+unchanged and exists purely for editor autocomplete. Required-field
+validation happens inside `createUpupHandler` regardless, so calling the
+handler with a plain object literal is equally protected.
+
+## 3a. App Router
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupNextHandler } from '@upupjs/next/server'
+import { upupConfig } from '@/lib/upup-config'
+
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)
+```
+
+The route segment must be a **catch-all** (`[...route]`): the handler
+dispatches on the path suffix beneath your mount
+(`/presign`, `/multipart/init`, `/auth/:provider`, `/files/:provider`, …),
+and a fixed segment would only ever match one of them.
+
+`createUpupNextHandler` returns all four methods rather than a single
+function. Exporting the bare handler works too, but you lose the origin
+correction described below.
+
+## 3b. Pages Router
+
+```ts
+// pages/api/upup/[...route].ts
+import { createUpupPagesHandler } from '@upupjs/next/server'
+import { upupConfig } from '@/lib/upup-config'
+
+export default createUpupPagesHandler(upupConfig)
+
+// Required: the adapter reads the raw request body itself.
+export const config = {
+    api: { bodyParser: false },
+}
+```
+
+<Callout type="warning">
+    The `bodyParser: false` export is not optional. With Next's parser left on,
+    the adapter receives an already-consumed stream, every POST body arrives
+    empty, and the upload routes fail with `400 Invalid JSON body` (`code:
+    BAD_REQUEST`).
+</Callout>
+
+The Pages adapter bridges Node's `req`/`res` to the Web `Request`/`Response`
+the core handler speaks, reading the raw body itself and streaming the
+response back through `res.status` / `res.setHeader` / `res.send`. It takes
+the same second-argument options as the App Router handler.
+
+## 4. Point the uploader at it
+
+Both routers expose the same URL prefix, so the client code is identical:
+
+```tsx
+'use client'
+import { UpupUploader } from '@upupjs/next'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            mode="server"
+            serverUrl="/api/upup"
+            provider="aws"
+            sources={['local', 'googleDrive', 'dropbox']}
+        />
+    )
+}
+```
+
+## Behind a proxy or CDN
+
+The OAuth `redirect_uri` for cloud drives is derived from the request's
+origin, so a proxy that rewrites the origin breaks the callback. Both
+handlers take an options object that corrects it:
+
+```ts
+createUpupNextHandler(upupConfig, { baseUrl: 'https://app.example.com' })
+createUpupNextHandler(upupConfig, { trustProxy: true })
+```
+
+- `baseUrl` — an explicit public origin. Wins over everything; use it when
+  you know the public URL at build time.
+- `trustProxy` — derive the origin from `x-forwarded-host` /
+  `x-forwarded-proto`. **Off by default**, because those headers are
+  spoofable by anything that can reach your server directly. Only enable it
+  behind a proxy that overwrites them.
+
+Neither is needed on Vercel: `req.url` is already the public origin, so the
+correction is a no-op. The same options apply to `createUpupPagesHandler`.
+
+Whichever you use, register the resulting callback URL in each provider's
+console — for a mount at `/api/upup` that's
+`https://app.example.com/api/upup/auth/google-drive/cb`.
+
+## `trailingSlash: true`
+
+Supported, nothing to configure. Next 308-redirects `POST /api/upup/presign`
+to `.../presign/` with method and body preserved, and the handler matches
+routes on the slash-stripped path — so the redirected request lands on the
+right route instead of 404ing.
+
+## CORS
+
+A route mounted in the same Next app that serves your pages is same-origin
+and needs no CORS config. For a Next app acting as a standalone upload API
+for a separate frontend, set it on the upup config rather than in
+`next.config.js` headers — the handler attaches the headers itself, on every
+response including the preflight `OPTIONS` (`204`):
+
+```ts
+export const upupConfig = defineUpupConfig({
+    // ...storage, uploadTokenSecret
+    cors: {
+        allowedOrigins: ['https://app.example.com'],
+        allowedMethods: ['GET', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        maxAgeSeconds: 600,
+    },
+})
+```
+
+<Callout type="warning">
+    Credentialed CORS is granted only on a concrete origin match. A config whose
+    `allowedOrigins` is just `['*']` gets public, non-credentialed CORS — the
+    server-mode drive client sends `credentials: 'include'`, so cloud drives
+    will fail against a wildcard-only allowlist. Enumerate your real app
+    origins.
+</Callout>
+
+## Serverless caveats
+
+- **Multipart state is stateless by design.** The `/multipart/*` routes
+  carry an HMAC-signed token instead of server-side session state, so a
+  later part can land on a different lambda than the one that ran
+  `/multipart/init`. That only holds while every instance shares the same
+  `uploadTokenSecret` — set it from one environment variable, never
+  generate it per boot.
+- **`InMemoryTokenStore` does not survive.** Drive OAuth tokens kept in
+  process memory vanish between invocations and differ per instance. Use a
+  Redis, KV, or database-backed `TokenStore` for any serverless deployment;
+  the store contract is three methods (`get`, `set`, `delete`).
+- **Route timeouts bound the drive-transfer path.** `POST
+/files/:provider/transfer` streams a cloud-drive file into S3 inside one
+  request; a large file on a short function timeout will be cut off. Raise
+  the route's `maxDuration` if you enable cloud drives in server mode.
+
+## Verify the mount
+
+```sh
+curl http://localhost:3000/api/upup/health
+```
+
+A JSON body with `"status": "ok"` and `checks.config` / `checks.storage`
+means the route is mounted and the storage credentials resolve. The route is
+unauthenticated by design and always answers `200` — read the `status`
+field, not the HTTP code.
+
+## Related
+
+- [Server mode setup](/docs/guides/server-mode-setup/) — every
+  `createUpupHandler` option, hooks, limits, and observability.
+- [Server auth & trust model](/docs/guides/server-auth/) — why
+  `uploadTokenSecret` is mandatory and what forged requests get.
+- [Storage providers](/docs/guides/storage-providers/) — S3, R2, MinIO,
+  B2, Spaces, Wasabi configs.
