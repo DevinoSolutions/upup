@@ -331,7 +331,7 @@ const fileTypes = [
         types: 'ZIP, RAR, 7Z, TAR',
     },
     {
-        icon: <SiJavascript className="w-8 h-8" />,
+        icon: <SiJavascript className="w-8 h-8" aria-hidden />,
         label: 'Code',
         types: 'JS, TS, JSON, XML',
     },
@@ -608,7 +608,10 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                     >
                         <div className="flex h-full flex-col items-center gap-2.5 rounded-xl border border-black/5 bg-[var(--bg-base)] px-3 py-4 text-center dark:border-white/10">
                             <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
-                                <provider.icon className="h-5 w-5" />
+                                <provider.icon
+                                    className="h-5 w-5"
+                                    aria-hidden
+                                />
                             </span>
                             <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
                                 {provider.name}
@@ -644,7 +647,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
                     onClick={() => onProviderClick(provider)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                    <provider.icon className="w-3.5 h-3.5" />
+                    <provider.icon className="w-3.5 h-3.5" aria-hidden />
                     {provider.name}
                 </button>
             ))}

@@ -255,7 +255,10 @@ export default function StackBlitzDemoSection() {
                                     onClick={openInStackBlitz}
                                     className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20"
                                 >
-                                    <SiStackblitz className="w-4 h-4" />
+                                    <SiStackblitz
+                                        className="w-4 h-4"
+                                        aria-hidden
+                                    />
                                     Open in StackBlitz
                                 </button>
                                 <button
@@ -272,7 +275,10 @@ export default function StackBlitzDemoSection() {
                         <div className="relative">
                             {embedFailed ? (
                                 <div className="flex h-[75vh] flex-col items-center justify-center gap-4 bg-gray-950 px-6 text-center">
-                                    <SiStackblitz className="h-12 w-12 text-primary-dark" />
+                                    <SiStackblitz
+                                        className="h-12 w-12 text-primary-dark"
+                                        aria-hidden
+                                    />
                                     <p className="max-w-md text-sm text-gray-300">
                                         The embedded editor could not load here.
                                         Open the same example in StackBlitz to
@@ -282,7 +288,10 @@ export default function StackBlitzDemoSection() {
                                         onClick={openInStackBlitz}
                                         className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-opacity hover:opacity-90"
                                     >
-                                        <SiStackblitz className="w-5 h-5" />
+                                        <SiStackblitz
+                                            className="w-5 h-5"
+                                            aria-hidden
+                                        />
                                         Open in StackBlitz
                                         <ExternalLink className="w-4 h-4" />
                                     </button>
@@ -363,7 +372,10 @@ export default function StackBlitzDemoSection() {
                                     onClick={openInStackBlitz}
                                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
                                 >
-                                    <SiStackblitz className="w-4 h-4" />
+                                    <SiStackblitz
+                                        className="w-4 h-4"
+                                        aria-hidden
+                                    />
                                     Open in StackBlitz
                                 </button>
                                 <button

@@ -44,7 +44,6 @@ export default function BeatChips({
                     <button
                         key={beat.id}
                         type="button"
-                        aria-label={`Play the ${beat.label} part of the demo`}
                         aria-disabled={frozen || undefined}
                         onClick={() => onSelect(beat.seekTo)}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
@@ -59,6 +58,12 @@ export default function BeatChips({
                                 Popular
                             </span>
                         )}
+                        {/* Name-from-contents so the visible label (incl. the
+                            Popular badge) leads the accessible name — an
+                            aria-label that omits the badge fails WCAG 2.5.3. */}
+                        <span className="sr-only">
+                            — play this part of the demo
+                        </span>
                     </button>
                 )
             })}

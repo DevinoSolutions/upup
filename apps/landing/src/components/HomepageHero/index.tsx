@@ -344,6 +344,7 @@ export default function HeroSection({
                                             {/* Copy Button */}
                                             <motion.button
                                                 onClick={handleCopy}
+                                                aria-label="Copy install command"
                                                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
