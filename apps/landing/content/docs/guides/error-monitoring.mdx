@@ -48,12 +48,12 @@ This fires for upload-level errors only (not pipeline or drive errors), and
 it carries the message string, not the `Error` object.
 
 <Callout type="note" title="Known limitation">
-The component does not currently expose its internal core — `UploaderRef`
-exposes `useUpload()` only — so the rich `upload-error` payload (the full
-`Error` with `code`/`retryable`, plus the failing file) is not reachable
-from the component API. A ref-level core accessor is on the roadmap. The
-event examples below apply when you drive `@upupjs/core` yourself (headless
-or custom-UI integrations).
+    The component does not currently expose its internal core — `UploaderRef`
+    exposes `useUpload()` only — so the rich `upload-error` payload (the full
+    `Error` with `code`/`retryable`, plus the failing file) is not reachable
+    from the component API. A ref-level core accessor is on the roadmap. The
+    event examples below apply when you drive `@upupjs/core` yourself (headless
+    or custom-UI integrations).
 </Callout>
 
 ### Full-fidelity events (headless `@upupjs/core`)
@@ -65,9 +65,7 @@ context — the full `Error` object plus the file that failed:
 import { UpupCore, UpupError } from '@upupjs/core'
 import * as Sentry from '@sentry/browser'
 
-const core = new UpupCore({
-    /* ...your options */
-})
+const core = new UpupCore({/* ...your options */})
 
 const off = core.on('upload-error', ({ error, file }) => {
     const upup = error instanceof UpupError ? error : undefined
@@ -133,9 +131,7 @@ If you instrument manually:
 import { createUpupHandler } from '@upupjs/server'
 import * as Sentry from '@sentry/node'
 
-const handle = createUpupHandler({
-    /* storage, uploadTokenSecret, ... */
-})
+const handle = createUpupHandler({/* storage, uploadTokenSecret, ... */})
 
 export async function handler(req: Request): Promise<Response> {
     try {

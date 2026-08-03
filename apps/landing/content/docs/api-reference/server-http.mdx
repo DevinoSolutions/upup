@@ -1,0 +1,564 @@
+---
+title: Server HTTP API
+description: The complete HTTP contract of @upupjs/server — every route, request and response shape, status code, and operational header — for wiring a custom client or debugging a live handler.
+---
+
+`createUpupHandler(config)` returns one `(req: Request) => Promise<Response>`
+function that serves every route below. This page is the wire-level contract:
+what each route accepts, what it returns, and which status codes it can produce.
+Reach for it when you are writing a non-upup client, proxying the handler, or
+reading a failing request in your logs. For wiring the handler into a framework,
+see [Server Mode — Setup](/docs/guides/server-mode-setup/); for why the 403s
+exist, see [Server Auth & Trust Model](/docs/guides/server-auth/).
+
+## Routing model
+
+Routes are matched on the **path suffix**, so the handler works at whatever
+prefix you mount it (`/api/upup`, `/upload`, the root). Every example below is
+written relative to that mount point.
+
+Trailing slashes are tolerated: the handler strips them before matching, so a
+framework that normalizes URLs (Next.js `trailingSlash: true` 308s a
+`POST /presign` to `/presign/` with method and body intact) still hits the
+route instead of falling through to 404.
+
+Two routes run **before** the global `auth` gate — `OPTIONS` preflight and
+`GET /health` — so browsers can preflight and uptime probes can poll without
+credentials. Everything else passes through `config.auth` first, when you have
+configured it.
+
+## Route table
+
+| Method    | Path                        | Auth                                            | Success              |
+| --------- | --------------------------- | ----------------------------------------------- | -------------------- |
+| `OPTIONS` | any path                    | none (before the gate)                          | `204`, no body       |
+| `GET`     | `/health`                   | none (before the gate)                          | `200` always         |
+| `POST`    | `/presign`                  | `auth` / `getUserId` / `allowAnonymousUploads`  | `200` presigned PUT  |
+| `POST`    | `/multipart/init`           | `auth` / `getUserId` / `allowAnonymousUploads`  | `200` + upload token |
+| `POST`    | `/multipart/sign-part`      | upload token (owner-bound when `getUserId` set) | `200` presigned part |
+| `POST`    | `/multipart/complete`       | upload token (owner-bound when `getUserId` set) | `200` final object   |
+| `POST`    | `/multipart/abort`          | upload token (owner-bound when `getUserId` set) | `200` `{ ok: true }` |
+| `GET`     | `/auth/:provider`           | resolved user id                                | `302` to provider    |
+| `GET`     | `/auth/:provider/cb`        | OAuth `state` (single-use, 10 min)              | `200` HTML           |
+| `GET`     | `/files/:provider`          | resolved user id + stored drive tokens          | `200` file list      |
+| `POST`    | `/files/:provider/transfer` | resolved user id + stored drive tokens          | `200` stored object  |
+
+`:provider` is one of `google-drive`, `one-drive`, `dropbox`, `box` — the
+kebab-case wire form. Anything else returns `400`.
+
+Any method/path pair not in the table falls through to
+`404 {"error":"Not found"}` — including a `GET /presign` or a
+`POST /files/:provider` without the `/transfer` suffix.
+
+## Response conventions
+
+Every response the handler produces — success, error, redirect, preflight —
+carries an **`x-upup-request-id`** header holding a fresh UUID for that request.
+The same id appears in the `onError` log record, so a client-side failure
+correlates to exactly one server log line. There is no route that skips it.
+
+CORS headers are added to every response too, when `config.cors` is set and the
+request's `Origin` matches `allowedOrigins` (or the list contains `*`). The
+matched origin is reflected rather than a literal `*`; a bare `*` goes out only
+to origin-less, non-browser callers.
+`Access-Control-Allow-Credentials: true` is sent **only** on a concrete origin
+match — a wildcard-only allowlist gets public, non-credentialed CORS.
+
+Failure bodies are uniform:
+
+```json
+{ "error": "human-readable message", "code": "MACHINE_CODE" }
+```
+
+The `code` field is present on coded failures (the `UpupErrorCode` values plus
+the upload-token codes); a few plain validation rejections carry `error` alone.
+The real cause — stack, provider response — goes to your
+[`onError` seam](/docs/guides/error-monitoring/), never to the client.
+
+An unhandled throw anywhere in routing is caught by a single transport safety
+net that returns a logged, CORS-headered
+`500 {"error":"Internal error","code":"STORAGE_ERROR"}`. Adapters do not need a
+catch of their own.
+
+## `OPTIONS` — preflight
+
+Returns `204` with no body, the CORS headers, and `x-upup-request-id`. Matched
+before the auth gate and before any path matching, so it answers for every path
+the handler is mounted under.
+
+## `GET /health`
+
+Answers "is this instance configured, and can it reach storage?" in one
+unauthenticated request, without performing an upload. It **always returns
+`200`** — a liveness probe should not restart a container because S3 blipped —
+so read the `status` field, not the HTTP code.
+
+```json
+{
+    "status": "ok",
+    "checks": { "config": "ok", "storage": "ok" },
+    "summary": {
+        "storageType": "aws",
+        "anonymousUploads": false,
+        "anonymousDrives": false,
+        "driveProviders": 2,
+        "uploadTokenTtlSeconds": 3600
+    }
+}
+```
+
+| Field                           | Values                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `status`                        | `ok` when both checks pass, otherwise `degraded`                         |
+| `checks.config`                 | `ok` / `incomplete` — bucket, region, and a ≥ 16-char secret are all set |
+| `checks.storage`                | `ok` / `error` — a `HeadBucket` probe, cached for 30 s                   |
+| `summary.storageType`           | the configured `storage.type` label                                      |
+| `summary.anonymousUploads`      | whether `allowAnonymousUploads` is on                                    |
+| `summary.anonymousDrives`       | whether `allowAnonymous` (drive/tokenStore scoping) is on                |
+| `summary.driveProviders`        | count of configured OAuth providers                                      |
+| `summary.uploadTokenTtlSeconds` | lifetime of an issued multipart upload token                             |
+
+No secret **value** is ever returned. Setting
+`health: { exposeSecretFingerprint: true }` adds one extra field:
+
+```json
+{ "uploadTokenFingerprint": "9f2c41ab" }
+```
+
+That is the first 8 hex characters of `SHA-256(uploadTokenSecret)` — enough to
+confirm every instance in a fleet shares the same secret (a rolling redeploy
+that half-rotated it shows two different fingerprints), and not reversible to
+the secret itself. It is off by default.
+
+## `POST /presign`
+
+Issues a presigned `PUT` so the browser uploads bytes straight to storage. The
+server chooses the object key; the client never proposes one.
+
+**Auth.** This is a capability-granting route, so it is closed by default: with
+none of `auth`, `getUserId`, or `allowAnonymousUploads` configured it returns
+`403` `AUTH_REQUIRED`. That is the intended posture — configure one of the three
+rather than working around it.
+
+**Request**
+
+```ts
+type FileMetadata = {
+    name: string // non-empty
+    type: string // MIME type; may be empty, but then it must pass allowedTypes
+    size: number // bytes, finite, >= 0
+}
+```
+
+**Response `200`** — the `PresignedUrlResponse` shape from `@upupjs/core`:
+
+```ts
+type PresignedUrlResponse = {
+    key: string
+    publicUrl?: string
+    downloadUrl?: string
+    uploadUrl: string
+    uploadHeaders?: Record<string, string>
+    expiresIn: number
+}
+```
+
+This handler returns `key`, `uploadUrl`, `downloadUrl`, `uploadHeaders`, and
+`expiresIn: 3600`. The PUT signature covers both `content-type` and
+`content-length`, so a body larger than the approved size fails at S3 rather
+than silently landing. `downloadUrl` is a separately signed `GET` valid for
+three days.
+
+**Status codes**
+
+| Status | Body                                                          | Cause                                         |
+| ------ | ------------------------------------------------------------- | --------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`     | unparseable body                              |
+| `400`  | `{ "error": "Invalid file metadata", "code": "BAD_REQUEST" }` | missing/wrong-typed `name`, `type`, or `size` |
+| `401`  | `{ "error": "Unauthorized" }`                                 | your `auth` gate returned `false`             |
+| `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                   |
+| `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                       |
+| `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`  |
+| `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                  |
+| `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`          |
+| `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                        |
+
+Checks run in that order: JSON parse, metadata shape, size, type,
+`onBeforeUpload`, then identity resolution. So an oversized file is rejected
+with `413` before `getUserId` is consulted.
+
+The `AUTH_REQUIRED` body carries the full remedy as its message:
+`Anonymous uploads are disabled. Set allowAnonymousUploads:true, or configure auth/getUserId.`
+
+## `POST /multipart/init`
+
+Starts an S3 multipart session and returns the signed upload token that
+authorizes every later step. Same auth gate, same metadata validation, and the
+same `400` / `401` / `403` / `413` / `415` table as `/presign`.
+
+**Request**
+
+```ts
+{
+    name: string
+    type: string
+    size: number
+    chunkSizeBytes?: number // requested part size; floors and bumps applied
+}
+```
+
+**Response `200`** — `MultipartInitResponse` plus the token:
+
+```ts
+type MultipartInitResponse = {
+    key: string
+    uploadId: string
+    partSize: number
+    expiresIn: number
+    /** Opaque server-issued token bound to {key, uploadId, size, expiry}. */
+    token?: string
+}
+```
+
+`token` is always present on responses from this handler. Treat it as opaque:
+it is a base64url payload plus an HMAC-SHA-256 signature, and it binds the
+object key, the S3 `uploadId`, the resolved user id (`null` when anonymous), the
+allowed total-size envelope, and an expiry one hour out. Send it back verbatim
+on every continuation request.
+
+`partSize` is the server's decision, not your request — see
+[Policy and limits](#policy-and-limits).
+
+`500` here is `{ "error": "Multipart init failed", "code": "STORAGE_ERROR" }`.
+
+## `POST /multipart/sign-part`
+
+Presigns one part's `PUT`. The token is the credential — the client never
+re-asserts the key or `uploadId`, because the server re-derives both from the
+verified token.
+
+**Request**
+
+```ts
+{
+    token: string
+    partNumber: number
+}
+```
+
+**Response `200`** — `MultipartSignPartResponse`:
+
+```ts
+type MultipartSignPartResponse = {
+    uploadUrl: string
+    uploadHeaders?: Record<string, string>
+    expiresIn: number
+}
+```
+
+This handler returns `uploadUrl` and `expiresIn: 3600`.
+
+**Token failures.** A missing, tampered, or stale token returns `403` with the
+specific reason, so you can tell a bug from an expiry:
+
+```json
+{ "error": "Invalid upload token", "code": "bad_signature" }
+```
+
+`code` is one of `malformed`, `bad_signature`, or `expired`. The signature is
+verified before any payload byte is trusted, and compared in constant time.
+
+**Owner binding.** When `getUserId` is configured, the caller's current identity
+is re-checked against the `uid` the token was issued to. A token that leaked to a
+different authenticated user cannot be replayed:
+
+```json
+{
+    "error": "Upload token does not belong to the current user",
+    "code": "AUTH_DENIED"
+}
+```
+
+Without `getUserId` there was no identity to bind at `init`, `uid` is `null`,
+and the check is skipped — possession of the token is then the model by design.
+
+`500` is `{ "error": "Multipart sign failed", "code": "STORAGE_ERROR" }`.
+
+## `POST /multipart/complete`
+
+Finalizes the object. Verifies the token and the owner binding exactly as
+`sign-part` does, then enforces the signed size envelope before committing.
+
+**Request**
+
+```ts
+{
+    token: string
+    parts: Array<{ partNumber: number; eTag: string }>
+}
+```
+
+**Response `200`** — `MultipartCompleteResponse`:
+
+```ts
+type MultipartCompleteResponse = {
+    key: string
+    publicUrl?: string
+    downloadUrl?: string
+    etag?: string
+}
+```
+
+This handler returns `key`, a three-day signed `downloadUrl`, and `etag` when S3
+supplied one.
+
+**The envelope check.** Because `sign-part` and the browser's direct PUTs never
+re-send a size, the real byte total is only knowable here. The handler sums what
+S3 actually received (`ListParts`) and compares it against the `[smin, smax]`
+range signed at `init`. Outside that range, the multipart upload is **aborted**
+— nothing partial is left in the bucket — and the request gets:
+
+```json
+{ "error": "Upload size outside signed envelope" }
+```
+
+with status `403`. This closes the "declare one byte at init, stream a gigabyte"
+path.
+
+After a successful commit, `hooks.onFileUploaded` and `hooks.onUploadComplete`
+run. A hook that throws is logged through `onError` and swallowed: the object is
+already durable, so the client still gets its `200` rather than a `500` telling
+it to retry an upload that succeeded.
+
+`500` is `{ "error": "Multipart complete failed", "code": "STORAGE_ERROR" }`.
+
+## `POST /multipart/abort`
+
+Cancels the session and asks S3 to discard the uploaded parts. Token
+verification and owner binding are identical to `sign-part`.
+
+**Request**
+
+```ts
+{
+    token: string
+}
+```
+
+**Response `200`** — `MultipartAbortResponse`:
+
+```ts
+type MultipartAbortResponse = { ok: true }
+```
+
+`500` is `{ "error": "Multipart abort failed", "code": "STORAGE_ERROR" }`.
+
+## `GET /auth/:provider`
+
+Begins the cloud-drive OAuth flow. Requires a `tokenStore` and a resolvable user
+id — drive tokens are stored per user, which is why `providers` or `tokenStore`
+without `getUserId` is refused at construction unless you set
+`allowAnonymous: true`.
+
+**Query parameters**
+
+| Name       | Required | Meaning                                                                  |
+| ---------- | -------- | ------------------------------------------------------------------------ |
+| `returnTo` | no       | Where to send the popup afterwards. Validated; see the callback section. |
+
+**Response `302`** to the provider's authorization URL, carrying a 32-byte
+random `state` and a `redirect_uri` derived from the request URL — always
+`<mount>/auth/:provider/cb`, so it is identical on the redirect and the exchange
+and providers do not reject it as a mismatch. The `state` is stored for **10
+minutes** and is single-use.
+
+| Status | Body                                                    | Cause                                    |
+| ------ | ------------------------------------------------------- | ---------------------------------------- |
+| `400`  | `{ "error": "Unknown provider: x" }`                    | not one of the four wire slugs           |
+| `400`  | `{ "error": "Google Drive not configured" }`            | that provider is absent from `providers` |
+| `401`  | `{ "error": "Unauthenticated" }`                        | `getUserId` returned `null`              |
+| `500`  | `{ "error": "tokenStore is required for OAuth flows" }` | no `tokenStore` configured               |
+| `500`  | `{ "error": "No OAuth providers configured" }`          | no `providers` block at all              |
+
+Requested scopes are read-only per provider: Google Drive
+`drive.readonly`, OneDrive `Files.Read.All offline_access`, Dropbox
+`files.content.read files.metadata.read`, Box `root_readonly`.
+
+## `GET /auth/:provider/cb`
+
+The provider's redirect target. Exchanges the authorization code for tokens,
+persists them against the user id captured in the `state`, and renders a small
+HTML page that closes the popup.
+
+**Query parameters:** `code`, `state`, or `error` from the provider.
+
+**Response `200`** is `text/html`, not JSON. The page posts
+`{ type: 'upup:oauth-success', provider }` to `window.opener`, targeted at each
+concrete origin in `cors.allowedOrigins` (falling back to `*` only when no
+concrete origin is configured — the payload carries no token), then closes
+itself. With no opener it redirects to a validated `returnTo`, or prints a
+"you may close this window" line.
+
+`returnTo` is validated fail-closed: it is accepted only when it resolves to the
+server's own origin or to a concrete (non-wildcard) entry in
+`cors.allowedOrigins`. A `*` in the allowlist does not authorize an arbitrary
+redirect target.
+
+<Callout type="note">
+    Both `/auth` routes sit behind your global `auth` gate. The callback arrives
+    as a top-level browser navigation from the provider, so it carries cookies
+    but no `Authorization` header — an `auth` implementation that only reads a
+    bearer token will reject the callback with `401`. Accept a session cookie
+    there, or scope your gate to the upload routes.
+</Callout>
+
+| Status | Body                                                                  | Cause                                             |
+| ------ | --------------------------------------------------------------------- | ------------------------------------------------- |
+| `400`  | `{ "error": "OAuth error: access_denied" }`                           | the provider returned an error                    |
+| `400`  | `{ "error": "Missing code or state" }`                                | truncated callback                                |
+| `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state` |
+| `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                          |
+| `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                   |
+| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code exchange           |
+
+## `GET /files/:provider`
+
+Lists one folder of the connected drive, or searches it. Requires a resolved
+user id and stored tokens for that user and provider.
+
+**Query parameters**
+
+| Name       | Required | Meaning                                                    |
+| ---------- | -------- | ---------------------------------------------------------- |
+| `folderId` | no       | Provider folder id; omitted means that provider's root.    |
+| `search`   | no       | Free-text query; when present it replaces folder browsing. |
+
+**Response `200`**
+
+```ts
+{
+    provider: 'google-drive' | 'one-drive' | 'dropbox' | 'box'
+    files: Array<{
+        id: string
+        name: string
+        size?: number
+        mimeType?: string
+        thumbnailUrl?: string
+        isFolder: boolean
+        modifiedAt?: string
+    }>
+}
+```
+
+**Re-authentication.** When the caller has no stored tokens, when a proactive
+refresh fails, or when the provider answers `401`, the route returns **`401`**
+with a re-auth signal instead of a generic error:
+
+```json
+{ "reauth": true, "provider": "google-drive" }
+```
+
+In the last two cases the dead tokens are deleted from the store first, so the
+next request starts a clean OAuth flow. Send the user back through
+`GET /auth/:provider`. Tokens holding a refresh token are refreshed
+automatically 30 seconds before expiry, so a routine expiry never surfaces as
+`reauth`.
+
+| Status | Body                                                           | Cause                               |
+| ------ | -------------------------------------------------------------- | ----------------------------------- |
+| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                            |
+| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`         |
+| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens |
+| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                     |
+| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | the drive API failed                |
+
+## `POST /files/:provider/transfer`
+
+Streams one drive file **server-side** into your bucket, so the bytes never
+touch the browser. Same identity, token-refresh, and re-auth behavior as the
+list route.
+
+**Request**
+
+```ts
+{
+    fileId: string // required
+    fileName?: string // overrides the provider's name
+    size?: number // client-declared; used only for the fast reject
+    mimeType?: string // checked against allowedTypes
+}
+```
+
+**Response `200`**
+
+```ts
+{
+    provider: string
+    key: string
+    name: string
+    size: number // ACTUAL bytes transferred, not the declared size
+    type: string
+    url: string // three-day signed download URL
+}
+```
+
+`hooks.onFileUploaded` runs after the object is durable, with the same
+throw-is-logged-and-swallowed treatment as multipart complete.
+
+| Status | Body                                                           | Cause                                          |
+| ------ | -------------------------------------------------------------- | ---------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                               |
+| `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                    |
+| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                       |
+| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
+| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
+| `413`  | `{ "error": "File too large" }`                                | declared `size` exceeds `maxFileSize`          |
+| `415`  | `{ "error": "File type not allowed" }`                         | `mimeType` fails `allowedTypes`                |
+| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
+| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
+
+The `413` above is only a cheap early-out on the client-declared size. The
+authoritative cap is enforced against the bytes actually streamed — see below.
+
+## Policy and limits
+
+**`maxFileSize`** (bytes) applies to `/presign`, `/multipart/init`, and
+`/files/:provider/transfer`. On the upload routes it rejects the declared size
+with `413`. On the transfer route it is additionally enforced against real
+egress: the transfer aborts the moment the streamed total crosses the cap, the
+S3 multipart upload is aborted, and **nothing is persisted**. Omit the option and
+no size limit applies.
+
+**`allowedTypes`** is a list of MIME patterns. An exact match passes; a trailing
+`/*` matches the whole type family (`image/*` matches `image/png`). An empty or
+absent type does **not** match a non-empty allowlist — a missing MIME type is
+rejected on both the upload and the transfer path, never waved through. Omit the
+option and every type passes.
+
+**Multipart part size.** The S3 floor is `MIN_PART_SIZE` = 5 MiB, and an upload
+may have at most 10,000 parts. `partSize` returned by `/multipart/init` is
+therefore `max(chunkSizeBytes ?? 5 MiB, 5 MiB, ceil(size / 10000))` — a large
+file automatically gets a larger part size instead of failing on the part-count
+ceiling. Requesting a chunk below 5 MiB silently floors to 5 MiB.
+
+**Drive-transfer buffering.** `SINGLE_PUT_MAX_BYTES` is 5 MiB. A drive file of
+known size at or under it is buffered once and written with a single `PUT`;
+anything larger — or of unknown size (a provider-reported size of `0`) —
+streams through bounded 5 MiB multipart parts, so peak server memory is one part
+regardless of file size. This bound is deliberately not configurable — memory
+safety is not a knob that can be raised away.
+
+**Upload-token TTL.** One hour from `init`, reported on `/health` as
+`summary.uploadTokenTtlSeconds`. A multipart session that outlives it must be
+restarted from `init`.
+
+## Adapters
+
+Express, Fastify, Hono, `@upupjs/next` (App and Pages routers), and any custom
+Node adapter built on `@upupjs/server/node-bridge` all dispatch into this exact
+contract. The adapters only translate between the framework's request/response
+objects and the Web `Request`/`Response` the handler speaks — no route, status
+code, or body shape differs between them. See
+[Server Mode — Setup](/docs/guides/server-mode-setup/) for the per-framework
+mounting code, and [Storage Providers](/docs/guides/storage-providers/) for the
+`storage` block behind these routes.

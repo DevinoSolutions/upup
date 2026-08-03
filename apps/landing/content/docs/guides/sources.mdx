@@ -1,0 +1,248 @@
+---
+title: Upload Sources
+description: Every input the uploader ships — local files, drag-and-drop, paste, folder upload, camera, microphone, screen capture, URL import, and cloud drives — plus the sources prop that decides which chips appear.
+---
+
+upup collects files from nine sources. One prop — `sources` — decides which of
+them appear in the panel, and each one is a self-contained view inside the same
+fixed-height uploader.
+
+<DocsUploaderDemo />
+
+## The `sources` prop
+
+`sources` is an array of source ids. It drives the chip grid on the idle panel:
+every id you list gets a chip, in the order below (the registry order, not the
+order you pass), and nothing else is rendered.
+
+| Id            | Chip label     | What it opens                         |
+| ------------- | -------------- | ------------------------------------- |
+| `local`       | My Device      | The OS file picker (no in-panel view) |
+| `googleDrive` | Google Drive   | Google Drive browser                  |
+| `oneDrive`    | OneDrive       | OneDrive browser                      |
+| `dropbox`     | Dropbox        | Dropbox browser                       |
+| `box`         | Box            | Box browser                           |
+| `url`         | Link           | URL import form                       |
+| `camera`      | Camera         | Live webcam capture                   |
+| `microphone`  | Audio          | Microphone recorder                   |
+| `screen`      | Screen Capture | Screen recorder                       |
+
+When `sources` is omitted the default set is the five that need no OAuth
+credentials: `local`, `url`, `camera`, `microphone`, `screen`. Cloud drives are
+opt-in because they also need a `cloudDrives` config (client mode) or a
+configured server (server mode).
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    sources={['local', 'camera', 'googleDrive']}
+/>
+```
+
+Ids are normalized against the known set and anything unrecognized is dropped
+silently — a typo removes a chip rather than throwing.
+
+Clicking **My Device** opens the OS picker immediately. Every other chip swaps
+the panel to that source's view, which carries a header with the source name and
+a **Back** button that returns to the chip grid.
+
+### Chip density
+
+The chip grid is capped at a fixed width, so it fits four regular chips per row.
+Up to **8** sources the chips render at the regular size (rows of 4). At **9**
+sources — the full set — they switch to the compact size, which fits five per
+row. Nothing else changes: same chips, same labels, same order.
+
+In `mini` mode the chip grid is not rendered at all; the panel shows a single
+browse button.
+
+## Local files
+
+`local` covers four ways to get files off the machine: the browse button, the
+file picker behind the My Device chip, drag-and-drop, and clipboard paste.
+
+### Browse
+
+The idle panel's **browse files** link and the My Device chip both open the same
+hidden file input. It carries your `allowedFileTypes` as its `accept` attribute
+and is `multiple` whenever `maxFiles` is greater than 1.
+
+### Drag and drop
+
+Drag-and-drop is on by default; `disableDragDrop` turns it off while leaving
+browse and the chips working. Dropping is also suppressed automatically while a
+source view is open or while an upload is in flight.
+
+One special case: dropping files onto an **open cloud-drive picker** is
+rejected with a toast rather than silently ignored — that view browses a remote
+drive and cannot accept OS drops.
+
+### Paste
+
+Clipboard paste is off by default. Set `enablePaste` to accept files pasted with
+Ctrl+V / Cmd+V:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" enablePaste />
+```
+
+The listener sits on the uploader panel, so the paste has to land in the panel
+(it or something inside it must have focus) — there is no document-wide
+listener. Clipboard images usually arrive nameless or as `image.png`; those are
+renamed to `pasted-<timestamp>.<ext>` so a batch of screenshots doesn't collapse
+into one repeated filename. A file that already has a real name keeps it.
+
+Paste has its own switch: `disableDragDrop` does not disable it.
+
+### Folders
+
+Folder upload is configured with `folderUpload`, and both of its flags default
+to `false`:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    folderUpload={{ allowDrop: true, showSelectFolderButton: true }}
+/>
+```
+
+`allowDrop` lets a dropped folder be traversed recursively — every file inside
+is collected, and each one is tagged with its `relativePath` inside the dropped
+folder. With `allowDrop` left off, a dropped folder is skipped: the uploader
+raises a warning through `onWarn` and emits `folder-drop-blocked` with the
+number of loose files it still accepted from the same drop. If the drop was
+folders only, nothing is added.
+
+`showSelectFolderButton` adds a **select a folder** action next to the browse
+link. It uses the browser's directory picker where available and falls back to a
+`webkitdirectory` file input elsewhere; either way the selected files carry
+their `relativePath`.
+
+## Camera
+
+The `camera` view mounts a live webcam preview via `getUserMedia`. The browser
+owns the permission prompt — upup does not pre-check it.
+
+The flow is capture-then-confirm: **Capture** freezes a still from the stream and
+shows it as a preview with a small delete button to retake, and **Add image**
+turns that still into a `File` and returns you to the chip grid. Captured stills
+get a generated filename (the data URL carries no name), with the extension
+derived from the image MIME type. A **switch camera** button flips between the
+environment- and user-facing cameras; the view starts on the environment camera.
+
+Permission behavior, as implemented: the camera view has **no in-panel error
+state**. If the user denies access, the preview area simply stays empty and
+Capture produces nothing — no capture, no event, no message. If you need to
+surface a denial to the user, do it outside the uploader.
+
+## Microphone
+
+The `microphone` view records audio with `getUserMedia` plus `MediaRecorder`.
+Idle shows a mic button; recording shows a live waveform rendered from the
+stream, a pulsing indicator, and an `m:ss` timer. **Stop Recording** ends the
+capture and gives you a standard audio player to review the take, plus
+**Discard** (throw it away, return to idle) and **Add Recording** (add it as
+`recording-<timestamp>.webm`, or `.ogg` where WebM is unavailable, and return to
+the chip grid).
+
+If permission is denied or no device is available, the view is replaced by the
+message _"Microphone access denied. Please allow microphone access and try
+again."_ There is no retry button here — leave the view with **Back** and
+re-enter it to try again.
+
+## Screen capture
+
+The `screen` view records the screen with `getDisplayMedia`, requesting video and
+audio. The browser's own picker chooses which screen, window, or tab is
+shared — upup cannot preselect it.
+
+While recording, the panel shows a live preview of the shared surface with a
+**REC** chip and timer over it. Stopping works two ways: the **Stop Recording**
+button, or the browser's own "stop sharing" control — ending the track from
+outside stops the recording too, so the two never drift apart. Then it's the
+same review step as audio: play it back, **Discard**, or **Add Recording** to add
+`screen-recording-<timestamp>.webm`.
+
+If the user cancels the share dialog or denies the permission, the view is
+replaced by _"Screen sharing was cancelled or denied. Please try again."_ with a
+**Try Again** button that reopens the picker.
+
+Recorded video and the live preview are sized to fit the panel rather than
+stretch it — the uploader panel is a fixed-height container, so tall or wide
+media is letterboxed, never clipped.
+
+## Import from a URL
+
+The `url` view takes a URL and fetches it **from the browser**, with the page's
+own origin. It is a plain `fetch()` — there is no server-side proxy, and this is
+identical in client mode and server mode.
+
+That makes CORS the deciding factor: **the remote server must allow the browser
+to read the response**. A URL that opens fine in a browser tab will still fail
+here unless its server sends permissive CORS headers. A cross-origin host that
+doesn't opt in is not importable this way; proxy it through your own backend and
+hand the uploader a same-origin URL instead.
+
+The filename is derived in order of preference: the response's
+`Content-Disposition` filename, then the last path segment of the URL, then a
+generated UUID with an extension inferred from the content type. A non-2xx
+response surfaces as an error message through `onError`
+(`Failed to fetch URL: <status>`).
+
+## Cloud drives
+
+Google Drive, OneDrive, Dropbox, and Box each render a file browser with
+sign-in, folder navigation, multi-select, and search where the provider supports
+it. Which credentials they need — and whether OAuth tokens live in the browser
+or on your server — depends
+entirely on the upload mode, so their setup lives with the mode docs rather than
+here: start with [Client Mode vs Server Mode](/docs/guides/modes/), then
+[Server Mode Setup](/docs/guides/server-mode-setup/) if you are proxying
+through `@upupjs/server`.
+
+## Source events
+
+Beyond the callback props, each source emits events on the core event bus:
+
+| Event                 | Payload             | Fired when                                            |
+| --------------------- | ------------------- | ----------------------------------------------------- |
+| `source-click`        | `{ sourceId }`      | A chip is clicked                                     |
+| `source-view-cancel`  | `{ sourceId }`      | A source view is closed with Back                     |
+| `browse-files`        | —                   | The browse link opens the file picker                 |
+| `folder-select`       | `{ count }`         | A folder is picked (count is 0 on the input fallback) |
+| `drag-over`           | —                   | A drag enters the panel                               |
+| `drag-leave`          | —                   | A drag leaves the panel                               |
+| `drop`                | `{ files }`         | Files are dropped                                     |
+| `folder-drop-blocked` | `{ acceptedFiles }` | A folder was dropped with `allowDrop` off             |
+| `paste`               | `{ files }`         | Files are pasted                                      |
+| `camera-capture`      | `{ dataUrl }`       | A still is captured                                   |
+| `camera-confirm`      | `{ file }`          | The captured still is added                           |
+| `url-submit`          | `{ url }`           | The URL form is submitted                             |
+| `url-fetch`           | `{ file }`          | A URL fetch succeeds                                  |
+| `url-fetch-cancel`    | `{ url }`           | An in-flight URL fetch is aborted                     |
+
+Two notes on the URL events. `url-fetch` also fires when a camera still is
+confirmed — the camera reuses the same fetch helper to turn its data URL into a
+`File`. And `url-fetch-cancel` fires on abort, which today happens when the view
+unmounts mid-fetch (leaving via Back), not from a user-facing cancel button.
+
+The microphone and screen-capture views emit no source-specific events; their
+recordings surface through the normal file-added path.
+
+<Callout type="note" title="Reaching these events">
+    These fire on the uploader's internal core, and the `UpupUploader` component
+    does not currently expose it — the ref surface is `useUpload()` only.
+    Subscribe with `core.on(...)` where you own the core: React's
+    `useUpupUpload()` headless hook returns both `on` and `core`, and the
+    Vanilla `createUploader()` handle does the same. See [Headless
+    Usage](/docs/guides/headless/).
+</Callout>
+
+## Next steps
+
+- [Client Mode vs Server Mode](/docs/guides/modes/) — where uploads and drive
+  API calls actually run.
+- [Theming](/docs/guides/theming/) — restyle the chip grid and each source view
+  through tokens and slots.
+- [Headless Usage](/docs/guides/headless/) — drive the sources yourself and
+  subscribe to the events above.

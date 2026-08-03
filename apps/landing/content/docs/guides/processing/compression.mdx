@@ -1,0 +1,156 @@
+---
+title: Client-side image compression before upload
+description: Compress and resize images in the browser before they upload — quality, maxWidthOrHeight and maxSizeMB options, the size-target backoff, and output formats.
+---
+
+Large phone photos are the single biggest cause of slow uploads. `imageCompression`
+re-encodes each image through a canvas before the upload starts — downscaling it
+and lowering encoder quality — so what crosses the network is a fraction of what
+the user picked, and your storage bill shrinks with it.
+
+Turn it on with a boolean for sensible defaults:
+
+```tsx
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Uploader() {
+    return <UpupUploader uploadEndpoint="/api/upload-token" imageCompression />
+}
+```
+
+That alone caps the longest edge at `1920` px and encodes at quality `0.82`.
+
+## Options
+
+Pass an object (`ImageCompressionOptions`, exported from
+`@upupjs/core/steps/compress`) to tune all three knobs:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    imageCompression: {
+        maxWidthOrHeight: 1920,
+        maxSizeMB: 1,
+        quality: 0.82,
+    },
+})
+```
+
+- **`quality`** — encoder quality, `0`–`1`. Default **`0.82`**. Values are
+  clamped into `0.05`–`1`, and a non-numeric value falls back to the default, so
+  a stray `0` will not produce an unusable file.
+- **`maxWidthOrHeight`** — cap on the **longest** edge, in pixels. Default
+  **`1920`**, applied whether or not you pass the option. Aspect ratio is
+  preserved and images are only ever scaled _down_; a smaller image is left at
+  its natural size.
+- **`maxSizeMB`** — a target output size. No default: without it, the file is
+  encoded exactly once at `quality`.
+
+<Callout type="info" title="The object form is an engine-level option">
+The visual `<UpupUploader>` prop `imageCompression` is typed as a plain boolean
+toggle. To pass the object, configure it through `useUpupUpload` or `UpupCore` —
+see [Headless Usage](/docs/guides/headless/).
+</Callout>
+
+## The `maxSizeMB` backoff
+
+When you set `maxSizeMB` and the first encode lands over budget, upup retries at
+progressively lower quality: it subtracts **0.12** each pass and stops at a floor
+of **0.35**. Starting from the default, that is at most five encodes —
+`0.82 → 0.70 → 0.58 → 0.46 → 0.35`. Each pass re-encodes the _original_ image,
+so quality loss doesn't compound.
+
+`maxSizeMB` is a best-effort target, not a guarantee. If the file is still over
+budget at quality `0.35`, the loop stops and that result is what gets uploaded.
+For a hard ceiling, pair it with `maxFileSize` so oversized files are rejected
+outright rather than uploaded large.
+
+The trade-off to weigh: a tight `maxSizeMB` on a large photo can mean five full
+decode-and-encode cycles per file. Lowering `maxWidthOrHeight` usually reaches
+the same byte target in one pass, because pixels shed size faster than quality
+does.
+
+## Output format
+
+The encoder preserves `image/png` and `image/webp`; **every other input type
+comes out as `image/jpeg`**. The filename is unchanged, so a `.gif` compressed
+to JPEG bytes keeps its original name — set the storage key or rename the file
+yourself if the extension matters to you.
+
+## When compression does nothing
+
+Compression can decide to keep the original file. Two cases:
+
+- **No size benefit.** If the re-encoded result is not smaller than the
+  original, upup keeps the original — but only when you passed neither
+  `maxSizeMB` nor an explicit `maxWidthOrHeight`. Setting either of those is read
+  as an instruction to normalize the image, so the re-encoded output is kept even
+  if it grew.
+- **No canvas backend.** In an environment where the image cannot be decoded at
+  all — server-side rendering, a runtime with no canvas — the step returns the
+  file untouched. It is a silent no-op: no `pipeline-error` event is emitted for
+  compression, unlike [HEIC conversion](/docs/guides/processing/heic-conversion/).
+
+## Metadata a compressed file carries
+
+When a file is actually compressed, upup stamps its metadata with
+`originalSize`, `processedSize`, `width`, `height`, and `compressed: true`.
+`width` and `height` are the dimensions of the encoded output, so they are also
+the cheapest way to confirm a downscale happened:
+
+```ts
+core.on('upload-all-complete', files => {
+    for (const file of files) {
+        const { originalSize, processedSize, width, height } =
+            file.metadata ?? {}
+        const size = `${originalSize} → ${processedSize}`
+        console.log(file.name, size, `${width}×${height}`)
+    }
+})
+```
+
+## How it interacts with the rest of the pipeline
+
+- **HEIC runs first.** A `.heic` photo is converted to JPEG before compression
+  sees it, so compression works on decodable bytes. See
+  [HEIC to JPEG](/docs/guides/processing/heic-conversion/).
+- **EXIF stripping runs before compression.** Enabling both means two encodes per
+  image. Compression's own re-encode drops EXIF as a side effect, but only when
+  it actually replaces the file — an image that lands in the "no size benefit"
+  case above keeps its original bytes, metadata included. If GPS coordinates
+  must never survive, enable `stripExifData` rather than relying on compression.
+- **Hashing runs after.** With `checksumVerification` on, the checksum describes
+  the compressed bytes, not the original.
+- **Thumbnails are separate.** `thumbnailGenerator` annotates the file with a
+  preview data URL and does not affect the uploaded bytes.
+
+Compression also runs on a Web Worker whenever one is available, and falls back
+to the main thread on timeout or failure without failing the file — see
+[Web Worker offload](/docs/guides/processing/custom-steps/#web-worker-offload).
+
+## Observing it
+
+`pipeline-step` fires with `step: 'compress'` after the step runs on a file, and
+`pipeline-start` lists `compress` among the steps that will run:
+
+```ts
+core.on('pipeline-start', ({ fileId, steps }) => {
+    console.log(fileId, steps) // e.g. ['exif', 'compress', 'hash']
+})
+```
+
+A file skipped by the step's `shouldProcess` filter — anything whose MIME type
+isn't `image/*` — fires no `pipeline-step` at all.
+
+## Related
+
+- [File Processing](/docs/guides/file-processing/) — the pipeline overview and
+  the fixed step order.
+- [Optional props](/docs/api-reference/upupuploader/optional-props/) — every
+  `<UpupUploader>` prop, including `maxFileSize` and the other processing
+  toggles.
+- [Events](/docs/api-reference/events/) — `pipeline-start`, `pipeline-step`,
+  `pipeline-complete`, and `pipeline-error` payloads.

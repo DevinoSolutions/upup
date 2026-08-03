@@ -1,0 +1,306 @@
+---
+title: Error Codes
+description: The complete UpupErrorCode enum, the seven UpupError classes that carry them, restriction reasons, and the response parser that turns server or S3 error bodies into typed errors.
+---
+
+Most failures upup raises are an `UpupError` (or one of its six subclasses)
+carrying a `code` from the `UpupErrorCode` enum. Codes are stable strings — safe
+to switch on, log, and tag in an error tracker. This page is the complete list;
+[Error Handling](/docs/error-handling/) covers the narrative, and [Error
+Monitoring](/docs/guides/error-monitoring/) covers wiring failures into Sentry
+or your own reporter.
+
+The one important exception is the rejection from `upload()` itself — see
+[Batch failures](/docs/api-reference/error-codes/#batch-failures-are-not-upuperrors)
+before you write a handler, because it is **not** an `UpupError` and carries no
+`code`.
+
+Every class that carries a code, and the one rejection that sits outside them:
+
+<ErrorTaxonomyDiagram />
+
+## The complete code list
+
+`UpupErrorCode` has 23 members. `retryable` is the value the error object
+carries on the `retryable` field — see [Retryability](/docs/api-reference/error-codes/#retryability)
+below for what actually drives automatic retries.
+
+| Code                     | Meaning                                             | Typical trigger                                                                                                                                                                                                                                                                                                                                            | Retryable       |
+| ------------------------ | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `AUTH_REQUIRED`          | Anonymous uploads are disabled                      | `@upupjs/server` `/presign` or `/multipart/init` reached with no `auth`, no `getUserId`, and no `allowAnonymousUploads` — returns 403                                                                                                                                                                                                                      | no              |
+| `AUTH_DENIED`            | The upload token belongs to a different user        | A multipart continuation route (sign-part / complete / abort) called with a token whose `uid` is not the current user — returns 403                                                                                                                                                                                                                        | no              |
+| `AUTH_EXPIRED`           | A stored drive credential is dead or revoked        | The server's drive-token refresh call is rejected by the provider; the stored tokens are deleted and the user must re-authorize. Surfaces only through the server's `onError` reporter — it is never returned as a response-body code                                                                                                                      | no              |
+| `AUTH_PROVIDER_ERROR`    | A cloud-drive OAuth or provider call failed         | OAuth code-for-token exchange returns non-2xx (server answers 502). Also the code every `UpupAuthError` carries by construction                                                                                                                                                                                                                            | no              |
+| `FILE_TOO_LARGE`         | A file is over the per-file size ceiling            | The file's size exceeds `maxFileSize`                                                                                                                                                                                                                                                                                                                      | no              |
+| `FILE_TOO_SMALL`         | A file is under the per-file size floor             | The file's size is below `minFileSize`                                                                                                                                                                                                                                                                                                                     | no              |
+| `TYPE_MISMATCH`          | A file's type is not accepted                       | Neither the MIME type nor the extension matches `accept`                                                                                                                                                                                                                                                                                                   | no              |
+| `LIMIT_EXCEEDED`         | Too many files                                      | The incoming batch would push the selection past `maxFiles`                                                                                                                                                                                                                                                                                                | no              |
+| `TOTAL_SIZE_EXCEEDED`    | The selection is too large in aggregate             | Existing plus incoming bytes exceed `maxTotalFileSize`                                                                                                                                                                                                                                                                                                     | no              |
+| `DUPLICATE`              | A content-identical file is already selected        | Reserved. With `contentDeduplication` on, duplicates are dropped silently rather than raised — no code path emits this today                                                                                                                                                                                                                               | no              |
+| `MIN_FILES_NOT_MET`      | Fewer files selected than required                  | Reserved — no code path emits this today                                                                                                                                                                                                                                                                                                                   | no              |
+| `UPLOAD_FAILED`          | The upload could not be performed                   | Exactly one emitter: the resumable tus strategy is selected but the optional `tus-js-client` dependency is not installed. Despite the generic name, no other path raises it                                                                                                                                                                                | no              |
+| `UPLOAD_ABORTED`         | The upload was cancelled                            | Reserved. Aborts currently surface as an `UpupNetworkError` ("Upload aborted") carrying `NETWORK_ERROR`                                                                                                                                                                                                                                                    | no              |
+| `PRESIGN_FAILED`         | Presigning the object URL failed                    | The server's `/presign` route threw — bad storage credentials, unreachable S3 endpoint, rejected key — returns 500                                                                                                                                                                                                                                         | no              |
+| `CORS_ERROR`             | The bucket's CORS configuration blocked the request | Reserved for bucket-CORS diagnosis; no code path emits it today, but the i18n map already routes it to a "CORS misconfigured" message                                                                                                                                                                                                                      | no              |
+| `PIPELINE_STEP_FAILED`   | A processing-pipeline step threw                    | Reserved — the HEIC step reports through `HEIC_CONVERSION_FAILED`, and no other step emits this today                                                                                                                                                                                                                                                      | no              |
+| `HEIC_CONVERSION_FAILED` | A HEIC/HEIF image could not be decoded              | The optional `libheif-js` dependency is not installed, or the file contains no decodable image                                                                                                                                                                                                                                                             | no              |
+| `NETWORK_ERROR`          | The transport itself failed                         | An XHR `error` or `abort` event during a direct PUT, or any `UpupNetworkError`. Note that the error thrown once retries are exhausted is the last _real_ failure, which is often an `UpupStorageError`, not this code                                                                                                                                      | **yes**         |
+| `TIMEOUT`                | An operation ran past its deadline                  | Reserved — no code path emits this today                                                                                                                                                                                                                                                                                                                   | no              |
+| `STORAGE_ERROR`          | An S3 / S3-compatible storage operation failed      | A direct PUT returning non-2xx, any multipart init / sign-part / complete / abort failure, a failed drive list or transfer, or the server router's last-resort 500. Also reported (not returned) when a post-completion hook throws after a durably-completed upload the client already got a 200 for, and when the health probe finds storage unreachable | class-dependent |
+| `QUOTA_EXCEEDED`         | A configured storage quota is exhausted             | The code every `UpupQuotaError` carries by construction                                                                                                                                                                                                                                                                                                    | no              |
+| `NO_UPLOAD_TARGET`       | No upload destination is configured                 | The default code for `UpupConfigError` — no `uploadEndpoint` / provider wiring to upload to                                                                                                                                                                                                                                                                | no              |
+| `BAD_REQUEST`            | The request or API call is malformed                | Server-side: an unparseable JSON body or invalid file metadata (400). Client-side: calling `addFiles` / `setFiles` / `upload` / `resume` / `retry` after `destroy()`, or passing an unknown file ID to `replaceFile` / `reorderFiles`                                                                                                                      | no              |
+
+Codes marked _reserved_ are part of the published enum and safe to reference in
+your own `switch` statements — they simply have no emitter in upup today.
+
+### Retryability
+
+`retryable` is a per-class constant, not a per-code lookup: `UpupNetworkError`
+sets it to `true` and every other class sets it to `false`.
+
+Crucially, **the code and the flag come from different places**, so you cannot
+infer one from the other. `uploadErrorFromResponse` picks the class from its
+`kind` argument — which fixes `retryable` — and then overwrites `code` with
+whatever machine code the response body supplied. A code can therefore ride on a
+class it does not "belong" to. The server-side drive transfer is a real example:
+it builds its error with `kind: 'network'` (so `retryable` is `true`), and the
+server answers a failed drive request with `STORAGE_ERROR` in the body, so the
+client genuinely sees `STORAGE_ERROR` with `retryable: true`.
+
+Never branch on `code` to decide whether something is retryable, or vice versa.
+Read `retryable` for the flag and `code` for the cause.
+
+Automatic retries do **not** consult that flag. The upload manager retries every
+failed attempt up to `maxRetries` times except three cases, which fail
+immediately:
+
+- the upload was aborted,
+- the failure is an `UpupNetworkError` with a 4xx status (a client error — a
+  retry would fail identically),
+- the failure is an `UpupNetworkError` with status `0`, which is how a rejecting
+  `isSuccessfulCall` is reported.
+
+Treat `retryable` as a hint for your own UI and reporting logic, and
+[`maxRetries`](/docs/api-reference/upupuploader/optional-props/#maxretries) as
+the control for upup's own retry loop.
+
+## The error classes
+
+Seven classes, all exported from `@upupjs/core`. Each subclass fixes the `code`
+it carries (except `UpupConfigError`, whose code is overridable) and adds the
+fields you need to act on the failure.
+
+| Class                 | Code it carries                                                | Thrown when                                                                                                                              | Extra fields                   |
+| --------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `UpupError`           | whatever the caller passes                                     | Base class. Raised directly for lifecycle and API misuse (`BAD_REQUEST`), HEIC decode failures, and a missing optional upload dependency | `code`, `retryable`, `status?` |
+| `UpupAuthError`       | `AUTH_PROVIDER_ERROR`                                          | A cloud-drive OAuth or provider call fails; also what `uploadErrorFromResponse` builds for `kind: 'auth'`                                | `provider`                     |
+| `UpupNetworkError`    | `NETWORK_ERROR`                                                | Transport failure or abort — the only class that is `retryable`                                                                          | `status?`                      |
+| `UpupValidationError` | the restriction reason itself                                  | A file fails a size, type, or count check                                                                                                | `reason`, `file`               |
+| `UpupQuotaError`      | `QUOTA_EXCEEDED`                                               | A configured quota is exceeded                                                                                                           | `limit`, `used`                |
+| `UpupStorageError`    | `STORAGE_ERROR`                                                | An S3 / storage operation fails; also what `uploadErrorFromResponse` builds for `kind: 'storage'`                                        | `provider`, `operation`        |
+| `UpupConfigError`     | `NO_UPLOAD_TARGET` by default, overridable via the constructor | Configuration is missing or invalid                                                                                                      | —                              |
+
+`UpupStorageError.operation` is one of `'presign'`, `'upload'`,
+`'multipart-init'`, `'multipart-complete'`, `'multipart-sign-part'`, or
+`'multipart-abort'` — enough to tell a failed presign apart from a failed part
+upload without parsing messages.
+
+### Batch failures are not `UpupError`s
+
+When one or more files in a run fail, `upload()` rejects with an
+`UpupUploadBatchError`. It extends plain `Error`, **not** `UpupError` — it has no
+`code` and no `retryable`. This is the single most common rejection you will
+handle, so a handler that only checks `instanceof UpupError` will fall through to
+its "unknown error" branch on the ordinary failure path.
+
+The batch error is a wrapper, and the coded per-file errors are inside it:
+
+```typescript
+readonly errors: { file: UploadFile; error: Error }[]
+```
+
+Each `error` in that array is the real, coded failure for that file — an
+`UpupStorageError`, `UpupNetworkError`, and so on. The same per-file errors also
+arrive individually on the `upload-error` event as they happen, which is usually
+the better place to react; the batch rejection is best treated as "the run did
+not fully succeed" rather than as a diagnosis.
+
+One caveat when narrowing: `UpupUploadBatchError` is **not exported** from
+`@upupjs/core` or `@upupjs/core/internal`, so you cannot `instanceof` it. Detect
+it by name or by shape:
+
+```typescript
+function isBatchError(
+    error: unknown,
+): error is Error & { errors: { file: File; error: Error }[] } {
+    return error instanceof Error && error.name === 'UpupUploadBatchError'
+}
+```
+
+### Narrowing by class, then by code
+
+`instanceof` gets you the extra fields; the `code` gets you the specific cause.
+Reach for the class first, because that is what makes `error.file` or
+`error.operation` type-safe:
+
+```typescript
+import {
+    UpupError,
+    UpupErrorCode,
+    UpupNetworkError,
+    UpupStorageError,
+    UpupValidationError,
+} from '@upupjs/core'
+
+function report(error: unknown): string {
+    // Check this FIRST — the rejection from upload() is a batch wrapper that is
+    // not an UpupError, so every instanceof below would miss it.
+    if (isBatchError(error)) {
+        return error.errors.map(entry => report(entry.error)).join('; ')
+    }
+
+    if (error instanceof UpupValidationError) {
+        // `reason` is narrowed to RestrictionFailedReason
+        return `${error.file.name} rejected (${error.reason})`
+    }
+
+    if (error instanceof UpupStorageError) {
+        return `S3 ${error.operation} failed on ${error.provider}`
+    }
+
+    if (error instanceof UpupNetworkError) {
+        return error.status === undefined
+            ? 'Connection dropped.'
+            : `Transport failed with HTTP ${error.status}.`
+    }
+
+    if (error instanceof UpupError) {
+        switch (error.code) {
+            case UpupErrorCode.PRESIGN_FAILED:
+                return 'Your token endpoint returned an error.'
+            case UpupErrorCode.AUTH_REQUIRED:
+            case UpupErrorCode.AUTH_DENIED:
+                return 'Sign in again to upload.'
+            case UpupErrorCode.HEIC_CONVERSION_FAILED:
+                return 'This HEIC image could not be converted.'
+            default:
+                return error.retryable
+                    ? 'Transient failure — safe to retry.'
+                    : 'Permanent failure — needs attention.'
+        }
+    }
+
+    return 'Unknown error.'
+}
+```
+
+## Restriction reasons
+
+`UpupValidationError.reason` is typed as `RestrictionFailedReason` — the subset
+of codes a file-level check can produce, plus one string that is not part of the
+code enum:
+
+```typescript
+type RestrictionFailedReason =
+    | UpupErrorCode.TYPE_MISMATCH
+    | UpupErrorCode.FILE_TOO_LARGE
+    | UpupErrorCode.FILE_TOO_SMALL
+    | UpupErrorCode.LIMIT_EXCEEDED
+    | UpupErrorCode.TOTAL_SIZE_EXCEEDED
+    | UpupErrorCode.DUPLICATE
+    | 'BEFORE_FILE_ADDED_REJECTED'
+```
+
+The per-file checks run in a fixed order — type, then maximum size, then minimum
+size — so the first violation reported for a file is the most specific one.
+`LIMIT_EXCEEDED` and `TOTAL_SIZE_EXCEEDED` are batch-level instead: they are
+raised once for the whole incoming batch, with `file` set to the first file in
+it rather than to a single offender.
+
+`'BEFORE_FILE_ADDED_REJECTED'` is the reason reserved for a host application
+vetoing a file before it enters the selection. It is a bare string, not a
+`UpupErrorCode` member, so compare it literally; like `DUPLICATE`, no code path
+emits it today.
+
+## Errors from your own endpoints
+
+When you host the presign or token endpoint yourself, `uploadErrorFromResponse`
+is what turns a failed HTTP response into a typed, code-carrying error. Four of
+the five upload strategies route their failures through it — direct PUT,
+multipart, server credentials, and server-side drive transfer — so a machine code
+your endpoint returns arrives intact on `error.code`.
+
+The exception is the tus strategy, which rejects with whatever error
+`tus-js-client` produced, unwrapped. Those errors are not `UpupError`s and carry
+no `code`, so a handler that reads `error.code` will come up empty on tus
+uploads.
+
+```typescript
+import { uploadErrorFromResponse } from '@upupjs/core'
+
+const err = uploadErrorFromResponse({
+    status: response.status,
+    statusText: response.statusText,
+    body: await response.text(),
+    kind: 'storage', // 'storage' | 'auth' | 'network'
+    operation: 'presign', // required when kind is 'storage'
+    provider: 'S3', // defaults to 'server'
+})
+```
+
+`kind` picks the class: `'auth'` builds an `UpupAuthError`, `'storage'` an
+`UpupStorageError`, and anything else an `UpupNetworkError`. The originating
+HTTP status is always copied onto `error.status`.
+
+### How the body is parsed
+
+`parseErrorBody` is the exported helper behind it, and it tries three shapes in
+order:
+
+1. **JSON** — a `code` field and an `error` (or `message`) field. This is the
+   convention `@upupjs/server` emits, so a server-mode failure reaches the
+   client with the same machine code the server logged.
+2. **S3-style XML** — `<Code>` and `<Message>` inside an `<Error>` envelope.
+   This is how S3 and S3-compatible providers report a rejected direct PUT, so
+   provider codes like `SignatureDoesNotMatch` or `EntityTooLarge` survive.
+3. **Plain text** — the first 200 characters of the body become the message,
+   with no code.
+
+If the body yields no code, `error.code` falls back to the class default and the
+message falls back to `"<status> <statusText>"`. To make your own endpoint's
+failures legible on the client, return JSON with a `code` field:
+
+```typescript
+return Response.json(
+    { error: 'Bucket is read-only', code: 'STORAGE_ERROR' },
+    { status: 500 },
+)
+```
+
+Anything you put in `code` is preserved verbatim — it does not have to be an
+`UpupErrorCode` member.
+
+## Turning codes into user-facing text
+
+`errorCodeToMessageKey(code)` in `packages/core/src/i18n/error-code-map.ts` maps
+a machine code to a key in the localized `ErrorMessages` catalog, and it is the
+one place that mapping lives. Note that it returns a **message key**, not a code
+— the two namespaces look similar and are easy to conflate.
+
+Coverage is partial. Eight of the 23 `UpupErrorCode` members have a dedicated
+mapping: `PRESIGN_FAILED`, `STORAGE_ERROR`, `BAD_REQUEST`, `AUTH_PROVIDER_ERROR`,
+`AUTH_EXPIRED`, `AUTH_DENIED`, `CORS_ERROR`, and `QUOTA_EXCEEDED`. The map also
+handles values that are not enum members at all: `@upupjs/server`'s upload-token
+codes (`expired`, `bad_signature`, `malformed`), S3 provider codes
+(`AccessDenied`, `SignatureDoesNotMatch`, `EntityTooLarge`, `NoSuchBucket`,
+`InvalidBucketName`), and the drive controller's `UNAUTHENTICATED`.
+
+Everything else — the other 15 enum members included — falls through to the
+`uploadFailedWithCode` message, and **that message interpolates the raw code**
+(`Upload failed with error code: {code}`). So an unmapped code _is_ shown to the
+end user. Only a completely absent code is code-free, falling back to the plain
+`uploadFailed` message. If you surface codes that matter to your users, either
+map them to your own copy or override `uploadFailedWithCode` for your locale.
+
+See [Localization](/docs/localization/) for overriding those strings per locale.

@@ -1,0 +1,168 @@
+---
+title: File upload server with Fastify and S3
+description: Register @upupjs/server as a Fastify plugin with createUpupPlugin — install, the mount-path option, body parsing, trustProxy origins, and CORS.
+---
+
+`@upupjs/server` ships a Fastify adapter: a plugin factory you register on
+your instance. It wraps the same `createUpupHandler` every other adapter
+wraps, so the config object is identical across frameworks — see
+[Server mode setup](/docs/guides/server-mode-setup/) for what each option
+does.
+
+## 1. Install
+
+```sh
+pnpm add @upupjs/server
+```
+
+The Fastify types are structural — the adapter declares the small slice of
+`request`/`reply` it uses, so no particular Fastify typings version is
+required for it to typecheck.
+
+## 2. Share one config
+
+Author the config once and import it wherever you register:
+
+```ts
+// lib/upup-config.ts
+import type { UpupServerConfig } from '@upupjs/server'
+
+export const upupConfig: UpupServerConfig = {
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    // Required, server-only: stable, high-entropy, min 16 chars, shared
+    // across every instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const session = await getSessionFromCookie(req)
+        return session?.userId ?? null
+    },
+}
+```
+
+## 3. Register the plugin
+
+```ts
+import Fastify from 'fastify'
+import { createUpupPlugin } from '@upupjs/server/fastify'
+import { upupConfig } from './lib/upup-config'
+
+const fastify = Fastify()
+
+await fastify.register(createUpupPlugin(upupConfig, { path: '/api/upup/*' }))
+
+await fastify.listen({ port: 3000 })
+```
+
+Point the uploader at the same prefix (without the wildcard):
+
+```tsx
+<UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
+```
+
+## The mount path
+
+`createUpupPlugin` is the one adapter that registers its own route, because
+`fastify.all(path, handler)` structurally requires a path at registration
+time. The optional second argument overrides it; the default is
+`/upup/*`.
+
+```ts
+createUpupPlugin(upupConfig) // registers fastify.all('/upup/*', …)
+createUpupPlugin(upupConfig, { path: '/api/upup/*' })
+```
+
+<Callout type="note">
+    Keep the trailing `/*`. The plugin registers exactly the string you pass,
+    and the handler dispatches on the path suffix beneath it — a bare
+    `/api/upup` matches only that one path, so `/api/upup/presign` would 404 at
+    the Fastify router before the handler ever sees it.
+</Callout>
+
+## Body parsing
+
+Nothing to wire. Fastify's built-in `application/json` content-type parser
+already populates `request.body`, and the adapter re-serializes that object
+into the Web `Request` it hands the core handler. Every route the browser
+POSTs to (`/presign`, `/multipart/init`, `/multipart/sign-part`,
+`/multipart/complete`, `/multipart/abort`, `/files/:provider/transfer`)
+sends JSON, so the default parser covers all of them.
+
+There is no multipart/form-data step to configure: on the presigned paths
+the file bytes go straight from the browser to storage and never traverse
+your Fastify process.
+
+<Callout type="warning">
+    If you removed Fastify's JSON parser or replaced it with one that leaves
+    `request.body` empty, the adapter forwards no body and the POST routes fail
+    with `400 Invalid JSON body` (`code: BAD_REQUEST`).
+</Callout>
+
+## Behind a proxy or load balancer
+
+The adapter builds the request URL from `request.protocol`,
+`request.hostname`, and `request.url`. That URL is load-bearing beyond
+routing: the OAuth `redirect_uri` for cloud drives is derived from the
+request's origin. Under a TLS-terminating proxy, construct Fastify with
+proxy trust enabled so those two fields reflect the public origin:
+
+```ts
+const fastify = Fastify({ trustProxy: true })
+```
+
+With that set, Fastify derives `protocol`/`hostname` from
+`X-Forwarded-Proto` / `X-Forwarded-Host` and the callback URL resolves to
+the public origin you registered in each provider's console. Leave it off
+and OAuth callbacks resolve to an internal address the provider rejects.
+
+## CORS
+
+Same-origin deployments need no CORS config. For cross-origin ones, set it
+on the upup config rather than reaching for `@fastify/cors` — the handler
+attaches the headers itself, on every response including the preflight
+`OPTIONS` (`204`):
+
+```ts
+export const upupConfig: UpupServerConfig = {
+    // ...storage, uploadTokenSecret
+    cors: {
+        allowedOrigins: ['https://app.example.com'],
+        allowedMethods: ['GET', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        maxAgeSeconds: 600,
+    },
+}
+```
+
+<Callout type="warning">
+    Credentialed CORS is granted only on a concrete origin match. A config whose
+    `allowedOrigins` is just `['*']` gets public, non-credentialed CORS — the
+    server-mode drive client sends `credentials: 'include'`, so cloud drives
+    will fail against a wildcard-only allowlist. Enumerate your real app
+    origins.
+</Callout>
+
+## Verify the mount
+
+```sh
+curl http://localhost:3000/api/upup/health
+```
+
+A JSON body with `"status": "ok"` and `checks.config` / `checks.storage`
+means the plugin is registered and the storage credentials resolve. The
+route is unauthenticated by design and always answers `200` — read the
+`status` field, not the HTTP code.
+
+## Related
+
+- [Server mode setup](/docs/guides/server-mode-setup/) — every
+  `createUpupHandler` option, hooks, limits, and observability.
+- [Server auth & trust model](/docs/guides/server-auth/) — why
+  `uploadTokenSecret` is mandatory and what forged requests get.
+- [Storage providers](/docs/guides/storage-providers/) — S3, R2, MinIO,
+  B2, Spaces, Wasabi configs.

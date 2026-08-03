@@ -1,0 +1,252 @@
+---
+title: Custom file processing pipeline steps
+description: Write your own upup PipelineStep — the contract, safe UploadFile cloning, registering a custom pipeline, and Web Worker offload with main-thread fallback.
+---
+
+upup's built-in steps cover the common cases — convert, strip, shrink, preview,
+hash. When you need something else (renaming for storage keys, watermarking,
+rejecting files by content, attaching your own metadata), the step contract is
+public and the pipeline is yours to assemble.
+
+## The contract
+
+`PipelineStep` and `PipelineContext` are exported from `@upupjs/core`:
+
+```ts
+interface PipelineStep {
+    name: string
+    process(file: UploadFile, context: PipelineContext): Promise<UploadFile>
+    shouldProcess?(file: UploadFile): boolean
+}
+
+interface PipelineContext {
+    files: ReadonlyMap<string, UploadFile>
+    options: Record<string, unknown>
+    emit(event: string, data?: unknown): void
+    t: (key: string, vars?: Record<string, unknown>) => string
+    worker?: {
+        execute<T>(task: {
+            type: string
+            data: ArrayBuffer
+            params?: Record<string, unknown>
+        }): Promise<T>
+    }
+}
+```
+
+- **`name`** shows up in the `pipeline-start` step list and in every
+  `pipeline-step` event, so make it descriptive.
+- **`shouldProcess`** is an optional synchronous filter — return `false` and the
+  step is skipped for that file, with no cost and no `pipeline-step` event.
+- **`process`** receives the file as the previous step left it and returns the
+  file the next step will see.
+- **`context.emit`** puts an event on core's bus — use `pipeline-error` to report
+  a step that degraded rather than throwing.
+- **`context.t`** is the translator built from your `locale` option, so a step
+  can produce localized text.
+- **`context.files`** is a read-only view of the whole selection, and
+  `context.options` the resolved uploader options, if your step needs to reason
+  about more than the file in hand.
+
+## A complete step
+
+This one prefixes every filename with the upload date, so storage keys sort
+chronologically:
+
+```ts
+import type { PipelineStep, PipelineContext, UploadFile } from '@upupjs/core'
+
+export function datePrefixStep(): PipelineStep {
+    return {
+        name: 'date-prefix',
+        shouldProcess: file => !/^\d{4}-\d{2}-\d{2}--/.test(file.name),
+        async process(
+            file: UploadFile,
+            context: PipelineContext,
+        ): Promise<UploadFile> {
+            const date = new Date().toISOString().slice(0, 10)
+            const renamed = new File([file], `${date}--${file.name}`, {
+                type: file.type,
+                lastModified: file.lastModified,
+            })
+
+            context.emit('pipeline-step', {
+                fileId: file.id,
+                step: 'date-prefix',
+            })
+
+            return Object.assign(renamed, {
+                id: file.id,
+                source: file.source,
+                status: file.status,
+                url: file.url,
+                key: file.key,
+                metadata: { ...file.metadata, renamed: true },
+            }) as UploadFile
+        },
+    }
+}
+```
+
+Two rules that example is demonstrating, both of which are easy to get wrong:
+
+1. **Never clone an `UploadFile` with an object spread.** `{ ...file }` produces
+   a plain object and silently drops `File`'s blob slots — the result has no
+   bytes. Build a real `new File([...])` and copy upup's own fields onto it with
+   `Object.assign`, exactly as above.
+2. **Carry the identity fields across.** `id` in particular: upup tracks files by
+   it, and a step that returns a file with a fresh id detaches it from the entry
+   in the list.
+
+A step that only annotates a file — attaching metadata, computing a value — does
+not need to clone at all. Mutate `file.metadata` and return the same file, the
+way the built-in `hash` and `thumbnail` steps do.
+
+## Registering a pipeline
+
+Pass your steps as the `pipeline` option:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    pipeline: [datePrefixStep()],
+})
+```
+
+<Callout type="warning" title="An explicit pipeline replaces the automatic one">
+    It does not append to it. Passing `pipeline` means the boolean options
+    (`heicConversion`, `stripExifData`, `imageCompression`,
+    `thumbnailGenerator`, `checksumVerification`) are ignored, so a custom
+    pipeline that also wants compression must include a compress step itself.
+    The option is read at construction time only — changing it later has no
+    effect, while the boolean flags do rebuild the automatic pipeline when they
+    change.
+</Callout>
+
+Steps run in array order, one file at a time, sequentially within a file. If
+your step depends on decodable bytes, put it after whatever produces them.
+
+## Web Worker offload
+
+Decoding and re-encoding images on the main thread janks the UI. `webWorker`
+moves the built-in pipeline — hash, HEIC, EXIF, thumbnail, compress — onto a
+Worker.
+
+It is **auto by default**: leave it unset (or pass `true`) and upup uses a Worker
+whenever it can. A Worker is used when all three hold:
+
+1. `webWorker` is not `false`,
+2. the runtime has a `Worker` global,
+3. the pipeline has at least one step.
+
+The Worker is created when an upload run starts and terminated when processing
+finishes, so it doesn't sit around holding memory between uploads.
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    imageCompression: true,
+    webWorker: true, // auto — the default
+    workerTimeoutMs: 60_000, // engine-level option, not a UI prop
+})
+```
+
+Force the main thread with `webWorker: false` when you are debugging a step,
+when a strict Content-Security-Policy blocks Worker creation, or in test
+environments with no Worker implementation.
+
+### Fallback semantics
+
+**The Worker path can never fail a file.** Every built-in step tries the Worker
+first and falls back to the main thread on any failure — and it does so quietly:
+
+- **Per-task timeout.** `workerTimeoutMs` (default **`30000`**) bounds each task.
+  On timeout the task rejects, the step catches it, and the same work runs on the
+  main thread.
+- **Worker unavailable.** If the Worker can't be spun up at all, upup logs a
+  console warning in development only and processes everything on the main
+  thread.
+
+The consequence to plan for: a slow Worker doesn't shorten the upload, it
+lengthens it — you pay the timeout, then pay for the main-thread run. If you are
+processing very large images, raise `workerTimeoutMs` rather than leaving it at
+30 s and eating both costs.
+
+### What the Worker can run
+
+`context.worker` is handed to every step, but the Worker understands a **fixed
+set of task types** — `hash`, `heic`, `exif`, `compress`, and `thumbnail`. A
+custom step that calls `context.worker.execute` with any other `type` is
+rejected with an `unknown task type` error rather than running anything.
+
+So a custom step has two honest options: do its work on the main thread, or
+create and own a Worker of its own. If you reuse one of the built-in task types,
+mirror what the built-in steps do — try the Worker, catch, and fall back:
+
+```ts
+export function myHashStep(): PipelineStep {
+    return {
+        name: 'my-hash',
+        async process(file: UploadFile, context: PipelineContext) {
+            if (context.worker) {
+                try {
+                    const result = await context.worker.execute<{
+                        checksum: string
+                    }>({
+                        type: 'hash',
+                        data: await file.arrayBuffer(),
+                    })
+                    file.metadata = {
+                        ...file.metadata,
+                        checksum: result.checksum,
+                    }
+                    return file
+                } catch {
+                    // fall through to the main-thread path
+                }
+            }
+            // ...main-thread implementation
+            return file
+        },
+    }
+}
+```
+
+Note that `execute` transfers the `ArrayBuffer` to the Worker, so the buffer you
+pass is not reusable afterwards — read a fresh one if you need the bytes again.
+
+## Observing your steps
+
+Custom steps appear in the same events as the built-in ones:
+
+```ts
+core.on('pipeline-start', ({ fileId, steps }) => {
+    console.log(fileId, 'entering', steps.join(' → ')) // includes 'date-prefix'
+})
+core.on('pipeline-step', ({ fileId, step }) => {
+    console.log(fileId, 'finished', step)
+})
+core.on('pipeline-error', ({ scope, name, message }) => {
+    console.warn('pipeline problem in', scope, 'on', name, message)
+})
+```
+
+If your step throws, the failure is **not** swallowed: it propagates out of the
+run, the uploader goes to `FAILED`, every file that hadn't succeeded is marked
+failed, `upload-error` is emitted, and the `upload()` promise rejects. The
+built-in steps deliberately catch their own failures and emit `pipeline-error`
+instead, so a degraded step never blocks the upload. Follow that pattern unless a
+failure genuinely should stop everything.
+
+## Related
+
+- [File Processing](/docs/guides/file-processing/) — the pipeline overview and
+  the fixed order of the built-in steps.
+- [Headless Usage](/docs/guides/headless/) — constructing `UpupCore` directly,
+  which is where the `pipeline` option lives.
+- [Events](/docs/api-reference/events/) — full payload types for
+  `pipeline-start`, `pipeline-step`, `pipeline-complete`, and `pipeline-error`.
+- [Optional props](/docs/api-reference/upupuploader/optional-props/) — the
+  `webWorker` prop and the processing toggles it applies to.

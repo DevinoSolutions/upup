@@ -214,9 +214,9 @@ test.describe('docs', () => {
         // Cards are real next/link <a href> anchors (SSR-rendered), so the
         // click navigates without waiting on hydration.
         await nav.getByRole('link').filter({ hasText: 'Next' }).click()
-        await expect(page).toHaveURL(/\/docs\/guides\/headless\//)
-        // The reverse edge: the headless page's Previous card must point back
-        // to the theming guide, proving the sequence is symmetric.
+        await expect(page).toHaveURL(/\/docs\/guides\/accessibility\//)
+        // The reverse edge: the accessibility page's Previous card must point
+        // back to the theming guide, proving the sequence is symmetric.
         const prev = page
             .getByRole('navigation', { name: 'Previous and next page' })
             .getByRole('link')

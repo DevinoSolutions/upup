@@ -1,0 +1,107 @@
+---
+title: Authenticate uploads with Clerk
+description: Scope S3 uploads to the Clerk user — authenticateRequest inside @upupjs/server's getUserId hook, why authorizedParties is mandatory, and multipart uid binding.
+---
+
+Clerk's backend client authenticates a plain `Request`, which is exactly what
+upup's `getUserId` hook receives. The same recipe therefore works unchanged in
+Next.js, Express, Fastify, Hono, or a worker: Clerk verifies the session, upup
+scopes the object key and the upload token to the returned `userId`.
+
+## The handler
+
+```ts
+import { createUpupHandler } from '@upupjs/server'
+import { createClerkClient } from '@clerk/backend'
+
+const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! })
+
+export const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const state = await clerk.authenticateRequest(req, {
+            authorizedParties: [process.env.APP_ORIGIN!],
+        })
+        if (!state.isAuthenticated) return null
+        return state.toAuth().userId ?? null
+    },
+})
+```
+
+An unauthenticated request — no session cookie, no bearer token, an expired
+token — takes the `return null` branch, and `POST /presign` and
+`POST /multipart/init` answer **401 Unauthenticated**. Nothing is presigned, so
+no upload capability is ever handed to an anonymous caller.
+
+<Callout type="danger" title="Always pass authorizedParties">
+    Without `authorizedParties`, a token minted for a different origin can
+    authenticate here. It is the check that ties a verified Clerk session to
+    _your_ application rather than to any application in the Clerk ecosystem.
+    Set it to your app's origin in every environment, not only production.
+</Callout>
+
+## Inside a Next.js app
+
+If you are already using `@clerk/nextjs`, use the framework client rather than
+constructing a backend client yourself — `authenticateRequest` is identical on
+both:
+
+```ts
+import { clerkClient } from '@clerk/nextjs/server'
+
+getUserId: async req => {
+    const clerk = await clerkClient()
+    const state = await clerk.authenticateRequest(req, {
+        authorizedParties: [process.env.APP_ORIGIN!],
+    })
+    if (!state.isAuthenticated) return null
+    return state.toAuth().userId ?? null
+},
+```
+
+## Gating on organization or plan
+
+`toAuth()` carries more than the user id — organization membership, roles, and
+session claims. Gate on them in the same hook and return `null` when the caller
+does not qualify, so there is exactly one place that decides whether an upload
+is allowed:
+
+```ts
+getUserId: async req => {
+    const state = await clerk.authenticateRequest(req, {
+        authorizedParties: [process.env.APP_ORIGIN!],
+    })
+    if (!state.isAuthenticated) return null
+    const { userId, orgId } = state.toAuth()
+    if (!orgId) return null // personal-account uploads not allowed
+    return userId ?? null
+},
+```
+
+Return the **user** id, not the org id, unless every member of an organization
+should genuinely share one upload namespace — the returned value is both the
+storage namespace and the token binding.
+
+## Multipart uploads and the bound uid
+
+Clerk's `userId` is stable for the life of the account, which is what the
+multipart path requires. The id is baked into the HMAC upload token issued at
+`POST /multipart/init` as `uid`, and sign-part, complete, and abort each
+re-resolve the caller through `getUserId` and compare against it. A mismatch is
+**403 `AUTH_DENIED`**, so a leaked upload token cannot be replayed by another
+signed-in Clerk user.
+
+## Next steps
+
+- [Auth Recipes](/docs/guides/auth-recipes/) — the hub: the hook model, the
+  `auth` gate, the anonymous opt-outs, and `TokenStore` implementations for
+  cloud-drive tokens.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — mounting the handler
+  on Next.js, Express, Fastify, or Hono.
+- [Server Auth & Trust Model](/docs/guides/server-auth/) — what upup enforces
+  once Clerk has told it who the caller is.

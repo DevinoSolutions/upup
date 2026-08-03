@@ -1,8 +1,11 @@
 {
     "title": "API reference",
     "pages": [
+        "upupuploader",
+        "events",
+        "error-codes",
+        "server-http",
         "s3-generate-presigned-url",
-        "azure-generate-sas-url",
-        "upupuploader"
+        "azure-generate-sas-url"
     ]
 }

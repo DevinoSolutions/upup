@@ -1,19 +1,36 @@
 ---
 title: Resumable Uploads
-description: Two resumable protocols — S3 multipart through your own upload endpoint, or tus against an external tus-compatible service.
+description: Two resumable protocols — S3 multipart through @upupjs/server, or tus against an external tus-compatible service. Full option reference, part-size rules, and what each protocol actually resumes.
 ---
 
-upup supports two resumable protocols.
+upup supports two resumable protocols. Both are opt-in through the single
+`resumable` prop, and they are mutually exclusive — a `resumable` value is
+either a multipart config or a tus config, never both.
+
+|                               | Multipart                      | tus                                |
+| ----------------------------- | ------------------------------ | ---------------------------------- |
+| Upload target                 | `serverUrl` (`@upupjs/server`) | tus `endpoint`                     |
+| Splits large files into parts | Yes                            | Yes (when `chunkSizeBytes` is set) |
+| Survives a page reload        | No                             | Yes (fingerprint URL storage)      |
+| Extra dependency              | None                           | `tus-js-client` (optional peer)    |
+| Storage                       | Your S3-compatible bucket      | Whatever the tus server writes to  |
+
+Pick multipart if your bytes already go to S3 through `@upupjs/server` and you
+mainly want large files split into parallel, individually-retried parts. Pick
+tus if you run (or rent) a tus server and need an upload to survive the browser
+tab closing.
 
 ## Multipart
 
-Multipart uploads use your configured `uploadEndpoint` or `serverUrl`. Core
-selects multipart for files above `thresholdBytes`.
+Multipart splits a file into parts, signs each part individually, uploads three
+parts at a time, and then asks the server to assemble them. Core routes a file
+to the multipart strategy when its size is at or above `thresholdBytes`;
+everything smaller takes the ordinary single-PUT presigned path.
 
 ```tsx
 <UpupUploader
-    provider="aws"
-    uploadEndpoint="/api/upload-token"
+    mode="server"
+    serverUrl="/api/upup"
     resumable={{
         protocol: 'multipart',
         thresholdBytes: 5 * 1024 * 1024,
@@ -22,7 +39,32 @@ selects multipart for files above `thresholdBytes`.
 />
 ```
 
-Your server must support:
+<Callout type="warning" title="Multipart requires server mode">
+    Multipart needs a credential source that can init, sign parts, complete, and
+    abort. Only `serverUrl` (backed by `@upupjs/server`) provides those. A
+    client-mode `uploadEndpoint` supplies presigned single-PUT URLs only, so
+    pairing it with `protocol: 'multipart'` throws a `UpupConfigError`
+    ("CredentialStrategy must implement multipart methods") the moment the
+    uploader is constructed.
+</Callout>
+
+### Options
+
+Three fields, all optional.
+
+| Option           | Type      | Default           | What it does                                                                                                                                  |
+| ---------------- | --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thresholdBytes` | `number`  | `5242880` (5 MiB) | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                          |
+| `chunkSizeBytes` | `number`  | `5242880` (5 MiB) | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value. |
+| `persist`        | `boolean` | —                 | **Currently ignored — reserved.** No upload path reads it in 3.1.0, so setting it has no effect either way.                                   |
+
+Part concurrency is fixed at three parts in flight and is not configurable
+through `resumable`.
+
+### Server routes
+
+Multipart is a four-call lifecycle. All four are `POST`, all four are
+implemented by `@upupjs/server` under your `serverUrl` base path:
 
 ```txt
 POST /multipart/init
@@ -31,19 +73,155 @@ POST /multipart/complete
 POST /multipart/abort
 ```
 
+`/multipart/init` returns `{ key, uploadId, partSize, expiresIn, token }`. The
+`token` is an HMAC-signed capability bound to the key, upload id, and a byte
+envelope; the client replays it on every subsequent call, and an init response
+without one is rejected client-side as a misconfigured or outdated server. If
+any part fails, core issues a best-effort `/multipart/abort` so no orphaned
+multipart upload is left billing you for storage.
+
+Request and response shapes for all four routes are documented in the
+[server HTTP reference](/docs/api-reference/server-http).
+
+### Part size, the 5 MiB floor, and the 10,000-part cap
+
+S3 imposes two hard limits that shape every multipart upload: a part must be at
+least **5 MiB** (except the last one), and a single upload may have at most
+**10,000 parts**. `@upupjs/server` reconciles both before answering
+`/multipart/init`:
+
+1. Start from the requested chunk size, or 5 MiB if none was given.
+2. Raise it to 5 MiB if it is below the floor.
+3. Raise it again to `ceil(fileSize / 10000)` if the file would otherwise need
+   more than 10,000 parts.
+
+The returned `partSize` wins — core uses the server's value and falls back to
+your `chunkSizeBytes` only if the server omits it. In practice that means the
+part size in server mode is decided by the server, not by the browser.
+
+The auto-bump in step 3 is why there is no hard file-size ceiling: a part size
+of `P` covers files up to `P × 10000`, and anything larger simply gets a bigger
+part size.
+
+| Part size         | Files covered without an auto-bump |
+| ----------------- | ---------------------------------- |
+| 5 MiB (the floor) | up to ~48.8 GiB                    |
+| 8 MiB             | up to ~78.1 GiB                    |
+| 16 MiB            | up to ~156.3 GiB                   |
+| 64 MiB            | up to ~625 GiB                     |
+
+Larger parts mean fewer signing round-trips but coarser progress and more bytes
+to re-send when one part fails. The 5 MiB default is the right choice unless
+you routinely move files in the tens of gigabytes.
+
+### What multipart recovers, and what it doesn't
+
+Multipart parallelizes and isolates failures — a failed part is retried on its
+own rather than taking the whole file down with it. Recovery beyond that is
+**within a single page session only**:
+
+- `pause()` aborts the in-flight requests. `resume()` and `retry()` then re-run
+  every file that has no storage key yet, starting from part one — the parts
+  already accepted by S3 are not reused.
+- Cross-reload resume is not wired. A page reload discards the in-memory upload,
+  and nothing re-attaches to the server-side upload id.
+
+A `localStorage`-backed session store exists in the codebase for building
+cross-reload resume yourself. It is exported from `@upupjs/core/internal`
+(`fileFingerprint`, `saveSession`, `loadSession`, `updateSessionProgress`,
+`removeSession`, `clearAllSessions`), keys entries under the `upup_mp_` prefix,
+expires them after 24 hours, and returns `null` rather than throwing when an
+entry is corrupt or `localStorage` is unavailable (private mode, quota). **No
+upload path calls it for you** — it is a building block you would have to wire
+up, not behavior you get by turning multipart on.
+
+If you need an upload to survive a closed tab out of the box, use tus.
+
 ## tus
 
-tus uploads use an external tus-compatible service directly.
+tus talks directly to an external tus-compatible service — your own
+[tusd](https://github.com/tus/tusd), Transloadit, or any other implementation of
+the protocol. `@upupjs/server` is not involved.
+
+`tus-js-client` is an optional peer dependency, kept out of core's mandatory
+path so projects that never use tus don't pay for it. Install it yourself:
+
+```bash
+npm i tus-js-client
+```
+
+<Callout type="warning" title="The error you get without it">
+    The import is dynamic, so a missing `tus-js-client` fails at upload time
+    rather than at construction time: the first tus upload rejects with a
+    `UpupError` carrying code `UPLOAD_FAILED` and the message _"Resumable (tus)
+    uploads require the optional dependency 'tus-js-client'. Install it: npm i
+    tus-js-client"_.
+</Callout>
 
 ```tsx
 <UpupUploader
     resumable={{
         protocol: 'tus',
         endpoint: 'https://uploads.example.com/files',
+        chunkSizeBytes: 8 * 1024 * 1024,
         retryDelays: [0, 1000, 3000, 5000],
+        headers: { Authorization: `Bearer ${token}` },
+        metadata: { album: 'summer-2026' },
     }}
 />
 ```
 
-Configure only one upload target at a time: `uploadEndpoint`, `serverUrl`, or
-tus `endpoint`.
+### Options
+
+Nine fields. `endpoint` is required; every other field is passed through to
+`tus-js-client` only when you set it, so an omitted field keeps that library's
+own default.
+
+| Option                        | Type                     | Default                  | What it does                                                                                                                           |
+| ----------------------------- | ------------------------ | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `endpoint`                    | `string`                 | —                        | **Required.** The tus creation endpoint. Also counts as your upload target.                                                            |
+| `chunkSizeBytes`              | `number`                 | `Infinity` (one request) | Bytes per PATCH request. Set it to get real chunking — and resumability that survives a mid-upload failure.                            |
+| `chunkSize`                   | `number`                 | —                        | **Deprecated** alias of `chunkSizeBytes`, still honored. `chunkSizeBytes` wins when both are set.                                      |
+| `retryDelays`                 | `number[]`               | `[0, 1000, 3000, 5000]`  | Backoff schedule, in milliseconds, for automatic retries. Pass `[]` to disable retrying.                                               |
+| `storeFingerprintForResuming` | `boolean`                | `true`                   | Store the upload URL in `localStorage`, keyed by a file fingerprint, so a later upload of the same file resumes instead of restarting. |
+| `removeFingerprintOnSuccess`  | `boolean`                | `false`                  | Delete that stored entry once the upload succeeds. Turn it on if users re-upload the same filename often.                              |
+| `headers`                     | `Record<string, string>` | —                        | Extra headers on every tus request — the usual place for an auth token.                                                                |
+| `metadata`                    | `Record<string, string>` | —                        | Upload-Metadata entries. Merged **over** the `filename` and `filetype` upup sets, so a key of either name overrides upup's value.      |
+| `parallelUploads`             | `number`                 | `1`                      | Split the file into N partial uploads sent concurrently, then concatenate server-side. Requires the tus **Concatenation** extension.   |
+
+A completed tus upload reports the tus upload URL as the file's storage key.
+
+<Callout type="note" title="parallelUploads and resuming interact">
+    tus-js-client stores fingerprints for whole uploads, not for the partial
+    uploads created by `parallelUploads`. With `parallelUploads` above 1 the
+    partial uploads are not fingerprinted, so a fresh page load restarts them.
+    Leave it at 1 if resume-after-reload matters more than raw throughput.
+</Callout>
+
+## Choosing exactly one upload target
+
+`uploadEndpoint`, `serverUrl`, and a tus `endpoint` are three upload targets and
+you may configure exactly one. Two or more throws a `UpupConfigError` with code
+`AMBIGUOUS_UPLOAD_TARGET` at construction time.
+
+When a tus config is present it takes precedence for every file regardless of
+size — `thresholdBytes` is a multipart-only concept and has no tus equivalent.
+
+## Crash recovery is a different feature
+
+Do not confuse resumable uploads with crash recovery. They solve neighboring
+problems and can be enabled independently:
+
+- **Resumable uploads** are about the bytes of one in-flight transfer — parts,
+  retries, and (for tus) reattaching to a partly-uploaded object on the server.
+- **Crash recovery** (`crashRecovery`) is about the uploader's own state. It
+  writes a snapshot to **IndexedDB** holding the file list — each file's blob
+  plus its id, name, type, source, status, metadata, and storage key if it got
+  one — along with the overall uploader status, and restores that after an
+  unexpected unmount or reload.
+
+The snapshot carries **no partial upload progress**: no byte offsets, no part
+list, no multipart upload id. Crash recovery gives the user their file list
+back; it does not pick a transfer up mid-stream. Conversely, enabling multipart
+does not persist selections. See the [reliability guide](/docs/guides/reliability)
+for how the two combine and which one to reach for.

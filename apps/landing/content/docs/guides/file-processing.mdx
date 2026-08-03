@@ -1,0 +1,299 @@
+---
+title: File Processing
+description: upup's client-side pipeline — image compression, HEIC to JPEG conversion, EXIF stripping, thumbnails, SHA-256 checksums and deduplication, Web Worker offload, and custom steps.
+---
+
+Before a byte leaves the browser, upup can run each file through a processing
+pipeline: shrink an image, convert a HEIC photo, strip location metadata,
+generate a preview, hash the contents. Every stage is off by default and opt-in
+per option, so the pipeline you don't ask for costs you nothing — the steps are
+lazily imported, and the whole thing can run on a Web Worker.
+
+This page is the map: what runs, in what order, and what each capability does.
+The three capabilities with the most surface area have pages of their own:
+
+- [Image compression](/docs/guides/processing/compression/) — resize and
+  re-encode images, with a size-target backoff.
+- [HEIC to JPEG](/docs/guides/processing/heic-conversion/) — decode iPhone
+  photos browsers can't display.
+- [Custom steps and Web Worker offload](/docs/guides/processing/custom-steps/) —
+  write your own `PipelineStep`, and keep the work off the main thread.
+
+<PipelineDiagram />
+
+## What runs, and in what order
+
+The pipeline is assembled from boolean options on the uploader. The order is
+**fixed** and independent of the order you pass the options:
+
+| Order | Step        | Option                 | Applies to       |
+| ----- | ----------- | ---------------------- | ---------------- |
+| 1     | `heic`      | `heicConversion`       | HEIC/HEIF images |
+| 2     | `exif`      | `stripExifData`        | any `image/*`    |
+| 3     | `compress`  | `imageCompression`     | any `image/*`    |
+| 4     | `thumbnail` | `thumbnailGenerator`   | any `image/*`    |
+| 5     | `hash`      | `checksumVerification` | every file       |
+
+```tsx
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            uploadEndpoint="/api/upload-token"
+            heicConversion
+            stripExifData
+            imageCompression
+            thumbnailGenerator
+            checksumVerification
+        />
+    )
+}
+```
+
+The order matters and is deliberate. HEIC runs first so every later step sees a
+JPEG it can decode. EXIF stripping runs before compression so the re-encode
+does not have to preserve metadata it is about to discard. Hashing runs last, so
+the checksum describes the bytes that are actually uploaded — not the original
+the user picked.
+
+A few mechanics worth knowing:
+
+- **Each step is loaded on demand.** A step you don't enable is never imported,
+  so it stays out of your bundle.
+- **The pipeline runs once per upload run**, during the `PROCESSING` status,
+  before any network request. Files are processed one at a time, and steps run
+  sequentially within a file.
+- **Only files that haven't uploaded yet are processed.** Calling `upload()`
+  again after adding more files re-processes only the new ones.
+- **A step can decline a file.** Each step carries a `shouldProcess` predicate;
+  the image steps skip anything whose MIME type isn't `image/*`.
+
+## Image compression
+
+`imageCompression` re-encodes images through a canvas, downscaling to a longest
+edge of `1920` px and encoding at quality `0.82` by default. Pass `true` for
+those defaults, or an object (`ImageCompressionOptions`, exported from
+`@upupjs/core/steps/compress`) to set
+`maxWidthOrHeight`, `quality`, and a best-effort `maxSizeMB` target:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" imageCompression />
+```
+
+The full option reference, the `maxSizeMB` quality backoff, the output-format
+rules, and the cases where compression keeps the original file are on
+[Client-side image compression](/docs/guides/processing/compression/).
+
+## HEIC to JPEG
+
+`heicConversion` decodes the HEIC/HEIF photos iPhones produce and re-encodes
+them to JPEG at quality `0.92`, renaming `photo.heic` to `photo.jpg`:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" heicConversion />
+```
+
+The decoder is libheif compiled to WebAssembly, shipped as an **optional
+dependency** you install yourself — so nothing HEIC-related reaches your bundle
+unless you ask for it. Install steps, matching rules, and the
+degrade-instead-of-fail behavior are on
+[HEIC to JPEG conversion](/docs/guides/processing/heic-conversion/).
+
+## EXIF stripping
+
+Photos carry EXIF metadata: camera model, timestamps, and — the one that
+matters — **GPS coordinates**. If your users upload phone photos and those files
+end up on a public URL, you are publishing where the picture was taken.
+
+`stripExifData` removes it. The step decodes the image and re-encodes it through
+a canvas, which by construction produces a file with no EXIF block at all:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" stripExifData />
+```
+
+Two things to know about the mechanism:
+
+- **It re-encodes at quality `0.92`** and preserves the source MIME type (an
+  empty type falls back to `image/jpeg`). It does not resize.
+- **It is a re-encode, not a surgical metadata edit.** Everything outside the
+  pixel data goes, including ICC color profiles.
+
+Because EXIF runs _before_ compression, turning both on means two encodes. If
+you want compression anyway, that is the cost of the privacy guarantee; if you
+only care about metadata, `stripExifData` alone is enough. Stripped files are
+marked with `exifStripped: true`, alongside `originalSize` and `processedSize`.
+
+## Thumbnails
+
+`thumbnailGenerator` produces a small preview alongside each image. Unlike the
+steps above, it does not replace the file — it annotates it:
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    thumbnailGenerator: {
+        width: 320,
+        height: 320,
+        quality: 0.75,
+    },
+})
+```
+
+- **`width`** — default **`320`**. **`height`** defaults to whatever `width` is.
+  Both are maxima; the thumbnail is scaled to fit inside the box with its aspect
+  ratio intact, and small images are never scaled up. A non-square box is honored
+  only when the step runs on the main thread — the Web Worker path uses `width`
+  for both edges, so prefer a square box unless you have also disabled worker
+  offload.
+- **`quality`** — default **`0.75`**. Thumbnails are always encoded as
+  `image/jpeg`.
+
+The result lands on `file.metadata.thumbnailUrl` as a data URL, ready to drop
+straight into an `<img src>`:
+
+```tsx
+{
+    files.map(file => (
+        <img key={file.id} src={file.metadata?.thumbnailUrl} alt={file.name} />
+    ))
+}
+```
+
+The thumbnail is a client-side artifact — upup does not upload it. If you want
+previews stored, upload them yourself from that metadata, or generate them
+server-side after the original arrives.
+
+## Checksums and deduplication
+
+These are two separate features that both hash file contents, at different
+moments and for different reasons.
+
+### `checksumVerification`
+
+Adds the `hash` step, the only step with no type filter — it runs on **every**
+file, not just images. It computes a SHA-256 digest via the Web Crypto API and
+writes the lowercase hex string to `file.metadata.checksum` and
+`file.metadata.originalContentHash`.
+
+Because hashing is last in the fixed order, the digest covers the **processed**
+bytes — the compressed JPEG, not the 12 MB HEIC the user picked. That is what
+you want for verifying what landed in storage.
+
+upup does not transmit the checksum for you. Read it from the file's metadata
+and send it wherever your integrity check lives:
+
+```ts
+core.on('upload-all-complete', files => {
+    for (const file of files) {
+        console.log(file.key, file.metadata?.checksum)
+    }
+})
+```
+
+### `contentDeduplication`
+
+Not a pipeline step at all — it runs in the file manager when files are
+**added**, long before any upload. Each candidate is hashed and compared against
+the files already in the list; an exact content match is dropped silently, so a
+user who picks the same photo twice (or drops it, then drags it in again) ends
+up with one entry:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" contentDeduplication />
+```
+
+It hashes the **original** bytes at add time, using SHA-256 where the Web Crypto
+API is available. In runtimes where `crypto.subtle` is genuinely missing, it
+falls back to a fast non-cryptographic FNV-1a hash, whose values are prefixed
+`fnv1a-` so the two are never confused. Deduplication only compares files within
+the same uploader session — it has no knowledge of what is already in your
+bucket.
+
+## Web Worker offload
+
+Decoding and re-encoding images on the main thread janks the UI. `webWorker`
+moves the built-in pipeline — hash, HEIC, EXIF, thumbnail, compress — onto a
+Worker, and it is **auto by default**: leave it unset and upup uses a Worker
+whenever the runtime supports one and the pipeline has at least one step.
+
+The Worker path can never fail a file: every step tries the Worker first and
+falls back to the main thread on any failure, bounded by `workerTimeoutMs`
+(default `30000`). Force the main thread with `webWorker: false`.
+
+The eligibility rules, the timeout trade-off, and what the Worker does and does
+not know how to run are on
+[Custom steps and Web Worker offload](/docs/guides/processing/custom-steps/#web-worker-offload).
+
+## Writing your own step
+
+The step contract is public: `PipelineStep` and `PipelineContext` are exported
+from `@upupjs/core`, and an explicit `pipeline` array replaces the automatic one
+entirely.
+
+```ts
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    pipeline: [datePrefixStep()],
+})
+```
+
+The contract, a complete worked example, the two cloning rules that are easy to
+get wrong, and how a custom pipeline interacts with the boolean options are on
+[Custom pipeline steps](/docs/guides/processing/custom-steps/).
+
+## Observing the pipeline
+
+Four events describe the run. Subscribe with `on(...)` from the headless hook or
+directly on `UpupCore`:
+
+```ts
+core.on('pipeline-start', ({ fileId, steps }) => {
+    console.log(fileId, 'entering', steps.join(' → '))
+})
+core.on('pipeline-step', ({ fileId, step }) => {
+    console.log(fileId, 'finished', step)
+})
+core.on('pipeline-complete', ({ fileId }) => {
+    console.log(fileId, 'processed')
+})
+core.on('pipeline-error', ({ scope, name, message }) => {
+    console.warn('pipeline problem in', scope, 'on', name, message)
+})
+```
+
+- **`pipeline-start`** fires once per file, carrying the ordered list of step
+  names that will run — the cheapest way to confirm which steps your options
+  actually produced.
+- **`pipeline-step`** fires after each step that ran. Steps skipped by
+  `shouldProcess` do not fire it, so the count varies per file.
+- **`pipeline-complete`** fires once per file, after the last step.
+- **`pipeline-error`** is a **diagnostic, not a failure**. It reports a step that
+  degraded — today that means HEIC conversion falling back to the original file.
+  It never aborts the upload, and it is separate from `upload-error`. If a
+  degraded conversion should be fatal in your app, that decision is yours to make
+  in this handler.
+
+Together these give you a progress signal for the phase before the network:
+`pipeline-start` on the first file marks the beginning of processing, and the
+uploader moves to `UPLOADING` once every file has completed.
+
+See [Events](/docs/api-reference/events/) for the full event surface and payload
+types.
+
+## Next steps
+
+- [Client-side image compression](/docs/guides/processing/compression/) — every
+  compression knob, and when compression declines to run.
+- [HEIC to JPEG conversion](/docs/guides/processing/heic-conversion/) — the
+  optional dependency, the bundle story, and failure behavior.
+- [Custom pipeline steps](/docs/guides/processing/custom-steps/) — the
+  `PipelineStep` contract and Web Worker offload.
+- [Headless Usage](/docs/guides/headless/) — drive the pipeline from your own UI
+  and pass the object-form processing options.
+- [Error Handling](/docs/error-handling/) — the `UpupError` taxonomy and how
+  processing failures differ from upload failures.
+- [Resumable Uploads](/docs/resumable-uploads/) — what happens to processed files
+  on the way to storage.

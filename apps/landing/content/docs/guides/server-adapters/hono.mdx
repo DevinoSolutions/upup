@@ -1,0 +1,191 @@
+---
+title: File upload server with Hono and S3
+description: Wire @upupjs/server into Hono with createUpupRoutes — the web-native mount, no body parsing, edge-runtime bindings, and CORS.
+---
+
+Hono is web-native: its request and response objects _are_ the platform
+`Request` and `Response`. `createUpupHandler` has that exact signature
+already, so the Hono adapter is the thinnest of the four — it hands the
+handler back unwrapped. See
+[Server mode setup](/docs/guides/server-mode-setup/) for what each config
+option does.
+
+## 1. Install
+
+```sh
+pnpm add @upupjs/server
+```
+
+## 2. Share one config
+
+Author the config once and import it wherever you mount:
+
+```ts
+// lib/upup-config.ts
+import type { UpupServerConfig } from '@upupjs/server'
+
+export const upupConfig: UpupServerConfig = {
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    // Required, server-only: stable, high-entropy, min 16 chars, shared
+    // across every instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const session = await getSessionFromCookie(req)
+        return session?.userId ?? null
+    },
+}
+```
+
+## 3. Mount the routes
+
+```ts
+import { Hono } from 'hono'
+import { createUpupRoutes } from '@upupjs/server/hono'
+import { upupConfig } from './lib/upup-config'
+
+const routes = createUpupRoutes(upupConfig)
+const app = new Hono()
+
+app.all('/api/upup/*', c => routes(c.req.raw))
+
+export default app
+```
+
+`createUpupRoutes(config)` returns a plain
+`(req: Request) => Promise<Response>`. Hand it the raw `Request` off the
+context (`c.req.raw`) and return its `Response` — no bridging, no
+serialization, nothing to convert.
+
+Use `app.all` and keep the trailing `/*`: the handler dispatches on the
+path suffix beneath your prefix (`/presign`, `/multipart/init`,
+`/auth/:provider`, …), and it needs `GET`, `POST`, and `OPTIONS` on all of
+them. Then point the uploader at the same prefix, minus the wildcard:
+
+```tsx
+<UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
+```
+
+## Body parsing
+
+There is none to configure. The handler reads the request body itself off
+the Web `Request` — do not call `c.req.json()` in a middleware ahead of it,
+because a consumed body stream cannot be read twice and the POST routes
+would fail with `400 Invalid JSON body`.
+
+The file bytes never flow through your Hono app on the presigned paths:
+the browser gets a signed URL and PUTs straight to storage.
+
+## Edge and non-Node runtimes
+
+Two things to check before deploying to Workers, Deno, or Bun.
+
+**Credentials arrive per request on some runtimes.** The snippet above
+builds the handler once at module scope, which is right on Node, Bun, and
+Deno where `process.env` is populated at startup. On Cloudflare Workers,
+secrets are bindings on `c.env` and only exist inside a request, so build
+the handler on first use and cache it:
+
+```ts
+import { Hono } from 'hono'
+import { createUpupRoutes } from '@upupjs/server/hono'
+import type { UpupServerConfig } from '@upupjs/server'
+
+type Env = {
+    Bindings: {
+        R2_BUCKET: string
+        R2_ENDPOINT: string
+        R2_ACCESS_KEY_ID: string
+        R2_SECRET_ACCESS_KEY: string
+        UPUP_UPLOAD_TOKEN_SECRET: string
+    }
+}
+
+const app = new Hono<Env>()
+let routes: ReturnType<typeof createUpupRoutes> | undefined
+
+app.all('/api/upup/*', c => {
+    routes ??= createUpupRoutes({
+        storage: {
+            type: 'r2',
+            bucket: c.env.R2_BUCKET,
+            // R2 is account-scoped and its region is the literal 'auto'.
+            region: 'auto',
+            endpoint: c.env.R2_ENDPOINT,
+            accessKeyId: c.env.R2_ACCESS_KEY_ID,
+            secretAccessKey: c.env.R2_SECRET_ACCESS_KEY,
+        },
+        uploadTokenSecret: c.env.UPUP_UPLOAD_TOKEN_SECRET,
+    } satisfies UpupServerConfig)
+    return routes(c.req.raw)
+})
+
+export default app
+```
+
+Caching matters for more than speed: `createUpupRoutes` runs the
+construct-time validation (missing bucket, short `uploadTokenSecret`,
+a non-S3 `storage.type`) and throwing that per request would turn a
+config mistake into a stream of 500s instead of one loud boot failure.
+
+<Callout type="warning">
+    `@upupjs/server` signs and completes uploads through `@aws-sdk/client-s3`. A
+    non-Node runtime therefore needs its Node-compatibility layer enabled — on
+    Cloudflare Workers that is the `nodejs_compat` flag in `wrangler.toml`.
+    Confirm it against your runtime before your first deploy.
+</Callout>
+
+## CORS
+
+Same-origin deployments need no CORS config. For cross-origin ones, set it
+on the upup config rather than adding Hono's `cors()` middleware in front —
+the handler attaches the headers itself, on every response including the
+preflight `OPTIONS` (`204`), and two layers of CORS on one route is a
+conflict waiting to happen:
+
+```ts
+export const upupConfig: UpupServerConfig = {
+    // ...storage, uploadTokenSecret
+    cors: {
+        allowedOrigins: ['https://app.example.com'],
+        allowedMethods: ['GET', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        maxAgeSeconds: 600,
+    },
+}
+```
+
+<Callout type="warning">
+    Credentialed CORS is granted only on a concrete origin match. A config whose
+    `allowedOrigins` is just `['*']` gets public, non-credentialed CORS — the
+    server-mode drive client sends `credentials: 'include'`, so cloud drives
+    will fail against a wildcard-only allowlist. Enumerate your real app
+    origins.
+</Callout>
+
+## Verify the mount
+
+```sh
+curl http://localhost:8787/api/upup/health
+```
+
+A JSON body with `"status": "ok"` and `checks.config` / `checks.storage`
+means the routes are mounted and the storage credentials resolve. The route
+is unauthenticated by design and always answers `200` — read the `status`
+field, not the HTTP code.
+
+## Related
+
+- [Server mode setup](/docs/guides/server-mode-setup/) — every
+  `createUpupHandler` option, hooks, limits, and observability.
+- [Server auth & trust model](/docs/guides/server-auth/) — why
+  `uploadTokenSecret` is mandatory and what forged requests get.
+- [Storage providers](/docs/guides/storage-providers/) — S3, R2, MinIO,
+  B2, Spaces, Wasabi configs, and
+  [Cloudflare R2](/docs/guides/storage/cloudflare-r2/) for the endpoint
+  used above.

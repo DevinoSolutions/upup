@@ -1,0 +1,257 @@
+---
+title: Plugins & Extensions
+description: Enable upup's built-in cloud-drive plugins with the cloudDrives config, compare client- and server-mode drives, and register third-party plugins on UpupCore.
+---
+
+`@upupjs/core` has two extension points. A **plugin** is an object that
+subscribes to (and emits on) the engine's event bus. An **extension** is a bag
+of methods hung off the core so your own UI can call them. Cloud drives —
+Google Drive, OneDrive, Dropbox, Box — are plugins, and the same contract is
+open to anyone: see [Writing a Plugin](/docs/guides/writing-plugins/) if you
+want to build one.
+
+This page is about **using** plugins: what ships in the box, how to turn the
+cloud drives on, and how to register something a third party wrote. Everything
+here works identically under the visual `<UpupUploader>`, the
+[headless `useUpupUpload` hook](/docs/guides/headless/), and a bare
+`new UpupCore(...)`.
+
+## What ships built-in
+
+Four cloud-drive plugins, all exported as classes from `@upupjs/core`:
+
+| Plugin              | Plugin id      | `cloudDrives` key | Auth model               |
+| ------------------- | -------------- | ----------------- | ------------------------ |
+| `GoogleDrivePlugin` | `google-drive` | `googleDrive`     | Google Identity Services |
+| `OneDrivePlugin`    | `one-drive`    | `oneDrive`        | popup OAuth2 + PKCE      |
+| `DropboxPlugin`     | `dropbox`      | `dropbox`         | popup OAuth2 + PKCE      |
+| `BoxPlugin`         | `box`          | `box`             | popup OAuth2 + PKCE      |
+
+The other upload sources — local files, camera, microphone, screen capture, URL
+import — are **not** plugins. They are built into the uploader and switched on
+through the `sources` prop; see [Sources](/docs/guides/sources/).
+
+Note the two spellings in that table, because both are load-bearing. The
+config key is camelCase (`googleDrive`, `oneDrive`) and the plugin id is
+kebab-case (`google-drive`, `one-drive`). `dropbox` and `box` are single words,
+so they look the same in either position.
+
+## Enabling cloud drives
+
+In client mode you never construct a drive plugin yourself. Pass a
+`cloudDrives` config and the uploader instantiates, configures, and registers
+the matching plugin for every key you supply:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    sources={['local', 'googleDrive', 'oneDrive', 'dropbox', 'box']}
+    cloudDrives={{
+        googleDrive: {
+            clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+            apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY!,
+            appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID!,
+        },
+        oneDrive: { clientId: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID! },
+        dropbox: { clientId: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID! },
+        box: { clientId: process.env.NEXT_PUBLIC_BOX_CLIENT_ID! },
+    }}
+/>
+```
+
+A key you omit means that plugin is never registered, even if the source chip
+is listed. The config shapes differ slightly per provider:
+
+- `googleDrive` — `clientId`, `apiKey`, and `appId`, all required.
+- `oneDrive`, `dropbox`, `box` — a required `clientId` plus an optional
+  `redirectUri`.
+
+`cloudDrives` is one camelCase shape end-to-end: the same object passes through
+the framework prop, the uploader options, and down to the plugin's
+`configure()` call unchanged. It is also part of `CoreOptions`, so the headless
+hook accepts it verbatim.
+
+<Callout type="warning" title="Client IDs are public, secrets are not">
+    Everything in `cloudDrives` ships to the browser, which is fine for OAuth
+    client IDs and API keys but never acceptable for a client secret. If your
+    provider's flow requires a secret, you need server mode.
+</Callout>
+
+## Client mode versus server mode
+
+The drive plugins are a **client-mode** mechanism. Which path the drive UI
+takes is decided by the uploader's mode, not by anything you configure on the
+plugin:
+
+- **Client mode.** The browser holds the OAuth tokens. The drive plugin runs in
+  the page, talks to the provider's API directly, downloads the selected files
+  as real `File` objects, and those flow through the normal pipeline and upload
+  path. This is the path `cloudDrives` configures.
+- **Server mode.** The browser talks only to your server. The drive views route
+  through `@upupjs/server`'s drive endpoints instead of a plugin — listing,
+  auth, and the drive → S3 transfer all happen server-side, and the file bytes
+  never pass through the browser. Credentials live in your server environment,
+  so no client IDs go in `cloudDrives`.
+
+Because server mode bypasses the plugin path entirely, a plugin you register
+yourself only runs in client mode. Full comparison in
+[Client Mode vs Server Mode](/docs/guides/modes/); credential setup for the
+proxied flow is in [Server Mode Setup](/docs/guides/server-mode-setup/).
+
+## Registering a plugin
+
+Two equivalent routes for anything not wired by `cloudDrives`. Pass it as an
+option:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({
+    uploadEndpoint: '/api/upload-token',
+    plugins: [analyticsPlugin(track)],
+})
+```
+
+…or register imperatively, which returns the core for chaining:
+
+```ts
+core.use(analyticsPlugin(track)).use(anotherPlugin())
+```
+
+The `plugins` option is part of `CoreOptions`, so the React hook takes it too:
+
+```ts
+useUpupUpload({
+    uploadEndpoint: '/api/upload-token',
+    plugins: [analyticsPlugin(track)],
+})
+```
+
+Constructor-supplied plugins are registered in array order, before the first
+upload. Each registration emits the core event `plugin-registered` with the
+plugin's name — see the [event catalog](/docs/api-reference/events/) for
+everything else a plugin can listen to.
+
+Registration is keyed by the plugin's `name`, and registering two plugins with
+the same name throws a `UpupConfigError` with code
+`PLUGIN_ALREADY_REGISTERED`. Look one up with `core.getPlugin(name)`.
+
+## Lifecycle, from the outside
+
+Three behaviors worth knowing before you drop someone else's plugin into your app:
+
+- **`init(emitter)` is the only lifecycle hook**, and it runs once at
+  registration. What the plugin receives is core's event bus, not the core
+  itself — so a plugin listens and emits, and nothing more. There is no
+  `beforeUpload` interception point.
+- **`core.destroy()` clears the plugin and extension registries**, but it does
+  not call anything on a plain plugin — the base contract has no teardown hook.
+  (Drive plugins are the exception: `DrivePlugin` requires `destroy()`, and the
+  uploader calls it on the drives it registered.) A plugin that owns a timer or
+  a socket has to hand you its own cleanup handle.
+- **A throwing listener is contained.** The emitter isolates each handler, so a
+  misbehaving plugin cannot abort sibling listeners or make `emit()` throw. In
+  development the error is logged to the console; it is never re-surfaced as an
+  upload failure.
+
+## Extensions
+
+An extension attaches named methods to the core so your UI can reach behavior a
+plugin added. The shape is deliberately loose:
+
+```ts
+type ExtensionMethods = Record<string, (...args: unknown[]) => unknown>
+```
+
+Register from your app code. A plugin cannot do this for itself — `init` never
+gets a core reference — so a plugin that offers methods will document them and
+leave the wiring to you:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
+
+core.use(analyticsPlugin(track))
+
+core.registerExtension('analytics', {
+    flush: () => track('flush'),
+    identify: (...args: unknown[]) => track('identify', { id: args[0] }),
+})
+```
+
+Read them back with `getExtension(name)`, or through `ext`, the map of every
+registered extension:
+
+```ts
+core.getExtension('analytics')?.flush()
+core.ext.analytics?.flush()
+```
+
+The React hook re-exposes the same map, so a headless UI needs no extra wiring:
+
+```tsx
+const { ext } = useUpupUpload({ uploadEndpoint: '/api/upload-token' })
+
+<button onClick={() => ext.analytics?.flush()}>Flush</button>
+```
+
+Because `ExtensionMethods` erases argument and return types, restore them at the
+call site with a typed accessor rather than casting inline everywhere:
+
+```ts
+type AnalyticsExt = {
+    flush: () => void
+    identify: (id: string) => void
+}
+
+const analytics = core.getExtension('analytics') as AnalyticsExt | undefined
+analytics?.identify('user_42')
+```
+
+Names are unique per core: re-registering one throws a `UpupConfigError` with
+code `EXTENSION_ALREADY_REGISTERED`.
+
+## Listening to a plugin
+
+Plugins emit on the same bus your app subscribes to, which is exactly how the
+drive plugins surface their state to the UI. Their events are namespaced by
+provider, and namespaced names pass through `core.on()` by design:
+
+```ts
+core.on('one-drive:authenticated', ({ user }) => {
+    console.log('signed in', user?.name)
+})
+```
+
+The six drive events are `<prefix>:state-change`, `:authenticated`,
+`:files-loaded`, `:session-expired`, `:error`, and `:signed-out`, where
+`<prefix>` is the kebab-case plugin id from the table above. Payload shapes are
+documented in [Writing a Plugin](/docs/guides/writing-plugins/).
+
+<Callout type="note" title="Drive failures are namespaced">
+    A drive plugin emits `<prefix>:error` — never a bare `error`. The engine's
+    single upload-failure event is `upload-error`, and there is deliberately no
+    second channel for it. See [Error Handling](/docs/error-handling/).
+</Callout>
+
+<Callout type="warning" title="A third-party drive won't get a source chip">
+    The shipped uploader wires exactly the four known providers from the
+    `cloudDrives` option, and `FileSource` is a closed set. A custom drive
+    plugin registers and runs fine, and it is a first-class citizen in a
+    headless UI you build yourself — but there is no registry today that adds a
+    new provider to `<UpupUploader>`'s built-in source selector.
+</Callout>
+
+## Next steps
+
+- [Writing a Plugin](/docs/guides/writing-plugins/) — the `UpupPlugin` contract,
+  the event rules, and building a custom cloud-drive provider.
+- [Sources](/docs/guides/sources/) — the non-plugin upload sources and the
+  `sources` prop that decides which chips render.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which drive path your app
+  is actually on.
+- [Events](/docs/api-reference/events/) — the full typed core-event catalog a
+  plugin can subscribe to.
+- [Headless Usage](/docs/guides/headless/) — where `core`, `on`, and `ext` are
+  handed to you directly.

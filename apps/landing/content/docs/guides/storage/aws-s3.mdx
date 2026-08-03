@@ -1,0 +1,145 @@
+---
+title: Upload files to Amazon S3
+description: Upload files to AWS S3 from React, Vue, Svelte, Angular, or plain JS with upup — bucket setup, IAM policy, CORS, and a copy-paste createUpupHandler config.
+---
+
+Amazon S3 is the reference implementation of the API every other provider on
+this site imitates, and it is the only one upup needs no `endpoint` for. Point
+`storage.type` at `aws`, give it a bucket and a region, and the AWS SDK resolves
+the host itself.
+
+This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+holds the credentials. In client mode your own endpoint signs the URLs and the
+browser `PUT`s straight to the bucket — see
+[Client Mode vs Server Mode](/docs/guides/modes/) for the split, and
+[S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/) for the
+response shape a client-mode endpoint must return.
+
+## The config
+
+Native AWS needs no `endpoint`. This is the complete handler; every other
+provider guide changes only the `storage` block.
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupHandler } from '@upupjs/server'
+
+const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!, // e.g. 'us-east-1'
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        // Omit both keys to use the host's IAM role instead.
+    },
+    // Required, server-only: a stable, high-entropy secret (min 16 chars),
+    // shared across every server instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    // getUserId, providers, tokenStore — see the Server Mode setup guide.
+})
+```
+
+`forcePathStyle` is ignored here: it only applies when `endpoint` is set, and
+native AWS S3 uses virtual-hosted-style addressing.
+
+## Console setup
+
+1. **Create the bucket.** S3 → Create bucket. Pick the region you will put in
+   `region` and leave Block Public Access on — upup uploads through signed
+   requests, so the bucket never needs to be public.
+2. **Create credentials.** Either attach an IAM role to the host that runs your
+   server (preferred on EC2, ECS, and Lambda) or create an IAM user with
+   programmatic access and copy its access key ID and secret.
+3. **Attach the policy** below to that role or user.
+4. **Add CORS** if — and only if — you use client mode, where the browser talks
+   to the bucket directly.
+
+### IAM policy
+
+`@upupjs/server` issues exactly these S3 operations: `PutObject`, `GetObject`,
+`CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`,
+`AbortMultipartUpload`, `ListParts`, and `HeadBucket` for the health route. That
+maps to five IAM actions:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:AbortMultipartUpload",
+                "s3:ListMultipartUploadParts"
+            ],
+            "Resource": "arn:aws:s3:::YOUR_BUCKET/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": "arn:aws:s3:::YOUR_BUCKET"
+        }
+    ]
+}
+```
+
+The object statement targets `YOUR_BUCKET/*`; the `ListBucket` statement targets
+the bucket ARN itself with no `/*`. Mixing those two up is the most common reason
+a policy that "looks right" still returns `AccessDenied`. Drop `s3:GetObject` if
+your server never reads objects back, and drop the `ListBucket` statement if you
+do not enable the health route's storage check.
+
+### Omitting the keys
+
+Leave both `accessKeyId` and `secretAccessKey` out and the AWS SDK falls back to
+its normal credential chain — the instance profile on EC2, the task role on ECS,
+the execution role on Lambda. That is the safer production setup: nothing to
+rotate, nothing to leak. upup validates the pair as both-or-neither, so a
+half-set pair fails at construct time rather than at the first upload.
+
+### CORS (client mode only)
+
+```json
+[
+    {
+        "AllowedOrigins": ["https://your-app.com"],
+        "AllowedMethods": ["PUT", "POST", "GET", "HEAD"],
+        "AllowedHeaders": ["*"],
+        "ExposeHeaders": ["ETag"],
+        "MaxAgeSeconds": 3000
+    }
+]
+```
+
+`ExposeHeaders: ["ETag"]` is not optional for multipart uploads: the browser
+must read each part's `ETag` to complete the upload, and without it the final
+`CompleteMultipartUpload` fails with parts it cannot identify. In server mode
+none of this applies — the browser only ever talks to your origin.
+
+<Callout type="warning" title="Region mismatch is the usual 403">
+    A `SignatureDoesNotMatch` or `PermanentRedirect` on the first upload almost
+    always means `region` does not match the bucket's actual region. S3
+    signatures are region-scoped and time-scoped, so a wrong region and a clock
+    more than a few minutes off produce the same 403. Check the bucket's region
+    in the console rather than trusting a copied `.env`.
+</Callout>
+
+## Costs and lifecycle
+
+Abandoned multipart uploads keep their uploaded parts, and those parts are
+billed as storage even though the object never appears in the bucket. Add a
+lifecycle rule that expires incomplete multipart uploads after a day or two —
+one rule, and cancelled uploads stop accumulating charges.
+
+## Next steps
+
+- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+  the shared `storage` config reference.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+  `providers`, `tokenStore`, and tuning.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+  changes on the wire.
+- [Other S3-compatible services](/docs/guides/storage/s3-compatible/) — the same
+  config against a non-AWS backend.

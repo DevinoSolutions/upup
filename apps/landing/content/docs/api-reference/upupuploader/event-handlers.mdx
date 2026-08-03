@@ -18,15 +18,15 @@ React events mirror core upload state.
 
 Common handlers:
 
-| Handler                 | Called when                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `onFilesSelected`       | Files enter core state.                                  |
-| `onFileRemoved`         | A file is removed.                                       |
-| `onUploadStart`         | Upload begins.                                           |
-| `onFileUploadProgress`  | Byte progress changes for one file.                      |
-| `onFilesUploadProgress` | Aggregate byte progress across the batch.                |
-| `onFileUploadComplete`  | One file succeeds.                                       |
-| `onUploadComplete`      | All files succeed.                                       |
+| Handler                 | Called when                                                                           |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| `onFilesSelected`       | Files enter core state.                                                               |
+| `onFileRemoved`         | A file is removed.                                                                    |
+| `onUploadStart`         | Upload begins.                                                                        |
+| `onFileUploadProgress`  | Byte progress changes for one file.                                                   |
+| `onFilesUploadProgress` | Aggregate byte progress across the batch.                                             |
+| `onFileUploadComplete`  | One file succeeds.                                                                    |
+| `onUploadComplete`      | All files succeed.                                                                    |
 | `onError`               | A validation, config, network, or provider failure occurs; delivers a message string. |
 
 File objects use the `UploadFile` contract from `@upupjs/core/contracts`.

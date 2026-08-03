@@ -1,0 +1,276 @@
+---
+title: Events
+description: The complete upup event catalog — all 52 typed core events with their payloads, plus the React callback props and the core event each one is driven by.
+---
+
+Every upload, file, drag, pipeline, and UI interaction in upup flows through one
+typed event bus on `UpupCore`. Each framework's callback props are a convenience
+layer over that bus, and a lossy one — the bus carries events no prop exposes,
+and a few props fire on paths that emit no event at all. When in doubt, listen
+to the event.
+
+## Listening
+
+With the visual uploader, use the callback props:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    onUploadStart={() => console.log('started')}
+    onFileUploadProgress={(file, p) => console.log(file.name, p.percentage)}
+    onUploadComplete={files => console.log(files.map(f => f.key))}
+    onError={message => console.error(message)}
+/>
+```
+
+Headless, subscribe to the bus directly. `on()` returns an unsubscribe
+function:
+
+```ts
+import { UpupCore } from '@upupjs/core'
+
+const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
+
+const off = core.on('upload-progress', ({ fileId, loaded, total }) => {
+    console.log(fileId, Math.round((loaded / total) * 100))
+})
+
+core.on('upload-error', ({ error, file }) => {
+    console.error(file?.name ?? 'run', error.message)
+})
+
+// Later:
+off()
+core.destroy()
+```
+
+The React hook `useUpupUpload` exposes the same `on(event, handler)`, and the
+uploader ref exposes the underlying `core`. See
+[Headless Usage](/docs/guides/headless/) for both.
+
+Bare event names are the typed catalog below and nothing else — an unknown bare
+name is a compile error at the `on` / `emit` site.
+
+> **There is exactly one upload-failure event: `upload-error`.** A bare
+> `'error'` event does not exist. Failed `resume()` calls route through
+> `upload-error`, and so does every pipeline step failure except HEIC
+> conversion, which downgrades to a `pipeline-error` diagnostic.
+> Cloud-drive plugins emit **namespaced** `<provider>:<event>` names
+> (e.g. `google-drive:files-loaded`, `one-drive:session-expired`) which pass
+> through the bus untyped and are not part of this catalog — see
+> [Credentials & Cloud Drives](/docs/credentials-configuration/).
+
+Events whose payload is listed as `{}` carry an empty object; the payload
+argument exists but has no fields.
+
+## Upload lifecycle
+
+A run drives one status projection, and the events below are emitted as it moves
+between states:
+
+<UploadLifecycleDiagram />
+
+| Event                 | Payload                                                                                                                                                    | Fires when                                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `state-change`        | `{ status?: UploadStatus; error?: Error; files?: Map<string, UploadFile>; progress?: { totalFiles: number; completedFiles: number; percentage: number } }` | Any observable state moves — the catch-all every framework binding re-renders from. Emitted alongside most other events, carrying only the slice that changed. |
+| `upload-start`        | `{ retry?: boolean; fileId?: string }`                                                                                                                     | A run begins. `retry: true` (with the optional `fileId`) marks a retry run rather than a fresh one.                                                            |
+| `file-upload-start`   | `{ file: UploadFile }`                                                                                                                                     | An individual file starts transferring.                                                                                                                        |
+| `upload-progress`     | `{ fileId: string; loaded: number; total: number }`                                                                                                        | Byte progress advances for one file.                                                                                                                           |
+| `upload-success`      | `{ file: UploadFile; result: UploadResult }`                                                                                                               | One file finishes successfully; `result.key` is its storage key.                                                                                               |
+| `upload-error`        | `{ error: Error; file?: UploadFile }`                                                                                                                      | A file fails (payload carries `file`) **or** the run ends terminally (no `file`). The only failure event — but see the double-emit warning below.              |
+| `upload-all-complete` | `UploadFile[]`                                                                                                                                             | Every file in the run has a storage key — the batch is done.                                                                                                   |
+| `upload-pause`        | `{}`                                                                                                                                                       | `core.pause()` pauses an in-flight run.                                                                                                                        |
+| `upload-resume`       | `{}`                                                                                                                                                       | `core.resume()` restarts a paused run.                                                                                                                         |
+| `upload-cancel`       | `{}`                                                                                                                                                       | `core.cancel()` aborts the run; pending files return to `IDLE`.                                                                                                |
+| `retry`               | `{ fileId?: string }`                                                                                                                                      | `core.retry(fileId?)` is called, before the retry run starts. Omitting `fileId` retries every unfinished or failed file.                                       |
+| `destroyed`           | `{}`                                                                                                                                                       | `core.destroy()` runs. Terminal — afterwards `upload`/`resume`/`retry`/`addFiles`/`setFiles` throw.                                                            |
+
+> **One failed file emits `upload-error` twice.** The per-file emission fires
+> first (with `file`), then the batch rejects and the terminal handler emits a
+> second time (without `file`, carrying an aggregate
+> `UpupUploadBatchError`). Anything bound to `upload-error` — including the
+> `onError` prop — therefore runs **twice** for a single failure. Deduplicate on
+> `file` being present if you only want the per-file signal, and treat the
+> `file`-less emission as "the run is over".
+
+> **Vanilla only:** `@upupjs/vanilla` also emits `upload-error` when a link
+> import fails, so a URL-fetch failure reaches the same channel as an upload
+> failure. React's URL path calls `onError` without emitting the event. Don't
+> assume `upload-error` implies a transfer was attempted.
+
+## File operations
+
+| Event                | Payload                 | Fires when                                                                                                                                                                                                                       |
+| -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `files-added`        | `UploadFile[]`          | One or more files pass validation and enter core state (only fires when at least one was accepted).                                                                                                                              |
+| `file-removed`       | `UploadFile`            | A single file is removed via `removeFile(id)`.                                                                                                                                                                                   |
+| `file-rejected`      | `{ count: number }`     | Some of an `addFiles` batch were filtered out — `count` is how many. The accepted remainder still lands.                                                                                                                         |
+| `file-replaced`      | `{ file: UploadFile }`  | A file's content is swapped in place, keeping its id (the image editor's save path).                                                                                                                                             |
+| `files-cleared`      | `{}`                    | `removeAll()` empties the list and clears any crash-recovery snapshot.                                                                                                                                                           |
+| `files-set`          | `{ count: number }`     | `setFiles()` replaces the whole selection; `count` is the resulting size.                                                                                                                                                        |
+| `files-reordered`    | `{ fileIds: string[] }` | `reorderFiles()` changes the display order; `fileIds` is the new order.                                                                                                                                                          |
+| `restriction-failed` | `{ error: unknown }`    | `addFiles()` throws instead of filtering — a hard validation failure (type, size, count). The error is rethrown to the caller. Nothing in upup subscribes to this event; the built-in UI reacts by catching the rethrow instead. |
+
+## Plugins and options
+
+| Event               | Payload                             | Fires when                                                                                   |
+| ------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| `plugin-registered` | `{ name: string }`                  | `core.use(plugin)` registers a plugin, after its `init(emitter)` hook runs.                  |
+| `options-updated`   | `{ partial: Partial<CoreOptions> }` | `updateOptions()` merges new options — how framework bindings forward changed props to core. |
+
+## Recovery
+
+| Event                     | Payload                                   | Fires when                                                                                                                                                                |
+| ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `snapshot-restored`       | `{ count: number; status: UploadStatus }` | `core.restore(snapshot)` rehydrates files and status from a snapshot.                                                                                                     |
+| `crash-recovery-restored` | `{}`                                      | A persisted IndexedDB session is recovered after a refresh or crash. Files that were mid-flight come back as `PAUSED`. Emitted after the `snapshot-restored` it triggers. |
+
+## UI flow
+
+| Event                | Payload             | Fires when                                                                                       |
+| -------------------- | ------------------- | ------------------------------------------------------------------------------------------------ |
+| `done`               | `{}`                | The user dismisses a finished run (the Done action), after `onDoneClicked` and before the reset. |
+| `state-reset`        | `{}`                | The uploader returns to its empty initial state.                                                 |
+| `auto-upload`        | `{ count: number }` | `autoUpload` is on and newly added files trigger an upload automatically; `count` is how many.   |
+| `connection-online`  | `{}`                | The browser regains network connectivity.                                                        |
+| `connection-offline` | `{}`                | The browser loses network connectivity.                                                          |
+
+## Image editor
+
+React and Preact only — the other frameworks intentionally stub the editor.
+
+| Event                 | Payload                                      | Fires when                                                                             |
+| --------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `image-editor-open`   | `{ file: UploadFile }`                       | The editor opens for a file, whether by user action or `imageEditor.autoOpen`.         |
+| `image-editor-cancel` | `{ file: UploadFile }`                       | The editor closes without saving. If more files are queued, the next one opens.        |
+| `image-editor-save`   | `{ file: UploadFile; original: UploadFile }` | An edit is saved. `file` is the new content, `original` is what it replaced (same id). |
+
+## Drag, drop, and paste
+
+| Event                 | Payload                     | Fires when                                                                                                                                                                                               |
+| --------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `drag-over`           | `{}`                        | A drag hovers the dropzone. Bound straight to the DOM `dragover` event with no enter-transition guard, so it fires **repeatedly** throughout the hover — debounce it, don't treat it as an enter signal. |
+| `drag-leave`          | `{}`                        | A drag leaves the dropzone without dropping. Leaves into a child element are filtered out, so this fires once per real exit.                                                                             |
+| `drop`                | `{ files: File[] }`         | Files are dropped and accepted. Not emitted when a folder drop is blocked and nothing else came with it.                                                                                                 |
+| `folder-drop-blocked` | `{ acceptedFiles: number }` | A dropped folder was ignored because `folderUpload.allowDrop` is off. `acceptedFiles` counts the loose files that still went through.                                                                    |
+| `paste`               | `{ files: File[] }`         | Files are pasted with `enablePaste` on. A pasted file is renamed to `pasted-<timestamp>.<ext>` only when the clipboard gave it no name or the literal name `image.png`; any other name is kept as-is.    |
+
+## Pipeline diagnostics
+
+The processing pipeline (hash, HEIC, EXIF, thumbnail, compress) reports through
+these as it works through each file.
+
+| Event               | Payload                                            | Fires when                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pipeline-start`    | `{ fileId: string; steps: string[] }`              | Processing begins for a file. `steps` lists every **configured** step — a step whose `shouldProcess` returns false is still listed here but never runs, so it emits no `pipeline-step`. |
+| `pipeline-step`     | `{ fileId: string; step: string }`                 | A step **finished**. It is emitted after the step resolves, not before it starts, so a step that never completes produces no event.                                                     |
+| `pipeline-complete` | `{ fileId: string }`                               | All steps finished for that file.                                                                                                                                                       |
+| `pipeline-error`    | `{ scope: string; name: string; message: string }` | HEIC conversion failed. This is the only source — the pipeline engine has no error handling of its own.                                                                                 |
+
+> **`pipeline-error` is not the general step-failure event.** Only the HEIC step
+> catches its own errors and reports them here, downgrading a failed conversion
+> to a diagnostic while the run continues. Every **other** step failure
+> propagates out of the pipeline uncaught and fails the whole run through
+> `upload-error`. So the absence of `pipeline-error` says nothing about whether
+> processing succeeded.
+
+## UI telemetry
+
+Emitted by every framework's UI layer with identical payloads (React is the
+payload canon). Useful for analytics on how people drive the picker.
+
+| Event                | Payload                                 | Fires when                                                                                                                                                    |
+| -------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source-click`       | `{ sourceId: FileSource }`              | A source tile is clicked in the source selector.                                                                                                              |
+| `source-view-cancel` | `{ sourceId: FileSource \| undefined }` | The user backs out of an open source view.                                                                                                                    |
+| `browse-files`       | `{}`                                    | The native file picker is opened for a normal file browse.                                                                                                    |
+| `folder-select`      | `{ count: number }`                     | A folder is chosen. `count` is the file count via the File System Access API, or `0` on the `webkitdirectory` input fallback where the count isn't known yet. |
+| `url-submit`         | `{ url: string }`                       | The link-import form is submitted.                                                                                                                            |
+| `url-fetch`          | `{ file: File }`                        | A link import finishes downloading and produced a file.                                                                                                       |
+| `url-fetch-cancel`   | `{ url: string }`                       | An in-flight link import is aborted.                                                                                                                          |
+| `camera-capture`     | `{ dataUrl: string }`                   | A camera photo is captured, before the user confirms it.                                                                                                      |
+| `camera-confirm`     | `{ file: File }`                        | The captured photo is confirmed and added.                                                                                                                    |
+| `file-preview-open`  | `{ fileId: string; fileName: string }`  | A file preview overlay opens.                                                                                                                                 |
+| `file-preview-close` | `{ fileId: string; fileName: string }`  | A file preview overlay closes.                                                                                                                                |
+
+## React callback props
+
+`<UpupUploader>` accepts these handlers. They come from the shared
+`UploaderBaseProps` type, so React, Vue, Svelte, Angular, and Preact all take
+the same set (each with its own binding syntax). Most are driven by a core
+event — subscribe to the event instead when you need the full payload, ordering
+guarantees, or a listener outside the component.
+
+> **Vanilla is a different surface.** `@upupjs/vanilla`'s `createUploader`
+> takes `CreateUploaderOptions`, not `UploaderBaseProps`, and accepts only
+> eleven callbacks: `onFileAdded`, `onFileRemoved`, `onUploadProgress`,
+> `onUploadComplete`, `onDoneClicked`, `onIntegrationClick`, `onFilesDragOver`,
+> `onFilesDragLeave`, `onFilesDrop`, `onWarn`, `onError`. Note `onFileAdded`
+> rather than `onFilesSelected`, and a single `onUploadProgress` rather than the
+> per-file/aggregate pair. `onStatusChange`, `onPrepareFiles`,
+> `onRestrictionFailed`, `onFileTypeMismatch`, and the per-file upload callbacks
+> have no vanilla equivalent — subscribe to the events directly there.
+
+| Prop                    | Signature                                                                                                   | Driven by                                                                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onFilesSelected`       | `(files: UploadFile[]) => void`                                                                             | `files-added`                                                                                                                              |
+| `onDoneClicked`         | `() => void`                                                                                                | `done` (called just before the event)                                                                                                      |
+| `onPrepareFiles`        | `(files: UploadFile[]) => Promise<UploadFile[]>`                                                            | No event — an async gate awaited at the start of `startUpload()`; return the list to upload                                                |
+| `onFileClick`           | `(file: UploadFile) => void`                                                                                | No event — a click on a file row in the list                                                                                               |
+| `onIntegrationClick`    | `(integrationType: string) => void`                                                                         | `source-click` (called just before the event)                                                                                              |
+| `onUploadStart`         | `() => void`                                                                                                | `upload-start`                                                                                                                             |
+| `onFileUploadStart`     | `(file: UploadFile) => void`                                                                                | `file-upload-start`                                                                                                                        |
+| `onFileUploadProgress`  | `(file: UploadFile, progress: { loaded: number; total: number; percentage: number }) => void`               | `upload-progress` (per file; `percentage` is computed for you)                                                                             |
+| `onFilesUploadProgress` | `(completedFiles: number, totalFiles: number) => void`                                                      | `upload-progress` (batch aggregate)                                                                                                        |
+| `onFileUploadComplete`  | `(file: UploadFile, key: string) => void`                                                                   | `upload-success`                                                                                                                           |
+| `onFilesUploadComplete` | `(files: UploadFile[]) => void`                                                                             | `upload-all-complete`                                                                                                                      |
+| `onUploadComplete`      | `(files: UploadFile[]) => void`                                                                             | `upload-all-complete` (same event as above; both fire)                                                                                     |
+| `onStatusChange`        | `(status: string) => void`                                                                                  | `state-change` — the projected status, lowercased and deduplicated so it fires once per real transition                                    |
+| `onFileRemoved`         | `(file: UploadFile) => void`                                                                                | `file-removed`                                                                                                                             |
+| `onFilesDragOver`       | `(files: File[]) => void`                                                                                   | `drag-over` — fires repeatedly during the hover, and `files` is effectively always `[]` (see below)                                        |
+| `onFilesDragLeave`      | `(files: File[]) => void`                                                                                   | `drag-leave` — `files` is effectively always `[]` (see below)                                                                              |
+| `onFilesDrop`           | `(files: File[]) => void`                                                                                   | `drop` (called just before the event)                                                                                                      |
+| `onFileTypeMismatch`    | `(file: File, acceptedTypes: string) => void`                                                               | No event — the built-in UI's rejection path only (see below)                                                                               |
+| `onRestrictionFailed`   | `(file: File, reason: 'TYPE_MISMATCH' \| 'FILE_TOO_LARGE' \| 'FILE_TOO_SMALL' \| 'LIMIT_EXCEEDED') => void` | No event — the built-in UI's rejection path only (see below)                                                                               |
+| `onBeforeFileAdded`     | `(file: File) => boolean \| File \| undefined \| Promise<boolean \| File \| undefined>`                     | No event — an async filter run per file before it is added. Return `false` to reject, a `File` to substitute, `true`/`undefined` to accept |
+| `onError`               | `(errorMessage: string) => void`                                                                            | `upload-error`, plus validation failures from `addFiles()`; delivers a message string                                                      |
+| `onWarn`                | `(warningMessage: string) => void`                                                                          | No event of its own — non-fatal notices such as an ignored folder drop (which also emits `folder-drop-blocked`)                            |
+| `onFileProcessed`       | `(file: UploadFile, data: Record<string, unknown>) => void`                                                 | No core event — the server's SSE message on `processingEndpoint` (opened after the whole batch, see below)                                 |
+
+`onFilesUploadComplete` and `onUploadComplete` are both invoked from
+`upload-all-complete` — pick one.
+
+### Caveats worth knowing
+
+**The rejection callbacks are UI-path only, and the reason is guessed from text.**
+`onFileTypeMismatch` and `onRestrictionFailed` are _not_ wired to
+`restriction-failed`. The built-in UI wraps its `addFiles` call in a try/catch
+and classifies the thrown error by substring-matching its **message** —
+`'type'`, `'limit'`, `'below'`, `'size'` — to pick the reason code. Two
+consequences: calling `core.addFiles()` yourself emits `restriction-failed` but
+invokes neither callback, and the reason code is a heuristic over
+human-readable text rather than a structured field. For robust handling,
+subscribe to `restriction-failed` and inspect the error yourself. Both callbacks
+fire for a type mismatch; `onRestrictionFailed` alone covers the size and count
+cases.
+
+**Drag callbacks never receive files.** `onFilesDragOver` and `onFilesDragLeave`
+are handed `e.dataTransfer.files`, which browsers keep empty during a drag
+(the DataTransfer is in protected mode until the drop completes). Expect `[]`
+and use these purely as hover signals — real files arrive only in `onFilesDrop`.
+
+**SSE processing is per batch, not per file.** Despite its name and per-file
+signature, `onFileProcessed` is driven by a connection opened once the _entire_
+batch finishes: the handler folds into `onFilesUploadComplete` and then opens one
+`EventSource` per completed file. No connection opens after each individual
+upload, so with a long batch the first file's server-side processing isn't
+watched until the last file lands.
+
+## Next steps
+
+- [Event Handlers](/docs/api-reference/upupuploader/event-handlers/) — the short
+  version of the callback props.
+- [Headless Usage](/docs/guides/headless/) — drive `UpupCore` and its bus with no
+  upup UI at all.
+- [Error Handling](/docs/error-handling/) — the `UpupError` taxonomy behind
+  `upload-error`.

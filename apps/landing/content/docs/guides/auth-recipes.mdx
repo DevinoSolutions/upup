@@ -1,0 +1,337 @@
+---
+title: Auth Recipes
+description: Wire your existing auth into @upupjs/server — one getUserId hook, recipes for Better Auth, NextAuth, Clerk and raw JWT, plus Redis and SQL TokenStores.
+---
+
+`@upupjs/server` never stores, reads, or replicates your app's credentials. It
+has no user table, no session format, and no opinion about how you log people
+in. It asks you exactly one question — _who is this request from?_ — through two
+optional hooks, `auth` and `getUserId`, and both receive the standard web
+`Request` that arrived at your route. Because it is the real request, a
+same-origin session cookie rides along untouched, and an `Authorization` header
+is right there in `req.headers`. Whatever your auth library already does inside
+that route handler, it can do inside these hooks.
+
+Once you return an id, upup enforces it end to end: uploads are namespaced by
+it, the HMAC upload token issued at `multipart/init` bakes it in as `uid`, and
+every multipart continuation re-checks the caller against that bound `uid`. You
+supply identity; upup supplies the enforcement.
+
+<AuthFlowDiagram />
+
+This page is the model and the shared pieces — the hook contract, the two
+anonymous opt-outs, and `TokenStore` implementations. The per-library wiring
+lives on its own page, linked below. See
+[Server Auth & Trust Model](/docs/guides/server-auth/) for what the enforcement
+actually guarantees, which errors it returns, and what it deliberately does not
+protect.
+
+## The hook you are implementing
+
+```ts
+interface UpupServerConfig {
+    getUserId?: (req: Request) => Promise<string | null>
+}
+```
+
+Return a **stable** id — the same string for the same person on every request,
+because it becomes the storage namespace and the token binding. Return `null`
+when the request carries no valid session: the upload routes answer **401
+Unauthenticated** and nothing is presigned.
+
+Two things to avoid. Do not return an id that can change between requests (an
+email a user can edit, a per-session token) — a multipart upload started under
+the old value fails owner binding at `complete` with **403 `AUTH_DENIED`**. And
+do not return the literal string `default`: that is upup's internal
+anonymous-namespace sentinel, and returning it collapses the caller into the
+shared anonymous namespace instead of their own.
+
+## Which shape do you need?
+
+Three configurations, in increasing order of strictness. Most production apps
+want the third.
+
+| Configuration                        | What happens                                                                        |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| Nothing configured                   | `/presign` and `/multipart/init` answer **403 `AUTH_REQUIRED`** — secure by default |
+| `allowAnonymousUploads: true`        | Uploads run under one shared anonymous namespace, with a warning on every boot      |
+| `getUserId` (optionally with `auth`) | Uploads are namespaced per user and the multipart token is bound to that id         |
+
+## Recipes
+
+Each page is a complete, copy-paste handler for one library — session
+validation, the `getUserId` wiring, and the multipart binding note.
+
+- [Better Auth](/docs/guides/auth/better-auth/) — `auth.api.getSession` takes
+  the hook's `Headers` object directly; the shortest integration of the four.
+- [NextAuth / Auth.js v5](/docs/guides/auth/next-auth/) — the `auth()` helper in
+  the App Router, `getToken` outside a request context, and the
+  `session.user.id` that Auth.js does not add for you.
+- [Clerk](/docs/guides/auth/clerk/) — `authenticateRequest` on a plain
+  `Request`, so one recipe covers Next.js, Express, Fastify, Hono, and workers.
+- [Custom JWT](/docs/guides/auth/custom-jwt/) — verify it yourself with `jose`,
+  including remote JWKS for asymmetric tokens.
+
+## Combining with `auth`
+
+`auth` and `getUserId` are independent and compose. `auth` is a coarse
+allow/deny gate that runs before any route — return `false` and the request is
+**401** immediately. `getUserId` resolves identity for scoping and token
+binding. Most apps need only `getUserId`; add `auth` when you want a cheap
+rejection (an API key, an IP allowlist, a maintenance flag) ahead of the
+session lookup.
+
+```ts
+createUpupHandler({
+    storage,
+    uploadTokenSecret,
+    auth: async req => req.headers.get('x-api-key') === process.env.API_KEY,
+    getUserId: async req => (await getSession(req))?.userId ?? null,
+})
+```
+
+## The two anonymous opt-outs
+
+Two separate flags, two separate subsystems, both defaulting to off. Neither is
+a general "disable auth" switch — they are narrow, explicit escape hatches.
+
+| Flag                    | Governs                                      | Default behaviour without it                                              |
+| ----------------------- | -------------------------------------------- | ------------------------------------------------------------------------- |
+| `allowAnonymousUploads` | `POST /presign`, `POST /multipart/init`      | **403 `AUTH_REQUIRED`** at request time when no `auth`/`getUserId` is set |
+| `allowAnonymous`        | cloud-drive `providers` and the `tokenStore` | **throws at construction** when neither is set alongside them             |
+
+The upload flag is a runtime gate. With none of `auth`, `getUserId`, or
+`allowAnonymousUploads` configured, the two capability-granting routes answer:
+
+```json
+{
+    "error": "Anonymous uploads are disabled. Set allowAnonymousUploads:true, or configure auth/getUserId.",
+    "code": "AUTH_REQUIRED"
+}
+```
+
+Setting `allowAnonymousUploads: true` opens them under one shared anonymous
+namespace and prints a warning on every boot, because a demo flag left on in
+production is the kind of thing that must be impossible to miss in the logs.
+
+The drive flag is a **construct-time** requirement instead of a runtime one:
+cloud-drive tokens are persisted per user, so a handler configured with
+`providers` or a `tokenStore` but no `getUserId` would silently write every
+user's Google Drive or Dropbox credentials into one shared bucket of the token
+store. `createUpupHandler` refuses to be built at all:
+
+```
+[@upupjs/server] drive providers / tokenStore require config.getUserId to scope
+tokens per user. Set getUserId, or set allowAnonymous:true to intentionally
+share ONE anonymous namespace (demos only).
+```
+
+You will see this as a `UpupConfigError` thrown at import/boot, not a 500 at
+request time. Fix it by adding `getUserId` — or, for a single-user demo, by
+setting `allowAnonymous: true` and accepting that every visitor shares one
+drive-token namespace.
+
+## TokenStore recipes
+
+The `tokenStore` is where cloud-drive OAuth tokens and short-lived OAuth state
+live. The interface is deliberately three methods wide so it maps onto Redis,
+Cloudflare KV, or a SQL table without an adapter layer:
+
+```ts
+export interface TokenStore {
+    get(key: string): Promise<string | null>
+    set(key: string, value: string, ttlSeconds?: number): Promise<void>
+    delete(key: string): Promise<void>
+}
+```
+
+Values are opaque JSON strings written under two key shapes:
+`upup:tokens:<userId>:<provider>` for drive tokens and
+`upup:oauth-state:<state>` for the 10-minute OAuth state map. Both hold live
+credentials — treat the store as secret material: private network, credentials
+of its own, and encryption at rest if your backend offers it.
+
+### TTL semantics — the one edge that bites
+
+`ttlSeconds` has **three** meaningful cases, not two:
+
+- **`undefined`** — store with **no expiry**. upup passes this deliberately for
+  a refreshable token blob: when a refresh token exists, the stored blob must
+  outlive the short-lived access token so it can be refreshed. Persisting it
+  forever is the correct behaviour, not a leak.
+- **a positive number** — expire after that many seconds.
+- **`0`** — already expired. This is **not** "no expiry". It arises when a
+  non-refreshable access token is stored at or past its own expiry, and the
+  store must treat the entry as absent from that moment on.
+
+`get` must return `null` for anything expired. The zero case is the one that
+breaks naive implementations: Redis rejects `EX 0` outright, and a SQL row
+written with an `expiresAt` of "now" is trivially read back within the same
+millisecond. Map zero to a delete.
+
+### Redis (ioredis)
+
+```ts
+import Redis from 'ioredis'
+import type { TokenStore } from '@upupjs/server'
+
+export class RedisTokenStore implements TokenStore {
+    constructor(private readonly redis: Redis) {}
+
+    async get(key: string): Promise<string | null> {
+        return this.redis.get(key)
+    }
+
+    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+        if (ttlSeconds === undefined) {
+            // No expiry — a refreshable drive-token blob.
+            await this.redis.set(key, value)
+            return
+        }
+        if (ttlSeconds <= 0) {
+            // Already expired. `SET … EX 0` is a Redis error, so never write it.
+            await this.redis.del(key)
+            return
+        }
+        await this.redis.set(key, value, 'EX', Math.ceil(ttlSeconds))
+    }
+
+    async delete(key: string): Promise<void> {
+        await this.redis.del(key)
+    }
+}
+```
+
+Wire it in the same way you would any other store:
+
+```ts
+createUpupHandler({
+    storage,
+    uploadTokenSecret,
+    getUserId,
+    tokenStore: new RedisTokenStore(new Redis(process.env.REDIS_URL!)),
+    providers: {
+        googleDrive: {
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        },
+    },
+})
+```
+
+Redis expires keys for you, so `get` needs no expiry check. Cloudflare KV is the
+same shape with `expirationTtl` in place of `EX` — note that KV enforces a
+60-second minimum TTL, so round short values up rather than passing them
+through.
+
+### SQL (Drizzle)
+
+A single table, keyed by the store key, with a nullable `expires_at`. The
+nullable column is what encodes "no expiry", and it must be **reset to null** on
+a write with no TTL — otherwise an earlier expiring row keeps its old deadline
+and a refreshable token blob silently disappears.
+
+```ts
+import { eq } from 'drizzle-orm'
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import type { TokenStore } from '@upupjs/server'
+
+export const upupTokens = pgTable('upup_tokens', {
+    key: text('key').primaryKey(),
+    value: text('value').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }), // null = never
+})
+
+export class DrizzleTokenStore implements TokenStore {
+    constructor(private readonly db: NodePgDatabase) {}
+
+    async get(key: string): Promise<string | null> {
+        const [row] = await this.db
+            .select()
+            .from(upupTokens)
+            .where(eq(upupTokens.key, key))
+            .limit(1)
+        if (!row) return null
+        if (row.expiresAt && row.expiresAt.getTime() <= Date.now()) {
+            await this.delete(key) // lazy eviction
+            return null
+        }
+        return row.value
+    }
+
+    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+        if (ttlSeconds !== undefined && ttlSeconds <= 0) {
+            await this.delete(key)
+            return
+        }
+        const expiresAt =
+            ttlSeconds === undefined
+                ? null
+                : new Date(Date.now() + ttlSeconds * 1000)
+        await this.db
+            .insert(upupTokens)
+            .values({ key, value, expiresAt })
+            .onConflictDoUpdate({
+                target: upupTokens.key,
+                set: { value, expiresAt }, // resets a stale deadline to null
+            })
+    }
+
+    async delete(key: string): Promise<void> {
+        await this.db.delete(upupTokens).where(eq(upupTokens.key, key))
+    }
+}
+```
+
+Prisma is the same logic with `upsert`:
+
+```ts
+export class PrismaTokenStore implements TokenStore {
+    constructor(private readonly prisma: PrismaClient) {}
+
+    async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
+        if (ttlSeconds !== undefined && ttlSeconds <= 0) return this.delete(key)
+        const expiresAt =
+            ttlSeconds === undefined
+                ? null
+                : new Date(Date.now() + ttlSeconds * 1000)
+        await this.prisma.upupToken.upsert({
+            where: { key },
+            create: { key, value, expiresAt },
+            update: { value, expiresAt },
+        })
+    }
+
+    // get / delete mirror the Drizzle store above.
+}
+```
+
+SQL will not evict for you. The lazy eviction in `get` keeps correctness, but
+add a periodic sweep (`DELETE FROM upup_tokens WHERE expires_at <= now()`) so
+dead OAuth-state rows do not accumulate.
+
+### Why not `InMemoryTokenStore`
+
+`InMemoryTokenStore` ships with `@upupjs/server` as a zero-dependency reference
+implementation, and it is **dev-only**. It is a `Map` in one process: tokens are
+lost on every restart and deploy, and nothing is shared across workers — so a
+drive OAuth flow that starts on worker A and returns its callback to worker B
+fails, and a request that lands on a cold serverless instance finds an empty
+store. Use it in the playground and in tests; ship one of the recipes above.
+
+## Checklist
+
+- `getUserId` returns a stable id, or `null` — never a throw, never `default`.
+- `uploadTokenSecret` is the same value on every instance and worker.
+- Configuring `providers` or `tokenStore` means configuring `getUserId` too, or
+  the handler throws at construction.
+- The store honours `undefined` (no expiry), a positive TTL, and `0` (expired).
+- Nothing anonymous is enabled by accident — check the boot logs for the
+  `allowAnonymousUploads` warning.
+
+Continue with [Server Auth & Trust Model](/docs/guides/server-auth/) for the
+enforcement guarantees, [Server Mode — Setup](/docs/guides/server-mode-setup/)
+for mounting the handler on Next.js, Express, Fastify, or Hono, and
+[Error Monitoring](/docs/guides/error-monitoring/) for routing the 401/403s you
+just configured into your error tracker.

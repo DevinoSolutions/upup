@@ -1,0 +1,135 @@
+---
+title: Convert HEIC to JPEG in the browser
+description: Convert iPhone HEIC/HEIF photos to JPEG before upload with upup — install the optional libheif decoder, matching rules, and failure behavior.
+---
+
+iPhones save photos as HEIC. Most browsers won't render them, most image
+pipelines won't read them, and a user who uploads one usually has no idea their
+file is unusable. `heicConversion` decodes HEIC/HEIF in the browser and uploads
+a JPEG instead:
+
+```tsx
+import { UpupUploader } from '@upupjs/react'
+import '@upupjs/react/styles'
+
+export default function Uploader() {
+    return <UpupUploader uploadEndpoint="/api/upload-token" heicConversion />
+}
+```
+
+Conversion runs **first** in the pipeline, so every later step — EXIF stripping,
+compression, thumbnails, hashing — sees a JPEG it can decode.
+
+## Install the decoder
+
+The decoder is [libheif](https://github.com/strukturag/libheif) compiled to
+WebAssembly, and it is heavy. upup ships it as an **optional dependency** and
+imports it dynamically, from the `@upupjs/core/steps/heic` subpath, only when
+the option is on — so an app that doesn't convert HEIC never pays for it.
+
+Install it yourself:
+
+```sh
+pnpm add libheif-js
+```
+
+```sh
+npm install libheif-js
+```
+
+<Callout
+    type="warning"
+    title="Without the package, conversion degrades — it does not throw"
+>
+    If `libheif-js` isn't installed, upup emits a `pipeline-error` event and
+    uploads the original HEIC unchanged. The upload still succeeds, so a missing
+    dependency looks like "conversion silently didn't happen" unless you are
+    listening. Install the package, or handle the event.
+</Callout>
+
+## Which files are converted
+
+A file matches when **either** its MIME type is `image/heic` or `image/heif`,
+**or** its name ends in `.heic` / `.heif` — browsers frequently report an empty
+type for these files, so the extension check is what usually fires.
+
+Everything else is skipped by the step's `shouldProcess` filter at zero cost.
+
+## What you get back
+
+- **Format** — JPEG, encoded at quality `0.92`.
+- **Name** — `photo.heic` becomes `photo.jpg`. A matching file whose name has
+  neither extension (it matched on MIME type) gets `.jpg` appended instead.
+- **Metadata** — `heicConverted: true`, plus `originalSize` and `processedSize`
+  so you can see what the conversion cost or saved.
+
+```ts
+core.on('upload-all-complete', files => {
+    for (const file of files) {
+        if (file.metadata?.heicConverted) {
+            console.log(file.name, file.metadata.processedSize)
+        }
+    }
+})
+```
+
+Note that the converted JPEG is what later steps operate on: with
+`imageCompression` also enabled, the JPEG is re-encoded again at your
+compression quality, so the `0.92` above is an intermediate, not the final
+quality. See
+[Client-side image compression](/docs/guides/processing/compression/).
+
+## Failure behavior
+
+Conversion **never fails the upload**. When decoding throws — the optional
+dependency isn't installed, or the file is corrupt — upup emits a
+`pipeline-error` event, logs to the console, and uploads the original HEIC:
+
+```ts
+core.on('pipeline-error', ({ scope, name, message }) => {
+    if (scope === 'heic') {
+        console.warn('HEIC conversion degraded for', name, message)
+    }
+})
+```
+
+`pipeline-error` is a diagnostic, not an upload failure: it is a separate channel
+from `upload-error` and never aborts the run. If a degraded conversion should be
+fatal in your app, that decision belongs in this handler. The full payload shape
+is on [Events](/docs/api-reference/events/).
+
+There is one quieter case. In an environment with no canvas backend — SSR, a
+plain Node runtime — the step is a **silent no-op**: the WASM module is never
+loaded, no event is emitted, and the original file passes through. That is an
+environment signal rather than a failure, which is why it is not reported.
+
+## Memory and repeat conversions
+
+The WASM module is loaded once per realm — one instance on the main thread, one
+inside the Web Worker — and reused across files, so converting twenty photos
+loads libheif once. Every decode frees its image handles and the decoder context
+afterwards, which is what keeps a long multi-file session from growing without
+bound.
+
+If the load failed because the package was missing, the memoized loader is
+cleared, so a later attempt picks the dependency up once it is installed — no
+page reload required.
+
+## Worker offload
+
+HEIC decoding is one of the tasks upup offloads to a Web Worker when one is
+available, which keeps a slow decode from freezing the UI. On worker timeout or
+failure the same decode is retried on the main thread, so the outcome is
+unchanged — only where it ran. See
+[Web Worker offload](/docs/guides/processing/custom-steps/#web-worker-offload).
+
+## Related
+
+- [File Processing](/docs/guides/file-processing/) — the pipeline overview and
+  the fixed step order.
+- [Client-side image compression](/docs/guides/processing/compression/) — what
+  happens to the converted JPEG next.
+- [Optional props](/docs/api-reference/upupuploader/optional-props/) — the
+  `heicConversion` prop alongside every other uploader option.
+- [Events](/docs/api-reference/events/) — `pipeline-error` and the rest of the
+  event surface.

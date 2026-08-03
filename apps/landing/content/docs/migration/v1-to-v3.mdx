@@ -69,10 +69,11 @@ Then update your imports:
 ```
 
 <Callout type="note">
-`UpupProvider` and `UploadAdapter` are **gone** as exports. `provider` is now a
-plain string (`"aws"`), and upload methods are configured with `sources`
-(string ids), not the `UploadAdapter` enum. If you need the storage-provider
-type, `@upupjs/react` re-exports `StorageProvider` from `@upupjs/core`.
+    `UpupProvider` and `UploadAdapter` are **gone** as exports. `provider` is
+    now a plain string (`"aws"`), and upload methods are configured with
+    `sources` (string ids), not the `UploadAdapter` enum. If you need the
+    storage-provider type, `@upupjs/react` re-exports `StorageProvider` from
+    `@upupjs/core`.
 </Callout>
 
 ## Props: v1 → v3
@@ -86,7 +87,7 @@ left; exact v3 names on the right.
 | `tokenEndpoint="/api/upload-token"` (required) | `uploadEndpoint="/api/upload-token"` **or** `mode="server"` + `serverUrl="/api/upup"` | Renamed and split into client mode vs server mode. See [Storage & upload path](#storage--upload-path).                                                                                                                                                                |
 | `accept="image/png"`                           | `allowedFileTypes="image/png"`                                                        | Renamed. Accepts a string, a `string[]`, or preset names (e.g. `"images"`, `"documents"`).                                                                                                                                                                            |
 | `dark={true}`                                  | `theme={{ mode: 'dark' }}`                                                            | `theme.mode` accepts `'light'`, `'dark'`, or `'system'`.                                                                                                                                                                                                              |
-| `classNames={{ … }}` (flat map)                | `theme={{ slots: { … } }}` (nested)                                                   | The flat keys (`adapterButton`, `progressBarInner`, …) become nested slot paths — see the [theming guide](/docs/guides/theming/) for the full slot structure.                                                                                                        |
+| `classNames={{ … }}` (flat map)                | `theme={{ slots: { … } }}` (nested)                                                   | The flat keys (`adapterButton`, `progressBarInner`, …) become nested slot paths — see the [theming guide](/docs/guides/theming/) for the full slot structure.                                                                                                         |
 | `limit={5}`                                    | `maxFiles={5}`                                                                        | Renamed. **Default changed from `1` to `10`** — see [Gotchas](#gotchas).                                                                                                                                                                                              |
 | `mini={true}`                                  | `mini={true}`                                                                         | Unchanged.                                                                                                                                                                                                                                                            |
 | `maxFileSize={{ size: 20, unit: 'MB' }}`       | `maxFileSize={{ size: 20, unit: 'MB' }}`                                              | Unchanged shape. v3 adds `minFileSize` and `maxTotalFileSize` (same object shape).                                                                                                                                                                                    |
@@ -199,9 +200,9 @@ from `@upupjs/react`).
 
 Most handlers keep their names and shapes. Two are worth a closer look:
 
-| v1 event                | v3 event                | Change                                                                                                                                                                                                                                          |
-| ----------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onFileRemove`          | `onFileRemoved`         | Renamed to past tense — the old spelling is gone, not aliased.                                                                                                                                                                                  |
+| v1 event                | v3 event                | Change                                                                                                                                                                                                                                                   |
+| ----------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `onFileRemove`          | `onFileRemoved`         | Renamed to past tense — the old spelling is gone, not aliased.                                                                                                                                                                                           |
 | `onFilesUploadComplete` | `onFilesUploadComplete` | Name unchanged; item type changed. Its argument is a list of files in both versions; v1 typed it `FileWithParams[]` (and v1's own docs mislabeled the items as storage "keys"), v3 types it `UploadFile[]` — the same type swap every file handler gets. |
 
 Unchanged names: `onFilesSelected`, `onFileClick`, `onFileTypeMismatch`,
@@ -214,10 +215,10 @@ New in v3: `onUploadStart`, `onUploadComplete`, `onStatusChange`,
 `onRestrictionFailed`, `onBeforeFileAdded`, and `onFileProcessed`.
 
 <Callout type="note">
-`onFilesSelected`, `onFileClick`, and the per-file complete/start handlers now
-receive v3 `UploadFile` objects (which carry `id`, `key`, `status`, and the
-underlying `File`) instead of v1's `FileWithParams`. Property access like
-`file.name` and `file.type` still works.
+    `onFilesSelected`, `onFileClick`, and the per-file complete/start handlers
+    now receive v3 `UploadFile` objects (which carry `id`, `key`, `status`, and
+    the underlying `File`) instead of v1's `FileWithParams`. Property access
+    like `file.name` and `file.type` still works.
 </Callout>
 
 ## Ref API (programmatic control)
@@ -372,13 +373,14 @@ different object or a larger body.
 Move to server mode when you need credential isolation, per-user token
 scoping, or server-side scanning/compliance. Client mode (`uploadEndpoint`)
 remains a valid, first-class choice.
+
 </Callout>
 
 <Callout type="note">
-`@upupjs/server` speaks the S3 API only — set `storage.endpoint` for any
-non-AWS S3-compatible backend (MinIO, R2, DO Spaces, …). `StorageProvider.Azure`
-has no S3 surface, so `createUpupHandler` rejects it at construction time; use
-client mode with your own signing route for Azure.
+    `@upupjs/server` speaks the S3 API only — set `storage.endpoint` for any
+    non-AWS S3-compatible backend (MinIO, R2, DO Spaces, …).
+    `StorageProvider.Azure` has no S3 surface, so `createUpupHandler` rejects it
+    at construction time; use client mode with your own signing route for Azure.
 </Callout>
 
 See [Server Mode — Setup](/docs/guides/server-mode-setup/) for the Next.js,

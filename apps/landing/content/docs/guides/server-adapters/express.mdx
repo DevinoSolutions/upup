@@ -1,0 +1,167 @@
+---
+title: File upload server with Express and S3
+description: Mount @upupjs/server on an Express route with createUpupMiddleware — install, config, the express.json() ordering trap, proxy origins, and CORS.
+---
+
+`@upupjs/server` ships an Express adapter: one middleware you mount
+wherever you like. It wraps the same `createUpupHandler` every other
+adapter wraps, so the config object is identical across frameworks —
+see [Server mode setup](/docs/guides/server-mode-setup/) for what each
+option does.
+
+## 1. Install
+
+```sh
+pnpm add @upupjs/server
+```
+
+The Express types are structural — the adapter declares the small slice
+of `req`/`res` it uses, so you don't need a particular `@types/express`
+version installed for it to typecheck.
+
+## 2. Share one config
+
+Author the config once and import it wherever you mount:
+
+```ts
+// lib/upup-config.ts
+import type { UpupServerConfig } from '@upupjs/server'
+
+export const upupConfig: UpupServerConfig = {
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    // Required, server-only: stable, high-entropy, min 16 chars, shared
+    // across every instance. createUpupHandler throws without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const session = await getSessionFromCookie(req)
+        return session?.userId ?? null
+    },
+}
+```
+
+## 3. Mount the middleware
+
+```ts
+import express from 'express'
+import { createUpupMiddleware } from '@upupjs/server/express'
+import { upupConfig } from './lib/upup-config'
+
+const app = express()
+
+// express.json() MUST run before the middleware — see below.
+app.use(express.json())
+app.use('/api/upup', createUpupMiddleware(upupConfig))
+
+app.listen(3000)
+```
+
+`createUpupMiddleware` returns a standard `(req, res, next)` middleware.
+It builds the request URL from `req.protocol`, `req.get('host')`, and
+`req.originalUrl` — `originalUrl` is the full path including the mount
+prefix, so mounting under `/api/upup`, `/uploads`, or the root all work
+unchanged. The handler matches routes on path **suffix**
+(`/presign`, `/multipart/init`, `/auth/:provider`, …), never on an
+absolute path it dictates.
+
+Point the uploader at the same prefix:
+
+```tsx
+<UpupUploader mode="server" serverUrl="/api/upup" provider="aws" />
+```
+
+## Body parsing: the ordering trap
+
+The Express adapter reads `req.body` and re-serializes it with
+`JSON.stringify` before handing a Web `Request` to the core handler. It
+does **not** read the raw stream. So a JSON body parser has to have run
+first.
+
+<Callout type="warning">
+    Mount `express.json()` before `createUpupMiddleware`. Without it `req.body`
+    is `undefined`, the adapter forwards no body at all, and the POST routes
+    fail with `400 Invalid JSON body` (`code: BAD_REQUEST`) — a failure that
+    looks like a broken client but is pure middleware ordering.
+</Callout>
+
+Every route the browser POSTs to (`/presign`, `/multipart/init`,
+`/multipart/sign-part`, `/multipart/complete`, `/multipart/abort`,
+`/files/:provider/transfer`) sends `Content-Type: application/json`, which
+is exactly what `express.json()` matches by default. No multipart or
+`urlencoded` parser is involved — the file bytes never pass through
+Express on the presigned paths.
+
+If your app deliberately runs without a global body parser, scope one to
+the upup mount instead of dropping it:
+
+```ts
+app.use('/api/upup', express.json(), createUpupMiddleware(upupConfig))
+```
+
+## Behind a proxy or load balancer
+
+The URL the adapter builds is load-bearing beyond routing: the OAuth
+`redirect_uri` for cloud drives is derived from the request's origin. Under
+a TLS-terminating proxy, Express reports `req.protocol` as `http` and
+`req.get('host')` as the internal host unless you opt in:
+
+```ts
+app.set('trust proxy', true)
+```
+
+With that set, Express honours `X-Forwarded-Proto` and
+`X-Forwarded-Host`, and the callback URL resolves to your public origin —
+the one you registered in each provider's console. Leave it off and OAuth
+callbacks resolve to an internal address the provider will reject.
+
+## CORS
+
+Same-origin mounts (the Express app also serves your frontend) need no
+CORS config at all. Cross-origin ones set it on the upup config, not on an
+Express CORS middleware — the handler attaches the headers itself, on every
+response including the preflight `OPTIONS` (`204`):
+
+```ts
+export const upupConfig: UpupServerConfig = {
+    // ...storage, uploadTokenSecret
+    cors: {
+        allowedOrigins: ['https://app.example.com'],
+        allowedMethods: ['GET', 'POST', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        maxAgeSeconds: 600,
+    },
+}
+```
+
+<Callout type="warning">
+    Credentialed CORS is granted only on a concrete origin match. A config whose
+    `allowedOrigins` is just `['*']` gets public, non-credentialed CORS — the
+    server-mode drive client sends `credentials: 'include'`, so cloud drives
+    will fail against a wildcard-only allowlist. Enumerate your real app
+    origins.
+</Callout>
+
+## Verify the mount
+
+```sh
+curl http://localhost:3000/api/upup/health
+```
+
+A JSON body with `"status": "ok"` and `checks.config` / `checks.storage`
+means the middleware is mounted and the storage credentials resolve. The
+route is unauthenticated by design and always answers `200` — read the
+`status` field, not the HTTP code.
+
+## Related
+
+- [Server mode setup](/docs/guides/server-mode-setup/) — every
+  `createUpupHandler` option, hooks, limits, and observability.
+- [Server auth & trust model](/docs/guides/server-auth/) — why
+  `uploadTokenSecret` is mandatory and what forged requests get.
+- [Storage providers](/docs/guides/storage-providers/) — S3, R2, MinIO,
+  B2, Spaces, Wasabi configs.

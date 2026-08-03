@@ -1,27 +1,17 @@
 import type { MetadataRoute } from 'next'
 import { FRAMEWORK_IDS } from '@/lib/frameworks'
+import { source } from '@/lib/docs/source'
 import { canonicalUrl } from '@/lib/site-url'
 
-// Key documentation entry points (served by this app under /docs). Fumadocs
-// has no separate sub-sitemap here — these are the high-value pages we
-// surface directly from the root sitemap.
-const docsPaths = [
-    'getting-started',
-    'guides/server-mode-setup',
-    'error-handling',
-    'quickstarts/react',
-    'quickstarts/next',
-    'quickstarts/vue',
-    'quickstarts/svelte',
-    'quickstarts/angular',
-    'quickstarts/vanilla',
-    'quickstarts/preact',
-    'comparisons/upup-vs-uppy',
-    'comparisons/upup-vs-filepond',
-    'comparisons/upup-vs-react-dropzone',
-    'comparisons/upup-vs-uploadthing',
-    'ai-assistants',
-]
+// A handful of docs entry points get a priority bump over the 0.6 docs
+// baseline — the pages searchers actually land on first.
+const HIGH_VALUE_DOCS = new Set([
+    '/docs',
+    '/docs/getting-started',
+    '/docs/guides/server-mode-setup',
+    '/docs/quickstarts/react',
+    '/docs/quickstarts/next',
+])
 
 export default function sitemap(): MetadataRoute.Sitemap {
     const lastModified = new Date()
@@ -46,11 +36,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'yearly',
             priority: 0.3,
         },
-        ...docsPaths.map((path): MetadataRoute.Sitemap[number] => ({
-            url: canonicalUrl(`docs/${path}`),
+        // EVERY docs page, derived from the fumadocs source — a page added to
+        // content/docs lands here (and in search engines) with no manual list
+        // to forget. page.url already carries the /docs prefix.
+        ...source.getPages().map((page): MetadataRoute.Sitemap[number] => ({
+            url: canonicalUrl(page.url),
             lastModified,
             changeFrequency: 'monthly',
-            priority: 0.7,
+            priority: HIGH_VALUE_DOCS.has(page.url.replace(/\/$/, ''))
+                ? 0.8
+                : 0.6,
         })),
     ]
 }

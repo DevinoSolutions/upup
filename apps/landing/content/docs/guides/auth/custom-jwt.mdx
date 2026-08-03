@@ -1,0 +1,116 @@
+---
+title: Authenticate uploads with a custom JWT
+description: Verify your own JWT inside @upupjs/server's getUserId hook with jose — bearer or cookie, shared secrets, and remote JWKS for asymmetric tokens.
+---
+
+No auth library, or a token minted by another service. Verify the token with
+[`jose`](https://github.com/panva/jose) inside the `getUserId` hook and use the
+subject claim as the id. The token can arrive as a bearer header or a cookie, so
+check both.
+
+## The handler
+
+```ts
+import { createUpupHandler } from '@upupjs/server'
+import { jwtVerify } from 'jose'
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+
+function readToken(req: Request): string | null {
+    const header = req.headers.get('authorization')
+    if (header?.startsWith('Bearer ')) return header.slice(7)
+    const cookie = req.headers.get('cookie') ?? ''
+    const match = /(?:^|;\s*)session=([^;]+)/.exec(cookie)
+    return match ? decodeURIComponent(match[1]!) : null
+}
+
+export const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => {
+        const token = readToken(req)
+        if (!token) return null
+        try {
+            const { payload } = await jwtVerify(token, secret, {
+                issuer: process.env.JWT_ISSUER!,
+                audience: process.env.JWT_AUDIENCE!,
+            })
+            return payload.sub ?? null
+        } catch {
+            return null // bad signature, wrong issuer, or expired
+        }
+    },
+})
+```
+
+`jwtVerify` throws on every failure mode — tampered signature, wrong
+issuer/audience, expired `exp` — so the `catch` returning `null` is the
+unauthenticated path. upup answers **401 Unauthenticated** on `POST /presign`
+and `POST /multipart/init`, and nothing is presigned.
+
+Always pass `issuer` and `audience`. A signature check alone accepts a token
+your identity provider minted for a completely different service, as long as it
+was signed with the same key.
+
+<Callout type="danger" title="Never decode without verifying">
+    `jose` also exports `decodeJwt`, which reads the payload without checking
+    the signature. It must not be used here: an attacker can craft any `sub`
+    they like, and upup will faithfully scope the upload to it. Only the return
+    value of `jwtVerify` (or `jwtVerify` with a JWKS) is trustworthy.
+</Callout>
+
+## Asymmetric tokens (RS256 and friends)
+
+When an identity provider signs with a private key, swap the shared secret for a
+remote key set. `createRemoteJWKSet` fetches, caches, and rotates the public keys
+for you, so a key rollover at the provider does not require a redeploy:
+
+```ts
+import { createRemoteJWKSet, jwtVerify } from 'jose'
+
+const jwks = createRemoteJWKSet(
+    new URL('https://issuer.example.com/.well-known/jwks.json'),
+)
+// …then: await jwtVerify(token, jwks, { issuer, audience })
+```
+
+Everything else in the recipe is unchanged — same `readToken`, same `try`/`catch`
+returning `null`, same 401.
+
+## Choosing the claim to return
+
+`payload.sub` is the right default: it is the provider's stable subject
+identifier. Two claims to avoid:
+
+- **`email`** — users can change it, and the id becomes the storage namespace
+  plus the multipart token binding. A rename mid-upload fails owner binding.
+- **a per-session or per-token identifier** — it rotates on every login, which
+  has the same effect.
+
+Never return the literal string `default`. That is upup's internal
+anonymous-namespace sentinel: returning it collapses the caller into the shared
+anonymous namespace instead of their own.
+
+## Multipart uploads and the bound uid
+
+The verified `sub` is baked into the HMAC upload token issued at
+`POST /multipart/init` as `uid`. Sign-part, complete, and abort each re-run
+`getUserId` on the incoming request and compare the result against that bound
+`uid` — a mismatch is **403 `AUTH_DENIED`**. This is what stops a leaked upload
+token from being replayed by a different authenticated caller, and it is also
+why a short-lived JWT must be refreshed by the client during a long multipart
+upload rather than swapped for a token with a different subject.
+
+## Next steps
+
+- [Auth Recipes](/docs/guides/auth-recipes/) — the hub: the hook model, the
+  `auth` gate, the anonymous opt-outs, and `TokenStore` implementations for
+  cloud-drive tokens.
+- [Server Mode — Setup](/docs/guides/server-mode-setup/) — mounting the handler
+  on Next.js, Express, Fastify, or Hono.
+- [Server Auth & Trust Model](/docs/guides/server-auth/) — the guarantees upup
+  attaches to the id your token produced.
