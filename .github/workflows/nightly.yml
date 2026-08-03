@@ -328,6 +328,45 @@ jobs:
                   UPUP_E2E_ENDPOINT: http://localhost:9100
               run: pnpm --filter @upupjs/e2e-test test:e2e:drive-sandbox
 
+    Lighthouse:
+        name: Lighthouse (landing SEO + Best Practices)
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build the landing site (turbo builds its workspace deps first)
+              run: pnpm exec turbo run build --filter=@upupjs/landing
+
+            # lhci boots `next start` itself and asserts per lighthouserc.cjs:
+            # SEO=100 everywhere; Best Practices 100 on docs pages, ratcheted
+            # on home/framework pages (third-party embed cookies). A11y is NOT
+            # asserted here — the axe ratchet above owns it; perf is excluded
+            # (noisy on shared runners; size-limit owns bundle weight).
+            - name: Lighthouse audit + assertions (SEO / Best Practices)
+              run: pnpm --filter @upupjs/landing run lighthouse
+
+            - name: Upload Lighthouse reports
+              if: always()
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: nightly-lighthouse-reports
+                  path: apps/landing/.lighthouseci-reports/
+                  if-no-files-found: warn
+                  retention-days: 14
+
     # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
     # branch-protection input (nightly has no PR) — it exists so one signal
     # summarizes the night. Mastra-Evals is green-with-notice when the key is
@@ -413,6 +452,7 @@ jobs:
                 Smoke-Packages,
                 Mastra-Evals,
                 Drive-Sandbox,
+                Lighthouse,
                 Landing-Feedback,
             ]
         if: always()
@@ -424,6 +464,7 @@ jobs:
                      [ "${{ needs.Smoke-Packages.result }}" != "success" ] || \
                      [ "${{ needs.Mastra-Evals.result }}" != "success" ] || \
                      [ "${{ needs.Drive-Sandbox.result }}" != "success" ] || \
+                     [ "${{ needs.Lighthouse.result }}" != "success" ] || \
                      [ "${{ needs.Landing-Feedback.result }}" != "success" ]; then
                     echo "One or more nightly jobs failed"
                     exit 1
