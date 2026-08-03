@@ -96,7 +96,7 @@ export default function ResumeScene({
                 <AnimatePresence>
                     {state.resumed && (
                         <motion.span
-                            className="absolute right-4 top-4 z-40 inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[11px] font-semibold text-white shadow-lg"
+                            className="absolute right-4 top-4 z-40 inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-1 text-[11px] font-semibold text-white shadow-lg"
                             initial={
                                 frozen ? false : { scale: 0.6, opacity: 0 }
                             }

@@ -23,8 +23,11 @@
     --ie-switch-bg-on: #3b82f6;
     --ie-switch-thumb: #ffffff;
 
-    --ie-accent: #3b82f6;
-    --ie-accent-soft: rgba(59, 130, 246, 0.12);
+    /* Accent doubles as small text on light surfaces and as a solid bg under
+       white text (--ie-accent-fg) — blue-600 keeps both ≥4.5:1 (WCAG AA);
+       blue-500 fails both at 3.7:1. */
+    --ie-accent: #2563eb;
+    --ie-accent-soft: rgba(37, 99, 235, 0.12);
     --ie-accent-strong: #1d4ed8;
     --ie-accent-fg: #ffffff;
 
@@ -100,6 +103,9 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     --ie-accent: #60a5fa;
     --ie-accent-soft: rgba(96, 165, 250, 0.16);
     --ie-accent-strong: #93c5fd;
+    /* Dark surfaces flip the pairing: light-blue accent bg needs DARK text —
+       the light theme's white --ie-accent-fg is 2.5:1 on #60a5fa. */
+    --ie-accent-fg: #0f172a;
     color-scheme: dark;
 }
 
@@ -122,6 +128,8 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
         --ie-accent: #60a5fa;
         --ie-accent-soft: rgba(96, 165, 250, 0.16);
         --ie-accent-strong: #93c5fd;
+        /* Same dark-text-on-light-accent flip as the html.dark block above. */
+        --ie-accent-fg: #0f172a;
         color-scheme: dark;
     }
 }
@@ -1408,8 +1416,11 @@ html.dark .upup-ie-preview-placeholder,
     --ie-popover-bg: #ffffff;
     --ie-input-bg: rgba(255, 255, 255, 0.6);
     --ie-input-border: rgba(209, 213, 219, 0.7);
-    --ie-accent: #3b82f6;
-    --ie-accent-soft: rgba(59, 130, 246, 0.12);
+    /* Accent doubles as small text on light surfaces and as a solid bg under
+       white text (--ie-accent-fg) — blue-600 keeps both ≥4.5:1 (WCAG AA);
+       blue-500 fails both at 3.7:1. */
+    --ie-accent: #2563eb;
+    --ie-accent-soft: rgba(37, 99, 235, 0.12);
     --ie-accent-strong: #1d4ed8;
     --ie-accent-fg: #ffffff;
     --ie-radius-card: 16px;
@@ -1445,6 +1456,9 @@ html.dark .upup-ie-ai-panel,
     --ie-accent: #60a5fa;
     --ie-accent-soft: rgba(96, 165, 250, 0.16);
     --ie-accent-strong: #93c5fd;
+    /* Dark surfaces flip the pairing: light-blue accent bg needs DARK text —
+       the light theme's white --ie-accent-fg is 2.5:1 on #60a5fa. */
+    --ie-accent-fg: #0f172a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1460,6 +1474,8 @@ html.dark .upup-ie-ai-panel,
         --ie-accent: #60a5fa;
         --ie-accent-soft: rgba(96, 165, 250, 0.16);
         --ie-accent-strong: #93c5fd;
+        /* Same dark-text-on-light-accent flip as the html.dark block above. */
+        --ie-accent-fg: #0f172a;
     }
 }
 
