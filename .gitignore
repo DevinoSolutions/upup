@@ -63,3 +63,8 @@ apps/*/dist
 # Visual-layer captures (CI artifact -> future snapvisor.io input; no goldens
 # are committed — snapvisor owns baselines server-side)
 apps/e2e-test/screenshots/
+
+# Lighthouse CI (nightly SEO/Best-Practices gate) — lhci scratch dir + the
+# filesystem report output uploaded as a CI artifact
+.lighthouseci/
+apps/landing/.lighthouseci-reports/

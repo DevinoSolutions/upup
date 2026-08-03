@@ -147,6 +147,9 @@ export default function StackBlitzDemoSection() {
                         // popups in the live demo. So the embed shows the real
                         // (credible) source; "Open in StackBlitz" runs it live
                         // on stackblitz.com, which is isolated.
+                        // The SDK replaces targetContainer with its iframe, so
+                        // hold the parent to find the frame afterwards.
+                        const embedParent = targetContainer.parentElement
                         sdk.embedProject(targetContainer, stackblitzProject, {
                             openFile: OPEN_FILE,
                             view: 'editor',
@@ -156,7 +159,18 @@ export default function StackBlitzDemoSection() {
                         })
                             // Dismiss the loader when the editor is actually
                             // ready, not on a fixed timer.
-                            .then(() => setIsLoading(false))
+                            .then(() => {
+                                // The SDK's iframe ships without a title;
+                                // screen readers need one.
+                                const frame = embedParent?.querySelector(
+                                    'iframe:not([title])',
+                                )
+                                frame?.setAttribute(
+                                    'title',
+                                    'StackBlitz code editor — upup React example',
+                                )
+                                setIsLoading(false)
+                            })
                             .catch(error => {
                                 console.error('StackBlitz embed failed:', error)
                                 setIsLoading(false)

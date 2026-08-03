@@ -564,8 +564,15 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 - `nightly.yml` — 03:17 UTC schedule + manual dispatch, no routing, no
   publishing: full e2e + real-MinIO suites + the a11y/overflow sweep
   (`pnpm run e2e:a11y` — the axe serious/critical ratchet vs
-  `a11y-baseline.json`; runs in NO PR gate), static `build:storybook` for all
-  six frameworks, `smoke:packages`, the mastra LLM evals (only when the
+  `a11y-baseline.json`; runs in NO PR gate), the **Lighthouse** job
+  (`pnpm --filter @upupjs/landing run lighthouse`, config
+  `apps/landing/lighthouserc.cjs`: production `next build`+`start`, asserts
+  SEO=100 on every audited page and Best Practices 100 on docs pages /
+  ratcheted ~0.74 on home+framework pages whose StackBlitz embed + ads tag set
+  third-party cookies; a11y is deliberately NOT asserted — the axe ratchet
+  owns it, Lighthouse's a11y audits are axe-core anyway — and perf is excluded
+  as CI-runner noise; size-limit owns bundle weight), static `build:storybook`
+  for all six frameworks, `smoke:packages`, the mastra LLM evals (only when the
   `OPENROUTER_API_KEY` Actions secret exists — absent, the job goes green with
   a loud skip notice, never silently), and the **Drive-Sandbox** job — the live
   cloud-drive integration suite
