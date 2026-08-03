@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function SupportPage() {
     return (
-        <main className="min-h-[70vh] bg-[var(--bg-base)]">
+        <div className="min-h-[70vh] bg-[var(--bg-base)]">
             <Section>
                 <SectionHeading
                     as="h1"
@@ -32,6 +32,6 @@ export default function SupportPage() {
                     <SupportForm />
                 </div>
             </Section>
-        </main>
+        </div>
     )
 }

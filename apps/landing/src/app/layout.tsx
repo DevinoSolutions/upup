@@ -184,7 +184,11 @@ export default function RootLayout({
                         <ThemeProvider>
                             <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
                                 <Navbar />
-                                {children}
+                                {/* The single main landmark for every page —
+                                    pages must not render their own <main>. */}
+                                <main className="flex w-full flex-1 flex-col">
+                                    {children}
+                                </main>
                                 <Footer />
                             </div>
                         </ThemeProvider>
