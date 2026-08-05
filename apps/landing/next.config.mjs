@@ -8,6 +8,16 @@ const repoRoot = join(__dirname, '../..')
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV !== 'production'
 
+// Build-time mirror of src/lib/site-url.ts (next.config cannot import from
+// src). The docs subdomain (`docs.<host>`) is a courtesy alias for agents and
+// humans guessing the common docs-URL shape — it 301s into the canonical
+// `/docs` path on the main host rather than serving content, so there is
+// never a second indexable docs origin.
+const SITE_BASE = (
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://useupup.com'
+).replace(/\/+$/, '')
+const DOCS_ALIAS_HOST = `docs.${new URL(SITE_BASE).host}`
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -106,6 +116,25 @@ const nextConfig = {
             {
                 source: '/documentation/:path*',
                 destination: '/docs/:path*',
+                permanent: true,
+            },
+            // docs.<host> alias — placed AFTER the /documentation rules on
+            // purpose: a legacy path on the alias host takes the relative
+            // /documentation/* -> /docs/* hop first (staying on the alias
+            // host), then the /docs/* rule below moves it to the main host —
+            // two hops, correct final URL. The /docs/* source must precede
+            // the catch-all so an already-prefixed path isn't doubled to
+            // /docs/docs/*.
+            {
+                source: '/docs/:path*',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/:path*`,
+                permanent: true,
+            },
+            {
+                source: '/:path*',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/:path*`,
                 permanent: true,
             },
         ]
