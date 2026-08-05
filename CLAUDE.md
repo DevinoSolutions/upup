@@ -355,7 +355,12 @@ the suites actually drive):
   final `@upupjs` — the `@useupup` 3.0.0 packages are deprecated/superseded. The
   brand, DOM contract strings, and the GitHub repo stay bare `upup`; the docs/
   landing domain stays `useupup.com` (a deliberate split — npm scope `@upupjs`,
-  web `useupup.com` — revisit if `upupjs.com` is ever adopted). `@upup` is a
+  web `useupup.com` — revisit if `upupjs.com` is ever adopted). `docs.useupup.com`
+  is a redirect-only alias for the commonly guessed docs-URL shape: host-based
+  301s in `apps/landing/next.config.mjs` send every path into
+  `useupup.com/docs/*` (plus a Dokploy domain entry on the prod compose routing
+  the host to the landing container) — it must never serve content directly, so
+  there is never a second indexable docs origin. `@upup` is a
   retired token — `pnpm run vocab:check` fails on any survivor.
 - `Upup*` — public entry points / brand: `UpupUploader`, `UpupThemeProvider`.
 - `Uploader*` — shared internal UI/controller layer: `UploaderPanel`,
