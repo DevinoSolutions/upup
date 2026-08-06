@@ -183,9 +183,38 @@ records site/QA quirks that don't fit there.
   text") — data files (.json, scripts, screenshots) write fine. The orchestrator
   must persist narrative reports itself, and completion notices do NOT relay the
   report body — ask the agent to resend as message text if it only "completed".
-- Idle notifications fire even when the agent never started the assignment.
-  Verify on disk (`git status`) and nudge with the evidence; both silent-idlers
-  this sweep started immediately after one nudge.
+- A subagent's FINAL assistant text also never reaches the orchestrator —
+  SendMessage is the only channel that arrives. An agent that "reported" in its
+  final text looks like a silent idler from outside.
+- Idle notifications fire even when the agent never started the assignment —
+  AND when it finished but only "reported" via final text. Verify on disk
+  (`git status`) and nudge with the evidence; every silent-idler this sweep
+  moved after one nudge.
+- Teammate status snapshots RACE orchestrator commits by minutes: two agents
+  reported stale HEAD/index states as alarming anomalies. The orchestrator's
+  acknowledgment message is the authority on commit state.
+- Concurrent agents in one working tree: `pnpm --filter <typo>` prints "No
+  projects matched the filters" and EXITS 0 — assert the script banner ran,
+  not just the exit code. Dev-server ports collide silently (EADDRINUSE —
+  check whose server :53000 actually is before "restarting" it; Next dev
+  hot-reloads everyone's edits, so verification against a peer's server is
+  valid). Running the landing TYPECHECK (whose first half is `fumadocs-mdx`)
+  while a landing dev server is up regenerates `.source/` underneath it and
+  500s every /docs route until the server restarts.
+- `{/* comment */}` INSIDE a JSX expression (`{cond && ( {/* c */} <div/> )}`)
+  is a syntax error — prettier is the fastest signal, put the comment above.
+- `nextjs-portal` in the DOM is the dev-tools portal, present on EVERY dev-server
+  page — it is not an error overlay. Key error probes on `[data-nextjs-dialog]`.
+- Naive WCAG contrast probes false-positive heavily wherever a gradient paints
+  over the body background (walker reads the body color). Any fail whose
+  resolved background is the page/body color under a gradient ancestor is
+  UNVERIFIED until eyeballed.
+- localStorage script stashes are per BROWSER INSTANCE as well as per origin —
+  a fresh spawn has an empty profile; re-paste per instance/origin pair.
+- Agents also reported two further rtk falsifications (a bash `wc -l` count
+  inflated by filter wrapper lines with a 0-byte redirect, and a grep printing
+  "0 matches" above output containing the match) — orchestrator did not witness
+  these firsthand; recorded for the maintainer to promote to CLAUDE.md's log.
 - pnpm's app-level `node_modules` junctions can be broken by OneDrive sync; when
   `createRequire` can't resolve a package that exists, require it by absolute path
   from `node_modules/.pnpm/<pkg>@<version>/node_modules/...`.
