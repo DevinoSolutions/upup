@@ -135,6 +135,57 @@ records site/QA quirks that don't fit there.
   strays by `ms-playwright-mcp` in the command line before killing anything. The
   chrome-devtools MCP intermittently drops with "Target closed" — retry once, then
   prefer a scripted Playwright run.
+- Windows itself can refuse to start ANY Chrome ("Your computer has run out of
+  resources", instant exit code 37) when the session has leaked thousands of
+  processes (psmux trees, orphaned MCP servers). Every local browser MCP fails
+  identically then; killing provable orphans (dead parent, automation names only,
+  never python/claude/user sessions) is the only safe local remedy — otherwise run
+  the browser elsewhere. Observed at 2,769 processes (2026-08-06).
+
+### stealth-chrome-devtools MCP specifically (2026-08-06 sweep)
+
+- `execute_script` does NOT await returned Promises — a Promise body yields
+  `result: null`, which reads as a broken page. Sample over time by stashing into
+  `window.__x` with `setInterval` in one call and reading it back in a later call.
+- `query_elements` text extraction leaks Chrome's video-control shadow tree, so a
+  live `<video>` appears to ship `controls` (with a Download button). Read
+  `video.controls` as a property before filing that bug.
+- A loaded StackBlitz embed has `src === ""` and zero parent-document resource
+  entries (the SDK form-POSTs into a NAMED iframe). Verify visually, not by src.
+- Duplicate mobile trigger copies (docs search / Ask AI) mean selectors match
+  multiple elements and the FIRST is the invisible one — always filter by a
+  non-zero bounding rect (complements the `:visible` rule above).
+- Clicking `Share Screen` (getDisplayMedia) can drop the MCP connection for
+  exactly one call; the instance survives — re-query, don't respawn.
+- Synthetic `element.click()` from `execute_script` does not drive React handlers
+  (hero beat chips ignore it even when healthy). Use the trusted `click_element`
+  tool before concluding a control is dead.
+- The CDP `Emulation` domain is absent (`setEmulatedMedia`,
+  `setDeviceMetricsOverride` → "Unknown CDP command"); `execute_cdp_command`
+  proxies Runtime only. Reduced motion: spawn with `--force-prefers-reduced-motion`.
+  True sub-500px mobile is IMPOSSIBLE — Chrome-on-Windows clamps window width to
+  ~500 CSS px, so "mobile" sweeps are 500px sweeps; note it in coverage claims.
+- `take_screenshot` `full_page:true` is a NO-OP (always viewport). Scroll-ladder
+  and stitch; before stitching, inject `*{scroll-behavior:auto!important}` (the
+  site sets smooth scrolling, so `scrollTo` doesn't land synchronously), and
+  remember `location.reload()` RESTORES scroll position — `scrollTo(0,0)` after
+  every theme-flip reload or your "hero" shot is the footer.
+- `create_persistent_function` dies (`Connection closed`) around ~4KB of body.
+  Workaround: stash the source in `localStorage` (per-origin — navigate first)
+  and `eval()` it per page.
+- PowerShell stitching: `Measure-Object` returns Double and
+  `New-Object System.Drawing.Bitmap($w,$h)` rejects it — cast `[int]`. Never let
+  a stitch script delete source segments before verifying the output isn't blank.
+
+### Subagent-orchestration quirks (this harness)
+
+- Subagents are BLOCKED from writing report `.md` files ("return findings as
+  text") — data files (.json, scripts, screenshots) write fine. The orchestrator
+  must persist narrative reports itself, and completion notices do NOT relay the
+  report body — ask the agent to resend as message text if it only "completed".
+- Idle notifications fire even when the agent never started the assignment.
+  Verify on disk (`git status`) and nudge with the evidence; both silent-idlers
+  this sweep started immediately after one nudge.
 - pnpm's app-level `node_modules` junctions can be broken by OneDrive sync; when
   `createRequire` can't resolve a package that exists, require it by absolute path
   from `node_modules/.pnpm/<pkg>@<version>/node_modules/...`.
