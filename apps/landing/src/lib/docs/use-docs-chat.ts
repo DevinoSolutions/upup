@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { clientEnv } from '@/lib/env'
 
 export interface DocsChatMessage {
@@ -70,12 +70,29 @@ export function useDocsChat() {
     // requests against one transcript. The ref flips synchronously, so the
     // second call sees the first already in flight.
     const inFlightRef = useRef(false)
+    // Monotonic run id. A send releases the shared gate only while it still
+    // OWNS it: clear() drops the gate so a new send can start, and without this
+    // the older request's teardown would then clear the newer one's pending
+    // state mid-answer (re-enabling the composer and allowing a third request).
+    const runIdRef = useRef(0)
+
+    // Leaving /docs mid-answer should not keep a request alive writing into a
+    // hook nobody is rendering.
+    useEffect(
+        () => () => {
+            runIdRef.current++
+            abortRef.current?.abort()
+        },
+        [],
+    )
 
     const send = useCallback(
         async (content: string) => {
             const base = clientEnv.NEXT_PUBLIC_MASTRA_BASE_URL
             if (!base || pending || inFlightRef.current) return
             inFlightRef.current = true
+            const myRun = ++runIdRef.current
+            const isCurrent = () => runIdRef.current === myRun
 
             const userMsg: DocsChatMessage = {
                 id: `m${++counter.current}`,
@@ -213,15 +230,21 @@ export function useDocsChat() {
                     if (!(await runGenerate())) finishError()
                 }
             } finally {
-                inFlightRef.current = false
-                setPending(false)
-                abortRef.current = null
+                // Release the shared gate only if this send still owns it.
+                if (isCurrent()) {
+                    inFlightRef.current = false
+                    setPending(false)
+                    abortRef.current = null
+                }
             }
         },
         [messages, pending],
     )
 
     const clear = useCallback(() => {
+        // Bump first: any in-flight send is now superseded, so when it unwinds
+        // it leaves the gate alone for whatever the user starts next.
+        runIdRef.current++
         abortRef.current?.abort()
         abortRef.current = null
         inFlightRef.current = false

@@ -1,12 +1,23 @@
 import { z } from 'zod'
 
-/** The four kinds of support request the form offers. */
-export const SUPPORT_TYPES = [
+/** The four kinds of support request the support FORM offers as options. */
+export const SUPPORT_FORM_TYPES = [
     'problem',
     'feature_request',
     'question',
     'other',
 ] as const
+export type SupportFormType = (typeof SUPPORT_FORM_TYPES)[number]
+
+/**
+ * Every type the API accepts: the form's four, plus `provider_notify` — what the
+ * homepage provider-interest modal submits. That modal has no free-text field,
+ * so it composes its message from the provider name and sends the visitor's
+ * address as the reply-to. It is deliberately NOT a form option: the support
+ * page's dropdown renders SUPPORT_FORM_TYPES, so a wire-only type never appears
+ * as something a human can pick.
+ */
+export const SUPPORT_TYPES = [...SUPPORT_FORM_TYPES, 'provider_notify'] as const
 export type SupportType = (typeof SUPPORT_TYPES)[number]
 
 /**

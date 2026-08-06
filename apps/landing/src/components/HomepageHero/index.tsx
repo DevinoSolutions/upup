@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
     Copy,
@@ -18,14 +18,18 @@ import FrameworkSnippets from '@/components/FrameworkSnippets'
 import FrameworkStrip from '@/components/FrameworkStrip'
 import { HeroSession } from '@/components/UploaderScene'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
+import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 
 export default function HeroSection({
     framework,
 }: Readonly<{ framework?: FrameworkId }> = {}) {
     const fw = framework ? FRAMEWORKS[framework] : undefined
-    const [copied, setCopied] = useState(false)
+    const { copied, copy } = useCopyToClipboard()
     const [isOpen, setIsOpen] = useState(false)
     const [selectedManager, setSelectedManager] = useState('npm')
+    const menuRef = useRef<HTMLDivElement>(null)
+    const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const menuId = React.useId()
 
     // Non-`once` observer on the hero visual: the scene only runs while it is
     // on-screen (the FeatureShowcase idiom). Cursor measuring stays internal to
@@ -51,43 +55,40 @@ export default function HeroSection({
         )
     }, [selectedManager, packageManagers])
 
-    const handleSelectManager = useCallback(
-        (managerId: string) => {
-            setSelectedManager(managerId)
-            setIsOpen(false)
-
-            // Auto-copy when selection changes
-            const command = packageManagers.find(
-                pm => pm.id === managerId,
-            )?.command
-            if (
-                command &&
-                typeof window !== 'undefined' &&
-                navigator.clipboard
-            ) {
-                navigator.clipboard
-                    .writeText(command)
-                    .then(() => {
-                        setCopied(true)
-                        setTimeout(() => setCopied(false), 2000)
-                    })
-                    .catch(() => console.warn('Please copy text manually!'))
-            }
-        },
-        [packageManagers],
-    )
+    // Selecting a package manager only changes which command is SHOWN. It used
+    // to also write that command to the clipboard, which is a side effect a
+    // visitor has no reason to expect from a dropdown — the copy button beside
+    // it is the one clipboard writer.
+    const handleSelectManager = useCallback((managerId: string) => {
+        setSelectedManager(managerId)
+        setIsOpen(false)
+        menuButtonRef.current?.focus()
+    }, [])
 
     const handleCopy = useCallback(() => {
-        if (typeof window !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard
-                .writeText(currentCommand)
-                .then(() => {
-                    setCopied(true)
-                    setTimeout(() => setCopied(false), 2000)
-                })
-                .catch(() => console.warn('Please copy text manually!'))
+        copy(currentCommand)
+    }, [copy, currentCommand])
+
+    // An open menu closes on Escape (returning focus to its trigger) and on a
+    // click anywhere outside it — without these it stayed open until something
+    // inside was clicked.
+    useEffect(() => {
+        if (!isOpen) return
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key !== 'Escape') return
+            setIsOpen(false)
+            menuButtonRef.current?.focus()
         }
-    }, [currentCommand])
+        function onPointerDown(e: MouseEvent) {
+            if (!menuRef.current?.contains(e.target as Node)) setIsOpen(false)
+        }
+        document.addEventListener('keydown', onKeyDown)
+        document.addEventListener('mousedown', onPointerDown)
+        return () => {
+            document.removeEventListener('keydown', onKeyDown)
+            document.removeEventListener('mousedown', onPointerDown)
+        }
+    }, [isOpen])
 
     const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
@@ -397,11 +398,20 @@ export default function HeroSection({
                                             </motion.button>
 
                                             {/* Package Manager Select */}
-                                            <div className="relative">
+                                            <div
+                                                className="relative"
+                                                ref={menuRef}
+                                            >
                                                 <motion.button
+                                                    ref={menuButtonRef}
+                                                    type="button"
                                                     onClick={() =>
                                                         setIsOpen(!isOpen)
                                                     }
+                                                    aria-haspopup="listbox"
+                                                    aria-expanded={isOpen}
+                                                    aria-controls={menuId}
+                                                    aria-label="Package manager"
                                                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]"
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
@@ -451,6 +461,9 @@ export default function HeroSection({
                                                             transition={{
                                                                 duration: 0.2,
                                                             }}
+                                                            id={menuId}
+                                                            role="listbox"
+                                                            aria-label="Package manager"
                                                             className="absolute z-50 top-full right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]"
                                                         >
                                                             {packageManagers.map(
@@ -460,6 +473,12 @@ export default function HeroSection({
                                                                 ) => (
                                                                     <motion.button
                                                                         key={
+                                                                            manager.id
+                                                                        }
+                                                                        type="button"
+                                                                        role="option"
+                                                                        aria-selected={
+                                                                            selectedManager ===
                                                                             manager.id
                                                                         }
                                                                         onClick={() =>

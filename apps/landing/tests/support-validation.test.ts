@@ -49,6 +49,24 @@ describe('supportRequestSchema', () => {
         expect(result.success).toBe(true)
     })
 
+    it('accepts the wire-only provider_notify type', () => {
+        const result = supportRequestSchema.safeParse(
+            valid({
+                type: 'provider_notify',
+                wantsReply: true,
+                email: 'dev@example.com',
+            }),
+        )
+        expect(result.success).toBe(true)
+    })
+
+    it('rejects a type outside the accepted set', () => {
+        const result = supportRequestSchema.safeParse(
+            valid({ type: 'not_a_real_type' }),
+        )
+        expect(result.success).toBe(false)
+    })
+
     it('rejects a feedbackId that is not a UUID', () => {
         const result = supportRequestSchema.safeParse(
             valid({ feedbackId: 'abc-123' }),

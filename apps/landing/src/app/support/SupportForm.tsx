@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import posthog from 'posthog-js'
 import { readE2ETestContext } from '@/lib/analytics/dataset'
-import { SUPPORT_TYPES, type SupportType } from '@/lib/support/schema'
+import { SUPPORT_FORM_TYPES, type SupportFormType } from '@/lib/support/schema'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
 
@@ -21,7 +21,7 @@ interface SupportResponseBody {
     email: 'ok' | 'failed' | 'not_configured'
 }
 
-const TYPE_LABELS: Record<SupportType, string> = {
+const TYPE_LABELS: Record<SupportFormType, string> = {
     problem: 'Report a problem',
     feature_request: 'Request a feature',
     question: 'Ask a question',
@@ -42,7 +42,7 @@ function safeId(read: () => string | undefined): string | undefined {
 }
 
 export default function SupportForm() {
-    const [type, setType] = useState<SupportType>('problem')
+    const [type, setType] = useState<SupportFormType>('problem')
     const [message, setMessage] = useState('')
     const [expectedOutcome, setExpectedOutcome] = useState('')
     const [wantsReply, setWantsReply] = useState(false)
@@ -172,9 +172,9 @@ export default function SupportForm() {
                     id="support-type"
                     className={FIELD}
                     value={type}
-                    onChange={e => setType(e.target.value as SupportType)}
+                    onChange={e => setType(e.target.value as SupportFormType)}
                 >
-                    {SUPPORT_TYPES.map(value => (
+                    {SUPPORT_FORM_TYPES.map(value => (
                         <option key={value} value={value}>
                             {TYPE_LABELS[value]}
                         </option>
@@ -201,7 +201,7 @@ export default function SupportForm() {
             <div>
                 <label htmlFor="support-expected" className={LABEL}>
                     Expected outcome{' '}
-                    <span className="font-normal text-gray-500">
+                    <span className="font-normal text-gray-500 dark:text-gray-400">
                         (optional)
                     </span>
                 </label>

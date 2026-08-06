@@ -6,7 +6,7 @@ import {
     type InteractiveExampleProps,
     type AiFeedbackEvent,
 } from '@upupjs/interactive-example'
-import { clientDatasetCredentials } from '@/lib/analytics/dataset'
+import { captureClientEvent } from '@/lib/analytics/capture.client'
 
 /**
  * Client wrapper that injects the two client-only pieces the Ask-AI panel needs
@@ -19,9 +19,9 @@ import { clientDatasetCredentials } from '@/lib/analytics/dataset'
  *
  * Both live here rather than in the server prop builder because a function prop
  * can't cross the RSC boundary and `posthog.get_distinct_id()` only exists on
- * the client. Delivery is dataset-gated (no-op on `disabled`) and posthog-js is
- * imported lazily so it never enters the server bundle — the interactive-example
- * package itself stays PostHog-free.
+ * the client. Delivery goes through the shared, dataset-gated
+ * `captureClientEvent` — the interactive-example package itself stays
+ * PostHog-free.
  */
 export function InteractiveExampleClient(props: InteractiveExampleProps) {
     const [distinctId, setDistinctId] = useState<string | undefined>(undefined)
@@ -46,13 +46,7 @@ export function InteractiveExampleClient(props: InteractiveExampleProps) {
     }, [])
 
     const onAiFeedback = useCallback((event: AiFeedbackEvent) => {
-        const { dataset } = clientDatasetCredentials()
-        if (dataset === 'disabled') return
-        void import('posthog-js')
-            .then(({ default: posthog }) => {
-                posthog.capture(event.name, event.properties)
-            })
-            .catch(() => {})
+        captureClientEvent(event.name, event.properties)
     }, [])
 
     return (

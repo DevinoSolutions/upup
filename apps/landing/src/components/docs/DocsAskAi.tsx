@@ -13,7 +13,8 @@ import {
     X,
 } from 'lucide-react'
 import { clientEnv } from '@/lib/env'
-import { clientDatasetCredentials } from '@/lib/analytics/dataset'
+import { captureClientEvent } from '@/lib/analytics/capture.client'
+import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 import type { useDocsChat, DocsChatMessage } from '@/lib/docs/use-docs-chat'
 
 const EXAMPLE_QUESTIONS = [
@@ -24,19 +25,6 @@ const EXAMPLE_QUESTIONS = [
 
 const LINK_CLASS =
     'text-blue-600 underline underline-offset-2 dark:text-blue-400'
-
-// Mirror of posthog-provider.tsx / InteractiveExampleClient's guard: delivery is
-// dataset-gated (no-op on `disabled`) and posthog-js is imported lazily so it
-// never rides a bundle that doesn't already pull it.
-function captureDocsEvent(name: string, properties: Record<string, unknown>) {
-    const { dataset } = clientDatasetCredentials()
-    if (dataset === 'disabled') return
-    void import('posthog-js')
-        .then(({ default: posthog }) => {
-            posthog.capture(name, properties)
-        })
-        .catch(() => {})
-}
 
 // The user message immediately preceding an assistant message is its question —
 // used for the feedback payload and error retry.
@@ -287,29 +275,12 @@ function CodeBlock({ code }: { code: string }) {
 }
 
 function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false)
-    const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-    useEffect(
-        () => () => {
-            if (timer.current) clearTimeout(timer.current)
-        },
-        [],
-    )
-    function copy() {
-        void navigator.clipboard
-            ?.writeText(text)
-            .then(() => {
-                setCopied(true)
-                if (timer.current) clearTimeout(timer.current)
-                timer.current = setTimeout(() => setCopied(false), 1500)
-            })
-            .catch(() => {})
-    }
+    const { copied, copy } = useCopyToClipboard(1500)
     return (
         <button
             type="button"
             aria-label={copied ? 'Copied' : 'Copy code'}
-            onClick={copy}
+            onClick={() => copy(text)}
             className="absolute right-1.5 top-1.5 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100"
         >
             {copied ? (
@@ -381,7 +352,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
 
     function ask(question: string) {
         if (!question.trim() || pending) return
-        captureDocsEvent('docs_ai_question', { question })
+        captureClientEvent('docs_ai_question', { question })
         void send(question)
     }
 
@@ -400,7 +371,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
     ) {
         if (votes[messageId]) return
         setVotes(prev => ({ ...prev, [messageId]: choice }))
-        captureDocsEvent('docs_ai_feedback', {
+        captureClientEvent('docs_ai_feedback', {
             vote: choice,
             question,
             answer,
@@ -500,98 +471,99 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                             </div>
                                         </li>
                                     ) : (
-                                        <li key={m.id} className="space-y-1.5">
-                                            {m.error ? (
-                                                <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
-                                                    {m.content}{' '}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            ask(
-                                                                questionForIndex(
-                                                                    messages,
-                                                                    index,
-                                                                ),
-                                                            )
-                                                        }
-                                                        className="underline underline-offset-2"
-                                                    >
-                                                        Retry
-                                                    </button>
-                                                </p>
-                                            ) : (
-                                                <>
-                                                    <div className="min-w-0 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
-                                                        <MessageBody
-                                                            content={m.content}
-                                                        />
-                                                        {m.streaming ? (
-                                                            m.content ? (
-                                                                <StreamingCursor />
-                                                            ) : (
-                                                                <TypingIndicator />
-                                                            )
-                                                        ) : null}
-                                                    </div>
-                                                    {m.streaming ? null : (
-                                                        <div className="flex items-center gap-1">
-                                                            <ThumbButton
-                                                                active={
-                                                                    votes[
-                                                                        m.id
-                                                                    ] === 'up'
+                                        // Resolved once per assistant message
+                                        // instead of once per control that
+                                        // needs it (retry + both thumbs).
+                                        (question => (
+                                            <li
+                                                key={m.id}
+                                                className="space-y-1.5"
+                                            >
+                                                {m.error ? (
+                                                    <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
+                                                        {m.content}{' '}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                ask(question)
+                                                            }
+                                                            className="underline underline-offset-2"
+                                                        >
+                                                            Retry
+                                                        </button>
+                                                    </p>
+                                                ) : (
+                                                    <>
+                                                        <div className="min-w-0 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
+                                                            <MessageBody
+                                                                content={
+                                                                    m.content
                                                                 }
-                                                                voted={
-                                                                    !!votes[
-                                                                        m.id
-                                                                    ]
-                                                                }
-                                                                label="Good answer"
-                                                                onClick={() =>
-                                                                    vote(
-                                                                        m.id,
-                                                                        'up',
-                                                                        questionForIndex(
-                                                                            messages,
-                                                                            index,
-                                                                        ),
-                                                                        m.content,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <ThumbsUp className="h-3.5 w-3.5" />
-                                                            </ThumbButton>
-                                                            <ThumbButton
-                                                                active={
-                                                                    votes[
-                                                                        m.id
-                                                                    ] === 'down'
-                                                                }
-                                                                voted={
-                                                                    !!votes[
-                                                                        m.id
-                                                                    ]
-                                                                }
-                                                                label="Bad answer"
-                                                                onClick={() =>
-                                                                    vote(
-                                                                        m.id,
-                                                                        'down',
-                                                                        questionForIndex(
-                                                                            messages,
-                                                                            index,
-                                                                        ),
-                                                                        m.content,
-                                                                    )
-                                                                }
-                                                            >
-                                                                <ThumbsDown className="h-3.5 w-3.5" />
-                                                            </ThumbButton>
+                                                            />
+                                                            {m.streaming ? (
+                                                                m.content ? (
+                                                                    <StreamingCursor />
+                                                                ) : (
+                                                                    <TypingIndicator />
+                                                                )
+                                                            ) : null}
                                                         </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </li>
+                                                        {m.streaming ? null : (
+                                                            <div className="flex items-center gap-1">
+                                                                <ThumbButton
+                                                                    active={
+                                                                        votes[
+                                                                            m.id
+                                                                        ] ===
+                                                                        'up'
+                                                                    }
+                                                                    voted={
+                                                                        !!votes[
+                                                                            m.id
+                                                                        ]
+                                                                    }
+                                                                    label="Good answer"
+                                                                    onClick={() =>
+                                                                        vote(
+                                                                            m.id,
+                                                                            'up',
+                                                                            question,
+                                                                            m.content,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ThumbsUp className="h-3.5 w-3.5" />
+                                                                </ThumbButton>
+                                                                <ThumbButton
+                                                                    active={
+                                                                        votes[
+                                                                            m.id
+                                                                        ] ===
+                                                                        'down'
+                                                                    }
+                                                                    voted={
+                                                                        !!votes[
+                                                                            m.id
+                                                                        ]
+                                                                    }
+                                                                    label="Bad answer"
+                                                                    onClick={() =>
+                                                                        vote(
+                                                                            m.id,
+                                                                            'down',
+                                                                            question,
+                                                                            m.content,
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <ThumbsDown className="h-3.5 w-3.5" />
+                                                                </ThumbButton>
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </li>
+                                        ))(questionForIndex(messages, index))
                                     ),
                                 )}
                                 {pending && !messages.some(m => m.streaming) ? (

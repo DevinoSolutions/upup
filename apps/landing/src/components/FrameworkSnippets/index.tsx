@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Copy } from 'lucide-react'
 import {
@@ -8,6 +8,7 @@ import {
     type FrameworkId,
     type FrameworkMeta,
 } from '@/lib/frameworks'
+import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 
 // The per-framework list (id/name/pkg/file/code) is the single source of truth
 // in src/lib/frameworks — imported here so the home snippets, the framework
@@ -104,9 +105,13 @@ function tokenizeLine(line: string): Token[] {
     return tokens
 }
 
+/* Shades are per-theme, not shared: the light panel is white and the dark
+   panel is gray-900, so a token needs a DARKER shade in light mode and a
+   LIGHTER one in dark mode. The comment pair was previously inverted
+   (gray-400 light / gray-500 dark), failing AA in both — 2.54:1 and 3.67:1. */
 const TOKEN_CLASS: Record<Token['kind'], string> = {
-    comment: 'text-gray-400 dark:text-gray-500 italic',
-    string: 'text-emerald-600 dark:text-emerald-400',
+    comment: 'text-gray-500 dark:text-gray-400 italic',
+    string: 'text-emerald-700 dark:text-emerald-400',
     keyword: 'text-purple-600 dark:text-purple-400',
     type: 'text-blue-600 dark:text-sky-400',
     text: 'text-gray-700 dark:text-gray-300',
@@ -135,25 +140,13 @@ export default function FrameworkSnippets({
     initialId = 'react',
 }: Readonly<{ initialId?: FrameworkId }> = {}) {
     const [activeId, setActiveId] = useState(initialId)
-    const [copiedCode, setCopiedCode] = useState(false)
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+    const { copied: copiedCode, copy } = useCopyToClipboard()
 
     const active = useMemo(
         () => FRAMEWORKS.find(f => f.id === activeId) ?? FRAMEWORKS[0],
         [activeId],
     )
-
-    const copy = useCallback((text: string, mark: (v: boolean) => void) => {
-        if (typeof window !== 'undefined' && navigator.clipboard) {
-            navigator.clipboard
-                .writeText(text)
-                .then(() => {
-                    mark(true)
-                    setTimeout(() => mark(false), 2000)
-                })
-                .catch(() => console.warn('Please copy text manually!'))
-        }
-    }, [])
 
     return (
         <motion.div
@@ -249,7 +242,7 @@ export default function FrameworkSnippets({
                         </span>
                     </div>
                     <button
-                        onClick={() => copy(active.code, setCopiedCode)}
+                        onClick={() => copy(active.code)}
                         aria-label="Copy code"
                         className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/70 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shrink-0"
                     >
