@@ -15,36 +15,10 @@ describe('@upupjs/react public exports', () => {
         expect(ReactPackage.StorageProvider.Azure).toBe('azure')
     })
 
-    it('does not export v1/internal component surface from the main entry', () => {
-        expect(
-            (ReactPackage as Record<string, unknown>).UpupCore,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).SourceSelector,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).SourceView,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).CameraUploader,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).FileList,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).FilePreview,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).UploaderPanel,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).UrlUploader,
-        ).toBeUndefined()
-        expect(
-            (ReactPackage as Record<string, unknown>).createPropGetters,
-        ).toBeUndefined()
-    })
-
+    // The "internal surface is absent" case that sat here is implied by
+    // public-api.test.ts, which asserts Object.keys(pkg) EQUALS an exact
+    // 27-name list — anything not on that list is necessarily unexported, so
+    // enumerating individual absent names could only ever go stale.
     it('exports the headless context hooks (parity with @upupjs/vue and @upupjs/svelte)', () => {
         for (const hook of [
             'useUploaderContext',

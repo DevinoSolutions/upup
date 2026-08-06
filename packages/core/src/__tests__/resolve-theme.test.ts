@@ -120,6 +120,24 @@ describe('resolveTheme — instance token overrides', () => {
         expect(result.tokens.shadow.lg).toBe('none')
         expect(result.tokens.shadow.sm).toBe(lightPreset.shadow.sm)
     })
+
+    // Deep merge across TWO token groups at once, on the dark base — the other
+    // override tests each touch a single group over the light preset, so this
+    // is the only pin that the merge keeps untouched siblings in every group it
+    // partially overwrites AND respects a non-default base preset.
+    it('merges nested partial overrides across multiple groups (deep merge)', () => {
+        const result = resolveTheme({
+            mode: 'dark',
+            tokens: {
+                color: { surface: '#000000' },
+                radius: { lg: '20px' },
+            },
+        })
+        expect(result.tokens.color.surface).toBe('#000000')
+        expect(result.tokens.color.primary).toBe(darkPreset.color.primary)
+        expect(result.tokens.radius.lg).toBe('20px')
+        expect(result.tokens.radius.sm).toBe(darkPreset.radius.sm)
+    })
 })
 
 // ─────────────────────────────────────────────

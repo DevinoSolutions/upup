@@ -19,6 +19,10 @@ test.describe('Adapter switching', () => {
         await expect(
             page.locator('[data-upup-slot="camera-uploader"]'),
         ).toBeVisible()
+        // Folded in from uploader-render.spec.ts: the slot being present does
+        // not prove the capture control rendered inside it, and this is the
+        // only assertion on that label anywhere in the suite.
+        await expect(page.getByText('Capture')).toBeVisible()
     })
 
     test('Google Drive adapter shows auth prompt', async ({ page }) => {
@@ -91,20 +95,11 @@ test.describe('Multi-file (default limit = 10)', () => {
         await page.reload()
     })
 
-    test('shows all files when several are added at once', async ({ page }) => {
-        await page.setInputFiles('[data-testid="upup-file-input"]', [
-            { name: 'alpha.txt', mimeType: 'text/plain', buffer: FILE_2KB },
-            { name: 'beta.txt', mimeType: 'text/plain', buffer: FILE_2KB },
-            { name: 'gamma.txt', mimeType: 'text/plain', buffer: FILE_2KB },
-        ])
-        await expect(
-            page.locator('[data-testid="upup-file-item"]'),
-        ).toHaveCount(3)
-        await expect(page.getByText('alpha.txt')).toBeVisible()
-        await expect(page.getByText('beta.txt')).toBeVisible()
-        await expect(page.getByText('gamma.txt')).toBeVisible()
-    })
-
+    // The plain "several files land in the list" case is a structural twin of
+    // file-interactions.spec.ts's "adds multiple files and shows all in the
+    // list" (same input, same toHaveCount(3), same per-name assertions — only
+    // the filenames differed). The two tests below stay because they are about
+    // per-file REMOVAL, which that file does not cover for a multi-file list.
     test('each file has its own remove button', async ({ page }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', [
             { name: 'one.txt', mimeType: 'text/plain', buffer: FILE_2KB },

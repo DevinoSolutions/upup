@@ -18,6 +18,27 @@ function getStepNames(core: UpupCore): string[] {
 // Individual boolean option → step mapping
 // ─────────────────────────────────────────────
 describe('Dynamic pipeline — boolean option → step', () => {
+    // Timing pin, not a step-content pin: every other test here calls upload()
+    // first and would still pass if the pipeline were built eagerly in the
+    // constructor. This one fails if the auto-build stops being LAZY.
+    it('does not build the pipeline until upload() — null right after construction', async () => {
+        const core = new UpupCore({
+            heicConversion: true,
+            stripExifData: true,
+            checksumVerification: true,
+        })
+        expect((core as unknown as CoreInternals).pipelineEngine).toBeNull()
+
+        try {
+            await core.upload()
+        } catch {
+            // upup-catch: no endpoint configured; upload() is only called to
+            // trigger lazy pipeline construction — the rejection is expected.
+        }
+        expect((core as unknown as CoreInternals).pipelineEngine).not.toBeNull()
+        core.destroy()
+    })
+
     it('heicConversion adds a heic step', async () => {
         const core = new UpupCore({ heicConversion: true })
         try {

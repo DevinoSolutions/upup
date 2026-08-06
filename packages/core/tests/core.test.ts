@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '@upupjs/core'
-import type { UpupPlugin } from '../src/plugin'
 import type { UploadFile } from '../src/contracts'
 
 const makeNativeFile = (
@@ -60,31 +59,14 @@ describe('UpupCore', () => {
         expect(core.files.size).toBe(0)
     })
 
-    it('registers plugins via use() and returns self for chaining', () => {
-        const core = new UpupCore({
-            provider: 'aws',
-            uploadEndpoint: '/api/upload',
-        })
-        const init = vi.fn()
-        const plugin: UpupPlugin = { name: 'test-plugin', init }
-        const result = core.use(plugin)
-        // init(emitter) is the one lifecycle hook (F-607) — invoked with core's bus.
-        expect(init).toHaveBeenCalledOnce()
-        expect(typeof init.mock.calls[0]![0].on).toBe('function')
-        expect(result).toBe(core)
-    })
-
-    it('registers plugins via options.plugins', () => {
-        const init = vi.fn()
-        const plugin: UpupPlugin = { name: 'opt-plugin', init }
-        const _core = new UpupCore({
-            provider: 'aws',
-            uploadEndpoint: '/api/upload',
-            plugins: [plugin],
-        })
-        expect(init).toHaveBeenCalledOnce()
-    })
-
+    // The plugin registration cases that lived here (use()-chaining + the
+    // init(emitter) shape, options.plugins, and destroy cleanup) are pinned by
+    // plugin-extended.test.ts — its F-607 block asserts the emitter exposes
+    // both on AND emit, its options.plugins block additionally proves
+    // constructor and use() plugins coexist in order, and core-destroy-
+    // lifecycle.test.ts owns destroy. Extension access stays below because
+    // this is the only place registerExtension is called directly on the core
+    // rather than from inside a plugin's init.
     it('provides type-safe extension access via ext', () => {
         const core = new UpupCore({
             provider: 'aws',
@@ -92,15 +74,5 @@ describe('UpupCore', () => {
         })
         core.registerExtension('counter', { getCount: () => 42 })
         expect(core.getExtension('counter')!.getCount!()).toBe(42)
-    })
-
-    it('cleans up on destroy', () => {
-        const core = new UpupCore({
-            provider: 'aws',
-            uploadEndpoint: '/api/upload',
-        })
-        core.on('custom:test', vi.fn())
-        core.destroy()
-        expect(core.status).toBe(UploadStatus.IDLE)
     })
 })
