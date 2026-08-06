@@ -78,7 +78,7 @@ function diffAgainstDefaults(
     return { omit: false, value }
 }
 
-function renderObjectLiteral(value: unknown, depth = 1): string {
+function renderObjectLiteral(value: unknown): string {
     if (isRawCode(value)) return value.__upupRawCode
     if (value === null || typeof value !== 'object') {
         // Backslashes must be escaped BEFORE quotes — a trailing "\" would
@@ -90,9 +90,7 @@ function renderObjectLiteral(value: unknown, depth = 1): string {
     if (Array.isArray(value)) {
         return (
             '[\n' +
-            value
-                .map(v => indent(renderObjectLiteral(v, depth + 1), 2))
-                .join(',\n') +
+            value.map(v => indent(renderObjectLiteral(v), 2)).join(',\n') +
             '\n]'
         )
     }
@@ -106,10 +104,7 @@ function renderObjectLiteral(value: unknown, depth = 1): string {
                 const safeKey = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(k)
                     ? k
                     : `'${k}'`
-                return indent(
-                    `${safeKey}: ${renderObjectLiteral(v, depth + 1)}`,
-                    2,
-                )
+                return indent(`${safeKey}: ${renderObjectLiteral(v)}`, 2)
             })
             .join(',\n') +
         '\n}'
@@ -135,7 +130,7 @@ function renderProp(key: string, value: unknown): string | null {
     if (typeof value === 'string')
         return `${key}="${value.replace(/"/g, '&quot;')}"`
     if (typeof value === 'number') return `${key}={${value}}`
-    return `${key}={${renderObjectLiteral(value, 1)}}`
+    return `${key}={${renderObjectLiteral(value)}}`
 }
 
 function collectCoreImports(value: unknown, imports: Set<string>): void {
@@ -194,12 +189,14 @@ function normalizeFolderUpload(
     return folder
 }
 
-function normalizeForCode(config: UpupConfig): {
-    config: UpupConfig
-    coreImports: string[]
-} {
+// Rewrite the raw config into the shape the generated JSX should show: drop the
+// upload target that doesn't apply to the chosen mode, swap locale strings for
+// `raw()` identifier markers, normalise CORS origins and the folder-upload keys.
+// The core imports the locale markers imply are NOT collected here — generateCode
+// derives them from the markers that survive its defaults diff, so a locale that
+// matches the default never drags in an unused import.
+function normalizeForCode(config: UpupConfig): UpupConfig {
     const out: Record<string, unknown> = { ...config }
-    const coreImports = new Set<string>()
     const resumable = out.resumable as Record<string, unknown> | undefined
     const usesTusEndpoint =
         resumable &&
@@ -225,7 +222,6 @@ function normalizeForCode(config: UpupConfig): {
             const value = nextI18n[key]
             if (typeof value === 'string' && LOCALE_EXPORTS[value]) {
                 nextI18n[key] = raw(LOCALE_EXPORTS[value])
-                coreImports.add(LOCALE_EXPORTS[value])
             }
         }
         out.i18n = nextI18n
@@ -243,7 +239,7 @@ function normalizeForCode(config: UpupConfig): {
     const folderUpload = normalizeFolderUpload(out.folderUpload)
     if (folderUpload) out.folderUpload = folderUpload
 
-    return { config: out as UpupConfig, coreImports: [...coreImports].sort() }
+    return out as UpupConfig
 }
 
 export function generateCode(
@@ -252,10 +248,10 @@ export function generateCode(
 ): string {
     const normalized = normalizeForCode(config)
     const normalizedDefaults = normalizeForCode(defaults)
-    const events = (normalized.config as any).events as
+    const events = (normalized as any).events as
         Record<string, boolean> | undefined
     const configWithoutEvents: Record<string, unknown> = {
-        ...normalized.config,
+        ...normalized,
     }
     delete (configWithoutEvents as any).events
     const coreImports = new Set<string>()
@@ -266,7 +262,7 @@ export function generateCode(
         .map(([k, v]) => {
             const res = diffAgainstDefaults(
                 v,
-                (normalizedDefaults.config as Record<string, unknown>)[k],
+                (normalizedDefaults as Record<string, unknown>)[k],
             )
             if (!res.omit) collectCoreImports(res.value, coreImports)
             return res.omit ? null : renderProp(k, res.value)

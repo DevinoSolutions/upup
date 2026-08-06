@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import React, {
+    createContext,
+    useCallback,
+    useEffect,
+    useMemo,
+    useState,
+    type ReactNode,
+} from 'react'
 import type { UpupConfig } from '../types'
 import { buildDefaultConfig } from '../categories'
 import { decodeConfig } from './serialize'
@@ -62,9 +69,10 @@ export function ConfigProvider({
     initialConfig?: UpupConfig | undefined
 }) {
     const defaults = useMemo(() => buildDefaultConfig(), [])
-    const [config, setConfigState] = useState<UpupConfig>(
-        () => ({ ...defaults, ...(initialConfig ?? {}) }),
-    )
+    const [config, setConfigState] = useState<UpupConfig>(() => ({
+        ...defaults,
+        ...(initialConfig ?? {}),
+    }))
 
     // Read-on-mount `?c=` permalink support (design spec §5). Runs from an
     // effect — not the useState initializer — so a server-rendered first
@@ -84,17 +92,28 @@ export function ConfigProvider({
 
     const setConfig = useCallback(
         (next: UpupConfig | ((prev: UpupConfig) => UpupConfig)) => {
-            setConfigState((prev) => (typeof next === 'function' ? (next as any)(prev) : next))
+            setConfigState(prev =>
+                typeof next === 'function' ? (next as any)(prev) : next,
+            )
         },
         [],
     )
 
     const setConfigPatch = useCallback((patch: Partial<UpupConfig>) => {
-        setConfigState((prev) => applyPatch(prev, patch))
+        setConfigState(prev => applyPatch(prev, patch))
     }, [])
 
+    // `defaults` and both setters are already identity-stable, so without this
+    // memo the inline object would still be new on every render and re-render
+    // every consumer — including the live uploader preview, on each sidebar
+    // toggle and each AI patch.
+    const value = useMemo(
+        () => ({ config, setConfig, setConfigPatch, defaults }),
+        [config, setConfig, setConfigPatch, defaults],
+    )
+
     return (
-        <ConfigContext.Provider value={{ config, setConfig, setConfigPatch, defaults }}>
+        <ConfigContext.Provider value={value}>
             {children}
         </ConfigContext.Provider>
     )

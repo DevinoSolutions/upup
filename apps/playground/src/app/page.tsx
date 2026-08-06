@@ -89,9 +89,8 @@ export default function Home() {
                 className="text-sm text-gray-600 dark:text-gray-400"
                 style={{ marginBottom: 16, maxWidth: 720 }}
             >
-                Tweak props on the left, see the uploader update on the right.
-                Switch to the <strong>Code</strong> tab for a copy-pasteable
-                snippet.
+                Tweak the props and watch the uploader update live. Switch to
+                the <strong>Code</strong> tab for a copy-pasteable snippet.
             </p>
             <InteractiveExample
                 key={uploadEndpoint}

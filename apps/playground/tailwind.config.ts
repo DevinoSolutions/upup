@@ -1,5 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 
+const defaultTheme = require('tailwindcss/defaultTheme')
+
 module.exports = {
     darkMode: 'class',
     content: [
@@ -20,6 +22,16 @@ module.exports = {
     important: true,
     theme: {
         extend: {
+            fontFamily: {
+                sans: [
+                    'var(--font-geist-sans)',
+                    ...defaultTheme.fontFamily.sans,
+                ],
+                mono: [
+                    'var(--font-geist-mono)',
+                    ...defaultTheme.fontFamily.mono,
+                ],
+            },
             keyframes: {
                 bounceSlow: {
                     '0%, 100%': {

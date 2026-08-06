@@ -181,7 +181,7 @@ export function AssistantPanel({
     const inputRef = useRef<HTMLTextAreaElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
 
-    const { messages, isStreaming, error, conversationId, send, reset } =
+    const { messages, isPending, error, conversationId, send, reset } =
         useMastraChat({
             baseUrl: mastraBaseUrl,
             agentId,
@@ -193,7 +193,7 @@ export function AssistantPanel({
         })
 
     useEffect(() => {
-        // Autoscroll to the latest message as it streams.
+        // Autoscroll to the latest message as the transcript grows.
         const el = listRef.current
         if (el) el.scrollTop = el.scrollHeight
     }, [messages])
@@ -305,14 +305,14 @@ export function AssistantPanel({
                         }
                     }}
                     placeholder={
-                        isStreaming ? 'Working…' : 'Describe your upload setup'
+                        isPending ? 'Working…' : 'Describe your upload setup'
                     }
-                    disabled={isStreaming}
+                    disabled={isPending}
                     aria-label="Message"
                 />
                 <button
                     type="submit"
-                    disabled={isStreaming || !input.trim()}
+                    disabled={isPending || !input.trim()}
                     aria-label="Send"
                 >
                     ▶
