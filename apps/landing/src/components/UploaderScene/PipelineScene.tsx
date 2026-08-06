@@ -105,7 +105,7 @@ function WorkerLane({ reduce }: { reduce: boolean }) {
                 <div className="h-3 w-28 rounded-full bg-emerald-500/15">
                     <div className="h-full w-full rounded-full bg-gradient-to-r from-emerald-400/50 to-emerald-400/50" />
                 </div>
-                <span className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                <span className="text-[9px] text-emerald-700 dark:text-emerald-400">
                     stays responsive
                 </span>
             </div>
@@ -140,7 +140,7 @@ function WorkerLane({ reduce }: { reduce: boolean }) {
                         />
                     ))}
                 </div>
-                <span className="text-[9px] text-sky-600 dark:text-sky-400">
+                <span className="text-[9px] text-sky-700 dark:text-sky-400">
                     compressing off-thread
                 </span>
             </div>

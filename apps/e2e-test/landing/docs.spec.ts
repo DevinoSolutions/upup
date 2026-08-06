@@ -150,15 +150,13 @@ test.describe('docs', () => {
             }),
         )
         await page.goto('/docs/getting-started/')
-        // Two DOM mounts share this testid (mobile-menu + desktop sidebar);
-        // at the default desktop e2e viewport only the desktop one is
-        // visible — the mobile mount sits inside a `lg:hidden` container.
-        // The click can land before React hydration attaches the handler on a
-        // cold compile (seen once under full-suite load), so retry the
-        // click-then-open pair until the drawer actually responds.
-        const trigger = page
-            .locator('[data-testid="docs-ask-ai-trigger"]:visible')
-            .first()
+        // Each Ask-AI trigger now has its own testid (`-desktop` sidebar,
+        // `-menu` disclosure, `-mobile` floating pill), so this addresses the
+        // desktop sidebar one directly instead of filtering a shared id by
+        // `:visible`. The click can land before React hydration attaches the
+        // handler on a cold compile (seen once under full-suite load), so retry
+        // the click-then-open pair until the drawer actually responds.
+        const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
         const drawer = page.getByTestId('docs-ask-ai-drawer')
         await expect(async () => {
             await trigger.click()
@@ -265,9 +263,7 @@ test.describe('docs', () => {
             route.fulfill({ contentType: 'text/event-stream', body: sse }),
         )
         await page.goto('/docs/getting-started/')
-        const trigger = page
-            .locator('[data-testid="docs-ask-ai-trigger"]:visible')
-            .first()
+        const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
         const drawer = page.getByTestId('docs-ask-ai-drawer')
         // Same cold-hydration guard as the fallback test: retry the open until
         // the drawer actually responds.
