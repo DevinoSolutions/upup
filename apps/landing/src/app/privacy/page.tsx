@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import Section from '@/components/ui/Section'
+import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 import { canonicalUrl } from '@/lib/site-url'
 
 export const metadata: Metadata = {
@@ -10,31 +12,20 @@ export const metadata: Metadata = {
 
 export default function Privacy() {
     return (
-        <div
-            className="
-        min-h-screen
-        flex items-center justify-center
-        bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-50
-        p-12 md:py-6 md:px-2
-      "
-        >
-            <div
-                className="
-          bg-bg dark:bg-bg-dark
-          text-gray-900 dark:text-gray-100
-          rounded-xl shadow-2xl
-          p-10 md:p-6
-          max-w-5xl md:max-w-full md:mx-1 w-full mx-4
-        "
-            >
-                <article className="prose prose-lg md:prose-base dark:prose-invert">
-                    <h1 className="text-primary dark:text-primary-dark">
-                        Privacy Policy
-                    </h1>
-                    <p>
-                        <em>Last Updated: April 25th, 2025</em>
-                    </p>
-
+        <div className="min-h-[70vh] bg-[var(--bg-base)]">
+            <Section clearNav>
+                <SectionHeading
+                    as="h1"
+                    badge="Last updated April 25th, 2025"
+                    title={
+                        <>
+                            Privacy{' '}
+                            <span className={GRADIENT_TEXT}>Policy</span>
+                        </>
+                    }
+                    subtitle="How upup collects, uses, and safeguards your information when you visit the site or use the uploader."
+                />
+                <article className="prose prose-lg mx-auto w-full max-w-3xl dark:prose-invert">
                     <p>
                         Welcome to <strong>Upup</strong> (https://useupup.com).
                         This Privacy Policy explains how we collect, use, and
@@ -106,7 +97,7 @@ export default function Privacy() {
                         .
                     </p>
                 </article>
-            </div>
+            </Section>
         </div>
     )
 }

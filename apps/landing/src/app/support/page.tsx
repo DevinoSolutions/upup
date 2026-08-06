@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function SupportPage() {
     return (
         <div className="min-h-[70vh] bg-[var(--bg-base)]">
-            <Section>
+            <Section clearNav>
                 <SectionHeading
                     as="h1"
                     badge={

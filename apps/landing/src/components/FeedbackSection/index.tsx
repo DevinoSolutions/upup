@@ -80,7 +80,9 @@ export default function FeedbackSection() {
             />
 
             {/* Feedback Options */}
-            <div className="grid lg:grid-cols-3 gap-8 mb-12">
+            {/* Four options in a 2x2 — a 3-col track orphaned the fourth card
+                on its own row with two empty columns beside it. */}
+            <div className="grid gap-8 mb-12 sm:grid-cols-2">
                 {feedbackOptions.map((option, index) => (
                     <Card key={index} className="p-8">
                         <div
@@ -115,16 +117,20 @@ export default function FeedbackSection() {
                             </a>
                         )}
 
-                        {/* Multiple action buttons */}
+                        {/* Multiple action buttons — stacked, never side by
+                            side: two buttons sharing a card row are too narrow
+                            for "Request Feature", which wrapped to two lines and
+                            made this card's CTAs 64px tall against every
+                            sibling's 48px. */}
                         {option.actions && (
-                            <div className="flex flex-col xl:flex-row gap-2">
+                            <div className="flex flex-col gap-2">
                                 {option.actions.map((action, actionIndex) => (
                                     <a
                                         key={actionIndex}
                                         href={action.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex text-sm items-center justify-center flex-1 px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                        className="inline-flex items-center justify-center w-full px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
                                     >
                                         {action.text}
                                     </a>
