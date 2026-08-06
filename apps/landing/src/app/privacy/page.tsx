@@ -1,3 +1,13 @@
+import type { Metadata } from 'next'
+import { canonicalUrl } from '@/lib/site-url'
+
+export const metadata: Metadata = {
+    title: 'Privacy Policy — upup',
+    description:
+        'How upup collects, uses, and safeguards your information when you visit the site or use the uploader.',
+    alternates: { canonical: canonicalUrl('privacy') },
+}
+
 export default function Privacy() {
     return (
         <div

@@ -16,7 +16,15 @@ const isDev = process.env.NODE_ENV !== 'production'
 const SITE_BASE = (
     process.env.NEXT_PUBLIC_BASE_URL || 'https://useupup.com'
 ).replace(/\/+$/, '')
-const DOCS_ALIAS_HOST = `docs.${new URL(SITE_BASE).host}`
+const SITE_HOST = new URL(SITE_BASE).host
+const DOCS_ALIAS_HOST = `docs.${SITE_HOST}`
+// `www.<host>` resolves to this same app, so without a redirect the whole site
+// is served twice under two hostnames. Page canonicals already point at the
+// apex, but a canonical is a hint — this makes the apex the only 200.
+const WWW_HOST = `www.${SITE_HOST}`
+// Mirrors src/lib/site-url.ts's isProductionSite(). Non-production hosts serve
+// a byte-identical copy of the site, so they get a noindex header.
+const IS_PRODUCTION_SITE = SITE_HOST === 'useupup.com'
 
 const nextConfig = {
     reactStrictMode: true,
@@ -113,29 +121,94 @@ const nextConfig = {
                 destination: '/docs/api-reference/upupuploader/required-props/',
                 permanent: true,
             },
+            // Destination carries the trailing slash so trailingSlash:true
+            // does not have to spend a SECOND 308 appending it. Safe here only
+            // because every extensionless legacy path maps to a real page and
+            // the two file paths under /documentation are handled by the
+            // explicit llms rules above — a slash appended to a file URL would
+            // break it (Next never slashes paths with an extension).
             {
                 source: '/documentation/:path*',
-                destination: '/docs/:path*',
+                destination: '/docs/:path*/',
                 permanent: true,
             },
             // docs.<host> alias — placed AFTER the /documentation rules on
             // purpose: a legacy path on the alias host takes the relative
             // /documentation/* -> /docs/* hop first (staying on the alias
-            // host), then the /docs/* rule below moves it to the main host —
-            // two hops, correct final URL. The /docs/* source must precede
-            // the catch-all so an already-prefixed path isn't doubled to
-            // /docs/docs/*.
+            // host), then the /docs/* rule below moves it to the main host.
+            //
+            // The three explicit rules come before the two catch-alls because
+            // a catch-all destination of `/docs/:path*/` is wrong for exactly
+            // two shapes: an EMPTY `:path*` (which would render `/docs//`) and
+            // a FILE path (which must not gain a trailing slash). Listing them
+            // explicitly lets the catch-alls stay slashed for the page shapes
+            // that are 99% of alias traffic.
+            {
+                source: '/llms.txt',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/llms.txt`,
+                permanent: true,
+            },
+            {
+                source: '/llms-full.txt',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/llms-full.txt`,
+                permanent: true,
+            },
+            // Bare alias root and a bare `/docs` on the alias — the empty
+            // `:path*` cases the catch-alls below cannot express.
+            {
+                source: '/',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/`,
+                permanent: true,
+            },
+            {
+                source: '/docs',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/docs/`,
+                permanent: true,
+            },
+            // The /docs/* source must precede the catch-all so an already-
+            // prefixed path isn't doubled to /docs/docs/*.
             {
                 source: '/docs/:path*',
                 has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
-                destination: `${SITE_BASE}/docs/:path*`,
+                destination: `${SITE_BASE}/docs/:path*/`,
                 permanent: true,
             },
             {
                 source: '/:path*',
                 has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
-                destination: `${SITE_BASE}/docs/:path*`,
+                destination: `${SITE_BASE}/docs/:path*/`,
                 permanent: true,
+            },
+            // www.<host> -> apex. Catch-all only: www serves the SAME routes,
+            // so unlike the docs alias there is no /docs prefixing. The bare
+            // root is listed separately for the same empty-`:path*` reason.
+            {
+                source: '/',
+                has: [{ type: 'host', value: WWW_HOST }],
+                destination: `${SITE_BASE}/`,
+                permanent: true,
+            },
+            {
+                source: '/:path*',
+                has: [{ type: 'host', value: WWW_HOST }],
+                destination: `${SITE_BASE}/:path*`,
+                permanent: true,
+            },
+        ]
+    },
+    // Non-production hosts (dev, previews) serve a byte-identical copy of the
+    // whole site. robots.txt disallows crawling there; this header is what
+    // actually keeps a URL discovered some other way out of the index.
+    async headers() {
+        if (IS_PRODUCTION_SITE) return []
+        return [
+            {
+                source: '/:path*',
+                headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
             },
         ]
     },

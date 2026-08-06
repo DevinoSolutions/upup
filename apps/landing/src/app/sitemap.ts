@@ -31,6 +31,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.9,
         })),
         {
+            url: canonicalUrl('support'),
+            lastModified,
+            changeFrequency: 'monthly',
+            priority: 0.4,
+        },
+        {
             url: canonicalUrl('privacy'),
             lastModified,
             changeFrequency: 'yearly',

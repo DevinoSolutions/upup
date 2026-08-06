@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Section from '@/components/ui/Section'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 import SupportForm from './SupportForm'
+import { canonicalUrl } from '@/lib/site-url'
 
 export const metadata: Metadata = {
     title: 'Support — upup',
     description:
         'Report a problem, request a feature, or ask a question about upup. Your message reaches the team directly.',
+    alternates: { canonical: canonicalUrl('support') },
 }
 
 export default function SupportPage() {

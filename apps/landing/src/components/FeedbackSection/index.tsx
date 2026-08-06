@@ -26,7 +26,9 @@ export default function FeedbackSection() {
             title: 'Contact Support',
             description:
                 'Open a support request — problems, feature ideas, or questions',
-            action: '/support',
+            // Slashed: trailingSlash:true serves the page at /support/, so the
+            // slashless form costs every visitor a 308 round trip.
+            action: '/support/',
             buttonText: 'Open Support',
         },
         {

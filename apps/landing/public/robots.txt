@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /api/
-Disallow: /mobile-demo/
-
-Sitemap: https://useupup.com/sitemap.xml
