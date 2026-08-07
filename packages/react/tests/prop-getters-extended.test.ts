@@ -66,14 +66,10 @@ function makeClipboardEvent(
 // onDragOver
 // ─────────────────────────────────────────────
 describe('getDropzoneProps — onDragOver', () => {
-    it('delegates to dragDrop.handleDragOver with the event', () => {
-        const dragDrop = makeFakeDragDrop()
-        const { getDropzoneProps } = createPropGetters(makeDeps({ dragDrop }))
-        const e = makeDragEvent()
-        getDropzoneProps().onDragOver!(e)
-        expect(dragDrop.handleDragOver).toHaveBeenCalledWith(e)
-    })
-
+    // The bare onDragOver delegation case is already pinned identically by
+    // prop-getters.test.ts ("delegates onDragOver to the DragDropController").
+    // The composition case below is kept because it is strictly stronger: it
+    // asserts the delegation STILL fires when a caller override is supplied.
     it('composes a caller override alongside the delegation', () => {
         const dragDrop = makeFakeDragDrop()
         const override = vi.fn()

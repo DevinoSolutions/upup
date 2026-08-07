@@ -154,3 +154,24 @@ describe('BrowserRuntime — createObjectURL / revokeObjectURL', () => {
         expect(stub).toHaveBeenCalledWith('blob:test-url')
     })
 })
+
+// ─────────────────────────────────────────────
+// computeHash ∘ readAsArrayBuffer round-trip
+// ─────────────────────────────────────────────
+describe('BrowserRuntime — computeHash round-trip with readAsArrayBuffer', () => {
+    it('hashes by CONTENT — same bytes under a different filename hash equal', async () => {
+        const content = 'round-trip test content'
+        const buf = await BrowserRuntime.readAsArrayBuffer(
+            new File([content], 'rt.txt', { type: 'text/plain' }),
+        )
+        const hash = await BrowserRuntime.computeHash(buf)
+        expect(hash).toHaveLength(64)
+
+        // Different File, different name, identical bytes → identical digest.
+        // Pins that filename never leaks into the hash input.
+        const buf2 = await BrowserRuntime.readAsArrayBuffer(
+            new File([content], 'rt2.txt'),
+        )
+        expect(await BrowserRuntime.computeHash(buf2)).toBe(hash)
+    })
+})

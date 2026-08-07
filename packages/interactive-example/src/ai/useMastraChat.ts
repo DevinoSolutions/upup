@@ -79,12 +79,21 @@ const newTraceId = () =>
         : randomHex(16)
 
 /**
- * Minimal chat hook talking directly to a Mastra agent's stream endpoint.
+ * Minimal chat hook talking directly to a Mastra agent through the client SDK's
+ * `generate()` — a whole turn per request, NOT token streaming. The panel shows
+ * a pending cursor while the request is in flight, then renders the answer in
+ * one go.
  *
  * Why not @ai-sdk/react useChat or CopilotKit? Mastra's client SDK already
- * understands the stream protocol our agent emits. Adding either of those
- * means another runtime in the middle. This hook is ~80 lines and does
- * exactly what the playground needs — text streaming + tool result hand-off.
+ * speaks the protocol our agent emits; either of those adds another runtime in
+ * the middle for no gain here.
+ *
+ * There is deliberately no cancel: `@mastra/client-js` builds `generate()`'s
+ * options by Omit-ing `abortSignal` (see StreamParamsBase in its types), so a
+ * request cannot be aborted through the SDK. Rather than expose a cancel that
+ * silently does nothing, an in-flight turn is superseded by run id — after
+ * `reset()` a late response is discarded instead of landing in a cleared
+ * transcript.
  */
 export function useMastraChat({
     baseUrl,
@@ -94,20 +103,25 @@ export function useMastraChat({
     distinctId,
 }: UseMastraChatOptions) {
     const [messages, setMessages] = useState<ChatMessage[]>([])
-    const [isStreaming, setIsStreaming] = useState(false)
+    const [isPending, setIsPending] = useState(false)
     const [error, setError] = useState<string | null>(null)
     // One conversation id per chat lifecycle, created lazily on first send and
     // rolled over by reset(). It becomes the trace's `$ai_session_id` and the
     // `$ai_session_id` on every thumbs event, so PostHog groups a conversation.
     const [conversationId, setConversationId] = useState<string | null>(null)
-    const abortRef = useRef<AbortController | null>(null)
+    // Monotonic turn id. Every send captures the value it started with; a
+    // response only touches state while it is still the current turn, so a
+    // reset() (which bumps the id) discards whatever is already in flight.
+    const runIdRef = useRef(0)
 
     const client = useMemo(() => new MastraClient({ baseUrl }), [baseUrl])
 
     const send = useCallback(
         async (input: string) => {
             const trimmed = input.trim()
-            if (!trimmed || isStreaming) return
+            if (!trimmed || isPending) return
+            const myRun = ++runIdRef.current
+            const isCurrent = () => runIdRef.current === myRun
 
             setError(null)
             const convId = conversationId ?? newId()
@@ -129,10 +143,7 @@ export function useMastraChat({
             }
 
             setMessages(prev => [...prev, userMsg, asstMsg])
-            setIsStreaming(true)
-
-            const controller = new AbortController()
-            abortRef.current = controller
+            setIsPending(true)
 
             try {
                 // .generate() returns the whole turn at once. We trade
@@ -201,6 +212,10 @@ export function useMastraChat({
                         collect(step?.toolResults)
                 }
 
+                // Superseded turn: the transcript it belongs to is gone, so
+                // neither its patches nor its text may be applied.
+                if (!isCurrent()) return
+
                 for (const p of patches) onPatch(p)
 
                 setMessages(prev =>
@@ -217,6 +232,7 @@ export function useMastraChat({
                     ),
                 )
             } catch (e: unknown) {
+                if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
                 const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
                 setError(friendly)
@@ -236,8 +252,10 @@ export function useMastraChat({
                     ),
                 )
             } finally {
-                setIsStreaming(false)
-                abortRef.current = null
+                // Only the turn that owns the flight may release the gate; a
+                // superseded one must not re-enable the composer under a newer
+                // request.
+                if (isCurrent()) setIsPending(false)
             }
         },
         [
@@ -246,23 +264,23 @@ export function useMastraChat({
             client,
             conversationId,
             distinctId,
-            isStreaming,
+            isPending,
             onPatch,
         ],
     )
 
-    const cancel = useCallback(() => {
-        abortRef.current?.abort()
-    }, [])
-
     const reset = useCallback(() => {
-        abortRef.current?.abort()
+        // Bumping the run id supersedes any in-flight turn: its response finds
+        // isCurrent() false and is dropped rather than repopulating the cleared
+        // transcript. The request itself keeps running — the SDK gives us no
+        // way to abort it — but it can no longer affect the UI.
+        runIdRef.current++
         setMessages([])
         setError(null)
-        setIsStreaming(false)
+        setIsPending(false)
         // A cleared conversation starts a new session on the next send.
         setConversationId(null)
     }, [])
 
-    return { messages, isStreaming, error, conversationId, send, cancel, reset }
+    return { messages, isPending, error, conversationId, send, reset }
 }

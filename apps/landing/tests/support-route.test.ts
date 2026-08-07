@@ -237,6 +237,53 @@ describe('POST /api/upup-support', () => {
         expect(captureArg.properties.test_scenario).toBeUndefined()
     })
 
+    it('accepts a provider_notify submission from the homepage modal', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(
+                payload({
+                    type: 'provider_notify',
+                    message:
+                        'Notify-me request from the homepage for the Vercel Blob integration.',
+                    wantsReply: true,
+                    email: 'dev@example.com',
+                }),
+            ),
+        )
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.ok).toBe(true)
+
+        // The type reaches both legs, so provider interest is filterable in
+        // analytics and identifiable in the inbox.
+        const captureArg = h.captureMock.mock.calls[0][0]
+        expect(captureArg.properties.feedback_type).toBe('provider_notify')
+        const mailArg = h.sendMailMock.mock.calls[0][0]
+        expect(mailArg.subject).toContain('provider_notify')
+        expect(mailArg.text).toContain('Vercel Blob')
+        // The address is the reply-to only — never the sender.
+        expect(mailArg.replyTo).toBe('dev@example.com')
+    })
+
+    it('drops a honeypot-filled provider_notify submission silently', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(
+                payload({
+                    type: 'provider_notify',
+                    wantsReply: true,
+                    email: 'bot@example.com',
+                    website: 'spam-bot',
+                }),
+            ),
+        )
+
+        expect(res.status).toBe(200)
+        expect(h.postHogCtor).not.toHaveBeenCalled()
+        expect(h.sendMailMock).not.toHaveBeenCalled()
+    })
+
     it('never puts the submitter email into the captured event properties', async () => {
         const POST = await loadRoute(ENABLED_ENV)
         const res = await POST(

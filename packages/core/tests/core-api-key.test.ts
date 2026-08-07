@@ -14,11 +14,9 @@ describe('UpupCore hosted apiKey removal', () => {
         vi.clearAllMocks()
     })
 
-    it('does not infer a managed serverUrl from apiKey-like legacy input', () => {
-        const core = new UpupCore(legacyApiKeyOptions)
-        expect(core.options.serverUrl).toBeUndefined()
-    })
-
+    // The serverUrl-inference check this file used to open with is implied by
+    // the test below: if a managed serverUrl had been inferred, upload() would
+    // have had a target and could not reject with NO_UPLOAD_TARGET.
     it('does not upload through the retired managed apiKey path', async () => {
         const core = new UpupCore(legacyApiKeyOptions)
         await core.addFiles([

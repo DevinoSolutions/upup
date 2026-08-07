@@ -1,7 +1,7 @@
 // components/StackBlitzDemoSection.tsx
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Code, ExternalLink, Maximize2, Minimize2 } from 'lucide-react'
 import { FaExclamationTriangle } from 'react-icons/fa'
@@ -87,8 +87,82 @@ const stackblitzProject: Project = {
 
 const OPEN_FILE = 'app/page.tsx'
 
+// The editor chrome, rendered identically inline and full screen — only the
+// surface colours and the size-toggle icon differ, so the two used to be
+// copy-pasted blocks that could drift apart.
+function EditorWindowBar({
+    variant,
+    onOpenInStackBlitz,
+    onToggleFullScreen,
+}: {
+    variant: 'inline' | 'fullscreen'
+    onOpenInStackBlitz: () => void
+    onToggleFullScreen: () => void
+}) {
+    const isFullscreen = variant === 'fullscreen'
+    const barClass = isFullscreen
+        ? 'flex items-center justify-between px-6 py-4 bg-gray-950 border-b border-white/10 shrink-0'
+        : 'flex items-center justify-between gap-3 border-b border-black/5 px-6 py-4 dark:border-white/10'
+    const titleClass = isFullscreen
+        ? 'text-sm font-medium text-white'
+        : 'text-sm font-medium text-gray-700 dark:text-gray-300'
+    const openClass = isFullscreen
+        ? 'inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors'
+        : 'inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20'
+    const toggleClass = isFullscreen
+        ? 'inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors'
+        : 'inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+
+    return (
+        <div className={barClass}>
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full" />
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                </div>
+                <span className={titleClass}>{OPEN_FILE}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+                <button onClick={onOpenInStackBlitz} className={openClass}>
+                    <SiStackblitz className="w-4 h-4" aria-hidden />
+                    Open in StackBlitz
+                </button>
+                <button onClick={onToggleFullScreen} className={toggleClass}>
+                    {isFullscreen ? (
+                        <>
+                            <Minimize2 className="w-4 h-4" />
+                            Exit&nbsp;full&nbsp;screen
+                        </>
+                    ) : (
+                        <>
+                            <Maximize2 className="w-4 h-4" />
+                            Full&nbsp;screen
+                        </>
+                    )}
+                </button>
+            </div>
+        </div>
+    )
+}
+
+// Covers the embed container until the SDK reports the editor is ready.
+function EditorLoadingOverlay() {
+    return (
+        <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
+            <div className="flex flex-col items-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+                <p className="text-white text-sm">Loading editor...</p>
+            </div>
+        </div>
+    )
+}
+
 export default function StackBlitzDemoSection() {
     const containerRef = useRef<HTMLDivElement | null>(null)
+    const cancelButtonRef = useRef<HTMLButtonElement | null>(null)
+    const warningTitleId = useId()
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [embedFailed, setEmbedFailed] = useState(false)
@@ -209,10 +283,23 @@ export default function StackBlitzDemoSection() {
         setShowFullscreenWarning(false)
     }
 
-    const cancelFullscreenChange = () => {
+    const cancelFullscreenChange = useCallback(() => {
         setShowFullscreenWarning(false)
         setPendingFullscreenState(isFullscreen)
-    }
+    }, [isFullscreen])
+
+    // The warning is a real confirm — switching size re-embeds the project and
+    // discards unsaved edits — so it keeps the gate but now behaves like a
+    // dialog: Escape dismisses it and focus moves into it on open.
+    useEffect(() => {
+        if (!showFullscreenWarning) return
+        cancelButtonRef.current?.focus()
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === 'Escape') cancelFullscreenChange()
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => document.removeEventListener('keydown', onKeyDown)
+    }, [showFullscreenWarning, cancelFullscreenChange])
 
     return (
         <>
@@ -237,39 +324,11 @@ export default function StackBlitzDemoSection() {
                 {/* Regular container when not fullscreen */}
                 {!isFullscreen && (
                     <div className="relative overflow-hidden rounded-3xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10">
-                        {/* Window bar */}
-                        <div className="flex items-center justify-between gap-3 border-b border-black/5 px-6 py-4 dark:border-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-red-500 rounded-full" />
-                                    <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                                    <div className="w-3 h-3 bg-green-500 rounded-full" />
-                                </div>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    app/page.tsx
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={openInStackBlitz}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 dark:bg-primary-dark/10 dark:text-primary-dark dark:hover:bg-primary-dark/20"
-                                >
-                                    <SiStackblitz
-                                        className="w-4 h-4"
-                                        aria-hidden
-                                    />
-                                    Open in StackBlitz
-                                </button>
-                                <button
-                                    onClick={toggleFullScreen}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-black/5 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-black/10 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10"
-                                >
-                                    <Maximize2 className="w-4 h-4" />
-                                    Full&nbsp;screen
-                                </button>
-                            </div>
-                        </div>
+                        <EditorWindowBar
+                            variant="inline"
+                            onOpenInStackBlitz={openInStackBlitz}
+                            onToggleFullScreen={toggleFullScreen}
+                        />
 
                         {/* StackBlitz iframe */}
                         <div className="relative">
@@ -302,16 +361,8 @@ export default function StackBlitzDemoSection() {
                                     className="w-full h-[75vh] overflow-hidden"
                                 />
                             )}
-                            {/* Loading overlay that covers the StackBlitz container */}
-                            {isLoading && !isFullscreen && !embedFailed && (
-                                <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
-                                    <div className="flex flex-col items-center space-y-4">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                        <p className="text-white text-sm">
-                                            Loading editor...
-                                        </p>
-                                    </div>
-                                </div>
+                            {isLoading && !embedFailed && (
+                                <EditorLoadingOverlay />
                             )}
                         </div>
                     </div>
@@ -354,39 +405,11 @@ export default function StackBlitzDemoSection() {
             {isFullscreen && (
                 <div className="fixed inset-0 z-[9999] bg-gray-900">
                     <div className="w-full h-full flex flex-col">
-                        {/* Window bar with improved text readability */}
-                        <div className="flex items-center justify-between px-6 py-4 bg-gray-950 border-b border-white/10 shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-red-500 rounded-full" />
-                                    <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                                    <div className="w-3 h-3 bg-green-500 rounded-full" />
-                                </div>
-                                <span className="text-sm font-medium text-white">
-                                    app/page.tsx
-                                </span>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={openInStackBlitz}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    <SiStackblitz
-                                        className="w-4 h-4"
-                                        aria-hidden
-                                    />
-                                    Open in StackBlitz
-                                </button>
-                                <button
-                                    onClick={toggleFullScreen}
-                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    <Minimize2 className="w-4 h-4" />
-                                    Exit&nbsp;full&nbsp;screen
-                                </button>
-                            </div>
-                        </div>
+                        <EditorWindowBar
+                            variant="fullscreen"
+                            onOpenInStackBlitz={openInStackBlitz}
+                            onToggleFullScreen={toggleFullScreen}
+                        />
 
                         {/* StackBlitz iframe container */}
                         <div className="flex-1 overflow-hidden relative">
@@ -394,17 +417,7 @@ export default function StackBlitzDemoSection() {
                                 className="w-full h-full"
                                 id="fullscreen-stackblitz-container"
                             />
-                            {/* Loading overlay for fullscreen mode */}
-                            {isLoading && isFullscreen && (
-                                <div className="absolute inset-0 bg-gray-900 bg-opacity-95 flex items-center justify-center z-10">
-                                    <div className="flex flex-col items-center space-y-4">
-                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                                        <p className="text-white text-sm">
-                                            Loading editor...
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+                            {isLoading && <EditorLoadingOverlay />}
                         </div>
                     </div>
                 </div>
@@ -426,14 +439,23 @@ export default function StackBlitzDemoSection() {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             transition={{ duration: 0.2 }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby={warningTitleId}
                             className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-md w-full border border-gray-200 dark:border-gray-700 shadow-xl"
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                                    <FaExclamationTriangle className="w-4 h-4 text-white" />
+                                    <FaExclamationTriangle
+                                        className="w-4 h-4 text-white"
+                                        aria-hidden
+                                    />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                <h3
+                                    id={warningTitleId}
+                                    className="text-lg font-semibold text-gray-900 dark:text-white"
+                                >
                                     {pendingFullscreenState
                                         ? 'Enter Fullscreen'
                                         : 'Exit Fullscreen'}
@@ -447,12 +469,15 @@ export default function StackBlitzDemoSection() {
 
                             <div className="flex gap-3">
                                 <button
+                                    ref={cancelButtonRef}
+                                    type="button"
                                     onClick={cancelFullscreenChange}
                                     className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg border border-gray-300 dark:border-gray-600"
                                 >
                                     Cancel
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={confirmFullscreenChange}
                                     className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                                 >

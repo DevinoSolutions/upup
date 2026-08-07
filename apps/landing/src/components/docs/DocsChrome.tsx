@@ -5,7 +5,10 @@ import { useState } from 'react'
 import { Sparkles } from 'lucide-react'
 import type { SidebarNode } from '@/lib/docs/sidebar-tree'
 import { DocsSidebar } from '@/components/docs/DocsSidebar'
-import { DocsSearch } from '@/components/docs/DocsSearch'
+import {
+    DocsSearchDialog,
+    DocsSearchTrigger,
+} from '@/components/docs/DocsSearch'
 import { DocsAskAi } from '@/components/docs/DocsAskAi'
 import { useDocsChat } from '@/lib/docs/use-docs-chat'
 
@@ -21,8 +24,13 @@ export function DocsChrome({
     children: ReactNode
 }) {
     const [aiOpen, setAiOpen] = useState(false)
+    // Search state lives here, next to aiOpen, so the two triggers below (mobile
+    // disclosure + desktop sidebar) drive ONE dialog — see DocsSearchTrigger's
+    // note for what rendering the whole widget twice used to break.
+    const [searchOpen, setSearchOpen] = useState(false)
     const chat = useDocsChat()
     const openAi = () => setAiOpen(true)
+    const openSearch = () => setSearchOpen(true)
 
     return (
         <div
@@ -37,9 +45,12 @@ export function DocsChrome({
                     Documentation menu
                 </summary>
                 <div className="space-y-3 pt-3">
-                    <DocsSearch />
+                    <DocsSearchTrigger onClick={openSearch} />
+                    {/* `-menu`, not `-mobile`: the floating pill below already
+                        owns `docs-ask-ai-trigger-mobile`, and all three of these
+                        triggers must be individually addressable. */}
                     <AskAiTrigger
-                        testId="docs-ask-ai-trigger"
+                        testId="docs-ask-ai-trigger-menu"
                         onClick={openAi}
                     />
                     <DocsSidebar tree={tree} />
@@ -50,9 +61,9 @@ export function DocsChrome({
                 {/* Desktop sidebar — sticky under the fixed site header. */}
                 <aside className="hidden lg:block">
                     <div className="docs-scrollbar sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-8">
-                        <DocsSearch />
+                        <DocsSearchTrigger onClick={openSearch} />
                         <AskAiTrigger
-                            testId="docs-ask-ai-trigger"
+                            testId="docs-ask-ai-trigger-desktop"
                             onClick={openAi}
                         />
                         <DocsSidebar tree={tree} />
@@ -71,6 +82,10 @@ export function DocsChrome({
                 <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Ask AI
             </button>
+
+            {/* One dialog for both triggers above, and the single owner of the
+                ⌘K listener + body-scroll lock. */}
+            <DocsSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
 
             <DocsAskAi
                 open={aiOpen}

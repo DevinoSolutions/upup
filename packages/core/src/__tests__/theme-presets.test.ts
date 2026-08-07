@@ -107,6 +107,20 @@ describe('darkPreset structure', () => {
         }
     })
 
+    // The contrast block below only compares shadow.lg and deep-equals spacing,
+    // so sm/md shadow keys on the DARK preset had no presence pin of their own.
+    it('shadow group has all required keys', () => {
+        for (const key of REQUIRED_SHADOW_KEYS) {
+            expect(darkPreset.shadow).toHaveProperty(key)
+        }
+    })
+
+    it('spacing group has all required keys', () => {
+        for (const key of REQUIRED_SPACING_KEYS) {
+            expect(darkPreset.spacing).toHaveProperty(key)
+        }
+    })
+
     it('surface is dark (#1A1A2E)', () => {
         expect(darkPreset.color.surface).toBe('#1A1A2E')
     })

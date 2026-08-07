@@ -5,8 +5,10 @@
 // itself stays passive (its taps are simulated), but these chips are REAL buttons
 // that jump the loop straight to a beat and let it play from there: clicking one
 // calls back with that beat's start timestamp, which HeroSession hands to the
-// timeline's `seek`. While the loop plays, the chip whose segment is on screen is
-// highlighted. They MUST live outside the aria-hidden scene root (they are
+// timeline's `seek`. Under reduced motion they keep working — `seek` pins the
+// beat's static frame instead of starting the clock — so the demo stays
+// browsable without motion. While the loop plays, the chip whose segment is on
+// screen is highlighted. They MUST live outside the aria-hidden scene root (they are
 // genuine controls), so HeroSession renders them as a sibling of it. Flat
 // hairline styling — the landing page's de-playful system, no gradients/glow.
 // The "Screen share" chip carries a persistent Popular badge (flagship item).
@@ -23,17 +25,14 @@ export interface BeatChip {
 
 interface BeatChipsProps {
     beats: BeatChip[]
-    /** Id of the chip whose segment is currently playing (null → none). */
+    /** Id of the chip whose segment is currently showing (null → none). */
     activeId: string | null
-    /** Reduced motion / off-viewport: chips still render but seeking no-ops. */
-    frozen: boolean
     onSelect: (seekTo: number) => void
 }
 
 export default function BeatChips({
     beats,
     activeId,
-    frozen,
     onSelect,
 }: BeatChipsProps) {
     return (
@@ -44,17 +43,23 @@ export default function BeatChips({
                     <button
                         key={beat.id}
                         type="button"
-                        aria-disabled={frozen || undefined}
+                        // A set of toggles, not a tablist — aria-pressed is the
+                        // minimal correct state here and is what makes the
+                        // selected beat perceivable to a screen reader (the
+                        // highlight is colour-only). Deliberately NOT
+                        // aria-disabled under reduced motion: the chip still
+                        // works there, it jumps to the beat's static frame.
+                        aria-pressed={active}
                         onClick={() => onSelect(beat.seekTo)}
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                             active
-                                ? 'border-sky-500/60 bg-sky-500/[0.08] text-sky-600 dark:text-sky-300'
+                                ? 'border-sky-500/60 bg-sky-500/[0.08] text-sky-700 dark:text-sky-300'
                                 : 'border-black/10 text-gray-600 hover:bg-black/[0.03] dark:border-white/15 dark:text-gray-300 dark:hover:bg-white/[0.05]'
                         }`}
                     >
                         {beat.label}
                         {beat.popular && (
-                            <span className="rounded-full bg-sky-500/15 px-1.5 text-[9px] font-semibold uppercase text-sky-600 dark:text-sky-300">
+                            <span className="rounded-full bg-sky-500/15 px-1.5 text-[9px] font-semibold uppercase text-sky-700 dark:text-sky-300">
                                 Popular
                             </span>
                         )}

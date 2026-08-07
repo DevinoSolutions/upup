@@ -77,6 +77,14 @@ describe('tokensToVars', () => {
         expect(Object.keys(vars).length).toBe(leafCount)
     })
 
+    // Deliberately a LITERAL, not derived from the preset like the test above:
+    // a derived count follows the token set wherever it goes and so can never
+    // notice a token being added or dropped. This one fails loudly when the
+    // public CSS-variable surface changes size — update it on purpose.
+    it('emits exactly 23 variables (12 color + 4 radius + 3 shadow + 4 spacing)', () => {
+        expect(Object.keys(tokensToVars(lightPreset))).toHaveLength(23)
+    })
+
     it('does not contain any undefined values', () => {
         const vars = tokensToVars(lightPreset)
         for (const val of Object.values(vars)) {

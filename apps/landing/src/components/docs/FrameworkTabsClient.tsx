@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import type { IconType } from 'react-icons'
 import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
 import { CodeCardControls } from './CodeCardControls'
@@ -59,6 +59,7 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
     // deep-linked choice in an effect after mount — avoids a hydration mismatch.
     const [selected, setSelected] = useState(tabs[0].fw)
     const baseId = useId()
+    const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
     useEffect(() => {
         const inTabs = (fw: string | null): fw is string =>
@@ -115,7 +116,7 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
                 aria-label="Framework"
                 className="flex flex-wrap gap-x-0.5 border-b border-gray-200 dark:border-white/10"
             >
-                {tabs.map(tab => {
+                {tabs.map((tab, i) => {
                     const isActive = tab.fw === active.fw
                     const icon = TAB_ICON[tab.fw]
                     return (
@@ -123,12 +124,37 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
                             key={tab.fw}
                             type="button"
                             role="tab"
+                            ref={el => {
+                                tabRefs.current[tab.fw] = el
+                            }}
                             id={`${baseId}-tab-${tab.fw}`}
                             aria-selected={isActive}
                             aria-controls={panelId}
                             tabIndex={isActive ? 0 : -1}
                             data-testid={`docs-framework-tab-${tab.fw}`}
                             onClick={() => choose(tab.fw)}
+                            // Roving tabindex removes the inactive tabs from the
+                            // tab sequence, so arrow/Home/End are the ONLY way a
+                            // keyboard reaches them. Mirrors the homepage strip
+                            // (components/FrameworkSnippets), and routes through
+                            // choose() so the stored/broadcast choice stays in
+                            // sync rather than only the local selection.
+                            onKeyDown={e => {
+                                const last = tabs.length - 1
+                                let nextIndex: number
+                                if (e.key === 'ArrowRight')
+                                    nextIndex = (i + 1) % tabs.length
+                                else if (e.key === 'ArrowLeft')
+                                    nextIndex =
+                                        (i - 1 + tabs.length) % tabs.length
+                                else if (e.key === 'Home') nextIndex = 0
+                                else if (e.key === 'End') nextIndex = last
+                                else return
+                                e.preventDefault()
+                                const next = tabs[nextIndex]
+                                choose(next.fw)
+                                tabRefs.current[next.fw]?.focus()
+                            }}
                             className={`-mb-px flex items-center gap-1.5 rounded-t-md border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                 isActive
                                     ? 'border-blue-600 text-gray-900 dark:border-blue-400 dark:text-white'

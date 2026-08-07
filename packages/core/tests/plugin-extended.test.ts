@@ -24,20 +24,9 @@ describe('UpupCore.use() — chaining and integration', () => {
         core.destroy()
     })
 
-    it('plugin can subscribe to core events during init', async () => {
-        const core = new UpupCore({})
-        const handler = vi.fn()
-        core.use({
-            name: 'event-listener',
-            init: emitter => {
-                emitter.on('files-added', handler)
-            },
-        })
-        await core.addFiles([new File(['x'], 'a.txt', { type: 'text/plain' })])
-        expect(handler).toHaveBeenCalled()
-        core.destroy()
-    })
-
+    // The init-subscription case that sat here was a verbatim twin of the
+    // F-607 block's "the init emitter is core's bus" test below, which carries
+    // the ruling context. Kept there, not here.
     it('rejects duplicate plugin names', () => {
         const core = new UpupCore({})
         core.use({ name: 'unique', init: () => {} })

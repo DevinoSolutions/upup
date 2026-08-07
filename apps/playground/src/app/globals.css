@@ -1,7 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@variant dark (&:where(.dark &, .dark & *));
 
 :root {
   --background: #ffffff;
@@ -18,18 +17,12 @@
   font-display: swap;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark values follow the `.dark` class the theme script in app/layout.tsx
+   stamps on <html>, NOT prefers-color-scheme — otherwise an explicit in-app
+   "light" choice on a dark-mode OS still resolved these to the dark values. */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 html {
   scroll-behavior: smooth;
@@ -81,7 +74,19 @@ html.dark body::-webkit-scrollbar-thumb:hover {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Geist is loaded by next/font/google in app/layout.tsx, which stamps
+     --font-geist-sans on <body>; the tailwind config exposes the same
+     stack as font-sans. */
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
 }
 
 @layer utilities {

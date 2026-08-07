@@ -63,21 +63,10 @@ test.describe('UpupUploader rendering', () => {
         await expect(page.getByText('Built by')).toBeVisible()
     })
 
-    test('has data-testid on root', async ({ page }) => {
-        await expect(page.locator('[data-testid="upup-root"]')).toBeVisible()
-    })
-
-    test('has data-testid on dropzone', async ({ page }) => {
-        await expect(
-            page.locator('[data-testid="upup-dropzone"]'),
-        ).toBeVisible()
-    })
-
-    test('has data-testid on browse button', async ({ page }) => {
-        await expect(
-            page.locator('[data-testid="upup-browse-files"]'),
-        ).toBeVisible()
-    })
+    // The root / dropzone / browse-button testid checks that sat here are
+    // owned by data-testid.spec.ts, which pins the whole contract-string set
+    // (root, container, dropzone, browse-files, branding, and every source
+    // tile) with toHaveCount(1).
 })
 
 test.describe('Theme switching', () => {
@@ -89,30 +78,14 @@ test.describe('Theme switching', () => {
         await expect(root).toBeVisible()
     })
 
-    test('switches to headless mode', async ({ page }) => {
-        await page.goto('/')
-        await page.getByRole('button', { name: 'Headless Hook' }).click()
-        await expect(page.getByText('Headless Hook Demo')).toBeVisible()
-        await expect(page.getByText('Status: IDLE')).toBeVisible()
-    })
+    // The headless-mode switch is covered by data-testid.spec.ts's "Headless
+    // hook demo" block, which asserts the same two strings plus Files/Progress
+    // and the switch back to the full UI.
 })
 
-test.describe('Adapter views', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/')
-    })
-
-    test('Link adapter shows URL input', async ({ page }) => {
-        await page.getByRole('button', { name: 'Link' }).click()
-        await expect(page.getByPlaceholder('Enter file url')).toBeVisible()
-        await expect(page.getByRole('button', { name: 'Fetch' })).toBeVisible()
-        // Redesign: the source view's return control is "Back" (overlayBack), not "Cancel".
-        await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
-    })
-
-    test('Camera adapter shows capture button', async ({ page }) => {
-        await page.getByRole('button', { name: 'Camera' }).click()
-        await expect(page.getByText('Capture')).toBeVisible()
-        await expect(page.getByRole('button', { name: 'Back' })).toBeVisible()
-    })
-})
+// The former "Adapter views" block (Link + Camera source views) is covered by
+// adapters.spec.ts, which drives the same views via their data-testid source
+// tiles and asserts the per-provider slots. Its one assertion with no home
+// there — getByText('Capture') — was folded into that file's camera test. The
+// "Back" control stays pinned by adapters.spec.ts clicking it and by
+// keyboard-only-source-activation-and-file-removal.spec.ts.

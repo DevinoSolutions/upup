@@ -43,6 +43,25 @@ function decodeEntities(text: string): string {
         .replace(/&amp;/g, '&')
 }
 
+// Excerpts come straight from the MDX source, so their markdown syntax is still
+// in the string — a result row rendered raw reads "**Response `200`** — the
+// `PresignedUrlResponse` shape". These rows are plain text (never innerHTML, see
+// above), so the tokens can't be rendered as formatting; strip them instead.
+// Measured against the live index: backticks appear in 160 of 356 sampled rows
+// and `**` in 52, so both are the real cases. `__` was in ZERO rows — it is
+// handled defensively, and only as a matched pair, so an unpaired identifier
+// like `__dirname` survives intact.
+function stripMarkdown(text: string): string {
+    return text
+        .replace(/`+/g, '')
+        .replace(/\*\*([\s\S]+?)\*\*/g, '$1')
+        .replace(/__([\s\S]+?)__/g, '$1')
+}
+
+function plainText(raw: string): string {
+    return stripMarkdown(decodeEntities(raw))
+}
+
 function HighlightedContent({ content }: { content: string }) {
     const parts = content.split(/(<mark>[\s\S]*?<\/mark>)/g)
     return (
@@ -50,18 +69,51 @@ function HighlightedContent({ content }: { content: string }) {
             {parts.map((part, i) => {
                 const match = /^<mark>([\s\S]*?)<\/mark>$/.exec(part)
                 return match ? (
-                    <mark key={i}>{decodeEntities(match[1])}</mark>
+                    <mark key={i}>{plainText(match[1])}</mark>
                 ) : (
-                    <span key={i}>{decodeEntities(part)}</span>
+                    <span key={i}>{plainText(part)}</span>
                 )
             })}
         </>
     )
 }
 
-export function DocsSearch() {
+// The trigger is a plain button so it can be rendered at BOTH breakpoints (the
+// mobile disclosure and the desktop sidebar) while the dialog below stays a
+// SINGLE instance owned by DocsChrome — the same split DocsChrome already uses
+// for AskAiTrigger + DocsAskAi.
+//
+// This is not cosmetic. When the whole widget was rendered twice, each copy kept
+// its own `open` state, its own ⌘K window listener and its own body-scroll lock,
+// so one ⌘K opened TWO dialogs: the real one plus an invisible 0x0 copy inside
+// the `lg:hidden` disclosure. Choosing a result closed only the copy you clicked;
+// the hidden one stayed mounted with `document.body.style.overflow = 'hidden'`
+// still applied, leaving the docs permanently unscrollable.
+export function DocsSearchTrigger({ onClick }: { onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            aria-label="Search docs"
+            onClick={onClick}
+            className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-transparent dark:text-gray-400 dark:hover:border-white/25 dark:hover:text-gray-200"
+        >
+            <Search className="h-4 w-4" />
+            <span>Search…</span>
+            <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                ⌘K
+            </kbd>
+        </button>
+    )
+}
+
+export function DocsSearchDialog({
+    open,
+    onOpenChange,
+}: {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+}) {
     const router = useRouter()
-    const [open, setOpen] = useState(false)
     const [activeIndex, setActiveIndex] = useState(0)
     const inputRef = useRef<HTMLInputElement>(null)
     const listRef = useRef<HTMLDivElement>(null)
@@ -84,22 +136,29 @@ export function DocsSearch() {
         function onKeyDown(e: KeyboardEvent) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault()
-                setOpen(prev => !prev)
+                onOpenChange(!open)
             } else if (e.key === 'Escape') {
-                setOpen(false)
+                onOpenChange(false)
             }
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [])
+    }, [open, onOpenChange])
 
+    // Scroll lock. The teardown clears the property OUTRIGHT rather than
+    // restoring a captured previous value: save/restore is what made the old
+    // double-mount unrecoverable. Two instances captured each other's state
+    // ('' then 'hidden') and tore down in tree order, so the last teardown
+    // reinstated 'hidden' and the page could never scroll again. Clearing
+    // unconditionally cannot wedge, whatever the mount count. The layout owns
+    // body overflow via a class (`overflow-x-hidden`), so there is no inline
+    // value this legitimately needs to preserve.
     useEffect(() => {
         if (!open) return undefined
-        const previousOverflow = document.body.style.overflow
         document.body.style.overflow = 'hidden'
         inputRef.current?.focus()
         return () => {
-            document.body.style.overflow = previousOverflow
+            document.body.style.removeProperty('overflow')
         }
     }, [open])
 
@@ -115,7 +174,7 @@ export function DocsSearch() {
     }, [activeIndex])
 
     function close() {
-        setOpen(false)
+        onOpenChange(false)
         setSearch('')
     }
 
@@ -141,19 +200,6 @@ export function DocsSearch() {
 
     return (
         <>
-            <button
-                type="button"
-                aria-label="Search docs"
-                onClick={() => setOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-transparent dark:text-gray-400 dark:hover:border-white/25 dark:hover:text-gray-200"
-            >
-                <Search className="h-4 w-4" />
-                <span>Search…</span>
-                <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
-                    ⌘K
-                </kbd>
-            </button>
-
             {open ? (
                 <div
                     className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh]"

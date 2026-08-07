@@ -50,28 +50,9 @@ describe('UpupCore.validateFiles', () => {
         core.destroy()
     })
 
-    it('should validate multiple files independently', async () => {
-        const core = new UpupCore({
-            allowedFileTypes: 'text/plain',
-            maxFileSize: { size: 5, unit: 'B' },
-        })
-
-        const f1 = new File(['hi'], 'good.txt', { type: 'text/plain' })
-        const f2 = new File(['hello world this is too big'], 'big.txt', {
-            type: 'text/plain',
-        })
-        const f3 = new File(['x'], 'wrong.png', { type: 'image/png' })
-
-        const results = await core.validateFiles([f1, f2, f3])
-
-        expect(results).toHaveLength(3)
-        expect(results[0]!.valid).toBe(true)
-        expect(results[1]!.valid).toBe(false)
-        expect(results[2]!.valid).toBe(false)
-
-        core.destroy()
-    })
-
+    // Multi-file independence (mixed validity across one array) is pinned by
+    // validate-files-extended's "validates against both accept and maxFileSize
+    // simultaneously", which asserts per-index validity over three files.
     it('should not modify the internal file list', async () => {
         const core = new UpupCore({})
         const f1 = new File(['hello'], 'test.txt', { type: 'text/plain' })

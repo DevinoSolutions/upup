@@ -16,11 +16,10 @@ const hook = vi.hoisted(() => ({
 vi.mock('../ai/useMastraChat', () => ({
     useMastraChat: () => ({
         messages: hook.messages,
-        isStreaming: false,
+        isPending: false,
         error: null,
         conversationId: hook.conversationId,
         send: () => {},
-        cancel: () => {},
         reset: () => {},
     }),
 }))

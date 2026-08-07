@@ -19,7 +19,7 @@ const PRESIGNED_RESPONSE = {
 test.describe('Upload flow — success', () => {
     test.beforeEach(async ({ page }) => {
         // Mock presign/token endpoint — routes survive page.reload()
-        await page.route(/\/api\/upload/, (route) => {
+        await page.route(/\/api\/upload/, route => {
             route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -27,7 +27,7 @@ test.describe('Upload flow — success', () => {
             })
         })
         // Mock the PUT upload — always succeeds
-        await page.route('**/api/mock-upload**', (route) => {
+        await page.route('**/api/mock-upload**', route => {
             route.fulfill({ status: 200 })
         })
         await page.goto('/')
@@ -36,10 +36,15 @@ test.describe('Upload flow — success', () => {
     })
 
     test('root data-state starts as idle', async ({ page }) => {
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'idle')
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute(
+            'data-state',
+            'idle',
+        )
     })
 
-    test('upload button triggers upload and reaches successful state', async ({ page }) => {
+    test('upload button triggers upload and reaches successful state', async ({
+        page,
+    }) => {
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
         await page.locator('[data-testid="upup-upload-btn"]').click()
         await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute(
@@ -51,14 +56,20 @@ test.describe('Upload flow — success', () => {
 
     test('progress bar is visible during upload', async ({ page }) => {
         // Slow down the PUT to catch the progress bar mid-upload
-        await page.route('**/api/mock-upload**', (route) => {
+        await page.route('**/api/mock-upload**', route => {
             setTimeout(() => route.fulfill({ status: 200 }), 2000)
         })
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
         await page.locator('[data-testid="upup-upload-btn"]').click()
         // Wait for upload to start (data-state="uploading") then verify progressbar
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'uploading', { timeout: 10000 })
-        await expect(page.locator('[role="progressbar"]').first()).toBeVisible({ timeout: 3000 })
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute(
+            'data-state',
+            'uploading',
+            { timeout: 10000 },
+        )
+        await expect(page.locator('[role="progressbar"]').first()).toBeVisible({
+            timeout: 3000,
+        })
     })
 })
 
@@ -69,8 +80,11 @@ test.describe('Upload flow — error', () => {
         await page.reload()
     })
 
-    test('shows failed data-state when server returns 500', async ({ page }) => {
-        await page.route(/\/api\/upload/, (route) => {
+    // The bare "data-state becomes failed" case is contained in the retry test
+    // below, which drives the identical mocked 500 and asserts the same
+    // attribute before going on to check the retry affordance.
+    test('shows retry button after failed upload', async ({ page }) => {
+        await page.route(/\/api\/upload/, route => {
             route.fulfill({ status: 500, body: 'Internal Server Error' })
         })
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
@@ -80,15 +94,6 @@ test.describe('Upload flow — error', () => {
             'failed',
             { timeout: 10000 },
         )
-    })
-
-    test('shows retry button after failed upload', async ({ page }) => {
-        await page.route(/\/api\/upload/, (route) => {
-            route.fulfill({ status: 500, body: 'Internal Server Error' })
-        })
-        await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
-        await page.locator('[data-testid="upup-upload-btn"]').click()
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'failed', { timeout: 10000 })
         await expect(page.getByText(/retry/i)).toBeVisible()
     })
 
@@ -99,16 +104,25 @@ test.describe('Upload flow — error', () => {
     // This deep-suite test is the real behavioral proof instead (principle #2 —
     // no smoke-test theater; a real mocked-server failure, not a rendered-only
     // check).
-    test('renders the default upload-error message on a real 500 failure', async ({ page }) => {
-        await page.route(/\/api\/upload/, (route) => {
+    test('renders the default upload-error message on a real 500 failure', async ({
+        page,
+    }) => {
+        await page.route(/\/api\/upload/, route => {
             route.fulfill({ status: 500, body: 'Internal Server Error' })
         })
         await page.setInputFiles('[data-testid="upup-file-input"]', TXT_FILE)
         await page.locator('[data-testid="upup-upload-btn"]').click()
-        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute('data-state', 'failed', { timeout: 10000 })
+        await expect(page.locator('[data-testid="upup-root"]')).toHaveAttribute(
+            'data-state',
+            'failed',
+            { timeout: 10000 },
+        )
         const errorSlot = page.locator('[data-testid="upup-upload-error"]')
         await expect(errorSlot).toBeVisible()
-        await expect(errorSlot).toHaveAttribute('data-upup-slot', 'upload-error')
+        await expect(errorSlot).toHaveAttribute(
+            'data-upup-slot',
+            'upload-error',
+        )
         await expect(errorSlot).not.toBeEmpty()
     })
 })

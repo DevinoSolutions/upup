@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Copy } from 'lucide-react'
-import { useCopied } from './useCopied'
+import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 
 // The overlay every code card wears: an optional language pill and a
 // copy button that reveals on hover/focus of the card. Positioned absolutely
@@ -20,16 +20,7 @@ export function CodeCardControls({
     language?: string
     getText: () => string
 }) {
-    const { copied, markCopied } = useCopied(1600)
-
-    async function copy() {
-        try {
-            await navigator.clipboard.writeText(getText())
-            markCopied()
-        } catch {
-            // Clipboard API is unavailable in insecure contexts — no-op.
-        }
-    }
+    const { copied, copy } = useCopyToClipboard(1600)
 
     return (
         <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2">
@@ -40,7 +31,7 @@ export function CodeCardControls({
             ) : null}
             <button
                 type="button"
-                onClick={copy}
+                onClick={() => copy(getText())}
                 aria-label={copied ? 'Copied' : 'Copy code'}
                 className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100"
             >

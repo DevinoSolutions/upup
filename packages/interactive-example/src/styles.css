@@ -947,6 +947,11 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     height: 16px;
 }
 
+/* Wraps rather than ellipsing: these tiles are ~88px wide, so any
+   two-word provider name ("Cloudflare R2") truncated to "Cloudflare …"
+   and the full name was unreachable on touch, where there is no hover
+   tooltip. Tiles are grid items and stretch to their row, so a second
+   line makes the row taller without staggering it. */
 .upup-ie-source-tile-label {
     font-size: 10px;
     font-weight: 500;
@@ -954,9 +959,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     color: var(--ie-fg);
     min-width: 0;
     flex: 1 1 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
 }
 
 /* Legend-with-icon (cloud drive credential blocks) */
@@ -1792,16 +1795,26 @@ html.dark .upup-ie-ai-panel,
 }
 
 @media (max-width: 900px) {
-    /* Single-column on small viewports. Each column keeps its own
-       internal scroll so the user can browse without the page itself
-       becoming enormous. Using a fixed 60vh here (not the variable)
-       so the main column's wrapped layout doesn't defeat the cap. */
+    /* Single-column on small viewports. */
     .upup-ie-shell,
     .upup-ie-shell.has-ai,
     .upup-ie-focus {
         grid-template-columns: 1fr;
     }
-    .upup-ie-sidebar,
+    /* The config sidebar drops its height cap here: once the columns
+       stack, an inner scroll region nested inside page scroll means two
+       scrollbars competing for the same drag, and the config list is the
+       whole point of the page on mobile. It grows naturally and the page
+       scrolls once. The cap stays at lg+, where the sidebar sits beside
+       the preview and must not outrun it. */
+    .upup-ie-sidebar {
+        height: auto;
+        overflow-y: visible;
+    }
+    /* The AI panel keeps its cap — it is a transcript that grows without
+       bound, so an uncapped one would bury everything below it. Using a
+       fixed 60vh (not the variable) so the main column's wrapped layout
+       doesn't defeat the cap. */
     .upup-ie-ai-panel {
         height: 60vh;
     }

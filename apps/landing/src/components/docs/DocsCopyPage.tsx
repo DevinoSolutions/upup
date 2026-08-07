@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Copy } from 'lucide-react'
-import { useCopied } from './useCopied'
+import { useCopied } from '@/lib/use-copied'
 
 // "Copy page" — fetches the page's raw-markdown twin (the force-static
 // /docs-md route) and writes it to the clipboard, with a brief copied state.

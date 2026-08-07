@@ -313,22 +313,41 @@ const SCRIPT: TimelineStep<HeroState>[] = [
 // The clickable segment index. `seekTo` is each beat's start — an overlay-closed
 // timestamp, per the seek authoring rule. `firstAt` is the `at` of the beat's
 // first script step; its index marks when the beat becomes the active chip.
+// `staticAt` is where a click lands when motion is off: a beat's START is the
+// moment before anything has happened (for `drag` that is an EMPTY panel), which
+// says nothing about the beat, so the frozen jump targets its PAYOFF instead —
+// the frame right after the beat's files have landed. Each is still an
+// overlay-closed timestamp, so the seek authoring rule holds.
 interface Beat extends BeatChip {
     firstAt: number
+    staticAt: number
 }
 
 const BEATS: Beat[] = [
-    { id: 'drag', label: 'Drag & drop', seekTo: 0, firstAt: 0.4 },
-    { id: 'folder', label: 'Folder', seekTo: 5.5, firstAt: 5.5 },
-    { id: 'drive', label: 'Drive', seekTo: 10.5, firstAt: 10.5 },
+    {
+        id: 'drag',
+        label: 'Drag & drop',
+        seekTo: 0,
+        firstAt: 0.4,
+        staticAt: 4.2,
+    },
+    { id: 'folder', label: 'Folder', seekTo: 5.5, firstAt: 5.5, staticAt: 8.5 },
+    {
+        id: 'drive',
+        label: 'Drive',
+        seekTo: 10.5,
+        firstAt: 10.5,
+        staticAt: 15.3,
+    },
     {
         id: 'screen',
         label: 'Screen share',
         seekTo: 17,
         firstAt: 17,
+        staticAt: 21.9,
         popular: true,
     },
-    { id: 'voice', label: 'Voice', seekTo: 23, firstAt: 23 },
+    { id: 'voice', label: 'Voice', seekTo: 23, firstAt: 23, staticAt: 27.9 },
 ]
 
 // Index of each beat's first step. The beat is the active chip once that step has
@@ -367,7 +386,13 @@ export default function HeroSession({
         return active
     }, [phase])
 
-    const handleSelect = useCallback((seekTo: number) => seek(seekTo), [seek])
+    const handleSelect = useCallback(
+        (seekTo: number) => {
+            const beat = BEATS.find(b => b.seekTo === seekTo)
+            seek(frozen && beat ? beat.staticAt : seekTo)
+        },
+        [seek, frozen],
+    )
 
     // One overlay slot, one open at a time. `null` → nothing rendered (the
     // MockUploader gate hides it and plays the previous overlay's exit).
@@ -445,7 +470,6 @@ export default function HeroSession({
             <BeatChips
                 beats={BEATS}
                 activeId={activeBeatId}
-                frozen={frozen}
                 onSelect={handleSelect}
             />
         </div>

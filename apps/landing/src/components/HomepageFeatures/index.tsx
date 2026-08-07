@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     FaFileAlt,
@@ -62,14 +63,64 @@ interface Integration {
     status: 'supported' | 'in-development' | 'planned'
     description: string
     category: string
+    /** Docs page for this provider. When set, the supported chip links to it. */
+    href?: string
+    /** Short caveat shown under the chip name (e.g. a mode restriction). */
+    qualifier?: string
 }
 
 interface EmailModalProps {
     isOpen: boolean
     onClose: () => void
     integrationName: string
-    onSubmit: (email: string, customToolName?: string) => void
     isCustom?: boolean
+}
+
+/**
+ * Record provider interest through the SAME sink the support page uses: the
+ * validated /api/upup-support route, which captures an analytics event and
+ * emails the request. This modal has no free-text field, so it composes the
+ * message itself and sends the visitor's address as the reply-to.
+ *
+ * The address is NEVER passed to Google Analytics — the gtag event carries only
+ * the provider name. `website` is the honeypot the route reads to drop bots.
+ */
+async function submitProviderInterest(input: {
+    email: string
+    providerName: string
+    isCustom: boolean
+    feedbackId: string
+    website: string
+}): Promise<boolean> {
+    const message = input.isCustom
+        ? `Custom storage provider requested from the homepage: ${input.providerName}.`
+        : `Notify-me request from the homepage for the ${input.providerName} integration.`
+    try {
+        // next.config sets trailingSlash:true, so the bare path would 308 the
+        // POST — hit the canonical URL (same rule as SupportForm).
+        const res = await fetch('/api/upup-support/', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                type: 'provider_notify',
+                message,
+                wantsReply: true,
+                email: input.email,
+                feedbackId: input.feedbackId,
+                route:
+                    typeof window !== 'undefined'
+                        ? window.location.pathname
+                        : undefined,
+                website: input.website,
+            }),
+        })
+        const body = (await res.json().catch(() => null)) as {
+            ok?: boolean
+        } | null
+        return res.ok && body?.ok === true
+    } catch {
+        return false
+    }
 }
 
 // User Storage Providers - for end users to connect their personal cloud storage
@@ -164,7 +215,16 @@ const userStorageProviders: Integration[] = [
     },
 ]
 
-// Developer Storage Providers - for developers to connect their cloud buckets
+// Developer Storage Providers - for developers to connect their cloud buckets.
+//
+// The `supported` entries mirror the StorageProvider enum in @upupjs/core
+// (packages/core/src/types/storage-provider.ts) — CHECK THE ENUM before
+// marking anything supported here. This list is a curated subset, not the
+// whole enum: the long tail (Vultr, UpCloud, OVHcloud, Contabo, Storj, Ceph)
+// is deliberately omitted to keep the wall readable, so absence from this
+// list does NOT mean absence from the enum. The durable fix is deriving the
+// supported set from the enum instead of restating it; until then a provider
+// added to the enum has to be added here by hand.
 const developerStorageProviders: Integration[] = [
     {
         id: 'aws',
@@ -181,6 +241,11 @@ const developerStorageProviders: Integration[] = [
         status: 'supported',
         description: 'Microsoft Azure storage',
         category: 'Developer Storage',
+        href: '/docs/guides/storage/azure-blob/',
+        // Azure is the sole member of NON_S3_STORAGE_PROVIDERS in
+        // @upupjs/core: it has no S3 surface, so createUpupHandler throws
+        // for it at construct time and server mode cannot serve it.
+        qualifier: 'client mode only',
     },
     {
         id: 'backblaze',
@@ -274,8 +339,16 @@ const developerStorageProviders: Integration[] = [
         id: 'gcp',
         name: 'Google Cloud Storage',
         icon: FaGoogle,
-        status: 'planned',
+        status: 'supported',
         description: 'Google Cloud storage',
+        category: 'Developer Storage',
+    },
+    {
+        id: 'supabase',
+        name: 'Supabase',
+        icon: SiSupabase,
+        status: 'supported',
+        description: 'Supabase storage',
         category: 'Developer Storage',
     },
     {
@@ -284,14 +357,6 @@ const developerStorageProviders: Integration[] = [
         icon: SiVercel,
         status: 'planned',
         description: 'Vercel blob storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'supabase',
-        name: 'Supabase',
-        icon: SiSupabase,
-        status: 'planned',
-        description: 'Supabase storage',
         category: 'Developer Storage',
     },
     {
@@ -341,240 +406,295 @@ const EmailModal: React.FC<EmailModalProps> = ({
     isOpen,
     onClose,
     integrationName,
-    onSubmit,
     isCustom = false,
 }) => {
     const [email, setEmail] = useState('')
     const [customToolName, setCustomToolName] = useState('')
+    const [website, setWebsite] = useState('') // honeypot
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isSubmitted, setIsSubmitted] = useState(false)
+    const [failed, setFailed] = useState(false)
+    // One id per submission lifecycle so a retry is idempotent server-side;
+    // regenerated only after a confirmed success (same rule as SupportForm).
+    const feedbackIdRef = useRef<string>('')
+    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(
+        () => () => {
+            if (closeTimer.current) clearTimeout(closeTimer.current)
+        },
+        [],
+    )
+
+    const providerName = isCustom ? customToolName : integrationName
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!email || (isCustom && !customToolName)) return
+        if (!email || (isCustom && !customToolName) || isSubmitting) return
 
         setIsSubmitting(true)
+        setFailed(false)
+        if (!feedbackIdRef.current) feedbackIdRef.current = crypto.randomUUID()
 
-        // Track email submission
+        // Analytics records WHICH provider was asked for — never who asked.
         gtag.event({
             action: 'provider_email_submit',
             event_category: 'providers',
-            event_label: isCustom
-                ? `Custom: ${customToolName}`
-                : integrationName,
-            value: email,
+            event_label: isCustom ? `Custom: ${customToolName}` : providerName,
         })
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        onSubmit(email, isCustom ? customToolName : undefined)
-        setIsSubmitted(true)
+        const ok = await submitProviderInterest({
+            email,
+            providerName,
+            isCustom,
+            feedbackId: feedbackIdRef.current,
+            website,
+        })
         setIsSubmitting(false)
 
-        setTimeout(() => {
+        if (!ok) {
+            // Keep every field and the same feedbackId so Retry is idempotent.
+            setFailed(true)
+            return
+        }
+
+        setIsSubmitted(true)
+        feedbackIdRef.current = ''
+        closeTimer.current = setTimeout(() => {
             onClose()
             setEmail('')
             setCustomToolName('')
+            setWebsite('')
             setIsSubmitted(false)
         }, 2000)
     }
 
-    if (!isOpen) return null
-
     return (
         <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                onClick={onClose}
-            >
+            {isOpen ? (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
-                    onClick={e => e.stopPropagation()}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={onClose}
                 >
-                    {!isSubmitted ? (
-                        <>
-                            <motion.div
-                                className="flex items-center justify-between mb-6"
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    {isCustom
-                                        ? 'Request Custom Provider'
-                                        : `Get notified for ${integrationName}`}
-                                </h3>
-                                <motion.button
-                                    onClick={onClose}
-                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {!isSubmitted ? (
+                            <>
+                                <motion.div
+                                    className="flex items-center justify-between mb-6"
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
                                 >
-                                    <FaTimes className="w-4 h-4 text-gray-500" />
-                                </motion.button>
-                            </motion.div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        {isCustom
+                                            ? 'Request Custom Provider'
+                                            : `Get notified for ${integrationName}`}
+                                    </h3>
+                                    <motion.button
+                                        onClick={onClose}
+                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                    >
+                                        <FaTimes className="w-4 h-4 text-gray-500" />
+                                    </motion.button>
+                                </motion.div>
 
-                            <motion.p
-                                className="text-gray-600 dark:text-gray-400 mb-6"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                {isCustom
-                                    ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
-                                    : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
-                            </motion.p>
+                                <motion.p
+                                    className="text-gray-600 dark:text-gray-400 mb-6"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                >
+                                    {isCustom
+                                        ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
+                                        : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
+                                </motion.p>
 
-                            <motion.form
-                                onSubmit={handleSubmit}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                {isCustom && (
+                                <motion.form
+                                    onSubmit={handleSubmit}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    {isCustom && (
+                                        <motion.input
+                                            type="text"
+                                            value={customToolName}
+                                            onChange={e =>
+                                                setCustomToolName(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Provider name (e.g., MinIO, Wasabi, IBM Cloud)"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
+                                            required
+                                            initial={{ x: -10, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.4 }}
+                                        />
+                                    )}
+
                                     <motion.input
-                                        type="text"
-                                        value={customToolName}
-                                        onChange={e =>
-                                            setCustomToolName(e.target.value)
-                                        }
-                                        placeholder="Provider name (e.g., MinIO, Wasabi, IBM Cloud)"
+                                        type="email"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="Enter your email address"
                                         className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
                                         required
                                         initial={{ x: -10, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 }}
+                                        transition={{
+                                            delay: isCustom ? 0.5 : 0.4,
+                                        }}
                                     />
-                                )}
 
-                                <motion.input
-                                    type="email"
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    placeholder="Enter your email address"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
-                                    required
-                                    initial={{ x: -10, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: isCustom ? 0.5 : 0.4 }}
-                                />
+                                    {/* Honeypot: hidden from users + assistive tech;
+                                    bots that fill it are silently dropped by the
+                                    API. Same field name the support form uses. */}
+                                    <input
+                                        type="text"
+                                        name="website"
+                                        value={website}
+                                        onChange={e =>
+                                            setWebsite(e.target.value)
+                                        }
+                                        tabIndex={-1}
+                                        autoComplete="off"
+                                        aria-hidden="true"
+                                        className="pointer-events-none absolute -left-[9999px] h-0 w-0 opacity-0"
+                                    />
 
-                                <motion.div
-                                    className="flex gap-3"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: isCustom ? 0.6 : 0.5 }}
-                                >
-                                    <motion.button
-                                        type="button"
-                                        onClick={onClose}
-                                        className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
+                                    {failed && (
+                                        <p
+                                            role="alert"
+                                            className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400"
+                                        >
+                                            Something went wrong recording that.
+                                            Your details are still here — try
+                                            again.
+                                        </p>
+                                    )}
+
+                                    <motion.div
+                                        className="flex gap-3"
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        transition={{
+                                            delay: isCustom ? 0.6 : 0.5,
+                                        }}
                                     >
-                                        Cancel
-                                    </motion.button>
-                                    <motion.button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <FaSpinner className="w-4 h-4 animate-spin" />
-                                                {isCustom
-                                                    ? 'Requesting...'
-                                                    : 'Subscribing...'}
-                                            </>
-                                        ) : isCustom ? (
-                                            'Request Provider'
-                                        ) : (
-                                            'Notify me'
-                                        )}
-                                    </motion.button>
-                                </motion.div>
-                            </motion.form>
-                        </>
-                    ) : (
-                        <motion.div
-                            className="text-center"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{
-                                type: 'spring',
-                                damping: 20,
-                                stiffness: 300,
-                            }}
-                        >
+                                        <motion.button
+                                            type="button"
+                                            onClick={onClose}
+                                            className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
+                                        >
+                                            Cancel
+                                        </motion.button>
+                                        <motion.button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <FaSpinner className="w-4 h-4 animate-spin" />
+                                                    {isCustom
+                                                        ? 'Requesting...'
+                                                        : 'Subscribing...'}
+                                                </>
+                                            ) : isCustom ? (
+                                                'Request Provider'
+                                            ) : (
+                                                'Notify me'
+                                            )}
+                                        </motion.button>
+                                    </motion.div>
+                                </motion.form>
+                            </>
+                        ) : (
                             <motion.div
-                                className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
+                                className="text-center"
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
                                 transition={{
-                                    delay: 0.2,
                                     type: 'spring',
-                                    damping: 15,
-                                    stiffness: 400,
+                                    damping: 20,
+                                    stiffness: 300,
                                 }}
                             >
                                 <motion.div
-                                    className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
+                                    className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{
-                                        delay: 0.4,
+                                        delay: 0.2,
                                         type: 'spring',
                                         damping: 15,
                                         stiffness: 400,
                                     }}
                                 >
-                                    <motion.svg
-                                        className="w-4 h-4 text-white"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        initial={{ pathLength: 0 }}
-                                        animate={{ pathLength: 1 }}
+                                    <motion.div
+                                        className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
                                         transition={{
-                                            delay: 0.6,
-                                            duration: 0.3,
+                                            delay: 0.4,
+                                            type: 'spring',
+                                            damping: 15,
+                                            stiffness: 400,
                                         }}
                                     >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M5 13l4 4L19 7"
-                                        />
-                                    </motion.svg>
+                                        <motion.svg
+                                            className="w-4 h-4 text-white"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            initial={{ pathLength: 0 }}
+                                            animate={{ pathLength: 1 }}
+                                            transition={{
+                                                delay: 0.6,
+                                                duration: 0.3,
+                                            }}
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M5 13l4 4L19 7"
+                                            />
+                                        </motion.svg>
+                                    </motion.div>
                                 </motion.div>
+                                <motion.h3
+                                    className="text-xl font-bold text-gray-900 dark:text-white mb-2"
+                                    initial={{ y: 10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                >
+                                    You&apos;re all set!
+                                </motion.h3>
+                                <motion.p
+                                    className="text-gray-600 dark:text-gray-400"
+                                    initial={{ y: 10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                >
+                                    {`We’ll email you when ${providerName} integration is ready.`}
+                                </motion.p>
                             </motion.div>
-                            <motion.h3
-                                className="text-xl font-bold text-gray-900 dark:text-white mb-2"
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                            >
-                                You&apos;re all set!
-                            </motion.h3>
-                            <motion.p
-                                className="text-gray-600 dark:text-gray-400"
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.4 }}
-                            >
-                                {isCustom
-                                    ? `We&apos;ll email you when ${customToolName} integration is ready.`
-                                    : `We&apos;ll email you when ${integrationName} integration is ready.`}
-                            </motion.p>
-                        </motion.div>
-                    )}
+                        )}
+                    </motion.div>
                 </motion.div>
-            </motion.div>
+            ) : null}
         </AnimatePresence>
     )
 }
@@ -600,13 +720,9 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                 aria-labelledby={captionId}
                 className="flex flex-wrap justify-center gap-3"
             >
-                {providers.map(provider => (
-                    <div
-                        key={provider.id}
-                        role="listitem"
-                        className="w-[120px]"
-                    >
-                        <div className="flex h-full flex-col items-center gap-2.5 rounded-xl border border-black/5 bg-[var(--bg-base)] px-3 py-4 text-center dark:border-white/10">
+                {providers.map(provider => {
+                    const card = (
+                        <>
                             <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
                                 <provider.icon
                                     className="h-5 w-5"
@@ -616,9 +732,34 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                             <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
                                 {provider.name}
                             </span>
+                            {provider.qualifier ? (
+                                <span className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
+                                    {provider.qualifier}
+                                </span>
+                            ) : null}
+                        </>
+                    )
+                    const cardClass =
+                        'flex h-full flex-col items-center gap-2.5 rounded-xl border border-black/5 bg-[var(--bg-base)] px-3 py-4 text-center dark:border-white/10'
+                    return (
+                        <div
+                            key={provider.id}
+                            role="listitem"
+                            className="w-[120px]"
+                        >
+                            {provider.href ? (
+                                <Link
+                                    href={provider.href}
+                                    className={`${cardClass} transition-colors hover:border-black/10 dark:hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
+                                >
+                                    {card}
+                                </Link>
+                            ) : (
+                                <div className={cardClass}>{card}</div>
+                            )}
                         </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
         </div>
     )
@@ -684,12 +825,12 @@ export default function HomepageFeatures() {
     const handleProviderClick = (provider: Integration) => {
         if (provider.status === 'supported') return // Don't show modal for supported providers
 
-        // Track the interest in analytics
+        // Track the interest in analytics. Status rides the label, not `value`
+        // — GA4's `value` is the numeric parameter.
         gtag.event({
             action: 'provider_interest',
             event_category: 'providers',
-            event_label: provider.name,
-            value: provider.status,
+            event_label: `${provider.name} (${provider.status})`,
         })
 
         setSelectedProvider(provider.name)
@@ -706,19 +847,6 @@ export default function HomepageFeatures() {
         setSelectedProvider('Custom Provider')
         setIsCustomRequest(true)
         setModalOpen(true)
-    }
-
-    const handleEmailSubmit = (email: string, customToolName?: string) => {
-        if (customToolName) {
-            console.log(
-                `Email ${email} requested custom provider for ${customToolName}`,
-            )
-        } else {
-            console.log(
-                `Email ${email} subscribed for ${selectedProvider} provider`,
-            )
-        }
-        // Here you would typically send this to your backend
     }
 
     return (
@@ -869,7 +997,6 @@ export default function HomepageFeatures() {
                 isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
                 integrationName={selectedProvider || ''}
-                onSubmit={handleEmailSubmit}
                 isCustom={isCustomRequest}
             />
         </Section>

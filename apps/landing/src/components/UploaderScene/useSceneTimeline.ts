@@ -28,8 +28,13 @@ import { useReducedMotion } from 'framer-motion'
 //   • `seek(seconds)`: jump the loop clock to `seconds` (the rAF `start` origin
 //     is held in a ref, so `seek` rebases it to `performance.now() - s*1000` and
 //     the next tick — ≤1 frame away — computes `elapsed = s` and re-merges the
-//     phase; no new render path). A no-op while `frozen` (the clock never runs
-//     frozen, so there is nothing to jump). Seeking backwards is legal:
+//     phase; no new render path). While `frozen` there is no clock to rebase, so
+//     seek instead PINS the phase to the scripted state at `seconds` and holds
+//     it: the auto-advance stays off (that is the whole point of the freeze) but
+//     a real click on a beat chip still shows that beat's static frame. Without
+//     this a reduced-motion visitor was stuck on the final frame with no way to
+//     view any other beat — the chips looked live and did nothing.
+//     Seeking backwards is legal:
 //     `mergeUpTo` replays from `initial`, so the merged state is exactly the
 //     scripted state at the target time and AnimatePresence plays the same row
 //     exits it would on the loop wrap.
@@ -119,6 +124,10 @@ export function useSceneTimeline<S extends object>({
 
     const [phase, setPhase] = useState(steps.length)
 
+    // Phase pinned by a seek while frozen; null → hold the final frame (the
+    // default freeze). Cleared whenever the clock takes over again.
+    const [frozenPhase, setFrozenPhase] = useState<number | null>(null)
+
     // The rAF clock's origin, held in a ref so `seek` can rebase it without
     // touching the loop (null → the next tick stamps it to `now`, restarting
     // from t=0 when the effect (re)runs on a frozen→live flip).
@@ -129,6 +138,7 @@ export function useSceneTimeline<S extends object>({
             setPhase(stepsRef.current.length)
             return
         }
+        setFrozenPhase(null)
         startRef.current = null
         let raf = 0
         const tick = (now: number) => {
@@ -146,14 +156,23 @@ export function useSceneTimeline<S extends object>({
         return () => cancelAnimationFrame(raf)
     }, [frozen])
 
-    // Rebase the clock so the next tick reads `elapsed = seconds` (≤1 frame away)
-    // and re-merges the phase. No-op while frozen — the clock isn't running.
+    // Live: rebase the clock so the next tick reads `elapsed = seconds` (≤1 frame
+    // away) and re-merges the phase. Frozen: no clock to rebase, so resolve the
+    // phase for `seconds` directly and pin it — a static jump, no motion started.
     const seek = useCallback((seconds: number) => {
-        if (frozenRef.current) return
+        if (frozenRef.current) {
+            const script = stepsRef.current
+            let count = 0
+            while (count < script.length && script[count].at <= seconds) {
+                count++
+            }
+            setFrozenPhase(count)
+            return
+        }
         startRef.current = performance.now() - seconds * 1000
     }, [])
 
-    const effectivePhase = frozen ? steps.length : phase
+    const effectivePhase = frozen ? (frozenPhase ?? steps.length) : phase
     const state = mergeUpTo(initial, steps, effectivePhase)
 
     return { state, phase: effectivePhase, frozen, seek }
