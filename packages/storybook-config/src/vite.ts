@@ -21,6 +21,10 @@ type ViteConfigWithWorker = {
 /**
  * Force ES output for worker bundles.
  *
+ * MUTATES the config it is given and returns that same object (never a copy),
+ * so a `viteFinal` hook can either return the result or ignore it — the config
+ * it was handed is already updated either way.
+ *
  * `@upupjs/core`'s pipeline worker is a MODULE worker — `runtime/browser.ts`
  * spawns it as `new Worker(new URL('./pipeline-worker.js', import.meta.url),
  * { type: 'module' })` — and vite's `vite:worker-import-meta-url` plugin picks

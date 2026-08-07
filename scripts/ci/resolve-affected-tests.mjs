@@ -181,7 +181,11 @@ export const IMPACT_RULES = [
         test: path => FRAMEWORK_UI.test(path),
     },
     {
-        name: 'storybook',
+        // Named for the PARITY harness, not the static builds — the
+        // `storybook-build` rule below owns those. Keeping both bare
+        // `storybook` would make a combined reason read "(storybook+
+        // storybook-build)", which says nothing about why either fired.
+        name: 'storybook-parity',
         tier: TIER.TARGETED,
         suites: ['e2e'],
         test: path =>
