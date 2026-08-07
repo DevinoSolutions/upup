@@ -1,4 +1,5 @@
 import type { StorybookConfig } from '@storybook/preact-vite'
+import { withUpupViteWorkerFormat } from '@upupjs/storybook-config/vite'
 import preact from '@preact/preset-vite'
 
 // We re-apply `@preact/preset-vite` in the preview so its `react -> preact/compat`
@@ -28,7 +29,8 @@ const config: StorybookConfig = {
     async viteFinal(cfg) {
         cfg.plugins = cfg.plugins ?? []
         cfg.plugins.push(preact({ devToolsEnabled: false }))
-        return cfg
+        // Shared: ES worker output for core's module pipeline worker.
+        return withUpupViteWorkerFormat(cfg)
     },
 }
 export default config
