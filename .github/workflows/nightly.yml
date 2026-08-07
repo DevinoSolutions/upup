@@ -4,10 +4,14 @@ permissions:
     contents: read
 
 # Deep suites too slow or too external for every PR: the full e2e gate plus
-# the a11y/overflow sweep, static storybook builds, the tarball consumer, and
-# the mastra LLM evals (paid key; loudly skipped when the secret is absent —
-# never a silent green). PR routing lives in e2e.yml via
+# the a11y/overflow sweep, the tarball consumer, and the mastra LLM evals (paid
+# key; loudly skipped when the secret is absent — never a silent green). The
+# static storybook builds also run in e2e.yml now (routed) — nightly keeps its
+# unrouted copy as full-breadth coverage. PR routing lives in e2e.yml via
 # scripts/ci/resolve-affected-tests.mjs; nightly always runs everything.
+#
+# A red nightly files/updates a `nightly-failure` tracking issue (Nightly-Status
+# below) — a scheduled run nobody watches must not fail silently.
 # Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
 # setup-node cache:pnpm (F-787) — same mechanism as main.yml / e2e.yml.
 
@@ -115,7 +119,7 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Build every storybook statically # zero PR-CI callers — nightly catches build rot
+            - name: Build every storybook statically # also PR-gated in e2e.yml; this copy is unrouted
               run: pnpm run build:storybook
 
     Smoke-Packages:
@@ -445,6 +449,12 @@ jobs:
     Nightly-Status:
         name: Nightly Status Check
         runs-on: ubuntu-latest
+        # issues:write is granted HERE only (the workflow default stays
+        # contents:read) so the single job that files the tracking issue is the
+        # only thing in this file holding a write scope.
+        permissions:
+            contents: read
+            issues: write
         needs:
             [
                 E2E-Full,
@@ -457,16 +467,78 @@ jobs:
             ]
         if: always()
         steps:
+            # Records the verdict WITHOUT exiting, so the reporting step below
+            # still runs; the final step re-raises it. Deliberately not
+            # `if: failure()` + continue-on-error — the test-quality guard bans
+            # continue-on-error in workflows, and it would also mask real errors.
             - name: Check status
+              id: status
               run: |
-                  if [ "${{ needs.E2E-Full.result }}" != "success" ] || \
-                     [ "${{ needs.Storybook-Builds.result }}" != "success" ] || \
-                     [ "${{ needs.Smoke-Packages.result }}" != "success" ] || \
-                     [ "${{ needs.Mastra-Evals.result }}" != "success" ] || \
-                     [ "${{ needs.Drive-Sandbox.result }}" != "success" ] || \
-                     [ "${{ needs.Lighthouse.result }}" != "success" ] || \
-                     [ "${{ needs.Landing-Feedback.result }}" != "success" ]; then
+                  failed=""
+                  record() {
+                    if [ "$2" != "success" ]; then failed="$failed- $1: $2"$'\n'; fi
+                  }
+                  record "E2E-Full" "${{ needs.E2E-Full.result }}"
+                  record "Storybook-Builds" "${{ needs.Storybook-Builds.result }}"
+                  record "Smoke-Packages" "${{ needs.Smoke-Packages.result }}"
+                  record "Mastra-Evals" "${{ needs.Mastra-Evals.result }}"
+                  record "Drive-Sandbox" "${{ needs.Drive-Sandbox.result }}"
+                  record "Lighthouse" "${{ needs.Lighthouse.result }}"
+                  record "Landing-Feedback" "${{ needs.Landing-Feedback.result }}"
+                  if [ -n "$failed" ]; then
                     echo "One or more nightly jobs failed"
-                    exit 1
+                    printf '%s' "$failed"
+                    echo "failed=true" >> "$GITHUB_OUTPUT"
+                    {
+                      echo 'jobs<<NIGHTLY_EOF'
+                      printf '%s' "$failed"
+                      echo 'NIGHTLY_EOF'
+                    } >> "$GITHUB_OUTPUT"
+                  else
+                    echo "All nightly jobs passed"
+                    echo "failed=false" >> "$GITHUB_OUTPUT"
                   fi
-                  echo "All nightly jobs passed"
+
+            # A red nightly used to exit 1 into the void: nobody watches a
+            # scheduled run, which is how the storybook builds stayed broken for
+            # weeks. ONE tracking issue, deduped by the `nightly-failure` label —
+            # comment on the open one if it exists, open it otherwise — so a
+            # month of red nights is a single issue with a comment trail, not
+            # thirty issues.
+            - name: File or update the nightly tracking issue
+              if: steps.status.outputs.failed == 'true'
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+                  FAILED_JOBS: ${{ steps.status.outputs.jobs }}
+              run: |
+                  # Idempotent: --force updates the label if it already exists,
+                  # and `gh issue create --label` fails on a label the repo lacks.
+                  gh label create nightly-failure \
+                    --color B60205 \
+                    --description "The scheduled Nightly workflow is failing" \
+                    --force
+
+                  body=$(printf 'The Nightly workflow failed.\n\nFailing jobs:\n\n%s\nRun: %s\n' "$FAILED_JOBS" "$RUN_URL")
+
+                  existing=$(gh issue list \
+                    --label nightly-failure \
+                    --state open \
+                    --limit 1 \
+                    --json number \
+                    --jq '.[0].number // empty')
+
+                  if [ -n "$existing" ]; then
+                    echo "Commenting on the existing tracking issue #$existing"
+                    gh issue comment "$existing" --body "$body"
+                  else
+                    echo "Opening a new tracking issue"
+                    gh issue create \
+                      --title "Nightly is red" \
+                      --label nightly-failure \
+                      --body "$body"
+                  fi
+
+            - name: Re-raise the nightly verdict
+              if: steps.status.outputs.failed == 'true'
+              run: exit 1
