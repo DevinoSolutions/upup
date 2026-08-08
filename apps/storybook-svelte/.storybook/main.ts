@@ -1,5 +1,6 @@
 import type { StorybookConfig } from '@storybook/svelte-vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { withUpupViteWorkerFormat } from '@upupjs/storybook-config/vite'
 import { mergeConfig } from 'vite'
 
 const config: StorybookConfig = {
@@ -27,10 +28,13 @@ const config: StorybookConfig = {
     // so the only raw .svelte in the graph is @storybook/svelte's own renderer
     // (PreviewRender.svelte etc.). Without the compiler those reach
     // vite:import-analysis untransformed and fail to parse. Register it here.
+    // Shared: ES worker output for core's module pipeline worker.
     viteFinal: async config =>
-        mergeConfig(config, {
-            plugins: [svelte()],
-        }),
+        withUpupViteWorkerFormat(
+            mergeConfig(config, {
+                plugins: [svelte()],
+            }),
+        ),
 }
 
 export default config

@@ -11,6 +11,11 @@
  *             secret-less, boots the landing app and drives /docs. On for a
  *             change to the landing app (incl. content/docs), the landing e2e
  *             harness, or any package the landing app consumes.
+ *   storybook — the six static `storybook build` productions (Storybook-Builds).
+ *             Browser-less and MinIO-less, but a genuine production
+ *             code-splitting build, which dev-mode storybook is NOT — the class
+ *             of defect it catches (a vite worker.format failure originating in
+ *             @upupjs/core's dist) is invisible to every other suite.
  *
  * Fail-open is the core safety property: a path that matches no rule runs
  * EVERYTHING. An unknown/new directory can never silently skip coverage.
@@ -27,8 +32,8 @@
  *       Force every suite (workflow_dispatch / manual re-run).
  *   --json   Emit {suites, reasons, changedFiles} to stdout; no side effects.
  *
- * Default (non-json) output appends `e2e|minio|smoke|docsE2e=true|false` to the
- * file at $GITHUB_OUTPUT (when set), appends a markdown table to $GITHUB_STEP_SUMMARY
+ * Default (non-json) output appends `e2e|minio|smoke|docsE2e|storybook=true|false`
+ * to the file at $GITHUB_OUTPUT (when set), appends a markdown table to $GITHUB_STEP_SUMMARY
  * (when set), and always prints a human-readable per-suite reason table.
  *
  * Exit 0 in every resolved case (empty diff included → all suites false).
@@ -43,9 +48,10 @@ import { parseArgs } from 'node:util'
 
 // ── Suites ───────────────────────────────────────────────────────────────
 
-/** The routable suites, in stable display order. `docsE2e` is the cheap docs
- * job; the other three are the heavy MinIO/cross-framework/tarball suites. */
-export const SUITES = ['e2e', 'minio', 'smoke', 'docsE2e']
+/** The routable suites, in stable display order. `docsE2e` and `storybook` are
+ * the cheap jobs; the other three are the heavy MinIO/cross-framework/tarball
+ * suites. */
+export const SUITES = ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook']
 
 // ── Tiers & precedence ───────────────────────────────────────────────────
 //
@@ -175,7 +181,11 @@ export const IMPACT_RULES = [
         test: path => FRAMEWORK_UI.test(path),
     },
     {
-        name: 'storybook',
+        // Named for the PARITY harness, not the static builds — the
+        // `storybook-build` rule below owns those. Keeping both bare
+        // `storybook` would make a combined reason read "(storybook+
+        // storybook-build)", which says nothing about why either fired.
+        name: 'storybook-parity',
         tier: TIER.TARGETED,
         suites: ['e2e'],
         test: path =>
@@ -230,6 +240,32 @@ export const IMPACT_RULES = [
             path.startsWith('packages/react/') ||
             path.startsWith('packages/server/') ||
             path.startsWith('packages/interactive-example/'),
+    },
+
+    {
+        // A static `storybook build` compiles apps/storybook-*/ against the
+        // BUILT dist of every framework package it renders, so any of those can
+        // break it — @upupjs/core did, via the module pipeline worker vite emits
+        // out of core's dist (the worker.format defect that kept nightly red for
+        // weeks while every PR gate stayed green). TARGETED with a lone
+        // `storybook` suite, mirroring docs-e2e: it unions on top of whatever
+        // heavy suites these same files already carry, so every pre-existing
+        // verdict is byte-identical. The shared factories (tailwind-config owns
+        // the postcss/fx layer all six render; storybook-config owns their
+        // shared vite tweaks) are UNIVERSAL and include it for free, as does
+        // fail-open. Docs-only changes stay light and skip it.
+        //
+        // Reusing FRAMEWORK_UI deliberately over-includes @upupjs/next, which
+        // backs no storybook: one shared regex beats a second near-duplicate,
+        // and over-running a browser-less build job errs in the safe direction.
+        name: 'storybook-build',
+        tier: TIER.TARGETED,
+        suites: ['storybook'],
+        test: path =>
+            path.startsWith('apps/storybook-') ||
+            path.startsWith('packages/storybook-config/') ||
+            path.startsWith('packages/core/') ||
+            FRAMEWORK_UI.test(path),
     },
 
     // ── LIGHT_DIR → NONE (dev-only apps + repo metadata) ─────────────────
@@ -386,7 +422,7 @@ function formatReasonTable(result) {
     const lines = ['Affected test suites (feeds e2e.yml Resolve-Affected):']
     for (const suite of SUITES) {
         const decision = result.suites[suite] ? 'RUN ' : 'SKIP'
-        lines.push(`  ${suite.padEnd(6)} ${decision}  ${result.reasons[suite]}`)
+        lines.push(`  ${suite.padEnd(9)} ${decision}  ${result.reasons[suite]}`)
     }
     if (result.forcedAll) {
         lines.push('')
