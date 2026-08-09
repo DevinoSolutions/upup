@@ -35,34 +35,34 @@ function runCli(args, env = {}, cwd) {
 
 const TARGETED_CASES = [
     {
-        name: 'a core src change triggers e2e, minio, smoke, and docsE2e because every heavy suite consumes @upupjs/core and the landing docs demo is built from it',
+        name: 'a core src change triggers every suite because each one consumes @upupjs/core — the heavy suites, the landing docs demo, and the static storybook builds that bundle its dist',
         path: 'packages/core/src/upload/pipeline.ts',
-        suites: ['e2e', 'minio', 'smoke', 'docsE2e'],
+        suites: ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook'],
     },
     {
-        name: 'a server src change triggers e2e, minio, smoke, and docsE2e because its integration tests need real MinIO and the landing app consumes @upupjs/server',
+        name: 'a server src change triggers e2e, minio, smoke, and docsE2e but not storybook because its integration tests need real MinIO, the landing app consumes @upupjs/server, and no storybook renders it',
         path: 'packages/server/src/handler.ts',
         suites: ['e2e', 'minio', 'smoke', 'docsE2e'],
     },
     {
-        name: 'a react UI change triggers e2e, smoke, and docsE2e but not minio because a UI port needs no storage backend and the landing docs demo renders @upupjs/react',
+        name: 'a react UI change triggers e2e, smoke, docsE2e, and storybook but not minio because a UI port needs no storage backend while the landing docs demo and the react storybook both render it',
         path: 'packages/react/src/UpupUploader.tsx',
-        suites: ['e2e', 'smoke', 'docsE2e'],
+        suites: ['e2e', 'smoke', 'docsE2e', 'storybook'],
     },
     {
-        name: 'a next package change triggers e2e and smoke because it re-exports the UI and ships route handlers',
+        name: 'a next package change triggers e2e, smoke, and storybook because it re-exports the UI and ships route handlers, and the shared framework-UI rule deliberately over-includes it in the cheap build job',
         path: 'packages/next/src/server/app-router.ts',
-        suites: ['e2e', 'smoke'],
+        suites: ['e2e', 'smoke', 'storybook'],
     },
     {
-        name: 'a storybook-config change triggers only e2e because it feeds the parity harness, not uploads',
+        name: 'a storybook-config change triggers e2e and storybook because it feeds both the parity harness and the six static builds, but no upload path',
         path: 'packages/storybook-config/src/preview.ts',
-        suites: ['e2e'],
+        suites: ['e2e', 'storybook'],
     },
     {
-        name: 'a storybook app change triggers only e2e because it is a cross-framework parity project',
+        name: 'a storybook app change triggers e2e and storybook because it is both a cross-framework parity project and a statically built site',
         path: 'apps/storybook-vue/.storybook/main.ts',
-        suites: ['e2e'],
+        suites: ['e2e', 'storybook'],
     },
     {
         name: 'an e2e-test harness change triggers e2e and minio because the Playwright suite drives real uploads',
@@ -107,7 +107,7 @@ for (const testCase of TARGETED_CASES) {
     })
 }
 
-test('every non-react framework UI package triggers exactly e2e and smoke because the parity harness and tarball consumer both exercise it, while react additionally triggers docsE2e because the landing docs demo consumes it', () => {
+test('every non-react framework UI package triggers exactly e2e, smoke, and storybook because the parity harness, tarball consumer, and static storybook builds all exercise it, while react additionally triggers docsE2e because the landing docs demo consumes it', () => {
     for (const framework of [
         'vue',
         'svelte',
@@ -119,16 +119,17 @@ test('every non-react framework UI package triggers exactly e2e and smoke becaus
         const resolved = resolveFile(`packages/${framework}/src/index.ts`)
         assert.deepEqual(
             resolved.suites,
-            ['e2e', 'smoke'],
-            `expected ${framework} to route to e2e+smoke`,
+            ['e2e', 'smoke', 'storybook'],
+            `expected ${framework} to route to e2e+smoke+storybook`,
         )
     }
     // react is the sole UI framework the landing app depends on, so its change
-    // adds the docs suite on top of the shared e2e+smoke routing.
+    // adds the docs suite on top of the shared e2e+smoke+storybook routing.
     assert.deepEqual(resolveFile('packages/react/src/index.ts').suites, [
         'e2e',
         'smoke',
         'docsE2e',
+        'storybook',
     ])
 })
 
@@ -193,7 +194,13 @@ for (const testCase of UNIVERSAL_CASES) {
     test(testCase.name, () => {
         const resolved = resolveFile(testCase.path)
         assert.equal(resolved.tier, 'universal')
-        assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+        assert.deepEqual(resolved.suites, [
+            'e2e',
+            'minio',
+            'smoke',
+            'docsE2e',
+            'storybook',
+        ])
     })
 }
 
@@ -276,11 +283,63 @@ test('a landing e2e harness change routes to e2e, minio, and docsE2e because it 
 test('the landing playwright config is universal so it forces every suite including docsE2e, because a config change invalidates all routing', () => {
     const resolved = resolveFile('apps/e2e-test/playwright.landing.config.ts')
     assert.equal(resolved.tier, 'universal')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(resolved.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 test('a landing README stays fully light because the markdown carve-out outranks the docs-e2e rule and a readme cannot regress the rendered docs', () => {
     assert.deepEqual(resolveFile('apps/landing/README.md').suites, [])
+})
+
+// ── resolveFile: storybook-build routing ───────────────────────────────────
+
+test('every app that owns a storybook routes to the storybook suite, because a static build compiles each one against its framework package', () => {
+    for (const framework of [
+        'react',
+        'vue',
+        'svelte',
+        'vanilla',
+        'angular',
+        'preact',
+    ]) {
+        const resolved = resolveFile(
+            `apps/storybook-${framework}/.storybook/main.ts`,
+        )
+        assert.equal(resolved.tier, 'targeted')
+        assert.ok(
+            resolved.suites.includes('storybook'),
+            `expected apps/storybook-${framework} to route to the storybook suite`,
+        )
+    }
+})
+
+test('the shared tailwind factory forces the storybook suite through the universal tier, because all six storybooks render its postcss/fx layer', () => {
+    const resolved = resolveFile('packages/tailwind-config/postcss.cjs')
+    assert.equal(resolved.tier, 'universal')
+    assert.ok(resolved.suites.includes('storybook'))
+})
+
+test('a server-only change skips the storybook suite, because no storybook renders @upupjs/server and the static builds never reach a backend', () => {
+    assert.equal(
+        resolveFile('packages/server/src/upload-routes.ts').suites.includes(
+            'storybook',
+        ),
+        false,
+    )
+})
+
+test('a landing docs change skips the storybook suite, so a docs-only PR does not pay for six production builds', () => {
+    assert.equal(
+        resolveFile('apps/landing/content/docs/react.mdx').suites.includes(
+            'storybook',
+        ),
+        false,
+    )
 })
 
 // ── resolveFile: precedence subtleties ─────────────────────────────────────
@@ -288,7 +347,13 @@ test('a landing README stays fully light because the markdown carve-out outranks
 test('a config basename outranks the package rule so a package vitest config still runs everything', () => {
     const resolved = resolveFile('packages/svelte/vitest.config.ts')
     assert.equal(resolved.tier, 'universal')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(resolved.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 test('the markdown carve-out outranks a directory-targeted rule so a package README skips every suite', () => {
@@ -300,19 +365,32 @@ test('the markdown carve-out outranks a directory-targeted rule so a package REA
 test('a universal shared factory outranks the markdown carve-out so its README still runs everything', () => {
     const resolved = resolveFile('packages/eslint-config/README.md')
     assert.equal(resolved.tier, 'universal')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(resolved.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 test("a package's own package.json routes to that package's targeted suites, because only the ROOT manifest is universal", () => {
     // react is a landing dep, so its package.json unions docsE2e onto the
-    // framework-ui e2e+smoke routing.
+    // framework-ui e2e+smoke routing, and storybook-build adds the static
+    // builds on top.
     const pkg = resolveFile('packages/react/package.json')
     assert.equal(pkg.tier, 'targeted')
-    assert.deepEqual(pkg.suites, ['e2e', 'smoke', 'docsE2e'])
+    assert.deepEqual(pkg.suites, ['e2e', 'smoke', 'docsE2e', 'storybook'])
 
     const root = resolveFile('package.json')
     assert.equal(root.tier, 'universal')
-    assert.deepEqual(root.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(root.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 // ── resolveFile: fail-open ─────────────────────────────────────────────────
@@ -320,13 +398,25 @@ test("a package's own package.json routes to that package's targeted suites, bec
 test('an unmatched novel package path fails open to every suite so a new directory can never silently skip coverage', () => {
     const resolved = resolveFile('packages/brand-new-thing/src/index.ts')
     assert.equal(resolved.tier, 'fail-open')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(resolved.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 test('an unmatched novel root file fails open to every suite because an unknown path is treated as high risk', () => {
     const resolved = resolveFile('renovate.toml')
     assert.equal(resolved.tier, 'fail-open')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+    assert.deepEqual(resolved.suites, [
+        'e2e',
+        'minio',
+        'smoke',
+        'docsE2e',
+        'storybook',
+    ])
 })
 
 // ── resolveAffected: changeset behavior ────────────────────────────────────
@@ -338,6 +428,7 @@ test('an empty diff runs no suite because there is nothing to verify', () => {
         minio: false,
         smoke: false,
         docsE2e: false,
+        storybook: false,
     })
     for (const suite of SUITES) {
         assert.equal(result.reasons[suite], 'no changed files')
@@ -351,6 +442,7 @@ test('the force-all flag runs every suite because a manual dispatch opts out of 
         minio: true,
         smoke: true,
         docsE2e: true,
+        storybook: true,
     })
     for (const suite of SUITES) {
         assert.equal(
@@ -371,10 +463,11 @@ test('a mixed changeset unions suites across files so a docs tweak beside a core
         minio: true,
         smoke: true,
         docsE2e: true,
+        storybook: true,
     })
 })
 
-test('a docs-content-only changeset runs docsE2e alone, skipping every heavy suite because MDX under the landing app touches no upload path', () => {
+test('a docs-content-only changeset runs docsE2e alone, skipping every heavy suite and the storybook builds because MDX under the landing app touches no upload path and no storybook renders it', () => {
     const result = resolveAffected([
         'apps/landing/content/docs/getting-started.mdx',
         'apps/landing/src/components/docs/DocsSearch.tsx',
@@ -384,10 +477,15 @@ test('a docs-content-only changeset runs docsE2e alone, skipping every heavy sui
         minio: false,
         smoke: false,
         docsE2e: true,
+        storybook: false,
     })
     assert.match(result.reasons.docsE2e, /apps\/landing/)
     assert.equal(
         result.reasons.e2e,
+        'skipped — no changed file affects this suite',
+    )
+    assert.equal(
+        result.reasons.storybook,
         'skipped — no changed file affects this suite',
     )
 })
@@ -399,6 +497,7 @@ test('a changeset of only light files runs no suite because none of them affect 
         minio: false,
         smoke: false,
         docsE2e: false,
+        storybook: false,
     })
     for (const suite of SUITES) {
         assert.equal(
@@ -408,13 +507,14 @@ test('a changeset of only light files runs no suite because none of them affect 
     }
 })
 
-test('a non-react UI-only changeset runs e2e and smoke but skips minio and docsE2e, because vue is not a landing dependency', () => {
+test('a non-react UI-only changeset runs e2e, smoke, and storybook but skips minio and docsE2e, because vue backs a storybook but is not a landing dependency and needs no storage backend', () => {
     const result = resolveAffected(['packages/vue/src/UpupUploader.vue'])
     assert.deepEqual(result.suites, {
         e2e: true,
         minio: false,
         smoke: true,
         docsE2e: false,
+        storybook: true,
     })
     assert.match(result.reasons.e2e, /packages\/vue/)
     assert.equal(
@@ -438,6 +538,7 @@ test('an unmatched file is recorded in the fail-open list so reviewers can see c
         minio: true,
         smoke: true,
         docsE2e: true,
+        storybook: true,
     })
 })
 
@@ -479,6 +580,7 @@ test('the CLI writes GitHub Actions outputs to GITHUB_OUTPUT so the workflow can
     assert.match(written, /^minio=true$/m)
     assert.match(written, /^smoke=true$/m)
     assert.match(written, /^docsE2e=true$/m)
+    assert.match(written, /^storybook=true$/m)
 })
 
 test('the CLI records false outputs for a light-only changeset so a skipped suite is explicit, not absent', () => {
@@ -492,8 +594,10 @@ test('the CLI records false outputs for a light-only changeset so a skipped suit
     assert.match(written, /^e2e=true$/m)
     assert.match(written, /^minio=false$/m)
     assert.match(written, /^smoke=true$/m)
-    // react is a landing dep → the docs suite is emitted true alongside.
+    // react is a landing dep → the docs suite is emitted true alongside, and
+    // the react storybook renders it → so is the static-build suite.
     assert.match(written, /^docsE2e=true$/m)
+    assert.match(written, /^storybook=true$/m)
 })
 
 test('the CLI emits a parseable JSON document under --json so other tooling can consume the routing decision', () => {
@@ -505,6 +609,7 @@ test('the CLI emits a parseable JSON document under --json so other tooling can 
         minio: false,
         smoke: true,
         docsE2e: false,
+        storybook: true,
     })
     assert.equal(typeof parsed.reasons.e2e, 'string')
     assert.deepEqual(parsed.changedFiles, ['packages/svelte/src/x.ts'])
@@ -527,6 +632,7 @@ test('the CLI accepts comma-joined files in a single flag so a workflow can pass
         minio: true,
         smoke: true,
         docsE2e: true,
+        storybook: true,
     })
 })
 
@@ -583,6 +689,7 @@ test('the CLI forces every suite under --all so a manual re-run can bypass routi
         minio: true,
         smoke: true,
         docsE2e: true,
+        storybook: true,
     })
 })
 
@@ -638,6 +745,7 @@ test('the CLI computes an affected set from real git history so the git-diff pat
             minio: true,
             smoke: true,
             docsE2e: true,
+            storybook: true,
         })
     } finally {
         rmSync(repo, { recursive: true, force: true, maxRetries: 3 })

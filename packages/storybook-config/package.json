@@ -8,6 +8,10 @@
             "types": "./src/index.ts",
             "default": "./src/index.ts"
         },
+        "./vite": {
+            "types": "./src/vite.ts",
+            "default": "./src/vite.ts"
+        },
         "./brand.css": "./src/brand.css"
     },
     "scripts": {
