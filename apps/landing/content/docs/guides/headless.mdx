@@ -83,7 +83,8 @@ function MyUploader() {
   typed; namespaced `'<provider>:<event>'` names pass through.
 - **Prop getters** — `getRootProps()`, `getInputProps()`, `getDropzoneProps()`
   spread onto your own elements to wire drag/drop, click-to-browse, and the
-  hidden file input.
+  hidden file input. Each accepts an overrides object — see
+  [Prop getters and overrides](#prop-getters-and-overrides).
 - **Escape hatch** — `core: UpupCore`, the underlying engine instance, plus
   `ext` for plugin-contributed methods.
 
@@ -91,6 +92,46 @@ A `UploadFile` extends the native `File`, so `file.name`, `file.size`, and
 `file.type` work alongside upup's additions: `file.id`, `file.status`,
 `file.source`, `file.key`, and `file.metadata`. `UploadStatus` is the enum
 `IDLE | PROCESSING | READY | UPLOADING | PAUSED | SUCCESSFUL | FAILED`.
+
+### Prop getters and overrides
+
+Every getter takes an optional overrides object and merges it by one rule:
+
+```tsx
+<div {...getRootProps({ className: 'ring-2', 'aria-describedby': 'hint' })}>
+    <input {...getInputProps({ style: { position: 'absolute' } })} />
+    <div {...getDropzoneProps({ className: 'zone', onDrop: analytics.track })} />
+</div>
+```
+
+1. **Your overrides are spread first**, so anything you pass survives —
+   `className`, `id`, `style`, `data-*`, and ARIA attributes all reach the
+   element.
+2. **A short list of getter-owned keys is applied after and wins.** These are
+   the values derived from live uploader state, plus the ones without which the
+   element stops working as an uploader element:
+
+| Getter               | Getter-owned keys                                                                |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `getRootProps()`     | `aria-busy` (tracks upload status)                                               |
+| `getDropzoneProps()` | `aria-dropeffect` (tracks drag state)                                            |
+| `getInputProps()`    | `type`, `multiple`, `accept`, `style.display`                                    |
+
+3. **Event handlers are composed, never replaced.** The getter's own handler
+   runs first, then yours — pass `onDrop`, `onDragOver`, `onDragLeave`,
+   `onPaste`, or `onChange` and the uploader keeps working alongside it. There
+   is no way to accidentally unwire drag/drop by passing your own handler.
+4. **`style` is merged, not replaced.** `getInputProps()` owns only
+   `display: 'none'`; every other style key you pass survives, so you can
+   position or size the visually-hidden input.
+5. **Everything else is a default you may override** — `role`, `aria-label`,
+   `tabIndex`, and `aria-hidden`. Override `aria-label` to localize it.
+
+> **Why `multiple` and `accept` are owned.** They mirror the hook's own `limit`
+> and `allowedFileTypes` options, so the file picker cannot advertise a
+> selection the engine would then reject. `accept` is only claimed when you
+> actually set `allowedFileTypes`; with no filter configured, your own `accept`
+> passes straight through.
 
 ### Options
 
