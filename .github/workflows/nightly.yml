@@ -517,6 +517,9 @@ jobs:
               if: github.event_name == 'schedule' && steps.status.outputs.failed == 'true'
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  # No checkout in this job — without GH_REPO, gh tries to infer
+                  # the repo from a git remote and dies ("not a git repository").
+                  GH_REPO: ${{ github.repository }}
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
                   FAILED_JOBS: ${{ steps.status.outputs.jobs }}
               run: |
@@ -555,6 +558,7 @@ jobs:
               if: github.event_name == 'schedule' && steps.status.outputs.failed == 'false'
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GH_REPO: ${{ github.repository }}
                   RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
               run: |
                   existing=$(gh issue list \
