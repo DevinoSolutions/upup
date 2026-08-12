@@ -128,8 +128,12 @@ describe('@upupjs/core public API surface (pin test)', () => {
     it('runtime value export list matches the curated, checked-in list', () => {
         // The curated public surface (D2), updated in pass 2: the legacy
         // parallel UploadError/UploadErrorType family was deleted (F-724) —
-        // the UpupError taxonomy + uploadErrorFromResponse (via ./internal)
-        // are the one error surface. 51 entries.
+        // the UpupError taxonomy + uploadErrorFromResponse are the one error
+        // surface. `uploadErrorFromResponse` joined this entry in #339: the
+        // previous "(via ./internal)" note here was wrong — it was exported
+        // from NEITHER entry, so the documented
+        // `import { uploadErrorFromResponse } from '@upupjs/core'` in
+        // api-reference/error-codes.mdx did not resolve. 52 entries.
         const EXPECTED_PUBLIC_VALUE_EXPORTS: string[] = [
             'ACCEPT_PRESETS',
             'BOX_DESCRIPTOR',
@@ -180,6 +184,7 @@ describe('@upupjs/core public API surface (pin test)', () => {
             'resolveAccept',
             'resolveTheme',
             'tokensToVars',
+            'uploadErrorFromResponse',
             'zhCN',
             'zhTW',
         ]

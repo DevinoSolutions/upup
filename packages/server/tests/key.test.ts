@@ -35,6 +35,12 @@ describe('sanitizeFilename', () => {
     })
 })
 
+// KeyStrategyContext carries the originating request (#337); these cases are
+// about key SHAPE, so any request stands in.
+const req = new Request('https://app.example.com/api/upup/presign', {
+    method: 'POST',
+})
+
 describe('defaultKeyStrategy', () => {
     it('namespaces by userId', () => {
         const key = defaultKeyStrategy({
@@ -42,6 +48,7 @@ describe('defaultKeyStrategy', () => {
             fileName: 'f.bin',
             contentType: 't',
             size: 1,
+            req,
         })
         expect(key.startsWith('alice/')).toBe(true)
         expect(key.endsWith('/f.bin')).toBe(true)
@@ -52,6 +59,7 @@ describe('defaultKeyStrategy', () => {
             fileName: 'f.bin',
             contentType: 't',
             size: 1,
+            req,
         })
         expect(key.startsWith('anon/')).toBe(true)
     })
@@ -61,6 +69,7 @@ describe('defaultKeyStrategy', () => {
             fileName: 'f.bin',
             contentType: 't',
             size: 1,
+            req,
         }
         expect(defaultKeyStrategy(ctx)).not.toBe(defaultKeyStrategy(ctx))
     })

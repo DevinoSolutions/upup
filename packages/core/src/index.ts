@@ -51,6 +51,12 @@ export {
     UpupQuotaError,
     UpupStorageError,
     UpupConfigError,
+    // The taxonomy's response parser: turns a failed fetch/XHR response into
+    // the right typed subclass. Public since #339 — CLAUDE.md names it part of
+    // the one error surface and api-reference/error-codes.mdx already documents
+    // `import { uploadErrorFromResponse } from '@upupjs/core'`, but the
+    // allow-list never caught up, so that documented import did not resolve.
+    uploadErrorFromResponse,
 } from './errors'
 export type { RestrictionFailedReason } from './errors'
 

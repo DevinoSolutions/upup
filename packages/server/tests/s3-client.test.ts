@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { buildS3ClientConfig } from '../src/providers/s3-client'
+import { describe, it, expect, beforeEach } from 'vitest'
+import {
+    buildS3ClientConfig,
+    createS3Client,
+    _resetS3ClientCacheForTests,
+} from '../src/providers/s3-client'
 
 const base = { type: 'aws', bucket: 'b', region: 'us-east-1' } as const
 
@@ -46,5 +50,32 @@ describe('buildS3ClientConfig', () => {
             forcePathStyle: false,
         })
         expect(cfg.forcePathStyle).toBe(false)
+    })
+})
+
+// Per-destination client cache (#337): multi-bucket routing must not rebuild a
+// client and its connection pool on every presign, and must not silently reuse
+// one across destinations or across a credential rotation.
+describe('createS3Client caching', () => {
+    beforeEach(() => {
+        _resetS3ClientCacheForTests()
+    })
+
+    it('reuses one client for repeated calls with the same destination', () => {
+        expect(createS3Client({ ...base })).toBe(createS3Client({ ...base }))
+    })
+
+    it('builds a separate client per bucket, region and endpoint', () => {
+        const first = createS3Client({ ...base })
+        expect(createS3Client({ ...base, bucket: 'other' })).not.toBe(first)
+        expect(createS3Client({ ...base, region: 'eu-west-1' })).not.toBe(first)
+        expect(
+            createS3Client({ ...base, endpoint: 'http://localhost:9100' }),
+        ).not.toBe(first)
+    })
+
+    it('builds a new client when the access key rotates', () => {
+        const old = createS3Client({ ...base, accessKeyId: 'AK1' })
+        expect(createS3Client({ ...base, accessKeyId: 'AK2' })).not.toBe(old)
     })
 })
