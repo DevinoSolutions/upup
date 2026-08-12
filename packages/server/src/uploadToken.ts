@@ -20,6 +20,13 @@ export interface UploadTokenPayload {
     smin: number
     /** Maximum allowed total size, bytes. */
     smax: number
+    /**
+     * Opaque identity of the storage this upload's `init` resolved (#337).
+     * Present only when `config.storage` is a resolver; a static config binds
+     * nothing because there is only ever one destination. Signed, so the client
+     * cannot steer a continuation into another bucket.
+     */
+    sid?: string
     /** Expiry, epoch SECONDS. */
     exp: number
 }
@@ -135,7 +142,8 @@ export async function verifyUploadToken(
         typeof payload.u !== 'string' ||
         typeof payload.exp !== 'number' ||
         typeof payload.smin !== 'number' ||
-        typeof payload.smax !== 'number'
+        typeof payload.smax !== 'number' ||
+        (payload.sid !== undefined && typeof payload.sid !== 'string')
     ) {
         throw new UploadTokenError(
             'malformed',

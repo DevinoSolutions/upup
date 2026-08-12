@@ -7,6 +7,18 @@ import type {
 } from '@upupjs/core'
 import type { UpupServerLogger } from './observability'
 
+/**
+ * Free-form routing hints the CLIENT sends alongside a file's name/type/size,
+ * as the `metadata` field of a `/presign`, `/multipart/init`, or drive-transfer
+ * body. upup neither interprets nor validates it — it is carried through to
+ * `keyStrategy` and the storage resolver verbatim.
+ *
+ * It is ATTACKER-CONTROLLED. Treat it as you would a query parameter: switch on
+ * it against a fixed allow-list, never let it name a bucket, a path prefix, or
+ * a credential directly.
+ */
+export type UpupClientMetadata = Record<string, unknown>
+
 /** Context passed to a custom keyStrategy. */
 export interface KeyStrategyContext {
     /** Resolved userId, or null when anonymous. */
@@ -14,6 +26,11 @@ export interface KeyStrategyContext {
     fileName: string
     contentType: string
     size: number
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. */
+    metadata?: UpupClientMetadata
+    /** The originating request, past every auth and policy check. */
+    req: Request
 }
 
 /** Which of the three presign-side responses `onPresignResponse` is rewriting. */
@@ -27,9 +44,12 @@ export interface PresignResponseContext {
     /** The server-chosen object key. Present on all three phases — on
      *  `multipart-sign-part` it comes from the VERIFIED token, not the client. */
     key: string
-    /** The client-declared file metadata. Absent on `multipart-sign-part`,
-     *  which sees only a token and a part number. */
-    metadata?: FileMetadata
+    /** The client-declared file (name/type/size). Absent on
+     *  `multipart-sign-part`, which sees only a token and a part number. */
+    file?: FileMetadata
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. Absent on `multipart-sign-part`. */
+    metadata?: UpupClientMetadata
     /** Resolved userId, or null for an anonymous (server-namespaced) upload. */
     userId: string | null
 }
@@ -44,6 +64,13 @@ export type PresignResponseBody =
  *  to add for your client. */
 export type PresignResponseRewrite = PresignResponseBody &
     Record<string, unknown>
+
+/* eslint-disable @typescript-eslint/no-invalid-void-type -- `| void` is the deliberate "rewrite it, or just look at it" idiom: it is what lets an inspect-only hook be written with no return statement at all. `| undefined` would not — TypeScript rejects a void-returning function there, forcing every hook to end in `return undefined`. */
+export type OnPresignResponse = (
+    response: PresignResponseBody,
+    ctx: PresignResponseContext,
+) => PresignResponseRewrite | void | Promise<PresignResponseRewrite | void>
+/* eslint-enable @typescript-eslint/no-invalid-void-type -- scope of the exemption above ends here; the rest of this file is held to the rule. */
 
 /** One bucket's worth of S3 / S3-compatible connection settings. */
 export interface UpupStorageConfig {
@@ -68,8 +95,52 @@ export interface UpupStorageConfig {
     [key: string]: unknown
 }
 
+/** Which operation is asking for a storage config. */
+export type StorageResolverPhase =
+    | 'presign'
+    | 'multipart-init'
+    | 'multipart-sign-part'
+    | 'multipart-complete'
+    | 'multipart-abort'
+    | 'drive-transfer'
+
+export interface StorageResolverContext {
+    /** The originating request, past every auth and policy check. */
+    req: Request
+    phase: StorageResolverPhase
+    /** Resolved userId, or null for an anonymous (server-namespaced) upload. */
+    userId: string | null
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. Absent on the multipart continuation
+     *  phases, which carry only a token. */
+    metadata?: UpupClientMetadata
+    fileName?: string
+    contentType?: string
+    size?: number
+    /**
+     * Set on `multipart-sign-part` / `-complete` / `-abort` ONLY: the opaque
+     * identity of the storage this upload's `init` resolved, carried inside the
+     * HMAC-signed upload token. Return the SAME storage for it — the server
+     * re-derives the identity of whatever you return and answers `403
+     * AUTH_DENIED` if it does not match, so a continuation can never be
+     * steered to a different bucket than the one it started in.
+     */
+    storageId?: string
+}
+
+export type UpupStorageResolver = (
+    ctx: StorageResolverContext,
+) => UpupStorageConfig | Promise<UpupStorageConfig>
+
 export type UpupServerConfig = {
-    storage: UpupStorageConfig
+    /**
+     * One static bucket, or a resolver called per request to pick one — three
+     * buckets by upload class, a tenant's own bucket, a quarantine bucket for
+     * unscanned files. A resolver is validated at RESOLVE time (a bad config
+     * fails that request with a 500), not at construct time like the static
+     * form.
+     */
+    storage: UpupStorageConfig | UpupStorageResolver
 
     providers?: {
         googleDrive?: { clientId: string; clientSecret: string }
@@ -164,13 +235,7 @@ export type UpupServerConfig = {
          * Rewriting `uploadUrl` changes where the browser sends bytes, so the
          * URL you substitute must land at the same object.
          */
-        onPresignResponse?: (
-            response: PresignResponseBody,
-            ctx: PresignResponseContext,
-        ) =>
-            | PresignResponseRewrite
-            | void
-            | Promise<PresignResponseRewrite | void>
+        onPresignResponse?: OnPresignResponse
     }
 
     auth?: (req: Request) => Promise<boolean>
@@ -229,6 +294,9 @@ export interface FileMetadata {
     name: string
     size: number
     type: string
+    /** Free-form routing hints from the client. Untrusted — see
+     *  {@link UpupClientMetadata}. */
+    metadata?: UpupClientMetadata
 }
 
 export interface UploadedFile {

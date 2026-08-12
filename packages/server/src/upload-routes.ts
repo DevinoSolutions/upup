@@ -35,6 +35,14 @@ import { resolveUserId, DEFAULT_USER_ID } from './tokenStore'
 import { defaultKeyStrategy } from './key'
 import { reportServerError, toSafeError } from './observability'
 import { parseJsonBody, type Responder } from './respond'
+import {
+    isStorageResolver,
+    resolveStorage,
+    resolveBoundStorage,
+    storageIdentity,
+    StorageBindingError,
+} from './resolve-storage'
+import type { UpupStorageConfig, StorageResolverContext } from './config'
 
 /** Secure-by-default gate for the capability-granting upload routes (/presign,
  *  /multipart/init): reject an unauthenticated, unidentified caller unless the
@@ -203,6 +211,67 @@ async function validateUploadMetadata(
     return null
 }
 
+/** Resolve the storage for a fresh upload (#337). A resolver that returns
+ *  something unusable is a server misconfiguration, so it fails the request as
+ *  a logged 500 — the real cause goes to onError, the client gets a fixed
+ *  message. Never fall back to a default bucket: a misrouted write is worse
+ *  than a failed one. */
+async function resolveStorageOrFail(
+    config: UpupServerConfig,
+    res: Responder,
+    route: string,
+    method: string,
+    ctx: StorageResolverContext,
+): Promise<UpupStorageConfig | Response> {
+    try {
+        return await resolveStorage(config, ctx)
+    } catch (error) {
+        return res.fail(
+            route,
+            method,
+            500,
+            UpupErrorCode.STORAGE_ERROR,
+            'Storage configuration error',
+            error,
+        )
+    }
+}
+
+/** Resolve the storage for a multipart CONTINUATION, pinned to the identity the
+ *  init bound into the token. A binding that cannot be honoured is a 403, not a
+ *  500 — the request is not authorized for that storage. */
+async function resolveBoundStorageOrFail(
+    config: UpupServerConfig,
+    res: Responder,
+    route: string,
+    method: string,
+    ctx: StorageResolverContext,
+    boundId: string | undefined,
+): Promise<UpupStorageConfig | Response> {
+    try {
+        return await resolveBoundStorage(config, ctx, boundId)
+    } catch (error) {
+        if (error instanceof StorageBindingError) {
+            return res.fail(
+                route,
+                method,
+                403,
+                UpupErrorCode.AUTH_DENIED,
+                'Upload token is not valid for the resolved storage',
+                error,
+            )
+        }
+        return res.fail(
+            route,
+            method,
+            500,
+            UpupErrorCode.STORAGE_ERROR,
+            'Storage configuration error',
+            error,
+        )
+    }
+}
+
 /** Give `hooks.onPresignResponse` the last look at a presign-side payload
  *  (#338). Runs after every auth/policy/token check, so it can rewrite where
  *  the browser sends bytes but can never widen what the caller was allowed to
@@ -276,11 +345,30 @@ export async function handlePresign(
         fileName: body.name,
         contentType: body.type,
         size: body.size,
+        ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
+        req,
     })
+
+    const storage = await resolveStorageOrFail(
+        config,
+        res,
+        'presign',
+        req.method,
+        {
+            req,
+            phase: 'presign',
+            userId: owner,
+            ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
+            fileName: body.name,
+            contentType: body.type,
+            size: body.size,
+        },
+    )
+    if (storage instanceof Response) return storage
 
     try {
         const result = await generatePresignedUrl(
-            config.storage,
+            storage,
             key,
             body.type,
             body.size,
@@ -292,7 +380,8 @@ export async function handlePresign(
             phase: 'presign',
             // Always the key that is IN the payload, on every phase.
             key: result.key,
-            metadata: body,
+            file: body,
+            ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
             userId: owner,
         })
         return res.json(payload, 200)
@@ -323,12 +412,7 @@ export async function handleMultipartInit(
 
     const parsed = await parseJsonBody(req, res)
     if (!parsed.ok) return parsed.response
-    const body = parsed.value as {
-        name: string
-        type: string
-        size: number
-        chunkSizeBytes?: number
-    }
+    const body = parsed.value as FileMetadata & { chunkSizeBytes?: number }
 
     try {
         const validationError = await validateUploadMetadata(
@@ -348,10 +432,31 @@ export async function handleMultipartInit(
             fileName: body.name,
             contentType: body.type,
             size: body.size,
+            ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
+            req,
         })
 
+        const storage = await resolveStorageOrFail(
+            config,
+            res,
+            'multipart/init',
+            req.method,
+            {
+                req,
+                phase: 'multipart-init',
+                userId: owner,
+                ...(body.metadata !== undefined
+                    ? { metadata: body.metadata }
+                    : {}),
+                fileName: body.name,
+                contentType: body.type,
+                size: body.size,
+            },
+        )
+        if (storage instanceof Response) return storage
+
         const result = await initiateMultipartUpload(
-            config.storage,
+            storage,
             key,
             body.type,
             body.size,
@@ -359,12 +464,20 @@ export async function handleMultipartInit(
             body.chunkSizeBytes,
         )
         assertUploadTokenSecret(config.uploadTokenSecret)
+        // Bind the resolved destination into the SIGNED token so every
+        // continuation provably lands in this bucket (#337). Omitted entirely
+        // for a static config — there is only one destination, and omitting it
+        // keeps the static token byte-identical to before.
+        const sid = isStorageResolver(config.storage)
+            ? await storageIdentity(storage)
+            : undefined
         const token = await signUploadToken(config.uploadTokenSecret, {
             k: result.key,
             u: result.uploadId,
             uid: owner,
             smin: 0,
             smax: body.size,
+            ...(sid !== undefined ? { sid } : {}),
             exp:
                 Math.floor(Date.now() / 1000) +
                 DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
@@ -376,7 +489,10 @@ export async function handleMultipartInit(
                 req,
                 phase: 'multipart-init',
                 key: result.key,
-                metadata: body,
+                file: body,
+                ...(body.metadata !== undefined
+                    ? { metadata: body.metadata }
+                    : {}),
                 userId: owner,
             },
         )
@@ -419,8 +535,21 @@ export async function handleMultipartSignPart(
             req.method,
         )
         if (owned) return owned
+        const storage = await resolveBoundStorageOrFail(
+            config,
+            res,
+            'multipart/sign-part',
+            req.method,
+            {
+                req,
+                phase: 'multipart-sign-part',
+                userId: payload.uid,
+            },
+            payload.sid,
+        )
+        if (storage instanceof Response) return storage
         const result = await generatePresignedPartUrl(
-            config.storage,
+            storage,
             payload.k,
             payload.u,
             body.partNumber,
@@ -476,18 +605,28 @@ export async function handleMultipartComplete(
         )
         if (owned) return owned
 
+        const storage = await resolveBoundStorageOrFail(
+            config,
+            res,
+            'multipart/complete',
+            req.method,
+            { req, phase: 'multipart-complete', userId: payload.uid },
+            payload.sid,
+        )
+        if (storage instanceof Response) return storage
+
         // S1 (multipart): smin/smax are SIGNED at init but must be ENFORCED here —
         // otherwise a client can init with a tiny declared size (tiny smax) and
         // upload arbitrarily large real parts, since sign-part/PUT never sees the
         // client-declared size. Sum the bytes S3 actually received (ListParts) and
         // reject + abort if outside the signed envelope.
         const uploadedSize = await getMultipartUploadedSize(
-            config.storage,
+            storage,
             payload.k,
             payload.u,
         )
         if (uploadedSize < payload.smin || uploadedSize > payload.smax) {
-            await abortMultipartUpload(config.storage, payload.k, payload.u)
+            await abortMultipartUpload(storage, payload.k, payload.u)
             return res.json(
                 { error: 'Upload size outside signed envelope' },
                 403,
@@ -495,7 +634,7 @@ export async function handleMultipartComplete(
         }
 
         const result = await completeMultipartUpload(
-            config.storage,
+            storage,
             payload.k,
             payload.u,
             body.parts,
@@ -564,11 +703,16 @@ export async function handleMultipartAbort(
             req.method,
         )
         if (owned) return owned
-        const result = await abortMultipartUpload(
-            config.storage,
-            payload.k,
-            payload.u,
+        const storage = await resolveBoundStorageOrFail(
+            config,
+            res,
+            'multipart/abort',
+            req.method,
+            { req, phase: 'multipart-abort', userId: payload.uid },
+            payload.sid,
         )
+        if (storage instanceof Response) return storage
+        const result = await abortMultipartUpload(storage, payload.k, payload.u)
         return res.json(result, 200)
     } catch (error) {
         return res.fail(

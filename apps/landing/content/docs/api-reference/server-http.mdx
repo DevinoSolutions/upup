@@ -147,8 +147,14 @@ type FileMetadata = {
     name: string // non-empty
     type: string // MIME type; may be empty, but then it must pass allowedTypes
     size: number // bytes, finite, >= 0
+    metadata?: Record<string, unknown> // free-form; see below
 }
 ```
+
+`metadata` is optional, opaque routing input: the handler neither reads nor
+validates it, and passes it through to `keyStrategy` and a `storage` resolver.
+It is client-controlled — a server that routes on it must treat it like a query
+parameter. `/multipart/init` accepts the same field.
 
 **Response `200`** — the `PresignedUrlResponse` shape from `@upupjs/core`:
 
@@ -282,6 +288,12 @@ different authenticated user cannot be replayed:
 
 Without `getUserId` there was no identity to bind at `init`, `uid` is `null`,
 and the check is skipped — possession of the token is then the model by design.
+
+**Storage binding.** With a `storage` resolver, the token also carries the
+identity of the bucket `init` resolved, and this route answers `403
+AUTH_DENIED` if the resolver returns anything else — a continuation cannot be
+steered into a different bucket. A static `storage` binds nothing, since there
+is only one destination.
 
 `500` is `{ "error": "Multipart sign failed", "code": "STORAGE_ERROR" }`.
 
@@ -553,6 +565,16 @@ safety is not a knob that can be raised away.
 **Upload-token TTL.** One hour from `init`, reported on `/health` as
 `summary.uploadTokenTtlSeconds`. A multipart session that outlives it must be
 restarted from `init`.
+
+**Per-request storage.** When `config.storage` is a resolver rather than a
+static object, every route resolves its bucket per request, and the multipart
+continuation routes are pinned to the one `init` chose: the token carries a
+signed storage identity, the resolver is handed it back as `ctx.storageId`, and
+a resolved bucket that does not match answers `403 AUTH_DENIED`. A resolver that
+returns an unusable config fails that request with `500 Storage configuration
+error` (the real cause goes to `onError` only), and `/health` reports
+`checks.storage: "skipped"` with `summary.storageType: "dynamic"`. See
+[Multi-bucket routing](/docs/guides/server-mode-setup/#multi-bucket-routing).
 
 **Download-URL TTL.** Three days by default, for every signed `GET` the handler
 returns — `downloadUrl` on `/presign` and `/multipart/complete`, `url` on

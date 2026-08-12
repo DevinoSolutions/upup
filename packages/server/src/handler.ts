@@ -3,6 +3,7 @@ import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
 import { validateServerConfig } from './validate-config'
 import { assertS3Storage } from './storage'
+import { isStorageResolver } from './resolve-storage'
 import { handleHealth } from './health'
 import { createResponder } from './respond'
 import {
@@ -36,7 +37,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // credentials/region. A provider with no S3-compatible surface (currently
     // just Azure) could never function, with zero compile- or startup-time
     // signal until now.
-    assertS3Storage(config.storage)
+    // A resolver has no type to check yet — the same guard runs on whatever it
+    // returns, per request, in resolve-storage.ts (#337).
+    if (!isStorageResolver(config.storage)) assertS3Storage(config.storage)
     if (
         (config.providers || config.tokenStore) &&
         !config.getUserId &&

@@ -156,6 +156,7 @@ describe('hooks.onPresignResponse (#338)', () => {
                     seen.push({
                         phase: ctx.phase,
                         key: ctx.key,
+                        file: ctx.file,
                         metadata: ctx.metadata,
                         userId: ctx.userId,
                         isRequest: ctx.req instanceof Request,
@@ -176,21 +177,25 @@ describe('hooks.onPresignResponse (#338)', () => {
             {
                 phase: 'presign',
                 key: 'u1/uuid/photo.png',
-                metadata: meta,
+                file: meta,
+                // This client sent no free-form routing metadata.
+                metadata: undefined,
                 userId: 'user-7',
                 isRequest: true,
             },
             {
                 phase: 'multipart-init',
                 key: 'u1/uuid/big.zip',
-                metadata: meta,
+                file: meta,
+                metadata: undefined,
                 userId: 'user-7',
                 isRequest: true,
             },
             {
-                // sign-part sees only a verified token, never file metadata.
+                // sign-part sees only a verified token, never the file.
                 phase: 'multipart-sign-part',
                 key: 'u1/uuid/big.zip',
+                file: undefined,
                 metadata: undefined,
                 userId: 'user-7',
                 isRequest: true,

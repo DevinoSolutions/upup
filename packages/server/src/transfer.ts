@@ -6,7 +6,7 @@ import {
     AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3'
 import { UpupStorageError, UpupErrorCode } from '@upupjs/core'
-import type { UpupServerConfig, UploadedFile } from './config'
+import type { UpupStorageConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
 import {
     MIN_PART_SIZE,
@@ -32,7 +32,7 @@ export async function transferDriveFileToS3(opts: {
     size: number
     fileName: string
     mimeType: string
-    storage: UpupServerConfig['storage']
+    storage: UpupStorageConfig
     /** Authoritative cap enforced against the ACTUAL streamed bytes (not the
      *  client/drive-declared size). Exceeding it aborts + rejects (F-743). */
     maxBytes?: number | undefined
@@ -56,7 +56,7 @@ async function singlePut(opts: {
     size: number
     fileName: string
     mimeType: string
-    storage: UpupServerConfig['storage']
+    storage: UpupStorageConfig
     key: string
     maxBytes?: number | undefined
     downloadUrlExpiresIn?: number | undefined
@@ -100,7 +100,7 @@ async function streamingMultipart(opts: {
     size: number
     fileName: string
     mimeType: string
-    storage: UpupServerConfig['storage']
+    storage: UpupStorageConfig
     key: string
     maxBytes?: number | undefined
     onError?: UpupServerLogger | undefined

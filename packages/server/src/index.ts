@@ -13,6 +13,11 @@ export type {
     PresignResponseContext,
     PresignResponseBody,
     PresignResponseRewrite,
+    OnPresignResponse,
+    UpupClientMetadata,
+    UpupStorageResolver,
+    StorageResolverPhase,
+    StorageResolverContext,
 } from './config'
 export { getDownloadUrl } from './download-url'
 export type { DownloadUrlConfig, GetDownloadUrlOptions } from './download-url'

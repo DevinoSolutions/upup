@@ -573,6 +573,95 @@ Full request/response shapes for every route:
 [Server HTTP API](/docs/api-reference/server-http/). For client-side error
 wiring, see [Error monitoring](/docs/guides/error-monitoring/).
 
+## Multi-bucket routing
+
+`storage` takes either one static object or a **resolver** called per request,
+for apps that split uploads across buckets — images in one, unscanned documents
+in a quarantine bucket, each tenant in their own:
+
+```ts
+import { defineUpupConfig } from '@upupjs/next/server'
+
+const BUCKETS = {
+    images: { type: 'aws', bucket: 'app-images', region: 'us-east-1' },
+    quarantine: { type: 'aws', bucket: 'app-quarantine', region: 'us-east-1' },
+    documents: { type: 'aws', bucket: 'app-docs', region: 'eu-west-1' },
+} as const
+
+export default defineUpupConfig({
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET,
+    storage: ctx => {
+        // A continuation of a multipart upload: return the bucket it started in.
+        if (ctx.storageId) return byIdentity(ctx.storageId)
+
+        const requested = ctx.metadata?.uploadClass
+        if (requested === 'images') return BUCKETS.images
+        if (requested === 'unscanned') return BUCKETS.quarantine
+        return BUCKETS.documents
+    },
+})
+```
+
+The client picks a class by sending a `metadata` object alongside the file's
+name, type, and size in the presign body. `ctx` carries `req`, `phase`,
+`userId`, `metadata`, `fileName`, `contentType`, `size` — and `storageId` on
+multipart continuations.
+
+<Callout type="warn">
+    `ctx.metadata` is **whatever the client sent**. Switch on it against a fixed
+    map like the one above; never build a bucket name, a path prefix, or a
+    credential out of it. A resolver that does `bucket: ctx.metadata.bucket`
+    hands every caller the run of your account.
+</Callout>
+
+### How multipart stays in one bucket
+
+A multipart upload resolves its bucket once, at `init` — but `sign-part`,
+`complete`, and `abort` arrive later carrying only a token, with none of the
+metadata that decision was made from. upup closes that gap by stamping an
+opaque **storage identity** into the HMAC-signed upload token at `init` and
+handing it back to your resolver as `ctx.storageId`.
+
+Return the storage matching that id and the upload proceeds. The server then
+re-derives the identity of whatever you returned and answers
+`403 AUTH_DENIED` on a mismatch, so a resolver that ignores `storageId` fails
+loudly instead of writing parts into the wrong bucket. The client never supplies
+the identity unsigned, and it is a hash of bucket, endpoint, and region only —
+never of your credentials, so rotating an access key does not strand uploads in
+flight.
+
+A token issued while `storage` was still a static object carries no identity;
+if you then switch to a resolver, uploads already in flight answer `403` and
+restart from `init`. Upload tokens live one hour.
+
+### What changes with a resolver
+
+- **Validation moves to request time.** A static config is checked when
+  `createUpupHandler` is constructed; a resolver has nothing to check until a
+  request arrives, so a bad result fails that one request with a `500` and the
+  cause goes to `onError`. There is no fallback bucket — a misrouted write is
+  worse than a failed one.
+- **`/health` reports `storage: "skipped"`** and `storageType: "dynamic"`.
+  There is no single destination to probe, and calling your resolver from an
+  unauthenticated liveness route would reach a real backend.
+- **S3 clients are cached per destination**, keyed on endpoint, region, bucket,
+  and access key ID, so a multi-bucket deployment does not rebuild a client and
+  its connection pool on every presign.
+
+### `keyStrategy` sees it too
+
+`keyStrategy` now receives `metadata` and `req` alongside the existing
+`userId` / `fileName` / `contentType` / `size` — existing strategies keep
+working unchanged:
+
+```ts
+keyStrategy: ctx =>
+    `${ctx.metadata?.tenant ?? 'shared'}/${ctx.userId ?? 'anon'}/${crypto.randomUUID()}`
+```
+
+The same warning applies: `ctx.metadata` is untrusted, and here it lands in an
+object key. Sanitize anything you interpolate.
+
 ## Download URLs
 
 Every route that reports a stored object hands back a **presigned GET** —

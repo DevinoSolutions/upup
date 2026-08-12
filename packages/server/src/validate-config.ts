@@ -22,6 +22,9 @@ export function validateServerConfig(config: UpupServerConfig): void {
     // Runtime guard: callers may pass partial/invalid objects at boot time.
     if (!(config as Partial<UpupServerConfig>).storage) {
         missing.push('storage')
+    } else if (typeof config.storage === 'function') {
+        // A storage RESOLVER has no fields yet — its result is validated per
+        // request in resolve-storage.ts, which is the first moment it exists.
     } else {
         if (!isNonEmpty(config.storage.bucket)) missing.push('storage.bucket')
         if (!isNonEmpty(config.storage.region)) missing.push('storage.region')
