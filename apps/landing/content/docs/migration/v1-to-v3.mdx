@@ -138,6 +138,26 @@ Adapter → source id mapping:
 | `CAMERA`           | `'camera'`                          |
 | _(new)_            | `'box'`, `'screen'`, `'microphone'` |
 
+<Callout type="warning" title="v3's default sources add camera, microphone, and screen recording">
+    v1's default surface was effectively local files plus link imports. v3
+    defaults `sources` to `['local', 'url', 'camera', 'microphone', 'screen']`,
+    so an uploader migrated **without** a `sources` prop silently grows three
+    capture panels. Opening one asks the user for camera or microphone
+    permission, and what it produces is a recording: `video/webm` for screen,
+    `audio/webm` for microphone, `image/jpeg` for a camera photo. The exact
+    recording type comes from the browser's `MediaRecorder` and may carry a
+    `;codecs=…` suffix, so match it with a `video/*`-style wildcard rather than
+    an exact string. If those types are not in your `allowedFileTypes` (or your
+    server's `allowedTypes`), a user can record a clip and then watch it be
+    rejected — a dead end with no way forward.
+</Callout>
+
+Pass `sources` explicitly to keep the v1 surface:
+
+```tsx
+<UpupUploader sources={['local', 'url']} />
+```
+
 `driveConfigs` becomes `cloudDrives`, and the snake_case keys become camelCase:
 
 ```diff
@@ -387,6 +407,76 @@ See [Server Mode — Setup](/docs/guides/server-mode-setup/) for the Next.js,
 Express, Fastify, and Hono adapters, and [Upload modes](/docs/guides/modes/) for
 choosing between them.
 
+### Re-check upload limits on the server
+
+<Callout type="danger" title="v1 server-side maxFileSize/accept validation silently stops applying">
+    v1 clients sent the uploader's configured constraints along with the presign
+    request, so a v1 route could read them back and enforce them. v3 does not:
+    the presign body is `{ name, type, size, metadata }` and carries **no
+    constraints at all**. A v1 route ported field-for-field keeps answering
+    `200` while validating nothing — the limits it reads off the body are now
+    `undefined`, and every guard they feed passes. Nothing fails loudly, so the
+    gap usually surfaces only when a billing or abuse cap turns out never to
+    have been enforced.
+</Callout>
+
+`maxFiles`, `maxFileSize`, and `allowedFileTypes` are **client-side UX props**:
+they keep the picker honest, and that is all they do in either version. Anyone
+can POST to your presign route directly, so every limit you actually rely on has
+to be re-checked where the URL is signed.
+
+With `@upupjs/server`, flat policy is declarative and per-user policy goes in the
+`onBeforeUpload` hook. Both run on `/presign` and `/multipart/init` before any
+storage call:
+
+```ts
+import { createUpupHandler } from '@upupjs/server'
+
+const handler = createUpupHandler({
+    storage: {
+        type: 'aws',
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+    },
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    getUserId: async req => resolveUser(req),
+
+    // Flat policy: 413 over the size cap, 415 on a disallowed type.
+    maxFileSize: 25 * 1024 * 1024, // bytes — not the { size, unit } prop shape
+    allowedTypes: ['image/*', 'application/pdf'],
+
+    hooks: {
+        // Per-user policy. `file` is { name, size, type }; `req` is the raw
+        // Request. Returning false rejects with 403 "Upload rejected".
+        onBeforeUpload: async (file, req) => {
+            const plan = await resolvePlan(req)
+            if (file.size > plan.perFileByteCap) return false
+            if (plan.tier === 'free' && !file.type.startsWith('image/'))
+                return false
+            return await withinMonthlyQuota(plan, file.size)
+        },
+    },
+})
+```
+
+If you kept a hand-rolled client-mode route instead, do the same work there: read
+`name`, `type`, and `size` off the request body, reject before signing, and sign
+for exactly the size you approved. The presigned `PUT` signature covers
+`content-length`, so a client that later sends a bigger body is rejected by
+storage rather than quietly landing an oversized object.
+
+<Callout type="note">
+    The server's `maxFileSize` is a **number of bytes**, not the
+    `{ size, unit }` object the `<UpupUploader>` prop takes. They are separate
+    settings that happen to share a name — one gates the picker, the other gates
+    the signature.
+</Callout>
+
+See [Server Auth & Trust Model](/docs/guides/server-auth/#metadata-policy-size-and-type)
+for the full policy surface, and
+[`POST /presign`](/docs/api-reference/server-http/#post-presign) for the exact
+request shape and status codes.
+
 ## Full example: before and after
 
 **v1** (`upup-react-file-uploader`):
@@ -468,6 +558,15 @@ export default function Uploader() {
 
 Behavioral differences to check after the mechanical rename:
 
+- **Your v1 server-side size/type validation silently stops applying.** v3's
+  presign body carries no constraints, so a ported v1 route keeps returning
+  `200` while checking nothing. Re-enforce the limits where the URL is signed —
+  see [Re-check upload limits on the server](#re-check-upload-limits-on-the-server).
+- **`sources` defaults to five sources, including camera, microphone, and
+  screen recording.** Omit the prop and your app gains capture panels it never
+  had in v1 — and recordings your `allowedFileTypes` may reject. Pass
+  `sources={['local', 'url']}` for the v1 surface; see
+  [Sources & cloud drives](#sources--cloud-drives).
 - **`maxFiles` defaults to 10, not 1.** v1's `limit` defaulted to `1`. If your
   app relied on single-file selection, set `maxFiles={1}` (or use `mini`, which
   forces a single file).

@@ -203,7 +203,15 @@ paths before any storage call:
 
 An `onBeforeUpload` hook — configured under `hooks`, i.e.
 `config.hooks.onBeforeUpload`, not top-level — can reject a specific upload
-(**403** `Upload rejected`) with your own logic.
+(**403** `Upload rejected`) with your own logic. It receives the same
+`{ name, size, type }` metadata plus the raw `Request`, which is where per-user
+rules (plan caps, quotas) belong.
+
+These are the only size and type limits on the server. The `<UpupUploader>`
+props (`maxFiles`, `maxFileSize`, `allowedFileTypes`) are client-side UX and
+never reach this handler — if you are porting a v1 route that read its limits
+out of the request body, see
+[Re-check upload limits on the server](/docs/migration/v1-to-v3/#re-check-upload-limits-on-the-server).
 
 ## What forged and unsigned requests get
 
