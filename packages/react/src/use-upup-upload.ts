@@ -132,7 +132,16 @@ export function useUpupUpload(
             // the headless hook's existing drop/paste semantics; only the
             // GATING (enablePaste/isProcessing/folder-drop/filename/events)
             // was the bug, not the append-vs-replace choice.
-            setFiles: files => core.addFiles(files),
+            //
+            // The .catch honors DragDropDeps.setFiles' void contract (#342):
+            // the controller fires this drop/paste path without awaiting, and
+            // core.addFiles rethrows restriction failures AFTER emitting
+            // `restriction-failed`. Every other framework satisfies the same
+            // contract via handleSetSelectedFiles, which try/catches; this
+            // headless dep is the one that reached core.addFiles bare.
+            setFiles: files => {
+                core.addFiles(files).catch(() => {})
+            },
             filesSize: () => orchestrator.getSnapshot().files.size,
             options: () => ({
                 ...(optionsRef.current.enablePaste !== undefined

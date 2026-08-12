@@ -34,6 +34,24 @@ function composeEventHandlers<E>(
     }
 }
 
+/**
+ * Detach a fire-and-forget promise from the unhandled-rejection channel (#342).
+ *
+ * `core.addFiles()` emits `restriction-failed` and THEN rethrows — the rethrow
+ * is deliberate, so a direct `await core.addFiles()` caller can narrow on the
+ * error. But a DOM callback has nobody to rethrow to, so an ordinary restriction
+ * failure (wrong type, too large, over the limit) used to surface a second time
+ * as an unhandled rejection and pollute error reporting. Dropping it here loses
+ * nothing: the event bus already carried the identical error before the throw.
+ */
+function ignoreRejection(result: Promise<unknown> | void): void {
+    // Duck-typed rather than `instanceof Promise` — a dep may hand back a
+    // thenable from another realm, which `instanceof` would silently miss.
+    if (result && typeof result.catch === 'function') {
+        result.catch(() => {})
+    }
+}
+
 export interface PropGetters {
     getDropzoneProps: (
         overrides?: HTMLAttributes<HTMLElement>,
@@ -69,7 +87,7 @@ export function createPropGetters(deps: PropGetterDeps): PropGetters {
             dragDrop?.handleDragLeave(e as unknown as DragEvent)
         }
         const onDrop = (e: React.DragEvent<HTMLElement>): void => {
-            void dragDrop?.handleDrop(e as unknown as DragEvent)
+            ignoreRejection(dragDrop?.handleDrop(e as unknown as DragEvent))
         }
         const onPaste = (e: React.ClipboardEvent<HTMLElement>): void => {
             dragDrop?.handlePaste(e as unknown as ClipboardEvent)
@@ -118,7 +136,7 @@ export function createPropGetters(deps: PropGetterDeps): PropGetters {
         const onChange: ChangeEventHandler<HTMLInputElement> = e => {
             const fileList = e.target.files
             if (fileList) {
-                void addFiles(Array.from(fileList))
+                ignoreRejection(addFiles(Array.from(fileList)))
             }
         }
         return {
