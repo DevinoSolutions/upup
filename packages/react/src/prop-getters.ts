@@ -44,11 +44,14 @@ function composeEventHandlers<E>(
  * as an unhandled rejection and pollute error reporting. Dropping it here loses
  * nothing: the event bus already carried the identical error before the throw.
  */
-function ignoreRejection(result: Promise<unknown> | void): void {
+function ignoreRejection(result: unknown): void {
     // Duck-typed rather than `instanceof Promise` — a dep may hand back a
     // thenable from another realm, which `instanceof` would silently miss.
-    if (result && typeof result.catch === 'function') {
-        result.catch(() => {})
+    // `unknown` rather than `Promise<unknown> | void`, because the callers'
+    // return types are void-unions that no narrower parameter type accepts.
+    const thenable = result as { catch?: (cb: () => void) => unknown } | null
+    if (typeof thenable?.catch === 'function') {
+        thenable.catch(() => {})
     }
 }
 
