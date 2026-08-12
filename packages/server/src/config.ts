@@ -1,4 +1,10 @@
-import type { StorageProvider, UpupCorsConfig } from '@upupjs/core'
+import type {
+    StorageProvider,
+    UpupCorsConfig,
+    PresignedUrlResponse,
+    MultipartInitResponse,
+    MultipartSignPartResponse,
+} from '@upupjs/core'
 import type { UpupServerLogger } from './observability'
 
 /** Context passed to a custom keyStrategy. */
@@ -9,6 +15,35 @@ export interface KeyStrategyContext {
     contentType: string
     size: number
 }
+
+/** Which of the three presign-side responses `onPresignResponse` is rewriting. */
+export type PresignResponsePhase =
+    'presign' | 'multipart-init' | 'multipart-sign-part'
+
+export interface PresignResponseContext {
+    /** The originating request, already past every auth and policy check. */
+    req: Request
+    phase: PresignResponsePhase
+    /** The server-chosen object key. Present on all three phases — on
+     *  `multipart-sign-part` it comes from the VERIFIED token, not the client. */
+    key: string
+    /** The client-declared file metadata. Absent on `multipart-sign-part`,
+     *  which sees only a token and a part number. */
+    metadata?: FileMetadata
+    /** Resolved userId, or null for an anonymous (server-namespaced) upload. */
+    userId: string | null
+}
+
+/** What the hook receives — narrow it on `ctx.phase`, or with `'uploadUrl' in response`. */
+export type PresignResponseBody =
+    | PresignedUrlResponse
+    | (MultipartInitResponse & { token: string })
+    | MultipartSignPartResponse
+
+/** What the hook may return: the same shapes, plus any extra fields you want
+ *  to add for your client. */
+export type PresignResponseRewrite = PresignResponseBody &
+    Record<string, unknown>
 
 /** One bucket's worth of S3 / S3-compatible connection settings. */
 export interface UpupStorageConfig {
@@ -98,12 +133,44 @@ export type UpupServerConfig = {
      * README's "Lifecycle hooks" section for the full per-path breakdown.
      */
     hooks?: {
+        /**
+         * Admission gate. Return `false` to reject with a generic
+         * `403 Upload rejected`; THROW an `UpupError` to reject with that
+         * error's own message and code in the 403 body (a quota check can say
+         * "Storage limit exceeded — upgrade to keep uploading"). Any other
+         * throw stays a generic 500 — internal error text never reaches the
+         * client.
+         */
         onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
         onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>
         onUploadComplete?: (
             files: UploadedFile[],
             req: Request,
         ) => Promise<void>
+        /**
+         * Last look at a presign-side response body before it is sent, for
+         * deployments where the storage endpoint is not browser-reachable
+         * (a same-origin proxy route, a docker-internal MinIO hostname, a
+         * VPC-only endpoint). Return an object to REPLACE the payload; return
+         * nothing to leave it as-is.
+         *
+         * Fires on exactly three responses, identified by `ctx.phase`:
+         * `POST /presign` (`presign`), `POST /multipart/init`
+         * (`multipart-init`, token already issued), and
+         * `POST /multipart/sign-part` (`multipart-sign-part`).
+         *
+         * It runs AFTER every auth, policy, and token check and cannot bypass
+         * any of them — a request that would 401/403 never reaches the hook.
+         * Rewriting `uploadUrl` changes where the browser sends bytes, so the
+         * URL you substitute must land at the same object.
+         */
+        onPresignResponse?: (
+            response: PresignResponseBody,
+            ctx: PresignResponseContext,
+        ) =>
+            | PresignResponseRewrite
+            | void
+            | Promise<PresignResponseRewrite | void>
     }
 
     auth?: (req: Request) => Promise<boolean>

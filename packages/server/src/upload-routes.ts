@@ -7,8 +7,14 @@
 // can read the trust core without wading through OAuth or drive-provider code.
 // The HMAC/token/envelope logic is UNCHANGED — this is a move, not a rewrite.
 
-import { UpupErrorCode } from '@upupjs/core'
-import type { UpupServerConfig, FileMetadata, UploadedFile } from './config'
+import { UpupErrorCode, UpupError } from '@upupjs/core'
+import type {
+    UpupServerConfig,
+    FileMetadata,
+    UploadedFile,
+    PresignResponseBody,
+    PresignResponseContext,
+} from './config'
 import {
     generatePresignedUrl,
     initiateMultipartUpload,
@@ -175,13 +181,40 @@ async function validateUploadMetadata(
     }
 
     if (config.hooks?.onBeforeUpload) {
-        const allowed = await config.hooks.onBeforeUpload(body, req)
+        let allowed: boolean
+        try {
+            allowed = await config.hooks.onBeforeUpload(body, req)
+        } catch (error) {
+            // upup-catch: an UpupError is the integrator DELIBERATELY speaking to
+            // the client — serialize its message + code into the 403 so a quota
+            // check can explain itself (#338). Anything else is an unexpected
+            // failure and is re-thrown, so it surfaces as a generic 500 with the
+            // real cause going only to onError. Never leak internal error text.
+            if (error instanceof UpupError) {
+                return res.json({ error: error.message, code: error.code }, 403)
+            }
+            throw error
+        }
         if (!allowed) {
             return res.json({ error: 'Upload rejected' }, 403)
         }
     }
 
     return null
+}
+
+/** Give `hooks.onPresignResponse` the last look at a presign-side payload
+ *  (#338). Runs after every auth/policy/token check, so it can rewrite where
+ *  the browser sends bytes but can never widen what the caller was allowed to
+ *  do. Returning nothing keeps the payload untouched. */
+async function applyPresignResponseHook(
+    config: UpupServerConfig,
+    response: PresignResponseBody,
+    ctx: PresignResponseContext,
+): Promise<PresignResponseBody> {
+    const hook = config.hooks?.onPresignResponse
+    if (!hook) return response
+    return (await hook(response, ctx)) ?? response
 }
 
 /** Run integrator post-completion hooks (onFileUploaded/onUploadComplete) AFTER
@@ -254,7 +287,15 @@ export async function handlePresign(
             undefined,
             config.downloadUrlExpiresIn,
         )
-        return res.json(result, 200)
+        const payload = await applyPresignResponseHook(config, result, {
+            req,
+            phase: 'presign',
+            // Always the key that is IN the payload, on every phase.
+            key: result.key,
+            metadata: body,
+            userId: owner,
+        })
+        return res.json(payload, 200)
     } catch (error) {
         return res.fail(
             'presign',
@@ -328,7 +369,18 @@ export async function handleMultipartInit(
                 Math.floor(Date.now() / 1000) +
                 DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
         })
-        return res.json({ ...result, token }, 200)
+        const payload = await applyPresignResponseHook(
+            config,
+            { ...result, token },
+            {
+                req,
+                phase: 'multipart-init',
+                key: result.key,
+                metadata: body,
+                userId: owner,
+            },
+        )
+        return res.json(payload, 200)
     } catch (error) {
         return res.fail(
             'multipart/init',
@@ -373,7 +425,15 @@ export async function handleMultipartSignPart(
             payload.u,
             body.partNumber,
         )
-        return res.json(result, 200)
+        const rewritten = await applyPresignResponseHook(config, result, {
+            req,
+            phase: 'multipart-sign-part',
+            // From the VERIFIED token — sign-part never sees a client-asserted
+            // key, and has no file metadata to report.
+            key: payload.k,
+            userId: payload.uid,
+        })
+        return res.json(rewritten, 200)
     } catch (error) {
         return res.fail(
             'multipart/sign-part',

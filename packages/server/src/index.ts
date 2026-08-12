@@ -9,6 +9,10 @@ export type {
     FileMetadata,
     UploadedFile,
     KeyStrategyContext,
+    PresignResponsePhase,
+    PresignResponseContext,
+    PresignResponseBody,
+    PresignResponseRewrite,
 } from './config'
 export { getDownloadUrl } from './download-url'
 export type { DownloadUrlConfig, GetDownloadUrlOptions } from './download-url'

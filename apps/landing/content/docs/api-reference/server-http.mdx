@@ -179,6 +179,7 @@ three days unless `downloadUrlExpiresIn` says otherwise.
 | `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                   |
 | `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                       |
 | `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`  |
+| `403`  | `{ "error": "…", "code": "…" }`                               | your `hooks.onBeforeUpload` threw an `UpupError` — its own message and code |
 | `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                  |
 | `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`          |
 | `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                        |
@@ -557,6 +558,28 @@ restarted from `init`.
 returns — `downloadUrl` on `/presign` and `/multipart/complete`, `url` on
 `/files/:provider/transfer`. Set `downloadUrlExpiresIn` (seconds) to change it.
 This is independent of the one-hour upload-URL expiry.
+
+## Rewriting a response body
+
+`hooks.onPresignResponse` is the one seam that can change what a route sends.
+It fires on three responses only, discriminated by `ctx.phase`:
+
+| `ctx.phase`           | Route                       | Body it receives                          |
+| --------------------- | --------------------------- | ----------------------------------------- |
+| `presign`             | `POST /presign`             | `PresignedUrlResponse`                    |
+| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token`      |
+| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`               |
+
+Returning an object replaces the payload; returning nothing keeps it. The
+context is `{ req, phase, key, metadata?, userId }` — `key` is always the key
+in the payload, and `metadata` is absent on `multipart-sign-part`, which sees
+only a verified token.
+
+The hook runs after auth, policy, and token verification, and after the upload
+token is issued. It cannot change a status code, cannot turn a rejection into a
+success, and never runs on a request that answered `401`/`403`. It is a body
+rewriter for deployments whose storage endpoint the browser cannot reach — see
+[Rewriting presign responses](/docs/guides/server-mode-setup/#rewriting-presign-responses).
 
 ## Signing a download URL outside the handler
 

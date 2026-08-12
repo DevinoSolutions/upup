@@ -322,13 +322,17 @@ rename.
 
 ## Lifecycle hooks
 
-Three optional hooks let you gate uploads and react to completions:
+Four optional hooks let you gate uploads, rewrite what the server hands back,
+and react to completions:
 
 ```ts
 createUpupHandler({
     // ...storage, uploadTokenSecret
     hooks: {
         onBeforeUpload: async (file, req) => true, // false rejects with 403
+        onPresignResponse: (response, ctx) => {
+            // return an object to replace the payload; nothing to keep it
+        },
         onFileUploaded: async (file, req) => {
             // one file finished — file.key, .name, .size, .type, .url
         },
@@ -342,17 +346,23 @@ createUpupHandler({
 **Which hook fires on which path.** Read this before wiring alerting,
 billing, or webhooks on top of them — the gaps are structural, not bugs:
 
-| Route                            | `onBeforeUpload` | `onFileUploaded` | `onUploadComplete` |
-| -------------------------------- | ---------------- | ---------------- | ------------------ |
-| `POST /presign`                  | yes              | no               | no                 |
-| `POST /multipart/init`           | yes              | no               | no                 |
-| `POST /multipart/complete`       | no               | yes              | yes                |
-| `POST /files/:provider/transfer` | no               | yes              | no                 |
+| Route                            | `onBeforeUpload` | `onPresignResponse` | `onFileUploaded` | `onUploadComplete` |
+| -------------------------------- | ---------------- | ------------------- | ---------------- | ------------------ |
+| `POST /presign`                  | yes              | yes                 | no               | no                 |
+| `POST /multipart/init`           | yes              | yes                 | no               | no                 |
+| `POST /multipart/sign-part`      | no               | yes                 | no               | no                 |
+| `POST /multipart/complete`       | no               | no                  | yes              | yes                |
+| `POST /files/:provider/transfer` | no               | no                  | yes              | no                 |
 
 - **`onBeforeUpload` is an admission gate, not a completion signal.** It runs
   during metadata validation on `/presign` and `/multipart/init`, after the
   `maxFileSize` and `allowedTypes` checks. Returning `false` responds
-  `403 Upload rejected` and nothing is presigned.
+  `403 Upload rejected` and nothing is presigned. To explain the rejection,
+  **throw an `UpupError`** instead — see
+  [Explaining a rejection](#explaining-a-rejection) below.
+- **`onPresignResponse` is the only hook that can change a response body.** It
+  sees the three presign-side payloads and nothing else — see
+  [Rewriting presign responses](#rewriting-presign-responses).
 - **`onFileUploaded` fires once per file on the two server-side-completion
   paths only:** `/multipart/complete` (the server just finished the S3
   multipart upload) and `/files/:provider/transfer` (the server just finished
@@ -375,6 +385,94 @@ A hook that throws **after** a successful upload is reported through
 `onError` and swallowed, never re-coded as a 500. The object is already
 durably in S3, so a 500 would only tell the client to retry something that
 already succeeded.
+
+### Rewriting presign responses
+
+If your bucket is not reachable from the browser — a private MinIO behind a
+same-origin proxy route, a docker-internal hostname in local dev, a VPC-only
+endpoint — the signed URL the server produces is not the URL the browser can
+use. `onPresignResponse` gets the last look at the payload and can replace it:
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    hooks: {
+        onPresignResponse: (response, ctx) => {
+            if (!('uploadUrl' in response)) return
+            return {
+                ...response,
+                uploadUrl: response.uploadUrl.replace(
+                    'https://minio.internal:9000',
+                    'https://app.example.com/api/s3',
+                ),
+            }
+        },
+    },
+})
+```
+
+Return an object to replace the payload; return nothing to leave it alone.
+
+It fires on exactly three responses, told apart by `ctx.phase`:
+
+| `ctx.phase`            | Route                       | Payload                                     |
+| ---------------------- | --------------------------- | ------------------------------------------- |
+| `presign`              | `POST /presign`             | `PresignedUrlResponse`                      |
+| `multipart-init`       | `POST /multipart/init`      | `MultipartInitResponse` plus the `token`    |
+| `multipart-sign-part`  | `POST /multipart/sign-part` | `MultipartSignPartResponse`                 |
+
+`ctx` also carries `req`, the server-chosen `key` (always the key in the
+payload), the resolved `userId`, and `metadata` — the client-declared file
+metadata, absent on `multipart-sign-part`, which sees only a verified token and
+a part number.
+
+<Callout type="warn">
+    The hook runs **after** every auth, policy, and token check, so it cannot
+    widen what a caller was allowed to do — a request that would answer 401 or
+    403 never reaches it. But rewriting `uploadUrl` does change where the
+    browser sends bytes: the URL you substitute must land at the same object,
+    and whatever proxy it points at is now part of your upload path.
+</Callout>
+
+Cover all three phases if you use multipart. Rewriting only `/presign` leaves
+multipart uploads pointed at the unreachable host.
+
+### Explaining a rejection
+
+`onBeforeUpload` returning `false` answers a deliberately generic
+`403 { "error": "Upload rejected" }` — it says nothing about why. When the
+reason is something the user should see, throw an `UpupError` instead and its
+message and code are serialized into the 403 body:
+
+```ts
+import { UpupQuotaError } from '@upupjs/core'
+
+hooks: {
+    onBeforeUpload: async (file, req) => {
+        const { used, limit } = await getQuota(req)
+        if (used + file.size > limit) {
+            throw new UpupQuotaError(
+                'Storage limit exceeded — upgrade to keep uploading',
+                limit,
+                used,
+            )
+        }
+        return true
+    }
+}
+```
+
+```json
+{
+    "error": "Storage limit exceeded — upgrade to keep uploading",
+    "code": "QUOTA_EXCEEDED"
+}
+```
+
+Only `UpupError` and its subclasses are serialized, and only from this hook.
+Any other throw stays a generic `500` with the real cause going to `onError`
+alone — an accidental `Error` carrying a connection string or a stack trace
+never reaches the client.
 
 ## Observability
 
