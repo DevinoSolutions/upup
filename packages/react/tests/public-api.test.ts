@@ -19,8 +19,21 @@ const EXPECTED_PUBLIC_VALUE_EXPORTS = [
     'OneDriveIcon',
     'ScreenCaptureIcon',
     'StorageProvider',
+    // The UpupError taxonomy, re-exported from @upupjs/core (#339) so catching
+    // a typed upload error does not force a direct @upupjs/core dependency.
+    // Same class identities as core's, so `instanceof` narrowing works no
+    // matter which package the consumer imported from — pinned by
+    // tests/error-exports.test.ts.
+    'UpupAuthError',
+    'UpupConfigError',
+    'UpupError',
+    'UpupErrorCode',
+    'UpupNetworkError',
+    'UpupQuotaError',
+    'UpupStorageError',
     'UpupThemeProvider',
     'UpupUploader',
+    'UpupValidationError',
     'resolveAccept',
     'useIsClient',
     'useUploaderContext',
