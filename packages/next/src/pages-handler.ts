@@ -24,7 +24,18 @@ function resolveBase(req: NextApiRequest, opts?: UpupNextOptions): string {
     return `${proto}://${host}`
 }
 
-async function readBody(req: NextApiRequest): Promise<Buffer | undefined> {
+/**
+ * Yields the raw body as a plain `Uint8Array`, never the `Buffer` we assemble.
+ * Under @types/node >=22 a `Buffer` types as `Buffer<ArrayBufferLike>`, which is
+ * not assignable to `BodyInit` — copying into a fresh `Uint8Array` yields
+ * `Uint8Array<ArrayBuffer>`, which every @types/node version accepts. The return
+ * type is `RequestInit['body']` (the bridge's own parameter type) rather than a
+ * bare `Uint8Array`, because bare `Uint8Array` means `Uint8Array<ArrayBufferLike>`
+ * and would reintroduce the same mismatch at the annotation.
+ */
+async function readBody(
+    req: NextApiRequest,
+): Promise<RequestInit['body'] | undefined> {
     const method = (req.method ?? 'GET').toUpperCase()
     if (method === 'GET' || method === 'HEAD') return undefined
     const chunks: Buffer[] = []
@@ -33,7 +44,7 @@ async function readBody(req: NextApiRequest): Promise<Buffer | undefined> {
             typeof chunk === 'string' ? Buffer.from(chunk) : (chunk as Buffer),
         )
     }
-    return chunks.length ? Buffer.concat(chunks) : undefined
+    return chunks.length ? new Uint8Array(Buffer.concat(chunks)) : undefined
 }
 
 /**

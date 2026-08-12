@@ -14,6 +14,21 @@ vi.mock('@upupjs/server', () => ({
     },
 }))
 
+// Capture the raw body value handed to the bridge, before Request swallows it.
+const bridged: { body?: unknown } = {}
+
+vi.mock('@upupjs/server/node-bridge', async importOriginal => {
+    const actual =
+        await importOriginal<typeof import('@upupjs/server/node-bridge')>()
+    return {
+        ...actual,
+        toWebRequest: (input: Parameters<typeof actual.toWebRequest>[0]) => {
+            bridged.body = input.body
+            return actual.toWebRequest(input)
+        },
+    }
+})
+
 import { createUpupPagesHandler } from '../pages-handler'
 
 function mockReq(opts: {
@@ -66,6 +81,7 @@ function mockRes(): MockRes & NextApiResponse {
 
 beforeEach(() => {
     delete received.req
+    delete bridged.body
     respond = async () => new Response('{}', { status: 200 })
 })
 
@@ -100,6 +116,27 @@ describe('createUpupPagesHandler', () => {
         expect(JSON.parse((res.body as Buffer).toString())).toEqual({
             url: 'https://s3/put',
         })
+    })
+
+    // A Node Buffer types as `Buffer<ArrayBufferLike>` under @types/node >=22,
+    // which is not assignable to BodyInit and breaks the dts build. A plain
+    // Uint8Array over a real ArrayBuffer satisfies every @types/node version.
+    it('hands the body to the bridge as a plain Uint8Array, not a Node Buffer', async () => {
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
+        await handler(
+            mockReq({
+                method: 'POST',
+                url: '/api/upup-pages/presign',
+                headers: { 'content-type': 'application/json' },
+                body: '{"name":"a.png"}',
+            }),
+            mockRes(),
+        )
+        expect(bridged.body).toBeInstanceOf(Uint8Array)
+        expect(Buffer.isBuffer(bridged.body)).toBe(false)
+        expect(new TextDecoder().decode(bridged.body as Uint8Array)).toBe(
+            '{"name":"a.png"}',
+        )
     })
 
     it('does not read a body for GET', async () => {
