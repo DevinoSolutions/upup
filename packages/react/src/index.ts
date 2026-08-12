@@ -54,6 +54,7 @@ export {
     UpupQuotaError,
     UpupStorageError,
     UpupConfigError,
+    uploadErrorFromResponse,
 } from '@upupjs/core'
 export type { RestrictionFailedReason } from '@upupjs/core'
 

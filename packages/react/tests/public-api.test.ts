@@ -35,6 +35,9 @@ const EXPECTED_PUBLIC_VALUE_EXPORTS = [
     'UpupUploader',
     'UpupValidationError',
     'resolveAccept',
+    // Completes the documented error toolkit alongside the taxonomy above
+    // (#339) — promoted to core's public entry in the same change.
+    'uploadErrorFromResponse',
     'useIsClient',
     'useUploaderContext',
     'useUploaderEditor',

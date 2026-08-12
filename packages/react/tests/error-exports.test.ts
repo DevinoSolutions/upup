@@ -39,6 +39,25 @@ describe('@upupjs/react error surface (#339)', () => {
         expect(ReactPackage.UpupErrorCode.TYPE_MISMATCH).toBe('TYPE_MISMATCH')
     })
 
+    it('re-exports uploadErrorFromResponse as the same function core exports', () => {
+        expect(ReactPackage.uploadErrorFromResponse).toBeTypeOf('function')
+        expect(ReactPackage.uploadErrorFromResponse).toBe(
+            CorePackage.uploadErrorFromResponse,
+        )
+    })
+
+    it('uploadErrorFromResponse builds an error that narrows to the re-exported classes', () => {
+        const err = ReactPackage.uploadErrorFromResponse({
+            kind: 'storage',
+            status: 500,
+            statusText: 'Internal Server Error',
+        })
+
+        expect(err).toBeInstanceOf(ReactPackage.UpupError)
+        expect(err).toBeInstanceOf(ReactPackage.UpupStorageError)
+        expect(err.code).toBe(ReactPackage.UpupErrorCode.STORAGE_ERROR)
+    })
+
     it('every subclass still narrows to UpupError through react-only imports', () => {
         const error = new ReactPackage.UpupValidationError(
             'File type "text/plain" is not accepted',
