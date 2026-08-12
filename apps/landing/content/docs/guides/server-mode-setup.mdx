@@ -475,6 +475,61 @@ Full request/response shapes for every route:
 [Server HTTP API](/docs/api-reference/server-http/). For client-side error
 wiring, see [Error monitoring](/docs/guides/error-monitoring/).
 
+## Download URLs
+
+Every route that reports a stored object hands back a **presigned GET** —
+`downloadUrl` on `/presign` and `/multipart/complete`, `url` on
+`/files/:provider/transfer`. Those links expire after **3 days** by default.
+
+### `downloadUrlExpiresIn`
+
+One knob sets the TTL, in seconds, for every signed GET the server issues:
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    downloadUrlExpiresIn: 900, // 15 minutes
+})
+```
+
+It covers the download half only. The **upload** URL's own 1-hour expiry is
+separate and unaffected, so shortening download links never shortens the
+window a large upload has to finish in.
+
+### Gated downloads: `getDownloadUrl`
+
+For content you serve later — a link on a dashboard, an email attachment, a
+paywalled asset — you need a fresh URL for a key stored weeks ago, with no
+upload in flight. `getDownloadUrl` is that operation on its own, with no
+handler and no HTTP route involved:
+
+```ts
+import { getDownloadUrl } from '@upupjs/server'
+import { upupConfig } from './lib/upup-config'
+
+const url = await getDownloadUrl(upupConfig, invoice.storageKey, {
+    expiresIn: 300, // 5 minutes, for this link only
+})
+```
+
+The first argument is your server config, or any object with a `storage`
+slice — it reuses the same credentials and endpoint the handler uses. Expiry
+resolves in this order:
+
+1. the per-call `expiresIn`,
+2. `config.downloadUrlExpiresIn`,
+3. the 3-day default.
+
+Two things to keep in mind:
+
+- **It authorizes nothing.** It signs whatever key you hand it. Check that the
+  current user may see that object *before* you call it — this is the same
+  trust position as `S3Client.getSignedUrl`, not a replacement for your access
+  control.
+- **S3-compatible providers only**, like the rest of the package. A
+  `storage.type` with no S3 API (`azure`) throws `UpupConfigError`, the same
+  error `createUpupHandler` throws at construct time.
+
 ## Limits
 
 ### `maxFileSize`

@@ -10,28 +10,31 @@ export interface KeyStrategyContext {
     size: number
 }
 
+/** One bucket's worth of S3 / S3-compatible connection settings. */
+export interface UpupStorageConfig {
+    /**
+     * An S3 / S3-compatible provider label. @upupjs/server only speaks the S3
+     * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
+     * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
+     * provider with no S3-compatible surface (currently `StorageProvider.Azure`
+     * — see @upupjs/core's NON_S3_STORAGE_PROVIDERS) is rejected by
+     * createUpupHandler at construct time.
+     */
+    type: StorageProvider | string
+    bucket: string
+    region: string
+    accessKeyId?: string
+    secretAccessKey?: string
+    /** S3-compatible endpoint (MinIO / Cloudflare R2 / DO Spaces / on-prem). Omit for AWS S3. */
+    endpoint?: string
+    /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO).
+     *  Only applies when `endpoint` is set; ignored for native AWS S3. */
+    forcePathStyle?: boolean
+    [key: string]: unknown
+}
+
 export type UpupServerConfig = {
-    storage: {
-        /**
-         * An S3 / S3-compatible provider label. @upupjs/server only speaks the S3
-         * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
-         * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
-         * provider with no S3-compatible surface (currently `StorageProvider.Azure`
-         * — see @upupjs/core's NON_S3_STORAGE_PROVIDERS) is rejected by
-         * createUpupHandler at construct time.
-         */
-        type: StorageProvider | string
-        bucket: string
-        region: string
-        accessKeyId?: string
-        secretAccessKey?: string
-        /** S3-compatible endpoint (MinIO / Cloudflare R2 / DO Spaces / on-prem). Omit for AWS S3. */
-        endpoint?: string
-        /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO).
-         *  Only applies when `endpoint` is set; ignored for native AWS S3. */
-        forcePathStyle?: boolean
-        [key: string]: unknown
-    }
+    storage: UpupStorageConfig
 
     providers?: {
         googleDrive?: { clientId: string; clientSecret: string }
@@ -62,6 +65,15 @@ export type UpupServerConfig = {
      * `<userId|anon>/<uuid>/<sanitized-filename>`. The client never chooses the key.
      */
     keyStrategy?: (ctx: KeyStrategyContext) => string
+
+    /**
+     * TTL, in SECONDS, for the signed GET download URLs this server hands back
+     * (`downloadUrl` on the presign / multipart-complete / drive-transfer
+     * responses, and `getDownloadUrl`'s result). Defaults to 3 days. Lower it
+     * for gated content — a 15-minute link is `900`. This is the download half
+     * only; the upload URL's own 1-hour expiry is unaffected.
+     */
+    downloadUrlExpiresIn?: number
 
     /**
      * Permit drive providers / tokenStore WITHOUT a getUserId resolver, collapsing

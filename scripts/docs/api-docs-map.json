@@ -89,7 +89,8 @@
     },
     "@upupjs/server": {
         "InMemoryTokenStore": "apps/landing/content/docs/guides/server-auth.mdx",
-        "createUpupHandler": "apps/landing/content/docs/api-reference/server-http.mdx"
+        "createUpupHandler": "apps/landing/content/docs/api-reference/server-http.mdx",
+        "getDownloadUrl": "apps/landing/content/docs/api-reference/server-http.mdx"
     },
     "@upupjs/next/server": {
         "InMemoryTokenStore": "apps/landing/content/docs/guides/server-auth.mdx",

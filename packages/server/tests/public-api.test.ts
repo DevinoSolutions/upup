@@ -9,6 +9,7 @@ const EXPECTED_PUBLIC_VALUE_EXPORTS = [
     'InMemoryTokenStore',
     'createUpupHandler',
     'deleteTokens',
+    'getDownloadUrl',
     'getTokens',
     'setTokens',
 ].sort()

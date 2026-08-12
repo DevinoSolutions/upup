@@ -159,6 +159,7 @@ export async function handleFileTransfer(
             maxBytes: config.maxFileSize,
             onError: config.onError,
             requestId: res.requestId,
+            downloadUrlExpiresIn: config.downloadUrlExpiresIn,
         })
         // Post-commit: object durably in S3. A throwing onFileUploaded hook is
         // logged + swallowed by runPostCompletionHooks, never bubbling to the

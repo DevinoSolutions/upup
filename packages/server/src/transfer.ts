@@ -8,7 +8,11 @@ import {
 import { UpupStorageError, UpupErrorCode } from '@upupjs/core'
 import type { UpupServerConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
-import { MIN_PART_SIZE, generateSignedPublicUrl } from './providers/aws'
+import {
+    MIN_PART_SIZE,
+    generateSignedPublicUrl,
+    DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
+} from './providers/aws'
 import {
     reportServerError,
     toSafeError,
@@ -36,6 +40,8 @@ export async function transferDriveFileToS3(opts: {
      *  swallowed (F-744). */
     onError?: UpupServerLogger | undefined
     requestId?: string | undefined
+    /** TTL for the signed GET returned as `url`; defaults to 3 days (#343). */
+    downloadUrlExpiresIn?: number | undefined
 }): Promise<UploadedFile> {
     const key = `${crypto.randomUUID()}-${opts.fileName}`
 
@@ -53,6 +59,7 @@ async function singlePut(opts: {
     storage: UpupServerConfig['storage']
     key: string
     maxBytes?: number | undefined
+    downloadUrlExpiresIn?: number | undefined
 }): Promise<UploadedFile> {
     const buffer = await streamToUint8Array(opts.stream)
     // Enforce maxFileSize against the bytes we actually received before writing
@@ -74,7 +81,11 @@ async function singlePut(opts: {
             Body: buffer,
         }),
     )
-    const url = await generateSignedPublicUrl(opts.storage, opts.key)
+    const url = await generateSignedPublicUrl(
+        opts.storage,
+        opts.key,
+        opts.downloadUrlExpiresIn ?? DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
+    )
     return {
         key: opts.key,
         name: opts.fileName,
@@ -94,6 +105,7 @@ async function streamingMultipart(opts: {
     maxBytes?: number | undefined
     onError?: UpupServerLogger | undefined
     requestId?: string | undefined
+    downloadUrlExpiresIn?: number | undefined
 }): Promise<UploadedFile> {
     const client = createS3Client(opts.storage)
 
@@ -195,7 +207,11 @@ async function streamingMultipart(opts: {
         throw err
     }
 
-    const url = await generateSignedPublicUrl(opts.storage, opts.key)
+    const url = await generateSignedPublicUrl(
+        opts.storage,
+        opts.key,
+        opts.downloadUrlExpiresIn ?? DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
+    )
     return {
         key: opts.key,
         name: opts.fileName,

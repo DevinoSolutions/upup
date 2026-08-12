@@ -251,6 +251,8 @@ export async function handlePresign(
             key,
             body.type,
             body.size,
+            undefined,
+            config.downloadUrlExpiresIn,
         )
         return res.json(result, 200)
     } catch (error) {
@@ -437,6 +439,7 @@ export async function handleMultipartComplete(
             payload.k,
             payload.u,
             body.parts,
+            config.downloadUrlExpiresIn,
         )
 
         const uploaded: UploadedFile = {

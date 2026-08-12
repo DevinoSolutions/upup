@@ -166,8 +166,8 @@ type PresignedUrlResponse = {
 This handler returns `key`, `uploadUrl`, `downloadUrl`, `uploadHeaders`, and
 `expiresIn: 3600`. The PUT signature covers both `content-type` and
 `content-length`, so a body larger than the approved size fails at S3 rather
-than silently landing. `downloadUrl` is a separately signed `GET` valid for
-three days.
+than silently landing. `downloadUrl` is a separately signed `GET`, valid for
+three days unless `downloadUrlExpiresIn` says otherwise.
 
 **Status codes**
 
@@ -309,7 +309,8 @@ type MultipartCompleteResponse = {
 }
 ```
 
-This handler returns `key`, a three-day signed `downloadUrl`, and `etag` when S3
+This handler returns `key`, a signed `downloadUrl` (three days by default, see
+`downloadUrlExpiresIn`), and `etag` when S3
 supplied one.
 
 **The envelope check.** Because `sign-part` and the browser's direct PUTs never
@@ -551,6 +552,35 @@ safety is not a knob that can be raised away.
 **Upload-token TTL.** One hour from `init`, reported on `/health` as
 `summary.uploadTokenTtlSeconds`. A multipart session that outlives it must be
 restarted from `init`.
+
+**Download-URL TTL.** Three days by default, for every signed `GET` the handler
+returns — `downloadUrl` on `/presign` and `/multipart/complete`, `url` on
+`/files/:provider/transfer`. Set `downloadUrlExpiresIn` (seconds) to change it.
+This is independent of the one-hour upload-URL expiry.
+
+## Signing a download URL outside the handler
+
+`getDownloadUrl` signs a `GET` for a key that already exists, without going
+through any route:
+
+```ts
+import { getDownloadUrl } from '@upupjs/server'
+
+const url = await getDownloadUrl(config, 'user-42/9f3a/invoice.pdf', {
+    expiresIn: 300,
+})
+```
+
+| Argument         | Type                              | Notes                                                        |
+| ---------------- | --------------------------------- | ------------------------------------------------------------ |
+| `config`         | `{ storage, downloadUrlExpiresIn?}` | Your `UpupServerConfig`, or any object with a `storage` slice |
+| `key`            | `string`                          | The stored object key. Signed as given — not validated       |
+| `opts.expiresIn` | `number`                          | Seconds, for this URL only                                    |
+
+Expiry resolves `opts.expiresIn` → `config.downloadUrlExpiresIn` → three days.
+Throws `UpupConfigError` when `storage.type` has no S3 API, matching
+`createUpupHandler`'s construct-time guard. It performs **no authorization** —
+decide whether the caller may read that key before you sign it.
 
 ## Adapters
 
