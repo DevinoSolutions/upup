@@ -25,9 +25,21 @@ export type MultipartSignPartResponse = {
 export type MultipartPart = {
     partNumber: number
     eTag: string
+    /** Bytes stored for this part. Populated on resume/list responses; the
+     *  complete call ignores it. */
+    size?: number
 }
 
 export type MultipartListPartsResponse = {
+    parts: MultipartPart[]
+}
+
+export type MultipartResumeResponse = {
+    key: string
+    /** Fresh server-issued token replacing the presented (possibly expired)
+     *  one — same key/uploadId/owner/size-envelope binding, new expiry. */
+    token: string
+    /** Parts the storage provider already holds; every entry carries `size`. */
     parts: MultipartPart[]
 }
 

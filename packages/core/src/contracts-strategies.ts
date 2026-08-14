@@ -3,7 +3,7 @@ import type {
     MultipartInitResponse,
     MultipartSignPartResponse,
     MultipartCompleteResponse,
-    MultipartListPartsResponse,
+    MultipartResumeResponse,
 } from './types/upload-protocols'
 
 export type FileMetadata = {
@@ -42,7 +42,12 @@ export interface CredentialStrategy {
         parts: { partNumber: number; eTag: string }[]
     }): Promise<MultipartCompleteResponse>
     abortMultipartUpload?(params: { token: string }): Promise<void>
-    listParts?(params: { token: string }): Promise<MultipartListPartsResponse>
+    /** Re-attach to an in-progress multipart upload: verify the presented
+     *  token server-side, list the parts storage already holds, and issue a
+     *  fresh token. Powers cross-reload resume. */
+    resumeMultipartUpload?(params: {
+        token: string
+    }): Promise<MultipartResumeResponse>
 }
 
 export interface UploadStrategy {
