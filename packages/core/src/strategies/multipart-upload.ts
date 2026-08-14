@@ -177,11 +177,16 @@ export class MultipartUpload implements UploadStrategy {
     }
 
     /**
-     * Every part but the highest-numbered one must be exactly `partSize` (S3's
-     * own multipart rule — only the final part may be short), and no part may
-     * fall outside the range this file's chunking would produce. Anything else
-     * means the saved session and the file on disk have drifted apart, and
-     * completing from those parts would corrupt the object.
+     * Each stored part must be byte-for-byte where this file's own chunking
+     * would put it: exactly `partSize`, except the file's TRUE final part
+     * (`partNumber === totalParts`), which must be exactly the remaining tail.
+     *
+     * The "highest part number we happen to hold" is NOT the exemption — the
+     * server may hold a sparse prefix (say parts 1, 2, 5 of 10), and letting
+     * part 5 be short would splice a short block into the MIDDLE of the object.
+     * S3 only enforces the ≥5 MiB floor on non-final parts, so it would accept
+     * the complete call and hand back a silently corrupt object. A part with no
+     * reported `size` is unverifiable and therefore equally unusable.
      */
     private partsMatchSession(
         parts: MultipartPart[],
@@ -190,14 +195,15 @@ export class MultipartUpload implements UploadStrategy {
     ): boolean {
         if (partSize <= 0) return false
         const totalParts = Math.ceil(fileSize / partSize)
-        return parts.every((part, index) => {
+        const finalPartSize = fileSize - (totalParts - 1) * partSize
+        return parts.every(part => {
+            if (typeof part.size !== 'number') return false
             if (part.partNumber < 1 || part.partNumber > totalParts) {
                 return false
             }
-            // `parts` is sorted ascending, so the last entry is the highest —
-            // it may legitimately be the file's short final part.
-            if (index === parts.length - 1) return true
-            return part.size === partSize
+            return part.partNumber === totalParts
+                ? part.size === finalPartSize
+                : part.size === partSize
         })
     }
 

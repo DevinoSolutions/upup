@@ -257,6 +257,36 @@ describe('MultipartUpload — cross-reload resume', () => {
             expect(creds.completeMultipartUpload).toHaveBeenCalledTimes(1)
         })
 
+        it('accepts a stored final part at the exact remaining tail and fills in the gap before it', async () => {
+            const file = makeFile()
+            saveSession(fileFingerprint(file), makeSession())
+            const creds = makeCredentials()
+            creds.resumeMultipartUpload.mockResolvedValue({
+                key: 'uploads/big.zip',
+                token: 'fresh-token',
+                // Part 3 of 3: 12 MiB - 2 × 5 MiB = 2 MiB exactly.
+                parts: [{ partNumber: 3, eTag: '"e3"', size: 2 * MIB }],
+            })
+
+            await makeStrategy(creds).upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+
+            expect(creds.initMultipartUpload).not.toHaveBeenCalled()
+            expect(
+                creds.signPart.mock.calls.map(call => call[0].partNumber),
+            ).toEqual([1, 2])
+            expect(creds.completeMultipartUpload).toHaveBeenCalledWith({
+                token: 'fresh-token',
+                parts: [
+                    { partNumber: 1, eTag: '"etag-1"' },
+                    { partNumber: 2, eTag: '"etag-2"' },
+                    { partNumber: 3, eTag: '"e3"' },
+                ],
+            })
+        })
+
         it('reports the already-uploaded offset before moving a byte, then stays monotonic to the full size', async () => {
             const file = makeFile()
             saveSession(fileFingerprint(file), makeSession())
@@ -376,6 +406,80 @@ describe('MultipartUpload — cross-reload resume', () => {
             expect(creds.completeMultipartUpload).toHaveBeenCalledWith(
                 expect.objectContaining({ token: 'init-token' }),
             )
+        })
+
+        // The bug this pins: exempting the highest part the server HAPPENS to
+        // hold (rather than the file's true final part) lets a short block sit
+        // in the MIDDLE of a sparse prefix. S3 only enforces its 5 MiB floor on
+        // non-final parts, so complete() would succeed and hand back a silently
+        // corrupt object.
+        it('starts fresh when the highest stored part is short but is not the last part of the file', async () => {
+            const file = makeFile()
+            const fingerprint = fileFingerprint(file)
+            saveSession(fingerprint, makeSession())
+            const creds = makeCredentials()
+            creds.resumeMultipartUpload.mockResolvedValue({
+                key: 'uploads/big.zip',
+                token: 'fresh-token',
+                parts: [
+                    { partNumber: 1, eTag: '"e1"', size: PART_SIZE },
+                    // Part 2 of 3 — a middle part, so it may not be short.
+                    { partNumber: 2, eTag: '"e2"', size: 3 * MIB },
+                ],
+            })
+
+            await makeStrategy(creds).upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+
+            expect(creds.initMultipartUpload).toHaveBeenCalledTimes(1)
+            expect(creds.signPart).toHaveBeenCalledTimes(3)
+            expect(creds.completeMultipartUpload).toHaveBeenCalledWith(
+                expect.objectContaining({ token: 'init-token' }),
+            )
+        })
+
+        it('starts fresh when the final part is stored at anything other than the exact remaining tail', async () => {
+            const file = makeFile()
+            saveSession(fileFingerprint(file), makeSession())
+            const creds = makeCredentials()
+            creds.resumeMultipartUpload.mockResolvedValue({
+                key: 'uploads/big.zip',
+                token: 'fresh-token',
+                // Part 3 of 3 must be exactly 2 MiB (12 MiB - 2 × 5 MiB).
+                parts: [{ partNumber: 3, eTag: '"e3"', size: 1 * MIB }],
+            })
+
+            await makeStrategy(creds).upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+
+            expect(creds.initMultipartUpload).toHaveBeenCalledTimes(1)
+            expect(creds.signPart).toHaveBeenCalledTimes(3)
+        })
+
+        it('starts fresh when a stored part reports no size at all, which cannot be validated', async () => {
+            const file = makeFile()
+            saveSession(fileFingerprint(file), makeSession())
+            const creds = makeCredentials()
+            creds.resumeMultipartUpload.mockResolvedValue({
+                key: 'uploads/big.zip',
+                token: 'fresh-token',
+                parts: [
+                    { partNumber: 1, eTag: '"e1"', size: PART_SIZE },
+                    { partNumber: 2, eTag: '"e2"' },
+                ],
+            })
+
+            await makeStrategy(creds).upload(file, unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+
+            expect(creds.initMultipartUpload).toHaveBeenCalledTimes(1)
+            expect(creds.signPart).toHaveBeenCalledTimes(3)
         })
 
         it('starts fresh when the saved content hash disagrees with the file being uploaded', async () => {
