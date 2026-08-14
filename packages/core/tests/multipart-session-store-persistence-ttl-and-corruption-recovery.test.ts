@@ -9,6 +9,7 @@ import {
     saveSession,
     loadSession,
     updateSessionProgress,
+    updateSessionToken,
     removeSession,
     clearAllSessions,
     fileFingerprint,
@@ -51,9 +52,8 @@ function makeSession(
     overrides: Partial<MultipartSession> = {},
 ): MultipartSession {
     return {
-        provider: 's3',
+        token: 'token-abc-123',
         key: 'uploads/video.mp4',
-        uploadId: 'upload-abc-123',
         partSize: 5 * 1024 * 1024,
         updatedAt: Date.now(),
         uploadedBytes: 0,
@@ -134,13 +134,51 @@ describe('multipart session store', () => {
     it('removes exactly its own key and leaves other sessions intact', () => {
         const fpA = fileFingerprint(makeFile('a.mp4', 1))
         const fpB = fileFingerprint(makeFile('b.mp4', 2))
-        saveSession(fpA, makeSession({ uploadId: 'upload-a' }))
-        saveSession(fpB, makeSession({ uploadId: 'upload-b' }))
+        saveSession(fpA, makeSession({ token: 'token-a' }))
+        saveSession(fpB, makeSession({ token: 'token-b' }))
 
         removeSession(fpA)
 
         expect(loadSession(fpA)).toBeNull()
-        expect(loadSession(fpB)?.uploadId).toBe('upload-b')
+        expect(loadSession(fpB)?.token).toBe('token-b')
+    })
+
+    it('never persists an uploadId — the signed token is its only carrier', () => {
+        const fp = fileFingerprint(makeFile('secret.mp4', 64))
+        saveSession(fp, makeSession())
+
+        expect(Object.keys(loadSession(fp) ?? {})).not.toContain('uploadId')
+    })
+
+    it('swaps in a refreshed token while leaving recorded progress intact', () => {
+        const fp = fileFingerprint(makeFile('refresh.mp4', 321))
+        saveSession(fp, makeSession({ token: 'stale', uploadedBytes: 2048 }))
+
+        updateSessionToken(fp, 'fresh')
+
+        expect(loadSession(fp)?.token).toBe('fresh')
+        expect(loadSession(fp)?.uploadedBytes).toBe(2048)
+    })
+
+    it('does nothing when asked to refresh the token of a session that is gone', () => {
+        expect(() => {
+            updateSessionToken('never-saved', 'fresh')
+        }).not.toThrow()
+        expect(loadSession('never-saved')).toBeNull()
+    })
+
+    it('round-trips the scope and contentHash guards a resume validates against', () => {
+        const fp = fileFingerprint(makeFile('guards.mp4', 88))
+        saveSession(
+            fp,
+            makeSession({
+                scope: 'https://api.example.com/upup',
+                contentHash: 'sha256-abc',
+            }),
+        )
+
+        expect(loadSession(fp)?.scope).toBe('https://api.example.com/upup')
+        expect(loadSession(fp)?.contentHash).toBe('sha256-abc')
     })
 
     it('clears every session it owns and leaves foreign keys untouched', () => {
@@ -169,6 +207,9 @@ describe('multipart session store', () => {
         expect(() => loadSession(fp)).not.toThrow()
         expect(loadSession(fp)).toBeNull()
         expect(() => updateSessionProgress(fp, 10)).not.toThrow()
+        expect(() => {
+            updateSessionToken(fp, 'fresh')
+        }).not.toThrow()
         expect(() => removeSession(fp)).not.toThrow()
         expect(() => clearAllSessions()).not.toThrow()
     })

@@ -14,6 +14,7 @@ import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
 import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
+import { abortPersistedMultipartSessions } from './strategies/multipart-upload'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import {
     serializeCrashRecovery,
@@ -241,9 +242,35 @@ export class UpupCore {
         }
     }
 
+    /**
+     * Discard the persisted multipart sessions of files the user just threw
+     * away (cancel / removeFile / removeAll), aborting them server-side on the
+     * way out. With `resumable.persist` on, a failed or cancelled upload
+     * deliberately keeps its server-side parts alive for a later resume — so
+     * an explicit discard is the ONE place that has to say "no, really, drop
+     * it", or the user pays storage for parts nothing will ever finish.
+     *
+     * Fire-and-forget and fully swallowed: cancelling must never throw or wait.
+     */
+    private discardPersistedMultipartSessions(files: UploadFile[]): void {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart') return
+        if (resumable.persist === false) return
+        const pending = files.filter(file => file.key == null)
+        if (pending.length === 0) return
+        try {
+            const { credentials } = resolveUploadConfig(this.options)
+            abortPersistedMultipartSessions(pending, credentials)
+        } catch {
+            // upup-catch: session cleanup is advisory — a misconfigured upload
+            // target must not turn cancel/remove into a throwing call.
+        }
+    }
+
     removeFile(id: string): void {
         const file = this.fileManager.removeFile(id)
         if (file) {
+            this.discardPersistedMultipartSessions([file])
             this.fileOverrides.delete(id)
             this.emitter.emit('file-removed', file)
             this.emitter.emit('state-change', { files: this.files })
@@ -251,6 +278,7 @@ export class UpupCore {
     }
 
     removeAll(): void {
+        this.discardPersistedMultipartSessions([...this.files.values()])
         this.fileManager.removeAll()
         this.fileOverrides.clear()
         this.crashRecovery
@@ -691,6 +719,7 @@ export class UpupCore {
             this.uploadManager.abort()
             this.uploadManager = null
         }
+        this.discardPersistedMultipartSessions([...this.files.values()])
         this.updatePendingFileStatuses(UploadStatus.IDLE)
         this._status = UploadStatus.IDLE
         this._error = null

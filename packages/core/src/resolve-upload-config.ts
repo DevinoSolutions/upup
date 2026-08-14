@@ -63,6 +63,14 @@ export function resolveUploadConfig(
             ? new MultipartUpload({
                   credentials,
                   chunkSizeBytes: options.resumable.chunkSizeBytes,
+                  // Cross-reload resume is ON by default: an interrupted
+                  // multipart upload keeps its server-side parts so the next
+                  // attempt continues instead of restarting. Integrators who
+                  // want the old auto-abort behavior set persist: false (and
+                  // should set an S3 AbortIncompleteMultipartUpload lifecycle
+                  // rule either way).
+                  persist: options.resumable.persist ?? true,
+                  sessionScope: options.serverUrl,
               })
             : null
     const multipartThreshold =

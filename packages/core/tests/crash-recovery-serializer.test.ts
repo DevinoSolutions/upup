@@ -5,6 +5,7 @@ import {
 } from '../src/crash-recovery-serializer'
 import { UploadStatus } from '../src/types/upload-status'
 import { FileSource } from '../src/types/file-source'
+import { fileFingerprint } from '../src/utils/multipart-session-store'
 import type { UploadFile } from '../src/types/upload-file'
 
 function uploadFile(id: string, name: string): UploadFile {
@@ -70,5 +71,70 @@ describe('reviveCrashRecoverySnapshot', () => {
         expect(
             reviveCrashRecoverySnapshot({ files: [], status: 'BOGUS' })!.status,
         ).toBe(UploadStatus.IDLE)
+    })
+})
+
+// Cross-reload multipart resume looks a restored file up by
+// `name:size:lastModified:type` (fileFingerprint). If revival changed ANY of
+// those four, a crash-recovered file would silently fail to match its own
+// saved session and restart from part 1 — so the round trip is pinned here,
+// including the degraded path where only the raw Blob survived storage.
+describe('crash-recovery revival preserves the multipart fingerprint', () => {
+    function fingerprintableFile(): UploadFile {
+        const f = new File([new Uint8Array(2048)], 'holiday.mp4', {
+            type: 'video/mp4',
+            lastModified: 1_700_000_000_000,
+        })
+        return Object.assign(f, {
+            id: 'v1',
+            source: FileSource.LOCAL,
+            status: UploadStatus.UPLOADING,
+            metadata: {},
+        }) as UploadFile
+    }
+
+    it('keeps name, size, lastModified and type byte-identical through a full round trip', () => {
+        const original = fingerprintableFile()
+        const snap = serializeCrashRecovery(
+            new Map([['v1', original]]),
+            UploadStatus.UPLOADING,
+        )
+
+        const revived = reviveCrashRecoverySnapshot(snap)!.files[0]![1]
+
+        expect(revived.name).toBe('holiday.mp4')
+        expect(revived.size).toBe(2048)
+        expect(revived.lastModified).toBe(1_700_000_000_000)
+        expect(revived.type).toBe('video/mp4')
+        expect(fileFingerprint(revived)).toBe(fileFingerprint(original))
+    })
+
+    it('rebuilds the same fingerprint from the snapshot fields when only a bare Blob survived storage', () => {
+        const original = fingerprintableFile()
+        const snap = serializeCrashRecovery(
+            new Map([['v1', original]]),
+            UploadStatus.UPLOADING,
+        )
+        // Structured-clone round trips can hand back a plain Blob rather than a
+        // File; revival must then reconstruct the identity from the snapshot's
+        // own name/type/lastModified fields.
+        const degraded = {
+            ...snap,
+            files: [
+                [
+                    'v1',
+                    {
+                        ...(snap.files[0]![1] as Record<string, unknown>),
+                        file: new Blob([new Uint8Array(2048)], {
+                            type: 'video/mp4',
+                        }),
+                    },
+                ],
+            ],
+        }
+
+        const revived = reviveCrashRecoverySnapshot(degraded)!.files[0]![1]
+
+        expect(fileFingerprint(revived)).toBe(fileFingerprint(original))
     })
 })

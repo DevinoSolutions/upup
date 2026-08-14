@@ -94,6 +94,7 @@ export class UpupStorageError extends UpupError {
         | 'multipart-complete'
         | 'multipart-sign-part'
         | 'multipart-abort'
+        | 'multipart-resume'
     constructor(
         message: string,
         provider: string,

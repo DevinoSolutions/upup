@@ -1,28 +1,134 @@
 import {
     UpupNetworkError,
     UpupConfigError,
+    UpupError,
+    UpupStorageError,
     uploadErrorFromResponse,
     type UploadStrategy,
     type UploadCredentials,
     type UploadResult,
     type CredentialStrategy,
     type MultipartPart,
+    type MultipartInitResponse,
+    type MultipartResumeResponse,
 } from '../contracts'
+import {
+    fileFingerprint,
+    loadSession,
+    saveSession,
+    removeSession,
+    updateSessionProgress,
+    updateSessionToken,
+} from '../utils/multipart-session-store'
 
 export interface MultipartUploadOptions {
     credentials: CredentialStrategy
     chunkSizeBytes?: number | undefined
     maxConcurrentParts?: number | undefined
+    /**
+     * Persist a resumable session (localStorage) for `File` inputs, so a page
+     * reload, a pause, or a retry re-attaches to the server-side upload rather
+     * than restarting it from part 1.
+     *
+     * Defaults to FALSE here on purpose: `resolveUploadConfig` is the single
+     * place that opts the product default in (`resumable.persist ?? true`), so
+     * a hand-constructed strategy keeps the historical abort-on-failure
+     * semantics until it explicitly asks for persistence.
+     */
+    persist?: boolean | undefined
+    /**
+     * The serverUrl sessions belong to. A session saved against server A must
+     * never be resumed against server B — its token means nothing there.
+     */
+    sessionScope?: string | undefined
 }
 
 const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024 // 5 MiB
 const DEFAULT_MAX_CONCURRENT = 3
+
+/** What a successful re-attach hands back to the upload loop. */
+type ResumedUpload = {
+    token: string
+    partSize: number
+    parts: MultipartPart[]
+    uploadedBytes: number
+}
 
 /** Reads a live AbortSignal through a call boundary so a repeat check after an
  *  `await` isn't (incorrectly) narrowed away as "always false" by TS — `.aborted`
  *  is `readonly`, but its value can genuinely change while we're awaiting. */
 function isAborted(signal: AbortSignal): boolean {
     return signal.aborted
+}
+
+function isClientError(error: unknown): boolean {
+    const status = error instanceof UpupError ? error.status : undefined
+    return status !== undefined && status >= 400 && status < 500
+}
+
+/** The server's token-expiry rejection: `@upupjs/server`'s upload routes answer
+ *  403 with `{ error: 'Invalid upload token', code: 'expired' }`, which
+ *  `uploadErrorFromResponse` lifts onto `.status` / `.code`. */
+function isExpiredTokenError(error: unknown): boolean {
+    return (
+        error instanceof UpupError &&
+        error.status === 403 &&
+        error.code === 'expired'
+    )
+}
+
+/** A 4xx from init or complete means the server already refused or tore the
+ *  upload down (size-envelope violation, upload gone) — no later resume can
+ *  ever succeed against that session, so it must not survive the failure. */
+function isUnresumableFailure(error: unknown): boolean {
+    return (
+        error instanceof UpupStorageError &&
+        (error.operation === 'multipart-init' ||
+            error.operation === 'multipart-complete') &&
+        isClientError(error)
+    )
+}
+
+/** The checksum pipeline step's hash, when it ran. Read defensively: the
+ *  strategy is handed `File | Blob`, and only pipeline-processed UploadFiles
+ *  carry `metadata`. */
+function readContentHash(file: File | Blob): string | undefined {
+    const metadata = (file as { metadata?: Record<string, unknown> }).metadata
+    return typeof metadata?.originalContentHash === 'string'
+        ? metadata.originalContentHash
+        : undefined
+}
+
+/**
+ * Best-effort teardown of the persisted multipart sessions belonging to files
+ * the user explicitly discarded (cancel / removeFile / removeAll). Without it,
+ * `persist` mode's deliberate "don't abort on failure" would leave server-side
+ * parts — and their storage bill — alive until an S3 lifecycle rule reaps them.
+ *
+ * Fire-and-forget by contract: never throws, never blocks the caller, and does
+ * nothing at all for a file that has no session.
+ */
+export function abortPersistedMultipartSessions(
+    files: Iterable<File | Blob>,
+    credentials: Pick<CredentialStrategy, 'abortMultipartUpload'>,
+): void {
+    for (const file of files) {
+        if (!(file instanceof File)) continue
+        try {
+            const fingerprint = fileFingerprint(file)
+            const session = loadSession(fingerprint)
+            if (!session) continue
+            removeSession(fingerprint)
+            void credentials
+                .abortMultipartUpload?.({ token: session.token })
+                .catch(() => {
+                    // upup-catch: cancel cleanup is advisory — a failed abort
+                    // must never surface to a user who already walked away.
+                })
+        } catch {
+            // upup-catch: storage/credential hiccups must not break cancel
+        }
+    }
 }
 
 export class MultipartUpload implements UploadStrategy {
@@ -34,8 +140,12 @@ export class MultipartUpload implements UploadStrategy {
     private completeMultipartUpload: NonNullable<
         CredentialStrategy['completeMultipartUpload']
     >
+    private resumeMultipartUpload:
+        CredentialStrategy['resumeMultipartUpload'] | undefined
     private chunkSizeBytes: number
     private maxConcurrentParts: number
+    private persist: boolean
+    private sessionScope: string | undefined
 
     constructor(options: MultipartUploadOptions) {
         const { credentials } = options
@@ -57,9 +167,128 @@ export class MultipartUpload implements UploadStrategy {
         this.signPart = credentials.signPart.bind(credentials)
         this.completeMultipartUpload =
             credentials.completeMultipartUpload.bind(credentials)
+        this.resumeMultipartUpload =
+            credentials.resumeMultipartUpload?.bind(credentials)
         this.chunkSizeBytes = options.chunkSizeBytes ?? DEFAULT_CHUNK_SIZE
         this.maxConcurrentParts =
             options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT
+        this.persist = options.persist ?? false
+        this.sessionScope = options.sessionScope
+    }
+
+    /**
+     * Every part but the highest-numbered one must be exactly `partSize` (S3's
+     * own multipart rule — only the final part may be short), and no part may
+     * fall outside the range this file's chunking would produce. Anything else
+     * means the saved session and the file on disk have drifted apart, and
+     * completing from those parts would corrupt the object.
+     */
+    private partsMatchSession(
+        parts: MultipartPart[],
+        partSize: number,
+        fileSize: number,
+    ): boolean {
+        if (partSize <= 0) return false
+        const totalParts = Math.ceil(fileSize / partSize)
+        return parts.every((part, index) => {
+            if (part.partNumber < 1 || part.partNumber > totalParts) {
+                return false
+            }
+            // `parts` is sorted ascending, so the last entry is the highest —
+            // it may legitimately be the file's short final part.
+            if (index === parts.length - 1) return true
+            return part.size === partSize
+        })
+    }
+
+    /**
+     * Try to re-attach to the upload a previous session left in flight.
+     * Returns `null` for every "just start fresh" outcome — a resume failure
+     * must never fail an upload that a fresh init could still serve.
+     */
+    private async tryResume(
+        fingerprint: string,
+        fileSize: number,
+        contentHash: string | undefined,
+    ): Promise<ResumedUpload | null> {
+        const resume = this.resumeMultipartUpload
+        if (!resume) return null
+
+        const session = loadSession(fingerprint)
+        if (!session) return null
+
+        // A session belongs to the server that issued its token; presenting it
+        // anywhere else is at best a 403 and at worst a cross-tenant surprise.
+        if (session.scope !== this.sessionScope) {
+            removeSession(fingerprint)
+            return null
+        }
+        if (
+            contentHash !== undefined &&
+            session.contentHash !== undefined &&
+            session.contentHash !== contentHash
+        ) {
+            removeSession(fingerprint)
+            return null
+        }
+
+        let response: MultipartResumeResponse
+        try {
+            response = await resume({ token: session.token })
+        } catch (error) {
+            // upup-catch: a resume failure must never fail an upload a fresh
+            // init could still serve — the caller falls back to init. 4xx: the
+            // server will never honour this session again (token rejected,
+            // upload gone), so drop it. A pure network failure says nothing
+            // about the session, so it survives for the next attempt.
+            if (isClientError(error)) removeSession(fingerprint)
+            return null
+        }
+
+        const parts = [...response.parts].sort(
+            (a, b) => a.partNumber - b.partNumber,
+        )
+        if (!this.partsMatchSession(parts, session.partSize, fileSize)) {
+            removeSession(fingerprint)
+            return null
+        }
+
+        const uploadedBytes = parts.reduce(
+            (sum, part) => sum + (part.size ?? 0),
+            0,
+        )
+        updateSessionToken(fingerprint, response.token)
+        updateSessionProgress(fingerprint, uploadedBytes)
+
+        return {
+            token: response.token,
+            partSize: session.partSize,
+            // Drop `size`: the complete call ignores it, and the wire payload
+            // stays byte-identical to a non-resumed upload's.
+            parts: parts.map(({ partNumber, eTag }) => ({ partNumber, eTag })),
+            uploadedBytes,
+        }
+    }
+
+    /**
+     * Failure teardown. THE behavior change of cross-reload resume: with
+     * `persist` on, an error or abort deliberately leaves the server-side
+     * upload alive so the next attempt can resume into it — pause(), a dropped
+     * connection, and UploadManager's own retries all re-enter `upload()` and
+     * pick the session back up. Without persist this is exactly the historical
+     * best-effort abort. Either way, a 4xx from init/complete kills the
+     * session: the server has already torn the upload down.
+     */
+    private async handleUploadFailure(
+        error: unknown,
+        token: string,
+        fingerprint: string | null,
+    ): Promise<void> {
+        if (fingerprint && isUnresumableFailure(error)) {
+            removeSession(fingerprint)
+        }
+        if (this.persist) return
+        await this.credentials.abortMultipartUpload?.({ token }).catch(() => {}) // Best-effort abort
     }
 
     async upload(
@@ -74,31 +303,131 @@ export class MultipartUpload implements UploadStrategy {
         const fileName = file instanceof File ? file.name : 'blob'
         const fileType = file.type || 'application/octet-stream'
 
-        // 1. Initiate multipart upload
-        const init = await this.initMultipartUpload({
-            name: fileName,
-            size: fileSize,
-            type: fileType,
-        })
+        // Persistence is a File-only story: the fingerprint that finds this
+        // upload again after a reload is name:size:lastModified:type, none of
+        // which a bare Blob carries.
+        const fingerprint =
+            this.persist && file instanceof File ? fileFingerprint(file) : null
+        const contentHash = readContentHash(file)
 
-        if (!init.token) {
-            throw new UpupNetworkError(
-                'Multipart init did not return an upload token (server too old or misconfigured)',
-            )
-        }
-        const token = init.token
+        // 1. Re-attach to an in-flight upload, or initiate a new one
+        const resumed = fingerprint
+            ? await this.tryResume(fingerprint, fileSize, contentHash)
+            : null
 
-        const partSize = init.partSize || this.chunkSizeBytes
-        const totalParts = Math.ceil(fileSize / partSize)
+        let currentToken: string
+        let partSize: number
         const completedParts: MultipartPart[] = []
         let totalUploaded = 0
 
+        if (resumed) {
+            currentToken = resumed.token
+            partSize = resumed.partSize
+            completedParts.push(...resumed.parts)
+            totalUploaded = resumed.uploadedBytes
+            // Jump the progress bar to the offset we are actually resuming
+            // from, before a single byte moves.
+            options.onProgress(totalUploaded, fileSize)
+        } else {
+            let init: MultipartInitResponse
+            try {
+                init = await this.initMultipartUpload({
+                    name: fileName,
+                    size: fileSize,
+                    type: fileType,
+                })
+            } catch (error) {
+                // Nothing exists server-side to abort; only the stale session
+                // (if any) needs clearing on a definitive rejection.
+                if (fingerprint && isClientError(error)) {
+                    removeSession(fingerprint)
+                }
+                throw error
+            }
+
+            if (!init.token) {
+                throw new UpupNetworkError(
+                    'Multipart init did not return an upload token (server too old or misconfigured)',
+                )
+            }
+            currentToken = init.token
+            partSize = init.partSize || this.chunkSizeBytes
+
+            if (fingerprint) {
+                saveSession(fingerprint, {
+                    token: currentToken,
+                    key: init.key,
+                    partSize,
+                    updatedAt: Date.now(),
+                    uploadedBytes: 0,
+                    ...(this.sessionScope !== undefined
+                        ? { scope: this.sessionScope }
+                        : {}),
+                    ...(contentHash !== undefined ? { contentHash } : {}),
+                })
+            }
+        }
+
+        const totalParts = Math.ceil(fileSize / partSize)
+
+        // Mid-flight token refresh. The 1h token TTL is shorter than plenty of
+        // real uploads, so a sign-part/complete call can legitimately outlive
+        // its own credential. One shared refresh serves all concurrent part
+        // uploaders: the first to see the 403 rotates the token, the rest
+        // either await that same promise or find `currentToken` already fresh.
+        let refreshInFlight: Promise<string | null> | null = null
+
+        const refreshToken = async (
+            staleToken: string,
+        ): Promise<string | null> => {
+            const resume = this.resumeMultipartUpload
+            if (!resume) return null
+            if (currentToken !== staleToken) return currentToken
+
+            const pending =
+                refreshInFlight ??
+                resume({ token: staleToken })
+                    .then(response => {
+                        currentToken = response.token
+                        if (fingerprint) {
+                            updateSessionToken(fingerprint, response.token)
+                        }
+                        return response.token
+                    })
+                    .catch(() => null)
+                    .finally(() => {
+                        refreshInFlight = null
+                    })
+            refreshInFlight = pending
+            return pending
+        }
+
+        /** Run a token-authenticated call; on an expired-token 403, rotate the
+         *  token through resume and retry exactly once. */
+        const withTokenRefresh = async <T>(
+            call: (token: string) => Promise<T>,
+        ): Promise<T> => {
+            const attemptToken = currentToken
+            try {
+                return await call(attemptToken)
+            } catch (error) {
+                if (!isExpiredTokenError(error)) throw error
+                const freshToken = await refreshToken(attemptToken)
+                if (!freshToken) throw error
+                return call(freshToken)
+            }
+        }
+
         try {
-            // 2. Upload parts with concurrency control
+            // 2. Upload the parts storage does not already hold, with
+            //    concurrency control
+            const alreadyUploaded = new Set(
+                completedParts.map(part => part.partNumber),
+            )
             const partQueue = Array.from(
                 { length: totalParts },
                 (_, i) => i + 1,
-            )
+            ).filter(partNumber => !alreadyUploaded.has(partNumber))
             const activeParts: Promise<void>[] = []
 
             const uploadPart = async (partNumber: number): Promise<void> => {
@@ -111,10 +440,12 @@ export class MultipartUpload implements UploadStrategy {
                 const chunk = file.slice(start, end)
 
                 // Sign the part
-                const signed = await this.signPart({
-                    token,
-                    partNumber,
-                })
+                const signed = await withTokenRefresh(token =>
+                    this.signPart({
+                        token,
+                        partNumber,
+                    }),
+                )
 
                 if (isAborted(options.signal)) {
                     throw new UpupNetworkError('Upload aborted')
@@ -146,6 +477,9 @@ export class MultipartUpload implements UploadStrategy {
 
                 totalUploaded += end - start
                 options.onProgress(totalUploaded, fileSize)
+                if (fingerprint) {
+                    updateSessionProgress(fingerprint, totalUploaded)
+                }
             }
 
             // Process parts with concurrency limit
@@ -169,10 +503,14 @@ export class MultipartUpload implements UploadStrategy {
             // 3. Complete multipart upload
             completedParts.sort((a, b) => a.partNumber - b.partNumber)
 
-            const result = await this.completeMultipartUpload({
-                token,
-                parts: completedParts,
-            })
+            const result = await withTokenRefresh(token =>
+                this.completeMultipartUpload({
+                    token,
+                    parts: completedParts,
+                }),
+            )
+
+            if (fingerprint) removeSession(fingerprint)
 
             return {
                 key: result.key,
@@ -181,12 +519,7 @@ export class MultipartUpload implements UploadStrategy {
                 etag: result.etag,
             }
         } catch (error) {
-            // Abort on failure
-            if (this.credentials.abortMultipartUpload) {
-                await this.credentials
-                    .abortMultipartUpload({ token })
-                    .catch(() => {}) // Best-effort abort
-            }
+            await this.handleUploadFailure(error, currentToken, fingerprint)
             throw error
         }
     }

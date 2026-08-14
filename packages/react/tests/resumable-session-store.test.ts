@@ -15,9 +15,8 @@ function makeSession(
     overrides: Partial<MultipartSession> = {},
 ): MultipartSession {
     return {
-        provider: 'S3',
+        token: 'upload-token-123',
         key: 'uploads/test-file.txt',
-        uploadId: 'upload-id-123',
         partSize: 5 * 1024 * 1024,
         updatedAt: Date.now(),
         ...overrides,
@@ -101,9 +100,8 @@ describe('saveSession + loadSession', () => {
         saveSession(fp, session)
         const loaded = loadSession(fp)
         expect(loaded).toMatchObject({
-            provider: session.provider,
+            token: session.token,
             key: session.key,
-            uploadId: session.uploadId,
             partSize: session.partSize,
         })
     })
@@ -212,9 +210,9 @@ describe('removeSession', () => {
 // ─────────────────────────────────────────────
 describe('clearAllSessions', () => {
     it('removes all upup_mp_ keys', () => {
-        saveSession('fp1', makeSession({ uploadId: 'u1' }))
-        saveSession('fp2', makeSession({ uploadId: 'u2' }))
-        saveSession('fp3', makeSession({ uploadId: 'u3' }))
+        saveSession('fp1', makeSession({ token: 'u1' }))
+        saveSession('fp2', makeSession({ token: 'u2' }))
+        saveSession('fp3', makeSession({ token: 'u3' }))
         clearAllSessions()
         expect(loadSession('fp1')).toBeNull()
         expect(loadSession('fp2')).toBeNull()

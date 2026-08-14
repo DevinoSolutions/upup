@@ -42,6 +42,41 @@ describe('resolveUploadConfig', () => {
         ).toBe(7)
     })
 
+    // Cross-reload resume: `persist` is opted in HERE (defaulting to true) and
+    // scoped to the serverUrl that issued the tokens, so a session saved
+    // against one server can never be replayed at another.
+    describe('multipart persistence wiring', () => {
+        function multipartStrategy(options: Partial<CoreOptions>) {
+            const cfg = resolveUploadConfig({
+                serverUrl: 'https://s',
+                resumable: { protocol: 'multipart' },
+                ...options,
+            } as CoreOptions)
+            return cfg.resolveUploadStrategy!({
+                size: 10 * 1024 * 1024,
+            } as UploadFile).uploadStrategy as unknown as {
+                persist: boolean
+                sessionScope: string | undefined
+            }
+        }
+
+        it('turns session persistence on by default for multipart uploads', () => {
+            expect(multipartStrategy({}).persist).toBe(true)
+        })
+
+        it('honors an explicit persist: false opt-out', () => {
+            expect(
+                multipartStrategy({
+                    resumable: { protocol: 'multipart', persist: false },
+                }).persist,
+            ).toBe(false)
+        })
+
+        it('scopes sessions to the configured serverUrl', () => {
+            expect(multipartStrategy({}).sessionScope).toBe('https://s')
+        })
+    })
+
     it('resolveUploadStrategy presigns the direct strategy by default', () => {
         const cfg = resolveUploadConfig({
             serverUrl: 'https://s',
