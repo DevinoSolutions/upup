@@ -81,6 +81,23 @@ jobs:
             - name: Guard against fixture/baseline regen in CI (F-205)
               run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
 
+            # The deep React suite now contains a real-MinIO spec (the
+            # cross-reload multipart resume gate), and it fails LOUDLY when
+            # :9100 is unreachable rather than skip-greening the strongest
+            # upload test in the repo — so MinIO must be up BEFORE `pnpm run
+            # e2e`, not only for the post-cf integration step below.
+            - name: Boot MinIO for the e2e gate
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
             - name: Run e2e gate (deep React + cross-framework smoke)
               run: pnpm run e2e
               env:
