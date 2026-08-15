@@ -110,9 +110,9 @@ leave `allowAnonymousUploads` off, the upload routes stay closed.
 
 ## The upload token
 
-Multipart uploads run over four requests — `init`, `sign-part`, `complete`,
-`abort`. The client cannot be trusted to re-assert which object key or S3
-`uploadId` it is continuing, so the server issues a **stateless, HMAC-signed
+Multipart uploads run over five requests — `init`, `sign-part`, `complete`,
+`abort`, `resume`. The client cannot be trusted to re-assert which object key or
+S3 `uploadId` it is continuing, so the server issues a **stateless, HMAC-signed
 token** at `init` and re-derives everything from the verified token on every
 later step.
 
@@ -123,13 +123,17 @@ The token binds:
 - **`uid`** — the resolved user id (or `null` for an anonymous upload).
 - **`smin` / `smax`** — the allowed total-size envelope, in bytes.
 - **`exp`** — expiry, epoch seconds. Default TTL is one hour.
+- **`iat`** — the issue time of the **original** `init`, epoch seconds. Absent
+  on tokens minted before cross-reload resume shipped; `resume` then derives it
+  from `exp`, since `init` is the only issuer and has always used the same TTL.
 
 It is signed with HMAC-SHA-256 over the payload using your
 `uploadTokenSecret`, via Web Crypto (so it works on Node 18+, edge runtimes,
 and Cloudflare Workers). On every continuation request the handler verifies the
 signature **before** trusting any payload byte, compares it in constant time,
-and checks expiry. A tampered or forged token is rejected with **403** and a
-code that names the failure:
+and checks expiry — the one exception being `resume`, which applies the resume
+window described below instead. A tampered or forged token is rejected with
+**403** and a code that names the failure:
 
 ```json
 { "error": "Invalid upload token", "code": "bad_signature" }
@@ -137,10 +141,34 @@ code that names the failure:
 
 The `code` is one of `malformed`, `bad_signature`, or `expired`.
 
+### The resume window
+
+`POST /multipart/resume` is the one route that accepts a token whose `exp` has
+passed — handing an expired token back as a fresh one is precisely its job, and
+an upload can easily outlive a one-hour TTL. Signature and shape verification
+are unchanged; only the expiry check is relaxed, and a tighter bound replaces
+it:
+
+- The **resume window** is `multipartResumeWindowSeconds`, 24 hours by default,
+  measured from the token's `iat` — the original `init`, not the most recent
+  re-issue. Past that, `resume` answers `403` with code `expired`.
+- Re-issued tokens carry the original `iat` forward unchanged, so a chain of
+  resumes cannot extend the window. It is a fixed-length extension of a token's
+  life, never an open-ended renewal.
+- Set `multipartResumeWindowSeconds: 0` to remove the route entirely.
+
+**The trade, stated plainly:** a leaked token is usable for the window instead
+of an hour. What it can do in that time is unchanged and narrow — continue the
+same upload, to the same key, inside the same signed size envelope, still
+owner-bound when `getUserId` is configured. It cannot start an upload, retarget
+one, or widen the envelope.
+
+The other four routes keep rejecting expired tokens exactly as before.
+
 ### Owner binding
 
-When `getUserId` is configured, `complete` / `sign-part` / `abort` also
-re-check the caller's current identity against the token's bound `uid`. A
+When `getUserId` is configured, `complete` / `sign-part` / `abort` / `resume`
+also re-check the caller's current identity against the token's bound `uid`. A
 token that leaked to a different authenticated user cannot be replayed —
 the mismatch returns **403 `AUTH_DENIED`**:
 

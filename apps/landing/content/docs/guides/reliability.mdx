@@ -82,15 +82,17 @@ core.on('upload-error', ({ file }) => {
 })
 ```
 
-`core.resume()` is the sibling for a paused run: it re-uploads every file that
-has no storage `key` yet. Both throw if called after `destroy()`.
+`core.resume()` is the sibling for a paused run: it re-runs the upload for every
+file that has no storage `key` yet. Both throw if called after `destroy()`.
 
 The shipped UI already wires this. The button appears whenever the run reaches a
 failed state — it is **not** gated on `maxRetries`, which governs how many
 automatic attempts happen _before_ that state, not whether the manual button is
 offered. It invokes `retryUpload()` regardless of protocol; only its **label**
 changes, reading **Retry** normally and **Resume** when `resumable.protocol` is
-`'multipart'`. Both labels run the same code path.
+`'multipart'`. Both labels run the same code path — what differs is what that
+path does underneath: a multipart file with a live session continues from its
+last completed part, anything else starts over.
 
 Do not confuse that button with the **Resume** control shown while a run is
 _paused_ — a separate button on the genuine pause/resume path that calls
@@ -178,17 +180,18 @@ call `core.pause()` on `connection-offline` and `core.resume()` on
 
 ## Crash recovery vs. multipart session resume
 
-These two are genuinely different mechanisms with different storage, different
-scope, and — importantly for v3.1.0 — different levels of support.
+These two are genuinely different mechanisms with different storage and
+different scope. They are also complementary: together they are what makes a
+reload survivable, and neither one does the whole job alone.
 
-|                   | **Crash recovery**                  | **Multipart session resume**      |
-| ----------------- | ----------------------------------- | --------------------------------- |
-| What it restores  | The file _selection_ and its status | Progress _within_ one large file  |
-| Granularity       | Whole files                         | Individual parts                  |
-| Storage           | IndexedDB (`upup-crash-recovery`)   | `localStorage` (`upup_mp_*` keys) |
-| Survives a reload | Yes                                 | Intended to, but see below        |
-| Turned on by      | `crashRecovery`                     | —                                 |
-| Status in v3.1.0  | **Active**                          | **Not wired up**                  |
+|                   | **Crash recovery**                  | **Multipart session resume**          |
+| ----------------- | ----------------------------------- | ------------------------------------- |
+| What it restores  | The file _selection_ and its status | Progress _within_ one large file      |
+| Granularity       | Whole files                         | Individual parts                      |
+| Storage           | IndexedDB (`upup-crash-recovery`)   | `localStorage` (`upup_mp_*` keys)     |
+| Survives a reload | Yes                                 | Yes                                   |
+| Turned on by      | `crashRecovery`                     | `resumable.persist` (on by default)   |
+| Requires          | Nothing                             | Server mode (`serverUrl`) + multipart |
 
 ### Crash recovery
 
@@ -210,8 +213,10 @@ How it behaves:
   `await core.restoreFromCrashRecovery()`, which resolves to `true` when a
   snapshot was found and applied.
 - **Files that were mid-flight come back as `PAUSED`**, not as uploading. The run
-  is not resurrected; the user (or your code) decides whether to continue, and
-  those files upload again from the beginning.
+  is not resurrected; the user (or your code) decides whether to continue. What
+  happens on continue depends on the upload path: a server-mode multipart file
+  with a live session resumes at its last completed part, everything else
+  uploads again from the beginning.
 - Two events fire on a successful restore: `snapshot-restored`
   (`{ count, status }`), then `crash-recovery-restored` (empty payload).
 
@@ -249,27 +254,46 @@ is a nicety that improves the common case, not a durability contract.
 
 ### Multipart session resume
 
-upup ships a `localStorage`-backed multipart session store — it fingerprints a
-file by name, size, last-modified time, and type, checkpoints the upload id and
-part size, expires entries after 24 hours, and treats corrupted JSON as "no
-session" rather than throwing.
+In server mode with `resumable: { protocol: 'multipart' }`, upup checkpoints
+each file's upload to `localStorage` — fingerprinted by name, size,
+last-modified time, and type, holding the signed upload token, the object key,
+the part size, and the bytes uploaded so far, expiring after 24 hours, and
+treating corrupted JSON as "no session" rather than throwing.
 
-<Callout type="warning" title="Not active in v3.1.0">
-The session store exists and is tested, but **no upload strategy currently calls
-it**. The multipart strategy starts a fresh `multipart/init` on every attempt,
-and a failed attempt actively aborts the server-side upload — completed parts
-are discarded, not kept. An interrupted multipart upload therefore restarts from
-byte zero rather than continuing from the last completed part. The
-`resumable.persist` option is likewise accepted but not read.
+On the next attempt at a file whose fingerprint matches a live session, the
+client presents the stored token to `POST /multipart/resume`, gets back the
+parts storage already holds plus a fresh token, validates their sizes, skips
+them, and uploads only the remainder. The **Resume** button on a failed
+multipart upload is no longer cosmetic: it continues the file rather than
+restarting it. The same machinery makes in-session `pause()` / `resume()` and
+the automatic retry loop continue mid-file, and refreshes an upload token that
+expires during a long transfer.
 
-The **Resume** button label you see on a failed multipart upload is cosmetic: it
-runs the same `retryUpload()` path as **Retry** and re-uploads the whole file.
+It is on by default (`persist: true`); `persist: false` restores the older
+behavior, where any failure aborts the server-side upload and the next attempt
+starts from byte zero.
 
-Plan for full re-uploads of large files after an interruption. If you need true
-part-level resume today, use the tus protocol, which handles resumption in the
-tus client itself.
+<Callout type="warning" title="Set an S3 lifecycle rule for incomplete uploads">
+Keeping parts for a later resume is the point, and it has an operational cost:
+a failed or abandoned upload is no longer aborted server-side, and parts nobody
+resumes are never cleaned up by upup. S3 bills for them.
+
+Configure an `AbortIncompleteMultipartUpload` lifecycle rule on the bucket with
+a 1–7 day expiry. Every S3-compatible provider supports it, MinIO included.
 
 </Callout>
+
+Resume is best-effort in the same way crash recovery is. It falls back to a
+fresh upload — never to a failure — when the fingerprint no longer matches
+(a pipeline-transformed file, a `Blob` with no name), when `localStorage` is
+evicted or unavailable, when the session belongs to a different `serverUrl`,
+when the server has resume disabled or is too old to have the route, or when
+the provider no longer holds the upload. The full list, and what each case
+costs you, is in
+[Cross-reload resume](/docs/resumable-uploads/#cross-reload-resume).
+
+For a client-mode (`uploadEndpoint`) deployment, where multipart cannot run at
+all, tus remains the resumable option.
 
 ## A note on `fastAbortThreshold`
 

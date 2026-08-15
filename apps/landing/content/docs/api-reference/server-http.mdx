@@ -38,6 +38,7 @@ configured it.
 | `POST`    | `/multipart/sign-part`      | upload token (owner-bound when `getUserId` set) | `200` presigned part |
 | `POST`    | `/multipart/complete`       | upload token (owner-bound when `getUserId` set) | `200` final object   |
 | `POST`    | `/multipart/abort`          | upload token (owner-bound when `getUserId` set) | `200` `{ ok: true }` |
+| `POST`    | `/multipart/resume`         | upload token (owner-bound; expiry relaxed)      | `200` parts + token  |
 | `GET`     | `/auth/:provider`           | resolved user id                                | `302` to provider    |
 | `GET`     | `/auth/:provider/cb`        | OAuth `state` (single-use, 10 min)              | `200` HTML           |
 | `GET`     | `/files/:provider`          | resolved user id + stored drive tokens          | `200` file list      |
@@ -49,6 +50,12 @@ kebab-case wire form. Anything else returns `400`.
 Any method/path pair not in the table falls through to
 `404 {"error":"Not found"}` — including a `GET /presign` or a
 `POST /files/:provider` without the `/transfer` suffix.
+
+`POST /multipart/resume` is the one route you can switch off: setting
+`multipartResumeWindowSeconds: 0` stops it from being routed at all, so it 404s
+like any unknown path. That is deliberate — a server with resume disabled is
+indistinguishable from one too old to have the route, and upup clients treat
+both the same way.
 
 ## Response conventions
 
@@ -223,8 +230,14 @@ type MultipartInitResponse = {
 `token` is always present on responses from this handler. Treat it as opaque:
 it is a base64url payload plus an HMAC-SHA-256 signature, and it binds the
 object key, the S3 `uploadId`, the resolved user id (`null` when anonymous), the
-allowed total-size envelope, and an expiry one hour out. Send it back verbatim
-on every continuation request.
+allowed total-size envelope, an expiry one hour out, and the issue time. Send it
+back verbatim on every continuation request.
+
+The issue time is what [`/multipart/resume`](#post-multipartresume) anchors its
+window on, and it is carried forward unchanged when that route re-issues a
+token. Tokens minted before resume shipped carry no issue time; the resume route
+derives it from the expiry, since `init` is the only issuer and has always used
+the same TTL.
 
 `partSize` is the server's decision, not your request — see
 [Policy and limits](#policy-and-limits).
@@ -267,6 +280,11 @@ specific reason, so you can tell a bug from an expiry:
 
 `code` is one of `malformed`, `bad_signature`, or `expired`. The signature is
 verified before any payload byte is trusted, and compared in constant time.
+
+`expired` is recoverable rather than fatal: present the expired token to
+[`/multipart/resume`](#post-multipartresume) and retry the call with the fresh
+one it returns. upup's own client does this automatically, once per expiry,
+shared across its concurrent part uploads.
 
 **Owner binding.** When `getUserId` is configured, the caller's current identity
 is re-checked against the `uid` the token was issued to. A token that leaked to a
@@ -352,6 +370,91 @@ type MultipartAbortResponse = { ok: true }
 ```
 
 `500` is `{ "error": "Multipart abort failed", "code": "STORAGE_ERROR" }`.
+
+## `POST /multipart/resume`
+
+Re-attaches to an upload a previous page load left in flight. Answers with the
+parts storage already holds — each with its byte size — and a freshly-signed
+token. This is what powers
+[cross-reload resume](/docs/resumable-uploads/#cross-reload-resume), and it is
+also how a client refreshes a token that expired mid-upload.
+
+**Request**
+
+```ts
+{
+    token: string
+}
+```
+
+The token is the only input. The client never sends the key or the `uploadId`,
+and neither comes back — the server re-derives both from the verified token, so
+the `uploadId` never leaves the signed payload.
+
+**Response `200`** — `MultipartResumeResponse`:
+
+```ts
+type MultipartResumeResponse = {
+    key: string
+    /** Fresh token replacing the presented one — same key, uploadId, owner,
+     *  and size envelope; new expiry. */
+    token: string
+    /** Parts the provider already holds; every entry carries `size`. */
+    parts: Array<{ partNumber: number; eTag: string; size?: number }>
+}
+```
+
+Send the returned `token` on every subsequent `sign-part` / `complete` /
+`abort` call — the presented one is not invalidated, but it is the stale one.
+
+**Expiry, relaxed and then re-bounded.** This is the only route that accepts a
+token whose `exp` has passed, because handing an expired token back as a fresh
+one is the whole point: an upload can easily outlive the one-hour TTL. A
+tighter bound replaces it — the **resume window**, measured from the original
+`/multipart/init` and carried forward unchanged on every re-issue, so a chain of
+resumes can never extend it. Signature and shape verification are identical to
+every other route.
+
+| Config                            | Default | Effect                                                   |
+| --------------------------------- | ------- | -------------------------------------------------------- |
+| `multipartResumeWindowSeconds`    | `86400` | Seconds after the original `init` that resume is allowed |
+| `multipartResumeWindowSeconds: 0` | —       | Route is not registered; requests 404                    |
+
+A negative or fractional value throws `UpupConfigError` at construction rather
+than being coerced.
+
+**Owner binding** is enforced exactly as on `sign-part`: with `getUserId`
+configured the caller's identity is re-checked against the token's `uid`, and a
+mismatch returns `403 AUTH_DENIED`. Without `getUserId`, possession of the token
+is the model, as everywhere else.
+
+**Status codes**
+
+| Status | Body                                                                          | Cause                                                                               |
+| ------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`                     | unparseable body                                                                    |
+| `403`  | `{ "error": "Invalid upload token", "code": "malformed" \| "bad_signature" }` | the token is not a token, or the signature does not verify                          |
+| `403`  | `{ "error": "Upload resume window has expired", "code": "expired" }`          | more than `multipartResumeWindowSeconds` since the original `init`                  |
+| `403`  | `{ "error": "…", "code": "AUTH_DENIED" }`                                     | owner mismatch                                                                      |
+| `404`  | `{ "error": "Multipart upload no longer exists", "code": "NOT_FOUND" }`       | the provider has no such upload — completed, aborted, or reaped by a lifecycle rule |
+| `500`  | `{ "error": "Multipart resume failed", "code": "STORAGE_ERROR" }`             | the storage call threw for any other reason                                         |
+
+A dead upload is deliberately a `404`, never a `500`: upup clients drop the
+session and start fresh on a `4xx`, whereas a `5xx` reads as "try again later"
+and would retry an upload that can never come back. The `NOT_FOUND` check
+matches the provider's `NoSuchUpload` error specifically, not a bare 404 status
+— a missing _bucket_ also 404s, and that is a misconfiguration, not a stale
+session.
+
+<Callout type="warning" title="The trade this route makes">
+    A leaked token stays usable for the resume window instead of one hour. What
+    it can do with that window is unchanged and narrow: continue the **same**
+    upload, to the **same** key, inside the **same** signed size envelope, still
+    owner-bound whenever `getUserId` is configured. It cannot start an upload,
+    retarget one, or widen the byte envelope. Shorten
+    `multipartResumeWindowSeconds`, or set it to `0`, if that trade is not one
+    you want.
+</Callout>
 
 ## `GET /auth/:provider`
 
@@ -549,8 +652,9 @@ regardless of file size. This bound is deliberately not configurable — memory
 safety is not a knob that can be raised away.
 
 **Upload-token TTL.** One hour from `init`, reported on `/health` as
-`summary.uploadTokenTtlSeconds`. A multipart session that outlives it must be
-restarted from `init`.
+`summary.uploadTokenTtlSeconds`. A multipart session that outlives it refreshes
+its token through [`/multipart/resume`](#post-multipartresume) rather than
+restarting, up to `multipartResumeWindowSeconds` after the original `init`.
 
 ## Adapters
 

@@ -89,21 +89,23 @@ Once a file has exhausted its attempts and the run is marked failed, a manual **
 
 ### Resumable upload recovery
 
-When [resumable multipart uploads](/docs/resumable-uploads/) are enabled (`resumable={{ protocol: 'multipart' }}`), the failure UI changes but the recovery mechanism does not:
+When [resumable multipart uploads](/docs/resumable-uploads/) are enabled (`resumable={{ protocol: 'multipart' }}`), the failure UI changes and so does what recovery costs:
 
 - The button shown **after a failure** is labelled **"Resume"** instead of "Retry".
-- It invokes the same retry command as a non-resumable upload, and the file re-uploads from the beginning. Every attempt requests a fresh multipart upload, and a failed attempt aborts the server-side upload rather than leaving its completed parts in place.
+- It invokes the same retry command as a non-resumable upload, but the file continues from its last completed part rather than restarting. The failed attempt left its server-side parts in place on purpose, and the retry re-attaches to them through `POST /multipart/resume`.
 
 Note that this is not the **"Resume"** button shown while a run is _paused_ —
 that one is a separate control on the pause/resume path. Only the failure-state
 button is described here.
 
-Part-level continuation is **not active in v3.1.0**. Core ships a `localStorage`
-multipart-session store (24-hour TTL, corruption-tolerant), but no upload
-strategy calls it and the `persist` flag on the multipart options is never read
-— so a page refresh does not resume a partially-uploaded file.
+Part-level continuation survives a page refresh too, provided the file comes
+back: pair `resumable` with `crashRecovery` and the restored file re-attaches
+mid-transfer. It is on by default (`persist: true`) and degrades to a fresh
+upload — never to a failure — whenever the session cannot be trusted. What
+that costs your bucket, and the `AbortIncompleteMultipartUpload` lifecycle rule
+it obliges you to configure, are covered in [Cross-reload
+resume](/docs/resumable-uploads/#cross-reload-resume).
 
-For true part-level resume, including across a page refresh, use the tus
-protocol instead. It delegates fingerprinting and offset recovery to
-`tus-js-client`, which implements them for real. See [Resumable
-Uploads](/docs/resumable-uploads/).
+In client mode (`uploadEndpoint`), where multipart cannot run, tus remains the
+resumable option: it delegates fingerprinting and offset recovery to
+`tus-js-client`. See [Resumable Uploads](/docs/resumable-uploads/).
