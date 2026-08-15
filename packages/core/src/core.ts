@@ -905,8 +905,17 @@ export class UpupCore {
             const wasActive =
                 restored.status === UploadStatus.PROCESSING ||
                 restored.status === UploadStatus.UPLOADING
+            const liveFiles = restored.files.filter(
+                ([, file]) => !this.isStaleMultipartRestore(file),
+            )
+            if (liveFiles.length === 0) {
+                this.queueCrashRecoveryClear().catch(
+                    this.warnCrashRecoveryFailure('clear'),
+                )
+                return false
+            }
             const normalized = {
-                files: restored.files.map(([id, file]) => {
+                files: liveFiles.map(([id, file]) => {
                     if (
                         wasActive &&
                         file.key == null &&
@@ -942,6 +951,29 @@ export class UpupCore {
      *  tryResume (scope), minus the server round-trip: this is display-only
      *  and must not spend a request; the authoritative recheck still happens
      *  on resume. */
+    /** A finished multipart upload can die in the window between its
+     *  synchronous session removal and the asynchronous IndexedDB snapshot
+     *  clear — the next visit then restores a file the server already
+     *  assembled, offering a Resume that would re-upload all of it. The
+     *  session store is the tiebreaker: init writes the session synchronously
+     *  before the first byte moves and completion removes it synchronously,
+     *  so an UPLOADING-status file of multipart size with no session is a
+     *  stale snapshot, not a crashed upload. PROCESSING files never had a
+     *  session and stay restorable; so does everything below the multipart
+     *  threshold or outside persist mode. */
+    private isStaleMultipartRestore(file: UploadFile): boolean {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart') return false
+        if (!(resumable.persist ?? true)) return false
+        if (!(file instanceof File)) return false
+        if (file.status !== UploadStatus.UPLOADING) return false
+        if (file.key != null) return false
+        if (file.size < (resumable.thresholdBytes ?? 5 * 1024 * 1024)) {
+            return false
+        }
+        return loadSession(fileFingerprint(file)) == null
+    }
+
     private seedRestoredProgress(restored: [string, UploadFile][]): void {
         for (const [, file] of restored) {
             if (file.status !== UploadStatus.PAUSED) continue

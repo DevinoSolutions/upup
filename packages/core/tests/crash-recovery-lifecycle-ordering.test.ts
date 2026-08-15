@@ -238,6 +238,111 @@ describe('crash-recovery restore progress seeding', () => {
         core.destroy()
     })
 
+    it('drops an UPLOADING multipart-sized file whose session is gone — a completed upload whose snapshot clear lost the race with page death must not resurrect as resumable', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        const file = makeSnapshotFile()
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.UPLOADING,
+        })
+        // No session saved: completion removed it synchronously before the
+        // page died, but the async snapshot clear never landed.
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: { protocol: 'multipart', thresholdBytes: 16 },
+            crashRecovery: { storage },
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(false)
+        expect(core.files.size).toBe(0)
+        await vi.waitFor(() => {
+            expect(storage.store.has(STORAGE_KEY)).toBe(false)
+        })
+        core.destroy()
+    })
+
+    it('keeps an UPLOADING multipart-sized file whose session survives — that is a genuinely crashed upload', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        const file = makeSnapshotFile()
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.UPLOADING,
+        })
+        saveSession(fileFingerprint(file), {
+            token: 'live-token',
+            key: 'uploads/seed.mp4',
+            partSize: 16,
+            updatedAt: Date.now(),
+            uploadedBytes: 32,
+            scope: SERVER_URL,
+        })
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: { protocol: 'multipart', thresholdBytes: 16 },
+            crashRecovery: { storage },
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        expect(core.files.get('seed-1')?.status).toBe(UploadStatus.PAUSED)
+        core.destroy()
+    })
+
+    it('keeps a session-less file below the multipart threshold — small files never have sessions and must stay restorable', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        const file = makeSnapshotFile()
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.UPLOADING,
+        })
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            // 64-byte snapshot file sits below the default 5 MiB threshold.
+            resumable: { protocol: 'multipart' },
+            crashRecovery: { storage },
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        expect(core.files.get('seed-1')?.status).toBe(UploadStatus.PAUSED)
+        core.destroy()
+    })
+
+    it('keeps a session-less PROCESSING file — the crash predates init, so no session ever existed', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        const file = Object.assign(
+            new File([new Uint8Array(64)], 'seed.mp4', {
+                type: 'video/mp4',
+                lastModified: 1_700_000_000_000,
+            }),
+            {
+                id: 'seed-1',
+                source: FileSource.LOCAL,
+                status: UploadStatus.PROCESSING,
+                metadata: {},
+            },
+        )
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.PROCESSING,
+        })
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: { protocol: 'multipart', thresholdBytes: 16 },
+            crashRecovery: { storage },
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        expect(core.files.get('seed-1')?.status).toBe(UploadStatus.PAUSED)
+        core.destroy()
+    })
+
     it('stays silent when the session recorded no uploaded bytes — 0 B seeded is 0 B displayed anyway', async () => {
         vi.stubGlobal('localStorage', new MemoryStorage())
         const storage = makeInstantStorage()
