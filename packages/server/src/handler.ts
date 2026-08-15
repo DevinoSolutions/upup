@@ -14,6 +14,8 @@ import {
     handleMultipartSignPart,
     handleMultipartComplete,
     handleMultipartAbort,
+    handleMultipartResume,
+    DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS,
 } from './upload-routes'
 import { handleOAuthRedirect, handleOAuthCallback } from './oauth'
 import { handleListFiles, handleFileTransfer } from './drive-routes'
@@ -119,6 +121,18 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
             }
             if (req.method === 'POST' && path.endsWith('/multipart/abort')) {
                 return await handleMultipartAbort(req, config, res)
+            }
+            // multipartResumeWindowSeconds:0 turns cross-reload resume OFF by
+            // not routing at all — the path falls through to the 404 below, so a
+            // disabled server is indistinguishable from one too old to have the
+            // route, and clients already fall back to a fresh init on 4xx.
+            if (
+                req.method === 'POST' &&
+                path.endsWith('/multipart/resume') &&
+                (config.multipartResumeWindowSeconds ??
+                    DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS) > 0
+            ) {
+                return await handleMultipartResume(req, config, res)
             }
 
             // OAuth routes: GET /auth/:provider and GET /auth/:provider/cb

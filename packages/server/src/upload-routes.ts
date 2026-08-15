@@ -7,7 +7,7 @@
 // can read the trust core without wading through OAuth or drive-provider code.
 // The HMAC/token/envelope logic is UNCHANGED — this is a move, not a rewrite.
 
-import { UpupErrorCode } from '@upupjs/core'
+import { UpupErrorCode, type MultipartResumeResponse } from '@upupjs/core'
 import type { UpupServerConfig, FileMetadata, UploadedFile } from './config'
 import {
     generatePresignedUrl,
@@ -16,6 +16,7 @@ import {
     completeMultipartUpload,
     abortMultipartUpload,
     getMultipartUploadedSize,
+    listMultipartParts,
 } from './providers/aws'
 import {
     assertUploadTokenSecret,
@@ -57,16 +58,24 @@ function requireUploadAuthorization(
     return null
 }
 
+/** How long after the original init an upload stays resumable, when the
+ *  integrator sets no `multipartResumeWindowSeconds`. 24h — the client's
+ *  localStorage session TTL, so neither side outlives the other. */
+export const DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS = 86_400
+
 /** Verify an upload token, or return the 403 Response to send as-is. Collapses
  *  the three duplicated inner try/catch blocks in sign-part/complete/abort into
  *  one call site, and surfaces the token's own malformed/bad_signature/expired
- *  code at the HTTP boundary (previously all three collapsed into one 403). */
+ *  code at the HTTP boundary (previously all three collapsed into one 403).
+ *  `allowExpired` is set by /multipart/resume ALONE — see the note on
+ *  VerifyUploadTokenOptions; every other caller keeps today's expiry rejection. */
 async function verifyTokenOrRespond(
     config: UpupServerConfig,
     token: string,
     res: Responder,
     route: string,
     method: string,
+    allowExpired = false,
 ): Promise<UploadTokenPayload | Response> {
     assertUploadTokenSecret(config.uploadTokenSecret)
     try {
@@ -74,6 +83,7 @@ async function verifyTokenOrRespond(
             config.uploadTokenSecret,
             token,
             Date.now(),
+            { allowExpired },
         )
     } catch (e) {
         if (e instanceof UploadTokenError) {
@@ -316,15 +326,18 @@ export async function handleMultipartInit(
             body.chunkSizeBytes,
         )
         assertUploadTokenSecret(config.uploadTokenSecret)
+        // `iat` stamps the moment this upload was born. /multipart/resume anchors
+        // its window here and carries the value forward untouched, so no chain of
+        // resumes can outlive the window the original init started.
+        const issuedAt = Math.floor(Date.now() / 1000)
         const token = await signUploadToken(config.uploadTokenSecret, {
             k: result.key,
             u: result.uploadId,
             uid: owner,
             smin: 0,
             smax: body.size,
-            exp:
-                Math.floor(Date.now() / 1000) +
-                DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+            exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+            iat: issuedAt,
         })
         return res.json({ ...result, token }, 200)
     } catch (error) {
@@ -334,6 +347,142 @@ export async function handleMultipartInit(
             500,
             UpupErrorCode.STORAGE_ERROR,
             'Multipart init failed',
+            error,
+        )
+    }
+}
+
+/** S3/MinIO's "that multipart upload is gone" signal — it completed, was
+ *  aborted, or a lifecycle rule reaped it. Matched on the modelled error name /
+ *  wire Code only, NOT on a bare 404 status: a missing BUCKET also 404s, and
+ *  mistaking that for a dead upload would tell the client its session is stale
+ *  when the deployment is actually misconfigured. */
+function isNoSuchUpload(error: unknown): boolean {
+    if (typeof error !== 'object' || error === null) return false
+    const shape = error as { name?: unknown; Code?: unknown }
+    return shape.name === 'NoSuchUpload' || shape.Code === 'NoSuchUpload'
+}
+
+/**
+ * Re-attach to a multipart upload a previous page-load left in flight: hand
+ * back the parts the provider already holds and a fresh token, so the client
+ * can finish the file instead of re-uploading it from byte zero.
+ *
+ * Trust posture is deliberately identical to sign-part/complete/abort — the
+ * token is the ONLY carrier. The client sends nothing but the token: no key, no
+ * uploadId, and none comes back either (S2 stays closed). Sits after the global
+ * `config.auth` gate like the other continuation routes, and owner-binds via
+ * `enforceTokenOwner` whenever `getUserId` exists.
+ *
+ * The ONE relaxation: an expired `exp` is accepted, because handing an expired
+ * token back as a fresh one is the entire point (an upload can easily outlive
+ * the 1h TTL). A tighter bound replaces it — the resume window, measured from
+ * the ORIGINAL init's `iat` and carried forward on every re-issue, so this is a
+ * fixed-length extension of a token's life, never an open-ended renewal.
+ */
+export async function handleMultipartResume(
+    req: Request,
+    config: UpupServerConfig,
+    res: Responder,
+): Promise<Response> {
+    const parsed = await parseJsonBody(req, res)
+    if (!parsed.ok) return parsed.response
+    const body = parsed.value as { token: string }
+    try {
+        const payload = await verifyTokenOrRespond(
+            config,
+            body.token,
+            res,
+            'multipart/resume',
+            req.method,
+            true, // allowExpired — the resume window below is the real bound
+        )
+        if (payload instanceof Response) return payload
+
+        const nowSeconds = Math.floor(Date.now() / 1000)
+        // Tokens minted before `iat` existed still resume: their init time is
+        // recoverable from the expiry, since init is the only issuer and always
+        // used the same TTL.
+        const issuedAt =
+            payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
+        const windowSeconds =
+            config.multipartResumeWindowSeconds ??
+            DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS
+        if (nowSeconds > issuedAt + windowSeconds) {
+            // Code stays the literal 'expired' the token layer uses: the client
+            // keys its mid-flight token refresh on `403 + code:'expired'`, and a
+            // second spelling here would silently break that path.
+            return res.fail(
+                'multipart/resume',
+                req.method,
+                403,
+                'expired',
+                'Upload resume window has expired',
+                new Error('resume window elapsed'),
+            )
+        }
+
+        const owned = await enforceTokenOwner(
+            config,
+            req,
+            payload,
+            res,
+            'multipart/resume',
+            req.method,
+        )
+        if (owned) return owned
+
+        let listed
+        try {
+            listed = await listMultipartParts(
+                config.storage,
+                payload.k,
+                payload.u,
+            )
+        } catch (error) {
+            // upup-catch: a dead upload is a 4xx, never a 5xx. The client drops
+            // its session and starts fresh on any 4xx; a 5xx would read as
+            // "try again later" and retry an upload that can never come back.
+            if (isNoSuchUpload(error)) {
+                return res.fail(
+                    'multipart/resume',
+                    req.method,
+                    404,
+                    UpupErrorCode.NOT_FOUND,
+                    'Multipart upload no longer exists',
+                    error,
+                )
+            }
+            throw error
+        }
+
+        assertUploadTokenSecret(config.uploadTokenSecret)
+        const token = await signUploadToken(config.uploadTokenSecret, {
+            // Every binding is copied from the VERIFIED payload, unchanged: same
+            // key, same uploadId, same owner, same size envelope. Only `exp`
+            // moves — `iat` is the original, so the window does not roll.
+            k: payload.k,
+            u: payload.u,
+            uid: payload.uid,
+            smin: payload.smin,
+            smax: payload.smax,
+            exp: nowSeconds + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+            iat: issuedAt,
+        })
+
+        const response: MultipartResumeResponse = {
+            key: payload.k,
+            token,
+            parts: listed.parts,
+        }
+        return res.json(response, 200)
+    } catch (error) {
+        return res.fail(
+            'multipart/resume',
+            req.method,
+            500,
+            UpupErrorCode.STORAGE_ERROR,
+            'Multipart resume failed',
             error,
         )
     }
