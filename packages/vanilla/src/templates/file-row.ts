@@ -6,7 +6,12 @@ import {
     type Translations,
     type IconName,
 } from '@upupjs/core'
-import { fileGetExtension, fileGetIsImage, cn } from '@upupjs/core/internal'
+import {
+    fileGetExtension,
+    fileGetIsImage,
+    cn,
+    isFileRemovalLocked,
+} from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { progressBar } from './shared/progress-bar'
 import { fileSuccessCheck } from './shared/file-success-check'
@@ -177,7 +182,7 @@ export function fileRow(
                       )}
                       @click=${onRemove}
                       type="button"
-                      ?disabled=${!!progress}
+                      ?disabled=${isFileRemovalLocked(progress, file.status)}
                       aria-label=${tr.removeFile}
                       data-testid="upup-file-remove"
                   >

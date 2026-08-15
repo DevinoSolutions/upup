@@ -1,6 +1,6 @@
 <script lang="ts">
   import { UploadStatus, type Translations } from '@upupjs/core'
-  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn } from '@upupjs/core/internal'
+  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn, isFileRemovalLocked } from '@upupjs/core/internal'
   import {
     useUploaderFiles,
     useUploaderI18n,
@@ -73,9 +73,9 @@
     return Number.isFinite(pct) ? pct : 0
   })
 
-  const isSuccessful = $derived(
-    $files.get(fileId)?.status === UploadStatus.SUCCESSFUL,
-  )
+  const fileStatus = $derived($files.get(fileId)?.status)
+
+  const isSuccessful = $derived(fileStatus === UploadStatus.SUCCESSFUL)
 
   function formatFileSize(bytes: number | undefined, tr: Translations) {
     if (!bytes || bytes === 0) return tr.zeroBytes
@@ -159,7 +159,7 @@
         )}
         onclick={onHandleFileRemove}
         type="button"
-        disabled={!!progress}
+        disabled={isFileRemovalLocked(progress, fileStatus ?? UploadStatus.IDLE)}
         aria-label={tr.removeFile}
         data-testid="upup-file-remove"
       >

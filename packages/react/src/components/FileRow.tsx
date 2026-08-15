@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react'
-import { cn } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import { UploadStatus, fileTypeIconName, type UploadFile } from '@upupjs/core'
 import {
     useUploaderEditor,
@@ -221,7 +221,7 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
                         handleFileRemove(file.id)
                     }}
                     type="button"
-                    disabled={!!progress}
+                    disabled={isFileRemovalLocked(progress, file.status)}
                     aria-label={tr.removeFile}
                     data-testid="upup-file-remove"
                 >

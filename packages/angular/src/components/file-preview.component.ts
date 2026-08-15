@@ -17,6 +17,7 @@ import {
     fileGetIsPdf,
     fileGetIsText,
     cn,
+    isFileRemovalLocked,
 } from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { ProgressBarComponent } from './progress-bar.component'
@@ -86,7 +87,7 @@ import { FileSuccessCheckComponent } from './shared/file-success-check.component
                         [class]="deleteButtonClass"
                         (click)="onHandleFileRemove($event)"
                         type="button"
-                        [disabled]="!!progress"
+                        [disabled]="isRemovalLocked"
                         [attr.aria-label]="translations.removeFile"
                         data-testid="upup-file-remove"
                     >
@@ -171,10 +172,18 @@ export class FilePreviewComponent implements OnChanges {
         return fileCanPreviewText(this.fileType, this.fileName, this.fileSize)
     }
 
+    get fileStatus(): UploadStatus | undefined {
+        return this.store.files().get(this.fileId)?.status
+    }
+
     get isSuccessful(): boolean {
-        return (
-            this.store.files().get(this.fileId)?.status ===
-            UploadStatus.SUCCESSFUL
+        return this.fileStatus === UploadStatus.SUCCESSFUL
+    }
+
+    get isRemovalLocked(): boolean {
+        return isFileRemovalLocked(
+            this.progress,
+            this.fileStatus ?? UploadStatus.IDLE,
         )
     }
 

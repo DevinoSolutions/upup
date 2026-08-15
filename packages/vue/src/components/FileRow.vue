@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { cn } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import {
     UploadStatus,
     fileTypeIconName,
@@ -20,7 +20,15 @@ import Icon from './Icon'
 import ProgressBar from './shared/ProgressBar.vue'
 import FileSuccessCheck from './shared/FileSuccessCheck.vue'
 
-const ARCHIVE_EXTENSIONS = new Set(['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'])
+const ARCHIVE_EXTENSIONS = new Set([
+    'zip',
+    'rar',
+    '7z',
+    'tar',
+    'gz',
+    'bz2',
+    'xz',
+])
 
 /**
  * Per-category thumbnail treatment for non-media rows so pdf / archive / audio /
@@ -151,7 +159,9 @@ function onRemove(e: MouseEvent) {
             />
         </div>
 
-        <div class="upup-flex upup-min-w-0 upup-flex-1 upup-flex-col upup-gap-0.5">
+        <div
+            class="upup-flex upup-min-w-0 upup-flex-1 upup-flex-col upup-gap-0.5"
+        >
             <div
                 :class="
                     cn(
@@ -203,7 +213,7 @@ function onRemove(e: MouseEvent) {
             "
             @click="onRemove"
             type="button"
-            :disabled="!!progress"
+            :disabled="isFileRemovalLocked(progress, file.status)"
             :aria-label="tr.removeFile"
             data-testid="upup-file-remove"
         >

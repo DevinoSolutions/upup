@@ -2,7 +2,7 @@ import { html, nothing } from 'lit-html'
 import type { TemplateResult } from 'lit-html'
 import type { UploadFile, Translations } from '@upupjs/core'
 import { UploadStatus } from '@upupjs/core'
-import { fileGetIsImage, cn } from '@upupjs/core/internal'
+import { fileGetIsImage, cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { progressBar } from './shared/progress-bar'
 import { filePreviewThumbnail } from './file-preview-thumbnail'
@@ -136,7 +136,10 @@ export function filePreview(
                           )}
                           @click=${onHandleFileRemove}
                           type="button"
-                          ?disabled=${!!progress}
+                          ?disabled=${isFileRemovalLocked(
+                              progress,
+                              file.status,
+                          )}
                           aria-label=${tr.removeFile}
                           data-testid="upup-file-remove"
                       >
