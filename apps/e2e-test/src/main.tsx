@@ -103,15 +103,23 @@ function RestrictionsDemo() {
  * multipart at a 5 MiB threshold/part size with crash recovery on, which is
  * what the cross-reload resume proof needs (reload mid-upload, the file comes
  * back, resume finishes it). `server` is a query param because the spec boots
- * its own harness process and owns the port.
+ * its own harness process and owns the port; `maxFiles` is one because the
+ * multi-file crash-restore proof needs three files in flight at once (the
+ * default stays 1 so the single-file specs are unaffected).
  */
-function MultipartResumeDemo({ serverUrl }: { serverUrl: string }) {
+function MultipartResumeDemo({
+    serverUrl,
+    maxFiles,
+}: {
+    serverUrl: string
+    maxFiles: number
+}) {
     const FIVE_MIB = 5 * 1024 * 1024
     return (
         <UpupUploader
             serverUrl={serverUrl}
             sources={['local']}
-            maxFiles={1}
+            maxFiles={maxFiles}
             maxFileSize={{ size: 999, unit: 'MB' }}
             thumbnailGenerator={false}
             crashRecovery
@@ -157,6 +165,7 @@ function App() {
                         serverUrl={
                             params.get('server') ?? 'http://localhost:53061'
                         }
+                        maxFiles={Number(params.get('maxFiles') ?? 1) || 1}
                     />
                 )}
             </div>
