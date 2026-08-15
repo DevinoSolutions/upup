@@ -95,8 +95,38 @@ function RestrictionsDemo() {
     )
 }
 
+/**
+ * Server-mode multipart scenario — loaded via
+ * `/?scenario=multipart-resume&server=http://localhost:53061`.
+ *
+ * The only story in this app that talks to a REAL @upupjs/server + MinIO:
+ * multipart at a 5 MiB threshold/part size with crash recovery on, which is
+ * what the cross-reload resume proof needs (reload mid-upload, the file comes
+ * back, resume finishes it). `server` is a query param because the spec boots
+ * its own harness process and owns the port.
+ */
+function MultipartResumeDemo({ serverUrl }: { serverUrl: string }) {
+    const FIVE_MIB = 5 * 1024 * 1024
+    return (
+        <UpupUploader
+            serverUrl={serverUrl}
+            sources={['local']}
+            maxFiles={1}
+            maxFileSize={{ size: 999, unit: 'MB' }}
+            thumbnailGenerator={false}
+            crashRecovery
+            resumable={{
+                protocol: 'multipart',
+                thresholdBytes: FIVE_MIB,
+                chunkSizeBytes: FIVE_MIB,
+            }}
+        />
+    )
+}
+
 function App() {
-    const scenario = new URLSearchParams(window.location.search).get('scenario')
+    const params = new URLSearchParams(window.location.search)
+    const scenario = params.get('scenario')
     const [tab, setTab] = useState<'dark' | 'light' | 'headless'>('dark')
 
     const tabStyle = (t: string) => ({
@@ -108,7 +138,7 @@ function App() {
         cursor: 'pointer' as const,
     })
 
-    if (scenario === 'restrictions') {
+    if (scenario === 'restrictions' || scenario === 'multipart-resume') {
         return (
             <div
                 style={{
@@ -120,7 +150,15 @@ function App() {
                     padding: 40,
                 }}
             >
-                <RestrictionsDemo />
+                {scenario === 'restrictions' ? (
+                    <RestrictionsDemo />
+                ) : (
+                    <MultipartResumeDemo
+                        serverUrl={
+                            params.get('server') ?? 'http://localhost:53061'
+                        }
+                    />
+                )}
             </div>
         )
     }
