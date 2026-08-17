@@ -1,5 +1,4 @@
-// Ready-to-adopt regression test (drop into packages/server/tests/integration/).
-// Gap it closes: listMultipartParts() / getMultipartUploadedSize() both loop on
+// Gap this closes: listMultipartParts() / getMultipartUploadedSize() both loop on
 // IsTruncated + PartNumberMarker, but MinIO NEVER truncates ListParts (it
 // answers MaxParts=10000, IsTruncated=false even at 1001 parts), so on MinIO
 // that loop always runs exactly once and the pagination branch is dead code.
