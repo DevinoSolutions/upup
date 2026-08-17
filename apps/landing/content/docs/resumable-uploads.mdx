@@ -56,16 +56,39 @@ everything smaller takes the ordinary single-PUT presigned path.
 
 ### Options
 
-Three fields, all optional.
+Six fields, all optional.
 
-| Option           | Type      | Default           | What it does                                                                                                                                                                                                                                                                        |
-| ---------------- | --------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `thresholdBytes` | `number`  | `5242880` (5 MiB) | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                                                                                                                                                                |
-| `chunkSizeBytes` | `number`  | `5242880` (5 MiB) | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
-| `persist`        | `boolean` | `true`            | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
+| Option           | Type       | Default                 | What it does                                                                                                                                                                                                                                                                        |
+| ---------------- | ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thresholdBytes` | `number`   | `5242880` (5 MiB)       | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                                                                                                                                                                |
+| `chunkSizeBytes` | `number`   | `5242880` (5 MiB)       | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
+| `persist`        | `boolean`  | `true`                  | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
+| `retryDelays`    | `number[]` | `[0, 1000, 3000, 5000]` | Backoff schedule, in milliseconds, for retrying a transiently failed or stalled part — the same vocabulary tus uses. The array's length is the retry budget; `[]` disables part retries. See [Part retries](#part-retries-and-the-stall-watchdog).                                  |
+| `partTimeoutMs`  | `number`   | `180000` (3 min)        | Watchdog for one part attempt: a sign or PUT request that neither succeeds nor fails within this window is aborted and retried instead of hanging the upload forever.                                                                                                               |
+| `autoResume`     | `boolean`  | `false`                 | Continue a crash-restored upload automatically instead of waiting for the Resume click — see [The full reload story](#the-full-reload-story-persist--crashrecovery).                                                                                                                |
 
 Part concurrency is fixed at three parts in flight and is not configurable
 through `resumable`.
+
+### Part retries and the stall watchdog
+
+Every part attempt runs under a watchdog: if its sign call or its PUT gets no
+response within `partTimeoutMs`, the attempt is aborted and treated as a
+failure — a request that would otherwise hang for the lifetime of a dead TCP
+connection instead fails fast and gets retried. The 3-minute default is sized
+so a full 5 MiB part still fits through a ~230 kbit/s connection; lower it if
+your users are on reliably faster links and you want snappier failure
+detection.
+
+A failed attempt is retried on the `retryDelays` schedule when the failure is
+transient: a network error, a watchdog timeout, an HTTP `429`, or any `5xx`.
+Definitive rejections — a `403` forged-token refusal, a `400` — are not
+retried and fail the file immediately. Retries wait out their delay, but a
+`pause()` or cancel cuts the wait short rather than blocking on it.
+
+Part retries sit **inside** one upload run; `maxRetries` governs whole-run
+retries around it. A part that recovers on retry never surfaces as a file
+failure at all.
 
 ### Server routes
 
@@ -206,6 +229,12 @@ byte-exactly, which is what keeps the fingerprint valid — and marks the
 interrupted files `PAUSED`. Calling `resume()` (the shipped UI's resume button)
 then re-enters the upload, the persisted session is found, and the transfer
 picks up mid-file.
+
+The explicit Resume click is the industry default — closing a tab is as often
+"cancel" as "oops", and silently re-uploading a file the user meant to abandon
+is the worse failure. If your product knows better (a backup tool, a sync
+client), set `autoResume: true` in the multipart config and a crash-restored
+upload continues by itself, no click required.
 
 Without `crashRecovery` the session still works, but the user has to re-select
 the same file themselves; nothing on the page remembers it was there.

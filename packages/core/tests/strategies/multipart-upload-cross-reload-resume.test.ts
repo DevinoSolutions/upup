@@ -171,6 +171,11 @@ describe('MultipartUpload — cross-reload resume', () => {
             maxConcurrentParts: 3,
             persist,
             sessionScope: SERVER_URL,
+            // This suite's subject is session lifecycle, and its failure
+            // fixtures fail EVERY attempt — part retries would only replay
+            // the same verdict through seconds of backoff. The retry policy
+            // has its own suite (multipart-part-retry-and-stall-watchdog).
+            retryDelays: [],
         })
     }
 

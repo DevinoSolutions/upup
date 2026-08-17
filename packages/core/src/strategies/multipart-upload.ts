@@ -2,6 +2,7 @@ import {
     UpupNetworkError,
     UpupConfigError,
     UpupError,
+    UpupErrorCode,
     UpupStorageError,
     uploadErrorFromResponse,
     type UploadStrategy,
@@ -41,10 +42,34 @@ export interface MultipartUploadOptions {
      * never be resumed against server B — its token means nothing there.
      */
     sessionScope?: string | undefined
+    /**
+     * Delays (ms) before each successive retry of a part whose attempt failed
+     * transiently — a network-level fetch rejection, a 429, a 5xx, or a stall
+     * caught by `partTimeoutMs`. Same vocabulary as the tus strategy's
+     * `retryDelays`: the array length is the retry budget, `[]` disables part
+     * retries. Definitive 4xx rejections are never retried.
+     */
+    retryDelays?: number[] | undefined
+    /**
+     * Watchdog for a single part attempt (the sign call + the part PUT). A
+     * request that neither succeeds nor fails within this window is aborted
+     * and counted as a transient failure, so a hung connection costs one
+     * `retryDelays` slot instead of hanging the whole upload forever. Size it
+     * for the slowest link a part must traverse: the default allows a 5 MiB
+     * part ~230 kbit/s.
+     */
+    partTimeoutMs?: number | undefined
 }
 
 const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024 // 5 MiB
 const DEFAULT_MAX_CONCURRENT = 3
+const DEFAULT_RETRY_DELAYS = [0, 1000, 3000, 5000]
+const DEFAULT_PART_TIMEOUT_MS = 180_000
+/** S3's hard cap on parts per upload. `@upupjs/server` already sizes parts to
+ *  respect it (providers/aws.ts computePartSize); this client-side floor covers
+ *  servers that return no partSize, where the 5 MiB default would otherwise
+ *  make any file past ~48.8 GiB fail at part 10,001. */
+const MAX_PARTS = 10_000
 
 /** What a successful re-attach hands back to the upload loop. */
 type ResumedUpload = {
@@ -87,6 +112,53 @@ function isUnresumableFailure(error: unknown): boolean {
             error.operation === 'multipart-complete') &&
         isClientError(error)
     )
+}
+
+/** The stall verdict `partTimeoutMs` produces. Built on the existing error
+ *  vocabulary (TIMEOUT code, `retryable: true`) so the part-retry predicate
+ *  and every downstream consumer classify it like any other transient fault. */
+function partStallError(partNumber: number, timeoutMs: number): UpupError {
+    return new UpupError(
+        `Part ${partNumber} stalled: no response within ${timeoutMs}ms`,
+        UpupErrorCode.TIMEOUT,
+        true,
+    )
+}
+
+/** A failure a later attempt could survive. Definitive rejections (a 4xx other
+ *  than 429) are a verdict, not weather — retrying them only hides bugs. */
+function isRetryablePartFailure(error: unknown): boolean {
+    if (error instanceof UpupError) {
+        return (
+            error.retryable ||
+            error.status === 429 ||
+            (error.status !== undefined && error.status >= 500)
+        )
+    }
+    // A stray AbortError that is neither the outer signal (rethrown before the
+    // predicate runs) nor a stall (already converted) was aborted by something
+    // this strategy doesn't own — leave it alone.
+    if (error instanceof DOMException && error.name === 'AbortError') {
+        return false
+    }
+    // fetch signals network-level death (connection reset, DNS, CORS) as a
+    // TypeError — no verdict was reached, so a retry is legitimate.
+    return error instanceof TypeError
+}
+
+/** Resolves after `ms`, or immediately when `signal` aborts — the caller
+ *  re-checks the signal after waking; sleeping through an abort would only
+ *  delay the inevitable throw. */
+function abortableDelay(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise(resolve => {
+        const wake = () => {
+            clearTimeout(timer)
+            signal.removeEventListener('abort', wake)
+            resolve()
+        }
+        const timer = setTimeout(wake, ms)
+        signal.addEventListener('abort', wake, { once: true })
+    })
 }
 
 /** The checksum pipeline step's hash, when it ran. Read defensively: the
@@ -146,6 +218,8 @@ export class MultipartUpload implements UploadStrategy {
     private maxConcurrentParts: number
     private persist: boolean
     private sessionScope: string | undefined
+    private retryDelays: number[]
+    private partTimeoutMs: number
 
     constructor(options: MultipartUploadOptions) {
         const { credentials } = options
@@ -174,6 +248,8 @@ export class MultipartUpload implements UploadStrategy {
             options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT
         this.persist = options.persist ?? false
         this.sessionScope = options.sessionScope
+        this.retryDelays = options.retryDelays ?? DEFAULT_RETRY_DELAYS
+        this.partTimeoutMs = options.partTimeoutMs ?? DEFAULT_PART_TIMEOUT_MS
     }
 
     /**
@@ -357,7 +433,12 @@ export class MultipartUpload implements UploadStrategy {
                 )
             }
             currentToken = init.token
-            partSize = init.partSize || this.chunkSizeBytes
+            // The server's partSize wins when present. The MAX_PARTS floor
+            // applies to the local fallback only — raising a server-chosen
+            // size here would desync from whatever bookkeeping produced it.
+            partSize =
+                init.partSize ||
+                Math.max(this.chunkSizeBytes, Math.ceil(fileSize / MAX_PARTS))
 
             if (fingerprint) {
                 saveSession(fingerprint, {
@@ -436,34 +517,76 @@ export class MultipartUpload implements UploadStrategy {
             ).filter(partNumber => !alreadyUploaded.has(partNumber))
             const activeParts: Promise<void>[] = []
 
-            const uploadPart = async (partNumber: number): Promise<void> => {
-                if (isAborted(options.signal)) {
-                    throw new UpupNetworkError('Upload aborted')
-                }
-
+            /** One sign+PUT attempt. Hangs are impossible by construction:
+             *  the sign call races the watchdog (its transport offers no
+             *  abort), the PUT is genuinely aborted by it. */
+            const attemptPart = async (partNumber: number): Promise<void> => {
                 const start = (partNumber - 1) * partSize
                 const end = Math.min(start + partSize, fileSize)
                 const chunk = file.slice(start, end)
 
                 // Sign the part
-                const signed = await withTokenRefresh(token =>
-                    this.signPart({
-                        token,
-                        partNumber,
+                let signTimer: ReturnType<typeof setTimeout> | undefined
+                const signed = await Promise.race([
+                    withTokenRefresh(token =>
+                        this.signPart({
+                            token,
+                            partNumber,
+                        }),
+                    ),
+                    new Promise<never>((_, reject) => {
+                        signTimer = setTimeout(() => {
+                            reject(
+                                partStallError(partNumber, this.partTimeoutMs),
+                            )
+                        }, this.partTimeoutMs)
                     }),
-                )
+                ]).finally(() => {
+                    clearTimeout(signTimer)
+                })
 
                 if (isAborted(options.signal)) {
                     throw new UpupNetworkError('Upload aborted')
                 }
 
-                // Upload the chunk
-                const response = await fetch(signed.uploadUrl, {
-                    method: 'PUT',
-                    headers: signed.uploadHeaders ?? {},
-                    body: chunk,
-                    signal: options.signal,
+                // Upload the chunk, under the stall watchdog: a PUT that
+                // neither succeeds nor fails is aborted and rethrown as a
+                // retryable stall — the failure mode a dying connection
+                // otherwise turns into a silent forever-hang.
+                const attemptController = new AbortController()
+                const forwardAbort = () => {
+                    attemptController.abort()
+                }
+                options.signal.addEventListener('abort', forwardAbort, {
+                    once: true,
                 })
+                let stalled = false
+                const watchdog = setTimeout(() => {
+                    stalled = true
+                    attemptController.abort()
+                }, this.partTimeoutMs)
+
+                let response: Response
+                try {
+                    response = await fetch(signed.uploadUrl, {
+                        method: 'PUT',
+                        headers: signed.uploadHeaders ?? {},
+                        body: chunk,
+                        signal: attemptController.signal,
+                    })
+                } catch (error) {
+                    if (stalled && !isAborted(options.signal)) {
+                        const stallErr = partStallError(
+                            partNumber,
+                            this.partTimeoutMs,
+                        )
+                        throw stallErr
+                    }
+                    throw error
+                } finally {
+                    clearTimeout(watchdog)
+                    options.signal.removeEventListener('abort', forwardAbort)
+                }
 
                 if (!response.ok) {
                     const body = await response.text().catch(() => '')
@@ -485,6 +608,30 @@ export class MultipartUpload implements UploadStrategy {
                 options.onProgress(totalUploaded, fileSize)
                 if (fingerprint) {
                     updateSessionProgress(fingerprint, totalUploaded)
+                }
+            }
+
+            const uploadPart = async (partNumber: number): Promise<void> => {
+                for (let attempt = 0; ; attempt++) {
+                    if (isAborted(options.signal)) {
+                        throw new UpupNetworkError('Upload aborted')
+                    }
+                    try {
+                        await attemptPart(partNumber)
+                        return
+                    } catch (error) {
+                        // The user's abort always wins, whatever error shape
+                        // it surfaced as mid-flight.
+                        if (isAborted(options.signal)) throw error
+                        const delay = this.retryDelays[attempt]
+                        if (
+                            delay === undefined ||
+                            !isRetryablePartFailure(error)
+                        ) {
+                            throw error
+                        }
+                        await abortableDelay(delay, options.signal)
+                    }
                 }
             }
 

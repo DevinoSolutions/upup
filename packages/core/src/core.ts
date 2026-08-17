@@ -16,6 +16,7 @@ import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
 import { abortPersistedMultipartSessions } from './strategies/multipart-upload'
 import { fileFingerprint, loadSession } from './utils/multipart-session-store'
+import { isUploadActive } from './utils/status-helpers'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import {
     serializeCrashRecovery,
@@ -66,6 +67,10 @@ export class UpupCore {
     private pauseRequested = false
     private cancelRequested = false
     private destroyed = false
+    /** True only while the CURRENT pause was made by the offline handler —
+     *  the one case `online` may resume. A pause the user chose stays theirs. */
+    private offlinePausedRun = false
+    private detachNetworkListeners: (() => void) | null = null
     private activeRun: Promise<UploadFile[]> | null = null
     private workerProvider:
         import('./worker/create-worker-provider').WorkerProvider | null = null
@@ -88,6 +93,57 @@ export class UpupCore {
         }
 
         this.configureCrashRecovery(options.crashRecovery)
+        this.installNetworkAwareness()
+    }
+
+    /** Connectivity reactions (`networkAware`, default on): `offline` pauses
+     *  an active run — with `persist` on, that keeps the multipart session
+     *  alive instead of burning whole-run retries against a dead network —
+     *  and `online` resumes it, but ONLY when this handler made the pause.
+     *  SSR/node-safe: without a window this installs nothing. */
+    private installNetworkAwareness(): void {
+        if (this.options.networkAware === false) return
+        if (
+            typeof window === 'undefined' ||
+            typeof window.addEventListener !== 'function'
+        ) {
+            return
+        }
+        const onOffline = () => {
+            if (this.destroyed || !isUploadActive(this._status)) return
+            this.pause()
+            this.offlinePausedRun = true
+        }
+        const onOnline = () => {
+            if (!this.offlinePausedRun) return
+            // Deferred a tick (F-148 pattern): the offline pause aborts the
+            // active run, which settles on a microtask — a synchronous resume
+            // would hit the activeRun re-entrancy guard, no-op, and leave the
+            // upload stuck PAUSED. The flag doubles as the cancellation token:
+            // a user pause() (or a fresh offline pause re-marking) in the gap
+            // clears/re-owns it before the timer fires.
+            setTimeout(() => {
+                if (!this.offlinePausedRun || this.destroyed) return
+                // navigator.onLine is typed boolean but absent in some
+                // runtimes — only an explicit false means "still offline".
+                const onLine =
+                    typeof navigator === 'undefined'
+                        ? undefined
+                        : (navigator as { onLine?: boolean }).onLine
+                if (onLine === false) {
+                    return // went offline again before the timer fired
+                }
+                this.offlinePausedRun = false
+                if (this._status !== UploadStatus.PAUSED) return
+                this.resume()
+            }, 0)
+        }
+        window.addEventListener('offline', onOffline)
+        window.addEventListener('online', onOnline)
+        this.detachNetworkListeners = () => {
+            window.removeEventListener('offline', onOffline)
+            window.removeEventListener('online', onOnline)
+        }
     }
 
     /** The one projection of CoreOptions the FileManager consumes — construction
@@ -705,6 +761,10 @@ export class UpupCore {
      * requires multipart upload support.
      */
     pause(): void {
+        // Any pause supersedes an offline-initiated one: the offline handler
+        // re-marks its own pauses right after this call, so a surviving flag
+        // here would let `online` overrule a pause the user chose.
+        this.offlinePausedRun = false
         if (this.uploadManager) {
             this.pauseRequested = true
             this.uploadManager.abort()
@@ -728,6 +788,7 @@ export class UpupCore {
             )
         if (this.activeRun) return
         this.pauseRequested = false
+        this.offlinePausedRun = false
         this._status = UploadStatus.UPLOADING
         this.emitter.emit('upload-resume', {})
         this.emitter.emit('state-change', { status: this._status })
@@ -938,9 +999,30 @@ export class UpupCore {
             this.restore(normalized)
             this.seedRestoredProgress(normalized.files)
             this.emitter.emit('crash-recovery-restored', {})
+            this.maybeScheduleAutoResume(normalized.status)
             return true
         }
         return false
+    }
+
+    /** `resumable.autoResume` continues a crash-restored upload without the
+     *  explicit Resume click. Off by default on purpose: closing a tab is an
+     *  ambiguous signal — as often "cancel" as "oops" — so silently resuming
+     *  a transfer the user may have meant to kill is an integrator's call,
+     *  never the library's. Deferred a tick so the host finishes mounting
+     *  (the same guard autoUpload's timer carries, F-148), and re-checked at
+     *  fire time: the user may have discarded the restore in between. */
+    private maybeScheduleAutoResume(restoredStatus: UploadStatus): void {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart' || !resumable.autoResume) {
+            return
+        }
+        if (restoredStatus !== UploadStatus.PAUSED) return
+        setTimeout(() => {
+            if (this.destroyed) return
+            if (this._status !== UploadStatus.PAUSED) return
+            this.resume()
+        }, 0)
     }
 
     /** A restored PAUSED file rendered "0 B of N" even when most of it was
@@ -996,6 +1078,8 @@ export class UpupCore {
 
     destroy(): void {
         this.destroyed = true
+        this.detachNetworkListeners?.()
+        this.detachNetworkListeners = null
         this.uploadManager?.abort()
         this.uploadManager = null
         this.workerProvider?.terminate()

@@ -71,6 +71,8 @@ export function resolveUploadConfig(
                   // rule either way).
                   persist: options.resumable.persist ?? true,
                   sessionScope: options.serverUrl,
+                  retryDelays: options.resumable.retryDelays,
+                  partTimeoutMs: options.resumable.partTimeoutMs,
               })
             : null
     const multipartThreshold =

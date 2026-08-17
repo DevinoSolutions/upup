@@ -30,7 +30,12 @@ const DEFAULT_PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
 export const MIN_PART_SIZE = 5 * 1024 * 1024 // 5 MiB
 const MAX_PARTS = 10_000
 
-function computePartSize(fileSize: number, chunkSizeBytes?: number): number {
+// Exported for its boundary tests: the MAX_PARTS clamp is what keeps a
+// >48.8 GiB file from failing at part 10,001, and it must stay covered.
+export function computePartSize(
+    fileSize: number,
+    chunkSizeBytes?: number,
+): number {
     let partSize = chunkSizeBytes ?? MIN_PART_SIZE
     if (partSize < MIN_PART_SIZE) partSize = MIN_PART_SIZE
     const minPartSizeForFile = Math.ceil(fileSize / MAX_PARTS)

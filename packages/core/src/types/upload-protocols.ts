@@ -65,6 +65,19 @@ export type ResumableUploadOptions =
           thresholdBytes?: number
           chunkSizeBytes?: number
           persist?: boolean
+          /** Delays (ms) before each successive retry of a transiently failed
+           *  or stalled part. Array length = retry budget; `[]` disables part
+           *  retries. Default `[0, 1000, 3000, 5000]`. */
+          retryDelays?: number[]
+          /** Watchdog (ms) for a single part attempt — a request that neither
+           *  succeeds nor fails within this window is aborted and retried
+           *  instead of hanging the upload. Default 180000. */
+          partTimeoutMs?: number
+          /** Continue a crash-restored upload automatically instead of waiting
+           *  for the Resume click. Off by default: closing a tab is as often
+           *  "cancel" as "oops", so silently resuming is the integrator's
+           *  call, never the library's. */
+          autoResume?: boolean
       }
     | {
           protocol: 'tus'

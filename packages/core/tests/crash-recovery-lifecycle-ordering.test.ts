@@ -374,3 +374,109 @@ describe('crash-recovery restore progress seeding', () => {
         core.destroy()
     })
 })
+
+describe('crash-recovery autoResume', () => {
+    /** A crashed multipart upload with a live session, ready to restore. */
+    function seedCrashedUpload(storage: ReturnType<typeof makeInstantStorage>) {
+        const file = Object.assign(
+            new File([new Uint8Array(64)], 'seed.mp4', {
+                type: 'video/mp4',
+                lastModified: 1_700_000_000_000,
+            }),
+            {
+                id: 'seed-1',
+                source: FileSource.LOCAL,
+                status: UploadStatus.UPLOADING,
+                metadata: {},
+            },
+        )
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.UPLOADING,
+        })
+        saveSession(fileFingerprint(file), {
+            token: 'live-token',
+            key: 'uploads/seed.mp4',
+            partSize: 16,
+            updatedAt: Date.now(),
+            uploadedBytes: 32,
+            scope: SERVER_URL,
+        })
+    }
+
+    it('autoResume: true continues the restored upload without a Resume click', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        // The auto-resumed run will genuinely hit the wire — park it so the
+        // test observes the resume, not the (irrelevant) transfer outcome.
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(() => new Promise(() => {})),
+        )
+        const storage = makeInstantStorage()
+        seedCrashedUpload(storage)
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: {
+                protocol: 'multipart',
+                thresholdBytes: 16,
+                autoResume: true,
+            },
+            crashRecovery: { storage },
+        })
+        const resumed = vi.fn()
+        core.on('upload-resume', resumed)
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        // Deferred a tick on purpose (host may still be mounting).
+        expect(resumed).not.toHaveBeenCalled()
+        await vi.waitFor(() => {
+            expect(resumed).toHaveBeenCalledTimes(1)
+        })
+        expect(core.status).toBe(UploadStatus.UPLOADING)
+        core.destroy()
+    })
+
+    it('without autoResume the restored upload stays PAUSED until the user acts — manual resume is the default contract', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        seedCrashedUpload(storage)
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: { protocol: 'multipart', thresholdBytes: 16 },
+            crashRecovery: { storage },
+        })
+        const resumed = vi.fn()
+        core.on('upload-resume', resumed)
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        await new Promise(resolve => setTimeout(resolve, 10))
+        expect(resumed).not.toHaveBeenCalled()
+        expect(core.status).toBe(UploadStatus.PAUSED)
+        core.destroy()
+    })
+
+    it('a destroy() racing the deferred auto-resume is a no-op, not a throw', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        seedCrashedUpload(storage)
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: {
+                protocol: 'multipart',
+                thresholdBytes: 16,
+                autoResume: true,
+            },
+            crashRecovery: { storage },
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        core.destroy() // beats the 0-ms timer
+        // resume() on a destroyed core throws; the guard must fire first.
+        // An unhandled throw here would reject this tick — waiting one tick
+        // with no rejection IS the assertion.
+        await new Promise(resolve => setTimeout(resolve, 10))
+    })
+})
