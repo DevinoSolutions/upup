@@ -168,7 +168,10 @@ describe('MultipartUpload — extended', () => {
         expect(completeCall?.parts.length).toBeLessThanOrEqual(10_000)
         // The clamp raises the part size only as far as the cap requires.
         expect(completeCall?.parts.length).toBeGreaterThan(9_000)
-    })
+        // 30s budget: proving the cap means genuinely pushing ~10,000 mocked
+        // parts through the loop, which crosses the 5s default under CI
+        // coverage instrumentation (measured 5450ms).
+    }, 30_000)
 
     it('throws when a part upload returns a definitive non-ok response', async () => {
         const creds = makeCredentials()
