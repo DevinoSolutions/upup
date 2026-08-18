@@ -25,6 +25,12 @@ import {
 export interface MultipartUploadOptions {
     credentials: CredentialStrategy
     chunkSizeBytes?: number | undefined
+    /**
+     * Parts of this one file in flight at once. Throughput on a fast link
+     * against memory and socket pressure — every in-flight part holds its own
+     * chunk. Clamped to a whole number ≥ 1 — the cap is a count of live
+     * requests, and a run with none in flight can never finish.
+     */
     maxConcurrentParts?: number | undefined
     /**
      * Persist a resumable session (localStorage) for `File` inputs, so a page
@@ -244,8 +250,10 @@ export class MultipartUpload implements UploadStrategy {
         this.resumeMultipartUpload =
             credentials.resumeMultipartUpload?.bind(credentials)
         this.chunkSizeBytes = options.chunkSizeBytes ?? DEFAULT_CHUNK_SIZE
-        this.maxConcurrentParts =
-            options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT
+        this.maxConcurrentParts = Math.max(
+            1,
+            Math.floor(options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT),
+        )
         this.persist = options.persist ?? false
         this.sessionScope = options.sessionScope
         this.retryDelays = options.retryDelays ?? DEFAULT_RETRY_DELAYS

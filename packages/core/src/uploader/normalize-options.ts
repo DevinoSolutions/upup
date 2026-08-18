@@ -132,6 +132,9 @@ export function normalizeUploaderOptions(
         stripExifData: options.stripExifData,
         contentDeduplication: options.contentDeduplication,
         crashRecovery: options.crashRecovery,
+        // Forwarded verbatim: `undefined` must survive so core's default-on
+        // network awareness applies; only an explicit `false` opts out.
+        networkAware: options.networkAware,
         maxConcurrentUploads: options.maxConcurrentUploads,
         metadata: options.metadata,
         cors: options.cors,

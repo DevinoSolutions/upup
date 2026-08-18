@@ -28,8 +28,9 @@ owns the offset bookkeeping.
 
 ## Multipart
 
-Multipart splits a file into parts, signs each part individually, uploads three
-parts at a time, and then asks the server to assemble them. Core routes a file
+Multipart splits a file into parts, signs each part individually, uploads
+several parts at a time (three by default), and then asks the server to
+assemble them. Core routes a file
 to the multipart strategy when its size is at or above `thresholdBytes`;
 everything smaller takes the ordinary single-PUT presigned path.
 
@@ -56,19 +57,30 @@ everything smaller takes the ordinary single-PUT presigned path.
 
 ### Options
 
-Six fields, all optional.
+Seven fields, all optional.
 
-| Option           | Type       | Default                 | What it does                                                                                                                                                                                                                                                                        |
-| ---------------- | ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `thresholdBytes` | `number`   | `5242880` (5 MiB)       | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                                                                                                                                                                |
-| `chunkSizeBytes` | `number`   | `5242880` (5 MiB)       | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
-| `persist`        | `boolean`  | `true`                  | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
-| `retryDelays`    | `number[]` | `[0, 1000, 3000, 5000]` | Backoff schedule, in milliseconds, for retrying a transiently failed or stalled part — the same vocabulary tus uses. The array's length is the retry budget; `[]` disables part retries. See [Part retries](#part-retries-and-the-stall-watchdog).                                  |
-| `partTimeoutMs`  | `number`   | `180000` (3 min)        | Watchdog for one part attempt: a sign or PUT request that neither succeeds nor fails within this window is aborted and retried instead of hanging the upload forever.                                                                                                               |
-| `autoResume`     | `boolean`  | `false`                 | Continue a crash-restored upload automatically instead of waiting for the Resume click — see [The full reload story](#the-full-reload-story-persist--crashrecovery).                                                                                                                |
+| Option               | Type       | Default                 | What it does                                                                                                                                                                                                                                                                        |
+| -------------------- | ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thresholdBytes`     | `number`   | `5242880` (5 MiB)       | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                                                                                                                                                                |
+| `chunkSizeBytes`     | `number`   | `5242880` (5 MiB)       | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
+| `persist`            | `boolean`  | `true`                  | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
+| `retryDelays`        | `number[]` | `[0, 1000, 3000, 5000]` | Backoff schedule, in milliseconds, for retrying a transiently failed or stalled part — the same vocabulary tus uses. The array's length is the retry budget; `[]` disables part retries. See [Part retries](#part-retries-and-the-stall-watchdog).                                  |
+| `partTimeoutMs`      | `number`   | `180000` (3 min)        | Watchdog for one part attempt: a sign or PUT request that neither succeeds nor fails within this window is aborted and retried instead of hanging the upload forever.                                                                                                               |
+| `maxConcurrentParts` | `number`   | `3`                     | How many parts of a single file upload at once — see [Part concurrency](#part-concurrency).                                                                                                                                                                                         |
+| `autoResume`         | `boolean`  | `false`                 | Continue a crash-restored upload automatically instead of waiting for the Resume click — see [The full reload story](#the-full-reload-story-persist--crashrecovery).                                                                                                                |
 
-Part concurrency is fixed at three parts in flight and is not configurable
-through `resumable`.
+### Part concurrency
+
+`maxConcurrentParts` sets how many parts of one file are in flight at the same
+time. Three is a deliberate middle: raising it fills a high-bandwidth link
+faster, and costs memory and sockets, because every in-flight part holds its
+own chunk of the file in the request body. Lower it when your users upload from
+constrained devices or you are being rate-limited; raise it when big files
+crawl on connections you know are fast. Values below `1` are clamped to `1`.
+
+This is parts within one file. `maxConcurrentUploads` is the other axis — how
+many files upload in parallel — and the two multiply: four files at three parts
+each is twelve requests in flight.
 
 ### Part retries and the stall watchdog
 

@@ -73,6 +73,11 @@ export type ResumableUploadOptions =
            *  succeeds nor fails within this window is aborted and retried
            *  instead of hanging the upload. Default 180000. */
           partTimeoutMs?: number
+          /** Parts of ONE file in flight at once. Default 3. More parts in
+           *  flight buys throughput on a high-bandwidth link and costs memory
+           *  and sockets — each in-flight part holds its own chunk. Values
+           *  below 1 are treated as 1. */
+          maxConcurrentParts?: number
           /** Continue a crash-restored upload automatically instead of waiting
            *  for the Resume click. Off by default: closing a tab is as often
            *  "cancel" as "oops", so silently resuming is the integrator's

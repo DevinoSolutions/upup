@@ -12,11 +12,11 @@ Props are identical across React, Vue, Svelte, Angular, Vanilla, Preact, and Nex
 - **Behavior** — [`mode`](#mode), [`autoUpload`](#autoupload), [`quietCompletion`](#quietcompletion), [`enablePaste`](#enablepaste), [`disableDragDrop`](#disabledragdrop), [`folderUpload`](#folderupload), [`onBeforeFileAdded`](#onbeforefileadded)
 - **Files & validation** — [`maxFiles`](#maxfiles), [`allowedFileTypes`](#allowedfiletypes), [`maxFileSize`](#maxfilesize), [`minFileSize`](#minfilesize), [`maxTotalFileSize`](#maxtotalfilesize), [`contentDeduplication`](#contentdeduplication)
 - **Processing pipeline** — [`imageCompression`](#imagecompression), [`heicConversion`](#heicconversion), [`stripExifData`](#stripexifdata), [`thumbnailGenerator`](#thumbnailgenerator), [`checksumVerification`](#checksumverification), [`webWorker`](#webworker), [`imageEditor`](#imageeditor), [`processingEndpoint`](#processingendpoint), [`processingTimeout`](#processingtimeout)
-- **Upload & reliability** — [`maxRetries`](#maxretries), [`maxConcurrentUploads`](#maxconcurrentuploads), [`resumable`](#resumable), [`crashRecovery`](#crashrecovery), [`metadata`](#metadata), [`cors`](#cors)
+- **Upload & reliability** — [`maxRetries`](#maxretries), [`maxConcurrentUploads`](#maxconcurrentuploads), [`resumable`](#resumable), [`crashRecovery`](#crashrecovery), [`networkAware`](#networkaware), [`metadata`](#metadata), [`cors`](#cors)
 - **Sources & drives** — [`sources`](#sources), [`cloudDrives`](#clouddrives)
 - **Appearance & UI** — [`theme`](#theme), [`animations`](#animations), [`mini`](#mini), [`className`](#classname), [`style`](#style), [`icons`](#icons), [`allowPreview`](#allowpreview), [`showBranding`](#showbranding), [`isProcessing`](#isprocessing)
 - **Localization** — [`i18n`](#i18n)
-- **Headless-only (not component props)** — [`plugins`](#plugins), [`pipeline`](#pipeline), [`workerTimeoutMs`](#workertimeoutms), [`isSuccessfulCall`](#issuccessfulcall), [`networkAware`](#networkaware)
+- **Headless-only (not component props)** — [`plugins`](#plugins), [`pipeline`](#pipeline), [`workerTimeoutMs`](#workertimeoutms), [`isSuccessfulCall`](#issuccessfulcall)
 
 ## Behavior
 
@@ -324,6 +324,20 @@ Pair it with `resumable` — recovering the file list is only useful if the tran
 
 The prop is a boolean. Supplying your own persistence layer instead of IndexedDB is a headless-only option: the engine's `crashRecovery` also accepts an object carrying a custom storage implementation, reachable through `new UpupCore(...)` or `useUpupUpload` — see [Headless Usage](/docs/guides/headless/).
 
+### `networkAware`
+
+`networkAware?: boolean` — default `true`.
+
+Reacts to browser connectivity: going offline mid-upload pauses the run — with multipart `persist` on, that keeps the server-side session alive instead of burning whole-run retries against a dead network — and coming back online resumes it. The resume fires **only** when the pause was offline-initiated; a pause the user chose is never overruled by a connectivity change. A no-op outside a browser.
+
+It is on by default, so the prop is only worth passing to opt out:
+
+```tsx
+<UpupUploader uploadEndpoint="/api/upload-token" networkAware={false} />
+```
+
+`false` restores the plain fail-and-retry behavior, where a dropped connection burns retries and eventually fails the run.
+
 ### `metadata`
 
 `metadata?: Record<string, unknown>` — no default.
@@ -532,12 +546,6 @@ Per-task timeout for web-worker pipeline work. On timeout the task falls back to
 `isSuccessfulCall?: (response: { status: number; headers: Record<string, string>; body: unknown }) => boolean | Promise<boolean>`
 
 A custom success predicate for the storage response. Use it when a `2xx` is not sufficient proof — for example a gateway that returns `200` with an error body. A file rejected by this predicate is marked failed and is **not** retried, on the assumption a business-logic rejection will not resolve on a second attempt.
-
-### `networkAware`
-
-`networkAware?: boolean` — default `true`. The default applies to the component too; only the opt-out is headless-only.
-
-Reacts to browser connectivity: going offline mid-upload pauses the run — with multipart `persist` on, that keeps the server-side session alive instead of burning whole-run retries against a dead network — and coming back online resumes it. The resume fires **only** when the pause was offline-initiated; a pause the user chose is never overruled by a connectivity change. Set `false` to restore the plain fail-and-retry behavior. A no-op outside a browser.
 
 ## See also
 

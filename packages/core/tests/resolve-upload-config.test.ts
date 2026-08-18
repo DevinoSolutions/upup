@@ -57,6 +57,7 @@ describe('resolveUploadConfig', () => {
             } as UploadFile).uploadStrategy as unknown as {
                 persist: boolean
                 sessionScope: string | undefined
+                maxConcurrentParts: number
             }
         }
 
@@ -74,6 +75,18 @@ describe('resolveUploadConfig', () => {
 
         it('scopes sessions to the configured serverUrl', () => {
             expect(multipartStrategy({}).sessionScope).toBe('https://s')
+        })
+
+        it('keeps the three-parts-in-flight default and forwards an explicit maxConcurrentParts', () => {
+            expect(multipartStrategy({}).maxConcurrentParts).toBe(3)
+            expect(
+                multipartStrategy({
+                    resumable: {
+                        protocol: 'multipart',
+                        maxConcurrentParts: 6,
+                    },
+                }).maxConcurrentParts,
+            ).toBe(6)
         })
     })
 

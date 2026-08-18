@@ -96,6 +96,7 @@ export const uploaderArgTypes: Record<string, unknown> = {
     disableDragDrop: { control: 'boolean', ...cat('Behavior') },
     allowPreview: { control: 'boolean', ...cat('Behavior') },
     crashRecovery: { control: 'boolean', ...cat('Behavior') },
+    networkAware: { control: 'boolean', ...cat('Behavior') },
 
     // ── Appearance ──────────────────────────────────────────
     mini: { control: 'boolean', ...cat('Appearance') },
