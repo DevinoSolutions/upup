@@ -65,7 +65,7 @@ Seven fields, all optional.
 | `chunkSizeBytes`     | `number`   | `5242880` (5 MiB)       | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
 | `persist`            | `boolean`  | `true`                  | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
 | `retryDelays`        | `number[]` | `[0, 1000, 3000, 5000]` | Backoff schedule, in milliseconds, for retrying a transiently failed or stalled part — the same vocabulary tus uses. The array's length is the retry budget; `[]` disables part retries. See [Part retries](#part-retries-and-the-stall-watchdog).                                  |
-| `partTimeoutMs`      | `number`   | `180000` (3 min)        | Watchdog for one part attempt: a sign or PUT request that neither succeeds nor fails within this window is aborted and retried instead of hanging the upload forever.                                                                                                               |
+| `partTimeoutMs`      | `number`   | `180000` (3 min)        | Watchdog budget for each phase of a part attempt (sign, source read, PUT): a phase that neither succeeds nor fails within its window is aborted and retried instead of hanging the upload forever — see [Part retries](#part-retries-and-the-stall-watchdog).                       |
 | `maxConcurrentParts` | `number`   | `3`                     | How many parts of a single file upload at once — see [Part concurrency](#part-concurrency).                                                                                                                                                                                         |
 | `autoResume`         | `boolean`  | `false`                 | Continue a crash-restored upload automatically instead of waiting for the Resume click — see [The full reload story](#the-full-reload-story-persist--crashrecovery).                                                                                                                |
 
@@ -74,7 +74,10 @@ Seven fields, all optional.
 `maxConcurrentParts` sets how many parts of one file are in flight at the same
 time. Three is a deliberate middle: raising it fills a high-bandwidth link
 faster, and costs memory and sockets, because every in-flight part holds its
-own chunk of the file in the request body. Lower it when your users upload from
+own chunk of the file in memory — parts up to 16 MiB are read into an
+`ArrayBuffer` before the PUT (so each in-flight part costs up to
+`min(partSize, 16 MiB)` of resident bytes, plus the copy XHR makes while
+sending), and larger parts stream from the file. Lower it when your users upload from
 constrained devices or you are being rate-limited; raise it when big files
 crawl on connections you know are fast. Values below `1` are clamped to `1`.
 
@@ -84,14 +87,17 @@ each is twelve requests in flight.
 
 ### Part retries and the stall watchdog
 
-Every part attempt runs under a watchdog. It is an **inactivity** timer, not a
+Every part attempt runs under a watchdog, applied to each of its phases
+separately: the sign call, the source read (for parts small enough to be
+materialized), and the PUT. For the PUT it is an **inactivity** timer, not a
 deadline on the whole transfer: as long as bytes keep moving, a part is never
 timed out, no matter how slow the link or how large the part. The watchdog only
 fires after `partTimeoutMs` of **no upload progress at all** — a genuinely
 stalled or dead connection — at which point the attempt is aborted and retried
-rather than hanging for the lifetime of a half-open TCP socket. The sign call,
-which has no progress to measure, is bounded by the same timeout as a plain
-deadline. The 3-minute default suits almost everyone; raise it only if your
+rather than hanging for the lifetime of a half-open TCP socket. The sign call
+and the source read, which have no progress to measure, are each bounded by the
+same timeout as a plain deadline — so the worst case for one attempt is up to
+three windows, not one. The 3-minute default suits almost everyone; raise it only if your
 users sit behind proxies that buffer a whole part before forwarding it (so no
 progress is visible mid-part), and lower it if you want a dead connection
 declared failed sooner.
