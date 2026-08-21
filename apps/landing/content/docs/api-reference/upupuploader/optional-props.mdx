@@ -304,7 +304,7 @@ Multipart and tus are both explicit protocols; there is no automatic selection.
 />
 ```
 
-The multipart form takes `thresholdBytes`, `chunkSizeBytes`, and `persist`. The tus form requires `endpoint` and takes `chunkSizeBytes`, `retryDelays`, `storeFingerprintForResuming`, `removeFingerprintOnSuccess`, `headers`, `metadata`, and `parallelUploads`; `tus-js-client` is an optional dependency loaded on demand. Full protocol details are in [Resumable Uploads](/docs/resumable-uploads/).
+The multipart form takes `thresholdBytes`, `chunkSizeBytes`, `persist`, `retryDelays`, `partTimeoutMs`, `maxConcurrentParts`, and `autoResume`. The tus form requires `endpoint` and takes `chunkSizeBytes`, `retryDelays`, `storeFingerprintForResuming`, `removeFingerprintOnSuccess`, `headers`, `metadata`, and `parallelUploads`; `tus-js-client` is an optional dependency loaded on demand. Full protocol details, including every multipart field, are in [Resumable Uploads](/docs/resumable-uploads/).
 
 ### `crashRecovery`
 

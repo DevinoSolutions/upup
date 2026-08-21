@@ -4,6 +4,7 @@ import type {
     CredentialStrategy,
     UploadCredentials,
 } from '../../src/contracts-strategies'
+import { installXhrPartMock } from './xhr-part-mock'
 
 // MultipartUpload's `_credentials` param is unused by the implementation
 // (multipart auth flows through `credentials.signPart`/`initMultipartUpload`
@@ -50,15 +51,13 @@ function makeCredentials(): CredentialStrategy {
     }
 }
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
+const { puts } = installXhrPartMock()
 
 beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockImplementation(async (_url: string) => ({
-        ok: true,
+    puts.mockImplementation(async () => ({
         status: 200,
-        headers: new Headers({ ETag: '"etag"' }),
+        headers: { ETag: '"etag"' },
     }))
 })
 
@@ -79,7 +78,7 @@ describe('MultipartUpload — extended', () => {
         })
 
         expect(creds.signPart).toHaveBeenCalledTimes(1)
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 
     it('uses default chunk size when not specified', () => {
@@ -184,12 +183,10 @@ describe('MultipartUpload — extended', () => {
         // 400, not 500: a 5xx is transient and now retried (see
         // multipart-part-retry-and-stall-watchdog.test.ts) — a definitive 4xx
         // still propagates on the first attempt.
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
+        puts.mockResolvedValueOnce({
             status: 400,
             statusText: 'Bad Request',
-            text: () => Promise.resolve(''),
-            headers: new Headers(),
+            responseText: '',
         })
 
         await expect(

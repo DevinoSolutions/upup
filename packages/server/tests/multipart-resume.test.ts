@@ -317,6 +317,40 @@ describe('POST /multipart/resume — token rejection', () => {
         expect(body.code).toBe('expired')
     })
 
+    it('clamps the re-issued exp to the resume window, so a short window really is the token lifetime cap', async () => {
+        // The whole point of multipartResumeWindowSeconds as a leak mitigation:
+        // an operator who shortens it must actually shorten how long a stolen
+        // token stays usable. A re-issued token handed a fresh full TTL would
+        // outlive the window by up to an hour and make that promise a lie.
+        const windowSeconds = 600
+        const handler = createUpupHandler({
+            ...config,
+            multipartResumeWindowSeconds: windowSeconds,
+        })
+        const agedSeconds = 300 // still inside the 600s window
+        const presented = await mintToken({}, agedSeconds)
+        const issuedAt = (
+            await verifyUploadToken(SECRET, presented, Date.now(), {
+                allowExpired: true,
+            })
+        ).iat as number
+
+        const body = (await (
+            await resume(handler, presented)
+        ).json()) as ResumeBody
+        const refreshed = await verifyUploadToken(
+            SECRET,
+            body.token as string,
+            Date.now(),
+        )
+
+        // exp is pinned to the window edge, NOT now + full TTL.
+        expect(refreshed.exp).toBe(issuedAt + windowSeconds)
+        expect(refreshed.exp).toBeLessThan(
+            nowSeconds() + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+        )
+    })
+
     it('rejects malformed JSON on the resume route with 400 BAD_REQUEST', async () => {
         const handler = createUpupHandler(config)
         const res = await handler(

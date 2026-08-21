@@ -687,6 +687,28 @@ export class UpupCore {
                 }
             }
 
+            // A pause or cancel can land DURING the PROCESSING phase — the
+            // offline handler firing, or the user acting, before uploadManager
+            // exists to abort. There is no transfer to stop yet, so it only
+            // records intent (pauseRequested / cancelRequested); without this
+            // guard runUpload marches straight on and starts the transfer
+            // anyway — over the very network the offline pause meant to avoid,
+            // burning the retry budget and stranding the run in a state
+            // online/resume can no longer recognize as PAUSED. Honor the
+            // requested pause/cancel here, before any transfer begins; the
+            // existing resume()/online path continues the held run later.
+            if (this.destroyed || this.cancelRequested) {
+                this._status = UploadStatus.IDLE
+                this._error = null
+                this.emitter.emit('state-change', { status: this._status })
+                return [...this.files.values()]
+            }
+            if (this.pauseRequested) {
+                this._status = UploadStatus.PAUSED
+                this.emitter.emit('state-change', { status: this._status })
+                return [...this.files.values()]
+            }
+
             this._status = UploadStatus.UPLOADING
             this.emitter.emit('state-change', { status: this._status })
 
@@ -765,8 +787,14 @@ export class UpupCore {
         // re-marks its own pauses right after this call, so a surviving flag
         // here would let `online` overrule a pause the user chose.
         this.offlinePausedRun = false
+        // Mark the pause request unconditionally, not only when a transfer is
+        // in flight. A pause during the PROCESSING phase has no uploadManager
+        // to abort yet, but the intent is identical and runUpload's guard reads
+        // this flag to hold the run before it ever starts the transfer. A
+        // request set while no run is active is harmless: resetRunFlags clears
+        // it at the head of the next run and resume() clears it too.
+        this.pauseRequested = true
         if (this.uploadManager) {
-            this.pauseRequested = true
             this.uploadManager.abort()
             this.uploadManager = null
         }
@@ -820,10 +848,44 @@ export class UpupCore {
                 .finally(() => {
                     this.activeRun = null
                 })
+            return
+        }
+
+        // An empty incomplete list means every present file is already keyed —
+        // reachable when an autoResume (or a manual Resume) fires against a
+        // crash snapshot saved in the window after the last file's key landed
+        // but before runUpload set SUCCESSFUL. No run starts and no .finally
+        // runs, so without this the status is stranded at UPLOADING forever — a
+        // permanent spinner. Settle to the terminal status the finished run
+        // would have reached. Scoped to `incomplete.length === 0`: a non-empty
+        // list with no upload target is a different case that keeps its
+        // just-set status, and an empty core has nothing to settle.
+        if (incomplete.length === 0 && this.files.size > 0) {
+            const allComplete = [...this.files.values()].every(
+                file => file.key != null,
+            )
+            this._status = allComplete
+                ? UploadStatus.SUCCESSFUL
+                : UploadStatus.IDLE
+            if (allComplete) {
+                this.emitter.emit('upload-all-complete', [
+                    ...this.files.values(),
+                ])
+                this.queueCrashRecoveryClear().catch(
+                    this.warnCrashRecoveryFailure('clear'),
+                )
+            }
+            this.emitter.emit('state-change', { status: this._status })
         }
     }
 
     cancel(): void {
+        // An explicit cancel ends the run for good — it can never be the pause
+        // `online` is allowed to auto-resume. Every other lifecycle method that
+        // leaves the offline-pause state (pause/resume/the online timer) clears
+        // this flag; cancel must too, or a cancel taken while offline leaves the
+        // flag set and a later online resurrects the upload the user killed.
+        this.offlinePausedRun = false
         this.cancelRequested = true
         if (this.uploadManager) {
             this.uploadManager.abort()

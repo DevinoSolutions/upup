@@ -479,4 +479,72 @@ describe('crash-recovery autoResume', () => {
         // with no rejection IS the assertion.
         await new Promise(resolve => setTimeout(resolve, 10))
     })
+
+    /** A snapshot saved in the window after the last file's key landed but
+     *  before runUpload set the run SUCCESSFUL: status still reads UPLOADING,
+     *  yet every file is already keyed. */
+    function seedAllKeyedActiveSnapshot(
+        storage: ReturnType<typeof makeInstantStorage>,
+    ) {
+        const file = Object.assign(
+            new File([new Uint8Array(64)], 'seed.mp4', {
+                type: 'video/mp4',
+                lastModified: 1_700_000_000_000,
+            }),
+            {
+                id: 'seed-1',
+                source: FileSource.LOCAL,
+                status: UploadStatus.SUCCESSFUL,
+                key: 'uploads/seed.mp4',
+                metadata: {},
+            },
+        )
+        storage.store.set(STORAGE_KEY, {
+            files: [['seed-1', file]],
+            status: UploadStatus.UPLOADING,
+        })
+    }
+
+    it('autoResume into an all-keyed crash snapshot settles SUCCESSFUL instead of a permanent UPLOADING spinner', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        seedAllKeyedActiveSnapshot(storage)
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            resumable: {
+                protocol: 'multipart',
+                thresholdBytes: 16,
+                autoResume: true,
+            },
+            crashRecovery: { storage },
+        })
+
+        // Restores PAUSED (the snapshot was active), then the deferred
+        // autoResume fires resume() into an empty incomplete list.
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        await vi.waitFor(() => {
+            expect(core.status).toBe(UploadStatus.SUCCESSFUL)
+        })
+        core.destroy()
+    })
+
+    it('a manual resume with every file already keyed settles SUCCESSFUL rather than stranding the status at UPLOADING', () => {
+        const core = new UpupCore({ serverUrl: SERVER_URL })
+        const file = Object.assign(new File([new Uint8Array(8)], 'done.txt'), {
+            id: 'done-1',
+            source: FileSource.LOCAL,
+            status: UploadStatus.SUCCESSFUL,
+            key: 'uploads/done.txt',
+            metadata: {},
+        })
+        core.restore({
+            files: [['done-1', file]],
+            status: UploadStatus.PAUSED,
+        })
+
+        core.resume()
+        expect(core.status).toBe(UploadStatus.SUCCESSFUL)
+        core.destroy()
+    })
 })

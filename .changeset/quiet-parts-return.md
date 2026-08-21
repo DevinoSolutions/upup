@@ -35,6 +35,10 @@ browser crash, resuming at the last completed part instead of restarting.
   story:** IndexedDB restores the file list (as `PAUSED`), `resume()` re-attaches
   the transfer mid-file. Fingerprint preservation through crash-recovery revival
   is test-pinned.
+- **UI: a paused file with progress can now be removed.** Previously any file
+  carrying progress had its remove control disabled; a restored/paused file now
+  carries seeded progress, so the rule changed to "locked only while actively in
+  flight". Identical across all five component ports.
 - **New config `multipartResumeWindowSeconds`** on `UpupServerConfig`, default
   `86400` (24h, matching the client session TTL). `0` disables the route, which
   clients see as an old server and fall back from gracefully. A negative or

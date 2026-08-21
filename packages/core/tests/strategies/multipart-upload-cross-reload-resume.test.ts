@@ -22,6 +22,7 @@ import type {
     CredentialStrategy,
     UploadCredentials,
 } from '../../src/contracts-strategies'
+import { installXhrPartMock } from './xhr-part-mock'
 
 // Minimal in-memory Storage stand-in — test infrastructure bridging the Web
 // Storage API the session store expects onto vitest's `node` environment (no
@@ -138,7 +139,7 @@ function storageError(
     })
 }
 
-const mockFetch = vi.fn()
+const { puts, install: installXhr, respondOk } = installXhrPartMock()
 
 describe('MultipartUpload — cross-reload resume', () => {
     let storage: MemoryStorage
@@ -147,14 +148,10 @@ describe('MultipartUpload — cross-reload resume', () => {
         vi.clearAllMocks()
         storage = new MemoryStorage()
         vi.stubGlobal('localStorage', storage)
-        mockFetch.mockImplementation(async (url: string) => ({
-            ok: true,
-            status: 200,
-            headers: new Headers({
-                ETag: `"etag-${/part(\d+)/.exec(url)?.[1] ?? 'x'}"`,
-            }),
-        }))
-        vi.stubGlobal('fetch', mockFetch)
+        // afterEach's unstubAllGlobals also clears the XHR stand-in, so
+        // re-install it (and the healthy default responder) each test.
+        installXhr()
+        respondOk()
     })
 
     afterEach(() => {
@@ -207,7 +204,7 @@ describe('MultipartUpload — cross-reload resume', () => {
                 token: 'fresh-token',
                 partNumber: 3,
             })
-            expect(mockFetch).toHaveBeenCalledTimes(1)
+            expect(puts).toHaveBeenCalledTimes(1)
         })
 
         it('completes with the resumed parts merged into the newly uploaded ones, in part order', async () => {
@@ -258,7 +255,7 @@ describe('MultipartUpload — cross-reload resume', () => {
             })
 
             expect(creds.signPart).not.toHaveBeenCalled()
-            expect(mockFetch).not.toHaveBeenCalled()
+            expect(puts).not.toHaveBeenCalled()
             expect(creds.completeMultipartUpload).toHaveBeenCalledTimes(1)
         })
 
@@ -660,12 +657,10 @@ describe('MultipartUpload — cross-reload resume', () => {
             const file = makeFile()
             const fingerprint = fileFingerprint(file)
             const creds = makeCredentials()
-            mockFetch.mockResolvedValue({
-                ok: false,
+            puts.mockResolvedValue({
                 status: 500,
                 statusText: 'Internal Server Error',
-                text: () => Promise.resolve(''),
-                headers: new Headers(),
+                responseText: '',
             })
 
             await expect(
@@ -681,16 +676,50 @@ describe('MultipartUpload — cross-reload resume', () => {
 
         it('still aborts server-side on failure when persistence is switched off', async () => {
             const creds = makeCredentials()
-            mockFetch.mockResolvedValue({
-                ok: false,
+            puts.mockResolvedValue({
                 status: 500,
                 statusText: 'Internal Server Error',
-                text: () => Promise.resolve(''),
-                headers: new Headers(),
+                responseText: '',
             })
 
             await expect(
                 makeStrategy(creds, false).upload(
+                    makeFile(),
+                    unusedCredentials,
+                    {
+                        onProgress: vi.fn(),
+                        signal: new AbortController().signal,
+                    },
+                ),
+            ).rejects.toThrow()
+
+            expect(creds.abortMultipartUpload).toHaveBeenCalledWith({
+                token: 'init-token',
+            })
+        })
+
+        // Surface2: skipping the abort is only safe when a later attempt can
+        // resume into the surviving upload. A persist:true strategy whose
+        // credentials cannot resume (no `resumeMultipartUpload` bound) would
+        // otherwise orphan the server-side parts forever for no benefit — so the
+        // best-effort abort must still fire.
+        it('aborts server-side on failure when persist is on but the strategy cannot resume', async () => {
+            const creds = makeCredentials()
+            const withoutResume: CredentialStrategy = {
+                getPresignedUrl: creds.getPresignedUrl,
+                initMultipartUpload: creds.initMultipartUpload,
+                signPart: creds.signPart,
+                completeMultipartUpload: creds.completeMultipartUpload,
+                abortMultipartUpload: creds.abortMultipartUpload,
+            }
+            puts.mockResolvedValue({
+                status: 500,
+                statusText: 'Internal Server Error',
+                responseText: '',
+            })
+
+            await expect(
+                makeStrategy(withoutResume).upload(
                     makeFile(),
                     unusedCredentials,
                     {
@@ -732,9 +761,8 @@ describe('MultipartUpload — cross-reload resume', () => {
                 controller.abort()
                 return { uploadUrl: 'https://s3/part?signed', expiresIn: 3600 }
             })
-            mockFetch.mockRejectedValue(
-                new DOMException('Aborted', 'AbortError'),
-            )
+            // The abort lands during signing, so the strategy throws before it
+            // PUTs any part — the default healthy responder is simply never hit.
 
             await expect(
                 makeStrategy(creds).upload(file, unusedCredentials, {
@@ -745,6 +773,51 @@ describe('MultipartUpload — cross-reload resume', () => {
 
             expect(creds.abortMultipartUpload).not.toHaveBeenCalled()
             expect(loadSession(fingerprint)?.token).toBe('init-token')
+        })
+    })
+
+    // C1 (data corruption): an abort that lands while `tryResume` is in flight
+    // — before any part starts — used to break the part loop on its first pass
+    // with `completedParts` seeded only from the server's already-stored parts,
+    // then fall straight into `completeMultipartUpload`. Because init signs
+    // `smin: 0`, the server could not reject the short upload, so the run
+    // assembled a TRUNCATED object and returned it as SUCCESS. The strategy must
+    // instead throw, converting the abort into a recorded failure.
+    describe('an abort between resume and the first part never completes a truncated object', () => {
+        it('throws instead of completing when the signal aborts during tryResume, and never calls completeMultipartUpload', async () => {
+            const file = makeFile()
+            const fingerprint = fileFingerprint(file)
+            saveSession(fingerprint, makeSession())
+            const creds = makeCredentials()
+            const controller = new AbortController()
+            // The abort lands as resume resolves — before part 3 (the only
+            // missing part) is signed or uploaded. Parts 1 and 2 are all the
+            // server holds: completing now would drop part 3 silently.
+            creds.resumeMultipartUpload.mockImplementation(async () => {
+                controller.abort()
+                return {
+                    key: 'uploads/big.zip',
+                    token: 'fresh-token',
+                    parts: [
+                        { partNumber: 1, eTag: '"e1"', size: PART_SIZE },
+                        { partNumber: 2, eTag: '"e2"', size: PART_SIZE },
+                    ],
+                }
+            })
+
+            await expect(
+                makeStrategy(creds).upload(file, unusedCredentials, {
+                    onProgress: vi.fn(),
+                    signal: controller.signal,
+                }),
+            ).rejects.toThrow('Upload aborted')
+
+            expect(creds.signPart).not.toHaveBeenCalled()
+            expect(puts).not.toHaveBeenCalled()
+            expect(creds.completeMultipartUpload).not.toHaveBeenCalled()
+            // persist + a bound resume: the session survives so the next attempt
+            // can finish the upload cleanly.
+            expect(loadSession(fingerprint)?.token).toBe('fresh-token')
         })
     })
 

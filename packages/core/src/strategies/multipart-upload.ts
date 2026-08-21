@@ -12,6 +12,7 @@ import {
     type MultipartPart,
     type MultipartInitResponse,
     type MultipartResumeResponse,
+    type MultipartSignPartResponse,
 } from '../contracts'
 import {
     fileFingerprint,
@@ -250,10 +251,16 @@ export class MultipartUpload implements UploadStrategy {
         this.resumeMultipartUpload =
             credentials.resumeMultipartUpload?.bind(credentials)
         this.chunkSizeBytes = options.chunkSizeBytes ?? DEFAULT_CHUNK_SIZE
-        this.maxConcurrentParts = Math.max(
-            1,
-            Math.floor(options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT),
+        // A non-finite request (NaN from a `parseInt('')` settings input,
+        // Infinity) must not become the gate value: `activeParts.length >= NaN`
+        // is always false, which uncaps concurrency and fires every part at
+        // once. Fall back to the default when the number isn't usable.
+        const requestedConcurrency = Math.floor(
+            options.maxConcurrentParts ?? DEFAULT_MAX_CONCURRENT,
         )
+        this.maxConcurrentParts = Number.isFinite(requestedConcurrency)
+            ? Math.max(1, requestedConcurrency)
+            : DEFAULT_MAX_CONCURRENT
         this.persist = options.persist ?? false
         this.sessionScope = options.sessionScope
         this.retryDelays = options.retryDelays ?? DEFAULT_RETRY_DELAYS
@@ -377,8 +384,126 @@ export class MultipartUpload implements UploadStrategy {
         if (fingerprint && isUnresumableFailure(error)) {
             removeSession(fingerprint)
         }
-        if (this.persist) return
+        // Skipping the abort is only justified when a later attempt can actually
+        // resume into the surviving upload. Persist alone isn't enough: without
+        // a bound `resumeMultipartUpload` (a custom strategy that omits it, or a
+        // client hitting an old server whose resume route 404s and tryResume
+        // returns null) the parts would be orphaned forever for no benefit.
+        if (this.persist && this.resumeMultipartUpload) return
         await this.credentials.abortMultipartUpload?.({ token }).catch(() => {}) // Best-effort abort
+    }
+
+    /**
+     * PUT one signed part over XMLHttpRequest, under an INACTIVITY watchdog.
+     *
+     * The watchdog resets on every `upload` progress event and fires only after
+     * `partTimeoutMs` with no forward motion at all. That distinction is the
+     * point: `fetch()` for a PUT resolves only once the whole body is sent, so a
+     * flat ceiling on total time aborts a large part on a slow-but-healthy link
+     * (a 5 MiB part under ~233 kbit/s crosses the 180s default) even though it
+     * is uploading fine. An inactivity timer kills the connection the watchdog
+     * was built for — one that has genuinely stopped moving bytes — without
+     * penalizing the slow one. Mirrors the XHR PUT in direct-upload.ts.
+     *
+     * Resolves with the part's ETag. Rejects with: the retryable stall on
+     * inactivity (`partStallError`); `UpupNetworkError('Upload aborted')` when
+     * the caller's signal aborts; a retryable `TypeError` on a network-level
+     * failure (the shape `fetch` produced, which `isRetryablePartFailure`
+     * already classifies); or an `uploadErrorFromResponse` on a non-2xx — its
+     * body read synchronously from `xhr.responseText`, so the whole request
+     * including the error body stays inside the one abort/inactivity window (the
+     * old `await response.text()` ran AFTER the watchdog was cleared and could
+     * hang a half-dead connection forever on the body read).
+     */
+    private putPart(
+        signed: MultipartSignPartResponse,
+        chunk: Blob,
+        partNumber: number,
+        signal: AbortSignal,
+    ): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            let stalled = false
+            let watchdog: ReturnType<typeof setTimeout> | undefined
+
+            const armWatchdog = () => {
+                clearTimeout(watchdog)
+                watchdog = setTimeout(() => {
+                    stalled = true
+                    xhr.abort()
+                }, this.partTimeoutMs)
+            }
+            const forwardAbort = () => {
+                xhr.abort()
+            }
+            const cleanup = () => {
+                clearTimeout(watchdog)
+                signal.removeEventListener('abort', forwardAbort)
+            }
+
+            // Any forward motion proves the connection is alive: restart the
+            // inactivity window instead of letting it count down against a
+            // healthy upload.
+            xhr.upload.addEventListener('progress', () => {
+                armWatchdog()
+            })
+
+            xhr.addEventListener('load', () => {
+                cleanup()
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const eTag =
+                        xhr.getResponseHeader('ETag') ?? `"part-${partNumber}"`
+                    resolve(eTag)
+                    return
+                }
+                const err = uploadErrorFromResponse({
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    body: xhr.responseText,
+                    kind: 'storage',
+                    operation: 'multipart-sign-part',
+                })
+                reject(err)
+            })
+
+            xhr.addEventListener('error', () => {
+                cleanup()
+                // A network-level failure reaches no verdict — the same thing
+                // `fetch` surfaces as a TypeError, which the retry predicate
+                // treats as retryable.
+                const err = new TypeError('Network error during part upload')
+                reject(err)
+            })
+
+            xhr.addEventListener('abort', () => {
+                cleanup()
+                // The watchdog's own abort is a retryable stall; any other abort
+                // is the caller cancelling the whole upload.
+                if (stalled && !isAborted(signal)) {
+                    const stallErr = partStallError(
+                        partNumber,
+                        this.partTimeoutMs,
+                    )
+                    reject(stallErr)
+                    return
+                }
+                const abortErr = new UpupNetworkError('Upload aborted')
+                reject(abortErr)
+            })
+
+            signal.addEventListener('abort', forwardAbort, { once: true })
+
+            xhr.open('PUT', signed.uploadUrl)
+            for (const [key, value] of Object.entries(
+                signed.uploadHeaders ?? {},
+            )) {
+                xhr.setRequestHeader(key, value)
+            }
+            // Arm before send so a connection that stalls before its first
+            // progress event still trips the watchdog.
+            armWatchdog()
+            xhr.send(chunk)
+        })
     }
 
     async upload(
@@ -525,9 +650,10 @@ export class MultipartUpload implements UploadStrategy {
             ).filter(partNumber => !alreadyUploaded.has(partNumber))
             const activeParts: Promise<void>[] = []
 
-            /** One sign+PUT attempt. Hangs are impossible by construction:
-             *  the sign call races the watchdog (its transport offers no
-             *  abort), the PUT is genuinely aborted by it. */
+            /** One sign+PUT attempt. Hangs are impossible by construction: the
+             *  sign call races the watchdog (its transport offers no abort), and
+             *  the PUT (see putPart) runs under an inactivity watchdog that
+             *  aborts it after `partTimeoutMs` with no upload progress. */
             const attemptPart = async (partNumber: number): Promise<void> => {
                 const start = (partNumber - 1) * partSize
                 const end = Math.min(start + partSize, fileSize)
@@ -557,59 +683,17 @@ export class MultipartUpload implements UploadStrategy {
                     throw new UpupNetworkError('Upload aborted')
                 }
 
-                // Upload the chunk, under the stall watchdog: a PUT that
-                // neither succeeds nor fails is aborted and rethrown as a
-                // retryable stall — the failure mode a dying connection
-                // otherwise turns into a silent forever-hang.
-                const attemptController = new AbortController()
-                const forwardAbort = () => {
-                    attemptController.abort()
-                }
-                options.signal.addEventListener('abort', forwardAbort, {
-                    once: true,
-                })
-                let stalled = false
-                const watchdog = setTimeout(() => {
-                    stalled = true
-                    attemptController.abort()
-                }, this.partTimeoutMs)
-
-                let response: Response
-                try {
-                    response = await fetch(signed.uploadUrl, {
-                        method: 'PUT',
-                        headers: signed.uploadHeaders ?? {},
-                        body: chunk,
-                        signal: attemptController.signal,
-                    })
-                } catch (error) {
-                    if (stalled && !isAborted(options.signal)) {
-                        const stallErr = partStallError(
-                            partNumber,
-                            this.partTimeoutMs,
-                        )
-                        throw stallErr
-                    }
-                    throw error
-                } finally {
-                    clearTimeout(watchdog)
-                    options.signal.removeEventListener('abort', forwardAbort)
-                }
-
-                if (!response.ok) {
-                    const body = await response.text().catch(() => '')
-                    const err = uploadErrorFromResponse({
-                        status: response.status,
-                        statusText: response.statusText,
-                        body,
-                        kind: 'storage',
-                        operation: 'multipart-sign-part',
-                    })
-                    throw err
-                }
-
-                const eTag =
-                    response.headers.get('ETag') ?? `"part-${partNumber}"`
+                // Upload the chunk over XHR (mirrors direct-upload.ts) so
+                // upload-progress events feed the watchdog. putPart makes it an
+                // INACTIVITY timer rather than a flat ceiling on total upload
+                // time: a slow-but-steady link is never aborted, a genuinely
+                // hung connection still is.
+                const eTag = await this.putPart(
+                    signed,
+                    chunk,
+                    partNumber,
+                    options.signal,
+                )
                 completedParts.push({ partNumber, eTag })
 
                 totalUploaded += end - start
@@ -660,6 +744,18 @@ export class MultipartUpload implements UploadStrategy {
 
             // Wait for remaining parts
             await Promise.all(activeParts)
+
+            // An abort that lands before any part starts — while tryResume is
+            // in flight, or between the resume/init and the first iteration —
+            // breaks the loop above on its first pass with `completedParts`
+            // holding only the parts the server already stored. Completing here
+            // would assemble a TRUNCATED object and return it as SUCCESS; init
+            // signs `smin: 0`, so the server cannot reject the short upload.
+            // Route the abort into the failure path (catch → handleUploadFailure
+            // → rethrow) so the run records a failure and preserves the session.
+            if (isAborted(options.signal)) {
+                throw new UpupNetworkError('Upload aborted')
+            }
 
             // 3. Complete multipart upload
             completedParts.sort((a, b) => a.partNumber - b.partNumber)

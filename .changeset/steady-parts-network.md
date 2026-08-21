@@ -17,11 +17,13 @@ client-side guard for S3's 10,000-part cap.
   short. Part retries sit inside one run; `maxRetries` still governs whole-run
   retries around them.
 - **Part stall watchdog — new `resumable.partTimeoutMs`** (default `180000`).
-  A part attempt that gets no response within the window is aborted and
-  surfaces as a retryable `UpupErrorCode.TIMEOUT` instead of hanging the
-  upload on a dead connection forever. Applies to both the sign call and the
-  PUT. The 3-minute default still lets a full 5 MiB part through a
-  ~230 kbit/s link.
+  An inactivity timer, not a deadline on the whole transfer: a part is timed
+  out only after this long with no upload progress at all, so a slow-but-steady
+  link is never penalized no matter the part size. A genuinely stalled or dead
+  connection is aborted and surfaces as a retryable `UpupErrorCode.TIMEOUT`
+  instead of hanging the upload forever. The PUT is measured by upload
+  progress; the sign call, which has none, is bounded by the same value as a
+  plain deadline.
 - **Connectivity awareness — new core option `networkAware`** (default on,
   no-op outside a browser). Going offline mid-upload pauses the run — with
   multipart `persist` on, that keeps the server-side session alive instead of

@@ -13,6 +13,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MultipartUpload } from '../../src/strategies/multipart-upload'
 import type { CredentialStrategy } from '../../src/contracts-strategies'
 import type { PresignedUrlResponse } from '@upupjs/core'
+import {
+    installXhrPartMock,
+    type PartRequest,
+    type PartResponse,
+} from './xhr-part-mock'
 
 const PART = 1024 // tiny parts keep fixtures cheap; sizing math is unchanged
 
@@ -53,26 +58,22 @@ function makeFile(parts = 2): File {
     })
 }
 
-function okResponse(partNumber: number) {
-    return {
-        ok: true,
-        status: 200,
-        headers: new Headers({ ETag: `"etag-${partNumber}"` }),
-    }
+function okResponse(partNumber: number): PartResponse {
+    return { status: 200, headers: { ETag: `"etag-${partNumber}"` } }
 }
 
-function errorResponse(status: number, body = '') {
-    return {
-        ok: false,
-        status,
-        statusText: `HTTP ${status}`,
-        text: () => Promise.resolve(body),
-        headers: new Headers(),
-    }
+function errorResponse(status: number, body = ''): PartResponse {
+    return { status, statusText: `HTTP ${status}`, responseText: body }
 }
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
+/** A PUT that neither reports progress nor settles — the pre-watchdog
+ *  forever-hang. Only the strategy's inactivity watchdog (or the caller's
+ *  signal) ends it, which is exactly the path these tests exercise. */
+function neverSettles(): Promise<PartResponse> {
+    return new Promise<PartResponse>(() => {})
+}
+
+const { puts } = installXhrPartMock()
 
 function makeStrategy(overrides: {
     retryDelays?: number[]
@@ -89,15 +90,15 @@ function makeStrategy(overrides: {
 }
 
 beforeEach(() => {
-    mockFetch.mockReset()
+    puts.mockReset()
 })
 
 describe('per-part retry on transient failures', () => {
     it('a 503 on one part is retried on the retryDelays schedule and the upload completes', async () => {
         const strategy = makeStrategy({ retryDelays: [0, 0] })
         let part2Attempts = 0
-        mockFetch.mockImplementation(async (url: string) => {
-            const part = Number(url.match(/part(\d)/)?.[1])
+        puts.mockImplementation(async (req: PartRequest) => {
+            const part = Number(req.url.match(/part(\d)/)?.[1])
             if (part === 2 && part2Attempts++ === 0) {
                 return errorResponse(
                     503,
@@ -115,18 +116,18 @@ describe('per-part retry on transient failures', () => {
         expect(result.key).toBe('uploads/big.zip')
         expect(part2Attempts).toBe(2)
         // 2 parts + 1 retry of part 2
-        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(puts).toHaveBeenCalledTimes(3)
     })
 
-    it('a network-level fetch rejection (TypeError) is retried, not fatal', async () => {
+    it('a network-level PUT rejection (TypeError) is retried, not fatal', async () => {
         const strategy = makeStrategy({ retryDelays: [0] })
         let first = true
-        mockFetch.mockImplementation(async (url: string) => {
+        puts.mockImplementation(async (req: PartRequest) => {
             if (first) {
                 first = false
                 throw new TypeError('Failed to fetch')
             }
-            return okResponse(Number(url.match(/part(\d)/)?.[1]))
+            return okResponse(Number(req.url.match(/part(\d)/)?.[1]))
         })
 
         const result = await strategy.upload(makeFile(1), unusedCredentials, {
@@ -135,12 +136,12 @@ describe('per-part retry on transient failures', () => {
         })
 
         expect(result.key).toBe('uploads/big.zip')
-        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(puts).toHaveBeenCalledTimes(2)
     })
 
     it('a definitive 4xx (403) propagates on the FIRST attempt — no retry hides a verdict', async () => {
         const strategy = makeStrategy({ retryDelays: [0, 0, 0] })
-        mockFetch.mockResolvedValue(
+        puts.mockResolvedValue(
             errorResponse(
                 403,
                 '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>',
@@ -155,12 +156,12 @@ describe('per-part retry on transient failures', () => {
             .catch((e: unknown) => e as Error & { code?: string })
 
         expect((err as { code?: string }).code).toBe('SignatureDoesNotMatch')
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 
     it('an exhausted retryDelays budget surfaces the last transient error', async () => {
         const strategy = makeStrategy({ retryDelays: [0] })
-        mockFetch.mockResolvedValue(errorResponse(503))
+        puts.mockResolvedValue(errorResponse(503))
 
         await expect(
             strategy.upload(makeFile(1), unusedCredentials, {
@@ -169,12 +170,12 @@ describe('per-part retry on transient failures', () => {
             }),
         ).rejects.toMatchObject({ status: 503 })
         // initial attempt + exactly one retry
-        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(puts).toHaveBeenCalledTimes(2)
     })
 
     it('retryDelays: [] restores single-attempt semantics for transient failures', async () => {
         const strategy = makeStrategy({ retryDelays: [] })
-        mockFetch.mockResolvedValue(errorResponse(503))
+        puts.mockResolvedValue(errorResponse(503))
 
         await expect(
             strategy.upload(makeFile(1), unusedCredentials, {
@@ -182,25 +183,26 @@ describe('per-part retry on transient failures', () => {
                 signal: new AbortController().signal,
             }),
         ).rejects.toMatchObject({ status: 503 })
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 })
 
 describe('part stall watchdog', () => {
-    it('a PUT that never settles is aborted at partTimeoutMs and the retry completes the upload', async () => {
+    // The watchdog is now an INACTIVITY timer, not a flat ceiling on total
+    // part-upload time: it fires only after `partTimeoutMs` with NO upload
+    // progress. These tests drive a PUT that reports no progress at all, which
+    // is the genuine-stall case the watchdog exists to kill.
+    it('a PUT that reports no progress at all is aborted after partTimeoutMs of inactivity, and the retry completes the upload', async () => {
         const strategy = makeStrategy({ retryDelays: [0], partTimeoutMs: 50 })
         let first = true
-        mockFetch.mockImplementation(async (url: string, init: RequestInit) => {
+        puts.mockImplementation((req: PartRequest) => {
             if (first) {
                 first = false
-                // Settle ONLY on abort — the pre-watchdog forever-hang.
-                return new Promise((_, reject) => {
-                    init.signal?.addEventListener('abort', () =>
-                        reject(new DOMException('Aborted', 'AbortError')),
-                    )
-                })
+                return neverSettles()
             }
-            return okResponse(Number(url.match(/part(\d)/)?.[1]))
+            return Promise.resolve(
+                okResponse(Number(req.url.match(/part(\d)/)?.[1])),
+            )
         })
 
         const result = await strategy.upload(makeFile(1), unusedCredentials, {
@@ -209,19 +211,57 @@ describe('part stall watchdog', () => {
         })
 
         expect(result.key).toBe('uploads/big.zip')
-        expect(mockFetch).toHaveBeenCalledTimes(2)
+        expect(puts).toHaveBeenCalledTimes(2)
+    })
+
+    // The regression Surface1 fixes: a large part on a slow-but-healthy link
+    // uploads fine on master (no timeout ever existed) but a flat 180s ceiling
+    // would abort it, retry identically, and deterministically fail. With the
+    // inactivity watchdog, steady progress keeps the part alive however long the
+    // whole transfer takes. Fake timers let the part run PAST the ceiling a flat
+    // timeout would have enforced, deterministically.
+    it('a PUT that keeps reporting progress past the old flat deadline is never aborted — steady bytes are not a stall', async () => {
+        vi.useFakeTimers()
+        try {
+            const strategy = makeStrategy({
+                retryDelays: [],
+                partTimeoutMs: 100,
+            })
+            puts.mockImplementation(
+                (_req: PartRequest, progress: () => void) =>
+                    new Promise<PartResponse>(resolve => {
+                        // A progress tick every 60ms — each one resets the 100ms
+                        // inactivity window. Four ticks span 240ms, well past the
+                        // ceiling a flat timeout would have enforced at 100ms.
+                        let ticks = 0
+                        const iv = setInterval(() => {
+                            ticks++
+                            progress()
+                            if (ticks === 4) {
+                                clearInterval(iv)
+                                resolve(okResponse(1))
+                            }
+                        }, 60)
+                    }),
+            )
+
+            const upload = strategy.upload(makeFile(1), unusedCredentials, {
+                onProgress: vi.fn(),
+                signal: new AbortController().signal,
+            })
+            await vi.advanceTimersByTimeAsync(400)
+            const result = await upload
+
+            expect(result.key).toBe('uploads/big.zip')
+            expect(puts).toHaveBeenCalledTimes(1)
+        } finally {
+            vi.useRealTimers()
+        }
     })
 
     it('a stall that outlives the whole retry budget surfaces as a TIMEOUT error, never a hang', async () => {
         const strategy = makeStrategy({ retryDelays: [], partTimeoutMs: 50 })
-        mockFetch.mockImplementation(
-            (_url: string, init: RequestInit) =>
-                new Promise((_, reject) => {
-                    init.signal?.addEventListener('abort', () =>
-                        reject(new DOMException('Aborted', 'AbortError')),
-                    )
-                }),
-        )
+        puts.mockImplementation(() => neverSettles())
 
         await expect(
             strategy.upload(makeFile(1), unusedCredentials, {
@@ -246,8 +286,8 @@ describe('part stall watchdog', () => {
             retryDelays: [0],
             partTimeoutMs: 50,
         })
-        mockFetch.mockImplementation(async (url: string) =>
-            okResponse(Number(url.match(/part(\d)/)?.[1])),
+        puts.mockImplementation(async (req: PartRequest) =>
+            okResponse(Number(req.url.match(/part(\d)/)?.[1])),
         )
 
         const result = await strategy.upload(makeFile(1), unusedCredentials, {
@@ -264,7 +304,7 @@ describe('abort beats retry', () => {
     it('an abort during the backoff wait stops the part immediately — no further attempts', async () => {
         const controller = new AbortController()
         const strategy = makeStrategy({ retryDelays: [60_000] })
-        mockFetch.mockImplementation(async () => {
+        puts.mockImplementation(async () => {
             // Fail transiently, then abort while the 60s backoff is pending.
             setTimeout(() => controller.abort(), 10)
             return errorResponse(503)
@@ -279,7 +319,7 @@ describe('abort beats retry', () => {
         ).rejects.toThrow()
         // Well under the 60s delay: the abort woke the backoff sleep.
         expect(Date.now() - started).toBeLessThan(5_000)
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 
     it('an abort mid-attempt propagates as an abort, not as a retryable stall', async () => {
@@ -288,15 +328,12 @@ describe('abort beats retry', () => {
             retryDelays: [0, 0],
             partTimeoutMs: 60_000,
         })
-        mockFetch.mockImplementation(
-            (_url: string, init: RequestInit) =>
-                new Promise((_, reject) => {
-                    init.signal?.addEventListener('abort', () =>
-                        reject(new DOMException('Aborted', 'AbortError')),
-                    )
-                    controller.abort()
-                }),
-        )
+        puts.mockImplementation((_req: PartRequest) => {
+            // Cancel the whole upload mid-PUT: the strategy must read this as
+            // the user's abort, not the watchdog's retryable stall.
+            controller.abort()
+            return neverSettles()
+        })
 
         await expect(
             strategy.upload(makeFile(1), unusedCredentials, {
@@ -304,6 +341,6 @@ describe('abort beats retry', () => {
                 signal: controller.signal,
             }),
         ).rejects.toThrow()
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 })

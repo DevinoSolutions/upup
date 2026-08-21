@@ -13,6 +13,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MultipartUpload } from '../../src/strategies/multipart-upload'
 import type { CredentialStrategy } from '../../src/contracts-strategies'
 import type { PresignedUrlResponse } from '@upupjs/core'
+import { installXhrPartMock, type PartRequest } from './xhr-part-mock'
 
 const PART = 1024 // tiny parts keep fixtures cheap; sizing math is unchanged
 
@@ -63,8 +64,7 @@ function makeStrategy(maxConcurrentParts?: number): MultipartUpload {
     })
 }
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
+const { puts } = installXhrPartMock()
 
 type ConcurrencyProbe = {
     /** Highest number of PUTs simultaneously unresolved. */
@@ -90,8 +90,8 @@ function probeInFlightPuts(): ConcurrencyProbe & { parked: Array<() => void> } {
     }
     let inFlight = 0
 
-    mockFetch.mockImplementation(async (url: string) => {
-        const partNumber = Number(url.match(/part(\d+)/)?.[1])
+    puts.mockImplementation(async (req: PartRequest) => {
+        const partNumber = Number(req.url.match(/part(\d+)/)?.[1])
         probe.issuedParts.push(partNumber)
         inFlight++
         probe.peakInFlight = Math.max(probe.peakInFlight, inFlight)
@@ -99,11 +99,7 @@ function probeInFlightPuts(): ConcurrencyProbe & { parked: Array<() => void> } {
             parked.push(resolve)
         })
         inFlight--
-        return {
-            ok: true,
-            status: 200,
-            headers: new Headers({ ETag: `"etag-${partNumber}"` }),
-        }
+        return { status: 200, headers: { ETag: `"etag-${partNumber}"` } }
     })
 
     return probe
@@ -157,7 +153,7 @@ async function uploadWithProbe(
 }
 
 beforeEach(() => {
-    mockFetch.mockReset()
+    puts.mockReset()
 })
 
 describe('multipart part concurrency', () => {
@@ -197,5 +193,18 @@ describe('multipart part concurrency', () => {
 
         expect(probe.peakInFlight).toBe(2)
         expect(probe.waves).toEqual([2, 2])
+    })
+
+    // A settings input parsed with `parseInt('')` yields NaN. Unguarded, the
+    // gate `activeParts.length >= NaN` is always false, so the loop never waits
+    // and fires EVERY part at once — the opposite of a concurrency cap. A
+    // non-finite request must fall back to the default of three.
+    it('a NaN maxConcurrentParts falls back to the default of three in flight, not unbounded', async () => {
+        const probe = await uploadWithProbe(makeStrategy(NaN), 6)
+
+        expect(probe.key).toBe('uploads/big.zip')
+        expect(probe.peakInFlight).toBe(3)
+        expect(probe.waves).toEqual([3, 3])
+        expect(probe.issuedParts).toHaveLength(6)
     })
 })

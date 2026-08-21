@@ -466,7 +466,15 @@ export async function handleMultipartResume(
             uid: payload.uid,
             smin: payload.smin,
             smax: payload.smax,
-            exp: nowSeconds + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+            // Clamp to the resume window, not a fresh full TTL. The window is
+            // the operator's stated cap on how long a leaked token stays
+            // usable (multipartResumeWindowSeconds); a re-issued token that
+            // outlived it by up to a full TTL would make that cap — and the
+            // documented leak mitigation — a lie.
+            exp: Math.min(
+                nowSeconds + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+                issuedAt + windowSeconds,
+            ),
             iat: issuedAt,
         })
 
