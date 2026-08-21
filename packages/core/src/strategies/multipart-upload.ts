@@ -58,12 +58,15 @@ export interface MultipartUploadOptions {
      */
     retryDelays?: number[] | undefined
     /**
-     * Watchdog for a single part attempt (the sign call + the part PUT). A
-     * request that neither succeeds nor fails within this window is aborted
-     * and counted as a transient failure, so a hung connection costs one
-     * `retryDelays` slot instead of hanging the whole upload forever. Size it
-     * for the slowest link a part must traverse: the default allows a 5 MiB
-     * part ~230 kbit/s.
+     * Watchdog budget applied to each PHASE of a part attempt separately: the
+     * sign call, the source read (parts small enough to be materialized —
+     * see MATERIALIZE_PART_MAX_BYTES), and the PUT, where it is an INACTIVITY
+     * window reset by upload progress. A phase that neither succeeds nor
+     * fails within its window is aborted and counted as a transient failure,
+     * so a hung connection or a hung blob read costs one `retryDelays` slot
+     * instead of hanging the whole upload forever (worst case per attempt is
+     * therefore up to 3 × this value, not 1 ×). A slow-but-progressing PUT is
+     * never aborted — only one with no forward motion at all.
      */
     partTimeoutMs?: number | undefined
 }
@@ -72,6 +75,11 @@ const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024 // 5 MiB
 const DEFAULT_MAX_CONCURRENT = 3
 const DEFAULT_RETRY_DELAYS = [0, 1000, 3000, 5000]
 const DEFAULT_PART_TIMEOUT_MS = 180_000
+/** Parts at or under this size are materialized to an ArrayBuffer before the
+ *  PUT (the Firefox revived-blob fix in putPart); larger parts keep streaming
+ *  as Blobs so huge files (partSize grows with file size past ~48 GiB via the
+ *  10,000-part cap) can't turn the fix into an unbounded-heap regression. */
+const MATERIALIZE_PART_MAX_BYTES = 16 * 1024 * 1024
 /** S3's hard cap on parts per upload. `@upupjs/server` already sizes parts to
  *  respect it (providers/aws.ts computePartSize); this client-side floor covers
  *  servers that return no partSize, where the 5 MiB default would otherwise
@@ -406,7 +414,9 @@ export class MultipartUpload implements UploadStrategy {
      * penalizing the slow one. Mirrors the XHR PUT in direct-upload.ts.
      *
      * Resolves with the part's ETag. Rejects with: the retryable stall on
-     * inactivity (`partStallError`); `UpupNetworkError('Upload aborted')` when
+     * inactivity (`partStallError`) — covering both the slice READ and the PUT;
+     * a retryable `UPLOAD_FAILED` when the slice read itself rejects;
+     * `UpupNetworkError('Upload aborted')` when
      * the caller's signal aborts; a retryable `TypeError` on a network-level
      * failure (the shape `fetch` produced, which `isRetryablePartFailure`
      * already classifies); or an `uploadErrorFromResponse` on a non-2xx — its
@@ -415,12 +425,80 @@ export class MultipartUpload implements UploadStrategy {
      * old `await response.text()` ran AFTER the watchdog was cleared and could
      * hang a half-dead connection forever on the body read).
      */
-    private putPart(
+    private async putPart(
         signed: MultipartSignPartResponse,
         chunk: Blob,
         partNumber: number,
         signal: AbortSignal,
     ): Promise<string> {
+        // Materialize the slice to an ArrayBuffer BEFORE handing it to XHR.
+        // Firefox streams a Blob body lazily during send(); when the Blob is a
+        // slice of a File revived from IndexedDB after a page reload, that lazy
+        // read can stall — the request headers go out but the body never does,
+        // so the store times out the part (observed as a 503 storm on both
+        // MinIO and Backblaze B2, Firefox-only, reload-resume-only; the same
+        // revived blob READS fine via arrayBuffer(), so only the lazy XHR
+        // streaming path is affected). Reading the bytes up front turns a
+        // broken source into a clean rejection instead of a hanging bodyless
+        // request: a read REJECTION (Firefox NotReadableError on an
+        // evicted/stale blob) is a retryable failure that costs one
+        // `retryDelays` slot — the retry re-slices the SAME File, so it
+        // recovers only if the backing store does — and a read that never
+        // settles falls under the same `partTimeoutMs` inactivity budget as
+        // the PUT. The caller's signal joins the race so pause/cancel/destroy
+        // interrupt a hung read immediately instead of waiting the budget out.
+        //
+        // Size-gated: partSize GROWS with file size (the 10,000-part cap
+        // raises it past 5 MiB above ~48 GiB), and per the XHR spec send()
+        // copies a BufferSource — so materializing an arbitrarily large part
+        // would trade this Firefox-only stall for an unbounded-heap
+        // regression in every browser. Oversized parts keep the streaming
+        // Blob path (the pre-fix behavior); at the ceiling the transient cost
+        // is bounded by maxConcurrentParts × 2 × MATERIALIZE_PART_MAX_BYTES.
+        if (isAborted(signal)) {
+            throw new UpupNetworkError('Upload aborted')
+        }
+        let body: ArrayBuffer | Blob = chunk
+        if (chunk.size <= MATERIALIZE_PART_MAX_BYTES) {
+            let readTimer: ReturnType<typeof setTimeout> | undefined
+            let onReadAbort: (() => void) | undefined
+            body = await Promise.race([
+                chunk.arrayBuffer().catch((cause: unknown) => {
+                    const readErr = new UpupError(
+                        `Part ${partNumber} source read failed: ${
+                            cause instanceof Error
+                                ? cause.message
+                                : String(cause)
+                        }`,
+                        UpupErrorCode.UPLOAD_FAILED,
+                        true,
+                    )
+                    throw readErr
+                }),
+                new Promise<never>((_, reject) => {
+                    readTimer = setTimeout(() => {
+                        reject(partStallError(partNumber, this.partTimeoutMs))
+                    }, this.partTimeoutMs)
+                }),
+                new Promise<never>((_, reject) => {
+                    onReadAbort = () => {
+                        const abortErr = new UpupNetworkError('Upload aborted')
+                        reject(abortErr)
+                    }
+                    signal.addEventListener('abort', onReadAbort, {
+                        once: true,
+                    })
+                }),
+            ]).finally(() => {
+                clearTimeout(readTimer)
+                if (onReadAbort) {
+                    signal.removeEventListener('abort', onReadAbort)
+                }
+            })
+        }
+        if (isAborted(signal)) {
+            throw new UpupNetworkError('Upload aborted')
+        }
         return new Promise<string>((resolve, reject) => {
             const xhr = new XMLHttpRequest()
             let stalled = false
@@ -502,7 +580,7 @@ export class MultipartUpload implements UploadStrategy {
             // Arm before send so a connection that stalls before its first
             // progress event still trips the watchdog.
             armWatchdog()
-            xhr.send(chunk)
+            xhr.send(body)
         })
     }
 

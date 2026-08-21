@@ -50,6 +50,10 @@ export class UpupCore {
     private _status: UploadStatus = UploadStatus.IDLE
     private _error: Error | null = null
     private crashRecovery: CrashRecoveryManager | null = null
+    // Only set when WE created the IndexedDBStorage (not user-supplied
+    // storage, whose lifecycle belongs to the caller) so destroy() can
+    // release its cached IndexedDB connection.
+    private crashRecoveryStorage: IndexedDBStorage | null = null
     private crashRecoveryUnsubscribe: (() => void) | null = null
     /** Every crash-recovery storage write flows through this one promise chain.
      *  Blob snapshots of large files make IndexedDB puts slow; fire-and-forget
@@ -211,9 +215,12 @@ export class UpupCore {
 
         const crashOptions =
             typeof crashRecovery === 'object' ? crashRecovery : {}
-        this.crashRecovery = new CrashRecoveryManager(
-            crashOptions.storage ?? new IndexedDBStorage(),
-        )
+        let storage = crashOptions.storage
+        if (!storage) {
+            this.crashRecoveryStorage = new IndexedDBStorage()
+            storage = this.crashRecoveryStorage
+        }
+        this.crashRecovery = new CrashRecoveryManager(storage)
         this.crashRecoveryUnsubscribe = this.on('state-change', () => {
             if (this.destroyed || this.files.size === 0) return
             this.queueCrashRecoverySync()
@@ -1152,6 +1159,10 @@ export class UpupCore {
         // Release the manager refs (F-148). Do NOT clear crash-recovery storage — a normal
         // unmount must leave a recoverable snapshot behind. fileManager is deliberately kept
         // (not nulled) so the files/progress getters keep working post-destroy.
+        // Closing the cached IndexedDB connection only releases the handle
+        // (pending transactions drain first); the snapshot data stays put.
+        this.crashRecoveryStorage?.close()
+        this.crashRecoveryStorage = null
         this.crashRecovery = null
         this.pipelineEngine = null
         this.fileOverrides.clear()
