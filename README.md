@@ -118,7 +118,7 @@ Express, Fastify, and Hono handlers ship as subpath exports
 - **S3-compatible storage.** AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi — any S3-compatible endpoint.
 - **Cloud drives.** Import from Google Drive, OneDrive, Dropbox, and Box, in client or server mode.
 - **More sources.** Drag-and-drop, file picker, camera, screen capture, audio recording, and link (URL) import.
-- **Resumable uploads.** Optional chunked/resumable strategy (tus) for large files, loaded on demand so it never weighs down the core bundle.
+- **Resumable uploads.** Optional for large files, in two forms: S3 multipart through `@upupjs/server`, which resumes at the last completed part after a reload or crash, or tus against an external tus server, loaded on demand so it never weighs down the core bundle.
 - **Image editor.** Crop, rotate, and annotate before upload (React / Preact only).
 - **i18n & theming.** ICU-based localization with 9 bundled locales and RTL support, plus a slot-level theming system that targets every rendered element.
 - **TypeScript-first.** Full type definitions out of the box.

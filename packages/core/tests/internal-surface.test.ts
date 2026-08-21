@@ -57,6 +57,7 @@ const EXPECTED_INTERNAL_VALUE_EXPORTS: string[] = [
     'fileIs3D',
     'fileNameFromContentDisposition',
     'getDir',
+    'isFileRemovalLocked',
     'isUploadActive',
     'isUploadIdle',
     'loadGoogleIdentityServices',

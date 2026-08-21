@@ -22,6 +22,11 @@ export enum UpupErrorCode {
     NO_UPLOAD_TARGET = 'NO_UPLOAD_TARGET',
     BAD_REQUEST = 'BAD_REQUEST',
     AUTH_REQUIRED = 'AUTH_REQUIRED',
+    /** The addressed resource is gone server-side — e.g. resuming a multipart
+     *  upload the storage provider has already completed, aborted, or reaped.
+     *  Always paired with a 4xx so the client starts fresh instead of retrying
+     *  something that will never come back. */
+    NOT_FOUND = 'NOT_FOUND',
 }
 
 export type RestrictionFailedReason =
@@ -94,6 +99,7 @@ export class UpupStorageError extends UpupError {
         | 'multipart-complete'
         | 'multipart-sign-part'
         | 'multipart-abort'
+        | 'multipart-resume'
     constructor(
         message: string,
         provider: string,

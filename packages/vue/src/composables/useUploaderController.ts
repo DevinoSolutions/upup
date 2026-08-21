@@ -99,6 +99,9 @@ export default function useUploaderController(
         stripExifData = false,
         contentDeduplication = false,
         crashRecovery = false,
+        // No destructure default: `undefined` must reach core so its default-on
+        // network awareness applies; only an explicit `false` opts out.
+        networkAware,
         sources,
         onError: errorHandler,
         onWarn: warningHandler,
@@ -175,6 +178,7 @@ export default function useUploaderController(
         autoUpload,
         maxConcurrentUploads,
         crashRecovery,
+        networkAware,
         allowedFileTypes:
             typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
         mini,

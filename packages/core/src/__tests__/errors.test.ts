@@ -40,14 +40,15 @@ describe('UpupErrorCode', () => {
             'NO_UPLOAD_TARGET',
             'BAD_REQUEST',
             'AUTH_REQUIRED',
+            'NOT_FOUND',
         ]
         for (const code of expected) {
             expect(Object.values(UpupErrorCode)).toContain(code)
         }
     })
 
-    it('has 23 distinct error codes', () => {
-        expect(new Set(Object.values(UpupErrorCode)).size).toBe(23)
+    it('has 24 distinct error codes', () => {
+        expect(new Set(Object.values(UpupErrorCode)).size).toBe(24)
     })
 })
 

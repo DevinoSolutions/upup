@@ -33,6 +33,10 @@ export interface FrameworkEntry {
     storyId: string
     /** Story id for the deterministic DOM-parity fixture (autoUpload off), per variant. */
     parityStoryIds: Record<ParityVariant, string>
+    /** Story id for the crash-restore contract (crashRecovery + multipart
+     *  resume, no network). The crash-restored-paused-file-stays-removable spec
+     *  seeds a snapshot + a persisted session before this story mounts. */
+    crashRestoreStoryId: string
 }
 
 export const FRAMEWORKS: FrameworkEntry[] = [
@@ -45,6 +49,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'react-uploader--parity-hero',
             crowded: 'react-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'react-uploader--crash-restore',
     },
     {
         name: 'vue',
@@ -55,6 +60,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'vue-uploader--parity-hero',
             crowded: 'vue-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'vue-uploader--crash-restore',
     },
     {
         name: 'svelte',
@@ -65,6 +71,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'svelte-uploader--parity-hero',
             crowded: 'svelte-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'svelte-uploader--crash-restore',
     },
     {
         name: 'vanilla',
@@ -75,6 +82,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'vanilla-uploader--parity-hero',
             crowded: 'vanilla-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'vanilla-uploader--crash-restore',
     },
     {
         name: 'angular',
@@ -85,6 +93,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'angular-uploader--parity-hero',
             crowded: 'angular-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'angular-uploader--crash-restore',
     },
     {
         name: 'preact',
@@ -95,6 +104,7 @@ export const FRAMEWORKS: FrameworkEntry[] = [
             hero: 'preact-uploader--parity-hero',
             crowded: 'preact-uploader--parity-crowded',
         },
+        crashRestoreStoryId: 'preact-uploader--crash-restore',
     },
 ]
 

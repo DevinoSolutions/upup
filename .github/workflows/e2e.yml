@@ -81,6 +81,23 @@ jobs:
             - name: Guard against fixture/baseline regen in CI (F-205)
               run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
 
+            # The deep React suite now contains a real-MinIO spec (the
+            # cross-reload multipart resume gate), and it fails LOUDLY when
+            # :9100 is unreachable rather than skip-greening the strongest
+            # upload test in the repo — so MinIO must be up BEFORE `pnpm run
+            # e2e`, not only for the post-cf integration step below.
+            - name: Boot MinIO for the e2e gate
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
+
             - name: Run e2e gate (deep React + cross-framework smoke)
               run: pnpm run e2e
               env:
@@ -142,6 +159,71 @@ jobs:
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
                   retention-days: 14
+
+    # MinIO NEVER truncates ListParts (it answers MaxParts=10000,
+    # IsTruncated=false even past 1000 parts), so on the MinIO job the
+    # IsTruncated+PartNumberMarker pagination loop in listMultipartParts /
+    # getMultipartUploadedSize runs exactly once and its truncation branch is
+    # dead code. LocalStack caps a ListParts page at 1000 like real AWS S3 —
+    # this job exists so that branch is exercised by CI, not just believed.
+    # Same suite, same env-var contract as the MinIO step; only the backend
+    # differs. Signature validation stays ON (S3_SKIP_SIGNATURE_VALIDATION=0)
+    # so presigned-URL trust-model tests keep their AWS semantics.
+    LocalStack-Integration:
+        name: Server integration suite (LocalStack — AWS ListParts semantics)
+        runs-on: ubuntu-latest
+        needs: [Resolve-Affected]
+        if: needs.Resolve-Affected.outputs.minio == 'true'
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Boot LocalStack (S3 only, signature validation ON)
+              run: |
+                  docker run -d --name upup-localstack -p 4566:4566 \
+                    -e SERVICES=s3 -e S3_SKIP_SIGNATURE_VALIDATION=0 \
+                    localstack/localstack@sha256:59373b4a27dba3ec15c4db0b7455f0cb68c8a42300e2cbbe362b440f9a131697 # 4.9.2
+                  for i in $(seq 1 60); do
+                    if curl -sf http://localhost:4566/_localstack/health > /dev/null; then
+                      echo "LocalStack healthy on :4566"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "LocalStack failed to become healthy on :4566" >&2
+                  docker logs upup-localstack >&2 || true
+                  exit 1
+
+            - name: Create the e2e bucket
+              run: docker exec upup-localstack awslocal s3 mb s3://upup-e2e
+
+            - name: Build the packages the server suite resolves from dist
+              run: pnpm --filter @upupjs/core --filter @upupjs/server build
+
+            # MINIO_ROOT_USER/PASSWORD are the env-var names the suite reads as
+            # S3 credentials regardless of backend; LocalStack's canonical test
+            # credentials are test/test.
+            - name: Server integration suites against LocalStack
+              run: pnpm --filter @upupjs/server exec vitest run tests/integration
+              env:
+                  UPUP_E2E_MINIO: '1'
+                  UPUP_E2E_ENDPOINT: http://localhost:4566
+                  MINIO_ROOT_USER: test
+                  MINIO_ROOT_PASSWORD: test
+                  UPUP_E2E_BUCKET: upup-e2e
+                  UPUP_E2E_REGION: us-east-1
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
 
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
@@ -260,7 +342,14 @@ jobs:
         name: E2E Status Check
         runs-on: ubuntu-latest
         needs:
-            [Resolve-Affected, E2E, Smoke-Packages, Docs-E2E, Storybook-Builds]
+            [
+                Resolve-Affected,
+                E2E,
+                LocalStack-Integration,
+                Smoke-Packages,
+                Docs-E2E,
+                Storybook-Builds,
+            ]
         if: always()
         steps:
             - name: Check status (respecting resolver-sanctioned skips)
@@ -268,6 +357,8 @@ jobs:
                   RESOLVE_RESULT: ${{ needs.Resolve-Affected.result }}
                   E2E_RESULT: ${{ needs.E2E.result }}
                   E2E_WANTED: ${{ needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true' }}
+                  LOCALSTACK_RESULT: ${{ needs.LocalStack-Integration.result }}
+                  LOCALSTACK_WANTED: ${{ needs.Resolve-Affected.outputs.minio }}
                   SMOKE_RESULT: ${{ needs.Smoke-Packages.result }}
                   SMOKE_WANTED: ${{ needs.Resolve-Affected.outputs.smoke }}
                   DOCS_RESULT: ${{ needs.Docs-E2E.result }}
@@ -295,6 +386,7 @@ jobs:
                     fi
                   }
                   check "E2E" "$E2E_RESULT" "$E2E_WANTED"
+                  check "LocalStack-Integration" "$LOCALSTACK_RESULT" "$LOCALSTACK_WANTED"
                   check "Smoke-Packages" "$SMOKE_RESULT" "$SMOKE_WANTED"
                   check "Docs-E2E" "$DOCS_RESULT" "$DOCS_WANTED"
                   check "Storybook-Builds" "$STORYBOOK_RESULT" "$STORYBOOK_WANTED"

@@ -14,7 +14,7 @@ import {
     fileGetIsPdf,
     fileGetIsText,
 } from '@upupjs/core/internal'
-import { cn } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 import FileSuccessCheck from './shared/FileSuccessCheck.vue'
@@ -72,8 +72,10 @@ const progress = computed(() => {
     return Number.isFinite(pct) ? pct : 0
 })
 
+const fileStatus = computed(() => files.value.get(props.fileId)?.status)
+
 const isSuccessful = computed(
-    () => files.value.get(props.fileId)?.status === UploadStatus.SUCCESSFUL,
+    () => fileStatus.value === UploadStatus.SUCCESSFUL,
 )
 
 watch(
@@ -132,7 +134,9 @@ function updateCanPreview(val: boolean) {
                     themeSlots?.filePreview?.thumbnail,
                 )
             "
-            :style="isImage ? { backgroundImage: `url(${fileUrl})` } : undefined"
+            :style="
+                isImage ? { backgroundImage: `url(${fileUrl})` } : undefined
+            "
         >
             <button
                 type="button"
@@ -184,7 +188,12 @@ function updateCanPreview(val: boolean) {
                 "
                 @click="onHandleFileRemove"
                 type="button"
-                :disabled="!!progress"
+                :disabled="
+                    isFileRemovalLocked(
+                        progress,
+                        fileStatus ?? UploadStatus.IDLE,
+                    )
+                "
                 :aria-label="tr.removeFile"
                 data-testid="upup-file-remove"
             >

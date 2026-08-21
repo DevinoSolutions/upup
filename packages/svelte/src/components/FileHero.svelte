@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from '@upupjs/core/internal'
+  import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
   import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
   import { fileGetExtension, fileGetIsImage } from '@upupjs/core/internal'
   import {
@@ -107,7 +107,7 @@
       )}
       onclick={onRemove}
       type="button"
-      disabled={!!progress}
+      disabled={isFileRemovalLocked(progress, file.status)}
       aria-label={tr.removeFile}
       data-testid="upup-file-remove"
     >

@@ -6,6 +6,7 @@ import {
     type MultipartInitResponse,
     type MultipartSignPartResponse,
     type MultipartCompleteResponse,
+    type MultipartResumeResponse,
 } from '../contracts'
 import type { UpupStorageError } from '../errors'
 
@@ -21,6 +22,7 @@ function operationForPath(path: string): UpupStorageError['operation'] {
     if (path.startsWith('/multipart/sign-part')) return 'multipart-sign-part'
     if (path.startsWith('/multipart/complete')) return 'multipart-complete'
     if (path.startsWith('/multipart/abort')) return 'multipart-abort'
+    if (path.startsWith('/multipart/resume')) return 'multipart-resume'
     return 'upload'
 }
 
@@ -100,5 +102,16 @@ export class ServerCredentials implements CredentialStrategy {
 
     async abortMultipartUpload(params: { token: string }): Promise<void> {
         await this.post('/multipart/abort', params)
+    }
+
+    /** Re-attach to an upload the client left in flight (page reload, pause,
+     *  retry) or whose token aged past its 1h TTL. The presented token is the
+     *  ONLY input — key/uploadId are never sent by the client — and the
+     *  response carries a freshly-signed replacement plus the parts storage
+     *  already holds, each with its byte size. */
+    async resumeMultipartUpload(params: {
+        token: string
+    }): Promise<MultipartResumeResponse> {
+        return this.post<MultipartResumeResponse>('/multipart/resume', params)
     }
 }

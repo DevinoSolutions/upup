@@ -18,6 +18,7 @@ function isNonEmpty(v: unknown): v is string {
 
 export function validateServerConfig(config: UpupServerConfig): void {
     const missing: string[] = []
+    const invalid: string[] = []
 
     // Runtime guard: callers may pass partial/invalid objects at boot time.
     if (!(config as Partial<UpupServerConfig>).storage) {
@@ -62,10 +63,32 @@ export function validateServerConfig(config: UpupServerConfig): void {
             missing.push('providers.box.clientSecret')
     }
 
-    if (missing.length > 0) {
+    // A window that is negative, fractional, or NaN is a typo, not a policy —
+    // and silently coercing it would either disable resume or extend it forever.
+    // `0` is the sanctioned "route off" value, so only sub-zero is rejected.
+    const resumeWindow = config.multipartResumeWindowSeconds
+    if (
+        resumeWindow !== undefined &&
+        (!Number.isInteger(resumeWindow) || resumeWindow < 0)
+    ) {
+        invalid.push(
+            `multipartResumeWindowSeconds must be a non-negative integer (got ${String(resumeWindow)}); use 0 to disable /multipart/resume`,
+        )
+    }
+
+    if (missing.length > 0 || invalid.length > 0) {
+        const sections = [
+            missing.length > 0
+                ? 'missing/empty required field(s):\n' +
+                  missing.map(m => `  - ${m}`).join('\n')
+                : '',
+            invalid.length > 0
+                ? 'invalid field(s):\n' +
+                  invalid.map(m => `  - ${m}`).join('\n')
+                : '',
+        ].filter(Boolean)
         throw new UpupConfigError(
-            '[@upupjs/server] Invalid config — missing/empty required field(s):\n' +
-                missing.map(m => `  - ${m}`).join('\n'),
+            `[@upupjs/server] Invalid config — ${sections.join('\n')}`,
         )
     }
 }

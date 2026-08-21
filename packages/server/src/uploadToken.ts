@@ -22,6 +22,14 @@ export interface UploadTokenPayload {
     smax: number
     /** Expiry, epoch SECONDS. */
     exp: number
+    /**
+     * Issue time of the ORIGINAL multipart init, epoch SECONDS. Optional: tokens
+     * minted before cross-reload resume shipped carry no `iat` and must keep
+     * verifying, so the resume route falls back to `exp - TTL`. Carried forward
+     * UNCHANGED by /multipart/resume — the resume window is anchored at the
+     * original init, so rolling resumes can never extend it.
+     */
+    iat?: number
 }
 
 export type UploadTokenErrorCode = 'malformed' | 'bad_signature' | 'expired'
@@ -96,10 +104,23 @@ export async function signUploadToken(
     return `${body}.${sig}`
 }
 
+export interface VerifyUploadTokenOptions {
+    /**
+     * Accept a token whose `exp` has already passed. ONLY /multipart/resume sets
+     * this: its whole job is to hand an expired token back as a fresh one, and it
+     * applies its OWN, tighter bound afterwards (the resume window anchored at
+     * `iat`). Every other route leaves it unset and keeps rejecting expired
+     * tokens exactly as before — signature/shape checks are identical either way,
+     * so this relaxes expiry and nothing else.
+     */
+    allowExpired?: boolean
+}
+
 export async function verifyUploadToken(
     secret: string,
     token: string,
     nowMs: number,
+    options: VerifyUploadTokenOptions = {},
 ): Promise<UploadTokenPayload> {
     if (typeof token !== 'string' || !token.includes('.')) {
         throw new UploadTokenError(
@@ -142,7 +163,7 @@ export async function verifyUploadToken(
             'Upload token payload is missing required fields',
         )
     }
-    if (payload.exp <= Math.floor(nowMs / 1000)) {
+    if (!options.allowExpired && payload.exp <= Math.floor(nowMs / 1000)) {
         throw new UploadTokenError('expired', 'Upload token has expired')
     }
     return payload

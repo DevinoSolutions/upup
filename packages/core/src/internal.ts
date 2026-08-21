@@ -149,7 +149,11 @@ export {
 } from './utils/image-helpers'
 export { loadGoogleIdentityServices } from './utils/load-gapi'
 export { sourceNameKeys } from './utils/source-metadata'
-export { isUploadActive, isUploadIdle } from './utils/status-helpers'
+export {
+    isUploadActive,
+    isUploadIdle,
+    isFileRemovalLocked,
+} from './utils/status-helpers'
 export {
     bytesToSize,
     sizeToBytes,

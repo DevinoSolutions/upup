@@ -51,7 +51,7 @@ for multi-tenant production.
 `createUpupHandler` throws at construction time if `uploadTokenSecret` is
 missing or under 16 characters. This secret HMAC-signs the stateless upload
 token issued at multipart-init and re-verified on every sign-part / complete
-/ abort call — it is what binds the client-supplied token to the
+/ abort / resume call — it is what binds the client-supplied token to the
 server-chosen object key and S3 `uploadId` so a client can never assert
 either on the way back.
 
@@ -72,13 +72,28 @@ without comparing the secret value directly.
 
 #### Token semantics: TTL & replay
 
-An upload token is issued once at `/multipart/init` and re-verified on every
-`/multipart/sign-part`, `/multipart/complete`, and `/multipart/abort` call. It
-carries no nonce — expiry is the only freshness check:
+An upload token is issued at `/multipart/init`, re-verified on every
+`/multipart/sign-part`, `/multipart/complete`, and `/multipart/abort` call, and
+re-issued by `/multipart/resume`. It carries no nonce — expiry is the only
+freshness check:
 
 - **TTL.** `exp` is set to `now + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS` (3600s / 1
-  hour) at init and is not refreshable. Once `exp` passes, every continuation
-  route rejects it with `403 {code: 'expired'}`.
+  hour) at init. Once `exp` passes, sign-part / complete / abort reject it with
+  `403 {code: 'expired'}`.
+- **Refresh.** `/multipart/resume` is the one route that accepts an expired
+  token, because exchanging it for a fresh one is its purpose — an upload can
+  outlive an hour. The replacement re-signs the same `k`/`u`/`uid`/`smin`/`smax`
+  with a new `exp`, so nothing about what the token authorizes changes.
+- **Resume window.** The relaxed expiry is re-bounded by
+  `multipartResumeWindowSeconds` (default 86400 / 24h), measured from `iat` —
+  the ORIGINAL init, carried forward unchanged on every re-issue, so a chain of
+  resumes cannot extend it. Past the window, resume answers
+  `403 {code: 'expired'}`. Tokens minted before `iat` existed fall back to
+  `exp - TTL`. Set the knob to `0` to remove the route entirely; a negative or
+  fractional value throws `UpupConfigError` at construction.
+  **The trade:** a leaked token is usable for the window rather than an hour,
+  but only to continue the same upload, to the same key, inside the same signed
+  size envelope, still owner-bound whenever `getUserId` is set.
 - **Replay window.** Within that hour, the _same_ token may be sent to
   sign-part/complete/abort **any number of times** — this is by design, not a
   bug: a client legitimately re-signs a part after a network retry, or drives
@@ -98,6 +113,30 @@ carries no nonce — expiry is the only freshness check:
   needs single-use tokens, back the token verification with a nonce/jti store
   in your `TokenStore` implementation (not provided out of the box).
 
+## Cross-reload resume — one thing you must configure
+
+`POST /multipart/resume` lets a client re-attach to an upload a page reload,
+tab close, or crash left in flight. It takes `{ token }` and nothing else, and
+answers `{ key, token, parts }` — the parts the provider already holds, each
+with its byte size, plus a freshly-signed token. The `uploadId` is never sent
+by the client and never returned.
+
+```ts
+createUpupHandler({
+    // ...storage, uploadTokenSecret
+    multipartResumeWindowSeconds: 86400, // default; 0 removes the route
+})
+```
+
+**Because upup's client keeps resume on by default, an interrupted multipart
+upload is no longer aborted server-side — its parts are kept so the next
+attempt can continue from them.** Parts nobody ever resumes are not cleaned up
+by this package, and S3 bills for them.
+
+Configure an `AbortIncompleteMultipartUpload` lifecycle rule on the bucket with
+a 1–7 day expiry. Every S3-compatible provider supports it, MinIO included.
+This is the one piece of operational setup the feature asks of you.
+
 ## Error codes
 
 Every non-2xx JSON response body is `{ error: <generic human message>, code:
@@ -106,25 +145,26 @@ Every non-2xx JSON response body is `{ error: <generic human message>, code:
 mapping). The real exception detail (name/message/stack) is **never** sent
 to the client — it goes only to the [`onError`](#onerror--the-logging-seam) seam.
 
-| `code`                | Where it comes from                                                                         | Typical cause                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `PRESIGN_FAILED`      | `POST /presign` 500                                                                         | Storage provider rejected the presign call                                                                         |
-| `STORAGE_ERROR`       | multipart init/sign-part/complete/abort 500, drive list/transfer 500, uncaught router error | S3/MinIO call failed, or an unhandled exception anywhere in routing                                                |
-| `BAD_REQUEST`         | any route, 400                                                                              | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`)                    |
-| `AUTH_REQUIRED`       | `POST /presign`, `POST /multipart/init`, 403                                                | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default |
-| `AUTH_DENIED`         | multipart sign-part/complete/abort, 403                                                     | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to                         |
-| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502                                                                   | The provider's token endpoint rejected the code/refresh-token exchange                                             |
-| `AUTH_EXPIRED`        | drive token refresh failure (internal)                                                      | Refresh token dead/revoked — forces a clean re-auth                                                                |
+| `code`                | Where it comes from                                                                                | Typical cause                                                                                                                                                           |
+| --------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRESIGN_FAILED`      | `POST /presign` 500                                                                                | Storage provider rejected the presign call                                                                                                                              |
+| `STORAGE_ERROR`       | multipart init/sign-part/complete/abort/resume 500, drive list/transfer 500, uncaught router error | S3/MinIO call failed, or an unhandled exception anywhere in routing                                                                                                     |
+| `NOT_FOUND`           | `POST /multipart/resume`, 404                                                                      | The provider no longer holds that multipart upload — completed, aborted, or reaped by a lifecycle rule. A 4xx on purpose: the client drops its session and starts fresh |
+| `BAD_REQUEST`         | any route, 400                                                                                     | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`)                                                                         |
+| `AUTH_REQUIRED`       | `POST /presign`, `POST /multipart/init`, 403                                                       | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default                                                      |
+| `AUTH_DENIED`         | multipart sign-part/complete/abort/resume, 403                                                     | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to                                                                              |
+| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502                                                                          | The provider's token endpoint rejected the code/refresh-token exchange                                                                                                  |
+| `AUTH_EXPIRED`        | drive token refresh failure (internal)                                                             | Refresh token dead/revoked — forces a clean re-auth                                                                                                                     |
 
-Upload-token verification failures (multipart sign-part/complete/abort) are
-a separate, narrower vocabulary — always `403` — because they describe the
+Upload-token verification failures (multipart sign-part/complete/abort/resume)
+are a separate, narrower vocabulary — always `403` — because they describe the
 token itself, not a storage/auth outcome:
 
-| Token `code`    | Meaning                                                                                         |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| `malformed`     | Token isn't the expected `body.signature` shape, or its payload is missing required fields      |
-| `bad_signature` | Token is well-shaped but the HMAC signature doesn't verify (wrong/rotated secret, or tampering) |
-| `expired`       | Token's `exp` claim is in the past                                                              |
+| Token `code`    | Meaning                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `malformed`     | Token isn't the expected `body.signature` shape, or its payload is missing required fields           |
+| `bad_signature` | Token is well-shaped but the HMAC signature doesn't verify (wrong/rotated secret, or tampering)      |
+| `expired`       | Token's `exp` claim is in the past — or, on `/multipart/resume` alone, the resume window has elapsed |
 
 On the client, `@upupjs/core`'s upload strategies read these bodies and
 construct typed errors (`UpupStorageError` / `UpupAuthError`) carrying the

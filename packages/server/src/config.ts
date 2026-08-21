@@ -94,6 +94,19 @@ export type UpupServerConfig = {
         ) => Promise<void>
     }
 
+    /**
+     * How long after its ORIGINAL `/multipart/init` an upload may still be
+     * resumed via `POST /multipart/resume`, in seconds. Default 86400 (24h),
+     * matching the client's localStorage session TTL. Set `0` to disable the
+     * route entirely (it then 404s like any unknown path) — the cost of the
+     * route is that a leaked token stays usable for this window, though only to
+     * continue the SAME upload, to the SAME key, inside the SAME signed size
+     * envelope, and still owner-bound whenever `getUserId` is configured.
+     * Resuming re-issues a token with a fresh 1h expiry but carries the original
+     * issue time forward, so rolling resumes can never extend this window.
+     */
+    multipartResumeWindowSeconds?: number
+
     auth?: (req: Request) => Promise<boolean>
     maxFileSize?: number
     allowedTypes?: string[]

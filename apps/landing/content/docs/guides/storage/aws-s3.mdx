@@ -129,9 +129,15 @@ none of this applies — the browser only ever talks to your origin.
 ## Costs and lifecycle
 
 Abandoned multipart uploads keep their uploaded parts, and those parts are
-billed as storage even though the object never appears in the bucket. Add a
-lifecycle rule that expires incomplete multipart uploads after a day or two —
-one rule, and cancelled uploads stop accumulating charges.
+billed as storage even though the object never appears in the bucket. Add an
+`AbortIncompleteMultipartUpload` lifecycle rule that expires them after a day
+or two — one rule, and abandoned uploads stop accumulating charges.
+
+With [cross-reload resume](/docs/resumable-uploads/#cross-reload-resume) on —
+which it is by default for server-mode multipart — that rule stops being
+optional hygiene. Interrupted uploads deliberately keep their parts so a later
+attempt can continue from them, so nothing else will ever clean up the ones
+that are never resumed.
 
 ## Next steps
 

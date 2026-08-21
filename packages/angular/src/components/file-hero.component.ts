@@ -1,7 +1,12 @@
 import { Component, Input, inject, type Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
-import { cn, fileGetIsImage, fileGetExtension } from '@upupjs/core/internal'
+import {
+    cn,
+    fileGetIsImage,
+    fileGetExtension,
+    isFileRemovalLocked,
+} from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { FileIconComponent } from './file-icon.component'
 import { ProgressBarComponent } from './progress-bar.component'
@@ -63,7 +68,7 @@ import { FileSuccessCheckComponent } from './shared/file-success-check.component
                     [class]="removeButtonClass"
                     (click)="onRemove($event)"
                     type="button"
-                    [disabled]="!!progress"
+                    [disabled]="isRemovalLocked"
                     [attr.aria-label]="translations.removeFile"
                     data-testid="upup-file-remove"
                 >
@@ -120,6 +125,10 @@ export class FileHeroComponent {
         const total = p?.total ?? NaN
         const pct = Math.floor((loaded / total) * 100)
         return Number.isFinite(pct) ? pct : 0
+    }
+
+    get isRemovalLocked(): boolean {
+        return isFileRemovalLocked(this.progress, this.file.status)
     }
 
     get fileDeleteIcon(): Type<unknown> {

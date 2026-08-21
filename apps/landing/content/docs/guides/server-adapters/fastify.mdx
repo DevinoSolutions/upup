@@ -90,8 +90,9 @@ Nothing to wire. Fastify's built-in `application/json` content-type parser
 already populates `request.body`, and the adapter re-serializes that object
 into the Web `Request` it hands the core handler. Every route the browser
 POSTs to (`/presign`, `/multipart/init`, `/multipart/sign-part`,
-`/multipart/complete`, `/multipart/abort`, `/files/:provider/transfer`)
-sends JSON, so the default parser covers all of them.
+`/multipart/complete`, `/multipart/abort`, `/multipart/resume`,
+`/files/:provider/transfer`) sends JSON, so the default parser covers all
+of them.
 
 There is no multipart/form-data step to configure: on the presigned paths
 the file bytes go straight from the browser to storage and never traverse

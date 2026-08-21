@@ -149,6 +149,7 @@ createUpupHandler({
     // ...storage, uploadTokenSecret, and providers from step 2
     maxFileSize: 500 * 1024 * 1024, // 500 MB
     allowedTypes: ['image/*', 'video/*'],
+    multipartResumeWindowSeconds: 86400, // 24h; 0 disables POST /multipart/resume
     hooks: {
         onBeforeUpload: async (file, req) => {
             // Return false to reject the upload
@@ -176,7 +177,8 @@ By default a file is uploaded whole: `POST /presign` hands the browser one
 signed URL and the bytes go straight to storage. Turn on multipart
 (client-side `resumable: { protocol: 'multipart' }`, threshold 5 MiB by
 default — see [Resumable uploads](/docs/resumable-uploads/)) and the
-browser drives the four-step lifecycle above against your server instead:
+browser drives the lifecycle above against your server instead. The diagram
+shows the happy path; steps 4 and 5 below cover finishing and recovering:
 
 1. **`POST /multipart/init`** — the server starts the S3 upload and returns
    the object key, the `uploadId`, the part size, and an **HMAC-signed
@@ -193,7 +195,27 @@ browser drives the four-step lifecycle above against your server instead:
 4. **`POST /multipart/complete`** — the server sums the bytes S3 actually
    received, rejects and aborts the upload with `403` if the total falls
    outside the token's signed envelope, and only then finalizes the object.
-   Cancelled or failed runs call `POST /multipart/abort`.
+   An explicit cancel calls `POST /multipart/abort`.
+5. **`POST /multipart/resume`** — the recovery step. The browser presents the
+   token it saved, and the server answers with the parts storage already holds
+   (each with its byte size) plus a freshly-signed token. That is how an upload
+   survives a reload or a tab close, and how a token that outlived its one-hour
+   expiry is refreshed mid-upload. Its window is `multipartResumeWindowSeconds`
+   (24 hours by default, measured from the original `init`); set it to `0` to
+   switch the route off entirely.
+
+<Callout type="warning" title="Set an AbortIncompleteMultipartUpload lifecycle rule">
+    Because resume is on by default client-side, a failed or abandoned
+    multipart upload is **not** aborted server-side — its parts are kept
+    deliberately, so the next attempt continues from them. Parts nobody ever
+    resumes are never cleaned up by upup and S3 bills for them.
+
+    Configure an `AbortIncompleteMultipartUpload` lifecycle rule on the bucket
+    with a 1–7 day expiry. Every S3-compatible provider supports it, MinIO
+    included. See
+    [Cross-reload resume](/docs/resumable-uploads/#cross-reload-resume).
+
+</Callout>
 
 Two consequences worth knowing:
 
@@ -203,10 +225,15 @@ Two consequences worth knowing:
   Different secrets across instances is the classic mid-upload failure —
   the `/health` fingerprint below catches it.
 - **The token's owner is enforced, not just its signature.** With
-  `getUserId` configured, `sign-part`, `complete`, and `abort` all check
-  that the caller is the user the token was issued to and answer `403
+  `getUserId` configured, `sign-part`, `complete`, `abort`, and `resume` all
+  check that the caller is the user the token was issued to and answer `403
 AUTH_DENIED` otherwise. Without a `getUserId` resolver, possession of the
   token is the model.
+- **`resume` is the one route that tolerates an expired token**, since
+  refreshing one is its job. It applies the resume window instead, anchored at
+  the original `init` and carried forward on every re-issue, so the usable life
+  of a leaked token is bounded even across a chain of resumes. See
+  [Server Auth & Trust Model](/docs/guides/server-auth/#the-upload-token).
 
 This is a different path from the cloud-drive transfer described in
 [Limits](#the-drive-transfer-memory-bound), where the server itself pulls

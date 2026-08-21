@@ -196,6 +196,9 @@ export class UpupStore {
             autoUpload: p.autoUpload ?? false,
             maxConcurrentUploads: p.maxConcurrentUploads,
             crashRecovery: p.crashRecovery ?? false,
+            // No `??` default: `undefined` must reach core so its default-on
+            // network awareness applies; only an explicit `false` opts out.
+            networkAware: p.networkAware,
             allowedFileTypes:
                 typeof acceptProp === 'string'
                     ? acceptProp

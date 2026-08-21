@@ -6,6 +6,11 @@ import type {
     MultipartCompleteResponse,
     PresignedUrlResponse,
 } from '@upupjs/core'
+import {
+    installXhrPartMock,
+    type PartRequest,
+    type PartResponse,
+} from './xhr-part-mock'
 
 describe('MultipartUpload', () => {
     const mockCredentials: CredentialStrategy = {
@@ -25,8 +30,7 @@ describe('MultipartUpload', () => {
         expiresIn: 0,
     }
 
-    const mockFetch = vi.fn()
-    vi.stubGlobal('fetch', mockFetch)
+    const { puts } = installXhrPartMock()
 
     let strategy: MultipartUpload
 
@@ -63,15 +67,10 @@ describe('MultipartUpload', () => {
             }),
         )
 
-        mockFetch.mockImplementation(
-            async (url: string, _init: RequestInit) => ({
-                ok: true,
-                status: 200,
-                headers: new Headers({
-                    ETag: `"etag-${url.match(/part(\d)/)?.[1]}"`,
-                }),
-            }),
-        )
+        puts.mockImplementation(async (req: PartRequest) => ({
+            status: 200,
+            headers: { ETag: `"etag-${req.url.match(/part(\d)/)?.[1]}"` },
+        }))
 
         const completeResponse: MultipartCompleteResponse = {
             key: 'uploads/big.zip',
@@ -94,7 +93,7 @@ describe('MultipartUpload', () => {
             type: 'application/zip',
         })
         expect(mockCredentials.signPart).toHaveBeenCalledTimes(3)
-        expect(mockFetch).toHaveBeenCalledTimes(3)
+        expect(puts).toHaveBeenCalledTimes(3)
         expect(mockCredentials.completeMultipartUpload).toHaveBeenCalledWith({
             token: 'tok-abc',
             parts: expect.arrayContaining([
@@ -130,7 +129,10 @@ describe('MultipartUpload', () => {
             return { uploadUrl: 'https://s3/part?signed', expiresIn: 3600 }
         })
 
-        mockFetch.mockRejectedValue(new DOMException('Aborted', 'AbortError'))
+        // The signal aborts during signing, so the strategy bails before it
+        // ever PUTs a part; a PUT that would only hang models that no part
+        // completes past the abort.
+        puts.mockImplementation(() => new Promise<PartResponse>(() => {}))
 
         await expect(
             strategy.upload(file, unusedCredentials, {
@@ -163,15 +165,11 @@ describe('MultipartUpload', () => {
         vi.mocked(mockCredentials.abortMultipartUpload!).mockResolvedValue(
             undefined,
         )
-        mockFetch.mockResolvedValue({
-            ok: false,
+        puts.mockResolvedValue({
             status: 403,
             statusText: 'Forbidden',
-            text: () =>
-                Promise.resolve(
-                    '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>',
-                ),
-            headers: new Headers(),
+            responseText:
+                '<Error><Code>SignatureDoesNotMatch</Code><Message>bad sig</Message></Error>',
         })
 
         const err = await strategy

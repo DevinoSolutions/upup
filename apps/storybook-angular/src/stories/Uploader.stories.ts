@@ -213,6 +213,23 @@ export const ParityHero: Story = {
     args: { ...Parity.args },
 }
 
+// ── Crash restore (a PAUSED file carrying a resumable byte offset) ───────────
+// Same no-network args as `Parity`, plus crash recovery and multipart resume.
+// The cross-framework `crash-restored-paused-file-stays-removable` spec seeds a
+// crash-recovery snapshot AND a persisted multipart session before this story
+// mounts, so the uploader opens with ONE restored PAUSED file whose progress is
+// replayed from that session. Contract under test: seeded progress must not
+// lock the remove control — discarding is the only path that aborts the
+// server-side upload and drops the persisted session.
+export const CrashRestore: Story = {
+    parameters: { ...Parity.parameters },
+    args: {
+        ...Parity.args,
+        crashRecovery: true,
+        resumable: { protocol: 'multipart', thresholdBytes: 1024 },
+    },
+}
+
 // Parity fixture for the COMPACT source-chip density. Identical to `Parity`
 // except for the source count: nine configured sources put the chip grid on the
 // compact branch (>8), where `Parity`/`ParityHero`'s two sources pin the large

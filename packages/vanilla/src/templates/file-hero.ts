@@ -1,6 +1,11 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
-import { fileGetExtension, fileGetIsImage, cn } from '@upupjs/core/internal'
+import {
+    fileGetExtension,
+    fileGetIsImage,
+    cn,
+    isFileRemovalLocked,
+} from '@upupjs/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { fileIcon } from './file-icon'
 import { progressBar } from './shared/progress-bar'
@@ -97,7 +102,7 @@ export function fileHero(
                       )}
                       @click=${onRemove}
                       type="button"
-                      ?disabled=${!!progress}
+                      ?disabled=${isFileRemovalLocked(progress, file.status)}
                       aria-label=${tr.removeFile}
                       data-testid="upup-file-remove"
                   >

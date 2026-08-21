@@ -8,7 +8,7 @@ import React, {
     useMemo,
 } from 'react'
 
-import { cn } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import { UploadStatus } from '@upupjs/core'
 import {
     useUploaderEditor,
@@ -246,7 +246,10 @@ export default memo(function FilePreview(props: Props) {
                         )}
                         onClick={onHandleFileRemove}
                         type="button"
-                        disabled={!!progress}
+                        disabled={isFileRemovalLocked(
+                            progress,
+                            fileStatus ?? UploadStatus.IDLE,
+                        )}
                         aria-label={tr.removeFile}
                         data-testid="upup-file-remove"
                     >

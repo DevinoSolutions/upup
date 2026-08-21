@@ -59,6 +59,14 @@ export interface CoreOptions extends FileManagerOptions {
     maxRetries?: number | undefined
     maxConcurrentUploads?: number | undefined
     autoUpload?: boolean | undefined
+    /**
+     * React to browser connectivity: going offline mid-upload pauses the run
+     * (so multipart sessions persist instead of burning retries against a dead
+     * network), and coming back online resumes it — only when the pause was
+     * offline-initiated, never overriding a pause the user chose. Default on;
+     * `false` restores the fail-and-retry behavior. No-op outside a browser.
+     */
+    networkAware?: boolean | undefined
     fastAbortThreshold?: number | undefined
     isSuccessfulCall?:
         | ((response: {

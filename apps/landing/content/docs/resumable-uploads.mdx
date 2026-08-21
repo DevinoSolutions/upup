@@ -11,19 +11,26 @@ either a multipart config or a tus config, never both.
 | ----------------------------- | ------------------------------ | ---------------------------------- |
 | Upload target                 | `serverUrl` (`@upupjs/server`) | tus `endpoint`                     |
 | Splits large files into parts | Yes                            | Yes (when `chunkSizeBytes` is set) |
-| Survives a page reload        | No                             | Yes (fingerprint URL storage)      |
+| Survives a page reload        | Yes (`localStorage` session)   | Yes (fingerprint URL storage)      |
 | Extra dependency              | None                           | `tus-js-client` (optional peer)    |
 | Storage                       | Your S3-compatible bucket      | Whatever the tus server writes to  |
 
-Pick multipart if your bytes already go to S3 through `@upupjs/server` and you
-mainly want large files split into parallel, individually-retried parts. Pick
-tus if you run (or rent) a tus server and need an upload to survive the browser
-tab closing.
+Pick multipart if your bytes already go to S3 through `@upupjs/server`: large
+files are split into parallel, individually-retried parts, and an interrupted
+upload picks up at the last completed part after a reload, a tab close, or a
+crash — see [Cross-reload resume](#cross-reload-resume).
+
+Pick tus when server-mode multipart is not on the table: a client-mode
+`uploadEndpoint` deployment (multipart refuses to run there at all), a non-S3
+destination, or an existing tus server you already operate. tus also resumes
+without `@upupjs/server` in the path, because the tus protocol — not upup —
+owns the offset bookkeeping.
 
 ## Multipart
 
-Multipart splits a file into parts, signs each part individually, uploads three
-parts at a time, and then asks the server to assemble them. Core routes a file
+Multipart splits a file into parts, signs each part individually, uploads
+several parts at a time (three by default), and then asks the server to
+assemble them. Core routes a file
 to the multipart strategy when its size is at or above `thresholdBytes`;
 everything smaller takes the ordinary single-PUT presigned path.
 
@@ -50,20 +57,58 @@ everything smaller takes the ordinary single-PUT presigned path.
 
 ### Options
 
-Three fields, all optional.
+Seven fields, all optional.
 
-| Option           | Type      | Default           | What it does                                                                                                                                  |
-| ---------------- | --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `thresholdBytes` | `number`  | `5242880` (5 MiB) | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                          |
-| `chunkSizeBytes` | `number`  | `5242880` (5 MiB) | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value. |
-| `persist`        | `boolean` | —                 | **Currently ignored — reserved.** No upload path reads it in 3.1.0, so setting it has no effect either way.                                   |
+| Option               | Type       | Default                 | What it does                                                                                                                                                                                                                                                                        |
+| -------------------- | ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thresholdBytes`     | `number`   | `5242880` (5 MiB)       | Files at or above this size use multipart; smaller files use a single presigned PUT.                                                                                                                                                                                                |
+| `chunkSizeBytes`     | `number`   | `5242880` (5 MiB)       | Requested part size. A fallback only — see [Part size](#part-size-the-5-mib-floor-and-the-10000-part-cap), the server decides the real value.                                                                                                                                       |
+| `persist`            | `boolean`  | `true`                  | Keep a per-file session in `localStorage` so an interrupted upload resumes at the last completed part — see [Cross-reload resume](#cross-reload-resume). `false` restores the older behavior: any failure aborts the server-side upload and the next attempt starts from byte zero. |
+| `retryDelays`        | `number[]` | `[0, 1000, 3000, 5000]` | Backoff schedule, in milliseconds, for retrying a transiently failed or stalled part — the same vocabulary tus uses. The array's length is the retry budget; `[]` disables part retries. See [Part retries](#part-retries-and-the-stall-watchdog).                                  |
+| `partTimeoutMs`      | `number`   | `180000` (3 min)        | Watchdog for one part attempt: a sign or PUT request that neither succeeds nor fails within this window is aborted and retried instead of hanging the upload forever.                                                                                                               |
+| `maxConcurrentParts` | `number`   | `3`                     | How many parts of a single file upload at once — see [Part concurrency](#part-concurrency).                                                                                                                                                                                         |
+| `autoResume`         | `boolean`  | `false`                 | Continue a crash-restored upload automatically instead of waiting for the Resume click — see [The full reload story](#the-full-reload-story-persist--crashrecovery).                                                                                                                |
 
-Part concurrency is fixed at three parts in flight and is not configurable
-through `resumable`.
+### Part concurrency
+
+`maxConcurrentParts` sets how many parts of one file are in flight at the same
+time. Three is a deliberate middle: raising it fills a high-bandwidth link
+faster, and costs memory and sockets, because every in-flight part holds its
+own chunk of the file in the request body. Lower it when your users upload from
+constrained devices or you are being rate-limited; raise it when big files
+crawl on connections you know are fast. Values below `1` are clamped to `1`.
+
+This is parts within one file. `maxConcurrentUploads` is the other axis — how
+many files upload in parallel — and the two multiply: four files at three parts
+each is twelve requests in flight.
+
+### Part retries and the stall watchdog
+
+Every part attempt runs under a watchdog. It is an **inactivity** timer, not a
+deadline on the whole transfer: as long as bytes keep moving, a part is never
+timed out, no matter how slow the link or how large the part. The watchdog only
+fires after `partTimeoutMs` of **no upload progress at all** — a genuinely
+stalled or dead connection — at which point the attempt is aborted and retried
+rather than hanging for the lifetime of a half-open TCP socket. The sign call,
+which has no progress to measure, is bounded by the same timeout as a plain
+deadline. The 3-minute default suits almost everyone; raise it only if your
+users sit behind proxies that buffer a whole part before forwarding it (so no
+progress is visible mid-part), and lower it if you want a dead connection
+declared failed sooner.
+
+A failed attempt is retried on the `retryDelays` schedule when the failure is
+transient: a network error, a watchdog timeout, an HTTP `429`, or any `5xx`.
+Definitive rejections — a `403` forged-token refusal, a `400` — are not
+retried and fail the file immediately. Retries wait out their delay, but a
+`pause()` or cancel cuts the wait short rather than blocking on it.
+
+Part retries sit **inside** one upload run; `maxRetries` governs whole-run
+retries around it. A part that recovers on retry never surfaces as a file
+failure at all.
 
 ### Server routes
 
-Multipart is a four-call lifecycle. All four are `POST`, all four are
+Multipart is a five-call lifecycle. All five are `POST`, all five are
 implemented by `@upupjs/server` under your `serverUrl` base path:
 
 ```txt
@@ -71,16 +116,25 @@ POST /multipart/init
 POST /multipart/sign-part
 POST /multipart/complete
 POST /multipart/abort
+POST /multipart/resume
 ```
 
 `/multipart/init` returns `{ key, uploadId, partSize, expiresIn, token }`. The
 `token` is an HMAC-signed capability bound to the key, upload id, and a byte
 envelope; the client replays it on every subsequent call, and an init response
-without one is rejected client-side as a misconfigured or outdated server. If
-any part fails, core issues a best-effort `/multipart/abort` so no orphaned
-multipart upload is left billing you for storage.
+without one is rejected client-side as a misconfigured or outdated server.
 
-Request and response shapes for all four routes are documented in the
+`/multipart/resume` takes that token — and nothing else — and answers with the
+parts storage already holds plus a freshly-signed replacement token. It is what
+makes a reload survivable, and it is also how the client refreshes a token that
+outlived its one-hour expiry mid-upload.
+
+`/multipart/abort` is issued on an explicit cancel. It is **not** issued on a
+plain failure while `persist` is on, because those parts are exactly what the
+next attempt resumes from — see [Cross-reload resume](#cross-reload-resume) for
+what that means for your bucket.
+
+Request and response shapes for all five routes are documented in the
 [server HTTP reference](/docs/api-reference/server-http).
 
 ### Part size, the 5 MiB floor, and the 10,000-part cap
@@ -114,28 +168,146 @@ Larger parts mean fewer signing round-trips but coarser progress and more bytes
 to re-send when one part fails. The 5 MiB default is the right choice unless
 you routinely move files in the tens of gigabytes.
 
-### What multipart recovers, and what it doesn't
+### Cross-reload resume
 
 Multipart parallelizes and isolates failures — a failed part is retried on its
-own rather than taking the whole file down with it. Recovery beyond that is
-**within a single page session only**:
+own rather than taking the whole file down with it. On top of that, with
+`persist` on (the default) an interrupted upload continues from the last
+completed part instead of restarting, across all four ways an upload gets
+interrupted:
 
-- `pause()` aborts the in-flight requests. `resume()` and `retry()` then re-run
-  every file that has no storage key yet, starting from part one — the parts
-  already accepted by S3 are not reused.
-- Cross-reload resume is not wired. A page reload discards the in-memory upload,
-  and nothing re-attaches to the server-side upload id.
+| Interruption                       | What happens with `persist` on                                          |
+| ---------------------------------- | ----------------------------------------------------------------------- |
+| A part's request fails             | That part is retried; the rest of the file is untouched                 |
+| `pause()` then `resume()`          | Continues mid-file — completed parts are not re-uploaded                |
+| Automatic retry after a failed run | Re-enters the upload and resumes from the persisted session             |
+| Page reload / tab close / crash    | Resumes once the file is selected again, or restored by `crashRecovery` |
 
-A `localStorage`-backed session store exists in the codebase for building
-cross-reload resume yourself. It is exported from `@upupjs/core/internal`
-(`fileFingerprint`, `saveSession`, `loadSession`, `updateSessionProgress`,
-`removeSession`, `clearAllSessions`), keys entries under the `upup_mp_` prefix,
-expires them after 24 hours, and returns `null` rather than throwing when an
-entry is corrupt or `localStorage` is unavailable (private mode, quota). **No
-upload path calls it for you** — it is a building block you would have to wire
-up, not behavior you get by turning multipart on.
+The mechanism is a small session record per file, held in `localStorage` under
+the `upup_mp_` prefix, keyed by a fingerprint of `name:size:lastModified:type`,
+expiring after 24 hours. It holds the upload token, the object key, the part
+size, and the bytes uploaded so far — never the S3 `uploadId`, which stays
+sealed inside the signed token.
 
-If you need an upload to survive a closed tab out of the box, use tus.
+On the next upload of a file whose fingerprint matches a live session, the
+client presents the stored token to `POST /multipart/resume`. The server hands
+back the parts storage already holds — each with its byte size — plus a
+freshly-signed token. The client then:
+
+1. Validates every returned part's size: each part except the file's true final
+   one must be exactly `partSize`, the final one must be the exact tail, and a
+   part reported without a size is not trusted. Any mismatch discards the
+   session and starts fresh.
+2. Compares content hashes when both sides have one. With
+   [`checksumVerification`](/docs/guides/file-processing/#checksumverification)
+   on, the pipeline writes `metadata.originalContentHash` and the session
+   records it — which catches a file whose bytes changed while its name, size,
+   and timestamp did not. Without it, the fingerprint alone decides.
+3. Skips the stored part numbers, pre-fills the progress bar at the resumed byte
+   offset, and uploads only what is missing. If every part is already present it
+   goes straight to `/multipart/complete`.
+
+Resume failures are never fatal: a `404`, a `403`, an old server without the
+route, or a plain network error all fall through to an ordinary
+`/multipart/init` and a fresh upload. A resume that cannot happen costs
+bandwidth, not the upload.
+
+<Callout type="warning" title="Configure an S3 lifecycle rule for incomplete uploads">
+    Because `persist` defaults to on, a failed or abandoned upload no longer
+    aborts itself server-side — its parts are deliberately kept so the next
+    attempt can resume from them. Parts that are never resumed are never
+    cleaned up by upup, and S3 bills for them.
+
+    Set an `AbortIncompleteMultipartUpload` lifecycle rule on the bucket, with
+    an expiry of 1–7 days. Every S3-compatible provider supports it, MinIO
+    included. This is the one piece of operational setup cross-reload resume
+    asks of you; without it, incomplete parts accrue storage cost silently.
+
+</Callout>
+
+#### The full reload story: `persist` + `crashRecovery`
+
+The two features cover different halves of a reload and are designed to
+compose. Turn both on:
+
+```tsx
+<UpupUploader
+    mode="server"
+    serverUrl="/api/upup"
+    resumable={{ protocol: 'multipart' }}
+    crashRecovery
+/>
+```
+
+After a reload, `crashRecovery` restores the file list from IndexedDB — blobs
+included, with the file's `name`, `size`, `lastModified`, and `type` preserved
+byte-exactly, which is what keeps the fingerprint valid — and marks the
+interrupted files `PAUSED`. Calling `resume()` (the shipped UI's resume button)
+then re-enters the upload, the persisted session is found, and the transfer
+picks up mid-file.
+
+The explicit Resume click is the industry default — closing a tab is as often
+"cancel" as "oops", and silently re-uploading a file the user meant to abandon
+is the worse failure. If your product knows better (a backup tool, a sync
+client), set `autoResume: true` in the multipart config and a crash-restored
+upload continues by itself, no click required.
+
+Without `crashRecovery` the session still works, but the user has to re-select
+the same file themselves; nothing on the page remembers it was there.
+
+#### What still starts over
+
+The fingerprint is a heuristic — the same model `tus-js-client` uses — and
+`localStorage` is not durable storage. These cases silently fall back to a
+fresh upload, which is the safe direction to fail in:
+
+- **A `Blob` rather than a `File`.** Blobs have no name or `lastModified`, so
+  they cannot be fingerprinted and are never persisted.
+- **A file the pipeline transformed** (compression, HEIC conversion). The
+  rewritten file carries a new `lastModified`, so it simply never matches an
+  older session.
+- **A different server.** Sessions record the `serverUrl` they were created
+  against; a session saved against one server is never resumed against another.
+- **Evicted or unavailable `localStorage`.** Safari's ITP evicts storage after
+  a period of inactivity, and private-browsing modes may refuse writes
+  outright. The store returns "no session" rather than throwing.
+- **A session older than 24 hours**, or an upload past the server's resume
+  window (`multipartResumeWindowSeconds`, 24 hours by default — see the
+  [server HTTP reference](/docs/api-reference/server-http/#post-multipartresume)).
+- **An upload the provider no longer has** — already completed, aborted, or
+  reaped by your lifecycle rule. The server answers `404 NOT_FOUND` and the
+  client drops the session.
+
+#### Uploads longer than the token's lifetime
+
+The upload token expires an hour after `init`. When a `sign-part` or `complete`
+call comes back `403` with code `expired`, the client refreshes through
+`/multipart/resume` once, swaps in the new token, and retries the call — the
+three concurrent part uploaders share one in-flight refresh rather than racing.
+A slow multi-hour upload therefore completes without the integrator configuring
+anything.
+
+#### Turning it off
+
+`persist: false` on the client restores the pre-3.2 behavior exactly: no session
+is written, and any failure or abort issues a best-effort `/multipart/abort` so
+no orphaned upload is left behind. This is the switch that turns off parts
+retention.
+
+Setting `multipartResumeWindowSeconds: 0` on the **server** is a different lever:
+it unregisters the resume route, so cross-reload resume stops working (clients
+see an old server and fall back to a fresh upload gracefully). It does **not** by
+itself stop clients from retaining parts on failure — a client still running the
+default `persist: true` keeps skipping the abort, because it cannot know the
+server disabled the route until it tries. To both disable resume and reclaim the
+old auto-abort, pair `multipartResumeWindowSeconds: 0` with `persist: false` on
+the client — or, as always, rely on the `AbortIncompleteMultipartUpload`
+lifecycle rule, which is the durable backstop either way.
+
+Explicit cancellation always cleans up regardless of `persist`: `cancel()`,
+`removeFile()`, and `removeAll()` abort the server-side upload and clear the
+persisted session on a best-effort basis. A user who cancels does not leave
+parts behind.
 
 ## tus
 
@@ -210,7 +382,8 @@ size — `thresholdBytes` is a multipart-only concept and has no tus equivalent.
 ## Crash recovery is a different feature
 
 Do not confuse resumable uploads with crash recovery. They solve neighboring
-problems and can be enabled independently:
+problems, are enabled independently, and — for multipart — are two halves of
+the same reload story:
 
 - **Resumable uploads** are about the bytes of one in-flight transfer — parts,
   retries, and (for tus) reattaching to a partly-uploaded object on the server.
@@ -222,6 +395,11 @@ problems and can be enabled independently:
 
 The snapshot carries **no partial upload progress**: no byte offsets, no part
 list, no multipart upload id. Crash recovery gives the user their file list
-back; it does not pick a transfer up mid-stream. Conversely, enabling multipart
-does not persist selections. See the [reliability guide](/docs/guides/reliability)
-for how the two combine and which one to reach for.
+back; it does not pick a transfer up mid-stream. Conversely, a persisted
+multipart session does not remember which files were selected — it only knows
+how to continue one, once that file is in front of it again.
+
+Turned on together in server mode they cover the whole reload: crash recovery
+restores the file, the multipart session restores the transfer. See
+[Cross-reload resume](#cross-reload-resume) above, and the
+[reliability guide](/docs/guides/reliability) for the side-by-side comparison.
