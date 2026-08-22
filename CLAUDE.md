@@ -210,6 +210,18 @@ style drift in them is invisible to CI; check it by hand until the parser lands.
 Run either through `rtk proxy`: the rtk filter has reported "all files
 formatted" on a red `--check` (see Machine-local notes).
 
+**The consequence of that src-only scope: CI is BLIND to formatting outside
+`packages/*/src`, and the pre-commit hook is not.** Everything else —
+`packages/*/tests/**`, `.changeset/*.md`, scripts, apps — is format-checked
+ONLY by `lint-staged` in the hook. So a PR that adds a badly-formatted TEST
+file goes fully green on GitHub and still cannot be committed locally; it
+looks clean in review and blocks the author. Found 2026-08-21 on
+`fix/firefox-reload-resume`: two 82-char `new DOMException(...)` lines in a new
+test file failed the hook while every CI check was green. **When authoring or
+reviewing a change that touches files outside `packages/*/src`, run
+`prettier --check` on those paths explicitly** — never infer formatting health
+from CI. The fix is always `prettier --write`, never `--no-verify`.
+
 Flake protocol: if a test fails only in the full run, re-run it isolated
 before suspecting your change. Known load-sensitive cases:
 `@upupjs/server tests/token-refresh.test.ts` ("refresh success") and
@@ -630,3 +642,14 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   two methods.
 - Long-running user processes (e.g. a Python scraper) may be present — never
   kill unfamiliar PIDs.
+- **Never boot the playground dev server from a deep worktree.** Next dev
+  (Turbopack) panics with Windows MAX_PATH errors when the checkout sits under
+  a long scratchpad path, so the dev box keeps a SHORT-PATH clone of this repo
+  and runs the playground from there instead. That clone's `origin` may point
+  at a session-scoped scratchpad worktree that disappears between sessions —
+  re-point it at the real GitHub remote before trying to sync it. It also
+  carries local-only demo edits to `apps/playground/{next.config.mjs,
+  src/components/Uploader.tsx,.env.local}` (a local S3 endpoint and a
+  real-storage flag): **never commit those.**
+- Local MinIO for E2E is `pnpm run e2e:minio:up`. Never `down -v` — that wipes
+  the volume.
