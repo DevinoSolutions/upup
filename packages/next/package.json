@@ -51,17 +51,27 @@
             "import": "./dist/server.js",
             "require": "./dist/server.cjs"
         },
-        "./styles": "./dist/tailwind-prefixed.css"
+        "./styles": {
+            "types": "./dist/styles.d.ts",
+            "default": "./dist/tailwind-prefixed.css"
+        }
     },
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "styles": [
+                "dist/styles.d.ts"
+            ]
+        }
+    },
     "files": [
         "dist"
     ],
     "scripts": {
         "build": "node scripts/clean-dist.mjs && tsup && pnpm run build:css",
-        "build:css": "node scripts/copy-styles.mjs",
+        "build:css": "node scripts/copy-styles.mjs && node ../../scripts/emit-styles-dts.mjs",
         "dev": "tsup --watch",
         "lint": "eslint . --max-warnings 0",
         "pretest": "pnpm run build",

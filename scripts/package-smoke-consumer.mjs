@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { readTarballEntries, collectExportTargets } from './lib/tarball.mjs'
+import { checkStylesSubpath } from './lib/styles-subpath.mjs'
 import {
     existsSync,
     mkdirSync,
@@ -159,6 +160,25 @@ function assertCorePackageDistShape() {
     }
 }
 
+// #357: assertExportsResolvable only proves the export TARGETS exist. This
+// proves the ./styles subpath still has its types CONDITION (and its unmoved CSS
+// default), so collapsing it back to a bare string turns the gate red even
+// though the CSS would still be present. Shape rules + their negative cases live
+// in scripts/lib/styles-subpath.{mjs,test.mjs}.
+function assertStylesSubpathTyped() {
+    for (const packageName of frameworkPackages) {
+        const entries = readTarballEntries(findTarball(packageName))
+        const pkg = JSON.parse(
+            entries.get('package/package.json').toString('utf8'),
+        )
+        checkStylesSubpath(
+            packageName,
+            pkg,
+            entries.get('package/dist/styles.d.ts')?.toString('utf8'),
+        )
+    }
+}
+
 function assertFileSizeAtMost(filePath, limit, label) {
     const { size } = statSync(filePath)
     if (size > limit) {
@@ -245,9 +265,8 @@ mkdirSync(join(consumerDir, 'src'), { recursive: true })
 
 runPnpm(['run', 'build:package'])
 
-const allPackages = [
-    '@upupjs/core',
-    '@upupjs/server',
+// The seven UI packages — the ones that ship a ./styles subpath.
+const frameworkPackages = [
     '@upupjs/react',
     '@upupjs/vue',
     '@upupjs/svelte',
@@ -256,6 +275,8 @@ const allPackages = [
     '@upupjs/preact',
     '@upupjs/next',
 ]
+
+const allPackages = ['@upupjs/core', '@upupjs/server', ...frameworkPackages]
 
 for (const packageName of allPackages) {
     runPnpm(['--filter', packageName, 'pack', '--pack-destination', tarballDir])
@@ -274,6 +295,7 @@ for (const packageName of allPackages) {
 }
 
 assertCorePackageDistShape()
+assertStylesSubpathTyped()
 
 writeFileSync(
     join(consumerDir, '.npmrc'),
