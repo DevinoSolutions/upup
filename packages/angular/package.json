@@ -42,19 +42,29 @@
     "main": "./dist/fesm2022/upupjs-angular.mjs",
     "module": "./dist/fesm2022/upupjs-angular.mjs",
     "types": "./dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "styles": [
+                "dist/styles.d.ts"
+            ]
+        }
+    },
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "default": "./dist/fesm2022/upupjs-angular.mjs"
         },
-        "./styles": "./dist/tailwind-prefixed.css"
+        "./styles": {
+            "types": "./dist/styles.d.ts",
+            "default": "./dist/tailwind-prefixed.css"
+        }
     },
     "files": [
         "dist"
     ],
     "scripts": {
         "build": "ng-packagr -p ng-package.json && pnpm run build:css",
-        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css && node ../../scripts/emit-styles-dts.mjs",
         "dev": "ng-packagr -p ng-package.json --watch",
         "lint": "eslint . --max-warnings 0",
         "test": "vitest run",

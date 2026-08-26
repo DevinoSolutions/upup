@@ -43,20 +43,30 @@
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "styles": [
+                "dist/styles.d.ts"
+            ]
+        }
+    },
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "svelte": "./dist/index.js",
             "default": "./dist/index.js"
         },
-        "./styles": "./dist/tailwind-prefixed.css"
+        "./styles": {
+            "types": "./dist/styles.d.ts",
+            "default": "./dist/tailwind-prefixed.css"
+        }
     },
     "files": [
         "dist"
     ],
     "scripts": {
         "build": "svelte-package --input src --output dist && pnpm run build:css",
-        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css && node ../../scripts/emit-styles-dts.mjs",
         "dev": "svelte-package --input src --output dist --watch",
         "lint": "eslint . --max-warnings 0",
         "test": "vitest run",

@@ -45,14 +45,24 @@
             "import": "./dist/index.js",
             "require": "./dist/index.cjs"
         },
-        "./styles": "./dist/tailwind-prefixed.css"
+        "./styles": {
+            "types": "./dist/styles.d.ts",
+            "default": "./dist/tailwind-prefixed.css"
+        }
     },
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "typesVersions": {
+        "*": {
+            "styles": [
+                "dist/styles.d.ts"
+            ]
+        }
+    },
     "scripts": {
         "build": "tsup && vue-tsc --declaration --emitDeclarationOnly --outDir dist && pnpm run build:css",
-        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css",
+        "build:css": "postcss src/tailwind.css -o ./dist/tailwind-prefixed.css && node ../../scripts/emit-styles-dts.mjs",
         "dev": "tsup --watch --onSuccess \"pnpm run build:css\"",
         "lint": "eslint . --max-warnings 0",
         "test": "vitest run",
