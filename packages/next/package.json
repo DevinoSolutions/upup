@@ -1,6 +1,6 @@
 {
     "name": "@upupjs/next",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "description": "Next.js integration for the upup uploader — App Router + Pages Router handlers, client UI, and serverless-correct config helpers.",
     "keywords": [
         "file-upload",

@@ -28,10 +28,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -50,6 +50,21 @@ jobs:
 
             - name: Guard against fixture/baseline regen in CI (F-205)
               run: if [ -n "$UPDATE_PARITY" ] || [ -n "$UPDATE_A11Y_BASELINE" ]; then echo "regen env forbidden in CI"; exit 1; fi
+
+            # The deep React suite contains a real-MinIO spec (cross-reload
+            # multipart resume) that fails loudly when :9100 is down — boot
+            # MinIO BEFORE `pnpm run e2e`, mirroring e2e.yml.
+            - name: Boot MinIO for the e2e gate
+              run: |
+                  pnpm run e2e:minio:up
+                  for i in $(seq 1 45); do
+                    if curl -sf http://localhost:9100/minio/health/live > /dev/null; then
+                      echo "MinIO healthy on :9100"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "MinIO failed to become healthy on :9100" >&2
+                  exit 1
 
             - name: Run e2e gate (deep React + cross-framework)
               run: pnpm run e2e
@@ -107,10 +122,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -129,10 +144,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -151,7 +166,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Detect eval credentials
               id: creds
@@ -168,7 +183,7 @@ jobs:
 
             - name: Setup pnpm
               if: steps.creds.outputs.present == 'true'
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               if: steps.creds.outputs.present == 'true'
@@ -209,7 +224,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Detect drive sandbox credentials
               id: creds
@@ -229,7 +244,7 @@ jobs:
 
             - name: Setup pnpm
               if: steps.creds.outputs.present == 'true'
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               if: steps.creds.outputs.present == 'true'
@@ -339,10 +354,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -382,7 +397,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Detect PostHog e2e capture token
               id: creds
@@ -399,7 +414,7 @@ jobs:
 
             - name: Setup pnpm
               if: steps.creds.outputs.present == 'true'
-              uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v4.4.0
+              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
 
             - name: Setup Node.js
               if: steps.creds.outputs.present == 'true'

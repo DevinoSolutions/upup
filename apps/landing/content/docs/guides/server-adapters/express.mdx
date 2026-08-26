@@ -91,7 +91,8 @@ first.
 
 Every route the browser POSTs to (`/presign`, `/multipart/init`,
 `/multipart/sign-part`, `/multipart/complete`, `/multipart/abort`,
-`/files/:provider/transfer`) sends `Content-Type: application/json`, which
+`/multipart/resume`, `/files/:provider/transfer`) sends
+`Content-Type: application/json`, which
 is exactly what `express.json()` matches by default. No multipart or
 `urlencoded` parser is involved — the file bytes never pass through
 Express on the presigned paths.

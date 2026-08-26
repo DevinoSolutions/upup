@@ -26,6 +26,7 @@ export type {
     MultipartSignPartResponse,
     MultipartPart,
     MultipartListPartsResponse,
+    MultipartResumeResponse,
     MultipartCompleteResponse,
     MultipartAbortResponse,
     MaxFileSizeObject,

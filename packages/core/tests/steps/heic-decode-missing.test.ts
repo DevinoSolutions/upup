@@ -45,5 +45,8 @@ describe('heicToJpegBlob — optional dep missing', () => {
             vi.doUnmock('libheif-js/libheif-wasm/libheif-bundle.mjs')
             vi.resetModules()
         }
-    })
+        // 30s budget: two vi.resetModules() + two dynamic re-imports of the
+        // decode module cross the 5s default when the whole workspace runs
+        // coverage in parallel and starves the CPU (measured >5s under load).
+    }, 30_000)
 })

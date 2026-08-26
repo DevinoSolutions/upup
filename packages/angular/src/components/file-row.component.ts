@@ -8,7 +8,12 @@ import {
     type UploadFile,
     type Translations,
 } from '@upupjs/core'
-import { cn, fileGetIsImage, fileGetExtension } from '@upupjs/core/internal'
+import {
+    cn,
+    fileGetIsImage,
+    fileGetExtension,
+    isFileRemovalLocked,
+} from '@upupjs/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { IconComponent } from './icon.component'
 import { ProgressBarComponent } from './progress-bar.component'
@@ -96,7 +101,7 @@ interface NonMediaThumb {
                     [class]="removeButtonClass"
                     (click)="onRemove($event)"
                     type="button"
-                    [disabled]="!!progress"
+                    [disabled]="isRemovalLocked"
                     [attr.aria-label]="translations.removeFile"
                     data-testid="upup-file-remove"
                 >
@@ -136,6 +141,10 @@ export class FileRowComponent {
 
     get isSuccessful(): boolean {
         return this.file.status === UploadStatus.SUCCESSFUL
+    }
+
+    get isRemovalLocked(): boolean {
+        return isFileRemovalLocked(this.progress, this.file.status)
     }
 
     get thumb(): NonMediaThumb {

@@ -33,7 +33,12 @@ export const DEFAULT_DOWNLOAD_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
 export const MIN_PART_SIZE = 5 * 1024 * 1024 // 5 MiB
 const MAX_PARTS = 10_000
 
-function computePartSize(fileSize: number, chunkSizeBytes?: number): number {
+// Exported for its boundary tests: the MAX_PARTS clamp is what keeps a
+// >48.8 GiB file from failing at part 10,001, and it must stay covered.
+export function computePartSize(
+    fileSize: number,
+    chunkSizeBytes?: number,
+): number {
     let partSize = chunkSizeBytes ?? MIN_PART_SIZE
     if (partSize < MIN_PART_SIZE) partSize = MIN_PART_SIZE
     const minPartSizeForFile = Math.ceil(fileSize / MAX_PARTS)
@@ -203,6 +208,14 @@ export async function abortMultipartUpload(
     return { ok: true }
 }
 
+/**
+ * Parts S3/MinIO currently holds for an in-progress multipart upload, each with
+ * the byte count actually stored (`size`, straight off ListParts' `Size`). The
+ * size is what makes a resume safe rather than hopeful: the client re-derives
+ * its own chunk boundaries and refuses to complete unless every stored part
+ * lands exactly where its chunking would have put it, so a part written by a
+ * different chunk size can never be spliced into the middle of the object.
+ */
 export async function listMultipartParts(
     storage: UpupStorageConfig,
     key: string,
@@ -225,7 +238,11 @@ export async function listMultipartParts(
         if (response.Parts) {
             for (const part of response.Parts) {
                 if (part.PartNumber != null && part.ETag) {
-                    parts.push({ partNumber: part.PartNumber, eTag: part.ETag })
+                    parts.push({
+                        partNumber: part.PartNumber,
+                        eTag: part.ETag,
+                        ...(part.Size !== undefined ? { size: part.Size } : {}),
+                    })
                 }
             }
         }
@@ -247,6 +264,12 @@ export async function listMultipartParts(
  * `size` it likes at init, but the bytes actually stored are authoritative
  * (closes the multipart variant of S1: init small, upload large parts, complete).
  * Paginates on `IsTruncated`, mirroring `listMultipartParts`.
+ *
+ * Deliberately NOT re-expressed as a sum over `listMultipartParts` now that the
+ * latter reports `size`: that function DROPS any part S3 reports without a
+ * PartNumber or ETag, and this one must count every byte the provider says it
+ * holds. Routing the envelope check through a filtered list would let bytes go
+ * unbilled against smax — a security regression, not a tidy-up.
  */
 export async function getMultipartUploadedSize(
     storage: UpupStorageConfig,

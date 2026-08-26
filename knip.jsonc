@@ -41,7 +41,9 @@
             "project": ["src/**/*.{ts,tsx}"],
         },
     },
-    "ignore": ["audit/**", "apps/**", "scripts/**"],
+    // sdk/** is the parked @useupup/sdk npm placeholder (an empty module published
+    // to hold the name) — not a workspace, imported by nothing, by design.
+    "ignore": ["audit/**", "apps/**", "scripts/**", "sdk/**"],
     // F-788: re-enabling `exports`/`duplicates` was attempted and REVERTED. It
     // surfaced 38 unused + 12 duplicate exports dominated by INTENTIONAL
     // per-framework parity (principle 4): parallel composables export both a named

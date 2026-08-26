@@ -146,4 +146,24 @@ describe('normalizeUploaderOptions', () => {
         expect(coreOptions.minFileSize).toEqual({ size: 1, unit: 'KB' })
         expect(coreOptions.maxTotalFileSize).toEqual({ size: 100, unit: 'MB' })
     })
+
+    it('networkAware true passes through to coreOptions verbatim', () => {
+        expect(
+            normalizeUploaderOptions({ networkAware: true }).coreOptions
+                .networkAware,
+        ).toBe(true)
+    })
+
+    it('networkAware false passes through to coreOptions verbatim so the opt-out reaches core', () => {
+        expect(
+            normalizeUploaderOptions({ networkAware: false }).coreOptions
+                .networkAware,
+        ).toBe(false)
+    })
+
+    it('networkAware omitted stays undefined in coreOptions so core applies its default-on behavior', () => {
+        expect(
+            normalizeUploaderOptions({}).coreOptions.networkAware,
+        ).toBeUndefined()
+    })
 })

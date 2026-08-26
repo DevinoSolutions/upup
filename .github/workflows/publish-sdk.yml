@@ -1,0 +1,30 @@
+name: Publish npm placeholder
+
+# Manual only, by design. This repo's own release flow publishes the root `upup` package, so
+# this workflow deliberately does NOT trigger on `release` — it must never
+# fire as a side effect of that flow.
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk
+    permissions:
+      contents: read
+      # Required for npm trusted publishing (OIDC). No NPM_TOKEN secret is used.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing requires npm >= 11.5.1; setup-node ships an older npm.
+      - run: npm install -g npm@latest
+
+      - run: npm publish --access public

@@ -52,6 +52,7 @@ type _Check_MultipartCompleteResponse = core.MultipartCompleteResponse
 type _Check_MultipartInitResponse = core.MultipartInitResponse
 type _Check_MultipartListPartsResponse = core.MultipartListPartsResponse
 type _Check_MultipartPart = core.MultipartPart
+type _Check_MultipartResumeResponse = core.MultipartResumeResponse
 type _Check_MultipartSignPartResponse = core.MultipartSignPartResponse
 type _Check_ObservableController = core.ObservableController
 type _Check_OneDriveConfig = core.OneDriveConfig

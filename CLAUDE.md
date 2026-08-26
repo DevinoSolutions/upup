@@ -358,6 +358,20 @@ the suites actually drive):
   variant fixture block, (c) a manual live overflow **and spacing/touch-target**
   check per framework (the harness catches outright clip, never cramped
   spacing).
+- **Firefox-only upload behavior:** the e2e harness is Chromium-only, and two
+  proven Firefox-only reload-resume bugs (2026-08-21) are invisible to it by
+  construction: Firefox streams XHR Blob bodies lazily (a slice of an
+  IndexedDB-revived File can send headers but never the body → backend 503
+  storm), and Firefox ties Blob/File handles read from IndexedDB to the
+  connection they were read over (closing the db invalidates a revived File
+  mid-resume; `arrayBuffer()` rejects `AbortError`). Guards: the vitest
+  suites `multipart-part-body-materialization.test.ts` and
+  `crash-recovery-indexeddb-connection.test.ts` pin the fix mechanisms
+  (materialize parts ≤ 16 MiB; one cached IDB connection), but only a live
+  Firefox run against real/slow storage (B2, or MinIO under load — fast local
+  MinIO often passes) proves the behavior itself. Re-verify there before
+  touching `putPart` body handling or `IndexedDBStorage`'s connection
+  lifecycle.
 
 ## Naming vocabulary
 
@@ -648,8 +662,8 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   and runs the playground from there instead. That clone's `origin` may point
   at a session-scoped scratchpad worktree that disappears between sessions —
   re-point it at the real GitHub remote before trying to sync it. It also
-  carries local-only demo edits to `apps/playground/{next.config.mjs,
-  src/components/Uploader.tsx,.env.local}` (a local S3 endpoint and a
+  carries local-only demo edits under `apps/playground/` — `next.config.mjs`,
+  `src/components/Uploader.tsx`, `.env.local` (a local S3 endpoint and a
   real-storage flag): **never commit those.**
 - Local MinIO for E2E is `pnpm run e2e:minio:up`. Never `down -v` — that wipes
   the volume.

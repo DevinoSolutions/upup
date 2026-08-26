@@ -28,6 +28,21 @@ describe('buildUploaderContext', () => {
         destroy()
     })
 
+    it('carries the networkAware opt-out from options through to the core instance', () => {
+        const { ctx, destroy } = buildUploaderContext(
+            { networkAware: false },
+            () => {},
+        )
+        expect(ctx.core.options.networkAware).toBe(false)
+        destroy()
+    })
+
+    it('leaves networkAware undefined on core when the option is omitted so the default-on behavior applies', () => {
+        const { ctx, destroy } = buildUploaderContext({}, () => {})
+        expect(ctx.core.options.networkAware).toBeUndefined()
+        destroy()
+    })
+
     it('resolves server mode when serverUrl is set without uploadEndpoint', () => {
         const { ctx, destroy } = buildUploaderContext(
             { serverUrl: 'http://localhost:53060' },

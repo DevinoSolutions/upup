@@ -95,7 +95,7 @@ getUserId: async req => {
 
 The id you return is baked into the HMAC upload token issued at
 `POST /multipart/init` as `uid`. Every continuation route — sign-part,
-complete, abort — re-resolves the caller through `getUserId` and compares the
+complete, abort, resume — re-resolves the caller through `getUserId` and compares the
 result against that bound `uid`; a mismatch is **403 `AUTH_DENIED`**. A leaked
 token therefore cannot be replayed by a different signed-in user.
 

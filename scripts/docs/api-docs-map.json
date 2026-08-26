@@ -129,6 +129,7 @@
         "isProcessing": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "maxConcurrentUploads": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "maxFileSize": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
+        "networkAware": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "maxFiles": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "maxRetries": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",
         "maxTotalFileSize": "apps/landing/content/docs/api-reference/upupuploader/optional-props.mdx",

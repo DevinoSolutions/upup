@@ -14,6 +14,9 @@ import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
 import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
+import { abortPersistedMultipartSessions } from './strategies/multipart-upload'
+import { fileFingerprint, loadSession } from './utils/multipart-session-store'
+import { isUploadActive } from './utils/status-helpers'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
 import {
     serializeCrashRecovery,
@@ -47,11 +50,31 @@ export class UpupCore {
     private _status: UploadStatus = UploadStatus.IDLE
     private _error: Error | null = null
     private crashRecovery: CrashRecoveryManager | null = null
+    // Only set when WE created the IndexedDBStorage (not user-supplied
+    // storage, whose lifecycle belongs to the caller) so destroy() can
+    // release its cached IndexedDB connection.
+    private crashRecoveryStorage: IndexedDBStorage | null = null
     private crashRecoveryUnsubscribe: (() => void) | null = null
+    /** Every crash-recovery storage write flows through this one promise chain.
+     *  Blob snapshots of large files make IndexedDB puts slow; fire-and-forget
+     *  save/clear calls complete out of order, so a save started before
+     *  completion can land after the completion clear and resurrect a finished
+     *  upload as a resumable one. FIFO ordering makes the last requested op the
+     *  last applied op. */
+    private crashRecoveryChain: Promise<void> = Promise.resolve()
+    /** True while a snapshot sync is queued but not yet run. Progress ticks
+     *  arrive far faster than a large snapshot writes; coalescing them into the
+     *  one queued sync (which reads state at write time) keeps it to at most
+     *  one write in flight plus one pending, instead of N stacked blob puts. */
+    private crashRecoverySyncQueued = false
     private fileOverrides = new Map<string, Partial<UploadOptions>>()
     private pauseRequested = false
     private cancelRequested = false
     private destroyed = false
+    /** True only while the CURRENT pause was made by the offline handler —
+     *  the one case `online` may resume. A pause the user chose stays theirs. */
+    private offlinePausedRun = false
+    private detachNetworkListeners: (() => void) | null = null
     private activeRun: Promise<UploadFile[]> | null = null
     private workerProvider:
         import('./worker/create-worker-provider').WorkerProvider | null = null
@@ -74,6 +97,57 @@ export class UpupCore {
         }
 
         this.configureCrashRecovery(options.crashRecovery)
+        this.installNetworkAwareness()
+    }
+
+    /** Connectivity reactions (`networkAware`, default on): `offline` pauses
+     *  an active run — with `persist` on, that keeps the multipart session
+     *  alive instead of burning whole-run retries against a dead network —
+     *  and `online` resumes it, but ONLY when this handler made the pause.
+     *  SSR/node-safe: without a window this installs nothing. */
+    private installNetworkAwareness(): void {
+        if (this.options.networkAware === false) return
+        if (
+            typeof window === 'undefined' ||
+            typeof window.addEventListener !== 'function'
+        ) {
+            return
+        }
+        const onOffline = () => {
+            if (this.destroyed || !isUploadActive(this._status)) return
+            this.pause()
+            this.offlinePausedRun = true
+        }
+        const onOnline = () => {
+            if (!this.offlinePausedRun) return
+            // Deferred a tick (F-148 pattern): the offline pause aborts the
+            // active run, which settles on a microtask — a synchronous resume
+            // would hit the activeRun re-entrancy guard, no-op, and leave the
+            // upload stuck PAUSED. The flag doubles as the cancellation token:
+            // a user pause() (or a fresh offline pause re-marking) in the gap
+            // clears/re-owns it before the timer fires.
+            setTimeout(() => {
+                if (!this.offlinePausedRun || this.destroyed) return
+                // navigator.onLine is typed boolean but absent in some
+                // runtimes — only an explicit false means "still offline".
+                const onLine =
+                    typeof navigator === 'undefined'
+                        ? undefined
+                        : (navigator as { onLine?: boolean }).onLine
+                if (onLine === false) {
+                    return // went offline again before the timer fired
+                }
+                this.offlinePausedRun = false
+                if (this._status !== UploadStatus.PAUSED) return
+                this.resume()
+            }, 0)
+        }
+        window.addEventListener('offline', onOffline)
+        window.addEventListener('online', onOnline)
+        this.detachNetworkListeners = () => {
+            window.removeEventListener('offline', onOffline)
+            window.removeEventListener('online', onOnline)
+        }
     }
 
     /** The one projection of CoreOptions the FileManager consumes — construction
@@ -141,21 +215,58 @@ export class UpupCore {
 
         const crashOptions =
             typeof crashRecovery === 'object' ? crashRecovery : {}
-        this.crashRecovery = new CrashRecoveryManager(
-            crashOptions.storage ?? new IndexedDBStorage(),
-        )
+        let storage = crashOptions.storage
+        if (!storage) {
+            this.crashRecoveryStorage = new IndexedDBStorage()
+            storage = this.crashRecoveryStorage
+        }
+        this.crashRecovery = new CrashRecoveryManager(storage)
         this.crashRecoveryUnsubscribe = this.on('state-change', () => {
             if (this.destroyed || this.files.size === 0) return
+            this.queueCrashRecoverySync()
+        })
+    }
+
+    /** Queue a snapshot write that reads files/status at WRITE time, not at
+     *  event time — so the write that runs last always reflects the state that
+     *  came last, and a completion observed while a save is queued turns that
+     *  queued write into the clear instead of racing it. */
+    private queueCrashRecoverySync(): void {
+        if (this.crashRecoverySyncQueued) return
+        this.crashRecoverySyncQueued = true
+        void this.enqueueCrashRecoveryOp(async () => {
+            this.crashRecoverySyncQueued = false
+            const manager = this.crashRecovery
+            if (!manager || this.destroyed || this.files.size === 0) return
             if (this._status === UploadStatus.SUCCESSFUL) {
-                this.crashRecovery
-                    ?.clear()
+                await manager
+                    .clear()
                     .catch(this.warnCrashRecoveryFailure('clear'))
                 return
             }
-            this.crashRecovery
-                ?.save(serializeCrashRecovery(this.files, this._status))
+            await manager
+                .save(serializeCrashRecovery(this.files, this._status))
                 .catch(this.warnCrashRecoveryFailure('save'))
         })
+    }
+
+    /** Queue an unconditional clear behind any in-flight snapshot write. The
+     *  default manager is captured at call time so a clear requested before
+     *  disable/destroy still applies after the field is nulled. */
+    private queueCrashRecoveryClear(
+        manager: CrashRecoveryManager | null = this.crashRecovery,
+    ): Promise<void> {
+        if (!manager) return Promise.resolve()
+        return this.enqueueCrashRecoveryOp(() => manager.clear())
+    }
+
+    private enqueueCrashRecoveryOp(op: () => Promise<void>): Promise<void> {
+        const run = this.crashRecoveryChain.then(op)
+        this.crashRecoveryChain = run.then(
+            () => undefined,
+            () => undefined,
+        )
+        return run
     }
 
     private disableCrashRecovery(): void {
@@ -163,7 +274,9 @@ export class UpupCore {
         this.crashRecoveryUnsubscribe?.()
         this.crashRecoveryUnsubscribe = null
         this.crashRecovery = null
-        manager?.clear().catch(this.warnCrashRecoveryFailure('clear'))
+        this.queueCrashRecoveryClear(manager).catch(
+            this.warnCrashRecoveryFailure('clear'),
+        )
     }
 
     use(plugin: UpupPlugin): this {
@@ -241,9 +354,35 @@ export class UpupCore {
         }
     }
 
+    /**
+     * Discard the persisted multipart sessions of files the user just threw
+     * away (cancel / removeFile / removeAll), aborting them server-side on the
+     * way out. With `resumable.persist` on, a failed or cancelled upload
+     * deliberately keeps its server-side parts alive for a later resume — so
+     * an explicit discard is the ONE place that has to say "no, really, drop
+     * it", or the user pays storage for parts nothing will ever finish.
+     *
+     * Fire-and-forget and fully swallowed: cancelling must never throw or wait.
+     */
+    private discardPersistedMultipartSessions(files: UploadFile[]): void {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart') return
+        if (resumable.persist === false) return
+        const pending = files.filter(file => file.key == null)
+        if (pending.length === 0) return
+        try {
+            const { credentials } = resolveUploadConfig(this.options)
+            abortPersistedMultipartSessions(pending, credentials)
+        } catch {
+            // upup-catch: session cleanup is advisory — a misconfigured upload
+            // target must not turn cancel/remove into a throwing call.
+        }
+    }
+
     removeFile(id: string): void {
         const file = this.fileManager.removeFile(id)
         if (file) {
+            this.discardPersistedMultipartSessions([file])
             this.fileOverrides.delete(id)
             this.emitter.emit('file-removed', file)
             this.emitter.emit('state-change', { files: this.files })
@@ -251,11 +390,12 @@ export class UpupCore {
     }
 
     removeAll(): void {
+        this.discardPersistedMultipartSessions([...this.files.values()])
         this.fileManager.removeAll()
         this.fileOverrides.clear()
-        this.crashRecovery
-            ?.clear()
-            .catch(this.warnCrashRecoveryFailure('clear'))
+        this.queueCrashRecoveryClear().catch(
+            this.warnCrashRecoveryFailure('clear'),
+        )
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-cleared', {})
     }
@@ -554,6 +694,28 @@ export class UpupCore {
                 }
             }
 
+            // A pause or cancel can land DURING the PROCESSING phase — the
+            // offline handler firing, or the user acting, before uploadManager
+            // exists to abort. There is no transfer to stop yet, so it only
+            // records intent (pauseRequested / cancelRequested); without this
+            // guard runUpload marches straight on and starts the transfer
+            // anyway — over the very network the offline pause meant to avoid,
+            // burning the retry budget and stranding the run in a state
+            // online/resume can no longer recognize as PAUSED. Honor the
+            // requested pause/cancel here, before any transfer begins; the
+            // existing resume()/online path continues the held run later.
+            if (this.destroyed || this.cancelRequested) {
+                this._status = UploadStatus.IDLE
+                this._error = null
+                this.emitter.emit('state-change', { status: this._status })
+                return [...this.files.values()]
+            }
+            if (this.pauseRequested) {
+                this._status = UploadStatus.PAUSED
+                this.emitter.emit('state-change', { status: this._status })
+                return [...this.files.values()]
+            }
+
             this._status = UploadStatus.UPLOADING
             this.emitter.emit('state-change', { status: this._status })
 
@@ -568,9 +730,9 @@ export class UpupCore {
             this._error = null
             this.emitter.emit('upload-all-complete', [...this.files.values()])
             this.emitter.emit('state-change', { status: this._status })
-            this.crashRecovery
-                ?.clear()
-                .catch(this.warnCrashRecoveryFailure('clear'))
+            this.queueCrashRecoveryClear().catch(
+                this.warnCrashRecoveryFailure('clear'),
+            )
 
             return [...this.files.values()]
         } catch (error) {
@@ -628,8 +790,18 @@ export class UpupCore {
      * requires multipart upload support.
      */
     pause(): void {
+        // Any pause supersedes an offline-initiated one: the offline handler
+        // re-marks its own pauses right after this call, so a surviving flag
+        // here would let `online` overrule a pause the user chose.
+        this.offlinePausedRun = false
+        // Mark the pause request unconditionally, not only when a transfer is
+        // in flight. A pause during the PROCESSING phase has no uploadManager
+        // to abort yet, but the intent is identical and runUpload's guard reads
+        // this flag to hold the run before it ever starts the transfer. A
+        // request set while no run is active is harmless: resetRunFlags clears
+        // it at the head of the next run and resume() clears it too.
+        this.pauseRequested = true
         if (this.uploadManager) {
-            this.pauseRequested = true
             this.uploadManager.abort()
             this.uploadManager = null
         }
@@ -651,6 +823,7 @@ export class UpupCore {
             )
         if (this.activeRun) return
         this.pauseRequested = false
+        this.offlinePausedRun = false
         this._status = UploadStatus.UPLOADING
         this.emitter.emit('upload-resume', {})
         this.emitter.emit('state-change', { status: this._status })
@@ -682,15 +855,50 @@ export class UpupCore {
                 .finally(() => {
                     this.activeRun = null
                 })
+            return
+        }
+
+        // An empty incomplete list means every present file is already keyed —
+        // reachable when an autoResume (or a manual Resume) fires against a
+        // crash snapshot saved in the window after the last file's key landed
+        // but before runUpload set SUCCESSFUL. No run starts and no .finally
+        // runs, so without this the status is stranded at UPLOADING forever — a
+        // permanent spinner. Settle to the terminal status the finished run
+        // would have reached. Scoped to `incomplete.length === 0`: a non-empty
+        // list with no upload target is a different case that keeps its
+        // just-set status, and an empty core has nothing to settle.
+        if (incomplete.length === 0 && this.files.size > 0) {
+            const allComplete = [...this.files.values()].every(
+                file => file.key != null,
+            )
+            this._status = allComplete
+                ? UploadStatus.SUCCESSFUL
+                : UploadStatus.IDLE
+            if (allComplete) {
+                this.emitter.emit('upload-all-complete', [
+                    ...this.files.values(),
+                ])
+                this.queueCrashRecoveryClear().catch(
+                    this.warnCrashRecoveryFailure('clear'),
+                )
+            }
+            this.emitter.emit('state-change', { status: this._status })
         }
     }
 
     cancel(): void {
+        // An explicit cancel ends the run for good — it can never be the pause
+        // `online` is allowed to auto-resume. Every other lifecycle method that
+        // leaves the offline-pause state (pause/resume/the online timer) clears
+        // this flag; cancel must too, or a cancel taken while offline leaves the
+        // flag set and a later online resurrects the upload the user killed.
+        this.offlinePausedRun = false
         this.cancelRequested = true
         if (this.uploadManager) {
             this.uploadManager.abort()
             this.uploadManager = null
         }
+        this.discardPersistedMultipartSessions([...this.files.values()])
         this.updatePendingFileStatuses(UploadStatus.IDLE)
         this._status = UploadStatus.IDLE
         this._error = null
@@ -747,9 +955,9 @@ export class UpupCore {
                 this.emitter.emit('upload-all-complete', [
                     ...this.files.values(),
                 ])
-                this.crashRecovery
-                    ?.clear()
-                    .catch(this.warnCrashRecoveryFailure('clear'))
+                this.queueCrashRecoveryClear().catch(
+                    this.warnCrashRecoveryFailure('clear'),
+                )
             }
             this.emitter.emit('state-change', { status: this._status })
             return uploaded
@@ -827,8 +1035,17 @@ export class UpupCore {
             const wasActive =
                 restored.status === UploadStatus.PROCESSING ||
                 restored.status === UploadStatus.UPLOADING
+            const liveFiles = restored.files.filter(
+                ([, file]) => !this.isStaleMultipartRestore(file),
+            )
+            if (liveFiles.length === 0) {
+                this.queueCrashRecoveryClear().catch(
+                    this.warnCrashRecoveryFailure('clear'),
+                )
+                return false
+            }
             const normalized = {
-                files: restored.files.map(([id, file]) => {
+                files: liveFiles.map(([id, file]) => {
                     if (
                         wasActive &&
                         file.key == null &&
@@ -849,18 +1066,89 @@ export class UpupCore {
                 status: wasActive ? UploadStatus.PAUSED : restored.status,
             }
             this.restore(normalized)
+            this.seedRestoredProgress(normalized.files)
             this.emitter.emit('crash-recovery-restored', {})
+            this.maybeScheduleAutoResume(normalized.status)
             return true
         }
         return false
     }
 
+    /** `resumable.autoResume` continues a crash-restored upload without the
+     *  explicit Resume click. Off by default on purpose: closing a tab is an
+     *  ambiguous signal — as often "cancel" as "oops" — so silently resuming
+     *  a transfer the user may have meant to kill is an integrator's call,
+     *  never the library's. Deferred a tick so the host finishes mounting
+     *  (the same guard autoUpload's timer carries, F-148), and re-checked at
+     *  fire time: the user may have discarded the restore in between. */
+    private maybeScheduleAutoResume(restoredStatus: UploadStatus): void {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart' || !resumable.autoResume) {
+            return
+        }
+        if (restoredStatus !== UploadStatus.PAUSED) return
+        setTimeout(() => {
+            if (this.destroyed) return
+            if (this._status !== UploadStatus.PAUSED) return
+            this.resume()
+        }, 0)
+    }
+
+    /** A restored PAUSED file rendered "0 B of N" even when most of it was
+     *  already in storage — the persisted multipart session knows the real
+     *  offset, but nothing replayed it into the progress pipeline until the
+     *  user actually hit resume. Emit it here so the restored UI opens at the
+     *  byte count the resume will continue from. Same session gates as
+     *  tryResume (scope), minus the server round-trip: this is display-only
+     *  and must not spend a request; the authoritative recheck still happens
+     *  on resume. */
+    /** A finished multipart upload can die in the window between its
+     *  synchronous session removal and the asynchronous IndexedDB snapshot
+     *  clear — the next visit then restores a file the server already
+     *  assembled, offering a Resume that would re-upload all of it. The
+     *  session store is the tiebreaker: init writes the session synchronously
+     *  before the first byte moves and completion removes it synchronously,
+     *  so an UPLOADING-status file of multipart size with no session is a
+     *  stale snapshot, not a crashed upload. PROCESSING files never had a
+     *  session and stay restorable; so does everything below the multipart
+     *  threshold or outside persist mode. */
+    private isStaleMultipartRestore(file: UploadFile): boolean {
+        const resumable = this.options.resumable
+        if (resumable?.protocol !== 'multipart') return false
+        if (!(resumable.persist ?? true)) return false
+        if (!(file instanceof File)) return false
+        if (file.status !== UploadStatus.UPLOADING) return false
+        if (file.key != null) return false
+        if (file.size < (resumable.thresholdBytes ?? 5 * 1024 * 1024)) {
+            return false
+        }
+        return loadSession(fileFingerprint(file)) == null
+    }
+
+    private seedRestoredProgress(restored: [string, UploadFile][]): void {
+        for (const [, file] of restored) {
+            if (file.status !== UploadStatus.PAUSED) continue
+            if (!(file instanceof File)) continue
+            const session = loadSession(fileFingerprint(file))
+            if (!session || session.scope !== this.options.serverUrl) continue
+            const loaded = Math.min(session.uploadedBytes ?? 0, file.size)
+            if (loaded <= 0) continue
+            this.emitter.emit('upload-progress', {
+                fileId: file.id,
+                loaded,
+                total: file.size,
+            })
+        }
+    }
+
     async clearCrashRecovery(): Promise<void> {
-        await this.crashRecovery?.clear()
+        await this.queueCrashRecoveryClear()
     }
 
     destroy(): void {
         this.destroyed = true
+        this.detachNetworkListeners?.()
+        this.detachNetworkListeners = null
         this.uploadManager?.abort()
         this.uploadManager = null
         this.workerProvider?.terminate()
@@ -871,6 +1159,10 @@ export class UpupCore {
         // Release the manager refs (F-148). Do NOT clear crash-recovery storage — a normal
         // unmount must leave a recoverable snapshot behind. fileManager is deliberately kept
         // (not nulled) so the files/progress getters keep working post-destroy.
+        // Closing the cached IndexedDB connection only releases the handle
+        // (pending transactions drain first); the snapshot data stays put.
+        this.crashRecoveryStorage?.close()
+        this.crashRecoveryStorage = null
         this.crashRecovery = null
         this.pipelineEngine = null
         this.fileOverrides.clear()

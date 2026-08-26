@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { cn } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
 import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
 import { fileGetExtension, fileGetIsImage } from '@upupjs/core/internal'
 import {
@@ -119,7 +119,7 @@ function onRemove(e: MouseEvent) {
             "
             @click="onRemove"
             type="button"
-            :disabled="!!progress"
+            :disabled="isFileRemovalLocked(progress, file.status)"
             :aria-label="tr.removeFile"
             data-testid="upup-file-remove"
         >

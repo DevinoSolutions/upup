@@ -59,6 +59,10 @@ vi.mock('../src/providers/aws', () => ({
         record('abort')(storage)
         return Promise.resolve({ ok: true })
     }),
+    listMultipartParts: vi.fn((storage: UpupStorageConfig) => {
+        record('resume')(storage)
+        return Promise.resolve({ parts: [] })
+    }),
     getMultipartUploadedSize: vi.fn(() => Promise.resolve(0)),
     checkStorageReachable: vi.fn(() => Promise.resolve({ ok: true as const })),
     generateSignedPublicUrl: vi.fn(() => Promise.resolve('https://signed')),
@@ -296,6 +300,65 @@ describe('multipart continuations stay bound to the init storage (#337)', () => 
         const res = await handler(
             post('/multipart/sign-part', { token: forged, partNumber: 1 }),
         )
+        expect(res.status).toBe(403)
+        expect((await res.json()) as { code: string }).toMatchObject({
+            code: UpupErrorCode.AUTH_DENIED,
+        })
+        expect(reached).toEqual([])
+    })
+
+    // /multipart/resume arrived with cross-reload resume and is a continuation
+    // like the other three: it must honour the token's binding, and the token it
+    // hands back must carry that binding forward — otherwise one resume launders
+    // a bucket-bound token into an unbound one.
+    it('reaches the bound bucket on resume and re-issues the same binding', async () => {
+        const handler = createUpupHandler(dynamic)
+        const init = (await (
+            await handler(post('/multipart/init', meta('quarantine')))
+        ).json()) as { token: string }
+
+        const resumed = (await (
+            await handler(post('/multipart/resume', { token: init.token }))
+        ).json()) as { token: string }
+
+        expect(reached.map(r => `${r.op}:${r.bucket}`)).toEqual([
+            'multipart-init:app-quarantine',
+            'resume:app-quarantine',
+        ])
+
+        const payload = JSON.parse(
+            Buffer.from(resumed.token.split('.')[0]!, 'base64url').toString(),
+        ) as { sid?: string }
+        expect(payload.sid).toBe(identityOf(BUCKETS.quarantine!))
+
+        // And the re-issued token still works on a later continuation.
+        await handler(
+            post('/multipart/sign-part', {
+                token: resumed.token,
+                partNumber: 1,
+            }),
+        )
+        expect(reached.at(-1)).toEqual({
+            op: 'sign-part',
+            bucket: 'app-quarantine',
+        })
+    })
+
+    it('403s a resume whose bound storage the resolver will not produce', async () => {
+        const handler = createUpupHandler({
+            ...dynamic,
+            storage: () => BUCKETS.images!,
+        })
+        const forged = await signUploadToken(SECRET, {
+            k: 'app-quarantine/uuid/scan.pdf',
+            u: 'mp-1',
+            uid: null,
+            smin: 0,
+            smax: 2048,
+            sid: identityOf(BUCKETS.quarantine!)!,
+            exp: Math.floor(Date.now() / 1000) + 600,
+        })
+        const res = await handler(post('/multipart/resume', { token: forged }))
         expect(res.status).toBe(403)
         expect((await res.json()) as { code: string }).toMatchObject({
             code: UpupErrorCode.AUTH_DENIED,

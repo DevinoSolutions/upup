@@ -91,7 +91,7 @@ storage namespace and the token binding.
 
 Clerk's `userId` is stable for the life of the account, which is what the
 multipart path requires. The id is baked into the HMAC upload token issued at
-`POST /multipart/init` as `uid`, and sign-part, complete, and abort each
+`POST /multipart/init` as `uid`, and sign-part, complete, abort, and resume each
 re-resolve the caller through `getUserId` and compare against it. A mismatch is
 **403 `AUTH_DENIED`**, so a leaked upload token cannot be replayed by another
 signed-in Clerk user.

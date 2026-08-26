@@ -4,6 +4,7 @@ import type {
     CredentialStrategy,
     UploadCredentials,
 } from '../../src/contracts-strategies'
+import { installXhrPartMock } from './xhr-part-mock'
 
 // MultipartUpload's `_credentials` param is unused by the implementation
 // (multipart auth flows through `credentials.signPart`/`initMultipartUpload`
@@ -50,15 +51,13 @@ function makeCredentials(): CredentialStrategy {
     }
 }
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
+const { puts } = installXhrPartMock()
 
 beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockImplementation(async (_url: string) => ({
-        ok: true,
+    puts.mockImplementation(async () => ({
         status: 200,
-        headers: new Headers({ ETag: '"etag"' }),
+        headers: { ETag: '"etag"' },
     }))
 })
 
@@ -79,7 +78,7 @@ describe('MultipartUpload — extended', () => {
         })
 
         expect(creds.signPart).toHaveBeenCalledTimes(1)
-        expect(mockFetch).toHaveBeenCalledTimes(1)
+        expect(puts).toHaveBeenCalledTimes(1)
     })
 
     it('uses default chunk size when not specified', () => {
@@ -137,7 +136,43 @@ describe('MultipartUpload — extended', () => {
         expect(lastCall![1]).toBe(fileSize) // total = file size
     })
 
-    it('throws when a part upload returns non-ok response', async () => {
+    it('when the server returns no partSize, the local fallback respects the S3 10,000-part cap', async () => {
+        const creds = makeCredentials()
+        // A server that answers init without choosing a part size: the client
+        // falls back to its own chunkSizeBytes — which, unclamped, would give
+        // this file 10,001 parts and a guaranteed failure at part 10,001.
+        vi.mocked(creds.initMultipartUpload!).mockResolvedValue({
+            key: 'uploads/huge.bin',
+            uploadId: 'up-huge',
+            partSize: 0,
+            expiresIn: 3600,
+            token: 'tok-huge',
+        })
+        const CHUNK = 1024
+        const fileSize = CHUNK * 10_001
+        const strategy = new MultipartUpload({
+            credentials: creds,
+            chunkSizeBytes: CHUNK,
+            maxConcurrentParts: 3,
+        })
+
+        await strategy.upload(
+            new File([new ArrayBuffer(fileSize)], 'huge.bin'),
+            dummyCredentials,
+            { onProgress: vi.fn(), signal: new AbortController().signal },
+        )
+
+        const completeCall = vi.mocked(creds.completeMultipartUpload!).mock
+            .calls[0]?.[0]
+        expect(completeCall?.parts.length).toBeLessThanOrEqual(10_000)
+        // The clamp raises the part size only as far as the cap requires.
+        expect(completeCall?.parts.length).toBeGreaterThan(9_000)
+        // 30s budget: proving the cap means genuinely pushing ~10,000 mocked
+        // parts through the loop, which crosses the 5s default under CI
+        // coverage instrumentation (measured 5450ms).
+    }, 30_000)
+
+    it('throws when a part upload returns a definitive non-ok response', async () => {
         const creds = makeCredentials()
         const strategy = new MultipartUpload({
             credentials: creds,
@@ -145,11 +180,13 @@ describe('MultipartUpload — extended', () => {
         })
         const file = new File([new ArrayBuffer(6 * 1024 * 1024)], 'fail.bin')
 
-        mockFetch.mockResolvedValueOnce({
-            ok: false,
-            status: 500,
-            statusText: 'Internal Server Error',
-            headers: new Headers(),
+        // 400, not 500: a 5xx is transient and now retried (see
+        // multipart-part-retry-and-stall-watchdog.test.ts) — a definitive 4xx
+        // still propagates on the first attempt.
+        puts.mockResolvedValueOnce({
+            status: 400,
+            statusText: 'Bad Request',
+            responseText: '',
         })
 
         await expect(

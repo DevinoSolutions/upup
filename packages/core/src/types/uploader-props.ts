@@ -101,6 +101,11 @@ export type UploaderBaseProps = {
     maxConcurrentUploads?: number | undefined
     /** v2: Enable crash recovery — saves upload state to IndexedDB for resume after page refresh */
     crashRecovery?: boolean | undefined
+    /** v3: React to browser connectivity — going offline mid-upload pauses the
+     *  run (so multipart sessions persist instead of burning retries against a
+     *  dead network) and coming back online resumes it, only when the pause was
+     *  offline-initiated. Default true; `false` restores fail-and-retry. */
+    networkAware?: boolean | undefined
     /** File type filter — MIME patterns, extensions, or preset names (e.g. "images", "documents"). */
     allowedFileTypes?: string | string[] | undefined
     allowPreview?: boolean | undefined
