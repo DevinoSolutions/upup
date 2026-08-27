@@ -1,5 +1,6 @@
 import type { PipelineStep, PipelineContext, UploadFile } from '../contracts'
 import { encodeImageFile, uploadFileFromImageResult } from './image-utils'
+import { isAnimatedImage } from './animated-image'
 import type { WorkerResult } from '../worker/protocol'
 
 export interface ImageCompressionOptions {
@@ -16,6 +17,11 @@ export function compressStep(_options?: ImageCompressionOptions): PipelineStep {
             file: UploadFile,
             context: PipelineContext,
         ): Promise<UploadFile> {
+            // Compression re-encodes through a canvas, and canvas has no
+            // animated encoder — an animated GIF/WebP/APNG would come back as
+            // its first frame. Leave those alone; the upload is unaffected.
+            if (await isAnimatedImage(file)) return file
+
             if (context.worker) {
                 try {
                     const result = await context.worker.execute<WorkerResult>({
