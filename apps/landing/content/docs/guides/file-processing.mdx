@@ -29,8 +29,8 @@ The pipeline is assembled from boolean options on the uploader. The order is
 | Order | Step        | Option                 | Applies to       |
 | ----- | ----------- | ---------------------- | ---------------- |
 | 1     | `heic`      | `heicConversion`       | HEIC/HEIF images |
-| 2     | `exif`      | `stripExifData`        | any `image/*`    |
-| 3     | `compress`  | `imageCompression`     | any `image/*`    |
+| 2     | `exif`      | `stripExifData`        | still `image/*`  |
+| 3     | `compress`  | `imageCompression`     | still `image/*`  |
 | 4     | `thumbnail` | `thumbnailGenerator`   | any `image/*`    |
 | 5     | `hash`      | `checksumVerification` | every file       |
 
@@ -120,6 +120,11 @@ Two things to know about the mechanism:
   empty type falls back to `image/jpeg`). It does not resize.
 - **It is a re-encode, not a surgical metadata edit.** Everything outside the
   pixel data goes, including ICC color profiles.
+- **Animated images are skipped.** A canvas cannot write an animation, so
+  re-encoding an animated GIF, animated WebP or APNG would keep frame one and
+  discard the rest. Those files are left untouched — which also means their EXIF
+  is left untouched. `imageCompression` skips them for the same reason. If you
+  need metadata stripped from animated uploads, do it server-side.
 
 Because EXIF runs _before_ compression, turning both on means two encodes. If
 you want compression anyway, that is the cost of the privacy guarantee; if you
