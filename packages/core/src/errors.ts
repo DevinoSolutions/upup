@@ -152,10 +152,15 @@ export function parseErrorBody(body: string | undefined): {
                 message: msg,
             } = parsed as {
                 code?: string
-                error?: string
+                error?: unknown
                 message?: string
             }
-            const message = error ?? msg
+            // Prefer a string `error` — the shape @upupjs/server emits — but
+            // never let a non-string one discard the `message` beside it: a
+            // `{ message, error: true }` body is common in hand-rolled
+            // endpoints, and reading `error` blindly turned it into a raw
+            // JSON dump.
+            const message = typeof error === 'string' ? error : msg
             if (typeof message === 'string' || typeof code === 'string') {
                 return {
                     message: message ?? '',
