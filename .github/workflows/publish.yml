@@ -48,7 +48,10 @@ jobs:
             - name: Create Release Pull Request
               if: github.ref == 'refs/heads/master'
               id: changesets
-              uses: changesets/action@8488615a623b1b9c987934bb89eae8af6a946ac1 # v2.1.1
+              # Action v1 is the track that supports Changesets CLI v2 (this repo's
+              # @changesets/cli). v2.x hard-errors unless the CLI is v3, so this pin
+              # only moves together with a CLI major upgrade.
+              uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
               with:
                   createGithubReleases: false
               env:
