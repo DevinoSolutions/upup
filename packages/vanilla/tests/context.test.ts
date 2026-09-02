@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { FileSource } from '@upupjs/core'
+import { FileSource } from '@useupup/core'
 import { buildUploaderContext } from '../src/context'
 
 beforeEach(() => {

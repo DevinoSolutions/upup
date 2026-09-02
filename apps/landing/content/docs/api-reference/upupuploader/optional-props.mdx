@@ -117,7 +117,7 @@ MIME patterns, file extensions, or preset names. Arrays are joined with commas; 
 <UpupUploader allowedFileTypes={['images', 'documents', '.dwg']} />
 ```
 
-Preset names available from `@upupjs/core`'s `ACCEPT_PRESETS`: `images`, `video`, `audio`, `documents`, `spreadsheets`, `presentations`, `archives`, `code`, `fonts`, `3d`, `design`, `ebooks`, `photography`, `animation`, `ar`, `vector`, `cad`, `gis`, `data`, `markup`, `subtitles`, `email`, `calendar`, `contacts`, `disk`, `ml`, `database`, `certificates`, `firmware`, `executable`, `config`, `financial`, `scientific`, `medical`.
+Preset names available from `@useupup/core`'s `ACCEPT_PRESETS`: `images`, `video`, `audio`, `documents`, `spreadsheets`, `presentations`, `archives`, `code`, `fonts`, `3d`, `design`, `ebooks`, `photography`, `animation`, `ar`, `vector`, `cad`, `gis`, `data`, `markup`, `subtitles`, `email`, `calendar`, `contacts`, `disk`, `ml`, `database`, `certificates`, `firmware`, `executable`, `config`, `financial`, `scientific`, `medical`.
 
 A rejected file fires `onFileTypeMismatch` and `onRestrictionFailed` with reason `TYPE_MISMATCH`.
 
@@ -372,7 +372,7 @@ An arbitrary object sent with presign and multipart-init requests, so your serve
 
 `sources?: UploadSource[]` — default `['local', 'url', 'camera', 'microphone', 'screen']`.
 
-Controls which source panels are available and the order they appear in. Cloud drives are **not** in the default set — listing one here also requires configuring it in [`cloudDrives`](#clouddrives) (client mode) or on your `@upupjs/server` handler (server mode). `UploadSource` is the string form of the `FileSource` enum — import `FileSource` from `@upupjs/core` if you prefer named constants over string literals. Canonical IDs are:
+Controls which source panels are available and the order they appear in. Cloud drives are **not** in the default set — listing one here also requires configuring it in [`cloudDrives`](#clouddrives) (client mode) or on your `@useupup/server` handler (server mode). `UploadSource` is the string form of the `FileSource` enum — import `FileSource` from `@useupup/core` if you prefer named constants over string literals. Canonical IDs are:
 
 ```ts
 type UploadSource =
@@ -495,10 +495,10 @@ A host-controlled busy flag. When `true`, the uploader shows a spinner in the pa
 
 `i18n?: { bundle?: LocaleBundle; locale?: LocaleBundle | string; fallbackLocale?: LocaleBundle | string; overrides?: PartialMessages }`
 
-Locale bundles are exported from `@upupjs/core/i18n`. Passing a bundle (via `bundle` or `locale`) enables ICU pluralization, namespaced key overrides, and the correct `lang`/`dir` on the root element; `bundle` takes precedence over `locale`. A bare BCP-47 string sets `lang`/`dir` only. `fallbackLocale` fills gaps when the active bundle is missing a key, and `overrides` merges per-key replacements on top of everything else.
+Locale bundles are exported from `@useupup/core/i18n`. Passing a bundle (via `bundle` or `locale`) enables ICU pluralization, namespaced key overrides, and the correct `lang`/`dir` on the root element; `bundle` takes precedence over `locale`. A bare BCP-47 string sets `lang`/`dir` only. `fallbackLocale` fills gaps when the active bundle is missing a key, and `overrides` merges per-key replacements on top of everything else.
 
 ```tsx
-import { frFR } from '@upupjs/core/i18n'
+import { frFR } from '@useupup/core/i18n'
 
 ;<UpupUploader
     i18n={{

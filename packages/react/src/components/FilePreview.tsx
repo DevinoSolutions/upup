@@ -8,8 +8,8 @@ import React, {
     useMemo,
 } from 'react'
 
-import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
-import { UploadStatus } from '@upupjs/core'
+import { cn, isFileRemovalLocked } from '@useupup/core/internal'
+import { UploadStatus } from '@useupup/core'
 import {
     useUploaderEditor,
     useUploaderFiles,

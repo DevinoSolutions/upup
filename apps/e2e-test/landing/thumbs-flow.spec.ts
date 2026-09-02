@@ -23,7 +23,7 @@ const mastraEnvFile = join(mastraDir, '.env')
 // The `mastra dev` CLI hard-binds :4111 and ignores PORT, so we boot the BUILT
 // server (`node .mastra/output/index.mjs`, the package's `start` script) which
 // honors PORT + MASTRA_HOST. It must be built first (CI builds it; locally run
-// `pnpm --filter @upupjs/mastra build`); absent, the flow self-skips green.
+// `pnpm --filter @useupup/mastra build`); absent, the flow self-skips green.
 const mastraBuiltEntry = join(mastraDir, '.mastra', 'output', 'index.mjs')
 
 // Named helper so the guard's `await new Promise(...=>setTimeout)` sleep rule
@@ -88,7 +88,7 @@ test.beforeAll(async () => {
 
     if (!existsSync(mastraBuiltEntry)) {
         skipReason =
-            'Mastra is not built (.mastra/output/index.mjs absent) — run `pnpm --filter @upupjs/mastra build` first; Ask-AI thumbs flow skipped'
+            'Mastra is not built (.mastra/output/index.mjs absent) — run `pnpm --filter @useupup/mastra build` first; Ask-AI thumbs flow skipped'
         // eslint-disable-next-line no-console
         console.log(`::notice title=Thumbs flow skipped::${skipReason}`)
         return

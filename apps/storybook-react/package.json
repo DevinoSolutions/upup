@@ -1,5 +1,5 @@
 {
-    "name": "@upupjs/storybook-react",
+    "name": "@useupup/storybook-react",
     "version": "0.1.4",
     "private": true,
     "type": "module",
@@ -10,13 +10,13 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@upupjs/core": "workspace:*",
-        "@upupjs/react": "workspace:*",
+        "@useupup/core": "workspace:*",
+        "@useupup/react": "workspace:*",
         "react": "^19.2.0",
         "react-dom": "^19.2.0"
     },
     "devDependencies": {
-        "@upupjs/storybook-config": "workspace:*",
+        "@useupup/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/react-vite": "^9",
         "@storybook/addon-docs": "^9",

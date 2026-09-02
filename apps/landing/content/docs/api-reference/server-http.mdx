@@ -1,6 +1,6 @@
 ---
 title: Server HTTP API
-description: The complete HTTP contract of @upupjs/server — every route, request and response shape, status code, and operational header — for wiring a custom client or debugging a live handler.
+description: The complete HTTP contract of @useupup/server — every route, request and response shape, status code, and operational header — for wiring a custom client or debugging a live handler.
 ---
 
 `createUpupHandler(config)` returns one `(req: Request) => Promise<Response>`
@@ -163,7 +163,7 @@ validates it, and passes it through to `keyStrategy` and a `storage` resolver.
 It is client-controlled — a server that routes on it must treat it like a query
 parameter. `/multipart/init` accepts the same field.
 
-**Response `200`** — the `PresignedUrlResponse` shape from `@upupjs/core`:
+**Response `200`** — the `PresignedUrlResponse` shape from `@useupup/core`:
 
 ```ts
 type PresignedUrlResponse = {
@@ -713,7 +713,7 @@ rewriter for deployments whose storage endpoint the browser cannot reach — see
 through any route:
 
 ```ts
-import { getDownloadUrl } from '@upupjs/server'
+import { getDownloadUrl } from '@useupup/server'
 
 const url = await getDownloadUrl(config, 'user-42/9f3a/invoice.pdf', {
     expiresIn: 300,
@@ -733,8 +733,8 @@ decide whether the caller may read that key before you sign it.
 
 ## Adapters
 
-Express, Fastify, Hono, `@upupjs/next` (App and Pages routers), and any custom
-Node adapter built on `@upupjs/server/node-bridge` all dispatch into this exact
+Express, Fastify, Hono, `@useupup/next` (App and Pages routers), and any custom
+Node adapter built on `@useupup/server/node-bridge` all dispatch into this exact
 contract. The adapters only translate between the framework's request/response
 objects and the Web `Request`/`Response` the handler speaks — no route, status
 code, or body shape differs between them. See

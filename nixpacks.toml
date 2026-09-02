@@ -8,4 +8,4 @@ nixPkgs = ["nodejs_20", "pnpm"]
 cmds = ["pnpm run build:landing"]
 
 [start]
-cmd = "pnpm --filter @upupjs/landing run start"
+cmd = "pnpm --filter @useupup/landing run start"

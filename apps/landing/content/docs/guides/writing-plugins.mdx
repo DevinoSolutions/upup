@@ -3,7 +3,7 @@ title: Write a custom upup plugin
 description: Build a custom upload-source plugin for upup — the UpupPlugin contract, namespaced events, registering with core.use(), and subclassing PopupOAuthPlugin.
 ---
 
-A plugin is the smallest way to teach `@upupjs/core` something new. Cloud
+A plugin is the smallest way to teach `@useupup/core` something new. Cloud
 drives — Google Drive, OneDrive, Dropbox, Box — are plugins, and the contract
 they satisfy is the same one open to you: subscribe to the engine's event bus,
 emit your own events on it, and optionally hand back real `File` objects for
@@ -55,7 +55,7 @@ parameter type from `UpupPlugin` keeps you on the public surface with no deep
 import.
 
 ```ts
-import type { UpupPlugin } from '@upupjs/core'
+import type { UpupPlugin } from '@useupup/core'
 
 type Emitter = Parameters<NonNullable<UpupPlugin['init']>>[0]
 
@@ -159,7 +159,7 @@ Required members: `id`, `init(emitter)`, `destroy()`, `restoreSession()`,
 
 If your provider uses browser popup OAuth2 with PKCE, don't hand-roll it.
 `PopupOAuthPlugin` is an abstract base — exported as a value from
-`@upupjs/core` — that owns the whole auth skeleton: the PKCE challenge, opening
+`@useupup/core` — that owns the whole auth skeleton: the PKCE challenge, opening
 and polling the popup, the authorization-code exchange, `sessionStorage`
 persistence, refresh-token exchange, proactive refresh when the access token is
 within 60 seconds of expiry, and an `apiRequest` helper that retries once on a
@@ -169,8 +169,8 @@ You supply two things: a `PopupOAuthSpec` (pure data) and your provider's real
 API calls.
 
 ```ts
-import { PopupOAuthPlugin, type PopupOAuthSpec } from '@upupjs/core'
-import type { DriveFile, DriveUser } from '@upupjs/core'
+import { PopupOAuthPlugin, type PopupOAuthSpec } from '@useupup/core'
+import type { DriveFile, DriveUser } from '@useupup/core'
 
 export class AcmeDrivePlugin extends PopupOAuthPlugin {
     readonly spec: PopupOAuthSpec = {
@@ -316,7 +316,7 @@ core.on('acme-drive:files-loaded', payload => {
 ## What's public today
 
 Worth stating plainly, because it decides your imports. All of these are named
-exports of the **public `@upupjs/core` entry** as of 3.1.0:
+exports of the **public `@useupup/core` entry** as of 3.1.0:
 
 - `UpupPlugin`, `ExtensionMethods` (types)
 - `DrivePlugin` (type)
@@ -337,7 +337,7 @@ These are **not** on the public entry, which is what shaped the recipes above:
   (`GOOGLE_DRIVE_DESCRIPTOR` and friends) are exported, but the descriptor type
   is not.
 
-All three live behind `@upupjs/core/internal`, a deep-import-only subpath. It is
+All three live behind `@useupup/core/internal`, a deep-import-only subpath. It is
 importable, but it is explicitly not the stable surface — names there can change
 in a minor release, so build against the public entry wherever you can.
 

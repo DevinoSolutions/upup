@@ -42,10 +42,10 @@ export default function Footer() {
                                 <FaGithub className="w-5 h-5" />
                             </a>
                             <a
-                                href="https://www.npmjs.com/package/@upupjs/core"
+                                href="https://www.npmjs.com/package/@useupup/core"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="@upupjs on npm"
+                                aria-label="@useupup on npm"
                                 className={FOOTER_ICON_LINK}
                             >
                                 <FaNpm className="w-6 h-6" />

@@ -9,7 +9,7 @@ import {
     CameraIcon,
     AudioIcon,
     ScreenCaptureIcon,
-} from '@upupjs/react'
+} from '@useupup/react'
 
 export type SourceMeta = {
     label: string

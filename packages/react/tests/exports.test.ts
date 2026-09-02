@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import * as ReactPackage from '../src/index'
 
-describe('@upupjs/react public exports', () => {
+describe('@useupup/react public exports', () => {
     it('exports the React uploader and headless hook', () => {
         expect(ReactPackage.UpupUploader).toBeDefined()
         expect(typeof ReactPackage.useUpupUpload).toBe('function')
         expect(typeof ReactPackage.useIsClient).toBe('function')
     })
 
-    it('exports canonical source and provider enums from @upupjs/core', () => {
+    it('exports canonical source and provider enums from @useupup/core', () => {
         expect(ReactPackage.FileSource.LOCAL).toBe('local')
         expect(ReactPackage.FileSource.GOOGLE_DRIVE).toBe('googleDrive')
         expect(ReactPackage.StorageProvider.AWS).toBe('aws')
@@ -19,7 +19,7 @@ describe('@upupjs/react public exports', () => {
     // public-api.test.ts, which asserts Object.keys(pkg) EQUALS an exact
     // 27-name list — anything not on that list is necessarily unexported, so
     // enumerating individual absent names could only ever go stale.
-    it('exports the headless context hooks (parity with @upupjs/vue and @upupjs/svelte)', () => {
+    it('exports the headless context hooks (parity with @useupup/vue and @useupup/svelte)', () => {
         for (const hook of [
             'useUploaderContext',
             'useUploaderRuntime',

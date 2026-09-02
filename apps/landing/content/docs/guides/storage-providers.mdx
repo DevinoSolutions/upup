@@ -12,7 +12,7 @@ There are two ways to wire storage. In **client mode** the browser uploads bytes
 directly to storage using short-lived URLs your own presign endpoint signs — the
 storage credentials never leave your server, and upup never sees them. In
 **server mode** the browser talks only to your server and
-[`@upupjs/server`](/docs/guides/server-mode-setup/) holds the credentials and writes to
+[`@useupup/server`](/docs/guides/server-mode-setup/) holds the credentials and writes to
 storage for you. Which one to pick, and what changes on the wire, is covered in
 [Client Mode vs Server Mode](/docs/guides/modes/).
 
@@ -47,8 +47,8 @@ and the mistakes that provider specifically invites.
 
 ## Supported providers
 
-`@upupjs/core` exports a `StorageProvider` enum with the values below. Every one
-except `azure` exposes an S3-compatible API and is served by `@upupjs/server`;
+`@useupup/core` exports a `StorageProvider` enum with the values below. Every one
+except `azure` exposes an S3-compatible API and is served by `@useupup/server`;
 `azure` is the sole exception.
 
 | `storage.type` | Service                           | S3 endpoint pattern                                                      | Notes                                                                                     |
@@ -80,7 +80,7 @@ is marked "copy it from the dashboard", the host is provisioned per account or
 per instance and cannot be derived from your region — read the exact value off
 the console rather than assembling it.
 
-The `type` value is a label. `@upupjs/server` builds the same AWS-SDK S3 client
+The `type` value is a label. `@useupup/server` builds the same AWS-SDK S3 client
 for every S3-compatible value and reaches your backend through `endpoint` — it
 does not branch on `type`. Because `storage.type` also accepts any string, a
 store that isn't in the enum works too, as long as it speaks the S3 API: use the

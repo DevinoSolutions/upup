@@ -4,8 +4,8 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
     type IconName,
-} from '@upupjs/core'
-import { cn, sourceNameKeys } from '@upupjs/core/internal'
+} from '@useupup/core'
+import { cn, sourceNameKeys } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { IconComponent } from './icon.component'
 

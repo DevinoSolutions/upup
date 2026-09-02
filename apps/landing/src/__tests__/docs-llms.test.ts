@@ -11,7 +11,7 @@ describe('llms corpus', () => {
 
     it('full corpus contains page bodies from all sections', () => {
         const full = buildLlmsFull()
-        expect(full).toContain('@upupjs/react')
+        expect(full).toContain('@useupup/react')
         expect(full).toContain('createUpupHandler')
         // Sanity floor, not exact — catches an empty/truncated corpus.
         expect(full.length).toBeGreaterThan(20_000)

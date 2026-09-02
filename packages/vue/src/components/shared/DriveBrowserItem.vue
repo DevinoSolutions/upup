@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { type DriveFile } from '@upupjs/core'
+import { type DriveFile } from '@useupup/core'
 import { useUploaderTheme } from '../../context/uploader-context'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import DriveBrowserIcon from './DriveBrowserIcon.vue'
 
 const props = defineProps<{

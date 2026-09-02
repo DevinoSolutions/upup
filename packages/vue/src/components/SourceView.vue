@@ -9,7 +9,7 @@ import {
 } from '../context/uploader-context'
 import { provideSourceViewHeaderExtra } from '../context/source-view-header-extra'
 import { uploadSourceObject } from '../lib/constants'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import DefaultLoaderIcon from './DefaultLoaderIcon.vue'
 
 const { core } = useUploaderRuntime()

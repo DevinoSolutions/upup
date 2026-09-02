@@ -1,5 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-vite'
-import { withUpupViteWorkerFormat } from '@upupjs/storybook-config/vite'
+import { withUpupViteWorkerFormat } from '@useupup/storybook-config/vite'
 
 const VUE_DEV_URL = 'http://localhost:53051'
 

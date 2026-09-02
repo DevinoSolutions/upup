@@ -11,8 +11,8 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
     UploadStatus,
-} from '@upupjs/core'
-import { isUploadActive, cn } from '@upupjs/core/internal'
+} from '@useupup/core'
+import { isUploadActive, cn } from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { fileItem } from './file-item'
 import { fileHero } from './file-hero'

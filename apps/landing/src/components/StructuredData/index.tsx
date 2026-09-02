@@ -1,6 +1,6 @@
 // Server component: emits JSON-LD structured data for SEO (rendered server-side).
-// Facts here are code-backed — see the six @upupjs/* framework packages, @upupjs/core
-// (headless engine), @upupjs/server (HMAC-signed server mode), and the cloud-drive
+// Facts here are code-backed — see the six @useupup/* framework packages, @useupup/core
+// (headless engine), @useupup/server (HMAC-signed server mode), and the cloud-drive
 // plugins (Google Drive, OneDrive, Dropbox, Box).
 
 import { faqs } from '@/lib/faqs'

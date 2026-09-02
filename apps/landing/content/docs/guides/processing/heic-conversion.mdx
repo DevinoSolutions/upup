@@ -9,8 +9,8 @@ file is unusable. `heicConversion` decodes HEIC/HEIF in the browser and uploads
 a JPEG instead:
 
 ```tsx
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return <UpupUploader uploadEndpoint="/api/upload-token" heicConversion />
@@ -24,7 +24,7 @@ compression, thumbnails, hashing — sees a JPEG it can decode.
 
 The decoder is [libheif](https://github.com/strukturag/libheif) compiled to
 WebAssembly, and it is heavy. upup ships it as an **optional dependency** and
-imports it dynamically, from the `@upupjs/core/steps/heic` subpath, only when
+imports it dynamically, from the `@useupup/core/steps/heic` subpath, only when
 the option is on — so an app that doesn't convert HEIC never pays for it.
 
 Install it yourself:

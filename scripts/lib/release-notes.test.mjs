@@ -8,14 +8,14 @@ import {
 } from './release-notes.mjs'
 
 const PKGS = [
-    { name: '@upupjs/core', version: '3.1.0' },
-    { name: '@upupjs/react', version: '3.1.0' },
+    { name: '@useupup/core', version: '3.1.0' },
+    { name: '@useupup/react', version: '3.1.0' },
 ]
 
 test('npmPackageUrl pins the version', () => {
     assert.equal(
-        npmPackageUrl('@upupjs/core', '3.1.0'),
-        'https://www.npmjs.com/package/@upupjs/core/v/3.1.0',
+        npmPackageUrl('@useupup/core', '3.1.0'),
+        'https://www.npmjs.com/package/@useupup/core/v/3.1.0',
     )
 })
 
@@ -50,7 +50,7 @@ test('buildReleaseNotes lists every package with a version-pinned npm link', () 
     }
     // install + footer always present
     assert.match(md, /## 📥 Install/)
-    assert.match(md, /npm i @upupjs\/react/)
+    assert.match(md, /npm i @useupup\/react/)
     assert.match(md, /MIT licensed/)
     assert.ok(md.endsWith('\n'))
 })

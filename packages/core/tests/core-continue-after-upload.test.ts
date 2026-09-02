@@ -1,6 +1,6 @@
 import { afterEach, describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upupjs/core'
+import { UploadStatus } from '@useupup/core'
 
 /**
  * F-810 continue-after-upload: after a run reaches a terminal status, adding

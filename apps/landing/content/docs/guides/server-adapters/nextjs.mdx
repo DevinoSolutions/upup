@@ -1,29 +1,29 @@
 ---
 title: File upload server with Next.js and S3
-description: Mount @upupjs/server in Next.js — App Router via createUpupNextHandler, Pages Router via createUpupPagesHandler, plus proxy origins, bodyParser, and CORS.
+description: Mount @useupup/server in Next.js — App Router via createUpupNextHandler, Pages Router via createUpupPagesHandler, plus proxy origins, bodyParser, and CORS.
 ---
 
 Next.js gets the richest adapter of the four, because it has two router
 conventions and a proxy story of its own. Both entry points come from
-`@upupjs/next/server` and take the same config object — see
+`@useupup/next/server` and take the same config object — see
 [Server mode setup](/docs/guides/server-mode-setup/) for what each option
 does.
 
 ## 1. Install
 
 ```sh
-pnpm add @upupjs/next
+pnpm add @useupup/next
 ```
 
-`@upupjs/next` depends on `@upupjs/server` (and `@upupjs/react`), so this
+`@useupup/next` depends on `@useupup/server` (and `@useupup/react`), so this
 one package covers both the client component and the route handlers. It
 peers on Next 15+ and React 19.
 
 <Callout type="note">
     Server-only if you prefer: `createUpupNextHandler` is also exported from
-    `@upupjs/server/next`, so an app that only needs the App Router route can
-    install `@upupjs/server` alone. The Pages Router adapter and
-    `defineUpupConfig` live in `@upupjs/next/server` only.
+    `@useupup/server/next`, so an app that only needs the App Router route can
+    install `@useupup/server` alone. The Pages Router adapter and
+    `defineUpupConfig` live in `@useupup/next/server` only.
 </Callout>
 
 ## 2. Share one config
@@ -32,7 +32,7 @@ Author it once and import it from the route file:
 
 ```ts
 // lib/upup-config.ts
-import { defineUpupConfig } from '@upupjs/next/server'
+import { defineUpupConfig } from '@useupup/next/server'
 
 export const upupConfig = defineUpupConfig({
     storage: {
@@ -61,7 +61,7 @@ handler with a plain object literal is equally protected.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupNextHandler } from '@upupjs/next/server'
+import { createUpupNextHandler } from '@useupup/next/server'
 import { upupConfig } from '@/lib/upup-config'
 
 export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)
@@ -80,7 +80,7 @@ correction described below.
 
 ```ts
 // pages/api/upup/[...route].ts
-import { createUpupPagesHandler } from '@upupjs/next/server'
+import { createUpupPagesHandler } from '@useupup/next/server'
 import { upupConfig } from '@/lib/upup-config'
 
 export default createUpupPagesHandler(upupConfig)
@@ -109,7 +109,7 @@ Both routers expose the same URL prefix, so the client code is identical:
 
 ```tsx
 'use client'
-import { UpupUploader } from '@upupjs/next'
+import { UpupUploader } from '@useupup/next'
 
 export default function Uploader() {
     return (

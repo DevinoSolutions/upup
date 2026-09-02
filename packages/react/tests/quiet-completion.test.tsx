@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
 import React from 'react'
-import type { UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@useupup/core'
 
 // Item 7 — quiet-completion mode. FileList renders the checkmark-only overlay
 // (`upup-complete-check`, no Done CTA) on SUCCESSFUL when the flag is on, and the

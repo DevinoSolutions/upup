@@ -1,5 +1,5 @@
 // Cross-reload multipart resume, proven end to end against a REAL
-// @upupjs/server + a REAL MinIO bucket: kill the page mid-upload, reload,
+// @useupup/server + a REAL MinIO bucket: kill the page mid-upload, reload,
 // resume, and the stored object is byte-identical to the source.
 //
 // Nothing is faked at the transport layer. The spec boots the repo's own
@@ -24,8 +24,8 @@
 //
 // Run:
 //   pnpm exec dotenv -e local-dev/.env.minio -- \
-//     pnpm --filter @upupjs/e2e-test exec playwright test multipart-cross-reload-resume
-// Requires: `pnpm --filter @upupjs/server build` (the harness imports its dist)
+//     pnpm --filter @useupup/e2e-test exec playwright test multipart-cross-reload-resume
+// Requires: `pnpm --filter @useupup/server build` (the harness imports its dist)
 // and MinIO up on :9100 (`pnpm run e2e:minio:up`).
 
 import { test, expect, type Page } from '@playwright/test'

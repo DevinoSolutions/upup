@@ -10,10 +10,10 @@ const nextConfig = {
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
     outputFileTracingRoot: repoRoot,
     transpilePackages: [
-        '@upupjs/core',
-        '@upupjs/react',
-        '@upupjs/server',
-        '@upupjs/interactive-example',
+        '@useupup/core',
+        '@useupup/react',
+        '@useupup/server',
+        '@useupup/interactive-example',
     ],
     turbopack: {
         root: repoRoot,

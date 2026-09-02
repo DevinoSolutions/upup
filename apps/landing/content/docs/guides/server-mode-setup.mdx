@@ -17,10 +17,10 @@ registration.
 ## 1. Install
 
 ```sh
-pnpm add @upupjs/react @upupjs/server
+pnpm add @useupup/react @useupup/server
 ```
 
-`@upupjs/server` is the Node-side handler. The React package has no
+`@useupup/server` is the Node-side handler. The React package has no
 dependency on it — your client bundle stays free of S3 SDKs.
 
 ## 2. Mount the handler
@@ -30,7 +30,7 @@ the same config object through a one-line adapter.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupHandler, InMemoryTokenStore } from '@upupjs/server'
+import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -260,11 +260,11 @@ object — the one you built in step 2.
 
 | Framework                                                      | Entry point              | Import from              |
 | -------------------------------------------------------------- | ------------------------ | ------------------------ |
-| [Express](/docs/guides/server-adapters/express/)               | `createUpupMiddleware`   | `@upupjs/server/express` |
-| [Fastify](/docs/guides/server-adapters/fastify/)               | `createUpupPlugin`       | `@upupjs/server/fastify` |
-| [Hono](/docs/guides/server-adapters/hono/)                     | `createUpupRoutes`       | `@upupjs/server/hono`    |
-| [Next.js — App Router](/docs/guides/server-adapters/nextjs/)   | `createUpupNextHandler`  | `@upupjs/next/server`    |
-| [Next.js — Pages Router](/docs/guides/server-adapters/nextjs/) | `createUpupPagesHandler` | `@upupjs/next/server`    |
+| [Express](/docs/guides/server-adapters/express/)               | `createUpupMiddleware`   | `@useupup/server/express` |
+| [Fastify](/docs/guides/server-adapters/fastify/)               | `createUpupPlugin`       | `@useupup/server/fastify` |
+| [Hono](/docs/guides/server-adapters/hono/)                     | `createUpupRoutes`       | `@useupup/server/hono`    |
+| [Next.js — App Router](/docs/guides/server-adapters/nextjs/)   | `createUpupNextHandler`  | `@useupup/next/server`    |
+| [Next.js — Pages Router](/docs/guides/server-adapters/nextjs/) | `createUpupPagesHandler` | `@useupup/next/server`    |
 
 Each page carries the complete mount recipe for that framework plus its own
 body-parsing, proxy-origin, and CORS notes — those genuinely differ, and
@@ -276,7 +276,7 @@ Define the config once and share it:
 
 ```ts
 // lib/upup-config.ts
-import type { UpupServerConfig } from '@upupjs/server'
+import type { UpupServerConfig } from '@useupup/server'
 
 export const upupConfig: UpupServerConfig = {
     storage: {
@@ -292,7 +292,7 @@ export const upupConfig: UpupServerConfig = {
 ```
 
 In a Next.js app you can author the same object through
-`defineUpupConfig` from `@upupjs/next/server` for editor autocomplete —
+`defineUpupConfig` from `@useupup/next/server` for editor autocomplete —
 it's a typed pass-through, not a second validation layer (required-field
 validation always happens inside `createUpupHandler`, so direct callers
 are protected too).
@@ -301,15 +301,15 @@ are protected too).
 
 Any Node framework without a dedicated adapter can reuse the same bridge
 the Express, Fastify, and Pages Router adapters are built on —
-`toWebRequest` and `writeWebResponse` from `@upupjs/server/node-bridge`.
+`toWebRequest` and `writeWebResponse` from `@useupup/server/node-bridge`.
 Don't hand-roll the conversion; the bridge already handles multi-value
 headers and skips `content-length` (Node recomputes it, and a copied value
 risks a mismatch).
 
 ```ts
 import { createServer } from 'node:http'
-import { createUpupHandler } from '@upupjs/server'
-import { toWebRequest, writeWebResponse } from '@upupjs/server/node-bridge'
+import { createUpupHandler } from '@useupup/server'
+import { toWebRequest, writeWebResponse } from '@useupup/server/node-bridge'
 import { upupConfig } from './lib/upup-config'
 
 const handler = createUpupHandler(upupConfig)
@@ -472,7 +472,7 @@ reason is something the user should see, throw an `UpupError` instead and its
 message and code are serialized into the 403 body:
 
 ```ts
-import { UpupQuotaError } from '@upupjs/core'
+import { UpupQuotaError } from '@useupup/core'
 
 hooks: {
     onBeforeUpload: async (file, req) => {
@@ -607,7 +607,7 @@ for apps that split uploads across buckets — images in one, unscanned document
 in a quarantine bucket, each tenant in their own:
 
 ```ts
-import { defineUpupConfig } from '@upupjs/next/server'
+import { defineUpupConfig } from '@useupup/next/server'
 
 const BUCKETS = {
     images: { type: 'aws', bucket: 'app-images', region: 'us-east-1' },
@@ -718,7 +718,7 @@ upload in flight. `getDownloadUrl` is that operation on its own, with no
 handler and no HTTP route involved:
 
 ```ts
-import { getDownloadUrl } from '@upupjs/server'
+import { getDownloadUrl } from '@useupup/server'
 import { upupConfig } from './lib/upup-config'
 
 const url = await getDownloadUrl(upupConfig, invoice.storageKey, {

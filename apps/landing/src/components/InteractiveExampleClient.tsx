@@ -5,7 +5,7 @@ import {
     InteractiveExample,
     type InteractiveExampleProps,
     type AiFeedbackEvent,
-} from '@upupjs/interactive-example'
+} from '@useupup/interactive-example'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
 
 /**

@@ -7,7 +7,7 @@ export { default as UpupUploader, type UploaderRef } from './upup-uploader'
 export { useUpupUpload, type UseUpupUploadReturn } from './use-upup-upload'
 export { useIsClient } from './use-is-client'
 
-// ── Headless context hooks (parity with @upupjs/vue and @upupjs/svelte) ──
+// ── Headless context hooks (parity with @useupup/vue and @useupup/svelte) ──
 export {
     useUploaderContext,
     useUploaderRuntime,
@@ -36,11 +36,11 @@ export type {
 } from './context/UploaderContext'
 
 // ── Canonical shared enums/types ─────────────────────────
-export { FileSource, StorageProvider } from '@upupjs/core'
+export { FileSource, StorageProvider } from '@useupup/core'
 
 // ── Error taxonomy (#339) ────────────────────────────────
-// Re-exported verbatim from @upupjs/core so catching a typed upload error
-// doesn't force a react-only consumer to add a direct @upupjs/core dependency —
+// Re-exported verbatim from @useupup/core so catching a typed upload error
+// doesn't force a react-only consumer to add a direct @useupup/core dependency —
 // the error-handling docs point at these names, and `error` on the hook's
 // return value is already an `UpupError | null`. They are the SAME class
 // objects core exports, so `instanceof` narrows identically whichever package
@@ -55,8 +55,8 @@ export {
     UpupStorageError,
     UpupConfigError,
     uploadErrorFromResponse,
-} from '@upupjs/core'
-export type { RestrictionFailedReason } from '@upupjs/core'
+} from '@useupup/core'
+export type { RestrictionFailedReason } from '@useupup/core'
 
 // ── React types ──────────────────────────────────────────
 export type {
@@ -70,7 +70,7 @@ export type {
     BoxConfig,
     CloudDrivesConfig,
     ResumableUploadOptions,
-} from '@upupjs/core'
+} from '@useupup/core'
 export type { UploaderProps, UploaderIcons } from './shared/types'
 
 // ── v2 core contract re-exports ───────────────────────
@@ -80,8 +80,8 @@ export type {
     UploadStatus,
     UpupThemeSlots,
     UpupSlotPath,
-} from '@upupjs/core'
-export type { DeepPartialSlots } from '@upupjs/core/internal'
+} from '@useupup/core'
+export type { DeepPartialSlots } from '@useupup/core/internal'
 
 // ── Brand icons (authentic colours, matches uploader adapter buttons) ──
 export {
@@ -97,8 +97,8 @@ export {
 } from './components/Icons'
 
 // ── Accept presets ──────────────────────────────────────
-export { ACCEPT_PRESETS, resolveAccept } from '@upupjs/core'
-export type { AcceptPreset, AcceptPresetDefinition } from '@upupjs/core'
+export { ACCEPT_PRESETS, resolveAccept } from '@useupup/core'
+export type { AcceptPreset, AcceptPresetDefinition } from '@useupup/core'
 
 // ── Theme ────────────────────────────────────────────────
 export { UpupThemeProvider } from './theme'

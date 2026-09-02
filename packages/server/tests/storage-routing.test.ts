@@ -6,7 +6,7 @@
 // Mocks providers/aws so every call records the storage it was handed — the
 // assertion is always "which bucket did this route actually reach".
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { UpupErrorCode } from '@upupjs/core'
+import { UpupErrorCode } from '@useupup/core'
 import type { UpupStorageConfig } from '../src/config'
 
 const reached: Array<{ op: string; bucket: string }> = []

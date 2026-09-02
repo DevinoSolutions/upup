@@ -5,7 +5,7 @@
     useUploaderSource,
     useUploaderTheme,
   } from '../context/uploader-context'
-  import { cn } from '@upupjs/core/internal'
+  import { cn } from '@useupup/core/internal'
   import SourceViewContainer from './shared/SourceViewContainer.svelte'
   import AudioWaveform from './AudioWaveform.svelte'
 

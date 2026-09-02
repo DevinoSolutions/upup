@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import type React from 'react'
-import type { DragDropController } from '@upupjs/core/internal'
+import type { DragDropController } from '@useupup/core/internal'
 import { createPropGetters } from '../src/prop-getters'
 
 // Issue #341 — the three prop getters each handled `overrides` differently:

@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader, type UploaderProps } from '@upupjs/vue'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
+import { UpupUploader, type UploaderProps } from '@useupup/vue'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
     const { themeMode, primaryColor, ...rest } = args

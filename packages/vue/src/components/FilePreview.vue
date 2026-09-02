@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { UploadStatus, type Translations } from '@upupjs/core'
+import { UploadStatus, type Translations } from '@useupup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,
@@ -13,8 +13,8 @@ import {
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
-} from '@upupjs/core/internal'
-import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
+} from '@useupup/core/internal'
+import { cn, isFileRemovalLocked } from '@useupup/core/internal'
 import FilePreviewThumbnail from './FilePreviewThumbnail.vue'
 import ProgressBar from './shared/ProgressBar.vue'
 import FileSuccessCheck from './shared/FileSuccessCheck.vue'

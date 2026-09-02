@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { type DriveFolder, type DriveUser } from '@upupjs/core'
+import { type DriveFolder, type DriveUser } from '@useupup/core'
 import {
     useUploaderI18n,
     useUploaderSource,
     useUploaderTheme,
 } from '../../context/uploader-context'
 import { useSourceViewHeaderExtra } from '../../context/source-view-header-extra'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import Icon from '../Icon'
 
 const props = defineProps<{

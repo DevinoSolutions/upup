@@ -1,5 +1,5 @@
 import type { Type } from '@angular/core'
-import type { UploaderBaseProps } from '@upupjs/core'
+import type { UploaderBaseProps } from '@useupup/core'
 
 export type UploaderIcons = {
     ContainerAddMoreIcon?: Type<unknown> | undefined

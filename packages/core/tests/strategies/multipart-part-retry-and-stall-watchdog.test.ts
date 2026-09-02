@@ -12,7 +12,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MultipartUpload } from '../../src/strategies/multipart-upload'
 import type { CredentialStrategy } from '../../src/contracts-strategies'
-import type { PresignedUrlResponse } from '@upupjs/core'
+import type { PresignedUrlResponse } from '@useupup/core'
 import {
     installXhrPartMock,
     type PartRequest,

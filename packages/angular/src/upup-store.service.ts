@@ -7,7 +7,7 @@ import {
     type UiTranslations,
     type Translator,
     type ResolvedImageEditorOptions,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     UploaderOrchestrator,
     ThemeStore,
@@ -18,7 +18,7 @@ import {
     type MotionMode,
     type TransientUiSnapshot,
     type CloudProvider,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 
 /** Read-only drive provider → flattened i18n label key (the human provider name
  *  for the drop-rejection toast). Typed `Record<CloudProvider, keyof

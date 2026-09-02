@@ -15,7 +15,7 @@
  *             Browser-less and MinIO-less, but a genuine production
  *             code-splitting build, which dev-mode storybook is NOT — the class
  *             of defect it catches (a vite worker.format failure originating in
- *             @upupjs/core's dist) is invisible to every other suite.
+ *             @useupup/core's dist) is invisible to every other suite.
  *
  * Fail-open is the core safety property: a path that matches no rule runs
  * EVERYTHING. An unknown/new directory can never silently skip coverage.
@@ -220,7 +220,7 @@ export const IMPACT_RULES = [
         // The docs live in apps/landing (MDX under content/docs, served at
         // /docs by fumadocs) and are proven by the `docs` Playwright project in
         // apps/e2e-test/landing. The landing app also renders a live creds-free
-        // uploader demo built from @upupjs/{core,react,server} + the private
+        // uploader demo built from @useupup/{core,react,server} + the private
         // interactive-example, so a change to ANY landing-consumed package can
         // regress the docs surface — those are exactly apps/landing/package.json's
         // workspace deps. TARGETED (not LIGHT) so it outranks the LIGHT_DIR
@@ -245,7 +245,7 @@ export const IMPACT_RULES = [
     {
         // A static `storybook build` compiles apps/storybook-*/ against the
         // BUILT dist of every framework package it renders, so any of those can
-        // break it — @upupjs/core did, via the module pipeline worker vite emits
+        // break it — @useupup/core did, via the module pipeline worker vite emits
         // out of core's dist (the worker.format defect that kept nightly red for
         // weeks while every PR gate stayed green). TARGETED with a lone
         // `storybook` suite, mirroring docs-e2e: it unions on top of whatever
@@ -255,7 +255,7 @@ export const IMPACT_RULES = [
         // shared vite tweaks) are UNIVERSAL and include it for free, as does
         // fail-open. Docs-only changes stay light and skip it.
         //
-        // Reusing FRAMEWORK_UI deliberately over-includes @upupjs/next, which
+        // Reusing FRAMEWORK_UI deliberately over-includes @useupup/next, which
         // backs no storybook: one shared regex beats a second near-duplicate,
         // and over-running a browser-less build job errs in the safe direction.
         name: 'storybook-build',

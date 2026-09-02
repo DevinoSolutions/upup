@@ -17,11 +17,11 @@ import {
 
 const byName = name => FRAMEWORKS.find(f => f.framework === name)
 
-test('buildUpupPaths maps all seven @upupjs packages to their built dist entry', () => {
+test('buildUpupPaths maps all seven @useupup packages to their built dist entry', () => {
     const paths = buildUpupPaths()
     assert.equal(Object.keys(paths).length, DIST_PACKAGES.length)
     for (const pkg of DIST_PACKAGES) {
-        assert.deepEqual(paths[`@upupjs/${pkg}`], [
+        assert.deepEqual(paths[`@useupup/${pkg}`], [
             `packages/${pkg}/dist/index.d.ts`,
         ])
     }
@@ -70,7 +70,7 @@ test('buildTsconfig pins react-jsx with the react JSX source for react snippets'
 })
 
 test('buildTsconfig gives the preact snippet the same react JSX contract as react', () => {
-    // @upupjs/preact re-exports @upupjs/react, so the snippet is React-typed.
+    // @useupup/preact re-exports @useupup/react, so the snippet is React-typed.
     const cfg = buildTsconfig(byName('preact'), {
         repoRoot: '/repo',
         frameworkDir: '/repo/h/preact',

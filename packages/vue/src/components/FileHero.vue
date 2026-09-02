@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
-import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
-import { fileGetExtension, fileGetIsImage } from '@upupjs/core/internal'
+import { cn, isFileRemovalLocked } from '@useupup/core/internal'
+import { UploadStatus, type UploadFile, type Translations } from '@useupup/core'
+import { fileGetExtension, fileGetIsImage } from '@useupup/core/internal'
 import {
     useUploaderFiles,
     useUploaderI18n,

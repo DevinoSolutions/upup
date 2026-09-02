@@ -18,7 +18,7 @@ import { SCENE_MEDIA } from './scene-media'
 import type { QueueFile, QueueStage, SourceDef } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MockUploader — the panel shell, recreated from @upupjs/react's UploaderPanel /
+// MockUploader — the panel shell, recreated from @useupup/react's UploaderPanel /
 // SourceSelector / FileList with marketing flair (glossy dark chrome, glow
 // accents, springy rows). Dark-chrome in BOTH themes on purpose: the real demo
 // preview renders as a dark charcoal device, and a single glossy panel reads as

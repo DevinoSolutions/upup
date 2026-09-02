@@ -217,7 +217,7 @@ const userStorageProviders: Integration[] = [
 
 // Developer Storage Providers - for developers to connect their cloud buckets.
 //
-// The `supported` entries mirror the StorageProvider enum in @upupjs/core
+// The `supported` entries mirror the StorageProvider enum in @useupup/core
 // (packages/core/src/types/storage-provider.ts) — CHECK THE ENUM before
 // marking anything supported here. This list is a curated subset, not the
 // whole enum: the long tail (Vultr, UpCloud, OVHcloud, Contabo, Storj, Ceph)
@@ -243,7 +243,7 @@ const developerStorageProviders: Integration[] = [
         category: 'Developer Storage',
         href: '/docs/guides/storage/azure-blob/',
         // Azure is the sole member of NON_S3_STORAGE_PROVIDERS in
-        // @upupjs/core: it has no S3 surface, so createUpupHandler throws
+        // @useupup/core: it has no S3 surface, so createUpupHandler throws
         // for it at construct time and server mode cannot serve it.
         qualifier: 'client mode only',
     },

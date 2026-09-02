@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cn } from '@upupjs/core/internal'
+  import { cn } from '@useupup/core/internal'
 
   /**
    * Completion checkmark (states-tour.html state E): a sky ring with a tick that

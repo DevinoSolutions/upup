@@ -1,6 +1,6 @@
 import type { StorybookConfig } from '@storybook/svelte-vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { withUpupViteWorkerFormat } from '@upupjs/storybook-config/vite'
+import { withUpupViteWorkerFormat } from '@useupup/storybook-config/vite'
 import { mergeConfig } from 'vite'
 
 const config: StorybookConfig = {
@@ -8,7 +8,7 @@ const config: StorybookConfig = {
         name: '@storybook/svelte-vite',
         options: {
             // No first-party .svelte components are authored in this Storybook: the
-            // stories are .ts and render the pre-built @upupjs/svelte library. With
+            // stories are .ts and render the pre-built @useupup/svelte library. With
             // nothing of our own to document, the docgen step (svelte2tsx) only ends
             // up parsing the library's *built* .svelte files — which it cannot parse
             // and has no reason to — and crashes the build. Skip it.

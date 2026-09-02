@@ -10,7 +10,7 @@ public and the pipeline is yours to assemble.
 
 ## The contract
 
-`PipelineStep` and `PipelineContext` are exported from `@upupjs/core`:
+`PipelineStep` and `PipelineContext` are exported from `@useupup/core`:
 
 ```ts
 interface PipelineStep {
@@ -54,7 +54,7 @@ This one prefixes every filename with the upload date, so storage keys sort
 chronologically:
 
 ```ts
-import type { PipelineStep, PipelineContext, UploadFile } from '@upupjs/core'
+import type { PipelineStep, PipelineContext, UploadFile } from '@useupup/core'
 
 export function datePrefixStep(): PipelineStep {
     return {
@@ -107,7 +107,7 @@ way the built-in `hash` and `thumbnail` steps do.
 Pass your steps as the `pipeline` option:
 
 ```ts
-import { UpupCore } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
 
 const core = new UpupCore({
     uploadEndpoint: '/api/upload-token',

@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/svelte-vite'
-import { UpupUploader } from '@upupjs/svelte'
+import { UpupUploader } from '@useupup/svelte'
 import {
     uploaderArgTypes,
     uploaderDefaultArgs,
     workerHeicArgs,
     workerHeicPlays,
-} from '@upupjs/storybook-config'
+} from '@useupup/storybook-config'
 
 function buildProps(args: Record<string, unknown>) {
     const { themeMode, primaryColor, ...rest } = args

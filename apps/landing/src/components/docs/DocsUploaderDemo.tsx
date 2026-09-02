@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic'
 // The uploader's stylesheet is imported per-module everywhere in landing
 // (see Uploader.tsx) — without this, a docs page that mounts only the demo
 // renders the uploader unstyled.
-import '@upupjs/react/styles'
-// @upupjs/react's public entry doesn't re-export UpupThemeConfig (only
-// UpupThemeSlots/UpupSlotPath) — import the type from @upupjs/core directly,
-// same as @upupjs/react's own UpupThemeProvider does internally.
-import type { UpupThemeConfig } from '@upupjs/core'
+import '@useupup/react/styles'
+// @useupup/react's public entry doesn't re-export UpupThemeConfig (only
+// UpupThemeSlots/UpupSlotPath) — import the type from @useupup/core directly,
+// same as @useupup/react's own UpupThemeProvider does internally.
+import type { UpupThemeConfig } from '@useupup/core'
 import { ThemeContext } from '@/lib/contexts'
 
 // The real uploader, loaded client-only so docs pages stay static-light. The
@@ -17,7 +17,7 @@ import { ThemeContext } from '@/lib/contexts'
 // src/preview/UploaderPreview.tsx): with serverUrl="" the whole client pipeline
 // (drag-drop, previews, validation) works and nothing is persisted anywhere.
 const UpupUploader = dynamic(
-    () => import('@upupjs/react').then(m => m.UpupUploader),
+    () => import('@useupup/react').then(m => m.UpupUploader),
     {
         ssr: false,
         loading: () => (

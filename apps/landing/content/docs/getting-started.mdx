@@ -1,10 +1,10 @@
 ---
 title: Getting Started
-description: Install upup and run your first upload — local file selection, client uploads straight to your storage, or full server mode with @upupjs/server.
+description: Install upup and run your first upload — local file selection, client uploads straight to your storage, or full server mode with @useupup/server.
 ---
 
 upup is a file uploader with a native UI for **React, Vue, Svelte, Angular,
-Vanilla JS, and Preact**, built on a shared headless core (`@upupjs/core`), with
+Vanilla JS, and Preact**, built on a shared headless core (`@useupup/core`), with
 an optional server mode for signed uploads and cloud-drive sources (Google
 Drive, OneDrive, Dropbox, Box). Every package renders the same UI.
 
@@ -25,12 +25,12 @@ each mounts the same uploader with the same options:
 Install the React package and styles:
 
 ```bash
-npm i @upupjs/react
+npm i @useupup/react
 ```
 
 ```tsx
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 ```
 
 ## Pick your framework
@@ -80,11 +80,11 @@ bytes directly to storage.
 
 ## Server uploads
 
-Use `@upupjs/server` when provider OAuth, token storage, storage credentials,
+Use `@useupup/server` when provider OAuth, token storage, storage credentials,
 or transfer policy should live server-side.
 
 ```bash
-npm i @upupjs/react @upupjs/server
+npm i @useupup/react @useupup/server
 ```
 
 ```tsx
@@ -92,7 +92,7 @@ npm i @upupjs/react @upupjs/server
 ```
 
 ```ts
-import { createUpupHandler, InMemoryTokenStore } from '@upupjs/server'
+import { createUpupHandler, InMemoryTokenStore } from '@useupup/server'
 
 const handler = createUpupHandler({
     storage: {

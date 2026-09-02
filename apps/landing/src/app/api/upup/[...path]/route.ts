@@ -1,5 +1,5 @@
-import { InMemoryTokenStore } from '@upupjs/server'
-import { createUpupNextHandler } from '@upupjs/server/next'
+import { InMemoryTokenStore } from '@useupup/server'
+import { createUpupNextHandler } from '@useupup/server/next'
 import { env, requireServerEnv } from '@/lib/env'
 
 let _handler: ReturnType<typeof createUpupNextHandler> | null = null

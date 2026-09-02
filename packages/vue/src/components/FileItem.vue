@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@useupup/core'
 import {
     useUploaderFiles,
     useUploaderOptions,
@@ -8,7 +8,7 @@ import {
     useUploaderTheme,
     useUploaderView,
 } from '../context/uploader-context'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import FilePreview from './FilePreview.vue'
 import FilePreviewPortal from './FilePreviewPortal.vue'
 import FileRow from './FileRow.vue'

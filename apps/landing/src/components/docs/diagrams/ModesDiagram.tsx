@@ -66,7 +66,7 @@ export function ModesDiagram() {
                 width={175}
                 height={48}
                 label="Your server"
-                sub="@upupjs/server"
+                sub="@useupup/server"
             />
             <Flow
                 d="M355 189 L419 189"

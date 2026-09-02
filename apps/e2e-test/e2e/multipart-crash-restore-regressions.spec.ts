@@ -1,5 +1,5 @@
 // The crash-restore behaviours the single-file cross-reload proof does not
-// cover, each pinned against a REAL @upupjs/server + a REAL MinIO bucket:
+// cover, each pinned against a REAL @useupup/server + a REAL MinIO bucket:
 //
 //   1. THREE files crash together and all three come back — each at ITS OWN
 //      restored byte offset — and resuming finishes every one of them into an
@@ -26,8 +26,8 @@
 //
 // Run:
 //   pnpm exec dotenv -e local-dev/.env.minio -- \
-//     pnpm --filter @upupjs/e2e-test exec playwright test multipart-crash-restore-regressions
-// Requires: `pnpm --filter @upupjs/server build` and MinIO up on :9100.
+//     pnpm --filter @useupup/e2e-test exec playwright test multipart-crash-restore-regressions
+// Requires: `pnpm --filter @useupup/server build` and MinIO up on :9100.
 
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { clearCrashRecovery } from './helpers'

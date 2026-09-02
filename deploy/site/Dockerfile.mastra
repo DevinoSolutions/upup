@@ -21,7 +21,7 @@ FROM base AS build
 COPY . .
 RUN pnpm install --frozen-lockfile
 # turbo builds ^build workspace deps first, then `mastra build`.
-RUN pnpm exec turbo run build --filter=@upupjs/mastra
+RUN pnpm exec turbo run build --filter=@useupup/mastra
 
 FROM build AS runtime
 ENV NODE_ENV=production

@@ -15,7 +15,7 @@ import {
     flattenSlotsToClassNames,
     type UploadFile,
     type UiTranslations,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
@@ -26,7 +26,7 @@ import {
     type MotionMode,
     type TransientUiSnapshot,
     type CloudProvider,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import Icon from '../components/Icon'
 import { UploaderProps } from '../shared/types'
 import { IUploaderContext } from '../context/UploaderContext'

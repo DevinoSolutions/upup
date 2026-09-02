@@ -3,8 +3,8 @@ import {
     type ServerModeProvider,
     type ServerDriveFile,
     type ServerDriveListState,
-} from '@upupjs/core'
-import { ServerModeDriveController } from '@upupjs/core/internal'
+} from '@useupup/core'
+import { ServerModeDriveController } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 
@@ -24,7 +24,7 @@ export class ServerModeDriveService {
     private store = inject(UpupStore)
     private controller!: ServerModeDriveController
     private bridge!: SignalStore<
-        import('@upupjs/core/internal').ServerDriveSnapshot
+        import('@useupup/core/internal').ServerDriveSnapshot
     >
     private provider!: ServerModeProvider
 

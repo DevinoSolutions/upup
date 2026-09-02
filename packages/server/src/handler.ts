@@ -1,4 +1,4 @@
-import { UpupErrorCode, UpupConfigError } from '@upupjs/core'
+import { UpupErrorCode, UpupConfigError } from '@useupup/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
 import { validateServerConfig } from './validate-config'
@@ -48,7 +48,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
         !config.allowAnonymous
     ) {
         throw new UpupConfigError(
-            '[@upupjs/server] drive providers / tokenStore require config.getUserId to ' +
+            '[@useupup/server] drive providers / tokenStore require config.getUserId to ' +
                 'scope tokens per user. Set getUserId, or set allowAnonymous:true to ' +
                 'intentionally share ONE anonymous namespace (demos only).',
         )
@@ -59,7 +59,7 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // production is impossible to miss in the boot logs.
     if (config.allowAnonymousUploads) {
         console.warn(
-            '[@upupjs/server] allowAnonymousUploads:true — /presign and /multipart/init ' +
+            '[@useupup/server] allowAnonymousUploads:true — /presign and /multipart/init ' +
                 'accept UNAUTHENTICATED uploads under a shared anonymous namespace. ' +
                 'Demos / upstream-auth deployments only; never enable in multi-tenant production.',
         )

@@ -1,5 +1,5 @@
-import { createUploader } from '@upupjs/vanilla'
-import '@upupjs/vanilla/styles'
+import { createUploader } from '@useupup/vanilla'
+import '@useupup/vanilla/styles'
 
 const uploader = createUploader('#uploader', {
     provider: 'aws',

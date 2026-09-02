@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Readable } from 'node:stream'
 import type { NextApiResponse } from 'next'
-import type { UpupServerConfig } from '@upupjs/server'
+import type { UpupServerConfig } from '@useupup/server'
 
 // Capture the Web Request the core handler receives, and control its Response.
 const received: { req?: Request } = {}
 let respond: (req: Request) => Promise<Response>
 
-vi.mock('@upupjs/server', () => ({
+vi.mock('@useupup/server', () => ({
     createUpupHandler: () => async (req: Request) => {
         received.req = req
         return respond(req)
@@ -17,9 +17,9 @@ vi.mock('@upupjs/server', () => ({
 // Capture the raw body value handed to the bridge, before Request swallows it.
 const bridged: { body?: unknown } = {}
 
-vi.mock('@upupjs/server/node-bridge', async importOriginal => {
+vi.mock('@useupup/server/node-bridge', async importOriginal => {
     const actual =
-        await importOriginal<typeof import('@upupjs/server/node-bridge')>()
+        await importOriginal<typeof import('@useupup/server/node-bridge')>()
     return {
         ...actual,
         toWebRequest: (input: Parameters<typeof actual.toWebRequest>[0]) => {

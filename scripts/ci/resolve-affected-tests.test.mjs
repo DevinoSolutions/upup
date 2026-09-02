@@ -35,12 +35,12 @@ function runCli(args, env = {}, cwd) {
 
 const TARGETED_CASES = [
     {
-        name: 'a core src change triggers every suite because each one consumes @upupjs/core — the heavy suites, the landing docs demo, and the static storybook builds that bundle its dist',
+        name: 'a core src change triggers every suite because each one consumes @useupup/core — the heavy suites, the landing docs demo, and the static storybook builds that bundle its dist',
         path: 'packages/core/src/upload/pipeline.ts',
         suites: ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook'],
     },
     {
-        name: 'a server src change triggers e2e, minio, smoke, and docsE2e but not storybook because its integration tests need real MinIO, the landing app consumes @upupjs/server, and no storybook renders it',
+        name: 'a server src change triggers e2e, minio, smoke, and docsE2e but not storybook because its integration tests need real MinIO, the landing app consumes @useupup/server, and no storybook renders it',
         path: 'packages/server/src/handler.ts',
         suites: ['e2e', 'minio', 'smoke', 'docsE2e'],
     },
@@ -324,7 +324,7 @@ test('the shared tailwind factory forces the storybook suite through the univers
     assert.ok(resolved.suites.includes('storybook'))
 })
 
-test('a server-only change skips the storybook suite, because no storybook renders @upupjs/server and the static builds never reach a backend', () => {
+test('a server-only change skips the storybook suite, because no storybook renders @useupup/server and the static builds never reach a backend', () => {
     assert.equal(
         resolveFile('packages/server/src/upload-routes.ts').suites.includes(
             'storybook',
@@ -714,7 +714,7 @@ test('the CLI computes an affected set from real git history so the git-diff pat
         execFileSync('git', gitArgs, { cwd: repo, encoding: 'utf8' })
     try {
         git('init')
-        git('config', 'user.email', 'ci-fixture@upupjs.test')
+        git('config', 'user.email', 'ci-fixture@useupup.test')
         git('config', 'user.name', 'CI Fixture')
         git('config', 'commit.gpgsign', 'false')
 

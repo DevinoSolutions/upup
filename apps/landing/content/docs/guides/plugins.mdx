@@ -3,7 +3,7 @@ title: Plugins & Extensions
 description: Enable upup's built-in cloud-drive plugins with the cloudDrives config, compare client- and server-mode drives, and register third-party plugins on UpupCore.
 ---
 
-`@upupjs/core` has two extension points. A **plugin** is an object that
+`@useupup/core` has two extension points. A **plugin** is an object that
 subscribes to (and emits on) the engine's event bus. An **extension** is a bag
 of methods hung off the core so your own UI can call them. Cloud drives —
 Google Drive, OneDrive, Dropbox, Box — are plugins, and the same contract is
@@ -18,7 +18,7 @@ here works identically under the visual `<UpupUploader>`, the
 
 ## What ships built-in
 
-Four cloud-drive plugins, all exported as classes from `@upupjs/core`:
+Four cloud-drive plugins, all exported as classes from `@useupup/core`:
 
 | Plugin              | Plugin id      | `cloudDrives` key | Auth model               |
 | ------------------- | -------------- | ----------------- | ------------------------ |
@@ -88,7 +88,7 @@ plugin:
   as real `File` objects, and those flow through the normal pipeline and upload
   path. This is the path `cloudDrives` configures.
 - **Server mode.** The browser talks only to your server. The drive views route
-  through `@upupjs/server`'s drive endpoints instead of a plugin — listing,
+  through `@useupup/server`'s drive endpoints instead of a plugin — listing,
   auth, and the drive → S3 transfer all happen server-side, and the file bytes
   never pass through the browser. Credentials live in your server environment,
   so no client IDs go in `cloudDrives`.
@@ -104,7 +104,7 @@ Two equivalent routes for anything not wired by `cloudDrives`. Pass it as an
 option:
 
 ```ts
-import { UpupCore } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
 
 const core = new UpupCore({
     uploadEndpoint: '/api/upload-token',
@@ -168,7 +168,7 @@ gets a core reference — so a plugin that offers methods will document them and
 leave the wiring to you:
 
 ```ts
-import { UpupCore } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
 
 const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
 

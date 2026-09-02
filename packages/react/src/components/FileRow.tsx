@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
-import { cn, isFileRemovalLocked } from '@upupjs/core/internal'
-import { UploadStatus, fileTypeIconName, type UploadFile } from '@upupjs/core'
+import { cn, isFileRemovalLocked } from '@useupup/core/internal'
+import { UploadStatus, fileTypeIconName, type UploadFile } from '@useupup/core'
 import {
     useUploaderEditor,
     useUploaderFiles,

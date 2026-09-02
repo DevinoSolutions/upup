@@ -10,11 +10,11 @@
  * Keeps the docs honest against the public API. The authoritative public
  * surface is derived — never hand-listed here — from two sources that already
  * gate every package:
- *   1. Each of the nine @upupjs/* packages' public-api pin test (the
- *      checked-in EXPECTED_*_EXPORTS array). @upupjs/preact re-exports react
+ *   1. Each of the nine @useupup/* packages' public-api pin test (the
+ *      checked-in EXPECTED_*_EXPORTS array). @useupup/preact re-exports react
  *      wholesale (its pin asserts equality, no independent array), so it is
  *      recorded as a mirror and contributes no members of its own.
- *   2. The @upupjs/core "contracts" types the UpupUploader is configured and
+ *   2. The @useupup/core "contracts" types the UpupUploader is configured and
  *      observed through: the props type UploaderBaseProps and the core
  *      event-map CoreEvents, enumerated from the SOURCE .ts via the TypeScript
  *      compiler API (not dist, not regex).
@@ -45,7 +45,7 @@ const DOCS_ROOT = 'apps/landing/content/docs'
 const MAP_PATH = join(HERE, 'api-docs-map.json')
 const EXCEPTIONS_PATH = join(HERE, 'api-sync-exceptions.json')
 
-// The TypeScript compiler is a devDependency of @upupjs/core, not the root —
+// The TypeScript compiler is a devDependency of @useupup/core, not the root —
 // resolve it from core's require context so this works under pnpm's hoisting.
 const require = createRequire(
     join(REPO_ROOT, 'packages', 'core', 'package.json'),
@@ -54,17 +54,17 @@ const ts = require('typescript')
 
 // ── Public surface: the nine packages' pin tests ─────────────────────────
 
-// key → pin-test file (repo-relative). @upupjs/preact mirrors react (no array).
+// key → pin-test file (repo-relative). @useupup/preact mirrors react (no array).
 const PIN_TESTS = {
-    '@upupjs/core': 'packages/core/tests/public-api.test.ts',
-    '@upupjs/react': 'packages/react/tests/public-api.test.ts',
-    '@upupjs/vue': 'packages/vue/tests/public-api.test.ts',
-    '@upupjs/svelte': 'packages/svelte/tests/public-api.test.ts',
-    '@upupjs/vanilla': 'packages/vanilla/tests/public-api.test.ts',
-    '@upupjs/angular': 'packages/angular/src/public-api.spec.ts',
-    '@upupjs/server': 'packages/server/tests/public-api.test.ts',
-    '@upupjs/next/server': 'packages/next/src/__tests__/public-api.spec.ts',
-    '@upupjs/preact': 'packages/preact/src/public-api.spec.ts',
+    '@useupup/core': 'packages/core/tests/public-api.test.ts',
+    '@useupup/react': 'packages/react/tests/public-api.test.ts',
+    '@useupup/vue': 'packages/vue/tests/public-api.test.ts',
+    '@useupup/svelte': 'packages/svelte/tests/public-api.test.ts',
+    '@useupup/vanilla': 'packages/vanilla/tests/public-api.test.ts',
+    '@useupup/angular': 'packages/angular/src/public-api.spec.ts',
+    '@useupup/server': 'packages/server/tests/public-api.test.ts',
+    '@useupup/next/server': 'packages/next/src/__tests__/public-api.spec.ts',
+    '@useupup/preact': 'packages/preact/src/public-api.spec.ts',
 }
 
 /**
@@ -100,7 +100,7 @@ export function extractPinnedArrays(text, fileName = 'pin.ts') {
         node.forEachChild(walk)
     }
     walk(sf)
-    // preact/next-client define their surface as `export * from '@upupjs/react'`
+    // preact/next-client define their surface as `export * from '@useupup/react'`
     // and pin it by asserting equality with a `reactPkg` import.
     const mirrorsReact = /reactPkg/.test(text)
     return { arrays, mirrorsReact }
@@ -168,10 +168,10 @@ export function loadSurface(root = REPO_ROOT) {
         const { arrays, mirrorsReact } = extractPinnedArrays(text, rel)
         const arrayNames = Object.keys(arrays)
         if (arrayNames.length === 0 && mirrorsReact) {
-            mirrors[key] = '@upupjs/react'
+            mirrors[key] = '@useupup/react'
             continue
         }
-        // @upupjs/next pins two lists (client mirrors react, server is its own):
+        // @useupup/next pins two lists (client mirrors react, server is its own):
         // its dedicated key carries the server array. Every other package has a
         // single EXPECTED_PUBLIC_VALUE_EXPORTS.
         const chosen =
@@ -263,10 +263,10 @@ function reasonFor(sourceKey, member) {
     if (sourceKey === 'contracts:UploaderBaseProps') {
         return 'undocumented: optional prop not yet listed on the optional-props reference page'
     }
-    if (sourceKey === '@upupjs/server') {
+    if (sourceKey === '@useupup/server') {
         return 'undocumented: token-store helper not documented individually (the server-auth guide covers the token-store concept)'
     }
-    if (sourceKey === '@upupjs/next/server') {
+    if (sourceKey === '@useupup/next/server') {
         return 'undocumented: request-origin helper not documented individually'
     }
     if (/^use[A-Z]/.test(member)) {

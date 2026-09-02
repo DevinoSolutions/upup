@@ -22,7 +22,7 @@ export function MultipartFlowDiagram() {
                 width={156}
                 height={44}
                 label="Your server"
-                sub="@upupjs/server"
+                sub="@useupup/server"
             />
             <Node
                 x={468}

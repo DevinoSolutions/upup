@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Emit the umbrella GitHub Release notes for a upup release to stdout.
 //
-// Gathers the publishable @upupjs/* set (packages/*/package.json), the release
+// Gathers the publishable @useupup/* set (packages/*/package.json), the release
 // version (an anchor package or --version), the previous v-tag (git or
 // --previous-tag), and contributors (git shortlog over the range), then hands
 // everything to buildReleaseNotes() in scripts/lib/release-notes.mjs.
@@ -24,7 +24,7 @@ import { dirname, join } from 'node:path'
 import { buildReleaseNotes } from './lib/release-notes.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const ANCHOR_PACKAGE = '@upupjs/core'
+const ANCHOR_PACKAGE = '@useupup/core'
 
 function parseArgs(argv) {
     const flags = { includeBots: false }
@@ -37,7 +37,7 @@ function parseArgs(argv) {
     return { ...opts, ...flags }
 }
 
-/** Read every publishable @upupjs/* package (name + version), sorted by name. */
+/** Read every publishable @useupup/* package (name + version), sorted by name. */
 function readPublishablePackages() {
     const dir = join(ROOT, 'packages')
     const packages = []
@@ -50,7 +50,7 @@ function readPublishablePackages() {
         } catch {
             continue
         }
-        if (pkg.name?.startsWith('@upupjs/') && !pkg.private) {
+        if (pkg.name?.startsWith('@useupup/') && !pkg.private) {
             packages.push({ name: pkg.name, version: pkg.version })
         }
     }
@@ -115,7 +115,7 @@ function main() {
     const packages = readPublishablePackages()
     if (!packages.length) {
         console.error(
-            'generate-release-notes: no publishable @upupjs/* packages found',
+            'generate-release-notes: no publishable @useupup/* packages found',
         )
         process.exit(1)
     }

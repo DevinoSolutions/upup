@@ -12,12 +12,12 @@ import Section from '@/components/ui/Section'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 
 // Inline, self-owned StackBlitz project so the visible package.json pins the
-// current, published packages (@upupjs/react v3 + a current Next) instead of a
+// current, published packages (@useupup/react v3 + a current Next) instead of a
 // remote project we can't edit. `app/page.tsx` is the real minimal usage shown
 // on every framework page. See lib/frameworks REACT_CODE.
 const APP_CODE = `'use client'
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Page() {
     return (
@@ -53,7 +53,7 @@ const PACKAGE_JSON = `{
         "start": "next start"
     },
     "dependencies": {
-        "@upupjs/react": "^3.0.0",
+        "@useupup/react": "^3.0.0",
         "next": "^15.1.6",
         "react": "^19.0.0",
         "react-dom": "^19.0.0"
@@ -75,7 +75,7 @@ export default nextConfig
 const stackblitzProject: Project = {
     title: 'upup — React file uploader',
     description:
-        'Minimal @upupjs/react example: drag & drop, cloud drives, and server-mode uploads.',
+        'Minimal @useupup/react example: drag & drop, cloud drives, and server-mode uploads.',
     template: 'node',
     files: {
         'app/page.tsx': APP_CODE,

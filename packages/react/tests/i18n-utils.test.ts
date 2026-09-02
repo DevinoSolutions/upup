@@ -3,7 +3,7 @@ import {
     formatUiMessage,
     pluralUiMessage,
     type Translations,
-} from '@upupjs/core'
+} from '@useupup/core'
 
 const baseMessages = {
     cancel: 'Cancel',

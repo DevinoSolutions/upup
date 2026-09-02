@@ -8,7 +8,7 @@ import type {
 // its first cold transform count against the 5s test timeout (flaked twice
 // under pre-commit load on the primary dev box). Nothing here mocks the
 // barrel, so a top-level import is equivalent and pays the cost up front.
-import { UpupNetworkError, type UploadFile } from '@upupjs/core'
+import { UpupNetworkError, type UploadFile } from '@useupup/core'
 
 // Helper to create a minimal UploadFile using a plain object
 function makeFile(id: string, name: string): UploadFile {

@@ -8,7 +8,7 @@ import {
     UploadStatus,
     type PipelineContext,
     type UploadFile,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     animatedGifBytes,
     animatedWebpBytes,

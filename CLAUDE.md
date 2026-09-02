@@ -375,19 +375,26 @@ the suites actually drive):
 
 ## Naming vocabulary
 
-- The npm scope is `@upupjs` (2026-07-13). Scope history: v1 shipped as
-  `upup-react-file-uploader`; the v2 scope was briefly `@upup` (never published),
-  renamed to `@useupup` and published as `@useupup/*@3.0.0`, then switched to the
-  final `@upupjs` — the `@useupup` 3.0.0 packages are deprecated/superseded. The
-  brand, DOM contract strings, and the GitHub repo stay bare `upup`; the docs/
-  landing domain stays `useupup.com` (a deliberate split — npm scope `@upupjs`,
-  web `useupup.com` — revisit if `upupjs.com` is ever adopted). `docs.useupup.com`
-  is a redirect-only alias for the commonly guessed docs-URL shape: host-based
-  301s in `apps/landing/next.config.mjs` send every path into
+- The npm scope is `@useupup` (2026-09-02), aligning the scope with the
+  `useupup.com` domain. Scope history: v1 shipped as `upup-react-file-uploader`
+  (deprecated); the v2 scope was briefly `@upup` (never published), then
+  `@useupup` published `3.0.0` and was unpublished during a temporary `@upupjs`
+  era (`3.0.x`–`3.3.0`, 2026-07-13 → 2026-09-02, all versions now deprecated
+  with pointers to `@useupup`); the scope returned to `@useupup` starting at
+  `3.3.0`. Two permanent consequences: the unpublished `@useupup/*@3.0.0`
+  version numbers are BURNED (npm never allows republishing an unpublished
+  version — `@useupup` resumes at 3.3.0 with a gap, by design), and the
+  `@upupjs` packages stay on npm deprecated-but-owned so the scope cannot be
+  squatted — never unpublish them. The brand, DOM contract strings, and the
+  GitHub repo stay bare `upup`; the docs/landing domain stays `useupup.com`.
+  `docs.useupup.com` is a redirect-only alias for the commonly guessed docs-URL
+  shape: host-based 301s in `apps/landing/next.config.mjs` send every path into
   `useupup.com/docs/*` (plus a Dokploy domain entry on the prod compose routing
   the host to the landing container) — it must never serve content directly, so
-  there is never a second indexable docs origin. `@upup` is a
-  retired token — `pnpm run vocab:check` fails on any survivor.
+  there is never a second indexable docs origin. `@upup` and `upupjs` (any form,
+  scoped or bare) are retired tokens — `pnpm run vocab:check` fails on any
+  survivor in its scan roots (packages/apps/scripts/.github; this root-level
+  scope-history note sits outside them, deliberately).
 - `Upup*` — public entry points / brand: `UpupUploader`, `UpupThemeProvider`.
 - `Uploader*` — shared internal UI/controller layer: `UploaderPanel`,
   `UploaderHeader`, `useUploaderController`, `UploaderContext`, `UploaderRef`.

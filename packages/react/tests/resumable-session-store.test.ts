@@ -7,7 +7,7 @@ import {
     removeSession,
     clearAllSessions,
     MultipartSession,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 
 const STORAGE_PREFIX = 'upup_mp_'
 

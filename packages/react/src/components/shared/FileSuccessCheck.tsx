@@ -1,5 +1,5 @@
 import React from 'react'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 
 type Props = {
     /** Position in the sorted list — drives the draw/pop stagger (capped at 8). */

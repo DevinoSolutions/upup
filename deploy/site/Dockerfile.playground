@@ -39,7 +39,7 @@ ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
 
 COPY . .
 RUN pnpm install --frozen-lockfile
-# turbo builds @upupjs/core → react → server → interactive-example → playground.
+# turbo builds @useupup/core → react → server → interactive-example → playground.
 RUN pnpm run build:playground
 
 FROM build AS runtime
@@ -47,4 +47,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 # Plain `next start` (bypasses the port-runner/dotenv wrapper); honors PORT.
-CMD ["pnpm", "--filter", "@upupjs/playground", "exec", "next", "start"]
+CMD ["pnpm", "--filter", "@useupup/playground", "exec", "next", "start"]

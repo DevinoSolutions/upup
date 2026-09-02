@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader } from '@upupjs/vue'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
+import { UpupUploader } from '@useupup/vue'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Vue/Limits',

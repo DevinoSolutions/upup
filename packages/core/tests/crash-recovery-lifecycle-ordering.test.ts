@@ -13,7 +13,7 @@ import {
     fileFingerprint,
     saveSession,
 } from '../src/utils/multipart-session-store'
-import { FileSource, UploadStatus } from '@upupjs/core'
+import { FileSource, UploadStatus } from '@useupup/core'
 
 const STORAGE_KEY = 'upup-crash-recovery'
 const SERVER_URL = 'https://api.example.com/upup'

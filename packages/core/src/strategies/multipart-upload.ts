@@ -80,7 +80,7 @@ const DEFAULT_PART_TIMEOUT_MS = 180_000
  *  as Blobs so huge files (partSize grows with file size past ~48 GiB via the
  *  10,000-part cap) can't turn the fix into an unbounded-heap regression. */
 const MATERIALIZE_PART_MAX_BYTES = 16 * 1024 * 1024
-/** S3's hard cap on parts per upload. `@upupjs/server` already sizes parts to
+/** S3's hard cap on parts per upload. `@useupup/server` already sizes parts to
  *  respect it (providers/aws.ts computePartSize); this client-side floor covers
  *  servers that return no partSize, where the 5 MiB default would otherwise
  *  make any file past ~48.8 GiB fail at part 10,001. */
@@ -106,7 +106,7 @@ function isClientError(error: unknown): boolean {
     return status !== undefined && status >= 400 && status < 500
 }
 
-/** The server's token-expiry rejection: `@upupjs/server`'s upload routes answer
+/** The server's token-expiry rejection: `@useupup/server`'s upload routes answer
  *  403 with `{ error: 'Invalid upload token', code: 'expired' }`, which
  *  `uploadErrorFromResponse` lifts onto `.status` / `.code`. */
 function isExpiredTokenError(error: unknown): boolean {

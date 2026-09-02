@@ -1,5 +1,5 @@
 {
-    "name": "@upupjs/next-example",
+    "name": "@useupup/next-example",
     "version": "0.0.4",
     "private": true,
     "scripts": {
@@ -9,7 +9,7 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@upupjs/next": "workspace:*",
+        "@useupup/next": "workspace:*",
         "next": "16.2.11",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",

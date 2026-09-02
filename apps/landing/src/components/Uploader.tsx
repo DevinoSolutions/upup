@@ -2,16 +2,16 @@
 
 import React, { useContext } from 'react'
 
-import { UpupUploader } from '@upupjs/react'
-import type { LocaleBundle } from '@upupjs/core'
+import { UpupUploader } from '@useupup/react'
+import type { LocaleBundle } from '@useupup/core'
 
-import '@upupjs/react/styles'
+import '@useupup/react/styles'
 import { ThemeContext } from '@/lib/contexts'
 import { clientEnv } from '@/lib/env'
 import { toast } from 'react-toastify'
 
 const customFields = {
-    // Point at the mounted @upupjs/server handler (src/app/api/upup/[...path]/route.ts);
+    // Point at the mounted @useupup/server handler (src/app/api/upup/[...path]/route.ts);
     // the client derives /presign and /multipart/* from this base. Relative on
     // purpose — same-origin by construction, so a NEXT_PUBLIC_BASE_URL that
     // drifts from the serving origin can't turn uploads cross-origin (the

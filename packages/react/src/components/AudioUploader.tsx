@@ -4,7 +4,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/UploaderContext'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer'
 import AudioWaveform from './AudioWaveform'
 

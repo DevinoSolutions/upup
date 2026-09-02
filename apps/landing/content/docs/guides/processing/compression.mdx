@@ -11,8 +11,8 @@ the user picked, and your storage bill shrinks with it.
 Turn it on with a boolean for sensible defaults:
 
 ```tsx
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return <UpupUploader uploadEndpoint="/api/upload-token" imageCompression />
@@ -24,10 +24,10 @@ That alone caps the longest edge at `1920` px and encodes at quality `0.82`.
 ## Options
 
 Pass an object (`ImageCompressionOptions`, exported from
-`@upupjs/core/steps/compress`) to tune all three knobs:
+`@useupup/core/steps/compress`) to tune all three knobs:
 
 ```ts
-import { UpupCore } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
 
 const core = new UpupCore({
     uploadEndpoint: '/api/upload-token',

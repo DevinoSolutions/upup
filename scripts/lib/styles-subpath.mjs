@@ -1,7 +1,7 @@
 // Shape check for a framework package's `./styles` subpath export (#357).
 //
 // TypeScript 6 type-checks side-effect imports, so a bare-string subpath makes
-// the documented `import '@upupjs/react/styles'` fail with TS2882. The subpath
+// the documented `import '@useupup/react/styles'` fail with TS2882. The subpath
 // therefore needs BOTH halves, and both are load-bearing:
 //   - a `types` condition backed by a shipped declaration, so TS can resolve it;
 //   - the SAME unmoved CSS as `default`, so runtime resolution never changes.

@@ -6,10 +6,10 @@ import {
     themeClassMap,
     defaultTheme,
     uploadHandlers,
-} from '@upupjs/storybook-config'
+} from '@useupup/storybook-config'
 
-import '@upupjs/vue/styles'
-import '@upupjs/storybook-config/brand.css'
+import '@useupup/vue/styles'
+import '@useupup/storybook-config/brand.css'
 import '../src/tailwind.css'
 
 initialize({ onUnhandledRequest: 'bypass' })

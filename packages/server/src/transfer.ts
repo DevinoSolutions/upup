@@ -5,7 +5,7 @@ import {
     CompleteMultipartUploadCommand,
     AbortMultipartUploadCommand,
 } from '@aws-sdk/client-s3'
-import { UpupStorageError, UpupErrorCode } from '@upupjs/core'
+import { UpupStorageError, UpupErrorCode } from '@useupup/core'
 import type { UpupStorageConfig, UploadedFile } from './config'
 import { createS3Client } from './providers/s3-client'
 import {

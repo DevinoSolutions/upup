@@ -9,11 +9,11 @@ import {
     GOOGLE_DRIVE_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     DriveBrowserController,
     type DriveBrowserState,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

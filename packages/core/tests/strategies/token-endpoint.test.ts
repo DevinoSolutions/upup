@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TokenEndpointCredentials } from '../../src/strategies/token-endpoint'
-import { UpupNetworkError, type UpupError } from '@upupjs/core'
+import { UpupNetworkError, type UpupError } from '@useupup/core'
 
 const FILE_META = { name: 'photo.jpg', size: 1024, type: 'image/jpeg' }
 

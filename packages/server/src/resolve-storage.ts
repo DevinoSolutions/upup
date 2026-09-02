@@ -22,7 +22,7 @@
 // of credentials: rotating an access key must not strand in-flight uploads, and
 // nothing secret may sit in a token the client can read.
 
-import { UpupConfigError } from '@upupjs/core'
+import { UpupConfigError } from '@useupup/core'
 import type {
     UpupServerConfig,
     UpupStorageConfig,
@@ -69,7 +69,7 @@ function assertResolvedStorage(
     const missing: string[] = []
     if (!s || typeof s !== 'object') {
         throw new UpupConfigError(
-            '[@upupjs/server] the storage resolver did not return a storage config object.',
+            '[@useupup/server] the storage resolver did not return a storage config object.',
         )
     }
     if (typeof s.bucket !== 'string' || s.bucket.trim() === '')
@@ -78,7 +78,7 @@ function assertResolvedStorage(
         missing.push('region')
     if (missing.length > 0) {
         throw new UpupConfigError(
-            '[@upupjs/server] the storage resolver returned a config missing required field(s): ' +
+            '[@useupup/server] the storage resolver returned a config missing required field(s): ' +
                 missing.map(m => `storage.${m}`).join(', '),
         )
     }
