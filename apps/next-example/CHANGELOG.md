@@ -1,5 +1,12 @@
 # @upupjs/next-example
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies [[`5fbd2c6`](https://github.com/DevinoSolutions/upup/commit/5fbd2c671a1834cd8e884bda455eb5602480f829), [`c40ddf5`](https://github.com/DevinoSolutions/upup/commit/c40ddf554b12ecd13fd974452972791928974e84)]:
+    - @upupjs/next@3.3.0
+
 ## 0.0.3
 
 ### Patch Changes
