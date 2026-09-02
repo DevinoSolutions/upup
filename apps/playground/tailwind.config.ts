@@ -13,7 +13,7 @@ module.exports = {
         // to the uploader would render no visible change.
         '../../packages/interactive-example/src/**/*.{ts,tsx}',
     ],
-    // @upupjs/react's preflight resets `border: 0` on every
+    // @useupup/react's preflight resets `border: 0` on every
     // descendant of `.upup-scope` (selector specificity 0,1,1). Without
     // !important on our utilities, slot-override classes like `.border`
     // (specificity 0,1,0) lose the cascade and render no visible change.

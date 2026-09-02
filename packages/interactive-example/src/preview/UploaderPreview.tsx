@@ -1,7 +1,7 @@
 'use client'
 import React, { useContext, useEffect, useMemo, useState } from 'react'
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 import {
     enUS,
     arSA,
@@ -13,7 +13,7 @@ import {
     zhCN,
     zhTW,
     type LocaleBundle,
-} from '@upupjs/core'
+} from '@useupup/core'
 import { ConfigContext } from '../state/ConfigContext'
 import { useEventLog } from '../state/EventLogContext'
 import type { UpupConfig } from '../types'
@@ -233,7 +233,7 @@ export function UploaderPreview({
         <div className="upup-ie-preview" style={style} suppressHydrationWarning>
             {mounted ? (
                 <UpupUploader
-                    // No key on the mode: @upupjs/react re-resolves the theme
+                    // No key on the mode: @useupup/react re-resolves the theme
                     // when the `theme` prop changes (3dc7c8bc), so a light/dark
                     // flip restyles in place — a remount here would throw away
                     // the user's selected files mid-session.

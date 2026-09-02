@@ -8,7 +8,7 @@ this site imitates, and it is the only one upup needs no `endpoint` for. Point
 `storage.type` at `aws`, give it a bucket and a region, and the AWS SDK resolves
 the host itself.
 
-This page covers server mode, where [`@upupjs/server`](/docs/guides/server-mode-setup/)
+This page covers server mode, where [`@useupup/server`](/docs/guides/server-mode-setup/)
 holds the credentials. In client mode your own endpoint signs the URLs and the
 browser `PUT`s straight to the bucket — see
 [Client Mode vs Server Mode](/docs/guides/modes/) for the split, and
@@ -22,7 +22,7 @@ provider guide changes only the `storage` block.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupHandler } from '@upupjs/server'
+import { createUpupHandler } from '@useupup/server'
 
 const handler = createUpupHandler({
     storage: {
@@ -57,7 +57,7 @@ native AWS S3 uses virtual-hosted-style addressing.
 
 ### IAM policy
 
-`@upupjs/server` issues exactly these S3 operations: `PutObject`, `GetObject`,
+`@useupup/server` issues exactly these S3 operations: `PutObject`, `GetObject`,
 `CreateMultipartUpload`, `UploadPart`, `CompleteMultipartUpload`,
 `AbortMultipartUpload`, `ListParts`, and `HeadBucket` for the health route. That
 maps to five IAM actions:

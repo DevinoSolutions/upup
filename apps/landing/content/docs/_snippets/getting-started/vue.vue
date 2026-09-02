@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { UpupUploader } from '@upupjs/vue'
-import '@upupjs/vue/styles'
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
 </script>
 
 <template>

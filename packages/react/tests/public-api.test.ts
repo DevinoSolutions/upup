@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as pkg from '../src/index'
 
 /**
- * Pins @upupjs/react's curated public runtime export list (F-142, canon for
+ * Pins @useupup/react's curated public runtime export list (F-142, canon for
  * preact + next's client entry, which both re-export this package wholesale).
  * A change here is a deliberate public-API change, not an accident.
  */
@@ -19,8 +19,8 @@ const EXPECTED_PUBLIC_VALUE_EXPORTS = [
     'OneDriveIcon',
     'ScreenCaptureIcon',
     'StorageProvider',
-    // The UpupError taxonomy, re-exported from @upupjs/core (#339) so catching
-    // a typed upload error does not force a direct @upupjs/core dependency.
+    // The UpupError taxonomy, re-exported from @useupup/core (#339) so catching
+    // a typed upload error does not force a direct @useupup/core dependency.
     // Same class identities as core's, so `instanceof` narrowing works no
     // matter which package the consumer imported from — pinned by
     // tests/error-exports.test.ts.

@@ -55,7 +55,7 @@ records site/QA quirks that don't fit there.
   `/api/upup/presign` (baked `NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT`) and PUTs directly to
   the Backblaze B2 dev bucket, whose existing `allowDevAccess` CORS rule permits any
   origin. Automated tests that upload should clean up their objects (S3 DeleteObject).
-- The `@upupjs/server` handler REFUSES empty-string provider secrets at construct
+- The `@useupup/server` handler REFUSES empty-string provider secrets at construct
   time, and a construct throw 500s EVERY route — including plain presign. App routes
   must only pass a provider when both its id and secret are set (fixed in both
   `/api/upup` routes, c2f53f6b); don't reintroduce an unconditional providers block.
@@ -108,7 +108,7 @@ records site/QA quirks that don't fit there.
       authenticated).
 - Landing `/api/upup/*` works THROUGH the trailingSlash 308 since 811f32da: Next
   308s POST `/presign` to `/presign/` (method+body preserved) and the
-  `@upupjs/server` router now matches the slash-stripped path (it used to 404 —
+  `@useupup/server` router now matches the slash-stripped path (it used to 404 —
   landing uploads and drive OAuth were both dead on the deployed site). The
   canonical/OG/sitemap/JSON-LD base URL is `src/lib/site-url.ts` (siteUrl /
   canonicalUrl) — never hardcode `https://useupup.com` in a new surface.
@@ -224,7 +224,7 @@ records site/QA quirks that don't fit there.
 
 ## Test-infrastructure quirks
 
-- `@upupjs/next`'s `test:coverage` has a dts-emit race: its pretest build doesn't
+- `@useupup/next`'s `test:coverage` has a dts-emit race: its pretest build doesn't
   await tsup's `dist/server.d.ts` write before vitest starts, so the build-artifact
   spec can fail nondeterministically (observed 2026-07-27: spec read at :37, dts
   written at :42). Re-run isolated per the flake protocol before suspecting a change;

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import * as ReactPackage from '../src/index'
-import * as CorePackage from '@upupjs/core'
+import * as CorePackage from '@useupup/core'
 
 // Issue #339 — the error-handling docs tell you to narrow failures with
 // `instanceof UpupError` / `UpupErrorCode`, but neither name was reachable from
-// @upupjs/react, so a react-only consumer had to add a direct @upupjs/core
+// @useupup/react, so a react-only consumer had to add a direct @useupup/core
 // dependency purely to type a catch block. React now re-exports the taxonomy.
 //
 // Identity is the load-bearing part: a re-export that produced a SECOND class
@@ -22,7 +22,7 @@ const ERROR_CLASSES = [
     'UpupConfigError',
 ] as const
 
-describe('@upupjs/react error surface (#339)', () => {
+describe('@useupup/react error surface (#339)', () => {
     it.each(ERROR_CLASSES)(
         're-exports %s as the same class core exports',
         name => {

@@ -2,9 +2,9 @@
 
 import React, { useContext } from 'react'
 
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
-import type { LocaleBundle } from '@upupjs/core'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
+import type { LocaleBundle } from '@useupup/core'
 import { ThemeContext } from '@/lib/contexts'
 import { clientEnv } from '@/lib/env'
 import { toast } from 'react-toastify'
@@ -40,7 +40,7 @@ export default function Uploader({
     const useRealStorage =
         clientEnv.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE === 'true'
     // Always same-origin: the playground serves its own /api/upup route, and
-    // the @upupjs/server handler here configures no CORS allowlist — an
+    // the @useupup/server handler here configures no CORS allowlist — an
     // absolute foreign base URL (e.g. the landing origin) fails preflight.
     const serverUrl = '/api/upup'
 

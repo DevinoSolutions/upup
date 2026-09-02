@@ -3,7 +3,7 @@ title: Upload files to any S3-compatible storage
 description: Upload files to Wasabi, Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and any other S3-compatible store from React, Vue, or plain JS with upup.
 ---
 
-`@upupjs/server` builds the same AWS-SDK S3 client for every provider and reaches
+`@useupup/server` builds the same AWS-SDK S3 client for every provider and reaches
 your backend through `endpoint`. The S3 client itself never reads `storage.type` —
 the only branch on it is a construct-time guard that rejects providers with no S3
 surface (currently just `azure`, which has

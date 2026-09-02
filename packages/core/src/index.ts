@@ -1,9 +1,9 @@
-// @upupjs/core public barrel — the curated surface a library consumer is
+// @useupup/core public barrel — the curated surface a library consumer is
 // meant to construct or handle: `UpupCore` + its options, the error
 // taxonomy, public value enums, the i18n and theme surfaces, the plugin
 // authoring surface, and the primary public data types. Implementation
 // machinery (engine collaborators, the orchestrator, controllers, context
-// shapes, low-level utils) lives behind `@upupjs/core/internal` instead — see
+// shapes, low-level utils) lives behind `@useupup/core/internal` instead — see
 // CLAUDE.md's "Package map" entry and packages/core/tests/public-api.test.ts
 // for the pin that keeps this barrel from silently regrowing.
 
@@ -55,7 +55,7 @@ export {
     // The taxonomy's response parser: turns a failed fetch/XHR response into
     // the right typed subclass. Public since #339 — CLAUDE.md names it part of
     // the one error surface and api-reference/error-codes.mdx already documents
-    // `import { uploadErrorFromResponse } from '@upupjs/core'`, but the
+    // `import { uploadErrorFromResponse } from '@useupup/core'`, but the
     // allow-list never caught up, so that documented import did not resolve.
     uploadErrorFromResponse,
 } from './errors'

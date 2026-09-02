@@ -1,5 +1,5 @@
 import type { StorybookConfig } from '@storybook/html-vite'
-import { withUpupViteWorkerFormat } from '@upupjs/storybook-config/vite'
+import { withUpupViteWorkerFormat } from '@useupup/storybook-config/vite'
 
 const config: StorybookConfig = {
     framework: {

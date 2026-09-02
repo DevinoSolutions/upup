@@ -7,13 +7,13 @@ import {
     type IconName,
     type UploadFile,
     type Translations,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     cn,
     fileGetIsImage,
     fileGetExtension,
     isFileRemovalLocked,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { IconComponent } from './icon.component'
 import { ProgressBarComponent } from './progress-bar.component'

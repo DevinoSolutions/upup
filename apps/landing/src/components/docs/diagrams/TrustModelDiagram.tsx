@@ -25,7 +25,7 @@ export function TrustModelDiagram() {
 
             <Node x={180} y={35} width={200} height={95} label="" />
             <Muted x={280} y={57} size={11} opacity={0.85}>
-                @upupjs/server
+                @useupup/server
             </Muted>
             <Muted x={280} y={80} size={9} opacity={0.55}>
                 verify auth

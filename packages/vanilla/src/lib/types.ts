@@ -17,7 +17,7 @@ import type {
     DriveFile,
     DriveFolder,
     CloudDrivesConfig,
-} from '@upupjs/core'
+} from '@useupup/core'
 import type {
     UploaderOrchestrator,
     ThemeStore,
@@ -25,14 +25,14 @@ import type {
     DragDropController,
     TransientUiSnapshot,
     MotionMode,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 
-// Dropzone controller now lives in @upupjs/core (hoisted in Workstream C-1 Unit 2).
+// Dropzone controller now lives in @useupup/core (hoisted in Workstream C-1 Unit 2).
 export type {
     DragDropController,
     DragDropSnapshot,
     DragDropDeps,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 
 /** Flat, framework-free snapshot the render loop reads and subscribe() emits. */
 export interface UploaderSnapshot {

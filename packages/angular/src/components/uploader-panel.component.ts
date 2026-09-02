@@ -12,8 +12,8 @@ import {
     cn,
     DragDropController,
     type DragDropSnapshot,
-} from '@upupjs/core/internal'
-import { UploadStatus, formatUiMessage } from '@upupjs/core'
+} from '@useupup/core/internal'
+import { UploadStatus, formatUiMessage } from '@useupup/core'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore, type SignalStore } from '../lib/to-signal-store'
 import { SourceViewComponent } from './source-view.component'

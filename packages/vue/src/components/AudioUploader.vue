@@ -5,7 +5,7 @@ import {
     useUploaderSource,
     useUploaderTheme,
 } from '../context/uploader-context'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 import SourceViewContainer from './shared/SourceViewContainer.vue'
 import AudioWaveform from './AudioWaveform.vue'
 

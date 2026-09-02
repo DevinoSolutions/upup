@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { UpupCore } from '@upupjs/core'
-import { UploadStatus } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
+import { UploadStatus } from '@useupup/core'
 
 describe('UpupCore.updateOptions', () => {
     it('updates accept option', () => {

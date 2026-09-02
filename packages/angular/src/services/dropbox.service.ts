@@ -3,11 +3,11 @@ import {
     DROPBOX_DESCRIPTOR,
     type DriveFile,
     type DriveFolder,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     DriveBrowserController,
     type DriveBrowserState,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { toSignalStore } from '../lib/to-signal-store'
 

@@ -1,5 +1,5 @@
 {
-    "name": "@upupjs/storybook-preact",
+    "name": "@useupup/storybook-preact",
     "version": "0.1.4",
     "private": true,
     "type": "module",
@@ -10,12 +10,12 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@upupjs/core": "workspace:*",
-        "@upupjs/preact": "workspace:*",
+        "@useupup/core": "workspace:*",
+        "@useupup/preact": "workspace:*",
         "preact": "^10.29.2"
     },
     "devDependencies": {
-        "@upupjs/storybook-config": "workspace:*",
+        "@useupup/storybook-config": "workspace:*",
         "storybook": "^9",
         "@storybook/preact-vite": "^9",
         "@storybook/addon-docs": "^9",

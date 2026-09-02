@@ -10,7 +10,7 @@ For actual uploads, configure exactly one target:
 | Prop                 | Type     | Use                                                                                                                        |
 | -------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `uploadEndpoint`     | `string` | Client-hosted presign route. The browser requests an upload URL, then uploads bytes directly to storage.                   |
-| `serverUrl`          | `string` | Server-hosted upup route from `@upupjs/server`. Your server owns provider calls, storage credentials, and transfer policy. |
+| `serverUrl`          | `string` | Server-hosted upup route from `@useupup/server`. Your server owns provider calls, storage credentials, and transfer policy. |
 | `resumable.endpoint` | `string` | External tus service endpoint when `resumable={{ protocol: 'tus', endpoint }}` is used.                                    |
 
 `provider` is required only when the selected target or server handler needs to know which storage backend to use.
@@ -18,8 +18,8 @@ For actual uploads, configure exactly one target:
 ## Client upload target
 
 ```tsx
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -56,4 +56,4 @@ type PresignedUrlResponse = {
 <UpupUploader provider="aws" mode="server" serverUrl="/api/upup" />
 ```
 
-`serverUrl` should point to a handler created by `@upupjs/server`.
+`serverUrl` should point to a handler created by `@useupup/server`.

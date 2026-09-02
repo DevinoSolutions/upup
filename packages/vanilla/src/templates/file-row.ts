@@ -5,13 +5,13 @@ import {
     type UploadFile,
     type Translations,
     type IconName,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     fileGetExtension,
     fileGetIsImage,
     cn,
     isFileRemovalLocked,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { progressBar } from './shared/progress-bar'
 import { fileSuccessCheck } from './shared/file-success-check'

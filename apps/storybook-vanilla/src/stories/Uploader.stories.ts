@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/html-vite'
-import { createUploader } from '@upupjs/vanilla'
-import type { CreateUploaderOptions, UpupInstance } from '@upupjs/vanilla'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
+import { createUploader } from '@useupup/vanilla'
+import type { CreateUploaderOptions, UpupInstance } from '@useupup/vanilla'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 // ── Per-canvas instance tracking ──────────────────────────────────────────────
 // WeakMap keyed by canvasElement so each story's instance is destroyed before
@@ -137,7 +140,7 @@ export const AllSources: Story = {
     },
 }
 
-// ── Real storage (MinIO via the @upupjs/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
 // Opt-in stories for the real-bytes upload milestone. They DISABLE MSW
 // (parameters.msw.handlers = []) and point at the local harness server using
 // `serverUrl` (which selects the ServerCredentials strategy -> POST /presign),
@@ -244,8 +247,8 @@ export const RealUploadServerDrive: Story = {
 }
 
 // ── Custom Element story ───────────────────────────────────────────────────────
-// Demonstrates the <upup-uploader> custom element registered by @upupjs/vanilla/element.
-import '@upupjs/vanilla/element'
+// Demonstrates the <upup-uploader> custom element registered by @useupup/vanilla/element.
+import '@useupup/vanilla/element'
 
 export const ElementTag: Story = {
     args: {

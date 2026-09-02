@@ -5,7 +5,7 @@
 // same way transfer.test.ts does, so the real providers/aws.ts signing path
 // runs and the expiry actually threads through it.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { UpupConfigError } from '@upupjs/core'
+import { UpupConfigError } from '@useupup/core'
 
 const signed: Array<{
     expiresIn: number | undefined

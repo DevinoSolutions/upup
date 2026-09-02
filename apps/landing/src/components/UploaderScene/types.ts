@@ -7,7 +7,7 @@ export type AccentHue = 'blue' | 'teal' | 'violet' | 'amber' | 'green' | 'pink'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared shapes for the UploaderScene kit — a marketing recreation of the real
-// @upupjs/react uploader (panel chrome, source row, drive browser, file queue)
+// @useupup/react uploader (panel chrome, source row, drive browser, file queue)
 // driven by a declarative timeline. Every visual moment maps to a REAL upup
 // capability; the only fiction is illustrative size numbers.
 // ─────────────────────────────────────────────────────────────────────────────

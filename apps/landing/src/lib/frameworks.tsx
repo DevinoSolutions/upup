@@ -16,7 +16,7 @@ import {
 // framework's name, npm package, icon, and demo capabilities are
 // declared exactly once. Adding a framework is one entry here.
 //
-// The live demo on every page is React-powered (@upupjs/react) by design; these
+// The live demo on every page is React-powered (@useupup/react) by design; these
 // pages are marketing/SEO surfaces branded per framework, not per-framework
 // runtimes. `hasImageEditor` gates the image editor to React/Preact only — it
 // ships the real Filerobot editor as a lazily-loaded real-React island and the
@@ -30,7 +30,7 @@ export interface FrameworkMeta {
     id: FrameworkId
     /** Display name, e.g. "Vue". */
     name: string
-    /** Published npm package, e.g. "@upupjs/vue". */
+    /** Published npm package, e.g. "@useupup/vue". */
     pkg: string
     /** Example file name for the snippet, e.g. "Uploader.vue". */
     file: string
@@ -55,16 +55,16 @@ export interface FrameworkMeta {
 }
 
 const REACT_CODE = `'use client'
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
   return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
 }`
 
 const VUE_CODE = `<script setup lang="ts">
-import { UpupUploader } from '@upupjs/vue'
-import '@upupjs/vue/styles'
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
 </script>
 
 <template>
@@ -72,15 +72,15 @@ import '@upupjs/vue/styles'
 </template>`
 
 const SVELTE_CODE = `<script lang="ts">
-  import { UpupUploader } from '@upupjs/svelte'
-  import '@upupjs/svelte/styles'
+  import { UpupUploader } from '@useupup/svelte'
+  import '@useupup/svelte/styles'
 </script>
 
 <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />`
 
 const ANGULAR_CODE = `import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upupjs/angular'
-// Load styles once: add '@upupjs/angular/styles' to angular.json → "styles"
+import { UpupUploaderComponent } from '@useupup/angular'
+// Load styles once: add '@useupup/angular/styles' to angular.json → "styles"
 
 @Component({
   selector: 'app-root',
@@ -92,16 +92,16 @@ import { UpupUploaderComponent } from '@upupjs/angular'
 })
 export class AppComponent {}`
 
-const VANILLA_CODE = `import { createUploader } from '@upupjs/vanilla'
-import '@upupjs/vanilla/styles'
+const VANILLA_CODE = `import { createUploader } from '@useupup/vanilla'
+import '@useupup/vanilla/styles'
 
 createUploader('#uploader', {
   provider: 'aws',
   uploadEndpoint: '/api/upload-token',
 })`
 
-const PREACT_CODE = `import { UpupUploader } from '@upupjs/preact'
-import '@upupjs/preact/styles'
+const PREACT_CODE = `import { UpupUploader } from '@useupup/preact'
+import '@useupup/preact/styles'
 
 export function App() {
   return <UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
@@ -111,7 +111,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     react: {
         id: 'react',
         name: 'React',
-        pkg: '@upupjs/react',
+        pkg: '@useupup/react',
         file: 'Uploader.tsx',
         code: REACT_CODE,
         docsFile: 'react.tsx',
@@ -125,7 +125,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     vue: {
         id: 'vue',
         name: 'Vue',
-        pkg: '@upupjs/vue',
+        pkg: '@useupup/vue',
         file: 'Uploader.vue',
         code: VUE_CODE,
         docsFile: 'vue.vue',
@@ -139,7 +139,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     svelte: {
         id: 'svelte',
         name: 'Svelte',
-        pkg: '@upupjs/svelte',
+        pkg: '@useupup/svelte',
         file: 'Uploader.svelte',
         code: SVELTE_CODE,
         docsFile: 'svelte.svelte',
@@ -153,7 +153,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     angular: {
         id: 'angular',
         name: 'Angular',
-        pkg: '@upupjs/angular',
+        pkg: '@useupup/angular',
         file: 'app.component.ts',
         code: ANGULAR_CODE,
         docsFile: 'angular.ts',
@@ -167,7 +167,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     vanilla: {
         id: 'vanilla',
         name: 'Vanilla JS',
-        pkg: '@upupjs/vanilla',
+        pkg: '@useupup/vanilla',
         file: 'uploader.ts',
         code: VANILLA_CODE,
         docsFile: 'vanilla.ts',
@@ -181,7 +181,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
     preact: {
         id: 'preact',
         name: 'Preact',
-        pkg: '@upupjs/preact',
+        pkg: '@useupup/preact',
         file: 'App.tsx',
         code: PREACT_CODE,
         docsFile: 'preact.tsx',
@@ -211,7 +211,7 @@ export const FRAMEWORK_IDS: FrameworkId[] = FRAMEWORK_LIST.map(f => f.id)
 //
 // The docs surfaces (the <FrameworkTabs> strip, its client tab bar, and the
 // "Pick your framework" pills on /docs) need a SUPERSET of FRAMEWORK_LIST:
-// Next.js ships no UI package of its own — it re-exports @upupjs/react and adds
+// Next.js ships no UI package of its own — it re-exports @useupup/react and adds
 // route handlers — so it has no marketing page or hero snippet, but it does
 // have a docs quickstart and a canonical snippet file. It is therefore appended
 // here rather than added to FRAMEWORKS, which stays "frameworks with a native
@@ -237,7 +237,7 @@ export interface DocsFrameworkMeta {
     brand?: string
 }
 
-/** Next.js — docs-only: a quickstart and snippets, but no @upupjs/next UI. */
+/** Next.js — docs-only: a quickstart and snippets, but no @useupup/next UI. */
 const NEXT_DOCS_FRAMEWORK: DocsFrameworkMeta = {
     id: 'next',
     name: 'Next.js',

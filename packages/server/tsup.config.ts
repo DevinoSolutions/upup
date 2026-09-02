@@ -15,5 +15,5 @@ export default defineConfig({
     clean: true,
     target: 'node18',
     platform: 'node',
-    external: ['@upupjs/core'],
+    external: ['@useupup/core'],
 })

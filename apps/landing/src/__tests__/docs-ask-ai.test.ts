@@ -19,10 +19,10 @@ describe('MessageBody inline rendering', () => {
     })
 
     it('renders bold that wraps inline code as <strong><code>', () => {
-        const html = render('Install with **`npm i @upupjs/core`** first.')
+        const html = render('Install with **`npm i @useupup/core`** first.')
         expect(html).toContain('<strong')
         expect(html).toContain('<code')
-        expect(html).toContain('npm i @upupjs/core')
+        expect(html).toContain('npm i @useupup/core')
         // Both markers are consumed — no raw ** or backticks bleed through.
         expect(html).not.toContain('**')
         expect(html).not.toContain('`')

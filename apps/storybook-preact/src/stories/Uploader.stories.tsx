@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite'
-import { UpupUploader } from '@upupjs/preact'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
+import { UpupUploader } from '@useupup/preact'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 // Pull virtual controls (themeMode, primaryColor) out of args and fold them
 // into the real `theme` prop that UpupUploader actually accepts.
@@ -120,7 +123,7 @@ export const AllSources: Story = {
     },
 }
 
-// ── Real storage (MinIO via the @upupjs/server harness on :53060) ──────────────
+// ── Real storage (MinIO via the @useupup/server harness on :53060) ──────────────
 // Opt-in stories for the real-bytes upload milestone. They DISABLE MSW
 // (parameters.msw.handlers = []) and point at the local harness server using
 // `serverUrl` (which selects the ServerCredentials strategy -> POST /presign),
@@ -132,7 +135,7 @@ const REAL_SERVER_URL =
         ?.VITE_UPUP_E2E_SERVER_URL || 'http://localhost:53060'
 
 // ── 10. RealUploadClient ──────────────────────────────────────────────────────
-// Client-mode presign: hits POST /presign on the real @upupjs/server harness.
+// Client-mode presign: hits POST /presign on the real @useupup/server harness.
 // MSW is disabled so requests reach the real local server on :53060.
 export const RealUploadClient: Story = {
     parameters: { msw: { handlers: [] } },

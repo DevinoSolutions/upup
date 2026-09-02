@@ -111,7 +111,7 @@ function makeCredentials() {
     }
 }
 
-/** The 403 `@upupjs/server` answers with when an upload token has aged out:
+/** The 403 `@useupup/server` answers with when an upload token has aged out:
  *  `{ error: 'Invalid upload token', code: 'expired' }`. */
 function expiredTokenError(): Error {
     return uploadErrorFromResponse({

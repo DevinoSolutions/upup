@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
-import { UpupUploader } from '@upupjs/vue'
-import { frFR, arSA, jaJP } from '@upupjs/core'
-import { uploaderArgTypes, uploaderDefaultArgs } from '@upupjs/storybook-config'
+import { UpupUploader } from '@useupup/vue'
+import { frFR, arSA, jaJP } from '@useupup/core'
+import {
+    uploaderArgTypes,
+    uploaderDefaultArgs,
+} from '@useupup/storybook-config'
 
 const meta: Meta<typeof UpupUploader> = {
     title: 'Vue/i18n',

@@ -10,7 +10,7 @@ export default defineConfig({
     external: [
         'react',
         'react-dom',
-        '@upupjs/core',
+        '@useupup/core',
         'react-filerobot-image-editor',
         'react-konva',
         'konva',

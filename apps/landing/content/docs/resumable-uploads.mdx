@@ -1,6 +1,6 @@
 ---
 title: Resumable Uploads
-description: Two resumable protocols — S3 multipart through @upupjs/server, or tus against an external tus-compatible service. Full option reference, part-size rules, and what each protocol actually resumes.
+description: Two resumable protocols — S3 multipart through @useupup/server, or tus against an external tus-compatible service. Full option reference, part-size rules, and what each protocol actually resumes.
 ---
 
 upup supports two resumable protocols. Both are opt-in through the single
@@ -9,13 +9,13 @@ either a multipart config or a tus config, never both.
 
 |                               | Multipart                      | tus                                |
 | ----------------------------- | ------------------------------ | ---------------------------------- |
-| Upload target                 | `serverUrl` (`@upupjs/server`) | tus `endpoint`                     |
+| Upload target                 | `serverUrl` (`@useupup/server`) | tus `endpoint`                     |
 | Splits large files into parts | Yes                            | Yes (when `chunkSizeBytes` is set) |
 | Survives a page reload        | Yes (`localStorage` session)   | Yes (fingerprint URL storage)      |
 | Extra dependency              | None                           | `tus-js-client` (optional peer)    |
 | Storage                       | Your S3-compatible bucket      | Whatever the tus server writes to  |
 
-Pick multipart if your bytes already go to S3 through `@upupjs/server`: large
+Pick multipart if your bytes already go to S3 through `@useupup/server`: large
 files are split into parallel, individually-retried parts, and an interrupted
 upload picks up at the last completed part after a reload, a tab close, or a
 crash — see [Cross-reload resume](#cross-reload-resume).
@@ -23,7 +23,7 @@ crash — see [Cross-reload resume](#cross-reload-resume).
 Pick tus when server-mode multipart is not on the table: a client-mode
 `uploadEndpoint` deployment (multipart refuses to run there at all), a non-S3
 destination, or an existing tus server you already operate. tus also resumes
-without `@upupjs/server` in the path, because the tus protocol — not upup —
+without `@useupup/server` in the path, because the tus protocol — not upup —
 owns the offset bookkeeping.
 
 ## Multipart
@@ -48,7 +48,7 @@ everything smaller takes the ordinary single-PUT presigned path.
 
 <Callout type="warning" title="Multipart requires server mode">
     Multipart needs a credential source that can init, sign parts, complete, and
-    abort. Only `serverUrl` (backed by `@upupjs/server`) provides those. A
+    abort. Only `serverUrl` (backed by `@useupup/server`) provides those. A
     client-mode `uploadEndpoint` supplies presigned single-PUT URLs only, so
     pairing it with `protocol: 'multipart'` throws a `UpupConfigError`
     ("CredentialStrategy must implement multipart methods") the moment the
@@ -115,7 +115,7 @@ failure at all.
 ### Server routes
 
 Multipart is a five-call lifecycle. All five are `POST`, all five are
-implemented by `@upupjs/server` under your `serverUrl` base path:
+implemented by `@useupup/server` under your `serverUrl` base path:
 
 ```txt
 POST /multipart/init
@@ -147,7 +147,7 @@ Request and response shapes for all five routes are documented in the
 
 S3 imposes two hard limits that shape every multipart upload: a part must be at
 least **5 MiB** (except the last one), and a single upload may have at most
-**10,000 parts**. `@upupjs/server` reconciles both before answering
+**10,000 parts**. `@useupup/server` reconciles both before answering
 `/multipart/init`:
 
 1. Start from the requested chunk size, or 5 MiB if none was given.
@@ -319,7 +319,7 @@ parts behind.
 
 tus talks directly to an external tus-compatible service — your own
 [tusd](https://github.com/tus/tusd), Transloadit, or any other implementation of
-the protocol. `@upupjs/server` is not involved.
+the protocol. `@useupup/server` is not involved.
 
 `tus-js-client` is an optional peer dependency, kept out of core's mandatory
 path so projects that never use tus don't pay for it. Install it yourself:

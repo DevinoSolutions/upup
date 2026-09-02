@@ -45,7 +45,7 @@ export function variantCanon(variant: ParityVariant): VariantFixtures {
     if (!block) {
         throw new Error(
             `No parity fixtures for variant "${variant}" — regen them from React (the canon) before asserting:\n` +
-                `  UPDATE_PARITY=1 pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.crossframework.config.ts --project react\n` +
+                `  UPDATE_PARITY=1 pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @useupup/e2e-test exec playwright test --config playwright.crossframework.config.ts --project react\n` +
                 `then review the parity-fixtures.json diff like code. A regen that leaves the file untouched never matched the spec (see CLAUDE.md).`,
         )
     }

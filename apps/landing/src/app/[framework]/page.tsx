@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import '@upupjs/interactive-example/styles'
+import '@useupup/interactive-example/styles'
 import { InteractiveExampleClient } from '@/components/InteractiveExampleClient'
 import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import { FRAMEWORK_IDS, getFramework } from '@/lib/frameworks'

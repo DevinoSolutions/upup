@@ -5,7 +5,7 @@ import type {
     MultipartInitResponse,
     MultipartCompleteResponse,
     PresignedUrlResponse,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     installXhrPartMock,
     type PartRequest,

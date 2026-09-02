@@ -1,6 +1,6 @@
 ---
 title: File upload server with Hono and S3
-description: Wire @upupjs/server into Hono with createUpupRoutes — the web-native mount, no body parsing, edge-runtime bindings, and CORS.
+description: Wire @useupup/server into Hono with createUpupRoutes — the web-native mount, no body parsing, edge-runtime bindings, and CORS.
 ---
 
 Hono is web-native: its request and response objects _are_ the platform
@@ -13,7 +13,7 @@ option does.
 ## 1. Install
 
 ```sh
-pnpm add @upupjs/server
+pnpm add @useupup/server
 ```
 
 ## 2. Share one config
@@ -22,7 +22,7 @@ Author the config once and import it wherever you mount:
 
 ```ts
 // lib/upup-config.ts
-import type { UpupServerConfig } from '@upupjs/server'
+import type { UpupServerConfig } from '@useupup/server'
 
 export const upupConfig: UpupServerConfig = {
     storage: {
@@ -46,7 +46,7 @@ export const upupConfig: UpupServerConfig = {
 
 ```ts
 import { Hono } from 'hono'
-import { createUpupRoutes } from '@upupjs/server/hono'
+import { createUpupRoutes } from '@useupup/server/hono'
 import { upupConfig } from './lib/upup-config'
 
 const routes = createUpupRoutes(upupConfig)
@@ -93,8 +93,8 @@ the handler on first use and cache it:
 
 ```ts
 import { Hono } from 'hono'
-import { createUpupRoutes } from '@upupjs/server/hono'
-import type { UpupServerConfig } from '@upupjs/server'
+import { createUpupRoutes } from '@useupup/server/hono'
+import type { UpupServerConfig } from '@useupup/server'
 
 type Env = {
     Bindings: {
@@ -134,7 +134,7 @@ a non-S3 `storage.type`) and throwing that per request would turn a
 config mistake into a stream of 500s instead of one loud boot failure.
 
 <Callout type="warning">
-    `@upupjs/server` signs and completes uploads through `@aws-sdk/client-s3`. A
+    `@useupup/server` signs and completes uploads through `@aws-sdk/client-s3`. A
     non-Node runtime therefore needs its Node-compatibility layer enabled — on
     Cloudflare Workers that is the `nodejs_compat` flag in `wrangler.toml`.
     Confirm it against your runtime before your first deploy.

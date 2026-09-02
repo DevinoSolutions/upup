@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
-import { FileSource } from '@upupjs/core'
+import { FileSource } from '@useupup/core'
 import { UpupUploader } from '../src'
 
 // Nine sources is one past the compact threshold (8); five is comfortably under it.

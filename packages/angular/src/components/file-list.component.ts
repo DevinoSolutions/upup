@@ -22,8 +22,8 @@ import {
     pluralUiMessage as plural,
     UploadStatus,
     type UploadFile,
-} from '@upupjs/core'
-import { isUploadActive, cn } from '@upupjs/core/internal'
+} from '@useupup/core'
+import { isUploadActive, cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { UploaderHeaderComponent } from './uploader-header.component'
 import { ProgressBarComponent } from './progress-bar.component'

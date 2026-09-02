@@ -5,11 +5,11 @@ import {
     useSyncExternalStore,
     type SetStateAction,
 } from 'react'
-import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@upupjs/core'
+import { BOX_DESCRIPTOR, type DriveFile, type DriveFolder } from '@useupup/core'
 import {
     DriveBrowserController,
     type DriveBrowserState,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import {
     useUploaderFiles,
     useUploaderRuntime,

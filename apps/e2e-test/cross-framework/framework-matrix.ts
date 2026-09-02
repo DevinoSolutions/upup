@@ -25,7 +25,7 @@ export const PARITY_VARIANTS: readonly ParityVariant[] = [
 ]
 
 export interface FrameworkEntry {
-    /** Playwright project name AND the `@upupjs/storybook-<name>` package suffix. */
+    /** Playwright project name AND the `@useupup/storybook-<name>` package suffix. */
     name: string
     /** Dev-server port (baked into the storybook package's own script). */
     port: number

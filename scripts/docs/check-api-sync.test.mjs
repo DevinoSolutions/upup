@@ -19,13 +19,13 @@ const kindsOf = failures => failures.map(f => f.kind).sort()
 // one member honestly excepted. This must produce zero findings.
 const cleanArgs = () => ({
     surface: {
-        '@upupjs/react': ['UpupUploader', 'useIsClient'],
+        '@useupup/react': ['UpupUploader', 'useIsClient'],
     },
     map: {
-        '@upupjs/react': { UpupUploader: 'docs/react.mdx' },
+        '@useupup/react': { UpupUploader: 'docs/react.mdx' },
     },
     exceptions: {
-        '@upupjs/react': { useIsClient: 'undocumented: headless hook' },
+        '@useupup/react': { useIsClient: 'undocumented: headless hook' },
     },
     pageExists: page => page === 'docs/react.mdx',
     pageContains: (page, member) =>
@@ -39,7 +39,7 @@ test('a fully mapped-or-excepted surface with present docs yields no findings', 
 
 test('a public member that is neither mapped nor excepted fails as unmapped', () => {
     const args = cleanArgs()
-    args.surface['@upupjs/react'].push('BrandNewExport')
+    args.surface['@useupup/react'].push('BrandNewExport')
     const failures = checkSync(args)
     assert.deepEqual(kindsOf(failures), ['unmapped'])
     assert.equal(failures[0].member, 'BrandNewExport')
@@ -47,7 +47,7 @@ test('a public member that is neither mapped nor excepted fails as unmapped', ()
 
 test('a map entry naming a member absent from the surface fails as a ghost mapping', () => {
     const args = cleanArgs()
-    args.map['@upupjs/react'].RemovedExport = 'docs/react.mdx'
+    args.map['@useupup/react'].RemovedExport = 'docs/react.mdx'
     const failures = checkSync(args)
     assert.deepEqual(kindsOf(failures), ['ghost-map'])
     assert.equal(failures[0].member, 'RemovedExport')
@@ -55,7 +55,7 @@ test('a map entry naming a member absent from the surface fails as a ghost mappi
 
 test('an exception whose member left the surface fails as a stale exception', () => {
     const args = cleanArgs()
-    args.exceptions['@upupjs/react'].GoneExport = 'undocumented: removed later'
+    args.exceptions['@useupup/react'].GoneExport = 'undocumented: removed later'
     const failures = checkSync(args)
     assert.deepEqual(kindsOf(failures), ['stale-exception'])
     assert.equal(failures[0].member, 'GoneExport')
@@ -78,7 +78,7 @@ test('a mapped page that does not exist fails as missing-page', () => {
 
 test('a member listed in both the map and the exceptions fails as double-listed', () => {
     const args = cleanArgs()
-    args.exceptions['@upupjs/react'].UpupUploader =
+    args.exceptions['@useupup/react'].UpupUploader =
         'undocumented: contradiction'
     const failures = checkSync(args)
     assert.ok(kindsOf(failures).includes('double-listed'))
@@ -101,7 +101,7 @@ test('extractPinnedArrays parses a sorted-chained EXPECTED array and flags react
     assert.deepEqual(arrays.EXPECTED_PUBLIC_VALUE_EXPORTS, ['b', 'a', 'c'])
     assert.equal(mirrorsReact, false)
 
-    const mirrorText = "import * as reactPkg from '@upupjs/react'\nexport {}\n"
+    const mirrorText = "import * as reactPkg from '@useupup/react'\nexport {}\n"
     assert.equal(extractPinnedArrays(mirrorText, 'm.ts').mirrorsReact, true)
 })
 

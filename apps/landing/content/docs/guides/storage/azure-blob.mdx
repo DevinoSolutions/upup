@@ -1,23 +1,23 @@
 ---
 title: Upload files to Azure Blob Storage
-description: Azure Blob Storage has no S3 API, so @upupjs/server rejects it. Upload to Azure from React, Vue, Svelte, or plain JS with upup via client mode and a SAS URL.
+description: Azure Blob Storage has no S3 API, so @useupup/server rejects it. Upload to Azure from React, Vue, Svelte, or plain JS with upup via client mode and a SAS URL.
 ---
 
 Azure Blob Storage is the one provider in upup's list that server mode cannot
-serve. It has no S3-compatible API, and `@upupjs/server` speaks only S3 — every
+serve. It has no S3-compatible API, and `@useupup/server` speaks only S3 — every
 upload it performs goes through an `@aws-sdk/client-s3` client. Azure still
 works with upup, through **client mode**: your endpoint returns a SAS URL shaped
 as upup's presign contract and the browser uploads straight to the blob.
 
 ## Why server mode rejects it
 
-`@upupjs/core` exports `azure` as a `StorageProvider` value and also lists it in
+`@useupup/core` exports `azure` as a `StorageProvider` value and also lists it in
 `NON_S3_STORAGE_PROVIDERS`. `createUpupHandler` checks that set while it is being
 constructed, so passing `type: 'azure'` throws an `UpupConfigError` at boot —
 before a single request is served — rather than failing per-request later:
 
 ```text
-[@upupjs/server] storage.type "azure" has no S3-compatible API and cannot be
+[@useupup/server] storage.type "azure" has no S3-compatible API and cannot be
 served. upup uploads via the S3 API — use an S3-compatible provider
 (aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.
 ```

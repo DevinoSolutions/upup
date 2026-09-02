@@ -12,12 +12,12 @@ import {
     inject,
 } from '@angular/core'
 import { isPlatformBrowser } from '@angular/common'
-import { cn } from '@upupjs/core/internal'
-import type { CoreEvents } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
+import type { CoreEvents } from '@useupup/core/internal'
 import { UpupStore } from './upup-store.service'
 import { SourceViewHeaderExtraService } from './context/source-view-header-extra.service'
 import type { UploaderProps } from './shared/types'
-import type { UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@useupup/core'
 import { UploaderPanelComponent } from './components/uploader-panel.component'
 import { ImageEditorStubComponent } from './components/image-editor-stub.component'
 

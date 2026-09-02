@@ -7,7 +7,7 @@
 // where it actually runs: after validation and token issuance, immediately
 // before the route responds.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { UpupQuotaError, UpupError, UpupErrorCode } from '@upupjs/core'
+import { UpupQuotaError, UpupError, UpupErrorCode } from '@useupup/core'
 
 vi.mock('../src/providers/aws', () => ({
     generatePresignedUrl: vi.fn().mockResolvedValue({

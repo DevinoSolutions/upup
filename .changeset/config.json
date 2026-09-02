@@ -7,20 +7,20 @@
     "commit": false,
     "fixed": [
         [
-            "@upupjs/angular",
-            "@upupjs/core",
-            "@upupjs/next",
-            "@upupjs/preact",
-            "@upupjs/react",
-            "@upupjs/server",
-            "@upupjs/svelte",
-            "@upupjs/vanilla",
-            "@upupjs/vue"
+            "@useupup/angular",
+            "@useupup/core",
+            "@useupup/next",
+            "@useupup/preact",
+            "@useupup/react",
+            "@useupup/server",
+            "@useupup/svelte",
+            "@useupup/vanilla",
+            "@useupup/vue"
         ]
     ],
     "linked": [],
     "access": "public",
     "baseBranch": "master",
     "updateInternalDependencies": "patch",
-    "ignore": ["@upupjs/landing", "@upupjs/playground"]
+    "ignore": ["@useupup/landing", "@useupup/playground"]
 }

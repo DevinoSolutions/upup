@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { UploadStatus, type Translations } from '@upupjs/core'
-  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn, isFileRemovalLocked } from '@upupjs/core/internal'
+  import { UploadStatus, type Translations } from '@useupup/core'
+  import { fileCanPreviewText, fileGetIsImage, fileGetIsPdf, fileGetIsText, cn, isFileRemovalLocked } from '@useupup/core/internal'
   import {
     useUploaderFiles,
     useUploaderI18n,

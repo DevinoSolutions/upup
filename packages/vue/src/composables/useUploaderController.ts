@@ -9,7 +9,7 @@ import {
     h,
     type Ref,
 } from 'vue'
-import { FileSource, type UploadFile, type UiTranslations } from '@upupjs/core'
+import { FileSource, type UploadFile, type UiTranslations } from '@useupup/core'
 import {
     normalizeUploaderOptions,
     createUploaderController,
@@ -17,7 +17,7 @@ import {
     type UploaderControllerOptions,
     type TransientUiSnapshot,
     type CloudProvider,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderProps } from '../shared/types'
 import type { IUploaderContext } from '../context/uploader-context'
 import { useUpupUpload } from '../use-upup-upload'

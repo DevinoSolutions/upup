@@ -18,7 +18,7 @@
 // is the ONE path that aborts the server-side upload and drops the persisted
 // session, so a crashed upload became undiscardable.
 //
-// Run: pnpm --filter @upupjs/e2e-test test:e2e:cf
+// Run: pnpm --filter @useupup/e2e-test test:e2e:cf
 
 import { test, expect, type Page } from '@playwright/test'
 import { byName, storyUrl } from './framework-matrix'

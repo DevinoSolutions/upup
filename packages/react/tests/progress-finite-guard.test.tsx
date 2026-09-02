@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, cleanup } from '@testing-library/react'
 import React from 'react'
-import { UploadStatus } from '@upupjs/core'
-import type { UploadFile } from '@upupjs/core'
+import { UploadStatus } from '@useupup/core'
+import type { UploadFile } from '@useupup/core'
 
 afterEach(cleanup)
 

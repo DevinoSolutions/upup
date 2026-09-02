@@ -1,14 +1,14 @@
 // Pure builders for the umbrella GitHub Release notes (one `v<version>` release
-// covering every published @upupjs/* package). Kept side-effect-free so
+// covering every published @useupup/* package). Kept side-effect-free so
 // scripts/lib/release-notes.test.mjs can pin the exact Markdown; the CLI
 // (scripts/generate-release-notes.mjs) gathers the inputs (fs + git) and calls
-// buildReleaseNotes(). All @upupjs/* packages are `fixed` in changesets, so a
+// buildReleaseNotes(). All @useupup/* packages are `fixed` in changesets, so a
 // release shares ONE version — but the packages table still prints each
 // package's own version, so any accidental divergence stays visible.
 
-const NPM_ORG_URL = 'https://www.npmjs.com/org/upupjs'
+const NPM_ORG_URL = 'https://www.npmjs.com/org/useupup'
 
-/** npm version-pinned package page, e.g. .../package/@upupjs/core/v/3.1.0 */
+/** npm version-pinned package page, e.g. .../package/@useupup/core/v/3.1.0 */
 export function npmPackageUrl(name, version) {
     return `https://www.npmjs.com/package/${name}/v/${version}`
 }
@@ -28,7 +28,7 @@ function packagesSection(packages) {
     return [
         '## 📦 Packages',
         '',
-        `All ${packages.length} packages are published to npm under the [\`@upupjs\`](${NPM_ORG_URL}) scope:`,
+        `All ${packages.length} packages are published to npm under the [\`@useupup\`](${NPM_ORG_URL}) scope:`,
         '',
         '| Package | Version |',
         '| --- | --- |',
@@ -42,10 +42,10 @@ function installSection() {
         '',
         '```bash',
         '# pick your framework',
-        'npm i @upupjs/react     # or @upupjs/vue · @upupjs/svelte · @upupjs/angular · @upupjs/vanilla · @upupjs/preact',
+        'npm i @useupup/react     # or @useupup/vue · @useupup/svelte · @useupup/angular · @useupup/vanilla · @useupup/preact',
         '',
         '# server mode — presign + proxy uploads to any S3-compatible storage',
-        'npm i @upupjs/server    # plus @upupjs/next for Next.js route handlers',
+        'npm i @useupup/server    # plus @useupup/next for Next.js route handlers',
         '```',
     ].join('\n')
 }

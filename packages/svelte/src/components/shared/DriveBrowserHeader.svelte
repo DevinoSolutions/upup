@@ -1,7 +1,7 @@
 <script lang="ts">
   import { writable } from 'svelte/store'
-  import { type DriveFolder, type DriveUser } from '@upupjs/core'
-import { cn } from '@upupjs/core/internal'
+  import { type DriveFolder, type DriveUser } from '@useupup/core'
+import { cn } from '@useupup/core/internal'
   import {
     useUploaderI18n,
     useUploaderSource,

@@ -1,6 +1,6 @@
 ---
 title: Authenticate uploads with a custom JWT
-description: Verify your own JWT inside @upupjs/server's getUserId hook with jose — bearer or cookie, shared secrets, and remote JWKS for asymmetric tokens.
+description: Verify your own JWT inside @useupup/server's getUserId hook with jose — bearer or cookie, shared secrets, and remote JWKS for asymmetric tokens.
 ---
 
 No auth library, or a token minted by another service. Verify the token with
@@ -11,7 +11,7 @@ check both.
 ## The handler
 
 ```ts
-import { createUpupHandler } from '@upupjs/server'
+import { createUpupHandler } from '@useupup/server'
 import { jwtVerify } from 'jose'
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET!)

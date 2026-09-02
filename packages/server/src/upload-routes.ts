@@ -11,7 +11,7 @@ import {
     UpupErrorCode,
     UpupError,
     type MultipartResumeResponse,
-} from '@upupjs/core'
+} from '@useupup/core'
 import type {
     UpupServerConfig,
     FileMetadata,
@@ -323,7 +323,7 @@ export async function runPostCompletionHooks(
             route,
             method,
             status: 200,
-            // No dedicated HOOK_ERROR code exists in @upupjs/core; the message
+            // No dedicated HOOK_ERROR code exists in @useupup/core; the message
             // carries the real meaning — the upload itself succeeded.
             code: UpupErrorCode.STORAGE_ERROR,
             message:

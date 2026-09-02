@@ -9,8 +9,8 @@ import {
     type Context,
     type ReactNode,
 } from 'react'
-import type { FileSource, ResolvedImageEditorOptions } from '@upupjs/core'
-import type { MotionMode } from '@upupjs/core/internal'
+import type { FileSource, ResolvedImageEditorOptions } from '@useupup/core'
+import type { MotionMode } from '@useupup/core/internal'
 import type {
     BaseContextUpload,
     BaseContextRuntime,
@@ -21,8 +21,8 @@ import type {
     BaseContextView,
     BaseContextEditor,
     BaseContextTheme,
-} from '@upupjs/core/internal'
-import { UploadStatus } from '@upupjs/core'
+} from '@useupup/core/internal'
+import { UploadStatus } from '@useupup/core'
 import type { UploaderProps, UploaderIcons } from '../shared/types'
 
 export { UploadStatus }

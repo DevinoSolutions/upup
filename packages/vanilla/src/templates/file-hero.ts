@@ -1,11 +1,11 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
-import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
+import { UploadStatus, type UploadFile, type Translations } from '@useupup/core'
 import {
     fileGetExtension,
     fileGetIsImage,
     cn,
     isFileRemovalLocked,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { fileIcon } from './file-icon'
 import { progressBar } from './shared/progress-bar'

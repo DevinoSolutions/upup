@@ -5,8 +5,8 @@
 // bundle weight is already gated by size-limit).
 //
 // Run locally after building:
-//   pnpm exec turbo run build --filter=@upupjs/landing
-//   pnpm --filter @upupjs/landing run lighthouse
+//   pnpm exec turbo run build --filter=@useupup/landing
+//   pnpm --filter @useupup/landing run lighthouse
 // lhci boots `next start` itself (startServerCommand below).
 
 const PORT = 4463

@@ -1,9 +1,9 @@
 ---
 title: Auth Recipes
-description: Wire your existing auth into @upupjs/server — one getUserId hook, recipes for Better Auth, NextAuth, Clerk and raw JWT, plus Redis and SQL TokenStores.
+description: Wire your existing auth into @useupup/server — one getUserId hook, recipes for Better Auth, NextAuth, Clerk and raw JWT, plus Redis and SQL TokenStores.
 ---
 
-`@upupjs/server` never stores, reads, or replicates your app's credentials. It
+`@useupup/server` never stores, reads, or replicates your app's credentials. It
 has no user table, no session format, and no opinion about how you log people
 in. It asks you exactly one question — _who is this request from?_ — through two
 optional hooks, `auth` and `getUserId`, and both receive the standard web
@@ -121,7 +121,7 @@ user's Google Drive or Dropbox credentials into one shared bucket of the token
 store. `createUpupHandler` refuses to be built at all:
 
 ```
-[@upupjs/server] drive providers / tokenStore require config.getUserId to scope
+[@useupup/server] drive providers / tokenStore require config.getUserId to scope
 tokens per user. Set getUserId, or set allowAnonymous:true to intentionally
 share ONE anonymous namespace (demos only).
 ```
@@ -173,7 +173,7 @@ millisecond. Map zero to a delete.
 
 ```ts
 import Redis from 'ioredis'
-import type { TokenStore } from '@upupjs/server'
+import type { TokenStore } from '@useupup/server'
 
 export class RedisTokenStore implements TokenStore {
     constructor(private readonly redis: Redis) {}
@@ -235,7 +235,7 @@ and a refreshable token blob silently disappears.
 import { eq } from 'drizzle-orm'
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
-import type { TokenStore } from '@upupjs/server'
+import type { TokenStore } from '@useupup/server'
 
 export const upupTokens = pgTable('upup_tokens', {
     key: text('key').primaryKey(),
@@ -313,7 +313,7 @@ dead OAuth-state rows do not accumulate.
 
 ### Why not `InMemoryTokenStore`
 
-`InMemoryTokenStore` ships with `@upupjs/server` as a zero-dependency reference
+`InMemoryTokenStore` ships with `@useupup/server` as a zero-dependency reference
 implementation, and it is **dev-only**. It is a `Map` in one process: tokens are
 lost on every restart and deploy, and nothing is shared across workers — so a
 drive OAuth flow that starts on worker A and returns its callback to worker B

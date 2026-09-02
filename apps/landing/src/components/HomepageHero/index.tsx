@@ -37,7 +37,7 @@ export default function HeroSection({
     const visualRef = useRef(null)
     const visualActive = useInView(visualRef, { amount: 0.2 })
 
-    const pkg = fw?.pkg ?? '@upupjs/react'
+    const pkg = fw?.pkg ?? '@useupup/react'
     const packageManagers = useMemo(
         () => [
             { id: 'npm', name: 'npm', command: `npm install ${pkg}` },

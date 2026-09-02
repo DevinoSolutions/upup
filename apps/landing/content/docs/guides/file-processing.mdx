@@ -35,8 +35,8 @@ The pipeline is assembled from boolean options on the uploader. The order is
 | 5     | `hash`      | `checksumVerification` | every file       |
 
 ```tsx
-import { UpupUploader } from '@upupjs/react'
-import '@upupjs/react/styles'
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
 
 export default function Uploader() {
     return (
@@ -75,7 +75,7 @@ A few mechanics worth knowing:
 `imageCompression` re-encodes images through a canvas, downscaling to a longest
 edge of `1920` px and encoding at quality `0.82` by default. Pass `true` for
 those defaults, or an object (`ImageCompressionOptions`, exported from
-`@upupjs/core/steps/compress`) to set
+`@useupup/core/steps/compress`) to set
 `maxWidthOrHeight`, `quality`, and a best-effort `maxSizeMB` target:
 
 ```tsx
@@ -235,7 +235,7 @@ not know how to run are on
 ## Writing your own step
 
 The step contract is public: `PipelineStep` and `PipelineContext` are exported
-from `@upupjs/core`, and an explicit `pipeline` array replaces the automatic one
+from `@useupup/core`, and an explicit `pipeline` array replaces the automatic one
 entirely.
 
 ```ts

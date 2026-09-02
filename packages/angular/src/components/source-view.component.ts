@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, inject } from '@angular/core'
-import { cn, sourceNameKeys } from '@upupjs/core/internal'
+import { cn, sourceNameKeys } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { SourceViewHeaderExtraService } from '../context/source-view-header-extra.service'
 import { UrlUploaderComponent } from './url-uploader.component'

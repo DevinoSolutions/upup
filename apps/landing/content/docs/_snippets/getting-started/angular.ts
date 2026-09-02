@@ -1,5 +1,5 @@
 import { Component } from '@angular/core'
-import { UpupUploaderComponent } from '@upupjs/angular'
+import { UpupUploaderComponent } from '@useupup/angular'
 
 @Component({
     selector: 'app-root',

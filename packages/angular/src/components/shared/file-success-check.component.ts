@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core'
-import { cn } from '@upupjs/core/internal'
+import { cn } from '@useupup/core/internal'
 
 /**
  * Completion checkmark (port of shared/FileSuccessCheck): a sky ring with a tick

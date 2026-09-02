@@ -1,6 +1,6 @@
 ---
 title: Authenticate uploads with NextAuth (Auth.js v5)
-description: Scope @upupjs/server uploads to the NextAuth session — the auth() helper in the App Router, getToken outside a request context, and the missing session.user.id.
+description: Scope @useupup/server uploads to the NextAuth session — the auth() helper in the App Router, getToken outside a request context, and the missing session.user.id.
 ---
 
 In the App Router, the `auth()` helper exported from your `auth.ts` reads the
@@ -12,7 +12,7 @@ argument — you do not need to thread the `Request` through.
 
 ```ts
 // app/api/upup/[...route]/route.ts
-import { createUpupHandler } from '@upupjs/server'
+import { createUpupHandler } from '@useupup/server'
 import { auth } from '@/auth' // export const { auth } = NextAuth(…)
 
 const handler = createUpupHandler({
@@ -61,7 +61,7 @@ upup wants: the same string for the same person on every request.
 ## Outside a Next request context
 
 Two situations put you outside the App Router's request context: a Pages-Router
-API route bridged by `@upupjs/next`, and NextAuth-issued JWTs verified from
+API route bridged by `@useupup/next`, and NextAuth-issued JWTs verified from
 another service. In both, read the token off the request with `getToken` from
 `next-auth/jwt` instead of calling `auth()`.
 

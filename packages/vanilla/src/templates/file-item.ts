@@ -1,12 +1,12 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
-import type { UploadFile } from '@upupjs/core'
+import type { UploadFile } from '@useupup/core'
 import {
     fileGetIsImage,
     fileGetIsPdf,
     fileGetIsText,
     fileCanPreviewText,
     cn,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import type { UploaderContext } from '../lib/types'
 import { filePreview } from './file-preview'
 import { filePreviewPortal, type TextState } from './file-preview-portal'

@@ -8,7 +8,7 @@ import { defineConfig } from '@playwright/test'
 // Isolated from the default suites by its own testDir + config, so `pnpm run
 // e2e` never runs it. Run (local / nightly):
 //   dotenv -e local-dev/.env.posthog-e2e -- \
-//     pnpm --filter @upupjs/e2e-test test:e2e:landing
+//     pnpm --filter @useupup/e2e-test test:e2e:landing
 //
 // The `flows` project (support + thumbs) runs first; the serial `ingestion`
 // project depends on it, so verification always runs LAST against landed data.
@@ -54,7 +54,7 @@ export default defineConfig({
     // still reach the server; these overrides just pin the e2e dataset + the
     // Mastra base URL our thumbs flow boots.
     webServer: {
-        command: `pnpm --filter @upupjs/landing exec next dev -p ${LANDING_PORT}`,
+        command: `pnpm --filter @useupup/landing exec next dev -p ${LANDING_PORT}`,
         url: baseURL,
         reuseExistingServer: true,
         timeout: 180_000,

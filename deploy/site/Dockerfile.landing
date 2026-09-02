@@ -51,7 +51,7 @@ ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL \
 
 COPY . .
 RUN pnpm install --frozen-lockfile
-# Builds @upupjs/core → react → server → interactive-example → landing
+# Builds @useupup/core → react → server → interactive-example → landing
 # (turbo dependency graph). The docs (MDX under apps/landing/content/docs) are
 # compiled into the landing Next build by fumadocs — no separate docs step.
 RUN pnpm run build:landing
@@ -61,4 +61,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 EXPOSE 3000
 # `next start` honors PORT; landing's start script is a bare `next start`.
-CMD ["pnpm", "--filter", "@upupjs/landing", "start"]
+CMD ["pnpm", "--filter", "@useupup/landing", "start"]

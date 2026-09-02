@@ -1,5 +1,5 @@
 import type { Component } from 'svelte'
-import type { UploaderBaseProps } from '@upupjs/core'
+import type { UploaderBaseProps } from '@useupup/core'
 
 export type UploaderIcons = {
     ContainerAddMoreIcon?: Component

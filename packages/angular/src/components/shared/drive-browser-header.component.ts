@@ -10,8 +10,8 @@ import {
     type DriveFolder,
     type DriveUser,
     type UiTranslations,
-} from '@upupjs/core'
-import { cn } from '@upupjs/core/internal'
+} from '@useupup/core'
+import { cn } from '@useupup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewHeaderExtraService } from '../../context/source-view-header-extra.service'
 import { SearchIconComponent } from '../icons/search-icon.component'

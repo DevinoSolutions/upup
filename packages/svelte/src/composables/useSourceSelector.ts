@@ -1,4 +1,4 @@
-import { FileSource } from '@upupjs/core'
+import { FileSource } from '@useupup/core'
 import {
     useUploaderFiles,
     useUploaderI18n,

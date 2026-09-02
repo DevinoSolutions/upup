@@ -7,8 +7,8 @@
 
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { UpupCore } from '../src/core'
-import { UploadStatus } from '@upupjs/core'
-import type { PipelineStep, UploadFile } from '@upupjs/core'
+import { UploadStatus } from '@useupup/core'
+import type { PipelineStep, UploadFile } from '@useupup/core'
 
 /** Minimal window stand-in: an EventTarget with addEventListener semantics —
  *  test infrastructure bridging the browser API onto vitest's node env. */

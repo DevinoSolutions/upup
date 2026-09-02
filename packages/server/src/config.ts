@@ -4,7 +4,7 @@ import type {
     PresignedUrlResponse,
     MultipartInitResponse,
     MultipartSignPartResponse,
-} from '@upupjs/core'
+} from '@useupup/core'
 import type { UpupServerLogger } from './observability'
 
 /**
@@ -75,11 +75,11 @@ export type OnPresignResponse = (
 /** One bucket's worth of S3 / S3-compatible connection settings. */
 export interface UpupStorageConfig {
     /**
-     * An S3 / S3-compatible provider label. @upupjs/server only speaks the S3
+     * An S3 / S3-compatible provider label. @useupup/server only speaks the S3
      * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
      * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
      * provider with no S3-compatible surface (currently `StorageProvider.Azure`
-     * — see @upupjs/core's NON_S3_STORAGE_PROVIDERS) is rejected by
+     * — see @useupup/core's NON_S3_STORAGE_PROVIDERS) is rejected by
      * createUpupHandler at construct time.
      */
     type: StorageProvider | string

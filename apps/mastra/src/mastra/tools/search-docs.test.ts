@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parseLlmsFull, scoreChunks } from './search-docs.js'
 
 const CORPUS = [
-    '# Getting Started\nhttps://useupup.com/docs/getting-started/\n\nInstall upup with pnpm add @upupjs/react. Then render the uploader.',
+    '# Getting Started\nhttps://useupup.com/docs/getting-started/\n\nInstall upup with pnpm add @useupup/react. Then render the uploader.',
     '# Theming\nhttps://useupup.com/docs/guides/theming/\n\nThe theme prop controls colors. Dark mode is supported.',
     '# Resumable Uploads\nhttps://useupup.com/docs/resumable-uploads/\n\nResumable uploads use tus. Configure the tus strategy for large files.',
 ].join('\n---\n')

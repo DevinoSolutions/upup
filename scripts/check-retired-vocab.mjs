@@ -89,12 +89,21 @@ const RETIRED = [
         useInstead: 'one-drive (wire/DOM) or oneDrive (in-app)',
     },
     // npm scope rename (2026-07-13, pre-first-publish): packages ship under
-    // @upupjs. The old @upup scope never reached npm and must not reappear
-    // in any layer. \b never matches inside @upupjs (no second `@`).
+    // @useupup. The old @upup scope never reached npm and must not reappear
+    // in any layer. \b never matches inside @useupup (no second `@`).
     {
         name: '@upup',
         pattern: /@upup\b/,
-        useInstead: '@upupjs',
+        useInstead: '@useupup',
+    },
+    // Scope return (2026-09-02): the temporary @upupjs era (3.0.x–3.3.0) ended
+    // with the scope back on @useupup; the npm packages stay deprecated-but-
+    // owned, but the token is dead in every repo layer. Bare form too — it
+    // also catches the old ng-packagr flat-module filename (upupjs-angular).
+    {
+        name: 'upupjs',
+        pattern: /upupjs/,
+        useInstead: '@useupup (scope) / useupup (bare)',
     },
 ]
 

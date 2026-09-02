@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import '@upupjs/react/styles'
-import { UpupUploader, useUpupUpload } from '@upupjs/react'
+import '@useupup/react/styles'
+import { UpupUploader, useUpupUpload } from '@useupup/react'
 
 /** Headless hook demo — v2 feature, custom UI built from scratch */
 function HeadlessDemo() {
@@ -99,7 +99,7 @@ function RestrictionsDemo() {
  * Server-mode multipart scenario — loaded via
  * `/?scenario=multipart-resume&server=http://localhost:53061`.
  *
- * The only story in this app that talks to a REAL @upupjs/server + MinIO:
+ * The only story in this app that talks to a REAL @useupup/server + MinIO:
  * multipart at a 5 MiB threshold/part size with crash recovery on, which is
  * what the cross-reload resume proof needs (reload mid-upload, the file comes
  * back, resume finishes it). `server` is a query param because the spec boots

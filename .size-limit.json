@@ -1,48 +1,48 @@
 [
     {
-        "name": "@upupjs/core",
+        "name": "@useupup/core",
         "path": "packages/core/dist/**/*.js",
         "gzip": false,
         "brotli": false,
         "limit": "410 KB"
     },
     {
-        "name": "@upupjs/react",
+        "name": "@useupup/react",
         "path": "packages/react/dist/**/*.js",
         "gzip": false,
         "brotli": false,
         "limit": "460 KB"
     },
     {
-        "name": "@upupjs/vue",
+        "name": "@useupup/vue",
         "path": "packages/vue/dist/**/*.js",
         "gzip": false,
         "brotli": false,
         "limit": "490 KB"
     },
     {
-        "name": "@upupjs/svelte",
+        "name": "@useupup/svelte",
         "path": "packages/svelte/dist/**/*.{js,svelte}",
         "gzip": false,
         "brotli": false,
         "limit": "400 KB"
     },
     {
-        "name": "@upupjs/vanilla",
+        "name": "@useupup/vanilla",
         "path": "packages/vanilla/dist/**/*.js",
         "gzip": false,
         "brotli": false,
         "limit": "360 KB"
     },
     {
-        "name": "@upupjs/angular",
+        "name": "@useupup/angular",
         "path": "packages/angular/dist/**/*.mjs",
         "gzip": false,
         "brotli": false,
         "limit": "650 KB"
     },
     {
-        "name": "@upupjs/preact",
+        "name": "@useupup/preact",
         "path": [
             "packages/preact/dist/**/*.js",
             "!packages/preact/dist/filerobot-island.js"
@@ -52,14 +52,14 @@
         "limit": "670 KB"
     },
     {
-        "name": "@upupjs/preact (image editor island)",
+        "name": "@useupup/preact (image editor island)",
         "path": "packages/preact/dist/filerobot-island.js",
         "gzip": false,
         "brotli": false,
         "limit": "4 MB"
     },
     {
-        "name": "@upupjs/next",
+        "name": "@useupup/next",
         "path": "packages/next/dist/**/*.js",
         "gzip": false,
         "brotli": false,

@@ -1,6 +1,6 @@
 ---
 title: Authenticate uploads with Clerk
-description: Scope S3 uploads to the Clerk user — authenticateRequest inside @upupjs/server's getUserId hook, why authorizedParties is mandatory, and multipart uid binding.
+description: Scope S3 uploads to the Clerk user — authenticateRequest inside @useupup/server's getUserId hook, why authorizedParties is mandatory, and multipart uid binding.
 ---
 
 Clerk's backend client authenticates a plain `Request`, which is exactly what
@@ -11,7 +11,7 @@ scopes the object key and the upload token to the returned `userId`.
 ## The handler
 
 ```ts
-import { createUpupHandler } from '@upupjs/server'
+import { createUpupHandler } from '@useupup/server'
 import { createClerkClient } from '@clerk/backend'
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! })

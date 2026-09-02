@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { ref } from 'lit-html/directives/ref.js'
-import { UploadStatus, formatUiMessage } from '@upupjs/core'
+import { UploadStatus, formatUiMessage } from '@useupup/core'
 import { cn } from '../lib/cn'
 import type { UploaderContext } from '../lib/types'
 import { sourceView } from './source-view'

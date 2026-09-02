@@ -12,10 +12,10 @@ or your own reporter.
 
 Everything on this page — `UpupError`, `UpupValidationError`, `UpupNetworkError`,
 `UpupStorageError`, `UpupAuthError`, `UpupConfigError`, `UpupQuotaError`,
-`UpupErrorCode`, and `uploadErrorFromResponse` — is exported from `@upupjs/core`
-and re-exported by `@upupjs/react` (and therefore `@upupjs/next` and
-`@upupjs/preact`), so an app that only installed its framework package can
-import the whole surface from there without adding a direct `@upupjs/core`
+`UpupErrorCode`, and `uploadErrorFromResponse` — is exported from `@useupup/core`
+and re-exported by `@useupup/react` (and therefore `@useupup/next` and
+`@useupup/preact`), so an app that only installed its framework package can
+import the whole surface from there without adding a direct `@useupup/core`
 dependency.
 
 The one important exception is the rejection from `upload()` itself — see
@@ -35,7 +35,7 @@ below for what actually drives automatic retries.
 
 | Code                     | Meaning                                             | Typical trigger                                                                                                                                                                                                                                                                                                                                                     | Retryable       |
 | ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `AUTH_REQUIRED`          | Anonymous uploads are disabled                      | `@upupjs/server` `/presign` or `/multipart/init` reached with no `auth`, no `getUserId`, and no `allowAnonymousUploads` — returns 403                                                                                                                                                                                                                               | no              |
+| `AUTH_REQUIRED`          | Anonymous uploads are disabled                      | `@useupup/server` `/presign` or `/multipart/init` reached with no `auth`, no `getUserId`, and no `allowAnonymousUploads` — returns 403                                                                                                                                                                                                                               | no              |
 | `AUTH_DENIED`            | The upload token belongs to a different user        | A multipart continuation route (sign-part / complete / abort / resume) called with a token whose `uid` is not the current user — returns 403                                                                                                                                                                                                                        | no              |
 | `AUTH_EXPIRED`           | A stored drive credential is dead or revoked        | The server's drive-token refresh call is rejected by the provider; the stored tokens are deleted and the user must re-authorize. Surfaces only through the server's `onError` reporter — it is never returned as a response-body code                                                                                                                               | no              |
 | `AUTH_PROVIDER_ERROR`    | A cloud-drive OAuth or provider call failed         | OAuth code-for-token exchange returns non-2xx (server answers 502). Also the code every `UpupAuthError` carries by construction                                                                                                                                                                                                                                     | no              |
@@ -58,7 +58,7 @@ below for what actually drives automatic retries.
 | `QUOTA_EXCEEDED`         | A configured storage quota is exhausted             | The code every `UpupQuotaError` carries by construction                                                                                                                                                                                                                                                                                                             | no              |
 | `NO_UPLOAD_TARGET`       | No upload destination is configured                 | The default code for `UpupConfigError` — no `uploadEndpoint` / provider wiring to upload to                                                                                                                                                                                                                                                                         | no              |
 | `BAD_REQUEST`            | The request or API call is malformed                | Server-side: an unparseable JSON body or invalid file metadata (400). Client-side: calling `addFiles` / `setFiles` / `upload` / `resume` / `retry` after `destroy()`, or passing an unknown file ID to `replaceFile` / `reorderFiles`                                                                                                                               | no              |
-| `NOT_FOUND`              | The addressed resource is gone server-side          | `@upupjs/server` `/multipart/resume` asked to re-attach to a multipart upload the storage provider no longer has — completed, aborted, or reaped by an `AbortIncompleteMultipartUpload` lifecycle rule — returns 404. Deliberately a 4xx: the client drops its saved session and starts a fresh upload rather than retrying something that cannot return            | no              |
+| `NOT_FOUND`              | The addressed resource is gone server-side          | `@useupup/server` `/multipart/resume` asked to re-attach to a multipart upload the storage provider no longer has — completed, aborted, or reaped by an `AbortIncompleteMultipartUpload` lifecycle rule — returns 404. Deliberately a 4xx: the client drops its saved session and starts a fresh upload rather than retrying something that cannot return            | no              |
 
 Codes marked _reserved_ are part of the published enum and safe to reference in
 your own `switch` statements — they simply have no emitter in upup today.
@@ -96,7 +96,7 @@ the control for upup's own retry loop.
 
 ## The error classes
 
-Seven classes, all exported from `@upupjs/core`. Each subclass fixes the `code`
+Seven classes, all exported from `@useupup/core`. Each subclass fixes the `code`
 it carries (except `UpupConfigError`, whose code is overridable) and adds the
 fields you need to act on the failure.
 
@@ -136,7 +136,7 @@ the better place to react; the batch rejection is best treated as "the run did
 not fully succeed" rather than as a diagnosis.
 
 One caveat when narrowing: `UpupUploadBatchError` is **not exported** from
-`@upupjs/core` or `@upupjs/core/internal`, so you cannot `instanceof` it. Detect
+`@useupup/core` or `@useupup/core/internal`, so you cannot `instanceof` it. Detect
 it by name or by shape:
 
 ```typescript
@@ -160,7 +160,7 @@ import {
     UpupNetworkError,
     UpupStorageError,
     UpupValidationError,
-} from '@upupjs/core'
+} from '@useupup/core'
 
 function report(error: unknown): string {
     // Check this FIRST — the rejection from upload() is a batch wrapper that is
@@ -252,7 +252,7 @@ unreadable the message stays `Presign request failed: <status> <statusText>`,
 the wording that path has always thrown.
 
 ```typescript
-import { uploadErrorFromResponse } from '@upupjs/core'
+import { uploadErrorFromResponse } from '@useupup/core'
 
 const err = uploadErrorFromResponse({
     status: response.status,
@@ -274,7 +274,7 @@ HTTP status is always copied onto `error.status`.
 order:
 
 1. **JSON** — a `code` field and an `error` (or `message`) field. This is the
-   convention `@upupjs/server` emits, so a server-mode failure reaches the
+   convention `@useupup/server` emits, so a server-mode failure reaches the
    client with the same machine code the server logged.
 2. **S3-style XML** — `<Code>` and `<Message>` inside an `<Error>` envelope.
    This is how S3 and S3-compatible providers report a rejected direct PUT, so
@@ -306,7 +306,7 @@ one place that mapping lives. Note that it returns a **message key**, not a code
 Coverage is partial. Eight of the 24 `UpupErrorCode` members have a dedicated
 mapping: `PRESIGN_FAILED`, `STORAGE_ERROR`, `BAD_REQUEST`, `AUTH_PROVIDER_ERROR`,
 `AUTH_EXPIRED`, `AUTH_DENIED`, `CORS_ERROR`, and `QUOTA_EXCEEDED`. The map also
-handles values that are not enum members at all: `@upupjs/server`'s upload-token
+handles values that are not enum members at all: `@useupup/server`'s upload-token
 codes (`expired`, `bad_signature`, `malformed`), S3 provider codes
 (`AccessDenied`, `SignatureDoesNotMatch`, `EntityTooLarge`, `NoSuchBucket`,
 `InvalidBucketName`), and the drive controller's `UNAUTHENTICATED`.

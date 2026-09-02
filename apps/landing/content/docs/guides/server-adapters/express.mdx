@@ -1,9 +1,9 @@
 ---
 title: File upload server with Express and S3
-description: Mount @upupjs/server on an Express route with createUpupMiddleware — install, config, the express.json() ordering trap, proxy origins, and CORS.
+description: Mount @useupup/server on an Express route with createUpupMiddleware — install, config, the express.json() ordering trap, proxy origins, and CORS.
 ---
 
-`@upupjs/server` ships an Express adapter: one middleware you mount
+`@useupup/server` ships an Express adapter: one middleware you mount
 wherever you like. It wraps the same `createUpupHandler` every other
 adapter wraps, so the config object is identical across frameworks —
 see [Server mode setup](/docs/guides/server-mode-setup/) for what each
@@ -12,7 +12,7 @@ option does.
 ## 1. Install
 
 ```sh
-pnpm add @upupjs/server
+pnpm add @useupup/server
 ```
 
 The Express types are structural — the adapter declares the small slice
@@ -25,7 +25,7 @@ Author the config once and import it wherever you mount:
 
 ```ts
 // lib/upup-config.ts
-import type { UpupServerConfig } from '@upupjs/server'
+import type { UpupServerConfig } from '@useupup/server'
 
 export const upupConfig: UpupServerConfig = {
     storage: {
@@ -49,7 +49,7 @@ export const upupConfig: UpupServerConfig = {
 
 ```ts
 import express from 'express'
-import { createUpupMiddleware } from '@upupjs/server/express'
+import { createUpupMiddleware } from '@useupup/server/express'
 import { upupConfig } from './lib/upup-config'
 
 const app = express()

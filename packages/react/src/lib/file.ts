@@ -1,6 +1,6 @@
 import pako from 'pako'
-import type { Translations, UploadFile } from '@upupjs/core'
-import { fileAppendParams, revokeFileUrl } from '@upupjs/core/internal'
+import type { Translations, UploadFile } from '@useupup/core'
+import { fileAppendParams, revokeFileUrl } from '@useupup/core/internal'
 
 export { fileAppendParams, revokeFileUrl }
 
@@ -29,7 +29,7 @@ export {
     fileGetExtension,
     fileIs3D,
     searchDriveFiles,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 
 export async function compressFile(oldFile: UploadFile): Promise<UploadFile> {
     const buffer = await oldFile.arrayBuffer()

@@ -1,4 +1,4 @@
-// UploaderScene — a mock-uploader kit that recreates the real @upupjs/react
+// UploaderScene — a mock-uploader kit that recreates the real @useupup/react
 // uploader as marketing motion. The kit (MockUploader / MockDriveBrowser /
 // SceneTap / useSceneTimeline) is shared; scenes (HeroSession, and the
 // per-feature scenes to come) declare a timeline script over it.

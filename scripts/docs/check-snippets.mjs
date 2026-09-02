@@ -18,15 +18,15 @@
  *   svelte                                     →  svelte-check
  *
  * Module resolution (validated empirically against the built dist):
- *   - Each `@upupjs/<pkg>` maps by `paths` to packages/<pkg>/dist/index.d.ts.
- *     Deep imports *inside* those .d.ts files (react, @upupjs/core, …) resolve
+ *   - Each `@useupup/<pkg>` maps by `paths` to packages/<pkg>/dist/index.d.ts.
+ *     Deep imports *inside* those .d.ts files (react, @useupup/core, …) resolve
  *     relative to the dist file via the package's own node_modules, so only
  *     the specifiers the SNIPPET writes directly need explicit `paths`.
  *   - react / preact / next: the snippet's own JSX needs React's runtime +
  *     JSX namespace, so `react` (and its jsx-runtime) map to the package's
  *     @types/react. jsx=react-jsx / jsxImportSource=react.
- *       WHY react-jsx for PREACT: @upupjs/preact's dist is literally
- *       `export * from '@upupjs/react'` — a compat re-export — so the exported
+ *       WHY react-jsx for PREACT: @useupup/preact's dist is literally
+ *       `export * from '@useupup/react'` — a compat re-export — so the exported
  *       component and props carry REACT's types. The consumer snippet therefore
  *       typechecks against React's JSX runtime, not preact's. (A real preact
  *       app aliases react→preact/compat at build time; that swaps the runtime,
@@ -34,7 +34,7 @@
  *       jsxImportSource here would type the JSX namespace against preact while
  *       the component is React-typed — the wrong contract to pin.
  *   - vue: jsx=preserve / jsxImportSource=vue (mirrors packages/vue).
- *   - `@upupjs/<pkg>/styles` imports are CSS — tsc cannot typecheck them, so a
+ *   - `@useupup/<pkg>/styles` imports are CSS — tsc cannot typecheck them, so a
  *     generated snippet-env.d.ts declares them as ambient modules.
  *
  * BUILT dist must already exist — this gate does NOT build. If a mapped dist is
@@ -140,11 +140,11 @@ const toPosix = p => p.replace(/\\/g, '/')
 
 // ── Pure helpers (unit-tested) ───────────────────────────────────────────────
 
-/** `@upupjs/<pkg>` → built dist type entry, for every framework package. */
+/** `@useupup/<pkg>` → built dist type entry, for every framework package. */
 export function buildUpupPaths() {
     const paths = {}
     for (const pkg of DIST_PACKAGES) {
-        paths[`@upupjs/${pkg}`] = [`packages/${pkg}/dist/index.d.ts`]
+        paths[`@useupup/${pkg}`] = [`packages/${pkg}/dist/index.d.ts`]
     }
     return paths
 }
@@ -306,7 +306,7 @@ function scaffold(fw, { repoRoot, snippetsDir, harnessDir }) {
     if (fw.styles) {
         writeFileSync(
             join(frameworkDir, 'snippet-env.d.ts'),
-            `declare module '@upupjs/${fw.pkg}/styles'\n`,
+            `declare module '@useupup/${fw.pkg}/styles'\n`,
         )
     }
     if (fw.tool === 'svelte-check') {

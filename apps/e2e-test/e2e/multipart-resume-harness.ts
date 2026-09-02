@@ -129,7 +129,7 @@ export async function startPresignHarness(
     await expect
         .poll(() => reachable(`${url}/healthz`), {
             timeout: 60_000,
-            message: `presign harness never bound ${url} — is @upupjs/server built?`,
+            message: `presign harness never bound ${url} — is @useupup/server built?`,
         })
         .toBe(true)
 

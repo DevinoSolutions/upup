@@ -1,4 +1,4 @@
-# @upupjs/server
+# @useupup/server
 
 ## 3.3.0
 
@@ -6,18 +6,18 @@
 
 - [#353](https://github.com/DevinoSolutions/upup/pull/353) [`5fbd2c6`](https://github.com/DevinoSolutions/upup/commit/5fbd2c671a1834cd8e884bda455eb5602480f829) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Issue-batch release: headless and server API gaps reported by v1→v3 migrators.
 
-    - `@upupjs/react` re-exports the full core error surface — `UpupError` and its six subclasses, `UpupErrorCode`, and `uploadErrorFromResponse` — so framework-only apps no longer need a direct `@upupjs/core` dependency for typed error handling (#339). `uploadErrorFromResponse` is now on core's public entry, making the documented import real.
+    - `@useupup/react` re-exports the full core error surface — `UpupError` and its six subclasses, `UpupErrorCode`, and `uploadErrorFromResponse` — so framework-only apps no longer need a direct `@useupup/core` dependency for typed error handling (#339). `uploadErrorFromResponse` is now on core's public entry, making the documented import real.
     - Headless prop getters (`getRootProps` / `getDropzoneProps` / `getInputProps`) now share one override contract: overrides are spread first, getter-owned functional keys are set after, event handlers are composed instead of dropped, and `getInputProps` merges `style` rather than clobbering it (#341).
     - Restriction failures raised through the file input, dropzone drop, or paste no longer surface as unhandled promise rejections — the `restriction-failed` event remains the reporting channel (#342).
-    - `@upupjs/server`: new `getDownloadUrl(config, key, opts?)` primitive signs a GET for an existing key without a handler, and `downloadUrlExpiresIn` makes the download-URL expiry configurable (#343).
-    - `@upupjs/server`: new `hooks.onPresignResponse` rewrites the presign, multipart-init, and sign-part responses (for proxied or non-browser-reachable storage endpoints), and an `UpupError` thrown from `onBeforeUpload` now surfaces its message and code in the 403 instead of a generic rejection (#338).
-    - `@upupjs/server`: `storage` accepts a per-request resolver `(ctx) => StorageConfig` for multi-bucket routing; multipart continuations are bound to the resolved destination through the HMAC-signed upload token, and `keyStrategy` now receives `metadata` and `req` (#337).
-    - `@upupjs/next`: the Pages Router handler body is `BodyInit`-compatible with newer `@types/node`.
+    - `@useupup/server`: new `getDownloadUrl(config, key, opts?)` primitive signs a GET for an existing key without a handler, and `downloadUrlExpiresIn` makes the download-URL expiry configurable (#343).
+    - `@useupup/server`: new `hooks.onPresignResponse` rewrites the presign, multipart-init, and sign-part responses (for proxied or non-browser-reachable storage endpoints), and an `UpupError` thrown from `onBeforeUpload` now surfaces its message and code in the 403 instead of a generic rejection (#338).
+    - `@useupup/server`: `storage` accepts a per-request resolver `(ctx) => StorageConfig` for multi-bucket routing; multipart continuations are bound to the resolved destination through the HMAC-signed upload token, and `keyStrategy` now receives `metadata` and `req` (#337).
+    - `@useupup/next`: the Pages Router handler body is `BodyInit`-compatible with newer `@types/node`.
 
 ### Patch Changes
 
 - Updated dependencies [[`5fbd2c6`](https://github.com/DevinoSolutions/upup/commit/5fbd2c671a1834cd8e884bda455eb5602480f829), [`8446ca0`](https://github.com/DevinoSolutions/upup/commit/8446ca0c8ad26e2a1704a2d8bd11fc306c434f5d), [`03b4e82`](https://github.com/DevinoSolutions/upup/commit/03b4e82baed0d751ba5da688715ef48748e7fe51)]:
-    - @upupjs/core@3.3.0
+    - @useupup/core@3.3.0
 
 ## 3.2.0
 
@@ -28,7 +28,7 @@
 
     **What shipped**
 
-    - **`@upupjs/server`: new route `POST <base>/multipart/resume`.** Body is
+    - **`@useupup/server`: new route `POST <base>/multipart/resume`.** Body is
       `{ token }` and nothing else; the response is
       `{ key, token, parts: [{ partNumber, eTag, size }] }` and never carries the
       `uploadId`. Trust posture matches `sign-part`: signature verification, owner
@@ -38,7 +38,7 @@
       carried forward unchanged on every re-issue, so rolling resumes can never
       extend it. `/multipart/init` now stamps `iat` into the token; tokens minted
       before this release still resume, via an `exp - TTL` fallback.
-    - **`@upupjs/core`: `resumable: { protocol: 'multipart' }` persists a session
+    - **`@useupup/core`: `resumable: { protocol: 'multipart' }` persists a session
       per `File`** in `localStorage` (`upup_mp_` prefix, 24h TTL, fingerprint
       `name:size:lastModified:type`, scoped to the `serverUrl`, guarded by the
       checksum step's content hash when available). On upload it presents the saved
@@ -106,7 +106,7 @@
 ### Patch Changes
 
 - Updated dependencies [[`de8b363`](https://github.com/DevinoSolutions/upup/commit/de8b3635a1eafa04c378a5f5af14e22ba99b3fe5), [`de8b363`](https://github.com/DevinoSolutions/upup/commit/de8b3635a1eafa04c378a5f5af14e22ba99b3fe5), [`ff8f74f`](https://github.com/DevinoSolutions/upup/commit/ff8f74fd5cd33525b491267b986d566e3e1d8b5b), [`da08e45`](https://github.com/DevinoSolutions/upup/commit/da08e45fe49df4824a134b69498dff223b883701), [`5597477`](https://github.com/DevinoSolutions/upup/commit/5597477e29ad970f249b3a6b7b4912495e8a0503)]:
-    - @upupjs/core@3.2.0
+    - @useupup/core@3.2.0
 
 ## 3.1.0
 
@@ -131,7 +131,7 @@
       affordance; pass `imageEditor={false}` to opt out.
 
     **Non-visual:** all packages adopt `exactOptionalPropertyTypes` /
-    `noUncheckedIndexedAccess`; `@upupjs/server` upload/drive routing is
+    `noUncheckedIndexedAccess`; `@useupup/server` upload/drive routing is
     decomposed by concern behind a single CORS-safe responder. No breaking
     changes to the existing prop names or event contract — the additions are
     backward-compatible.
@@ -139,4 +139,4 @@
 ### Patch Changes
 
 - Updated dependencies [[`79a2861`](https://github.com/DevinoSolutions/upup/commit/79a2861ffc6259485075ac54c85c564fd58c7b86)]:
-    - @upupjs/core@3.1.0
+    - @useupup/core@3.1.0

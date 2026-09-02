@@ -7,7 +7,7 @@ import {
     BOX_DESCRIPTOR,
     type UploadFile,
     type UiTranslations,
-} from '@upupjs/core'
+} from '@useupup/core'
 import {
     DriveBrowserController,
     DragDropController,
@@ -15,7 +15,7 @@ import {
     createUploaderController,
     createChildController,
     type CloudProvider,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import { destroyTiles } from './lib/use-tiles-per-row'
 import type {
     CreateUploaderOptions,

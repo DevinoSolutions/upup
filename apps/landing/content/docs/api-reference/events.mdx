@@ -27,7 +27,7 @@ Headless, subscribe to the bus directly. `on()` returns an unsubscribe
 function:
 
 ```ts
-import { UpupCore } from '@upupjs/core'
+import { UpupCore } from '@useupup/core'
 
 const core = new UpupCore({ uploadEndpoint: '/api/upload-token' })
 
@@ -93,7 +93,7 @@ between states:
 > `file` being present if you only want the per-file signal, and treat the
 > `file`-less emission as "the run is over".
 
-> **Vanilla only:** `@upupjs/vanilla` also emits `upload-error` when a link
+> **Vanilla only:** `@useupup/vanilla` also emits `upload-error` when a link
 > import fails, so a URL-fetch failure reaches the same channel as an upload
 > failure. React's URL path calls `onError` without emitting the event. Don't
 > assume `upload-error` implies a transfer was attempted.
@@ -201,7 +201,7 @@ the same set (each with its own binding syntax). Most are driven by a core
 event — subscribe to the event instead when you need the full payload, ordering
 guarantees, or a listener outside the component.
 
-> **Vanilla is a different surface.** `@upupjs/vanilla`'s `createUploader`
+> **Vanilla is a different surface.** `@useupup/vanilla`'s `createUploader`
 > takes `CreateUploaderOptions`, not `UploaderBaseProps`, and accepts only
 > eleven callbacks: `onFileAdded`, `onFileRemoved`, `onUploadProgress`,
 > `onUploadComplete`, `onDoneClicked`, `onIntegrationClick`, `onFilesDragOver`,

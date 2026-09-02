@@ -1,11 +1,11 @@
 // packages/server/src/storage.ts
 //
-// The one home for "is this storage config something @upupjs/server can serve?".
+// The one home for "is this storage config something @useupup/server can serve?".
 // createUpupHandler asserts it at construct time and getDownloadUrl asserts it
 // per call, so the check and its wording live here rather than being duplicated
 // (and drifting) at each entry point.
 
-import { UpupConfigError, NON_S3_STORAGE_PROVIDERS } from '@upupjs/core'
+import { UpupConfigError, NON_S3_STORAGE_PROVIDERS } from '@useupup/core'
 import type { UpupStorageConfig } from './config'
 
 /**
@@ -20,7 +20,7 @@ export function assertS3Storage(storage: UpupStorageConfig): void {
         (NON_S3_STORAGE_PROVIDERS as ReadonlySet<string>).has(storageType)
     ) {
         throw new UpupConfigError(
-            `[@upupjs/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
+            `[@useupup/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
                 'upup uploads via the S3 API — use an S3-compatible provider ' +
                 '(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.',
         )

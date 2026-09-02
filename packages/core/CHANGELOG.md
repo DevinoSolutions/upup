@@ -1,4 +1,4 @@
-# @upupjs/core
+# @useupup/core
 
 ## 3.3.0
 
@@ -6,13 +6,13 @@
 
 - [#353](https://github.com/DevinoSolutions/upup/pull/353) [`5fbd2c6`](https://github.com/DevinoSolutions/upup/commit/5fbd2c671a1834cd8e884bda455eb5602480f829) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Issue-batch release: headless and server API gaps reported by v1→v3 migrators.
 
-    - `@upupjs/react` re-exports the full core error surface — `UpupError` and its six subclasses, `UpupErrorCode`, and `uploadErrorFromResponse` — so framework-only apps no longer need a direct `@upupjs/core` dependency for typed error handling (#339). `uploadErrorFromResponse` is now on core's public entry, making the documented import real.
+    - `@useupup/react` re-exports the full core error surface — `UpupError` and its six subclasses, `UpupErrorCode`, and `uploadErrorFromResponse` — so framework-only apps no longer need a direct `@useupup/core` dependency for typed error handling (#339). `uploadErrorFromResponse` is now on core's public entry, making the documented import real.
     - Headless prop getters (`getRootProps` / `getDropzoneProps` / `getInputProps`) now share one override contract: overrides are spread first, getter-owned functional keys are set after, event handlers are composed instead of dropped, and `getInputProps` merges `style` rather than clobbering it (#341).
     - Restriction failures raised through the file input, dropzone drop, or paste no longer surface as unhandled promise rejections — the `restriction-failed` event remains the reporting channel (#342).
-    - `@upupjs/server`: new `getDownloadUrl(config, key, opts?)` primitive signs a GET for an existing key without a handler, and `downloadUrlExpiresIn` makes the download-URL expiry configurable (#343).
-    - `@upupjs/server`: new `hooks.onPresignResponse` rewrites the presign, multipart-init, and sign-part responses (for proxied or non-browser-reachable storage endpoints), and an `UpupError` thrown from `onBeforeUpload` now surfaces its message and code in the 403 instead of a generic rejection (#338).
-    - `@upupjs/server`: `storage` accepts a per-request resolver `(ctx) => StorageConfig` for multi-bucket routing; multipart continuations are bound to the resolved destination through the HMAC-signed upload token, and `keyStrategy` now receives `metadata` and `req` (#337).
-    - `@upupjs/next`: the Pages Router handler body is `BodyInit`-compatible with newer `@types/node`.
+    - `@useupup/server`: new `getDownloadUrl(config, key, opts?)` primitive signs a GET for an existing key without a handler, and `downloadUrlExpiresIn` makes the download-URL expiry configurable (#343).
+    - `@useupup/server`: new `hooks.onPresignResponse` rewrites the presign, multipart-init, and sign-part responses (for proxied or non-browser-reachable storage endpoints), and an `UpupError` thrown from `onBeforeUpload` now surfaces its message and code in the 403 instead of a generic rejection (#338).
+    - `@useupup/server`: `storage` accepts a per-request resolver `(ctx) => StorageConfig` for multi-bucket routing; multipart continuations are bound to the resolved destination through the HMAC-signed upload token, and `keyStrategy` now receives `metadata` and `req` (#337).
+    - `@useupup/next`: the Pages Router handler body is `BodyInit`-compatible with newer `@types/node`.
 
 ### Patch Changes
 
@@ -76,7 +76,7 @@
 
     **What shipped**
 
-    - **`@upupjs/server`: new route `POST <base>/multipart/resume`.** Body is
+    - **`@useupup/server`: new route `POST <base>/multipart/resume`.** Body is
       `{ token }` and nothing else; the response is
       `{ key, token, parts: [{ partNumber, eTag, size }] }` and never carries the
       `uploadId`. Trust posture matches `sign-part`: signature verification, owner
@@ -86,7 +86,7 @@
       carried forward unchanged on every re-issue, so rolling resumes can never
       extend it. `/multipart/init` now stamps `iat` into the token; tokens minted
       before this release still resume, via an `exp - TTL` fallback.
-    - **`@upupjs/core`: `resumable: { protocol: 'multipart' }` persists a session
+    - **`@useupup/core`: `resumable: { protocol: 'multipart' }` persists a session
       per `File`** in `localStorage` (`upup_mp_` prefix, 24h TTL, fingerprint
       `name:size:lastModified:type`, scoped to the `serverUrl`, guarded by the
       checksum step's content hash when available). On upload it presents the saved
@@ -189,7 +189,7 @@
       `max(chunkSizeBytes, ceil(fileSize / 10000))` instead of trusting the raw
       chunk size — without this, a >48.8 GiB file against a partSize-less server
       would fail at part 10,001. The server's `partSize` still wins whenever
-      present (`@upupjs/server` already clamps it the same way, now pinned by
+      present (`@useupup/server` already clamps it the same way, now pinned by
       boundary tests).
 
 ### Patch Changes
@@ -246,7 +246,7 @@
       affordance; pass `imageEditor={false}` to opt out.
 
     **Non-visual:** all packages adopt `exactOptionalPropertyTypes` /
-    `noUncheckedIndexedAccess`; `@upupjs/server` upload/drive routing is
+    `noUncheckedIndexedAccess`; `@useupup/server` upload/drive routing is
     decomposed by concern behind a single CORS-safe responder. No breaking
     changes to the existing prop names or event contract — the additions are
     backward-compatible.

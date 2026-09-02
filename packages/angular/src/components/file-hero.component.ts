@@ -1,12 +1,12 @@
 import { Component, Input, inject, type Type } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
-import { UploadStatus, type UploadFile, type Translations } from '@upupjs/core'
+import { UploadStatus, type UploadFile, type Translations } from '@useupup/core'
 import {
     cn,
     fileGetIsImage,
     fileGetExtension,
     isFileRemovalLocked,
-} from '@upupjs/core/internal'
+} from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
 import { FileIconComponent } from './file-icon.component'
 import { ProgressBarComponent } from './progress-bar.component'

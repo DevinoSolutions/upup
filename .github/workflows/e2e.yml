@@ -74,7 +74,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             - name: Provision MinIO env (defaults; smoke is OAuth-free)
               run: cp local-dev/.env.minio.example local-dev/.env.minio
@@ -111,11 +111,11 @@ jobs:
 
             # The strongest adversarial verification in the repo (forged-token 403s,
             # oversized-PUT rejection, multipart size-envelope abort, sha256 byte
-            # round-trips) lives in @upupjs/server tests/integration and is gated on
+            # round-trips) lives in @useupup/server tests/integration and is gated on
             # UPUP_E2E_MINIO=1 (provided by the env file via the dotenv wrapper).
             # Without these steps it silently skips everywhere except a dev laptop.
             # Runs after the e2e gate because that step builds the workspace
-            # (server's vitest resolves @upupjs/core via dist). MinIO must be booted
+            # (server's vitest resolves @useupup/core via dist). MinIO must be booted
             # HERE: the cf global-teardown stops the compose stack its own setup
             # started, so nothing from the e2e gate survives into this step
             # (proven by an ECONNREFUSED :9100 on this step's first CI execution).
@@ -210,13 +210,13 @@ jobs:
               run: docker exec upup-localstack awslocal s3 mb s3://upup-e2e
 
             - name: Build the packages the server suite resolves from dist
-              run: pnpm --filter @upupjs/core --filter @upupjs/server build
+              run: pnpm --filter @useupup/core --filter @useupup/server build
 
             # MINIO_ROOT_USER/PASSWORD are the env-var names the suite reads as
             # S3 credentials regardless of backend; LocalStack's canonical test
             # credentials are test/test.
             - name: Server integration suites against LocalStack
-              run: pnpm --filter @upupjs/server exec vitest run tests/integration
+              run: pnpm --filter @useupup/server exec vitest run tests/integration
               env:
                   UPUP_E2E_MINIO: '1'
                   UPUP_E2E_ENDPOINT: http://localhost:4566
@@ -282,15 +282,15 @@ jobs:
             # resolves these three workspace deps from their built dist — same
             # set nightly.yml's Landing-Feedback job builds before booting it.
             - name: Build the packages the landing dev server consumes (core/react/server dist)
-              run: pnpm --filter @upupjs/core --filter @upupjs/react --filter @upupjs/server build
+              run: pnpm --filter @useupup/core --filter @useupup/react --filter @useupup/server build
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             # Flag-position --project (never the `-- --project` pnpm-forwarding
             # form, which Playwright reads as filename filters — see CLAUDE.md).
             - name: Run the docs Playwright project (secret-less; agent mocked via page.route)
-              run: pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.landing.config.ts --project docs
+              run: pnpm --filter @useupup/e2e-test exec playwright test --config playwright.landing.config.ts --project docs
 
             - name: Upload Playwright report
               if: failure()
@@ -305,7 +305,7 @@ jobs:
     # The six static `storybook build` productions. Nightly-only until now, and
     # nightly-only is why they rotted unnoticed for weeks: a production build
     # CODE-SPLITS, dev-mode storybook does not, so the vite `worker.format`
-    # failure that @upupjs/core's module pipeline worker triggers was invisible
+    # failure that @useupup/core's module pipeline worker triggers was invisible
     # to every PR gate (the cross-framework e2e suite boots the storybooks in
     # DEV mode). Browser-less, MinIO-less, secret-less — cheap enough to gate.
     # Same turbo task nightly.yml runs; both call `pnpm run build:storybook`.

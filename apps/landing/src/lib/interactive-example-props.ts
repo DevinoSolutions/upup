@@ -1,7 +1,7 @@
 import type {
     InteractiveExampleProps,
     UpupConfig,
-} from '@upupjs/interactive-example'
+} from '@useupup/interactive-example'
 import { clientEnv } from './env'
 import { APP_ID } from './analytics/contract'
 

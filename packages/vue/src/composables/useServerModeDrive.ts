@@ -5,8 +5,8 @@ import {
     onUnmounted,
     type ComputedRef,
 } from 'vue'
-import { ServerModeDriveController } from '@upupjs/core/internal'
-import type { ServerModeProvider, ServerDriveFile } from '@upupjs/core'
+import { ServerModeDriveController } from '@useupup/core/internal'
+import type { ServerModeProvider, ServerDriveFile } from '@useupup/core'
 import { useUploaderRuntime } from '../context/uploader-context'
 
 export type { ServerModeProvider, ServerDriveFile }

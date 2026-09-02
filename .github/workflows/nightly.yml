@@ -44,7 +44,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             - name: Provision MinIO env (defaults; suites are OAuth-free)
               run: cp local-dev/.env.minio.example local-dev/.env.minio
@@ -202,7 +202,7 @@ jobs:
               env:
                   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
               run: |
-                  pnpm --filter @upupjs/mastra dev &
+                  pnpm --filter @useupup/mastra dev &
                   MASTRA_PID=$!
                   for i in $(seq 1 60); do
                     if curl -sf http://localhost:4111/healthz > /dev/null; then
@@ -214,7 +214,7 @@ jobs:
                     sleep 2
                   done
                   set +e
-                  pnpm --filter @upupjs/mastra eval
+                  pnpm --filter @useupup/mastra eval
                   EVAL_EXIT=$?
                   set -e
                   kill $MASTRA_PID || true
@@ -258,9 +258,9 @@ jobs:
               if: steps.creds.outputs.present == 'true'
               run: pnpm install --frozen-lockfile
 
-            - name: Build @upupjs/core (the live suite imports drive-clients.ts → @upupjs/core)
+            - name: Build @useupup/core (the live suite imports drive-clients.ts → @useupup/core)
               if: steps.creds.outputs.present == 'true'
-              run: pnpm --filter @upupjs/core build
+              run: pnpm --filter @useupup/core build
 
             - name: Rotate + write back the OneDrive refresh token (single mint point)
               if: steps.creds.outputs.present == 'true'
@@ -305,7 +305,7 @@ jobs:
                   UPUP_TEST_GDRIVE_CLIENT_ID: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_ID }}
                   UPUP_TEST_GDRIVE_CLIENT_SECRET: ${{ secrets.UPUP_TEST_GDRIVE_CLIENT_SECRET }}
                   UPUP_TEST_GDRIVE_REFRESH_TOKEN: ${{ secrets.UPUP_TEST_GDRIVE_REFRESH_TOKEN }}
-              run: pnpm --filter @upupjs/server exec vitest run tests/integration/drive-clients-live.integration.test.ts
+              run: pnpm --filter @useupup/server exec vitest run tests/integration/drive-clients-live.integration.test.ts
 
             - name: Provision MinIO env (defaults; the HTTP-surface suite needs a live bucket)
               if: steps.creds.outputs.present == 'true'
@@ -324,11 +324,11 @@ jobs:
                   echo "MinIO failed to become healthy on :9100" >&2
                   exit 1
 
-            - name: Build @upupjs/server (the Playwright HTTP-surface suite imports its built dist)
+            - name: Build @useupup/server (the Playwright HTTP-surface suite imports its built dist)
               if: steps.creds.outputs.present == 'true'
-              run: pnpm --filter @upupjs/server build
+              run: pnpm --filter @useupup/server build
 
-            - name: All-provider server-transfer through the real @upupjs/server HTTP surface (Playwright)
+            - name: All-provider server-transfer through the real @useupup/server HTTP surface (Playwright)
               if: steps.creds.outputs.present == 'true'
               env:
                   UPUP_DRIVE_SANDBOX: '1'
@@ -348,7 +348,7 @@ jobs:
                   UPUP_E2E_BUCKET: upup-e2e
                   UPUP_E2E_REGION: us-east-1
                   UPUP_E2E_ENDPOINT: http://localhost:9100
-              run: pnpm --filter @upupjs/e2e-test test:e2e:drive-sandbox
+              run: pnpm --filter @useupup/e2e-test test:e2e:drive-sandbox
 
     Lighthouse:
         name: Lighthouse (landing SEO + Best Practices)
@@ -370,7 +370,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Build the landing site (turbo builds its workspace deps first)
-              run: pnpm exec turbo run build --filter=@upupjs/landing
+              run: pnpm exec turbo run build --filter=@useupup/landing
 
             # lhci boots `next start` itself and asserts per lighthouserc.cjs:
             # SEO=100 everywhere; Best Practices 100 on docs pages, ratcheted
@@ -378,7 +378,7 @@ jobs:
             # asserted here — the axe ratchet above owns it; perf is excluded
             # (noisy on shared runners; size-limit owns bundle weight).
             - name: Lighthouse audit + assertions (SEO / Best Practices)
-              run: pnpm --filter @upupjs/landing run lighthouse
+              run: pnpm --filter @useupup/landing run lighthouse
 
             - name: Upload Lighthouse reports
               if: always()
@@ -430,15 +430,15 @@ jobs:
 
             - name: Build the packages the landing dev server consumes (core/react/server dist)
               if: steps.creds.outputs.present == 'true'
-              run: pnpm --filter @upupjs/core --filter @upupjs/react --filter @upupjs/server build
+              run: pnpm --filter @useupup/core --filter @useupup/react --filter @useupup/server build
 
             - name: Build the Mastra server (the thumbs flow boots its built output on :4144)
               if: steps.creds.outputs.present == 'true'
-              run: pnpm --filter @upupjs/mastra build
+              run: pnpm --filter @useupup/mastra build
 
             - name: Install Playwright Chromium
               if: steps.creds.outputs.present == 'true'
-              run: pnpm --filter @upupjs/e2e-test exec playwright install --with-deps chromium
+              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             - name: Run landing feedback e2e + shared-PostHog ingestion verification
               if: steps.creds.outputs.present == 'true'

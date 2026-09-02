@@ -1,6 +1,6 @@
 ---
 title: Authenticate uploads with Better Auth
-description: Wire a Better Auth session into @upupjs/server so every upload is scoped to the signed-in user — the getUserId hook, gated sessions, uid binding.
+description: Wire a Better Auth session into @useupup/server so every upload is scoped to the signed-in user — the getUserId hook, gated sessions, uid binding.
 ---
 
 Better Auth's server API takes a `Headers` object, which is exactly what upup's
@@ -10,7 +10,7 @@ Better Auth's server API takes a `Headers` object, which is exactly what upup's
 ## The handler
 
 ```ts
-import { createUpupHandler } from '@upupjs/server'
+import { createUpupHandler } from '@useupup/server'
 import { auth } from '@/lib/auth' // your betterAuth(...) instance
 
 export const handler = createUpupHandler({
