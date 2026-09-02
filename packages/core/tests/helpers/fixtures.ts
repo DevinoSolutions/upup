@@ -19,8 +19,12 @@ import type {
 export const HEIC_SAMPLE_BASE64 =
     'AAAAHGZ0eXBoZWljAAAAAG1pZjFoZWljbWlhZgAAAVRtZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAAACJpbG9jAAAAAERAAAEAAQAAAAABeAABAAAAAAAAAB4AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABodmMxAAAAAA5waXRtAAAAAAABAAAA1GlwcnAAAAC1aXBjbwAAAHhodmNDAQNwAAAAAAAAAAAAHvAA/P34+AAADwNgAAEAGEABDAH//wNwAAADAJAAAAMAAAMAHroCQGEAAQArQgEBA3AAAAMAkAAAAwAAAwAeoCCBBZbqSSmubgIaDAgAAAMAyAAAAwAIQGIAAQAHRAHBcrAiQAAAABNjb2xybmNseAABAA0ABoAAAAAUaXNwZQAAAAAAAABAAAAAQAAAAA5waXhpAAAAAAEIAAAAF2lwbWEAAAAAAAAAAQABBIECAwQAAAAmbWRhdAAAABooAa8E+EEyacv/S7/5H9i13//vHhpPRxg2/A=='
 
-function toBytes(buffer: Buffer): Uint8Array {
-    return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+// Copies rather than views the Buffer: the (buffer, byteOffset, length) form
+// types as Uint8Array<ArrayBufferLike> under TypeScript >= 5.7, which BlobPart
+// rejects. The single-argument form yields Uint8Array<ArrayBuffer>. The return
+// type is left inferred so it stays correct on either side of that lib change.
+function toBytes(buffer: Buffer) {
+    return new Uint8Array(buffer)
 }
 
 export function buildHeicFile(name = 'sample.heic'): File {
