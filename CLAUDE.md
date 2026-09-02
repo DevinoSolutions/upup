@@ -641,6 +641,12 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which
   skips versions already on npm); on dev: `test-release` dry-run.
+  **`changesets/action`'s major is coupled to the Changesets CLI major** — the
+  v2 action hard-errors ("designed to work with Changesets CLI v3") against this
+  repo's CLI v2, so a grouped dependabot action bump silently reds the release
+  pipeline (it did, 2026-09-02, and the failure is invisible until a push to
+  master). The pin is v1.9.0 and dependabot now ignores its majors; move the
+  action and `@changesets/cli` together or not at all.
 - **Branch protection must require BOTH rollup checks** (F-780): `Status Check`
   (main.yml) AND `E2E Status Check` (e2e.yml). main.yml's rollup aggregates only
   its own jobs; e2e.yml's rollup aggregates E2E + Smoke-Packages. Requiring only
