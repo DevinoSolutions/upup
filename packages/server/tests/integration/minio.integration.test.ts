@@ -23,11 +23,11 @@ import {
     completeMultipartUpload,
 } from '../../src/providers/aws'
 import { transferDriveFileToS3 } from '../../src/transfer'
-import type { UpupServerConfig } from '../../src/config'
+import type { UpupStorageConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
 
-const storage: UpupServerConfig['storage'] = {
+const storage: UpupStorageConfig = {
     type: 'aws',
     bucket: process.env.UPUP_E2E_BUCKET ?? 'upup-e2e',
     region: process.env.UPUP_E2E_REGION ?? 'us-east-1',

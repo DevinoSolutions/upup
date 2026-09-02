@@ -35,6 +35,8 @@ describe('build output guarantees (run after build; pretest builds)', () => {
             'server.cjs',
             'server.d.ts',
             'tailwind-prefixed.css',
+            // #357: the ./styles subpath's types condition points here.
+            'styles.d.ts',
         ]) {
             expect(existsSync(resolve(distDir, f)), `missing dist/${f}`).toBe(
                 true,

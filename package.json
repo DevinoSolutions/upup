@@ -26,7 +26,7 @@
         "test": "turbo run test --continue",
         "test:coverage": "turbo run test:coverage --continue",
         "test:quality": "node scripts/ci/test-quality-guard.mjs",
-        "test:scripts": "node --test scripts/ci/test-quality-guard.test.mjs scripts/ci/resolve-affected-tests.test.mjs scripts/lib/tarball.test.mjs scripts/lib/release-notes.test.mjs scripts/docs/check-api-sync.test.mjs scripts/docs/check-links.test.mjs scripts/docs/check-coverage.test.mjs scripts/docs/check-snippets.test.mjs",
+        "test:scripts": "node --test scripts/ci/test-quality-guard.test.mjs scripts/ci/resolve-affected-tests.test.mjs scripts/lib/tarball.test.mjs scripts/lib/styles-subpath.test.mjs scripts/lib/release-notes.test.mjs scripts/docs/check-api-sync.test.mjs scripts/docs/check-links.test.mjs scripts/docs/check-coverage.test.mjs scripts/docs/check-snippets.test.mjs",
         "docs:api-sync:check": "node scripts/docs/check-api-sync.mjs",
         "docs:links:check": "node scripts/docs/check-links.mjs",
         "docs:snippets:coverage": "node scripts/docs/check-coverage.mjs",

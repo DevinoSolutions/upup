@@ -20,12 +20,14 @@ import {
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createUpupHandler } from '../../src/handler'
-import type { UpupServerConfig } from '../../src/config'
+import type { UpupServerConfig, UpupStorageConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
 const PART_SIZE = 5 * 1024 * 1024 // MinIO's non-final part floor
 
-const storage: UpupServerConfig['storage'] = {
+// The precise static shape, not `UpupServerConfig['storage']` — since #337 that
+// is a union with the resolver form, which has no `bucket` to read below.
+const storage: UpupStorageConfig = {
     type: 'aws',
     bucket: process.env.UPUP_E2E_BUCKET ?? 'upup-e2e',
     region: process.env.UPUP_E2E_REGION ?? 'us-east-1',

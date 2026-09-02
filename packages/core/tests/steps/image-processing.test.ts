@@ -9,6 +9,12 @@ import {
     type PipelineContext,
     type UploadFile,
 } from '@upupjs/core'
+import {
+    animatedGifBytes,
+    animatedWebpBytes,
+    apngBytes,
+    stillGifBytes,
+} from '../helpers/animated-image-fixtures'
 
 vi.mock('libheif-js/libheif-wasm/libheif-bundle.mjs', () => ({
     default: () =>
@@ -43,7 +49,7 @@ const ctx: PipelineContext = {
 function makeUploadFile(
     name = 'photo.jpg',
     type = 'image/jpeg',
-    content = 'original image payload',
+    content: BlobPart = 'original image payload',
 ): UploadFile {
     const file = new File([content], name, { type, lastModified: 123 })
     return Object.assign(file, {
@@ -157,6 +163,23 @@ describe('browser image processing steps', () => {
         expect(result.thumbnail?.file.name).toContain('.thumbnail.jpg')
     })
 
+    it('re-encodes a still GIF, so the animation guard is not a blanket opt-out', async () => {
+        installImageRuntime('compressed')
+        const original = makeUploadFile(
+            'static.gif',
+            'image/gif',
+            stillGifBytes(),
+        )
+
+        const result = await compressStep({ quality: 0.7 }).process(
+            original,
+            ctx,
+        )
+
+        expect(result).not.toBe(original)
+        expect(result.metadata.compressed).toBe(true)
+    })
+
     it('converts HEIC files to JPEG via libheif through canvas', async () => {
         installImageRuntime('heic-jpeg')
         const original = makeUploadFile(
@@ -175,5 +198,104 @@ describe('browser image processing steps', () => {
             originalSize: original.size,
             processedSize: result.size,
         })
+    })
+})
+
+// ─────────────────────────────────────────────
+// Animated images
+//
+// Both re-encode steps go through a canvas, which has no animated encoder:
+// drawImage paints frame one and toBlob writes a still. The guard must keep
+// these files out of both steps entirely — the canvas runtime is installed
+// here precisely so a re-encode WOULD happen if the guard were missing.
+// ─────────────────────────────────────────────
+describe('animated images skip the canvas re-encode steps', () => {
+    const animated: [string, string, Uint8Array][] = [
+        ['an animated GIF', 'loop.gif', animatedGifBytes()],
+        ['an animated WebP', 'loop.webp', animatedWebpBytes()],
+        ['an APNG', 'loop.png', apngBytes()],
+    ]
+
+    for (const [label, name, bytes] of animated) {
+        const type = name.endsWith('.gif')
+            ? 'image/gif'
+            : name.endsWith('.webp')
+              ? 'image/webp'
+              : 'image/png'
+
+        it(`leaves ${label} untouched in the compress step`, async () => {
+            installImageRuntime('compressed')
+            const original = makeUploadFile(name, type, bytes)
+
+            const result = await compressStep({
+                maxWidthOrHeight: 1000,
+                quality: 0.7,
+            }).process(original, ctx)
+
+            expect(result).toBe(original)
+            expect(result.type).toBe(type)
+            expect(result.metadata.compressed).toBeUndefined()
+        })
+
+        it(`leaves ${label} untouched in the exif step`, async () => {
+            installImageRuntime('reencoded')
+            const original = makeUploadFile(name, type, bytes)
+
+            const result = await exifStep().process(original, ctx)
+
+            expect(result).toBe(original)
+            expect(result.type).toBe(type)
+            expect(result.metadata.exifStripped).toBeUndefined()
+        })
+    }
+
+    it('leaves an animated GIF untouched on the web-worker path too', async () => {
+        installImageRuntime('compressed')
+        const execute = vi.fn(() =>
+            Promise.resolve({
+                kind: 'image' as const,
+                bytes: new TextEncoder().encode('flattened').buffer,
+                type: 'image/jpeg',
+                name: 'loop.gif',
+            }),
+        )
+        // The worker contract is generic in its result; cast at this
+        // mock-introspection boundary rather than widening the contract.
+        const worker = { execute } as unknown as NonNullable<
+            PipelineContext['worker']
+        >
+        const original = makeUploadFile(
+            'loop.gif',
+            'image/gif',
+            animatedGifBytes(),
+        )
+
+        const result = await compressStep().process(original, {
+            ...ctx,
+            worker,
+        })
+
+        expect(result).toBe(original)
+        expect(execute).not.toHaveBeenCalled()
+    })
+
+    it('still generates a thumbnail for an animated GIF', async () => {
+        // A thumbnail is a still by definition and is stored alongside the
+        // file rather than replacing it, so it is deliberately not guarded.
+        installImageRuntime('thumb')
+        const original = makeUploadFile(
+            'loop.gif',
+            'image/gif',
+            animatedGifBytes(),
+        )
+
+        const result = await thumbnailStep({ width: 200 }).process(
+            original,
+            ctx,
+        )
+
+        expect(result.metadata.thumbnailUrl).toMatch(
+            /^data:image\/jpeg;base64,/,
+        )
     })
 })

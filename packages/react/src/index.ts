@@ -38,6 +38,26 @@ export type {
 // ── Canonical shared enums/types ─────────────────────────
 export { FileSource, StorageProvider } from '@upupjs/core'
 
+// ── Error taxonomy (#339) ────────────────────────────────
+// Re-exported verbatim from @upupjs/core so catching a typed upload error
+// doesn't force a react-only consumer to add a direct @upupjs/core dependency —
+// the error-handling docs point at these names, and `error` on the hook's
+// return value is already an `UpupError | null`. They are the SAME class
+// objects core exports, so `instanceof` narrows identically whichever package
+// you import from (pinned by tests/error-exports.test.ts).
+export {
+    UpupErrorCode,
+    UpupError,
+    UpupAuthError,
+    UpupNetworkError,
+    UpupValidationError,
+    UpupQuotaError,
+    UpupStorageError,
+    UpupConfigError,
+    uploadErrorFromResponse,
+} from '@upupjs/core'
+export type { RestrictionFailedReason } from '@upupjs/core'
+
 // ── React types ──────────────────────────────────────────
 export type {
     ImageEditorOptions,

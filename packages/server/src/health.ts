@@ -13,6 +13,7 @@ import type { Responder } from './respond'
 import { checkStorageReachable } from './providers/aws'
 import { reportServerError, toSafeError } from './observability'
 import { DEFAULT_UPLOAD_TOKEN_TTL_SECONDS } from './uploadToken'
+import { isStorageResolver } from './resolve-storage'
 
 type StorageCheckCache = { ok: true } | { ok: false } | undefined
 let cachedStorageCheck: StorageCheckCache
@@ -28,12 +29,13 @@ export function _resetStorageCheckCacheForTests(): void {
 }
 
 function isConfigComplete(config: UpupServerConfig): boolean {
-    return Boolean(
-        config.storage.bucket &&
-        config.storage.region &&
-        config.uploadTokenSecret &&
-        config.uploadTokenSecret.length >= 16,
+    const secretOk = Boolean(
+        config.uploadTokenSecret && config.uploadTokenSecret.length >= 16,
     )
+    // A resolver has no fields to check until a request supplies a context;
+    // its result is validated per request instead (#337).
+    if (isStorageResolver(config.storage)) return secretOk
+    return Boolean(config.storage.bucket && config.storage.region && secretOk)
 }
 
 async function sha256Hex(input: string): Promise<string> {
@@ -50,9 +52,19 @@ export async function handleHealth(
 ): Promise<Response> {
     const configOk = isConfigComplete(config)
 
+    // With a storage RESOLVER there is no single destination to probe, and
+    // inventing a synthetic request to feed the integrator's resolver would
+    // reach a real backend on an unauthenticated route. Report the probe as
+    // skipped rather than guessing (#337).
+    const staticStorage = isStorageResolver(config.storage)
+        ? null
+        : config.storage
     const now = Date.now()
-    if (!cachedStorageCheck || now - cachedAt > STORAGE_CHECK_TTL_MS) {
-        const result = await checkStorageReachable(config.storage)
+    if (
+        staticStorage &&
+        (!cachedStorageCheck || now - cachedAt > STORAGE_CHECK_TTL_MS)
+    ) {
+        const result = await checkStorageReachable(staticStorage)
         if (!result.ok) {
             reportServerError(config.onError, {
                 route: 'health',
@@ -68,11 +80,12 @@ export async function handleHealth(
         cachedAt = now
     }
 
+    const storageOk = staticStorage ? Boolean(cachedStorageCheck?.ok) : true
     const body: Record<string, unknown> = {
-        status: configOk && cachedStorageCheck.ok ? 'ok' : 'degraded',
+        status: configOk && storageOk ? 'ok' : 'degraded',
         checks: {
             config: configOk ? 'ok' : 'incomplete',
-            storage: cachedStorageCheck.ok ? 'ok' : 'error',
+            storage: !staticStorage ? 'skipped' : storageOk ? 'ok' : 'error',
         },
         // Non-secret operational summary — labels/flags/counts only, never any
         // secret VALUE. Lets an operator eyeball how an instance is configured
@@ -80,7 +93,7 @@ export async function handleHealth(
         // drive providers are wired, the upload-token lifetime) from the same
         // unauthenticated probe.
         summary: {
-            storageType: config.storage.type,
+            storageType: staticStorage ? staticStorage.type : 'dynamic',
             anonymousUploads: Boolean(config.allowAnonymousUploads),
             anonymousDrives: Boolean(config.allowAnonymous),
             driveProviders: config.providers

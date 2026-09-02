@@ -19,11 +19,14 @@ import type {
     MultipartListPartsResponse,
     MultipartPart,
 } from '@upupjs/core'
-import type { UpupServerConfig } from '../config'
+import type { UpupStorageConfig } from '../config'
 import { createS3Client } from './s3-client'
 
 const DEFAULT_EXPIRES_IN = 3600
-const DEFAULT_PUBLIC_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
+// Exported: the fallback for `config.downloadUrlExpiresIn` (#343). Every signed
+// GET this package hands out resolves through here, so the 3-day policy has one
+// definition rather than one per call site.
+export const DEFAULT_DOWNLOAD_URL_EXPIRES_IN = 3600 * 24 * 3 // 3 days
 // Exported: this is the one canonical home for the 5 MiB S3 part-size floor —
 // also the fixed memory-safety cap `transfer.ts` uses for its singlePut/
 // multipart routing decision (F-501, F-653).
@@ -47,9 +50,9 @@ export function computePartSize(
 // producer as the direct-presign path below, so the 3-day TTL + signing body
 // are single-sourced instead of duplicated (F-653).
 export async function generateSignedPublicUrl(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
-    expiresIn = DEFAULT_PUBLIC_URL_EXPIRES_IN,
+    expiresIn = DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
 ): Promise<string> {
     const client = createS3Client(storage)
     return getSignedUrl(
@@ -60,11 +63,12 @@ export async function generateSignedPublicUrl(
 }
 
 export async function generatePresignedUrl(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     contentType: string,
     contentLength: number,
     expiresIn = DEFAULT_EXPIRES_IN,
+    downloadUrlExpiresIn?: number,
 ): Promise<PresignedUrlResponse> {
     const client = createS3Client(storage)
 
@@ -83,7 +87,11 @@ export async function generatePresignedUrl(
         signableHeaders: new Set(['content-type', 'content-length']),
     })
 
-    const downloadUrl = await generateSignedPublicUrl(storage, key)
+    const downloadUrl = await generateSignedPublicUrl(
+        storage,
+        key,
+        downloadUrlExpiresIn ?? DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
+    )
 
     return {
         key,
@@ -97,7 +105,7 @@ export async function generatePresignedUrl(
 }
 
 export async function initiateMultipartUpload(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     contentType: string,
     fileSize: number,
@@ -128,7 +136,7 @@ export async function initiateMultipartUpload(
 }
 
 export async function generatePresignedPartUrl(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     uploadId: string,
     partNumber: number,
@@ -149,10 +157,11 @@ export async function generatePresignedPartUrl(
 }
 
 export async function completeMultipartUpload(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     uploadId: string,
     parts: MultipartPart[],
+    downloadUrlExpiresIn?: number,
 ): Promise<MultipartCompleteResponse> {
     const client = createS3Client(storage)
 
@@ -168,7 +177,11 @@ export async function completeMultipartUpload(
     })
 
     const result = await client.send(command)
-    const downloadUrl = await generateSignedPublicUrl(storage, key)
+    const downloadUrl = await generateSignedPublicUrl(
+        storage,
+        key,
+        downloadUrlExpiresIn ?? DEFAULT_DOWNLOAD_URL_EXPIRES_IN,
+    )
 
     return {
         key,
@@ -178,7 +191,7 @@ export async function completeMultipartUpload(
 }
 
 export async function abortMultipartUpload(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     uploadId: string,
 ): Promise<MultipartAbortResponse> {
@@ -204,7 +217,7 @@ export async function abortMultipartUpload(
  * different chunk size can never be spliced into the middle of the object.
  */
 export async function listMultipartParts(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     uploadId: string,
 ): Promise<MultipartListPartsResponse> {
@@ -259,7 +272,7 @@ export async function listMultipartParts(
  * unbilled against smax — a security regression, not a tidy-up.
  */
 export async function getMultipartUploadedSize(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
     key: string,
     uploadId: string,
 ): Promise<number> {
@@ -298,7 +311,7 @@ export async function getMultipartUploadedSize(
  * TTL-cached there so a probing client can't hammer the real provider.
  */
 export async function checkStorageReachable(
-    storage: UpupServerConfig['storage'],
+    storage: UpupStorageConfig,
 ): Promise<{ ok: true } | { ok: false; error: unknown }> {
     try {
         const client = createS3Client(storage)

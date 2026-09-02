@@ -295,6 +295,19 @@ describe('parseErrorBody', () => {
         })
     })
 
+    it('keeps `message` when a non-string `error` flag sits beside it', () => {
+        const parsed = parseErrorBody(
+            JSON.stringify({
+                message: "File exceeds your plan's 4608MB limit.",
+                error: true,
+            }),
+        )
+        expect(parsed).toEqual({
+            code: undefined,
+            message: "File exceeds your plan's 4608MB limit.",
+        })
+    })
+
     it('parses an S3 XML error body', () => {
         const xml =
             '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>SignatureDoesNotMatch</Code><Message>The request signature we calculated does not match the signature you provided.</Message></Error>'

@@ -76,14 +76,22 @@ does.
 ## Output format
 
 The encoder preserves `image/png` and `image/webp`; **every other input type
-comes out as `image/jpeg`**. The filename is unchanged, so a `.gif` compressed
-to JPEG bytes keeps its original name — set the storage key or rename the file
-yourself if the extension matters to you.
+comes out as `image/jpeg`**. The filename is unchanged, so a still `.gif`
+compressed to JPEG bytes keeps its original name — set the storage key or
+rename the file yourself if the extension matters to you. (An _animated_ GIF is
+not compressed at all — see below.)
 
 ## When compression does nothing
 
-Compression can decide to keep the original file. Two cases:
+Compression can decide to keep the original file. Three cases:
 
+- **The image is animated.** A canvas has no animated encoder, so re-encoding an
+  animated GIF, animated WebP or APNG would upload its first frame and throw the
+  rest away. upup detects those from the file's bytes and skips the step
+  entirely — the original uploads untouched, with no `compressed` metadata. Still
+  images of the same formats are compressed normally. `stripExifData` skips them
+  for the same reason, so an animated image reaches your storage exactly as the
+  user picked it, EXIF included.
 - **No size benefit.** If the re-encoded result is not smaller than the
   original, upup keeps the original — but only when you passed neither
   `maxSizeMB` nor an explicit `maxWidthOrHeight`. Setting either of those is read

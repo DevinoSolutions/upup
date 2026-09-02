@@ -10,6 +10,14 @@ to switch on, log, and tag in an error tracker. This page is the complete list;
 Monitoring](/docs/guides/error-monitoring/) covers wiring failures into Sentry
 or your own reporter.
 
+Everything on this page — `UpupError`, `UpupValidationError`, `UpupNetworkError`,
+`UpupStorageError`, `UpupAuthError`, `UpupConfigError`, `UpupQuotaError`,
+`UpupErrorCode`, and `uploadErrorFromResponse` — is exported from `@upupjs/core`
+and re-exported by `@upupjs/react` (and therefore `@upupjs/next` and
+`@upupjs/preact`), so an app that only installed its framework package can
+import the whole surface from there without adding a direct `@upupjs/core`
+dependency.
+
 The one important exception is the rejection from `upload()` itself — see
 [Batch failures](/docs/api-reference/error-codes/#batch-failures-are-not-upuperrors)
 before you write a handler, because it is **not** an `UpupError` and carries no
@@ -236,6 +244,12 @@ The exception is the tus strategy, which rejects with whatever error
 `tus-js-client` produced, unwrapped. Those errors are not `UpupError`s and carry
 no `code`, so a handler that reads `error.code` will come up empty on tus
 uploads.
+
+The presign call a custom `uploadEndpoint` makes routes through it too, so the
+sentence your endpoint writes into a non-2xx body is what `onError` receives —
+you do not have to recover it from an HTTP status. When the body is empty or
+unreadable the message stays `Presign request failed: <status> <statusText>`,
+the wording that path has always thrown.
 
 ```typescript
 import { uploadErrorFromResponse } from '@upupjs/core'

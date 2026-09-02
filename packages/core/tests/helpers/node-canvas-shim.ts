@@ -20,8 +20,12 @@ function toQualityInt(quality: number | undefined): number {
     return Math.max(0, Math.min(100, Math.round(q * 100)))
 }
 
-function toBytes(buffer: Buffer): Uint8Array {
-    return new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+// Copies rather than views the Buffer: the (buffer, byteOffset, length) form
+// types as Uint8Array<ArrayBufferLike> under TypeScript >= 5.7, which BlobPart
+// rejects. The single-argument form yields Uint8Array<ArrayBuffer>. The return
+// type is left inferred so it stays correct on either side of that lib change.
+function toBytes(buffer: Buffer) {
+    return new Uint8Array(buffer)
 }
 
 class NodeOffscreenCanvas {

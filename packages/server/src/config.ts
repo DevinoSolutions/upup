@@ -1,5 +1,23 @@
-import type { StorageProvider, UpupCorsConfig } from '@upupjs/core'
+import type {
+    StorageProvider,
+    UpupCorsConfig,
+    PresignedUrlResponse,
+    MultipartInitResponse,
+    MultipartSignPartResponse,
+} from '@upupjs/core'
 import type { UpupServerLogger } from './observability'
+
+/**
+ * Free-form routing hints the CLIENT sends alongside a file's name/type/size,
+ * as the `metadata` field of a `/presign`, `/multipart/init`, or drive-transfer
+ * body. upup neither interprets nor validates it — it is carried through to
+ * `keyStrategy` and the storage resolver verbatim.
+ *
+ * It is ATTACKER-CONTROLLED. Treat it as you would a query parameter: switch on
+ * it against a fixed allow-list, never let it name a bucket, a path prefix, or
+ * a credential directly.
+ */
+export type UpupClientMetadata = Record<string, unknown>
 
 /** Context passed to a custom keyStrategy. */
 export interface KeyStrategyContext {
@@ -8,30 +26,123 @@ export interface KeyStrategyContext {
     fileName: string
     contentType: string
     size: number
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. */
+    metadata?: UpupClientMetadata
+    /** The originating request, past every auth and policy check. */
+    req: Request
 }
 
+/** Which of the three presign-side responses `onPresignResponse` is rewriting. */
+export type PresignResponsePhase =
+    'presign' | 'multipart-init' | 'multipart-sign-part'
+
+export interface PresignResponseContext {
+    /** The originating request, already past every auth and policy check. */
+    req: Request
+    phase: PresignResponsePhase
+    /** The server-chosen object key. Present on all three phases — on
+     *  `multipart-sign-part` it comes from the VERIFIED token, not the client. */
+    key: string
+    /** The client-declared file (name/type/size). Absent on
+     *  `multipart-sign-part`, which sees only a token and a part number. */
+    file?: FileMetadata
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. Absent on `multipart-sign-part`. */
+    metadata?: UpupClientMetadata
+    /** Resolved userId, or null for an anonymous (server-namespaced) upload. */
+    userId: string | null
+}
+
+/** What the hook receives — narrow it on `ctx.phase`, or with `'uploadUrl' in response`. */
+export type PresignResponseBody =
+    | PresignedUrlResponse
+    | (MultipartInitResponse & { token: string })
+    | MultipartSignPartResponse
+
+/** What the hook may return: the same shapes, plus any extra fields you want
+ *  to add for your client. */
+export type PresignResponseRewrite = PresignResponseBody &
+    Record<string, unknown>
+
+/* eslint-disable @typescript-eslint/no-invalid-void-type -- `| void` is the deliberate "rewrite it, or just look at it" idiom: it is what lets an inspect-only hook be written with no return statement at all. `| undefined` would not — TypeScript rejects a void-returning function there, forcing every hook to end in `return undefined`. */
+export type OnPresignResponse = (
+    response: PresignResponseBody,
+    ctx: PresignResponseContext,
+) => PresignResponseRewrite | void | Promise<PresignResponseRewrite | void>
+/* eslint-enable @typescript-eslint/no-invalid-void-type -- scope of the exemption above ends here; the rest of this file is held to the rule. */
+
+/** One bucket's worth of S3 / S3-compatible connection settings. */
+export interface UpupStorageConfig {
+    /**
+     * An S3 / S3-compatible provider label. @upupjs/server only speaks the S3
+     * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
+     * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
+     * provider with no S3-compatible surface (currently `StorageProvider.Azure`
+     * — see @upupjs/core's NON_S3_STORAGE_PROVIDERS) is rejected by
+     * createUpupHandler at construct time.
+     */
+    type: StorageProvider | string
+    bucket: string
+    region: string
+    accessKeyId?: string
+    secretAccessKey?: string
+    /** S3-compatible endpoint (MinIO / Cloudflare R2 / DO Spaces / on-prem). Omit for AWS S3. */
+    endpoint?: string
+    /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO).
+     *  Only applies when `endpoint` is set; ignored for native AWS S3. */
+    forcePathStyle?: boolean
+    [key: string]: unknown
+}
+
+/** Which operation is asking for a storage config. */
+export type StorageResolverPhase =
+    | 'presign'
+    | 'multipart-init'
+    | 'multipart-sign-part'
+    | 'multipart-complete'
+    | 'multipart-abort'
+    | 'multipart-resume'
+    | 'drive-transfer'
+
+export interface StorageResolverContext {
+    /** The originating request, past every auth and policy check. */
+    req: Request
+    phase: StorageResolverPhase
+    /** Resolved userId, or null for an anonymous (server-namespaced) upload. */
+    userId: string | null
+    /** The client's `metadata` field, if it sent one. Untrusted — see
+     *  {@link UpupClientMetadata}. Absent on the multipart continuation
+     *  phases, which carry only a token. */
+    metadata?: UpupClientMetadata
+    fileName?: string
+    contentType?: string
+    size?: number
+    /**
+     * Set on `multipart-sign-part` / `-complete` / `-abort` / `-resume` ONLY:
+     * the opaque
+     * identity of the storage this upload's `init` resolved, carried inside the
+     * HMAC-signed upload token. Return the SAME storage for it — the server
+     * re-derives the identity of whatever you return and answers `403
+     * AUTH_DENIED` if it does not match, so a continuation can never be
+     * steered to a different bucket than the one it started in.
+     */
+    storageId?: string
+}
+
+export type UpupStorageResolver = (
+    ctx: StorageResolverContext,
+) => UpupStorageConfig | Promise<UpupStorageConfig>
+
 export type UpupServerConfig = {
-    storage: {
-        /**
-         * An S3 / S3-compatible provider label. @upupjs/server only speaks the S3
-         * API (buildS3ClientConfig always builds an @aws-sdk/client-s3 client) —
-         * set `endpoint` for any non-AWS backend (MinIO/R2/DO Spaces/etc). A
-         * provider with no S3-compatible surface (currently `StorageProvider.Azure`
-         * — see @upupjs/core's NON_S3_STORAGE_PROVIDERS) is rejected by
-         * createUpupHandler at construct time.
-         */
-        type: StorageProvider | string
-        bucket: string
-        region: string
-        accessKeyId?: string
-        secretAccessKey?: string
-        /** S3-compatible endpoint (MinIO / Cloudflare R2 / DO Spaces / on-prem). Omit for AWS S3. */
-        endpoint?: string
-        /** Path-style addressing. Defaults to true when `endpoint` is set (required by MinIO).
-         *  Only applies when `endpoint` is set; ignored for native AWS S3. */
-        forcePathStyle?: boolean
-        [key: string]: unknown
-    }
+    /**
+     * One static bucket, or a resolver called per request to pick one — three
+     * buckets by upload class, a tenant's own bucket, a quarantine bucket for
+     * unscanned files. A resolver is validated at RESOLVE time (a bad config
+     * fails that request with a 500), not at construct time like the static
+     * form.
+     */
+    storage: UpupStorageConfig | UpupStorageResolver
 
     providers?: {
         googleDrive?: { clientId: string; clientSecret: string }
@@ -64,6 +175,15 @@ export type UpupServerConfig = {
     keyStrategy?: (ctx: KeyStrategyContext) => string
 
     /**
+     * TTL, in SECONDS, for the signed GET download URLs this server hands back
+     * (`downloadUrl` on the presign / multipart-complete / drive-transfer
+     * responses, and `getDownloadUrl`'s result). Defaults to 3 days. Lower it
+     * for gated content — a 15-minute link is `900`. This is the download half
+     * only; the upload URL's own 1-hour expiry is unaffected.
+     */
+    downloadUrlExpiresIn?: number
+
+    /**
      * Permit drive providers / tokenStore WITHOUT a getUserId resolver, collapsing
      * every caller into one shared anonymous namespace. Demos only — never in
      * multi-tenant production. Default false -> createUpupHandler throws.
@@ -86,12 +206,38 @@ export type UpupServerConfig = {
      * README's "Lifecycle hooks" section for the full per-path breakdown.
      */
     hooks?: {
+        /**
+         * Admission gate. Return `false` to reject with a generic
+         * `403 Upload rejected`; THROW an `UpupError` to reject with that
+         * error's own message and code in the 403 body (a quota check can say
+         * "Storage limit exceeded — upgrade to keep uploading"). Any other
+         * throw stays a generic 500 — internal error text never reaches the
+         * client.
+         */
         onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
         onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>
         onUploadComplete?: (
             files: UploadedFile[],
             req: Request,
         ) => Promise<void>
+        /**
+         * Last look at a presign-side response body before it is sent, for
+         * deployments where the storage endpoint is not browser-reachable
+         * (a same-origin proxy route, a docker-internal MinIO hostname, a
+         * VPC-only endpoint). Return an object to REPLACE the payload; return
+         * nothing to leave it as-is.
+         *
+         * Fires on exactly three responses, identified by `ctx.phase`:
+         * `POST /presign` (`presign`), `POST /multipart/init`
+         * (`multipart-init`, token already issued), and
+         * `POST /multipart/sign-part` (`multipart-sign-part`).
+         *
+         * It runs AFTER every auth, policy, and token check and cannot bypass
+         * any of them — a request that would 401/403 never reaches the hook.
+         * Rewriting `uploadUrl` changes where the browser sends bytes, so the
+         * URL you substitute must land at the same object.
+         */
+        onPresignResponse?: OnPresignResponse
     }
 
     /**
@@ -163,6 +309,9 @@ export interface FileMetadata {
     name: string
     size: number
     type: string
+    /** Free-form routing hints from the client. Untrusted — see
+     *  {@link UpupClientMetadata}. */
+    metadata?: UpupClientMetadata
 }
 
 export interface UploadedFile {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { TokenEndpointCredentials } from '../../src/strategies/token-endpoint'
-import { UpupNetworkError } from '@upupjs/core'
+import { UpupNetworkError, type UpupError } from '@upupjs/core'
 
 const FILE_META = { name: 'photo.jpg', size: 1024, type: 'image/jpeg' }
 
@@ -209,5 +209,126 @@ describe('TokenEndpointCredentials — getPresignedUrl errors', () => {
         await expect(creds.getPresignedUrl(FILE_META)).rejects.toThrow(
             'Network unreachable',
         )
+    })
+})
+
+// ─────────────────────────────────────────────
+// getPresignedUrl — the endpoint's own error body
+//
+// A self-hosted token endpoint is where the host app enforces its own rules
+// (plan limits, auth), and it writes the sentence it wants the user to read
+// into the response body. This strategy used to throw the HTTP status line and
+// nothing else, so that sentence was unreachable and consumers resorted to
+// matching statuses out of upup's message text.
+// ─────────────────────────────────────────────
+describe('TokenEndpointCredentials — endpoint error body', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    function failWith(init: {
+        status: number
+        statusText: string
+        body?: string
+    }): TokenEndpointCredentials {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: init.status,
+                statusText: init.statusText,
+                text: () => Promise.resolve(init.body ?? ''),
+            }),
+        )
+        return new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
+    }
+
+    async function presignError(
+        creds: TokenEndpointCredentials,
+    ): Promise<UpupError> {
+        return (await creds
+            .getPresignedUrl(FILE_META)
+            .catch((e: unknown) => e)) as UpupError
+    }
+
+    it("throws the endpoint's own message and code instead of the status line", async () => {
+        const creds = failWith({
+            status: 413,
+            statusText: 'Payload Too Large',
+            body: JSON.stringify({
+                error: "File exceeds your plan's 4608MB limit. Upgrade for larger uploads.",
+                code: 'PLAN_FILE_SIZE_EXCEEDED',
+            }),
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe(
+            "File exceeds your plan's 4608MB limit. Upgrade for larger uploads.",
+        )
+        expect(err.code).toBe('PLAN_FILE_SIZE_EXCEEDED')
+        expect(err.status).toBe(413)
+    })
+
+    it('lifts a `message` field that sits beside a non-string `error` flag', async () => {
+        const creds = failWith({
+            status: 413,
+            statusText: 'Payload Too Large',
+            body: JSON.stringify({
+                message: "File exceeds your plan's 4608MB limit.",
+                error: true,
+            }),
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe("File exceeds your plan's 4608MB limit.")
+    })
+
+    it('uses a plain-text error body verbatim', async () => {
+        const creds = failWith({
+            status: 403,
+            statusText: 'Forbidden',
+            body: 'Your sign-in expired before the upload started.',
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe(
+            'Your sign-in expired before the upload started.',
+        )
+    })
+
+    it('still throws UpupNetworkError carrying the status', async () => {
+        const creds = failWith({
+            status: 500,
+            statusText: 'Internal Server Error',
+            body: JSON.stringify({ error: 'presign threw' }),
+        })
+        const err = await presignError(creds)
+        expect(err).toBeInstanceOf(UpupNetworkError)
+        expect(err.status).toBe(500)
+    })
+
+    it('keeps the legacy wording when the body is empty', async () => {
+        const creds = failWith({ status: 413, statusText: 'Payload Too Large' })
+        const err = await presignError(creds)
+        expect(err.message).toBe(
+            'Presign request failed: 413 Payload Too Large',
+        )
+    })
+
+    it('keeps the legacy wording when the body cannot be read', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                ok: false,
+                status: 502,
+                statusText: 'Bad Gateway',
+                text: () => Promise.reject(new Error('body stream errored')),
+            }),
+        )
+        const creds = new TokenEndpointCredentials({
+            url: 'https://example.com/presign',
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe('Presign request failed: 502 Bad Gateway')
+        expect(err.status).toBe(502)
     })
 })

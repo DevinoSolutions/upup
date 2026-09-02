@@ -154,8 +154,14 @@ type FileMetadata = {
     name: string // non-empty
     type: string // MIME type; may be empty, but then it must pass allowedTypes
     size: number // bytes, finite, >= 0
+    metadata?: Record<string, unknown> // free-form; see below
 }
 ```
+
+`metadata` is optional, opaque routing input: the handler neither reads nor
+validates it, and passes it through to `keyStrategy` and a `storage` resolver.
+It is client-controlled — a server that routes on it must treat it like a query
+parameter. `/multipart/init` accepts the same field.
 
 **Response `200`** — the `PresignedUrlResponse` shape from `@upupjs/core`:
 
@@ -173,8 +179,8 @@ type PresignedUrlResponse = {
 This handler returns `key`, `uploadUrl`, `downloadUrl`, `uploadHeaders`, and
 `expiresIn: 3600`. The PUT signature covers both `content-type` and
 `content-length`, so a body larger than the approved size fails at S3 rather
-than silently landing. `downloadUrl` is a separately signed `GET` valid for
-three days.
+than silently landing. `downloadUrl` is a separately signed `GET`, valid for
+three days unless `downloadUrlExpiresIn` says otherwise.
 
 **Status codes**
 
@@ -186,6 +192,7 @@ three days.
 | `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                   |
 | `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                       |
 | `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`  |
+| `403`  | `{ "error": "…", "code": "…" }`                               | your `hooks.onBeforeUpload` threw an `UpupError` — its own message and code |
 | `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                  |
 | `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`          |
 | `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                        |
@@ -300,6 +307,12 @@ different authenticated user cannot be replayed:
 Without `getUserId` there was no identity to bind at `init`, `uid` is `null`,
 and the check is skipped — possession of the token is then the model by design.
 
+**Storage binding.** With a `storage` resolver, the token also carries the
+identity of the bucket `init` resolved, and this route answers `403
+AUTH_DENIED` if the resolver returns anything else — a continuation cannot be
+steered into a different bucket. A static `storage` binds nothing, since there
+is only one destination.
+
 `500` is `{ "error": "Multipart sign failed", "code": "STORAGE_ERROR" }`.
 
 ## `POST /multipart/complete`
@@ -327,7 +340,8 @@ type MultipartCompleteResponse = {
 }
 ```
 
-This handler returns `key`, a three-day signed `downloadUrl`, and `etag` when S3
+This handler returns `key`, a signed `downloadUrl` (three days by default, see
+`downloadUrlExpiresIn`), and `etag` when S3
 supplied one.
 
 **The envelope check.** Because `sign-part` and the browser's direct PUTs never
@@ -655,6 +669,67 @@ safety is not a knob that can be raised away.
 `summary.uploadTokenTtlSeconds`. A multipart session that outlives it refreshes
 its token through [`/multipart/resume`](#post-multipartresume) rather than
 restarting, up to `multipartResumeWindowSeconds` after the original `init`.
+
+**Per-request storage.** When `config.storage` is a resolver rather than a
+static object, every route resolves its bucket per request, and the multipart
+continuation routes are pinned to the one `init` chose: the token carries a
+signed storage identity, the resolver is handed it back as `ctx.storageId`, and
+a resolved bucket that does not match answers `403 AUTH_DENIED`. A resolver that
+returns an unusable config fails that request with `500 Storage configuration
+error` (the real cause goes to `onError` only), and `/health` reports
+`checks.storage: "skipped"` with `summary.storageType: "dynamic"`. See
+[Multi-bucket routing](/docs/guides/server-mode-setup/#multi-bucket-routing).
+
+**Download-URL TTL.** Three days by default, for every signed `GET` the handler
+returns — `downloadUrl` on `/presign` and `/multipart/complete`, `url` on
+`/files/:provider/transfer`. Set `downloadUrlExpiresIn` (seconds) to change it.
+This is independent of the one-hour upload-URL expiry.
+
+## Rewriting a response body
+
+`hooks.onPresignResponse` is the one seam that can change what a route sends.
+It fires on three responses only, discriminated by `ctx.phase`:
+
+| `ctx.phase`           | Route                       | Body it receives                          |
+| --------------------- | --------------------------- | ----------------------------------------- |
+| `presign`             | `POST /presign`             | `PresignedUrlResponse`                    |
+| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token`      |
+| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`               |
+
+Returning an object replaces the payload; returning nothing keeps it. The
+context is `{ req, phase, key, metadata?, userId }` — `key` is always the key
+in the payload, and `metadata` is absent on `multipart-sign-part`, which sees
+only a verified token.
+
+The hook runs after auth, policy, and token verification, and after the upload
+token is issued. It cannot change a status code, cannot turn a rejection into a
+success, and never runs on a request that answered `401`/`403`. It is a body
+rewriter for deployments whose storage endpoint the browser cannot reach — see
+[Rewriting presign responses](/docs/guides/server-mode-setup/#rewriting-presign-responses).
+
+## Signing a download URL outside the handler
+
+`getDownloadUrl` signs a `GET` for a key that already exists, without going
+through any route:
+
+```ts
+import { getDownloadUrl } from '@upupjs/server'
+
+const url = await getDownloadUrl(config, 'user-42/9f3a/invoice.pdf', {
+    expiresIn: 300,
+})
+```
+
+| Argument         | Type                              | Notes                                                        |
+| ---------------- | --------------------------------- | ------------------------------------------------------------ |
+| `config`         | `{ storage, downloadUrlExpiresIn?}` | Your `UpupServerConfig`, or any object with a `storage` slice |
+| `key`            | `string`                          | The stored object key. Signed as given — not validated       |
+| `opts.expiresIn` | `number`                          | Seconds, for this URL only                                    |
+
+Expiry resolves `opts.expiresIn` → `config.downloadUrlExpiresIn` → three days.
+Throws `UpupConfigError` when `storage.type` has no S3 API, matching
+`createUpupHandler`'s construct-time guard. It performs **no authorization** —
+decide whether the caller may read that key before you sign it.
 
 ## Adapters
 

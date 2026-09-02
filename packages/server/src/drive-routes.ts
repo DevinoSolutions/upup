@@ -13,6 +13,8 @@ import { isValidProvider, refreshAccessToken } from './oauth'
 import { getDriveClient } from './drive-clients'
 import { matchesAllowedType, runPostCompletionHooks } from './upload-routes'
 import { type Responder } from './respond'
+import { resolveStorage } from './resolve-storage'
+import type { UpupClientMetadata } from './config'
 
 export async function handleListFiles(
     req: Request,
@@ -115,6 +117,7 @@ export async function handleFileTransfer(
         fileName?: string
         size?: number
         mimeType?: string
+        metadata?: UpupClientMetadata
     }
     try {
         body = (await req.json()) as typeof body
@@ -146,19 +149,32 @@ export async function handleFileTransfer(
         const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
         ).fetchFile(tokens.accessToken, body)
+        // Resolved AFTER the drive reports the real name/type/size, so a
+        // resolver can route on what is actually being transferred rather than
+        // on the client's claim (#337).
+        const storage = await resolveStorage(config, {
+            req,
+            phase: 'drive-transfer',
+            userId,
+            ...(body.metadata !== undefined ? { metadata: body.metadata } : {}),
+            fileName,
+            contentType: mimeType,
+            size,
+        })
         const { transferDriveFileToS3 } = await import('./transfer')
         const result = await transferDriveFileToS3({
             stream,
             size,
             fileName,
             mimeType,
-            storage: config.storage,
+            storage,
             // Enforce maxFileSize against the ACTUAL streamed bytes, and route
             // an abort-cleanup failure through onError instead of swallowing it
             // (F-743 / F-744).
             maxBytes: config.maxFileSize,
             onError: config.onError,
             requestId: res.requestId,
+            downloadUrlExpiresIn: config.downloadUrlExpiresIn,
         })
         // Post-commit: object durably in S3. A throwing onFileUploaded hook is
         // logged + swallowed by runPostCompletionHooks, never bubbling to the

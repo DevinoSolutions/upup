@@ -1,11 +1,9 @@
-import {
-    UpupErrorCode,
-    UpupConfigError,
-    NON_S3_STORAGE_PROVIDERS,
-} from '@upupjs/core'
+import { UpupErrorCode, UpupConfigError } from '@upupjs/core'
 import type { UpupServerConfig } from './config'
 import { assertUploadTokenSecret } from './uploadToken'
 import { validateServerConfig } from './validate-config'
+import { assertS3Storage } from './storage'
+import { isStorageResolver } from './resolve-storage'
 import { handleHealth } from './health'
 import { createResponder } from './respond'
 import {
@@ -41,17 +39,9 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
     // credentials/region. A provider with no S3-compatible surface (currently
     // just Azure) could never function, with zero compile- or startup-time
     // signal until now.
-    const storageType = config.storage.type
-    if (
-        typeof storageType === 'string' &&
-        (NON_S3_STORAGE_PROVIDERS as ReadonlySet<string>).has(storageType)
-    ) {
-        throw new UpupConfigError(
-            `[@upupjs/server] storage.type "${storageType}" has no S3-compatible API and cannot be served. ` +
-                'upup uploads via the S3 API — use an S3-compatible provider ' +
-                '(aws, minio, r2, wasabi, …) and set storage.endpoint for non-AWS backends.',
-        )
-    }
+    // A resolver has no type to check yet — the same guard runs on whatever it
+    // returns, per request, in resolve-storage.ts (#337).
+    if (!isStorageResolver(config.storage)) assertS3Storage(config.storage)
     if (
         (config.providers || config.tokenStore) &&
         !config.getUserId &&
