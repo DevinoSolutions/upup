@@ -1,6 +1,7 @@
 name: E2E
 
 permissions:
+    id-token: write
     contents: read
 
 on:
@@ -143,7 +144,7 @@ jobs:
             # nothing, which means the capture layer itself broke.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -152,7 +153,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: e2e-playwright-artifacts
                   path: |
@@ -293,7 +294,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: docs-e2e-playwright-artifacts
                   path: |
