@@ -1,5 +1,58 @@
 # @upupjs/core
 
+## 3.3.0
+
+### Minor Changes
+
+- [#353](https://github.com/DevinoSolutions/upup/pull/353) [`5fbd2c6`](https://github.com/DevinoSolutions/upup/commit/5fbd2c671a1834cd8e884bda455eb5602480f829) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Issue-batch release: headless and server API gaps reported by v1→v3 migrators.
+
+    - `@upupjs/react` re-exports the full core error surface — `UpupError` and its six subclasses, `UpupErrorCode`, and `uploadErrorFromResponse` — so framework-only apps no longer need a direct `@upupjs/core` dependency for typed error handling (#339). `uploadErrorFromResponse` is now on core's public entry, making the documented import real.
+    - Headless prop getters (`getRootProps` / `getDropzoneProps` / `getInputProps`) now share one override contract: overrides are spread first, getter-owned functional keys are set after, event handlers are composed instead of dropped, and `getInputProps` merges `style` rather than clobbering it (#341).
+    - Restriction failures raised through the file input, dropzone drop, or paste no longer surface as unhandled promise rejections — the `restriction-failed` event remains the reporting channel (#342).
+    - `@upupjs/server`: new `getDownloadUrl(config, key, opts?)` primitive signs a GET for an existing key without a handler, and `downloadUrlExpiresIn` makes the download-URL expiry configurable (#343).
+    - `@upupjs/server`: new `hooks.onPresignResponse` rewrites the presign, multipart-init, and sign-part responses (for proxied or non-browser-reachable storage endpoints), and an `UpupError` thrown from `onBeforeUpload` now surfaces its message and code in the 403 instead of a generic rejection (#338).
+    - `@upupjs/server`: `storage` accepts a per-request resolver `(ctx) => StorageConfig` for multi-bucket routing; multipart continuations are bound to the resolved destination through the HMAC-signed upload token, and `keyStrategy` now receives `metadata` and `req` (#337).
+    - `@upupjs/next`: the Pages Router handler body is `BodyInit`-compatible with newer `@types/node`.
+
+### Patch Changes
+
+- [#364](https://github.com/DevinoSolutions/upup/pull/364) [`8446ca0`](https://github.com/DevinoSolutions/upup/commit/8446ca0c8ad26e2a1704a2d8bd11fc306c434f5d) Thanks [@AminDhouib](https://github.com/AminDhouib)! - A custom `uploadEndpoint`'s presign failures now carry the endpoint's own error
+  body. `TokenEndpointCredentials.getPresignedUrl` threw
+  `Presign request failed: <status> <statusText>` without ever reading a non-ok
+  response, so the sentence the endpoint wrote for the user — a plan-limit
+  message, an expired-session notice — was discarded before any handler saw it,
+  and the only way to recover it was to match the HTTP status out of upup's own
+  message text. The strategy now reads the body and builds the error through
+  `uploadErrorFromResponse`, the same helper the direct-PUT, multipart, server
+  credentials and drive-transfer strategies already use: the body's message
+  becomes `error.message` (what `onError` receives), a `code` field lands on
+  `error.code`, and `error.status` still carries the HTTP status.
+
+    Backward compatible: the thrown class is still `UpupNetworkError`, and when the
+    body is empty or unreadable the message is byte-identical to before, so a
+    consumer matching on the old wording is unaffected. Nothing in the public
+    `onError` signature changes.
+
+    `parseErrorBody` also stops discarding a valid `message` when a non-string
+    `error` field sits beside it — a `{ message, error: true }` body used to fall
+    all the way through to the raw-JSON text fallback.
+
+- [#365](https://github.com/DevinoSolutions/upup/pull/365) [`03b4e82`](https://github.com/DevinoSolutions/upup/commit/03b4e82baed0d751ba5da688715ef48748e7fe51) Thanks [@AminDhouib](https://github.com/AminDhouib)! - `imageCompression` and `stripExifData` no longer flatten animated images. Both
+  steps re-encode through a canvas, and canvas has no animated encoder:
+  `drawImage` paints the first frame and `toBlob`/`convertToBlob` writes a still,
+  so enabling either option silently replaced an uploaded animated GIF with a
+  single frame — the upload succeeded and the user got a frozen image back.
+
+    Both steps now sniff the file first and pass animated GIF, animated WebP and
+    APNG through untouched. Detection is byte-level (GIF image descriptors plus the
+    NETSCAPE2.0/ANIMEXTS1.0 looping extension; the APNG `acTL` chunk; the WebP
+    `VP8X` animation flag and `ANIM`/`ANMF` chunks) rather than `ImageDecoder`-based,
+    so it behaves identically in every browser. Still images of the same formats are
+    processed exactly as before, and the upload itself is untouched either way.
+
+    `thumbnailGenerator` is deliberately unchanged — a thumbnail is a still by
+    definition, and it is stored alongside the file rather than replacing it.
+
 ## 3.2.0
 
 ### Minor Changes
