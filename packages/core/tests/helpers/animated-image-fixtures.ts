@@ -7,7 +7,10 @@
 
 export type BytePart = number[] | string | Uint8Array
 
-export function concatBytes(...parts: BytePart[]): Uint8Array {
+// Return annotations are deliberately inferred: an explicit `: Uint8Array`
+// means `Uint8Array<ArrayBufferLike>` on TypeScript >= 5.7, which is not
+// assignable to `BlobPart` (same float #368 fixed in the sibling helpers).
+export function concatBytes(...parts: BytePart[]) {
     const out: number[] = []
     for (const part of parts) {
         if (typeof part === 'string') {
@@ -24,7 +27,7 @@ export function concatBytes(...parts: BytePart[]): Uint8Array {
 // field's GCT flag and appends a two-entry (red/blue) table.
 export function gifHeader({
     globalColourTable = true,
-}: { globalColourTable?: boolean } = {}): Uint8Array {
+}: { globalColourTable?: boolean } = {}) {
     if (!globalColourTable) {
         return concatBytes('GIF89a', [0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00])
     }
@@ -74,11 +77,11 @@ export const GIF_GRAPHIC_CONTROL = [
 
 export const GIF_TRAILER = [0x3b]
 
-export function stillGifBytes(): Uint8Array {
+export function stillGifBytes() {
     return concatBytes(gifHeader(), gifFrame(0), GIF_TRAILER)
 }
 
-export function animatedGifBytes(): Uint8Array {
+export function animatedGifBytes() {
     return concatBytes(
         gifHeader(),
         GIF_NETSCAPE_LOOP,
@@ -94,7 +97,7 @@ export function animatedGifBytes(): Uint8Array {
 export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
 /** A length-prefixed, CRC-suffixed PNG chunk with zero-filled data. */
-export function pngChunk(type: string, dataLength = 0): Uint8Array {
+export function pngChunk(type: string, dataLength = 0) {
     return concatBytes(
         [
             (dataLength >>> 24) & 0xff,
@@ -108,7 +111,7 @@ export function pngChunk(type: string, dataLength = 0): Uint8Array {
     )
 }
 
-export function stillPngBytes(): Uint8Array {
+export function stillPngBytes() {
     return concatBytes(
         PNG_SIGNATURE,
         pngChunk('IHDR', 13),
@@ -117,7 +120,7 @@ export function stillPngBytes(): Uint8Array {
     )
 }
 
-export function apngBytes(): Uint8Array {
+export function apngBytes() {
     return concatBytes(
         PNG_SIGNATURE,
         pngChunk('IHDR', 13),
@@ -129,7 +132,7 @@ export function apngBytes(): Uint8Array {
 
 // ── WebP ────────────────────────────────────────────────────────
 /** A RIFF chunk: FourCC, little-endian size, payload padded to an even length. */
-export function riffChunk(fourCC: string, data: number[]): Uint8Array {
+export function riffChunk(fourCC: string, data: number[]) {
     const size = data.length
     return concatBytes(
         fourCC,
@@ -144,12 +147,12 @@ export function riffChunk(fourCC: string, data: number[]): Uint8Array {
     )
 }
 
-export function webpContainer(...chunks: BytePart[]): Uint8Array {
+export function webpContainer(...chunks: BytePart[]) {
     return concatBytes('RIFF', [0x00, 0x00, 0x00, 0x00], 'WEBP', ...chunks)
 }
 
 /** VP8X payload: flags byte then a 9-byte canvas description. */
-export function vp8xChunk(flags: number): Uint8Array {
+export function vp8xChunk(flags: number) {
     return riffChunk('VP8X', [
         flags,
         0x00,
@@ -167,11 +170,11 @@ export function vp8xChunk(flags: number): Uint8Array {
 const VP8X_ANIMATION_FLAG = 0x02
 export const VP8X_ALPHA_FLAG = 0x10
 
-export function stillWebpBytes(): Uint8Array {
+export function stillWebpBytes() {
     return webpContainer(riffChunk('VP8 ', [0x00, 0x00, 0x00, 0x00]))
 }
 
-export function animatedWebpBytes(): Uint8Array {
+export function animatedWebpBytes() {
     return webpContainer(
         vp8xChunk(VP8X_ANIMATION_FLAG),
         riffChunk('ANIM', [0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
