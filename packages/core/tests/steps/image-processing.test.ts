@@ -210,7 +210,10 @@ describe('browser image processing steps', () => {
 // here precisely so a re-encode WOULD happen if the guard were missing.
 // ─────────────────────────────────────────────
 describe('animated images skip the canvas re-encode steps', () => {
-    const animated: [string, string, Uint8Array][] = [
+    // BlobPart, not Uint8Array: a bare Uint8Array annotation widens to
+    // Uint8Array<ArrayBufferLike> on TypeScript >= 5.7 and stops being a
+    // BlobPart; these bytes only ever feed makeUploadFile.
+    const animated: [string, string, BlobPart][] = [
         ['an animated GIF', 'loop.gif', animatedGifBytes()],
         ['an animated WebP', 'loop.webp', animatedWebpBytes()],
         ['an APNG', 'loop.png', apngBytes()],
