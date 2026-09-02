@@ -1,6 +1,7 @@
 name: Nightly
 
 permissions:
+    id-token: write
     contents: read
 
 # Deep suites too slow or too external for every PR: the full e2e gate plus
@@ -100,7 +101,7 @@ jobs:
             # future snapvisor.io baseline feed.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -109,7 +110,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: nightly-playwright-artifacts
                   path: |
@@ -381,7 +382,7 @@ jobs:
 
             - name: Upload Lighthouse reports
               if: always()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: nightly-lighthouse-reports
                   path: apps/landing/.lighthouseci-reports/
@@ -455,7 +456,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && steps.creds.outputs.present == 'true'
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: DevinoSolutions/artifact/upload@v1
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
