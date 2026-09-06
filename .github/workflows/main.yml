@@ -77,7 +77,7 @@ jobs:
               run: pnpm run vocab:check
 
             - name: Archive code coverage results
-              uses: DevinoSolutions/artifact/upload@v1
+              uses: actions/upload-artifact@v4
               with:
                   name: code-coverage-report
                   path: coverage/

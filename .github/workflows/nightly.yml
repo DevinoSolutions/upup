@@ -101,7 +101,7 @@ jobs:
             # future snapvisor.io baseline feed.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: DevinoSolutions/artifact/upload@v1
+              uses: actions/upload-artifact@v4
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -110,7 +110,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: DevinoSolutions/artifact/upload@v1
+              uses: actions/upload-artifact@v4
               with:
                   name: nightly-playwright-artifacts
                   path: |
@@ -382,7 +382,7 @@ jobs:
 
             - name: Upload Lighthouse reports
               if: always()
-              uses: DevinoSolutions/artifact/upload@v1
+              uses: actions/upload-artifact@v4
               with:
                   name: nightly-lighthouse-reports
                   path: apps/landing/.lighthouseci-reports/
@@ -456,7 +456,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && steps.creds.outputs.present == 'true'
-              uses: DevinoSolutions/artifact/upload@v1
+              uses: actions/upload-artifact@v4
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
