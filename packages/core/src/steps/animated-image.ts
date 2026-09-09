@@ -9,10 +9,9 @@
  * instead.
  *
  * Detection is byte-level rather than `ImageDecoder`-based so it behaves the
- * same in every browser and is deterministic under test. Reading the whole
- * blob is cheaper than what the step does next either way — the worker path
- * already calls `file.arrayBuffer()`, and the main-thread path hands the file
- * to `createImageBitmap`, which decodes it to raw RGBA.
+ * same in every browser and is deterministic under test. It reads a prefix
+ * rather than the file: a still photo is the common case, and the main-thread
+ * path never materialised the bytes at all before this guard existed.
  */
 
 function ascii(bytes: Uint8Array, start: number, length: number): string {
@@ -180,14 +179,31 @@ function baseMimeType(type: string): string {
 }
 
 /**
+ * How much of the file the sniff reads before deciding. Every format declares
+ * animation near the front — APNG's `acTL` precedes the first `IDAT`, WebP's
+ * `VP8X`/`ANIM` open the RIFF container, and a looping GIF carries its
+ * NETSCAPE2.0 extension in the header — so 64 KiB answers all of them.
+ */
+const SNIFF_PREFIX_BYTES = 64 * 1024
+
+/**
  * True when the blob is an animated image in one of the three formats a canvas
  * re-encode would flatten. Anything else — including formats with no animated
  * variant — is false, so callers process it as before.
  */
 export async function isAnimatedImage(file: Blob): Promise<boolean> {
-    const sniff = SNIFFERS[baseMimeType(file.type)]
+    const type = baseMimeType(file.type)
+    const sniff = SNIFFERS[type]
     if (!sniff) return false
     try {
+        const prefix = new Uint8Array(
+            await file.slice(0, SNIFF_PREFIX_BYTES).arrayBuffer(),
+        )
+        if (sniff(prefix)) return true
+        // A GIF that does not announce itself in the header is only settled by
+        // the multi-descriptor walk, and the second descriptor can sit anywhere
+        // in the stream. No other format needs the rest of the bytes.
+        if (type !== 'image/gif' || file.size <= prefix.length) return false
         return sniff(new Uint8Array(await file.arrayBuffer()))
     } catch {
         // upup-catch: unreadable blob — let the step's own decode surface it

@@ -331,4 +331,50 @@ describe('TokenEndpointCredentials — endpoint error body', () => {
         expect(err.message).toBe('Presign request failed: 502 Bad Gateway')
         expect(err.status).toBe(502)
     })
+
+    it('keeps the legacy wording when a proxy answers with an HTML error page', async () => {
+        // nginx/Cloudflare answer a 502 with markup, not with the host's copy:
+        // surfacing it would hand `onError` 200 characters of `<html>`.
+        const creds = failWith({
+            status: 502,
+            statusText: 'Bad Gateway',
+            body: [
+                '<html>',
+                '<head><title>502 Bad Gateway</title></head>',
+                '<body>',
+                '<center><h1>502 Bad Gateway</h1></center>',
+                '<hr><center>nginx/1.24.0</center>',
+                '</body>',
+                '</html>',
+            ].join('\n'),
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe('Presign request failed: 502 Bad Gateway')
+        expect(err.status).toBe(502)
+    })
+
+    it('keeps the legacy wording for an error page behind leading whitespace', async () => {
+        const creds = failWith({
+            status: 413,
+            statusText: 'Payload Too Large',
+            body: '\n  <!DOCTYPE html><html><body>413 Request Entity Too Large</body></html>',
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe(
+            'Presign request failed: 413 Payload Too Large',
+        )
+    })
+
+    it('still surfaces an XML body that carries a real error code', async () => {
+        // The guard is markup *without* a code — an S3-style body opens with a
+        // tag too, and its <Code>/<Message> pair is exactly what to surface.
+        const creds = failWith({
+            status: 403,
+            statusText: 'Forbidden',
+            body: '<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>',
+        })
+        const err = await presignError(creds)
+        expect(err.message).toBe('Access Denied')
+        expect(err.code).toBe('AccessDenied')
+    })
 })

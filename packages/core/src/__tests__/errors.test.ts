@@ -401,4 +401,52 @@ describe('uploadErrorFromResponse', () => {
         expect(err.message).toContain('500')
         expect(err.status).toBe(500)
     })
+
+    it("prefers the caller's fallback message over the status line", () => {
+        const err = uploadErrorFromResponse({
+            status: 502,
+            statusText: 'Bad Gateway',
+            body: '',
+            kind: 'network',
+            fallbackMessage: 'Presign request failed: 502 Bad Gateway',
+        })
+        expect(err.message).toBe('Presign request failed: 502 Bad Gateway')
+    })
+
+    it('discards a proxy error page when the caller opts in', () => {
+        const err = uploadErrorFromResponse({
+            status: 502,
+            statusText: 'Bad Gateway',
+            body: '<html><body><h1>502 Bad Gateway</h1></body></html>',
+            kind: 'network',
+            ignoreErrorPageBody: true,
+            fallbackMessage: 'Presign request failed: 502 Bad Gateway',
+        })
+        expect(err.message).toBe('Presign request failed: 502 Bad Gateway')
+    })
+
+    it('keeps a code-carrying XML body even with the error-page guard on', () => {
+        const err = uploadErrorFromResponse({
+            status: 403,
+            statusText: 'Forbidden',
+            body: '<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>',
+            kind: 'network',
+            ignoreErrorPageBody: true,
+            fallbackMessage: 'Presign request failed: 403 Forbidden',
+        })
+        expect(err.message).toBe('Access Denied')
+        expect(err.code).toBe('AccessDenied')
+    })
+
+    it('leaves a markup body alone for callers that do not opt in', () => {
+        const err = uploadErrorFromResponse({
+            status: 502,
+            statusText: 'Bad Gateway',
+            body: '<html><body><h1>502 Bad Gateway</h1></body></html>',
+            kind: 'network',
+        })
+        expect(err.message).toBe(
+            '<html><body><h1>502 Bad Gateway</h1></body></html>',
+        )
+    })
 })
