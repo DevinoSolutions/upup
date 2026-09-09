@@ -38,7 +38,15 @@ const kib = 1024
 // (+~30) plus margin; anything larger must be a deliberate re-base, not a
 // bump-to-green. Whether locales belong on the mandatory path is deferred (F-701).
 const consumerEntryChunkBudget = 560 * kib
-const consumerOptionalChunkBudget = 1600 * kib
+// The optional (opt-in HEIC) chunk is libheif-js's emscripten bundle — upstream
+// WASM we do not author and cannot shrink. Re-based 1600→2100 KiB 2026-09-09:
+// libheif-js 1.23.2 (published 2026-09-05) grew it from ~1425 KiB to 1939.4 KiB,
+// and the consumer installs fresh from core's `^1.19.8` range with no lockfile
+// (a real consumer gets the same resolution), so the nightly went red the very
+// next run with no repo change. This budget guards the OPT-IN path only —
+// core's mandatory path is guarded by `consumerEntryChunkBudget` above and by
+// `.size-limit.json`. Keep the vite `chunkSizeWarningLimit` below in step.
+const consumerOptionalChunkBudget = 2100 * kib
 
 function assertInsideRepo(target) {
     const rel = relative(repoRoot, resolve(target))
@@ -396,7 +404,7 @@ export default defineConfig({
   },
   build: {
     manifest: true,
-    chunkSizeWarningLimit: 1600,
+    chunkSizeWarningLimit: 2100,
     rollupOptions: {
       output: {
         manualChunks(id) {

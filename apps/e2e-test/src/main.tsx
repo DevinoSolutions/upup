@@ -97,7 +97,7 @@ function RestrictionsDemo() {
 
 /**
  * Server-mode multipart scenario — loaded via
- * `/?scenario=multipart-resume&server=http://localhost:53061`.
+ * `/?scenario=multipart-resume&server=http://localhost:31061`.
  *
  * The only story in this app that talks to a REAL @useupup/server + MinIO:
  * multipart at a 5 MiB threshold/part size with crash recovery on, which is
@@ -163,7 +163,7 @@ function App() {
                 ) : (
                     <MultipartResumeDemo
                         serverUrl={
-                            params.get('server') ?? 'http://localhost:53061'
+                            params.get('server') ?? 'http://localhost:31061'
                         }
                         maxFiles={Number(params.get('maxFiles') ?? 1) || 1}
                     />

@@ -13,7 +13,7 @@
 // configured but whose token is broken does NOT skip — minting happens in
 // beforeAll, so a bad token throws there and the suite goes RED (configured but
 // broken is a real signal, never silently swallowed).
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -31,6 +31,18 @@ const PROVIDERS = ['box', 'dropbox', 'google-drive', 'one-drive'] as const
 type ProviderSlug = (typeof PROVIDERS)[number]
 
 const SANDBOX_ON = process.env.UPUP_DRIVE_SANDBOX === '1'
+
+// Every test here is network-bound against a PRODUCTION cloud API, and the
+// download case costs a folder listing plus a redirect-followed fetch and a full
+// stream drain per fixture. Vitest's 5 s default is a unit-test budget nobody
+// chose for this suite: under it the one-drive download test timed out on the
+// 2026-08-26, 09-02, 09-04, 09-05 and 09-06 nightlies while the other 24
+// assertions passed every time — a red gate reporting the clock, not the code.
+// What this suite gates is byte-integrity (sha256 vs the committed fixture) and
+// never latency, so give it a ceiling a real network deserves; a provider that
+// is genuinely down or broken still goes RED, just later. hookTimeout covers
+// beforeAll's OAuth token mint, which is the same kind of round trip.
+vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
 
 // ── Env plumbing ─────────────────────────────────────────────────────────
 
