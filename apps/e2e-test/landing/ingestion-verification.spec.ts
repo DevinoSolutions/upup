@@ -33,6 +33,16 @@ if (!queryKey) {
  * (array-of-arrays, column order = SELECT order). An auth/bad-request failure
  * throws (RED — an invalid key must never look like a pass); a transient 5xx /
  * network error returns null so the caller's poll can retry.
+ *
+ * `refresh: 'force_blocking'` is load-bearing. The Query API's default mode
+ * ("blocking") serves a CACHED result whenever one exists for the identical
+ * query text and is not yet stale — and every iteration of a poll below sends
+ * byte-identical text. So a first poll that runs before the events are visible
+ * caches an empty result, and the remaining 90 s replay that cache. That is
+ * exactly how the nightly "AI thumbs events landed" case failed 8 nights out
+ * of 9 (2026-08-26 → 09-07): PostHog's own `created_at` shows both events
+ * ingested 1-2 s after capture, i.e. present for the whole poll — the poll just
+ * kept reading the stale cache. `force_blocking` recalculates on every call.
  */
 async function runHogql(query: string): Promise<unknown[][] | null> {
     let res: Response
@@ -43,7 +53,10 @@ async function runHogql(query: string): Promise<unknown[][] | null> {
                 authorization: `Bearer ${queryKey}`,
                 'content-type': 'application/json',
             },
-            body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
+            body: JSON.stringify({
+                query: { kind: 'HogQLQuery', query },
+                refresh: 'force_blocking',
+            }),
         })
     } catch {
         return null // network blip — let the poll retry
@@ -58,7 +71,15 @@ async function runHogql(query: string): Promise<unknown[][] | null> {
             `PostHog Query API rejected the query (HTTP 400): ${await res.text()}`,
         )
     }
-    if (!res.ok) return null // transient upstream error — retry
+    if (!res.ok) {
+        // Transient upstream error — retry, but leave a trace in the job log
+        // so a poll that times out is never a silent mystery.
+        // eslint-disable-next-line no-console
+        console.log(
+            `[ingestion] PostHog Query API HTTP ${res.status} — retrying`,
+        )
+        return null
+    }
     const json = (await res.json()) as { results?: unknown[][] }
     return json.results ?? []
 }
