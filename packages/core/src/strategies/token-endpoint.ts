@@ -1,5 +1,4 @@
 import {
-    parseErrorBody,
     uploadErrorFromResponse,
     type CredentialStrategy,
     type FileMetadata,
@@ -52,18 +51,20 @@ export class TokenEndpointCredentials implements CredentialStrategy {
             // left consumers matching HTTP statuses out of upup's own message
             // text to recover what their server had already said.
             const body = await readErrorBody(response)
+            // Bound to a const so the error is thrown as constructed — the
+            // taxonomy lint reads a thrown call expression as a literal.
             const error = uploadErrorFromResponse({
                 status: response.status,
                 statusText: response.statusText,
                 ...(body !== undefined ? { body } : {}),
                 kind: 'network',
-            })
-            if (!parseErrorBody(body).message.trim()) {
-                // Nothing usable in the body — keep the exact wording this
+                // An empty body, or an error page a reverse proxy wrote,
+                // carries nothing to surface: keep the exact wording this
                 // strategy has always thrown, so a consumer matching on it
                 // sees no change.
-                error.message = `Presign request failed: ${response.status} ${response.statusText}`
-            }
+                ignoreErrorPageBody: true,
+                fallbackMessage: `Presign request failed: ${response.status} ${response.statusText}`,
+            })
             throw error
         }
 

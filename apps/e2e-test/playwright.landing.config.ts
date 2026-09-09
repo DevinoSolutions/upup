@@ -13,7 +13,12 @@ import { defineConfig } from '@playwright/test'
 // The `flows` project (support + thumbs) runs first; the serial `ingestion`
 // project depends on it, so verification always runs LAST against landed data.
 
-const LANDING_PORT = 53080
+// 31080, not 53080: Linux draws ephemeral source ports from 32768-60999, so a
+// fixed listen port in that window can be transiently held by one of the
+// runner's own outbound connections — the failure mode that killed the
+// resume harness on :53062 (see apps/e2e-test/e2e/multipart-resume-harness.ts).
+// Below 32768 the kernel never competes for it.
+const LANDING_PORT = 31080
 const MASTRA_PORT = 4144
 const baseURL = `http://localhost:${LANDING_PORT}`
 

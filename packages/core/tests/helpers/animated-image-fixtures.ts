@@ -70,6 +70,24 @@ export const GIF_NETSCAPE_LOOP = concatBytes(
     [0x03, 0x01, 0x00, 0x00, 0x00],
 )
 
+/**
+ * A Comment Extension carrying `length` bytes of filler, in the 255-byte
+ * sub-blocks the format requires. Lets a fixture push a later frame past a
+ * chosen offset without inventing an illegal container.
+ */
+export function gifComment(length: number): number[] {
+    const bytes = [0x21, 0xfe]
+    let left = length
+    while (left > 0) {
+        const size = Math.min(255, left)
+        bytes.push(size)
+        for (let i = 0; i < size; i += 1) bytes.push(0x20)
+        left -= size
+    }
+    bytes.push(0x00) // sub-block terminator
+    return bytes
+}
+
 /** Graphic Control Extension — legal on a single-frame GIF too. */
 export const GIF_GRAPHIC_CONTROL = [
     0x21, 0xf9, 0x04, 0x00, 0x0a, 0x00, 0x00, 0x00,

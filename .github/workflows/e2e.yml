@@ -74,7 +74,16 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
+              # Drop Google's chrome-stable apt source first: its index has been
+              # serving a broken Packages.gz ("Hash Sum mismatch", nightly run
+              # 34382957429, both attempts, three jobs), and `--with-deps` runs
+              # `apt-get update`, which fails the whole install with code 100.
+              # Playwright ships its own Chromium and takes system deps from the
+              # Ubuntu archives, so the repo is dead weight here.
+              run: |
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.sources
+                  pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             - name: Provision MinIO env (defaults; smoke is OAuth-free)
               run: cp local-dev/.env.minio.example local-dev/.env.minio
@@ -285,7 +294,16 @@ jobs:
               run: pnpm --filter @useupup/core --filter @useupup/react --filter @useupup/server build
 
             - name: Install Playwright Chromium
-              run: pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
+              # Drop Google's chrome-stable apt source first: its index has been
+              # serving a broken Packages.gz ("Hash Sum mismatch", nightly run
+              # 34382957429, both attempts, three jobs), and `--with-deps` runs
+              # `apt-get update`, which fails the whole install with code 100.
+              # Playwright ships its own Chromium and takes system deps from the
+              # Ubuntu archives, so the repo is dead weight here.
+              run: |
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.sources
+                  pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
             # Flag-position --project (never the `-- --project` pnpm-forwarding
             # form, which Playwright reads as filename filters — see CLAUDE.md).

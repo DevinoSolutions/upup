@@ -193,6 +193,24 @@ export interface UploadErrorFromResponseArgs {
     operation?: UpupStorageError['operation']
     /** Provider label for storage/auth errors (e.g. 'S3', 'google-drive'). Defaults to 'server'. */
     provider?: string
+    /**
+     * Message to use when the body carries nothing worth surfacing. Defaults
+     * to `${status} ${statusText}`; a caller passes its own to keep wording it
+     * has always thrown.
+     */
+    fallbackMessage?: string
+    /**
+     * Treat a markup body carrying no error code as nothing worth surfacing.
+     * A reverse proxy or CDN answers 502/413 with an HTML error page, and the
+     * text fallback would otherwise put 200 characters of it in `message`. An
+     * S3-style `<Error><Code>` body is unaffected — it parses to a real code.
+     */
+    ignoreErrorPageBody?: boolean
+}
+
+/** An HTML/XML body, told from the host's own copy by its opening tag. */
+function isMarkupBody(body: string | undefined): boolean {
+    return body !== undefined && body.trimStart().startsWith('<')
 }
 
 /**
@@ -205,9 +223,24 @@ export interface UploadErrorFromResponseArgs {
 export function uploadErrorFromResponse(
     args: UploadErrorFromResponseArgs,
 ): UpupError {
-    const { status, statusText, body, kind, operation, provider } = args
+    const {
+        status,
+        statusText,
+        body,
+        kind,
+        operation,
+        provider,
+        fallbackMessage,
+        ignoreErrorPageBody,
+    } = args
     const parsed = parseErrorBody(body)
-    const message = parsed.message || `${status} ${statusText}`.trim()
+    const surfaced =
+        ignoreErrorPageBody && !parsed.code && isMarkupBody(body)
+            ? ''
+            : parsed.message
+    const message = surfaced.trim()
+        ? surfaced
+        : (fallbackMessage ?? `${status} ${statusText}`.trim())
 
     let err: UpupError
     if (kind === 'auth') {
