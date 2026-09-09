@@ -247,9 +247,10 @@ uploads.
 
 The presign call a custom `uploadEndpoint` makes routes through it too, so the
 sentence your endpoint writes into a non-2xx body is what `onError` receives —
-you do not have to recover it from an HTTP status. When the body is empty or
-unreadable the message stays `Presign request failed: <status> <statusText>`,
-the wording that path has always thrown.
+you do not have to recover it from an HTTP status. When the body is empty,
+unreadable, or an HTML error page a reverse proxy wrote with no error code of
+its own, the message stays `Presign request failed: <status> <statusText>`, the
+wording that path has always thrown.
 
 ```typescript
 import { uploadErrorFromResponse } from '@useupup/core'

@@ -21,6 +21,17 @@ async function readErrorBody(response: Response): Promise<string | undefined> {
     }
 }
 
+/**
+ * True when the body is markup rather than the endpoint's own copy. A reverse
+ * proxy or CDN answers 502/413 with an HTML error page, and `parseErrorBody`'s
+ * text fallback would otherwise surface 200 characters of it as the message.
+ * Callers pair this with "and the parse found no code", so an S3-style
+ * `<Error><Code>…` body — markup that does carry a code — still gets through.
+ */
+function looksLikeErrorPage(body: string | undefined): boolean {
+    return body !== undefined && body.trimStart().startsWith('<')
+}
+
 export class TokenEndpointCredentials implements CredentialStrategy {
     private url: string
     private headers: Record<string, string>
@@ -58,7 +69,11 @@ export class TokenEndpointCredentials implements CredentialStrategy {
                 ...(body !== undefined ? { body } : {}),
                 kind: 'network',
             })
-            if (!parseErrorBody(body).message.trim()) {
+            const parsed = parseErrorBody(body)
+            if (
+                !parsed.message.trim() ||
+                (!parsed.code && looksLikeErrorPage(body))
+            ) {
                 // Nothing usable in the body — keep the exact wording this
                 // strategy has always thrown, so a consumer matching on it
                 // sees no change.
