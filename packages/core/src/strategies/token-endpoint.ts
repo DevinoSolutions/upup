@@ -1,5 +1,4 @@
 import {
-    parseErrorBody,
     uploadErrorFromResponse,
     type CredentialStrategy,
     type FileMetadata,
@@ -19,17 +18,6 @@ async function readErrorBody(response: Response): Promise<string | undefined> {
         // upup-catch: body unreadable — fall back to the status-only message
         return undefined
     }
-}
-
-/**
- * True when the body is markup rather than the endpoint's own copy. A reverse
- * proxy or CDN answers 502/413 with an HTML error page, and `parseErrorBody`'s
- * text fallback would otherwise surface 200 characters of it as the message.
- * Callers pair this with "and the parse found no code", so an S3-style
- * `<Error><Code>…` body — markup that does carry a code — still gets through.
- */
-function looksLikeErrorPage(body: string | undefined): boolean {
-    return body !== undefined && body.trimStart().startsWith('<')
 }
 
 export class TokenEndpointCredentials implements CredentialStrategy {
@@ -63,22 +51,20 @@ export class TokenEndpointCredentials implements CredentialStrategy {
             // left consumers matching HTTP statuses out of upup's own message
             // text to recover what their server had already said.
             const body = await readErrorBody(response)
+            // Bound to a const so the error is thrown as constructed — the
+            // taxonomy lint reads a thrown call expression as a literal.
             const error = uploadErrorFromResponse({
                 status: response.status,
                 statusText: response.statusText,
                 ...(body !== undefined ? { body } : {}),
                 kind: 'network',
-            })
-            const parsed = parseErrorBody(body)
-            if (
-                !parsed.message.trim() ||
-                (!parsed.code && looksLikeErrorPage(body))
-            ) {
-                // Nothing usable in the body — keep the exact wording this
+                // An empty body, or an error page a reverse proxy wrote,
+                // carries nothing to surface: keep the exact wording this
                 // strategy has always thrown, so a consumer matching on it
                 // sees no change.
-                error.message = `Presign request failed: ${response.status} ${response.statusText}`
-            }
+                ignoreErrorPageBody: true,
+                fallbackMessage: `Presign request failed: ${response.status} ${response.statusText}`,
+            })
             throw error
         }
 
