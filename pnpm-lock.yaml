@@ -929,7 +929,7 @@ importers:
     optionalDependencies:
       libheif-js:
         specifier: ^1.19.8
-        version: 1.19.8
+        version: 1.23.2
       tus-js-client:
         specifier: ^4.3.1
         version: 4.3.1
@@ -9534,8 +9534,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libheif-js@1.19.8:
-    resolution: {integrity: sha512-vQJWusIxO7wavpON1dusciL8Go9jsIQ+EUrckauFYAiSTjcmLAsuJh3SszLpvkwPci3JcL41ek2n+LUZGFpPIQ==}
+  libheif-js@1.23.2:
+    resolution: {integrity: sha512-qvHIXtggEsw1lCNCWBYKloL2Z36DJBm0R9ThGiH2JnhKYdeZFLPFkP30Lw4yMskxxhx0bKg1gLrBHX1D2w2pSw==}
     engines: {node: '>=8.0.0'}
 
   license-webpack-plugin@4.0.2:
@@ -22944,7 +22944,7 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libheif-js@1.19.8:
+  libheif-js@1.23.2:
     optional: true
 
   license-webpack-plugin@4.0.2(webpack@5.105.0(esbuild@0.28.0)(postcss@8.5.26)):
