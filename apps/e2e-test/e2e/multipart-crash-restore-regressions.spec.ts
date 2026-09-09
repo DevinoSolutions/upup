@@ -52,10 +52,12 @@ import {
 
 announceMinioSkip('multipart-crash-restore-e2e')
 
-// Its own port: the sibling spec owns 53061, and two spec files must never
-// contend for one harness even when Playwright raises the worker count.
+// Its own port: the sibling spec owns 31061, and two spec files must never
+// contend for one harness even when Playwright raises the worker count. Both
+// sit below 32768 deliberately — see that spec for why the old 5306x pair was
+// losing races against the runner's own ephemeral source ports.
 const HARNESS_PORT = Number(
-    process.env.UPUP_E2E_CRASH_RESTORE_SERVER_PORT ?? 53062,
+    process.env.UPUP_E2E_CRASH_RESTORE_SERVER_PORT ?? 31062,
 )
 const HARNESS_URL = `http://localhost:${HARNESS_PORT}`
 const SCENARIO = `/?scenario=multipart-resume&server=${encodeURIComponent(HARNESS_URL)}`

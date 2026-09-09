@@ -61,7 +61,12 @@ const SOURCE_BYTES = minioReady
     : Buffer.alloc(0)
 const SOURCE_SHA256 = sha256(SOURCE_BYTES)
 
-const HARNESS_PORT = Number(process.env.UPUP_E2E_RESUME_SERVER_PORT ?? 53061)
+// 31061, not 53061: Linux hands out ephemeral source ports from 32768-60999,
+// so a fixed LISTEN port inside that window can be transiently held by one of
+// the runner's own outbound connections. That is exactly how the 2026-09-06
+// nightly died — `EADDRINUSE :::53062` on the sibling spec, then 60 s of
+// polling a harness that never bound. Below 32768 the kernel never competes.
+const HARNESS_PORT = Number(process.env.UPUP_E2E_RESUME_SERVER_PORT ?? 31061)
 const HARNESS_URL = `http://localhost:${HARNESS_PORT}`
 
 let harness: PresignHarness | null = null

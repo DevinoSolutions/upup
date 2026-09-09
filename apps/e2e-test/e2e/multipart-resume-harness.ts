@@ -101,6 +101,10 @@ export interface PresignHarness {
  * Deliberately NOT :53060 — the cross-framework gate's harness owns that port
  * and allows only the six storybook origins, so reusing it would 403 the app.
  * Each real-MinIO spec file owns its own port so two files can never contend.
+ * Pick that port BELOW 32768: Linux draws ephemeral source ports from
+ * 32768-60999, so a fixed listen port in that window loses races against the
+ * runner's own outbound connections (`EADDRINUSE`, then a 60 s poll against a
+ * harness that never bound — the 2026-09-06 nightly).
  */
 export async function startPresignHarness(
     port: number,
