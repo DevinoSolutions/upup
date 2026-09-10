@@ -397,7 +397,7 @@ type UploadSource =
 
 Browser-safe cloud provider configuration for client mode. Google Drive takes `clientId`, `apiKey`, and `appId`; OneDrive, Dropbox, and Box each take `clientId` plus an optional `redirectUri`.
 
-Google Drive also takes an optional `sharedDrives` boolean, default `false`. Left off, the picker lists the signed-in user's own My Drive only — a Drive `files.list` with no corpus set answers from that corpus, so a file living in a shared drive is invisible at every depth. Turn it on to widen the listing to shared drives; it needs no extra OAuth scope, and the picker keeps its current shape for everyone who leaves it unset.
+Google Drive also takes an optional `sharedDrives` boolean, default `false`. Left off, the picker lists the signed-in user's own My Drive only — a Drive `files.list` with no corpus set answers from that corpus, so a file living in a shared drive is invisible at every depth. Turn it on and the root of the picker also lists each of the user's shared drives as a folder, plus a "Shared with me" folder, both browsable and downloadable like any other. It needs no extra OAuth scope, and the picker keeps its current shape for everyone who leaves it unset.
 
 ```tsx
 <UpupUploader
