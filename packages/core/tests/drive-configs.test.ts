@@ -15,6 +15,24 @@ describe('drive configs exported from core (one camelCase shape)', () => {
             appId: string
         }>()
     })
+    it('GoogleDriveConfig accepts an optional sharedDrives flag and still typechecks without it (#391)', () => {
+        const withoutFlag: GoogleDriveConfig = {
+            clientId: 'g',
+            apiKey: 'k',
+            appId: 'a',
+        }
+        const withFlag: GoogleDriveConfig = {
+            clientId: 'g',
+            apiKey: 'k',
+            appId: 'a',
+            sharedDrives: true,
+        }
+        expectTypeOf(withoutFlag).toMatchTypeOf<GoogleDriveConfig>()
+        expectTypeOf(withFlag).toMatchTypeOf<GoogleDriveConfig>()
+        expectTypeOf<GoogleDriveConfig['sharedDrives']>().toEqualTypeOf<
+            boolean | undefined
+        >()
+    })
     it('OneDriveConfig requires clientId; redirectUri optional', () => {
         const _: OneDriveConfig = { clientId: 'c' }
         expectTypeOf(_).toMatchTypeOf<OneDriveConfig>()

@@ -116,6 +116,23 @@ export class GoogleDrivePlugin implements DrivePlugin {
     private tokenExpiry = 0
     private state: DriveState = 'idle'
 
+    /**
+     * The shared-drive query params, or nothing when `sharedDrives` is off (#391).
+     * Drive v3 answers a `files.list` from the caller's own corpus unless all
+     * three are present, so a file living in a shared drive is invisible at every
+     * depth — including to the picker's search box, which filters the children
+     * already loaded. Spread into the params of every listing call.
+     */
+    private sharedDriveParams(): Record<string, string> {
+        return this.config.sharedDrives
+            ? {
+                  corpora: 'allDrives',
+                  includeItemsFromAllDrives: 'true',
+                  supportsAllDrives: 'true',
+              }
+            : {}
+    }
+
     // ── Plugin lifecycle ──
 
     configure(config: GoogleDriveConfig): this {
@@ -264,6 +281,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 fields: 'nextPageToken,files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
                 key: this.config.apiKey,
                 pageSize: '1000',
+                ...this.sharedDriveParams(),
             })
 
             const res = await this.apiRequest(
@@ -325,6 +343,7 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 key: this.config.apiKey,
                 pageSize: '1000',
                 pageToken,
+                ...this.sharedDriveParams(),
             })
 
             const res = await this.apiRequest(
@@ -392,9 +411,14 @@ export class GoogleDrivePlugin implements DrivePlugin {
     private async downloadRegularFile(
         driveFile: DriveFile,
     ): Promise<File | null> {
+        // `supportsAllDrives` is the files.get half of #391: without it a file
+        // the widened listing surfaced answers 404 on download, which would make
+        // the picker list shared-drive files it cannot fetch. `corpora` and
+        // `includeItemsFromAllDrives` are files.list-only and stay out of here.
         const params = new URLSearchParams({
             key: this.config.apiKey,
             alt: 'media',
+            ...(this.config.sharedDrives ? { supportsAllDrives: 'true' } : {}),
         })
 
         const res = await this.apiRequest(

@@ -718,6 +718,148 @@ describe('GoogleDrivePlugin', () => {
     // File download (regular files)
     // ────────────────────────────────────────────
 
+    // ────────────────────────────────────────────
+    // Shared drives (#391)
+    // ────────────────────────────────────────────
+
+    describe('sharedDrives config option (#391)', () => {
+        const SHARED_DRIVE_LIST_PARAMS = [
+            'corpora',
+            'includeItemsFromAllDrives',
+            'supportsAllDrives',
+        ] as const
+
+        function configureWithSharedDrives(enabled: boolean): void {
+            plugin.configure({
+                apiKey: 'test-api-key',
+                appId: 'test-app-id',
+                clientId: 'test-client-id',
+                sharedDrives: enabled,
+            })
+            plugin.setAccessToken('valid-token', 3600)
+        }
+
+        function paramsOfLastRequest(
+            fetchMock: ReturnType<typeof vi.fn>,
+        ): URLSearchParams {
+            const url = fetchMock.mock.calls.at(-1)![0] as string
+            return new URL(url).searchParams
+        }
+
+        it('omits every shared-drive param from loadFiles when the option is unset, so an existing picker keeps its My-Drive-only shape', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.loadFiles()
+
+            const params = paramsOfLastRequest(fetchMock)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+        })
+
+        it('omits every shared-drive param from loadFiles when the option is explicitly false', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(false)
+
+            await plugin.loadFiles()
+
+            const params = paramsOfLastRequest(fetchMock)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+        })
+
+        it('sends corpora=allDrives with both all-drives flags on loadFiles when the option is on', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles()
+
+            const params = paramsOfLastRequest(fetchMock)
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(params.get('includeItemsFromAllDrives')).toBe('true')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('keeps the folder query and the api key alongside the shared-drive params on loadFiles', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles('folder-in-a-shared-drive')
+
+            const params = paramsOfLastRequest(fetchMock)
+            expect(params.get('q')).toContain(
+                "'folder-in-a-shared-drive' in parents",
+            )
+            expect(params.get('key')).toBe('test-api-key')
+            expect(params.get('corpora')).toBe('allDrives')
+        })
+
+        it('sends the shared-drive params on the paginated loadMoreFiles call too, so page 2 does not narrow back to My Drive', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({
+                    folderId: 'shared-folder',
+                    pageToken: 'page-2-token',
+                }),
+            )
+
+            const params = paramsOfLastRequest(fetchMock)
+            expect(params.get('pageToken')).toBe('page-2-token')
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(params.get('includeItemsFromAllDrives')).toBe('true')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('omits the shared-drive params from loadMoreFiles when the option is off', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({ folderId: 'root', pageToken: 'p2' }),
+            )
+
+            const params = paramsOfLastRequest(fetchMock)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+        })
+
+        it('sends supportsAllDrives when downloading a file so a listed shared-drive file does not 404 on fetch', async () => {
+            const fetchMock = mockFetchResponse('file-content')
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.downloadFile(makeDriveFile({ id: 'shared-file-id' }))
+
+            const params = paramsOfLastRequest(fetchMock)
+            expect(params.get('alt')).toBe('media')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('omits supportsAllDrives from the download when the option is off, and never sends the list-only params there', async () => {
+            const fetchMock = mockFetchResponse('file-content')
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.downloadFile(makeDriveFile({ id: 'my-drive-file-id' }))
+
+            const params = paramsOfLastRequest(fetchMock)
+            expect(params.has('supportsAllDrives')).toBe(false)
+            expect(params.has('corpora')).toBe(false)
+            expect(params.has('includeItemsFromAllDrives')).toBe(false)
+        })
+    })
+
     describe('downloadFiles() - regular files', () => {
         beforeEach(() => {
             plugin.setAccessToken('valid-token', 3600)
