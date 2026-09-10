@@ -33,6 +33,7 @@ function ClientOneDriveUploader() {
         isAuthenticated,
         authenticate,
         isLoading,
+        error,
         ...uploaderProps
     } = useOneDrive()
 
@@ -46,6 +47,7 @@ function ClientOneDriveUploader() {
             <DriveAuthFallback
                 providerName="OneDrive"
                 onRetry={authenticate}
+                error={error}
                 data-upup-slot="one-drive-uploader"
             />
         )
@@ -56,6 +58,7 @@ function ClientOneDriveUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            error={error}
             data-upup-slot="one-drive-uploader"
             {...uploaderProps}
         />

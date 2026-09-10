@@ -205,6 +205,7 @@ export const esES: LocaleBundle = {
             generatingThumbnails: 'Generando miniaturas...',
             clientIdRequired: 'Se requiere Client ID...',
             popupBlocked: 'Ventana emergente bloqueada',
+            authCancelled: 'Inicio de sesión cancelado',
             dropboxClientIdMissing: 'Falta el clientId de Dropbox',
             dropboxAuthFailed: 'Autenticaci\u00F3n de Dropbox fallida',
             boxClientIdMissing: 'Box clientId missing',

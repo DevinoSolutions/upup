@@ -234,6 +234,8 @@ export const jaJP: LocaleBundle = {
                 '\u30AF\u30E9\u30A4\u30A2\u30F3\u30C8ID\u304C\u5FC5\u8981\u3067\u3059...',
             popupBlocked:
                 '\u30DD\u30C3\u30D7\u30A2\u30C3\u30D7\u304C\u30D6\u30ED\u30C3\u30AF\u3055\u308C\u307E\u3057\u305F',
+            authCancelled:
+                '\u30B5\u30A4\u30F3\u30A4\u30F3\u304C\u30AD\u30E3\u30F3\u30BB\u30EB\u3055\u308C\u307E\u3057\u305F',
             dropboxClientIdMissing:
                 'Dropbox \u306E clientId \u304C\u3042\u308A\u307E\u305B\u3093',
             dropboxAuthFailed:

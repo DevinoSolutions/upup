@@ -33,6 +33,7 @@ function ClientBoxUploader() {
         isAuthenticated,
         authenticate,
         isLoading,
+        error,
         ...uploaderProps
     } = useBox()
 
@@ -46,6 +47,7 @@ function ClientBoxUploader() {
             <DriveAuthFallback
                 providerName="Box"
                 onRetry={authenticate}
+                error={error}
                 data-upup-slot="box-uploader"
             />
         )
@@ -56,6 +58,7 @@ function ClientBoxUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            error={error}
             data-upup-slot="box-uploader"
             {...uploaderProps}
         />

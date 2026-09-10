@@ -240,6 +240,8 @@ export interface ErrorMessages {
     generatingThumbnails: string
     clientIdRequired: string
     popupBlocked: string
+    /** The person declined the provider's consent screen, or closed it. Never a popup block. */
+    authCancelled: string
     dropboxClientIdMissing: string
     dropboxAuthFailed: string
     boxClientIdMissing: string

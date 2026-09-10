@@ -99,6 +99,30 @@ const mockSessionStorage = {
     key: vi.fn((_i: number) => null),
 }
 
+/**
+ * Install a fake popup window and return it. `href` seeds `location.href`, which
+ * is what the auth poll reads each tick — omit it for a window that never
+ * navigates (the user-closes-it path).
+ */
+function stubPopupWindow(href?: string): {
+    closed: boolean
+    close: ReturnType<typeof vi.fn>
+    location: { href?: string }
+} {
+    const fakeWindow = {
+        closed: false,
+        close: vi.fn(),
+        location: href !== undefined ? { href } : {},
+    }
+    vi.stubGlobal('window', {
+        location: { origin: 'https://example.com' },
+        open: vi.fn(() => fakeWindow),
+        screenX: 0,
+        screenY: 0,
+    })
+    return fakeWindow
+}
+
 function captureEvents(emitter: EventEmitter) {
     const events: Array<{ event: string; payload: unknown }> = []
     const originalEmit = emitter.emit.bind(emitter)
@@ -439,15 +463,15 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
 
     // ── popup: user closes it → resolves without error ──
     describe('authenticateViaPopup', () => {
+        function authErrors(): Array<{ error: Error & { code?: string } }> {
+            return events
+                .filter(e => e.event === 'fake:error')
+                .map(e => e.payload as { error: Error & { code?: string } })
+        }
+
         it('resolves without error when the user closes the popup', async () => {
             vi.useFakeTimers()
-            const fakeWindow = { closed: false, close: vi.fn(), location: {} }
-            vi.stubGlobal('window', {
-                location: { origin: 'https://example.com' },
-                open: vi.fn(() => fakeWindow),
-                screenX: 0,
-                screenY: 0,
-            })
+            const fakeWindow = stubPopupWindow()
 
             const promise = plugin.authenticateViaPopup()
             // Simulate the user closing the popup, then advance the poll timer
@@ -455,6 +479,99 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             await vi.advanceTimersByTimeAsync(600)
             await expect(promise).resolves.toBeUndefined()
             expect(plugin.getState()).toBe('idle')
+            vi.useRealTimers()
+        })
+
+        it('emits an AUTH_DENIED cancellation when the user closes the popup, instead of resolving silently (#390)', async () => {
+            vi.useFakeTimers()
+            const fakeWindow = stubPopupWindow()
+
+            const promise = plugin.authenticateViaPopup()
+            fakeWindow.closed = true
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            const errors = authErrors()
+            expect(errors).toHaveLength(1)
+            expect(errors[0]!.error.code).toBe('AUTH_DENIED')
+            expect(errors[0]!.error.message).toContain('cancelled')
+            expect(errors[0]!.error.message).toContain('popup-closed')
+            vi.useRealTimers()
+        })
+
+        it('reports a redirect carrying error=access_denied as a cancellation rather than letting it fall through the poll (#390)', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect?error=access_denied&error_description=The+user+declined',
+            )
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            const errors = authErrors()
+            expect(errors).toHaveLength(1)
+            expect(errors[0]!.error.code).toBe('AUTH_DENIED')
+            expect(errors[0]!.error.message).toContain('The user declined')
+            expect(plugin.getState()).toBe('idle')
+            vi.useRealTimers()
+        })
+
+        it('falls back to the raw error code when the provider sends no error_description', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect?error=consent_required',
+            )
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            expect(authErrors()[0]!.error.message).toContain('consent_required')
+            vi.useRealTimers()
+        })
+
+        it('tags a genuinely blocked popup with AUTH_POPUP_BLOCKED, the one code that means window.open returned null (#390)', async () => {
+            vi.stubGlobal('window', {
+                location: { origin: 'https://example.com' },
+                open: vi.fn(() => null),
+                screenX: 0,
+                screenY: 0,
+            })
+
+            await expect(plugin.authenticateViaPopup()).rejects.toThrow(
+                'Popup was blocked by the browser',
+            )
+
+            const errors = authErrors()
+            expect(errors).toHaveLength(1)
+            expect(errors[0]!.error.code).toBe('AUTH_POPUP_BLOCKED')
+        })
+
+        it('still completes the code exchange when the redirect carries a code and no error', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect?code=the-auth-code',
+            )
+            vi.stubGlobal(
+                'fetch',
+                vi.fn().mockResolvedValue({
+                    ok: true,
+                    status: 200,
+                    json: vi.fn().mockResolvedValue({
+                        access_token: 'tok',
+                        expires_in: 3600,
+                    }),
+                    text: vi.fn().mockResolvedValue(''),
+                }),
+            )
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            expect(authErrors()).toHaveLength(0)
+            expect(plugin.getState()).toBe('authenticated')
             vi.useRealTimers()
         })
     })

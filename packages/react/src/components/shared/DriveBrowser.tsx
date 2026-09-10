@@ -14,6 +14,7 @@ import {
     useUploaderTheme,
 } from '../../context/UploaderContext'
 import { searchDriveFiles } from '../../lib/file'
+import { driveErrorText } from '../../lib/driveErrorText'
 import SourceViewContainer from './SourceViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'
@@ -132,7 +133,7 @@ export default function DriveBrowser({
                                         className="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                                     >
                                         {t(tr.driveLoadError, {
-                                            message: error.message,
+                                            message: driveErrorText(error, tr),
                                         })}
                                     </p>
                                 </div>

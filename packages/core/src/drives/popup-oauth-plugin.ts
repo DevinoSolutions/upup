@@ -3,7 +3,7 @@ import type { DrivePlugin } from './plugin'
 import type { DriveFile, DriveState, DriveUser } from './types'
 import { generateCodeVerifier, generateCodeChallenge } from './pkce'
 import { storageGet, storageSet, storageDel } from './session-storage'
-import { UpupAuthError, UpupNetworkError } from '../errors'
+import { UpupAuthError, UpupErrorCode, UpupNetworkError } from '../errors'
 
 /**
  * The fields this class reads off an OAuth2 token-endpoint response (RFC 6749 §5.1),
@@ -231,6 +231,25 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
         }
     }
 
+    /**
+     * Report that the person ended the sign-in themselves — declined the consent
+     * screen, hit an admin-approval wall and backed out, or closed the window
+     * (#390). Carries AUTH_DENIED so the renderer can say "cancelled" in the
+     * user's own locale instead of printing this diagnostic; `reason` is the
+     * provider's own `error_description`/`error`, or 'popup-closed', and exists
+     * for logs rather than for display.
+     */
+    private emitCancellation(reason: string): void {
+        this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
+            error: new UpupAuthError(
+                `${this.spec.displayName} sign-in was cancelled (${reason})`,
+                this.spec.displayName,
+                UpupErrorCode.AUTH_DENIED,
+            ),
+            action: 'authenticateViaPopup',
+        })
+    }
+
     // ── Auth: popup-based flow (open popup, poll for redirect code) ──
 
     async authenticateViaPopup(): Promise<void> {
@@ -256,14 +275,20 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
         )
 
         if (!this.popupWindow) {
-            this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
-                error: new Error('Popup was blocked by the browser'),
-                action: 'authenticateViaPopup',
-            })
-            throw new UpupAuthError(
+            // AUTH_POPUP_BLOCKED, not the generic provider error: this is the ONE
+            // place a popup block is real — `window.open` returned null.
+            // Everything downstream branches on the code, so a decline can no
+            // longer be reported with this wording (#390).
+            const blocked = new UpupAuthError(
                 'Popup was blocked by the browser',
                 this.spec.displayName,
+                UpupErrorCode.AUTH_POPUP_BLOCKED,
             )
+            this.emitter?.emit(`${this.spec.eventPrefix}:error`, {
+                error: blocked,
+                action: 'authenticateViaPopup',
+            })
+            throw blocked
         }
 
         this.setState('authenticating')
@@ -277,7 +302,18 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                         if (!this.popupWindow || this.popupWindow.closed) {
                             this.cleanupPopup()
                             this.setState('idle')
-                            resolve() // User closed popup — not an error
+                            // A closed window is a cancellation, not a silent
+                            // nothing (#390). It used to resolve with no error
+                            // and no state, so the view re-mounted believing no
+                            // attempt had happened and fired a second
+                            // `window.open` with no user activation left — which
+                            // returned null and got reported as a popup block.
+                            // The promise still RESOLVES: the contract callers
+                            // have is unchanged, and the cancellation reaches
+                            // the UI through the provider's error event, which
+                            // is the channel the drive browser renders from.
+                            this.emitCancellation('popup-closed')
+                            resolve()
                             return
                         }
 
@@ -289,12 +325,27 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                             return
                         }
 
-                        if (
-                            !href.startsWith(redirectUri) ||
-                            !href.includes('code=')
-                        ) {
+                        if (!href.startsWith(redirectUri)) return
+
+                        // The redirect landed. RFC 6749 §4.1.2.1 says it carries
+                        // either `code` or `error` — reading only `code` (#390)
+                        // let an `?error=access_denied` fall through this poll
+                        // until the person closed the window, so a refused or
+                        // admin-walled consent was never reported as itself.
+                        const redirectParams = new URL(href).searchParams
+                        const oauthError = redirectParams.get('error')
+                        if (oauthError) {
+                            this.cleanupPopup()
+                            this.setState('idle')
+                            this.emitCancellation(
+                                redirectParams.get('error_description') ||
+                                    oauthError,
+                            )
+                            resolve()
                             return
                         }
+
+                        if (!redirectParams.has('code')) return
 
                         // Got the redirect with the code
                         this.cleanupPollTimer()

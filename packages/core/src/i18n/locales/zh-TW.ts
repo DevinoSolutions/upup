@@ -170,6 +170,7 @@ export const zhTW: LocaleBundle = {
             generatingThumbnails: '正在產生縮圖...',
             clientIdRequired: '需要 Client ID...',
             popupBlocked: '彈出視窗被阻擋',
+            authCancelled: '登入已取消',
             dropboxClientIdMissing: '缺少 Dropbox clientId',
             dropboxAuthFailed: 'Dropbox 驗證失敗',
             boxClientIdMissing: 'Box clientId missing',
