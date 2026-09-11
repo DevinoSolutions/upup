@@ -929,7 +929,7 @@ describe('GoogleDrivePlugin', () => {
 
         // ── On: the shared drives are reachable, not merely queryable ──
 
-        it('appends each shared drive to the root listing as a navigable folder, after the My Drive children', async () => {
+        it('puts each shared drive at the TOP of the root listing as a navigable folder, ahead of the My Drive children', async () => {
             vi.stubGlobal(
                 'fetch',
                 mockFetchSequence([
@@ -955,16 +955,114 @@ describe('GoogleDrivePlugin', () => {
             const result = await plugin.loadFiles()
 
             expect(result.files.map(f => f.id)).toEqual([
-                'f1',
                 'drive-a',
                 'drive-b',
                 SHARED_WITH_ME_FOLDER_ID,
+                'f1',
             ])
-            const teamA = result.files[1]!
+            const teamA = result.files[0]!
             expect(teamA.name).toBe('Team A')
             expect(teamA.isFolder).toBe(true)
             expect(teamA.mimeType).toBe('folder')
             expect(teamA.thumbnail).toBeUndefined()
+        })
+
+        it('keeps the My Drive listing when drives.list answers 403, degrading to no shared-drive rows instead of an empty picker, and reports it on a non-fatal event', async () => {
+            vi.stubGlobal(
+                'fetch',
+                vi
+                    .fn()
+                    .mockResolvedValueOnce({
+                        ok: true,
+                        status: 200,
+                        json: vi.fn().mockResolvedValue({
+                            files: [
+                                {
+                                    id: 'f1',
+                                    name: 'own.txt',
+                                    mimeType: 'text/plain',
+                                },
+                            ],
+                        }),
+                        text: vi.fn().mockResolvedValue(''),
+                    })
+                    .mockResolvedValueOnce({
+                        ok: false,
+                        status: 403,
+                        json: vi.fn().mockResolvedValue({}),
+                        text: vi
+                            .fn()
+                            .mockResolvedValue('sharing policy forbids this'),
+                    }),
+            )
+            configureWithSharedDrives(true)
+            events.length = 0
+
+            const result = await plugin.loadFiles()
+
+            // The shared-drive rows are gone, the My Drive children survive, and
+            // Shared-with-me stays: it is a files.list query, so a drives.list
+            // failure says nothing about whether that door works.
+            expect(result.files.map(f => f.id)).toEqual([
+                SHARED_WITH_ME_FOLDER_ID,
+                'f1',
+            ])
+            expect(
+                events.filter(e => e.event === 'google-drive:error'),
+            ).toHaveLength(0)
+            const degraded = events.filter(
+                e => e.event === 'google-drive:shared-drives-error',
+            )
+            expect(degraded).toHaveLength(1)
+            expect(
+                (degraded[0]!.payload as { error: Error }).error.message,
+            ).toContain('403')
+        })
+
+        it('keeps the shared drives it already collected when a later drives.list page fails', async () => {
+            vi.stubGlobal(
+                'fetch',
+                vi
+                    .fn()
+                    .mockResolvedValueOnce({
+                        ok: true,
+                        status: 200,
+                        json: vi.fn().mockResolvedValue({ files: [] }),
+                        text: vi.fn().mockResolvedValue(''),
+                    })
+                    .mockResolvedValueOnce({
+                        ok: true,
+                        status: 200,
+                        json: vi.fn().mockResolvedValue({
+                            drives: [{ id: 'drive-a', name: 'Team A' }],
+                            nextPageToken: 'drives-page-2',
+                        }),
+                        text: vi.fn().mockResolvedValue(''),
+                    })
+                    .mockResolvedValueOnce({
+                        ok: false,
+                        status: 500,
+                        json: vi.fn().mockResolvedValue({}),
+                        text: vi.fn().mockResolvedValue('upstream exploded'),
+                    }),
+            )
+            configureWithSharedDrives(true)
+            events.length = 0
+
+            const result = await plugin.loadFiles()
+
+            expect(result.files.map(f => f.id)).toEqual([
+                'drive-a',
+                SHARED_WITH_ME_FOLDER_ID,
+            ])
+            expect(
+                events.filter(
+                    e => e.event === 'google-drive:shared-drives-error',
+                ),
+            ).toHaveLength(1)
+            expect(
+                events.filter(e => e.event === 'google-drive:error'),
+            ).toHaveLength(0)
         })
 
         it('asks drives.list for id and name a hundred at a time', async () => {
@@ -1083,6 +1181,79 @@ describe('GoogleDrivePlugin', () => {
                     pageToken: 'root-page-2',
                 }),
             )
+        })
+
+        it('keeps the shared-drive rows ahead of a second My Drive page, which the controller appends to the end of the list', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchSequence([
+                    {
+                        files: [
+                            {
+                                id: 'page1',
+                                name: 'a.txt',
+                                mimeType: 'text/plain',
+                            },
+                        ],
+                        nextPageToken: 'root-page-2',
+                    },
+                    { drives: [{ id: 'drive-a', name: 'Team A' }] },
+                ]),
+            )
+            configureWithSharedDrives(true)
+
+            const first = await plugin.loadFiles()
+
+            // Page 1 leads with the doors out of My Drive; a continuation page
+            // lands after everything here, so those rows stay at the top.
+            expect(first.files.map(f => f.id)).toEqual([
+                'drive-a',
+                SHARED_WITH_ME_FOLDER_ID,
+                'page1',
+            ])
+            expect(first.hasMore).toBe(true)
+        })
+
+        // ── On: query-value escaping ──
+
+        it('escapes a quote in a folder id so it cannot close the query literal and inject syntax', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles("id' or name contains 'x")
+
+            const q = firstRequestTo(fetchMock, FILES_ENDPOINT).get('q')
+            expect(q).toBe(
+                "'id\\' or name contains \\'x' in parents and trashed = false",
+            )
+        })
+
+        it('escapes a backslash in a folder id before the quotes, so the escape cannot be escaped away', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            const backslash = String.fromCharCode(92)
+            await plugin.loadFiles(`a${backslash}'b`)
+
+            const q = firstRequestTo(fetchMock, FILES_ENDPOINT).get('q')
+            expect(q).toBe(
+                `'a${backslash}${backslash}${backslash}'b' in parents and trashed = false`,
+            )
+        })
+
+        it('escapes the folder id on the paginated call too', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({ folderId: "dri've", pageToken: 'p2' }),
+            )
+
+            const q = firstRequestTo(fetchMock, FILES_ENDPOINT).get('q')
+            expect(q).toBe("'dri\\'ve' in parents and trashed = false")
         })
 
         // ── On: the Shared-with-me virtual folder ──

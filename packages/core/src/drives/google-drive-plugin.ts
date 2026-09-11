@@ -3,6 +3,7 @@ import type { DrivePlugin } from './plugin'
 import type { GoogleDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 import { storageGet, storageSet, storageDel } from './session-storage'
+import { escapeDriveQueryValue } from './query-escape'
 import { UpupAuthError, UpupNetworkError } from '../errors'
 
 // ── Session storage keys ──
@@ -162,11 +163,17 @@ export class GoogleDrivePlugin implements DrivePlugin {
      * The `files.list` query for one picker folder. Every id is a parent except
      * the synthetic "Shared with me" one, which is a query instead — Drive has no
      * folder whose children are the files other people shared with you.
+     *
+     * The id is escaped, not interpolated raw: a folder id reaches here from a
+     * Drive API response or a host-supplied argument, and an unescaped `'` ends
+     * the literal and lets the rest of the value become query syntax. Same
+     * escaper the server-mode drive client uses — one implementation in
+     * `query-escape.ts`, so the two halves cannot drift.
      */
     private listQuery(parentId: string): string {
         return parentId === SHARED_WITH_ME_FOLDER_ID
             ? 'sharedWithMe = true and trashed = false'
-            : `'${parentId}' in parents and trashed = false`
+            : `'${escapeDriveQueryValue(parentId)}' in parents and trashed = false`
     }
 
     /**
@@ -180,6 +187,14 @@ export class GoogleDrivePlugin implements DrivePlugin {
      * with no further special-casing.
      *
      * Requires no extra OAuth scope: `drive.readonly` covers `drives.list`.
+     *
+     * NEVER throws. `drives.list` can answer 403 under a Workspace sharing
+     * policy, or 429, or 5xx — and this runs inside the ROOT listing, so letting
+     * that escape would take a working My Drive listing down with it and leave
+     * the picker empty. A failure degrades to no shared-drive rows plus a
+     * `shared-drives-error` event, which is separate from the `error` event
+     * precisely because the browse did NOT fail. A partial result is kept: if
+     * page 3 of 5 fails, the drives already collected are still returned.
      */
     private async listSharedDriveFolders(): Promise<DriveFile[]> {
         const folders: DriveFile[] = []
@@ -196,13 +211,23 @@ export class GoogleDrivePlugin implements DrivePlugin {
             })
             if (pageToken) params.set('pageToken', pageToken)
 
-            // oxlint-disable-next-line no-await-in-loop -- cursor pagination: each page's token comes from the previous response, so these cannot run in parallel
-            const res = await this.apiRequest(
-                `${DRIVES_URL}?${params.toString()}`,
-                { method: 'GET' },
-            )
-            // oxlint-disable-next-line no-await-in-loop -- same round trip as the request above
-            const data = (await res.json()) as GoogleDrivesListResponse
+            let data: GoogleDrivesListResponse
+            try {
+                // oxlint-disable-next-line no-await-in-loop -- cursor pagination: each page's token comes from the previous response, so these cannot run in parallel
+                const res = await this.apiRequest(
+                    `${DRIVES_URL}?${params.toString()}`,
+                    { method: 'GET' },
+                )
+                // oxlint-disable-next-line no-await-in-loop -- same round trip as the request above
+                data = (await res.json()) as GoogleDrivesListResponse
+            } catch (err) {
+                // upup-catch: reported on shared-drives-error and swallowed, per
+                // the contract above — the root listing must survive this.
+                this.emitter?.emit('google-drive:shared-drives-error', {
+                    error: err instanceof Error ? err : new Error(String(err)),
+                })
+                break
+            }
 
             for (const drive of data.drives ?? []) {
                 folders.push(
@@ -386,17 +411,21 @@ export class GoogleDrivePlugin implements DrivePlugin {
             )
 
             const data = (await res.json()) as GoogleFilesListResponse
-            const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
+            const ownFiles: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
 
-            // The two doors out of My Drive, appended to the root page only —
-            // after its own children, and never on a continuation page, so they
-            // appear exactly once (#391).
-            if (this.config.sharedDrives && parentId === 'root') {
-                files.push(
-                    ...(await this.listSharedDriveFolders()),
-                    this.sharedWithMeFolder(),
-                )
-            }
+            // The two doors out of My Drive, on the root page only and never on a
+            // continuation page, so they appear exactly once (#391). They go
+            // FIRST: a root with more than one page appends its later pages to
+            // the end of the list, which would bury them under My Drive files
+            // that arrived after them.
+            const files: DriveFile[] =
+                this.config.sharedDrives && parentId === 'root'
+                    ? [
+                          ...(await this.listSharedDriveFolders()),
+                          this.sharedWithMeFolder(),
+                          ...ownFiles,
+                      ]
+                    : ownFiles
 
             const hasMore = !!data.nextPageToken
             const cursor = hasMore
