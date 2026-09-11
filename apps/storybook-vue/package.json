@@ -31,7 +31,7 @@
         "typescript": "^5.3.2",
         "vite": "^7",
         "vue-tsc": "^2.0.0",
-        "vitest": "^4.1.2"
+        "vitest": "^4.1.11"
     },
     "msw": {
         "workerDirectory": [
