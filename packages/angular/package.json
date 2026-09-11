@@ -1,6 +1,6 @@
 {
     "name": "@useupup/angular",
-    "version": "3.3.2",
+    "version": "3.3.3",
     "description": "Angular 19+ standalone file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
         "file-upload",
