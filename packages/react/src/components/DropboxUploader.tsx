@@ -33,6 +33,7 @@ function ClientDropboxUploader() {
         isAuthenticated,
         authenticate,
         isLoading,
+        error,
         ...uploaderProps
     } = useDropbox()
 
@@ -46,6 +47,7 @@ function ClientDropboxUploader() {
             <DriveAuthFallback
                 providerName="Dropbox"
                 onRetry={authenticate}
+                error={error}
                 data-upup-slot="dropbox-uploader"
             />
         )
@@ -56,6 +58,7 @@ function ClientDropboxUploader() {
             driveFiles={driveFiles}
             user={user}
             handleSignOut={handleSignOut}
+            error={error}
             data-upup-slot="dropbox-uploader"
             {...uploaderProps}
         />

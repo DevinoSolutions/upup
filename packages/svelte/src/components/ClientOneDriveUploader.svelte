@@ -35,6 +35,7 @@
   <DriveAuthFallback
     providerName="OneDrive"
     onRetry={authenticate}
+    {error}
     dataUpupSlot="one-drive-uploader"
   />
 {:else}

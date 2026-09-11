@@ -495,3 +495,150 @@ describe('DriveBrowserController — restore (F-123)', () => {
         expect(controller.getSnapshot().isAuthenticated).toBe(true)
     })
 })
+
+describe('DriveBrowserController — auth-outcome reporting (#390)', () => {
+    it('tags a popup-blocked error with the popupBlocked translation key so the UI stops printing the English literal', () => {
+        const { core, controller } = setup(ONE_DRIVE_DESCRIPTOR)
+
+        core.emit('one-drive:error', {
+            error: Object.assign(
+                new Error('Popup was blocked by the browser'),
+                {
+                    code: 'AUTH_POPUP_BLOCKED',
+                },
+            ),
+            action: 'authenticateViaPopup',
+        })
+
+        expect(controller.getSnapshot().error?.messageKey).toBe('popupBlocked')
+    })
+
+    it('tags a declined consent with the authCancelled key, so a choice the person made is never reported as a popup block', () => {
+        const { core, controller } = setup(ONE_DRIVE_DESCRIPTOR)
+
+        core.emit('one-drive:error', {
+            error: Object.assign(
+                new Error('OneDrive sign-in was cancelled (access_denied)'),
+                { code: 'AUTH_DENIED' },
+            ),
+            action: 'authenticateViaPopup',
+        })
+
+        const err = controller.getSnapshot().error
+        expect(err?.messageKey).toBe('authCancelled')
+        expect(err?.action).toBe('authenticateViaPopup')
+    })
+
+    it('leaves messageKey unset for an error it does not recognise, so the plugin message keeps its detail', () => {
+        const { core, controller } = setup(ONE_DRIVE_DESCRIPTOR)
+
+        core.emit('one-drive:error', {
+            error: new Error('Drive API error (500): upstream exploded'),
+            action: 'loadFiles',
+        })
+
+        const err = controller.getSnapshot().error
+        expect(err?.messageKey).toBeUndefined()
+        expect(err?.message).toBe('Drive API error (500): upstream exploded')
+    })
+
+    it('clears isLoading after a popup attempt that throws, so the auth view carrying the error can render at all', async () => {
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        vi.spyOn(plugin, 'authenticateViaPopup').mockRejectedValue(
+            new Error('Popup was blocked by the browser'),
+        )
+        const onUnhandledRejection = vi.fn()
+        process.on('unhandledRejection', onUnhandledRejection)
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        process.off('unhandledRejection', onUnhandledRejection)
+        expect(onUnhandledRejection).not.toHaveBeenCalled()
+        expect(controller.getSnapshot().isLoading).toBe(false)
+    })
+
+    it('records an error for an attempt that throws WITHOUT emitting one, because the view reads error to know an attempt already happened', async () => {
+        // The regression this pins took the OneDrive and Dropbox cross-framework
+        // E2E adapters down. An unconfigured clientId is THROWN out of
+        // `getAuthUrl()` and never emitted, so nothing reached state.error. The
+        // React auth fallback opens one popup on mount and uses `error` to know
+        // not to do it again — its own ref cannot tell it, because clearing
+        // isLoading remounts the view with a fresh one. An attempt that recorded
+        // nothing therefore looped: mount, attempt, unmount, remount, fast
+        // enough to peg the main thread, so the adapter slot never painted.
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        vi.spyOn(plugin, 'authenticateViaPopup').mockRejectedValue(
+            new Error('OneDrive client_id is not configured'),
+        )
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        const err = controller.getSnapshot().error
+        expect(err?.message).toBe('OneDrive client_id is not configured')
+        expect(err?.action).toBe('authenticateViaPopup')
+        expect(controller.getSnapshot().isLoading).toBe(false)
+    })
+
+    it('records an error for an attempt that ends unauthenticated without throwing at all, so the same loop cannot open on a silent path', async () => {
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        // Resolves, but no session — the shape `authenticateViaPopup` returns
+        // when the person closes the popup.
+        vi.spyOn(plugin, 'authenticateViaPopup').mockResolvedValue(undefined)
+        vi.spyOn(plugin, 'isAuthenticated').mockReturnValue(false)
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        expect(controller.getSnapshot().error).toBeDefined()
+        expect(controller.getSnapshot().isLoading).toBe(false)
+    })
+
+    it('keeps the emitted error rather than the thrown one, because the event payload carries the code the translation key is read from', async () => {
+        const { core, controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        vi.spyOn(plugin, 'authenticateViaPopup').mockImplementation(() => {
+            core.emit('one-drive:error', {
+                error: Object.assign(
+                    new Error('OneDrive sign-in was cancelled (access_denied)'),
+                    { code: 'AUTH_DENIED' },
+                ),
+                action: 'authenticateViaPopup',
+            })
+            return Promise.reject(new Error('a less useful diagnostic'))
+        })
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        const err = controller.getSnapshot().error
+        expect(err?.messageKey).toBe('authCancelled')
+        expect(err?.message).toContain('access_denied')
+    })
+
+    it('clears the previous attempt error when a retry starts, so a fresh sign-in is not shown under the last failure', async () => {
+        const { core, controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        core.emit('one-drive:error', {
+            error: Object.assign(new Error('cancelled'), {
+                code: 'AUTH_DENIED',
+            }),
+            action: 'authenticateViaPopup',
+        })
+        expect(controller.getSnapshot().error).toBeDefined()
+
+        vi.spyOn(plugin, 'authenticateViaPopup').mockResolvedValue(undefined)
+        controller.retryAuth()
+
+        expect(controller.getSnapshot().error).toBeUndefined()
+        await Promise.resolve()
+        await Promise.resolve()
+    })
+})

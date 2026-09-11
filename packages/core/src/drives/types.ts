@@ -26,7 +26,23 @@ export type DriveState =
 export type DriveBrowserError = {
     message: string
     action?: string | undefined
+    /**
+     * A flat UiTranslations key the renderer must prefer over `message` (#390).
+     * `message` is a plugin's English diagnostic, truthful about the call it
+     * describes but not always about the user — a declined consent screen used to
+     * arrive here worded as a popup block, in English, in every locale. The
+     * controller sets this from the error's machine `code` for the auth outcomes
+     * a person can tell apart, and leaves it unset for everything else.
+     */
+    messageKey?: DriveErrorMessageKey | undefined
 }
+
+/**
+ * The auth outcomes a person can tell apart, as flat `UiTranslations` keys.
+ * Named so `driveErrorText`'s English fallback map is exhaustive by the
+ * compiler rather than by inspection.
+ */
+export type DriveErrorMessageKey = 'popupBlocked' | 'authCancelled'
 
 /**
  * A page returned by DrivePlugin.loadMoreFiles (F-125). `cursor` is an OPAQUE

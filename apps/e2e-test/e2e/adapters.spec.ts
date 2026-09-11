@@ -25,26 +25,43 @@ test.describe('Adapter switching', () => {
         await expect(page.getByText('Capture')).toBeVisible()
     })
 
-    test('Google Drive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-googleDrive"]')
-        await expect(
-            page.locator('[data-upup-slot="google-drive-uploader"]'),
-        ).toBeVisible()
-    })
+    // The slot alone was never enough, and asserting only that is how these
+    // cases stayed green on `dev` for the wrong reason. `data-upup-slot` sits on
+    // BOTH branches of every drive component — the auth fallback AND the browser
+    // — so a spinner that could never resolve satisfied it exactly as well as a
+    // sign-in screen did. Each case now asserts the thing it is named after:
+    // the auth fallback's own slot, and the prompt inside it.
+    //
+    // No drive is configured in this app, so the sign-in screen is the only
+    // correct answer for all four.
+    const authPrompts = [
+        ['googleDrive', 'google-drive-uploader', 'Google Drive'],
+        ['oneDrive', 'one-drive-uploader', 'OneDrive'],
+        ['dropbox', 'dropbox-uploader', 'Dropbox'],
+        ['box', 'box-uploader', 'Box'],
+    ] as const
 
-    test('OneDrive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-oneDrive"]')
-        await expect(
-            page.locator('[data-upup-slot="one-drive-uploader"]'),
-        ).toBeVisible()
-    })
-
-    test('Dropbox adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-dropbox"]')
-        await expect(
-            page.locator('[data-upup-slot="dropbox-uploader"]'),
-        ).toBeVisible()
-    })
+    for (const [source, slot, provider] of authPrompts) {
+        test(`${provider} adapter shows auth prompt`, async ({ page }) => {
+            await page.click(`[data-testid="upup-source-${source}"]`)
+            // The adapter mounted at all.
+            await expect(
+                page.locator(`[data-upup-slot="${slot}"]`),
+            ).toBeVisible()
+            // ...and it is the AUTH view, not the browser branch. The slot
+            // attribute cannot tell them apart — each uploader passes its own
+            // name down, overriding the fallback's default — so these two are
+            // what separates them, and they are what a perpetual loader fails.
+            await expect(
+                page.getByRole('button', { name: `Sign in with ${provider}` }),
+            ).toBeVisible()
+            await expect(
+                page.getByText(
+                    `Authenticate with ${provider} to select files for upload`,
+                ),
+            ).toBeVisible()
+        })
+    }
 
     test('Cancel button returns to main view', async ({ page }) => {
         await page.click('[data-testid="upup-source-url"]')
