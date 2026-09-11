@@ -58,7 +58,8 @@ function headerSafeJson(value) {
 }
 
 /** Escape a value for a Drive query single-quoted literal (backslashes first).
- *  Mirrors escapeDriveQueryValue in packages/server/src/drive-clients.ts. */
+ *  Mirrors escapeDriveQueryValue in packages/core/src/drives/query-escape.ts
+ *  (re-exported by packages/server/src/drive-clients.ts). */
 function escapeGDriveQueryValue(value) {
     return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 }

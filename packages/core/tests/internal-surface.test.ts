@@ -46,6 +46,7 @@ const EXPECTED_INTERNAL_VALUE_EXPORTS: string[] = [
     'createUploaderController',
     'dataURLtoBlob',
     'deriveFetchedFileName',
+    'escapeDriveQueryValue',
     'extensionFromMime',
     'fileAppendParams',
     'fileCanPreviewText',

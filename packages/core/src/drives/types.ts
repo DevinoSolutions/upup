@@ -52,5 +52,13 @@ export type DriveEventMap = {
         cursor?: string
     }
     error: { error: Error; action: string }
+    /**
+     * Google Drive only, and NON-FATAL (#391): the widened root listing could not
+     * enumerate the user's shared drives — a 403 from a Workspace sharing policy,
+     * a 429, a 5xx. The listing still resolves with whatever it has, so this is
+     * reported separately from `error`, which means "the browse failed". Subscribe
+     * with `core.on('google-drive:shared-drives-error', …)` to log or surface it.
+     */
+    'shared-drives-error': { error: Error }
     'state-change': { state: DriveState }
 }

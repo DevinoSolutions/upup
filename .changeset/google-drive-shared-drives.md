@@ -1,6 +1,7 @@
 ---
 '@useupup/core': patch
 '@useupup/vanilla': patch
+'@useupup/server': patch
 ---
 
 The Google Drive picker can browse shared drives and "Shared with me", behind a
@@ -35,9 +36,20 @@ With `sharedDrives: true`:
   in both `loadFiles` and `loadMoreFiles`. Every other part of the picker treats
   it as an ordinary folder.
 
-Both additions land on the root's first page only, never on a continuation page,
-so they appear exactly once and pagination is unaffected in either the shared
-drives or the "Shared with me" view.
+Both additions lead the root's first page and are never repeated on a
+continuation page, so they appear exactly once, stay above a second page of My
+Drive files, and pagination is unaffected in either view.
+
+A `drives.list` failure — a 403 under a Workspace sharing policy, a 429, a 5xx —
+degrades to no shared-drive rows rather than taking the whole root listing down
+with it, and is reported on a new non-fatal `google-drive:shared-drives-error`
+event. Drives collected before a mid-pagination failure are kept.
+
+Drive folder ids are now escaped into the `files.list` query instead of
+interpolated raw, using the same `escapeDriveQueryValue` the server-mode drive
+client uses. That escaper moved from `@useupup/server` into
+`@useupup/core/internal`, and `@useupup/server` re-exports it, so the two halves
+share ONE implementation that cannot drift.
 
 The flag defaults off. Nothing is sent, no `drives.list` is issued and no extra
 row appears when it is unset or false, so no existing picker changes shape.

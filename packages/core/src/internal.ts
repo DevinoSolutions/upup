@@ -127,6 +127,7 @@ export type { UpupResolvedTheme, DeepPartial } from './theme/types'
 export type { DeepPartialSlots, InternalFlatClassNames } from './theme/slots'
 
 // ── Drive internals ─────────────────────────────────────────────
+export { escapeDriveQueryValue } from './drives/query-escape'
 export { bindDriveEvents } from './drives/bind-drive-events'
 export type { DriveEventCallbacks } from './drives/bind-drive-events'
 export type {
