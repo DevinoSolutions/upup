@@ -154,14 +154,15 @@ export function fileRow(
                 ${formatFileSize(file.size, tr)}
             </div>
             ${
-                progress
-                    ? progressBar(ctx, {
-                          progress,
-                          class: 'upup-mt-1',
-                          progressBarClassName: 'upup-rounded',
-                          showValue: true,
-                      })
-                    : nothing
+                // progressBar() self-gates on progress || isUploadActive — a
+                // truthy-progress wrapper here would hide the bar at 0% while
+                // a run is already active (#352).
+                progressBar(ctx, {
+                    progress,
+                    class: 'upup-mt-1',
+                    progressBarClassName: 'upup-rounded',
+                    showValue: true,
+                })
             }
         </div>
 

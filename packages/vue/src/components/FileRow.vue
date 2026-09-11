@@ -182,8 +182,10 @@ function onRemove(e: MouseEvent) {
             >
                 {{ formatFileSize(file.size, tr) }}
             </div>
+            <!-- ProgressBar self-gates on `progress || isUploadActive` — a
+                 `v-if="!!progress"` here would hide the bar at 0% while a run
+                 is already active (#352). -->
             <ProgressBar
-                v-if="!!progress"
                 class="upup-mt-1"
                 progress-bar-class-name="upup-rounded"
                 :progress="progress"

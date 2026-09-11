@@ -78,14 +78,15 @@ interface NonMediaThumb {
             >
                 <div [class]="nameClass">{{ file.name }}</div>
                 <div [class]="sizeClass">{{ formattedSize }}</div>
-                @if (!!progress) {
-                    <upup-progress-bar
-                        className="upup-mt-1"
-                        progressBarClassName="upup-rounded"
-                        [progress]="progress"
-                        [showValue]="true"
-                    />
-                }
+                <!-- ProgressBar self-gates on progress || isUploadActive — a
+                     truthy-progress wrapper here would hide the bar at 0%
+                     while a run is already active (#352). -->
+                <upup-progress-bar
+                    className="upup-mt-1"
+                    progressBarClassName="upup-rounded"
+                    [progress]="progress"
+                    [showValue]="true"
+                />
             </div>
 
             @if (isSuccessful) {
