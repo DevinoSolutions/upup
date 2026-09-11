@@ -1,5 +1,13 @@
 # @useupup/interactive-example
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`5921da4`](https://github.com/DevinoSolutions/upup/commit/5921da4d1c3094d76fbbd0f5deee7a1c5e7efbe9)]:
+    - @useupup/core@3.3.2
+    - @useupup/react@3.3.2
+
 ## 0.1.5
 
 ### Patch Changes
