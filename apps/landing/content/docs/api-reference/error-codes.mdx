@@ -35,7 +35,7 @@ below for what actually drives automatic retries.
 
 | Code                     | Meaning                                             | Typical trigger                                                                                                                                                                                                                                                                                                                                                     | Retryable       |
 | ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `AUTH_REQUIRED`          | Anonymous uploads are disabled                      | `@useupup/server` `/presign` or `/multipart/init` reached with no `auth`, no `getUserId`, and no `allowAnonymousUploads` — returns 403                                                                                                                                                                                                                               | no              |
+| `AUTH_REQUIRED`          | Anonymous uploads are disabled                      | `@useupup/server` `/presign` or `/multipart/init` reached with no `auth`, no `getUserId`, and no `allowAnonymousUploads` — returns 403                                                                                                                                                                                                                              | no              |
 | `AUTH_DENIED`            | The upload token belongs to a different user        | A multipart continuation route (sign-part / complete / abort / resume) called with a token whose `uid` is not the current user — returns 403                                                                                                                                                                                                                        | no              |
 | `AUTH_EXPIRED`           | A stored drive credential is dead or revoked        | The server's drive-token refresh call is rejected by the provider; the stored tokens are deleted and the user must re-authorize. Surfaces only through the server's `onError` reporter — it is never returned as a response-body code                                                                                                                               | no              |
 | `AUTH_PROVIDER_ERROR`    | A cloud-drive OAuth or provider call failed         | OAuth code-for-token exchange returns non-2xx (server answers 502). Also the code every `UpupAuthError` carries by construction                                                                                                                                                                                                                                     | no              |
@@ -58,7 +58,7 @@ below for what actually drives automatic retries.
 | `QUOTA_EXCEEDED`         | A configured storage quota is exhausted             | The code every `UpupQuotaError` carries by construction                                                                                                                                                                                                                                                                                                             | no              |
 | `NO_UPLOAD_TARGET`       | No upload destination is configured                 | The default code for `UpupConfigError` — no `uploadEndpoint` / provider wiring to upload to                                                                                                                                                                                                                                                                         | no              |
 | `BAD_REQUEST`            | The request or API call is malformed                | Server-side: an unparseable JSON body or invalid file metadata (400). Client-side: calling `addFiles` / `setFiles` / `upload` / `resume` / `retry` after `destroy()`, or passing an unknown file ID to `replaceFile` / `reorderFiles`                                                                                                                               | no              |
-| `NOT_FOUND`              | The addressed resource is gone server-side          | `@useupup/server` `/multipart/resume` asked to re-attach to a multipart upload the storage provider no longer has — completed, aborted, or reaped by an `AbortIncompleteMultipartUpload` lifecycle rule — returns 404. Deliberately a 4xx: the client drops its saved session and starts a fresh upload rather than retrying something that cannot return            | no              |
+| `NOT_FOUND`              | The addressed resource is gone server-side          | `@useupup/server` `/multipart/resume` asked to re-attach to a multipart upload the storage provider no longer has — completed, aborted, or reaped by an `AbortIncompleteMultipartUpload` lifecycle rule — returns 404. Deliberately a 4xx: the client drops its saved session and starts a fresh upload rather than retrying something that cannot return           | no              |
 
 Codes marked _reserved_ are part of the published enum and safe to reference in
 your own `switch` statements — they simply have no emitter in upup today.
@@ -313,10 +313,14 @@ codes (`expired`, `bad_signature`, `malformed`), S3 provider codes
 `InvalidBucketName`), and the drive controller's `UNAUTHENTICATED`.
 
 Everything else — the other 16 enum members included — falls through to the
-`uploadFailedWithCode` message, and **that message interpolates the raw code**
-(`Upload failed with error code: {code}`). So an unmapped code _is_ shown to the
-end user. Only a completely absent code is code-free, falling back to the plain
-`uploadFailed` message. If you surface codes that matter to your users, either
-map them to your own copy or override `uploadFailedWithCode` for your locale.
+`uploadFailedWithCode` message, and **that message interpolates the raw code
+together with your own error sentence**
+(`Upload failed with error code {code}: {message}`). So an unmapped code _is_
+shown to the end user, and so is whatever `error`/`message` your endpoint
+returned. Only a completely absent code is code-free, falling back to the plain
+`uploadFailed` message. Both slots are optional for a translator: override
+`uploadFailedWithCode` for your locale to reorder them, drop the code, or show
+only your own wording. The interpolated value is always rendered as text, never
+as markup.
 
 See [Localization](/docs/localization/) for overriding those strings per locale.

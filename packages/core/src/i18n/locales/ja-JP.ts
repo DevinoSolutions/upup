@@ -199,7 +199,7 @@ export const jaJP: LocaleBundle = {
             signedUrlGenerationFailed:
                 '\u7F72\u540D\u4ED8\u304D\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9URL\u306E\u751F\u6210\u306B\u5931\u6557\u3057\u307E\u3057\u305F',
             uploadFailedWithCode:
-                '\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9\u3067\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{code}',
+                '\u30A8\u30E9\u30FC\u30B3\u30FC\u30C9 {code} \u3067\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
             uploadFailed:
                 '\u30A2\u30C3\u30D7\u30ED\u30FC\u30C9\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF1A{message}',
             dropboxSessionExpired:

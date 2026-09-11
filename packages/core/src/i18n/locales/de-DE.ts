@@ -183,7 +183,7 @@ export const deDE: LocaleBundle = {
             signedUrlGenerationFailed:
                 'Signierte Upload-URL konnte nicht generiert werden',
             uploadFailedWithCode:
-                'Upload fehlgeschlagen mit Fehlercode: {code}',
+                'Upload fehlgeschlagen mit Fehlercode {code}: {message}',
             uploadFailed: 'Upload fehlgeschlagen: {message}',
             dropboxSessionExpired:
                 'Ihre Dropbox-Sitzung ist abgelaufen. Bitte authentifizieren Sie sich erneut.',

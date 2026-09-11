@@ -384,7 +384,10 @@ function onRetryClick() {
             >
                 {{
                     uploadErrorCode
-                        ? t(tr.uploadFailedWithCode, { code: uploadErrorCode })
+                        ? t(tr.uploadFailedWithCode, {
+                              code: uploadErrorCode,
+                              message: uploadError,
+                          })
                         : t(tr.uploadFailed, { message: uploadError })
                 }}
             </p>

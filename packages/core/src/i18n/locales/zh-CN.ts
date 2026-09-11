@@ -149,7 +149,7 @@ export const zhCN: LocaleBundle = {
             invalidFileType: '文件类型不被允许',
             storageQuotaExceeded: '存储配额已超出',
             signedUrlGenerationFailed: '生成签名上传 URL 失败',
-            uploadFailedWithCode: '上传失败，错误代码：{code}',
+            uploadFailedWithCode: '上传失败，错误代码 {code}：{message}',
             uploadFailed: '上传失败：{message}',
             dropboxSessionExpired:
                 '您的 Dropbox 会话已过期。请重新验证以继续。',
