@@ -155,14 +155,15 @@
     >
       {formatFileSize(file.size, tr)}
     </div>
-    {#if !!progress}
-      <ProgressBar
-        class="upup-mt-1"
-        progressBarClassName="upup-rounded"
-        {progress}
-        showValue
-      />
-    {/if}
+    <!-- ProgressBar self-gates on `progress || isUploadActive` — an
+         `{#if !!progress}` here would hide the bar at 0% while a run is
+         already active (#352). -->
+    <ProgressBar
+      class="upup-mt-1"
+      progressBarClassName="upup-rounded"
+      {progress}
+      showValue
+    />
   </div>
 
   {#if isSuccessful}
