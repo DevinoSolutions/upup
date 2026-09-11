@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from '../src/events'
-import { GoogleDrivePlugin } from '../src/drives/google-drive-plugin'
+import {
+    GoogleDrivePlugin,
+    SHARED_WITH_ME_FOLDER_ID,
+} from '../src/drives/google-drive-plugin'
 import type { DriveFile } from '../src/drives/types'
 
 // ── Helpers ──
@@ -35,6 +38,50 @@ function mockFetchResponse(
                 new Blob(['file-content'], { type: 'text/plain' }),
             ),
     })
+}
+
+/**
+ * Every request this run made to `endpoint`, as parsed query params. A root
+ * listing with `sharedDrives` on hits TWO endpoints, so a test must say which
+ * one it means rather than reading whichever call happened last.
+ */
+function requestsTo(
+    fetchMock: ReturnType<typeof vi.fn>,
+    endpoint: string,
+): URLSearchParams[] {
+    return fetchMock.mock.calls
+        .map(call => call[0] as string)
+        .filter(url => url.startsWith(endpoint))
+        .map(url => new URL(url).searchParams)
+}
+
+function firstRequestTo(
+    fetchMock: ReturnType<typeof vi.fn>,
+    endpoint: string,
+): URLSearchParams {
+    const found = requestsTo(fetchMock, endpoint)[0]
+    if (!found) throw new Error(`no request was made to ${endpoint}`)
+    return found
+}
+
+function stubbedResponse(body: unknown) {
+    return {
+        ok: true,
+        status: 200,
+        json: vi.fn().mockResolvedValue(body),
+        text: vi.fn().mockResolvedValue(JSON.stringify(body)),
+        blob: vi.fn().mockResolvedValue(new Blob(['file-content'])),
+    }
+}
+
+/** A fetch mock answering each call with the next body in the list. */
+function mockFetchSequence(bodies: unknown[]): ReturnType<typeof vi.fn> {
+    const mock = vi.fn()
+    for (const body of bodies) {
+        mock.mockResolvedValueOnce(stubbedResponse(body))
+    }
+    mock.mockResolvedValue(stubbedResponse({}))
+    return mock
 }
 
 function makeDriveFile(overrides: Partial<DriveFile> = {}): DriveFile {
@@ -717,6 +764,366 @@ describe('GoogleDrivePlugin', () => {
     // ────────────────────────────────────────────
     // File download (regular files)
     // ────────────────────────────────────────────
+
+    // ────────────────────────────────────────────
+    // Shared drives (#391)
+    // ────────────────────────────────────────────
+
+    describe('sharedDrives config option (#391)', () => {
+        const FILES_ENDPOINT = 'https://www.googleapis.com/drive/v3/files'
+        const DRIVES_ENDPOINT = 'https://www.googleapis.com/drive/v3/drives'
+        const SHARED_DRIVE_LIST_PARAMS = [
+            'corpora',
+            'includeItemsFromAllDrives',
+            'supportsAllDrives',
+        ] as const
+
+        function configureWithSharedDrives(enabled: boolean): void {
+            plugin.configure({
+                apiKey: 'test-api-key',
+                appId: 'test-app-id',
+                clientId: 'test-client-id',
+                sharedDrives: enabled,
+            })
+            plugin.setAccessToken('valid-token', 3600)
+        }
+
+        it('omits every shared-drive param from loadFiles when the option is unset, so an existing picker keeps its My-Drive-only shape', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.loadFiles()
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+        })
+
+        it('omits every shared-drive param from loadFiles when the option is explicitly false', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(false)
+
+            await plugin.loadFiles()
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+        })
+
+        it('returns only the real My Drive children at the root when the option is off — no shared drives and no Shared-with-me entry', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchSequence([
+                    {
+                        files: [
+                            {
+                                id: 'f1',
+                                name: 'own.txt',
+                                mimeType: 'text/plain',
+                            },
+                        ],
+                    },
+                ]),
+            )
+            plugin.setAccessToken('valid-token', 3600)
+
+            const result = await plugin.loadFiles()
+
+            expect(result.files.map(f => f.id)).toEqual(['f1'])
+        })
+
+        it('sends corpora=allDrives with both all-drives flags on loadFiles when the option is on', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }, { drives: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles()
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(params.get('includeItemsFromAllDrives')).toBe('true')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('keeps the folder query and the api key alongside the shared-drive params on loadFiles', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles('folder-in-a-shared-drive')
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('q')).toContain(
+                "'folder-in-a-shared-drive' in parents",
+            )
+            expect(params.get('key')).toBe('test-api-key')
+            expect(params.get('corpora')).toBe('allDrives')
+        })
+
+        it('sends the shared-drive params on the paginated loadMoreFiles call too, so page 2 does not narrow back to My Drive', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({
+                    folderId: 'shared-folder',
+                    pageToken: 'page-2-token',
+                }),
+            )
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('pageToken')).toBe('page-2-token')
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(params.get('includeItemsFromAllDrives')).toBe('true')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('omits the shared-drive params from loadMoreFiles when the option is off, and asks for no drives list', async () => {
+            const fetchMock = mockFetchResponse({ files: [] })
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({ folderId: 'root', pageToken: 'p2' }),
+            )
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            for (const name of SHARED_DRIVE_LIST_PARAMS) {
+                expect(params.has(name)).toBe(false)
+            }
+            expect(params.get('q')).toContain("'root' in parents")
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+        })
+
+        it('sends supportsAllDrives when downloading a file so a listed shared-drive file does not 404 on fetch', async () => {
+            const fetchMock = mockFetchResponse('file-content')
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.downloadFile(makeDriveFile({ id: 'shared-file-id' }))
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('alt')).toBe('media')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+
+        it('omits supportsAllDrives from the download when the option is off, and never sends the list-only params there', async () => {
+            const fetchMock = mockFetchResponse('file-content')
+            vi.stubGlobal('fetch', fetchMock)
+            plugin.setAccessToken('valid-token', 3600)
+
+            await plugin.downloadFile(makeDriveFile({ id: 'my-drive-file-id' }))
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.has('supportsAllDrives')).toBe(false)
+            expect(params.has('corpora')).toBe(false)
+            expect(params.has('includeItemsFromAllDrives')).toBe(false)
+        })
+
+        // ── On: the shared drives are reachable, not merely queryable ──
+
+        it('appends each shared drive to the root listing as a navigable folder, after the My Drive children', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchSequence([
+                    {
+                        files: [
+                            {
+                                id: 'f1',
+                                name: 'own.txt',
+                                mimeType: 'text/plain',
+                            },
+                        ],
+                    },
+                    {
+                        drives: [
+                            { id: 'drive-a', name: 'Team A' },
+                            { id: 'drive-b', name: 'Team B' },
+                        ],
+                    },
+                ]),
+            )
+            configureWithSharedDrives(true)
+
+            const result = await plugin.loadFiles()
+
+            expect(result.files.map(f => f.id)).toEqual([
+                'f1',
+                'drive-a',
+                'drive-b',
+                SHARED_WITH_ME_FOLDER_ID,
+            ])
+            const teamA = result.files[1]!
+            expect(teamA.name).toBe('Team A')
+            expect(teamA.isFolder).toBe(true)
+            expect(teamA.mimeType).toBe('folder')
+            expect(teamA.thumbnail).toBeUndefined()
+        })
+
+        it('asks drives.list for id and name a hundred at a time', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }, { drives: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadFiles()
+
+            const params = firstRequestTo(fetchMock, DRIVES_ENDPOINT)
+            expect(params.get('pageSize')).toBe('100')
+            expect(params.get('fields')).toBe('nextPageToken,drives(id,name)')
+            expect(params.get('key')).toBe('test-api-key')
+        })
+
+        it('follows drives.list pagination so a user in more shared drives than one page still sees them all', async () => {
+            const fetchMock = mockFetchSequence([
+                { files: [] },
+                {
+                    drives: [{ id: 'drive-a', name: 'Team A' }],
+                    nextPageToken: 'drives-page-2',
+                },
+                { drives: [{ id: 'drive-b', name: 'Team B' }] },
+            ])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            const result = await plugin.loadFiles()
+
+            const driveCalls = requestsTo(fetchMock, DRIVES_ENDPOINT)
+            expect(driveCalls).toHaveLength(2)
+            expect(driveCalls[0]!.has('pageToken')).toBe(false)
+            expect(driveCalls[1]!.get('pageToken')).toBe('drives-page-2')
+            expect(result.files.map(f => f.id)).toEqual([
+                'drive-a',
+                'drive-b',
+                SHARED_WITH_ME_FOLDER_ID,
+            ])
+        })
+
+        it('lists a shared drive by the ordinary parent query once the user navigates into it, and asks for no second drives list', async () => {
+            const fetchMock = mockFetchSequence([
+                {
+                    files: [
+                        {
+                            id: 'v1',
+                            name: 'launch.mp4',
+                            mimeType: 'video/mp4',
+                        },
+                    ],
+                },
+            ])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            const result = await plugin.loadFiles('drive-a')
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('q')).toBe(
+                "'drive-a' in parents and trashed = false",
+            )
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(params.get('includeItemsFromAllDrives')).toBe('true')
+            expect(params.get('supportsAllDrives')).toBe('true')
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+            expect(result.files.map(f => f.name)).toEqual(['launch.mp4'])
+        })
+
+        it('paginates a shared drive by its drive id, and does not re-append the shared drives to the continuation page', async () => {
+            const fetchMock = mockFetchSequence([
+                {
+                    files: [
+                        {
+                            id: 'v2',
+                            name: 'teaser.mp4',
+                            mimeType: 'video/mp4',
+                        },
+                    ],
+                },
+            ])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            const page = await plugin.loadMoreFiles(
+                JSON.stringify({
+                    folderId: 'drive-a',
+                    pageToken: 'drive-a-page-2',
+                }),
+            )
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('q')).toBe(
+                "'drive-a' in parents and trashed = false",
+            )
+            expect(params.get('pageToken')).toBe('drive-a-page-2')
+            expect(page.files.map(f => f.id)).toEqual(['v2'])
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+        })
+
+        it('carries the root cursor so a My Drive root with more pages still paginates with the option on', async () => {
+            vi.stubGlobal(
+                'fetch',
+                mockFetchSequence([
+                    { files: [], nextPageToken: 'root-page-2' },
+                    { drives: [] },
+                ]),
+            )
+            configureWithSharedDrives(true)
+
+            const result = await plugin.loadFiles()
+
+            expect(result.hasMore).toBe(true)
+            expect(result.cursor).toBe(
+                JSON.stringify({
+                    folderId: 'root',
+                    pageToken: 'root-page-2',
+                }),
+            )
+        })
+
+        // ── On: the Shared-with-me virtual folder ──
+
+        it('queries sharedWithMe rather than a parent for the virtual Shared-with-me folder, because Drive has no such parent', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            const result = await plugin.loadFiles(SHARED_WITH_ME_FOLDER_ID)
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('q')).toBe(
+                'sharedWithMe = true and trashed = false',
+            )
+            expect(params.get('q')).not.toContain('in parents')
+            expect(params.get('corpora')).toBe('allDrives')
+            expect(result.folderId).toBe(SHARED_WITH_ME_FOLDER_ID)
+            expect(requestsTo(fetchMock, DRIVES_ENDPOINT)).toHaveLength(0)
+        })
+
+        it('keeps the sharedWithMe query on page 2 of that folder, instead of asking for a parent that matches nothing', async () => {
+            const fetchMock = mockFetchSequence([{ files: [] }])
+            vi.stubGlobal('fetch', fetchMock)
+            configureWithSharedDrives(true)
+
+            await plugin.loadMoreFiles(
+                JSON.stringify({
+                    folderId: SHARED_WITH_ME_FOLDER_ID,
+                    pageToken: 'shared-page-2',
+                }),
+            )
+
+            const params = firstRequestTo(fetchMock, FILES_ENDPOINT)
+            expect(params.get('q')).toBe(
+                'sharedWithMe = true and trashed = false',
+            )
+            expect(params.get('pageToken')).toBe('shared-page-2')
+            expect(params.get('supportsAllDrives')).toBe('true')
+        })
+    })
 
     describe('downloadFiles() - regular files', () => {
         beforeEach(() => {

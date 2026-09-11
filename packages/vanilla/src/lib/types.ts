@@ -46,7 +46,13 @@ export interface UploaderSnapshot {
 
 /** Cloud-drive config shape accepted by createUploader (mirrors svelte UploaderProps.cloudDrives). */
 export interface VanillaCloudDrives {
-    googleDrive?: { clientId: string; apiKey: string; appId: string }
+    googleDrive?: {
+        clientId: string
+        apiKey: string
+        appId: string
+        /** Reach shared drives, not just My Drive (#391). Default false. */
+        sharedDrives?: boolean
+    }
     oneDrive?: { clientId: string; redirectUri?: string }
     dropbox?: { clientId: string; redirectUri?: string }
     box?: { clientId: string; redirectUri?: string }
