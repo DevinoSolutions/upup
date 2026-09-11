@@ -92,6 +92,12 @@ fumadocs-core headless; there is no longer a standalone docs app), `e2e-test`
 svelte/vanilla/angular/preact` (per-framework style-parity references),
 `next-example`, `mastra` (agents/tools for the interactive playground).
 
+Name reservation (`sdk/`): `@useupup/sdk@0.0.1`, a parked placeholder whose only
+job is to hold the name on npm. It is NOT a workspace package and NOT part of
+the changesets release — it publishes by hand through `publish-sdk.yml`
+(`workflow_dispatch` only, so the release flow can never fire it as a side
+effect). Touching it, or giving it real contents, needs a maintainer decision.
+
 ## Non-negotiable principles
 
 1. **React is the visual canon.** UI changes land in `@useupup/react` first; the
@@ -146,7 +152,7 @@ pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (all 9 publishable packages' src, .ts/.tsx ONLY — .vue/.svelte SFC + .css are NOT covered; one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
-pnpm run lint           # eslint flat-config: 9 @useupup/* packages + 3 apps (playground, landing, docs); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
+pnpm run lint           # eslint flat-config: 9 @useupup/* packages + 2 apps (playground, landing); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
 pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
 pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
 pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard

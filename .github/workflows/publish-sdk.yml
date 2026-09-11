@@ -1,8 +1,10 @@
 name: Publish npm placeholder
 
-# Manual only, by design. This repo's own release flow publishes the root `upup` package, so
-# this workflow deliberately does NOT trigger on `release` — it must never
-# fire as a side effect of that flow.
+# Manual only, by design. This repo's own release flow is changesets, and it
+# publishes the nine `@useupup/*` workspace packages — never `sdk/`. (The root
+# `upup` package is `private: true` and is never published at all.) So this
+# workflow deliberately does NOT trigger on `release` — it must never fire as a
+# side effect of that flow.
 on:
     workflow_dispatch:
 
