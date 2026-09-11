@@ -375,6 +375,7 @@ export default memo(function FileList() {
                         {uploadErrorCode
                             ? t(tr.uploadFailedWithCode, {
                                   code: uploadErrorCode,
+                                  message: uploadError,
                               })
                             : t(tr.uploadFailed, { message: uploadError })}
                     </p>

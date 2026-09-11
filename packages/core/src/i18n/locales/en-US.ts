@@ -171,7 +171,8 @@ export const enUS: LocaleBundle = {
             invalidFileType: 'File type is not allowed',
             storageQuotaExceeded: 'Storage quota has been exceeded',
             signedUrlGenerationFailed: 'Failed to generate signed upload URL',
-            uploadFailedWithCode: 'Upload failed with error code: {code}',
+            uploadFailedWithCode:
+                'Upload failed with error code {code}: {message}',
             uploadFailed: 'Upload failed: {message}',
             dropboxSessionExpired:
                 'Your Dropbox session has expired. Please re-authenticate to continue.',

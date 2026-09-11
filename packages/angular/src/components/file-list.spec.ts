@@ -114,7 +114,8 @@ function makeStoreMock(files: Map<string, UploadFile>) {
         clickToPreview: 'Click to preview',
         loading: 'Loading…',
         previewError: 'Error:',
-        uploadFailedWithCode: 'Upload failed with error code: {{code}}',
+        uploadFailedWithCode:
+            'Upload failed with error code {{code}}: {{message}}',
         uploadFailed: 'Upload failed: {{message}}',
         zeroBytes: '0 B',
         bytes: 'B',

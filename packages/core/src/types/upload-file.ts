@@ -12,6 +12,16 @@ export type UploadFileMetadata = {
     processedSize?: number
     compressed?: boolean
     exifStripped?: boolean
+    /**
+     * Set when `stripExifData` was requested but deliberately skipped, so the
+     * file reached storage with its original metadata intact. Canvas has no
+     * animated encoder, and animated WebP/APNG both carry EXIF — a
+     * privacy-sensitive host needs to see that the strip did not happen so it
+     * can branch server-side. Absent means nothing was skipped.
+     */
+    metadataStripSkipped?: boolean
+    /** Why `metadataStripSkipped` was set. */
+    metadataStripSkippedReason?: 'animated-image'
     heicConverted?: boolean
 }
 

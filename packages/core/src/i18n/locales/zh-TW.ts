@@ -149,7 +149,7 @@ export const zhTW: LocaleBundle = {
             invalidFileType: '檔案類型不被允許',
             storageQuotaExceeded: '儲存配額已超出',
             signedUrlGenerationFailed: '生成簽名上傳 URL 失敗',
-            uploadFailedWithCode: '上傳失敗，錯誤代碼：{code}',
+            uploadFailedWithCode: '上傳失敗，錯誤代碼 {code}：{message}',
             uploadFailed: '上傳失敗：{message}',
             dropboxSessionExpired:
                 '您的 Dropbox 會話已過期。請重新驗證以繼續。',

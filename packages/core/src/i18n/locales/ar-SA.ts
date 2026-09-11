@@ -221,7 +221,7 @@ export const arSA: LocaleBundle = {
             signedUrlGenerationFailed:
                 '\u0641\u0634\u0644 \u0625\u0646\u0634\u0627\u0621 \u0631\u0627\u0628\u0637 \u0627\u0644\u0631\u0641\u0639 \u0627\u0644\u0645\u0648\u0642\u0639',
             uploadFailedWithCode:
-                '\u0641\u0634\u0644 \u0627\u0644\u0631\u0641\u0639 \u0628\u0631\u0645\u0632 \u0627\u0644\u062E\u0637\u0623: {code}',
+                '\u0641\u0634\u0644 \u0627\u0644\u0631\u0641\u0639 \u0628\u0631\u0645\u0632 \u0627\u0644\u062E\u0637\u0623 {code}: {message}',
             uploadFailed:
                 '\u0641\u0634\u0644 \u0627\u0644\u0631\u0641\u0639: {message}',
             dropboxSessionExpired:

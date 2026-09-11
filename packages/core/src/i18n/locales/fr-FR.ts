@@ -186,7 +186,7 @@ export const frFR: LocaleBundle = {
             signedUrlGenerationFailed:
                 "\u00C9chec de la g\u00E9n\u00E9ration de l'URL sign\u00E9e",
             uploadFailedWithCode:
-                "\u00C9chec du t\u00E9l\u00E9versement avec le code d'erreur : {code}",
+                "\u00C9chec du t\u00E9l\u00E9versement avec le code d'erreur {code} : {message}",
             uploadFailed: '\u00C9chec du t\u00E9l\u00E9versement : {message}',
             dropboxSessionExpired:
                 'Votre session Dropbox a expir\u00E9. Veuillez vous r\u00E9authentifier.',

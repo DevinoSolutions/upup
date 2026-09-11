@@ -131,6 +131,31 @@ you want compression anyway, that is the cost of the privacy guarantee; if you
 only care about metadata, `stripExifData` alone is enough. Stripped files are
 marked with `exifStripped: true`, alongside `originalSize` and `processedSize`.
 
+### Detecting a skipped strip
+
+The skip above is silent in the upload itself, which matters when the point of
+`stripExifData` is a privacy guarantee — animated WebP and APNG both carry EXIF,
+so those files reach your storage with the metadata you asked to remove. The
+file records it:
+
+```tsx
+<UpupUploader
+    uploadEndpoint="/api/upload-token"
+    stripExifData
+    onFileUploadComplete={(file, key) => {
+        if (file.metadata.metadataStripSkipped) {
+            // metadataStripSkippedReason === 'animated-image'
+            queueServerSideStrip(key)
+        }
+    }}
+/>
+```
+
+`metadataStripSkipped` is set only by the `exif` step, and only when
+`stripExifData` asked for a strip that did not happen. A file whose EXIF really
+was removed carries `exifStripped: true` and no skip marker. `imageCompression`
+skipping an animated image does not set it — nothing was asked to be removed.
+
 ## Thumbnails
 
 `thumbnailGenerator` produces a small preview alongside each image. Unlike the

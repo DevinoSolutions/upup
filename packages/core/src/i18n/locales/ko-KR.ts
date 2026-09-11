@@ -154,7 +154,7 @@ export const koKR: LocaleBundle = {
             invalidFileType: '파일 유형이 허용되지 않습니다',
             storageQuotaExceeded: '저장소 할당량을 초과했습니다',
             signedUrlGenerationFailed: '서명된 업로드 URL 생성에 실패했습니다',
-            uploadFailedWithCode: '업로드 실패, 오류 코드: {code}',
+            uploadFailedWithCode: '업로드 실패, 오류 코드 {code}: {message}',
             uploadFailed: '업로드 실패: {message}',
             dropboxSessionExpired:
                 'Dropbox 세션이 만료되었습니다. 계속하려면 다시 인증하세요.',

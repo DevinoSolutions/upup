@@ -182,7 +182,7 @@ export const esES: LocaleBundle = {
             signedUrlGenerationFailed:
                 'Error al generar la URL firmada de subida',
             uploadFailedWithCode:
-                'La subida fall\u00F3 con el c\u00F3digo de error: {code}',
+                'La subida fall\u00F3 con el c\u00F3digo de error {code}: {message}',
             uploadFailed: 'La subida fall\u00F3: {message}',
             dropboxSessionExpired:
                 'Su sesi\u00F3n de Dropbox ha expirado. Por favor, vuelva a autenticarse.',

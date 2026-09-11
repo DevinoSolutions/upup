@@ -579,7 +579,7 @@ export class FileListComponent implements AfterViewInit, OnDestroy {
         const code = this.store.uploadErrorCode()
         const message = this.store.uploadError() ?? ''
         return code
-            ? t(tr.uploadFailedWithCode, { code })
+            ? t(tr.uploadFailedWithCode, { code, message })
             : t(tr.uploadFailed, { message })
     }
 

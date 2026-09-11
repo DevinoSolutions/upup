@@ -356,8 +356,11 @@ export function flattenTranslatorToUiTranslations(
         invalidFileType: tr('errors.invalidFileType'),
         storageQuotaExceeded: tr('errors.storageQuotaExceeded'),
         signedUrlGenerationFailed: tr('errors.signedUrlGenerationFailed'),
+        // Two slots (#367 item 2): the host's own sentence rides along with the
+        // machine code, and each locale decides where it goes.
         uploadFailedWithCode: tr('errors.uploadFailedWithCode', {
             code: '{{code}}',
+            message: '{{message}}',
         }),
         uploadFailed: tr('errors.uploadFailed', { message: '{{message}}' }),
         dropboxSessionExpired: tr('errors.dropboxSessionExpired'),
