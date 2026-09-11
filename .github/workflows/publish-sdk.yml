@@ -4,27 +4,27 @@ name: Publish npm placeholder
 # this workflow deliberately does NOT trigger on `release` — it must never
 # fire as a side effect of that flow.
 on:
-  workflow_dispatch:
+    workflow_dispatch:
 
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: sdk
-    permissions:
-      contents: read
-      # Required for npm trusted publishing (OIDC). No NPM_TOKEN secret is used.
-      id-token: write
-    steps:
-      - uses: actions/checkout@v7
+    publish:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: sdk
+        permissions:
+            contents: read
+            # Required for npm trusted publishing (OIDC). No NPM_TOKEN secret is used.
+            id-token: write
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version: 22
+                  registry-url: https://registry.npmjs.org
 
-      # Trusted publishing requires npm >= 11.5.1; setup-node ships an older npm.
-      - run: npm install -g npm@latest
+            # Trusted publishing requires npm >= 11.5.1; setup-node ships an older npm.
+            - run: npm install -g npm@latest
 
-      - run: npm publish --access public
+            - run: npm publish --access public
