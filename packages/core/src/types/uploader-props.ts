@@ -75,7 +75,13 @@ export type UploaderBaseProps = {
     /** Cloud drive configurations. */
     cloudDrives?:
         | {
-              googleDrive?: { clientId: string; apiKey: string; appId: string }
+              googleDrive?: {
+                  clientId: string
+                  apiKey: string
+                  appId: string
+                  /** Reach shared drives, not just My Drive (#391). Default false. */
+                  sharedDrives?: boolean
+              }
               oneDrive?: { clientId: string; redirectUri?: string }
               dropbox?: { clientId: string; redirectUri?: string }
               box?: { clientId: string; redirectUri?: string }
