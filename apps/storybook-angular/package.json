@@ -1,6 +1,6 @@
 {
     "name": "@useupup/storybook-angular",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "private": true,
     "scripts": {
         "storybook": "ng run storybook-angular:storybook",

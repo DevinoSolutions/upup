@@ -1,5 +1,51 @@
 # @useupup/vue
 
+## 3.3.1
+
+### Patch Changes
+
+- [#397](https://github.com/DevinoSolutions/upup/pull/397) [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default panel now shows your error message next to the machine code, and a
+  skipped EXIF strip leaves a marker on the file (#367 items 2 and 4).
+
+    A failure carrying a code used to render as `uploadFailedWithCode`, which
+    interpolated the code and nothing else — so an endpoint that returned a useful
+    sentence watched it disappear between `onError` and the panel. The key now has a
+    second `{message}` slot carrying the error's own message, added to all nine
+    locale bundles so translators control placement (override the key to reorder the
+    slots, drop the code, or show only your own wording). All six framework panels
+    pass both values, and the message is rendered as text, never as markup.
+
+    `stripExifData` skips animated GIF/WebP/APNG because canvas has no animated
+    encoder, which means an animated WebP or APNG reaches storage with the EXIF you
+    asked to remove. The `exif` step now records that on the file:
+    `metadata.metadataStripSkipped === true` with
+    `metadata.metadataStripSkippedReason === 'animated-image'`. A file whose EXIF
+    really was stripped carries `exifStripped: true` and no marker, and
+    `imageCompression` skipping an animated image does not set it — nothing was asked
+    to be removed. No new event, no new option.
+
+- [#398](https://github.com/DevinoSolutions/upup/pull/398) [`32ae800`](https://github.com/DevinoSolutions/upup/commit/32ae80094b21ea7064a5061d14d652b0e8bc7d82) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The compact file row shows its progress bar as soon as a run starts (#352), and
+  the branding logo assets are ~92% smaller (#229).
+
+    `ProgressBar` already renders whenever the run is active or progress is
+    non-zero, but every framework's compact `FileRow` wrapped it in a second
+    `!!progress` gate. That outer gate won whenever it was falsy, so the row stayed
+    blank between "upload started" and "first byte acknowledged" while the grid
+    tile, the single-file hero and the list footer all showed their bars. The
+    redundant wrapper is removed in all five row templates; the self-gate inside
+    `ProgressBar` is now the only one. No change at idle — with no progress and no
+    active run the bar is still absent, so the parity fixtures do not move.
+
+    The four base64 PNG logo assets in `src/assets/logos.ts` are re-exported at
+    122x26, twice the fixed 61x13 CSS-pixel box every framework renders them in.
+    They were shipping at up to 1905x580 — roughly 30x the rendered area. Each
+    package's copy of that file drops from 167 KB to 13 KB, about 109 KB gzipped off
+    every UI bundle, with the rendered appearance unchanged. The assets stay PNG:
+    there is no vector source for them in the repo.
+
+- Updated dependencies [[`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce), [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf), [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718), [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036)]:
+    - @useupup/core@3.3.1
+
 ## 3.3.0
 
 ### Patch Changes
