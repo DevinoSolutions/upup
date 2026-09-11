@@ -8,6 +8,7 @@
 // from ./oauth (acyclic DAG).
 
 import { UpupNetworkError } from '@useupup/core'
+import { escapeDriveQueryValue } from '@useupup/core/internal'
 import { type OAuthProvider } from './oauth'
 
 export type DriveFile = {
@@ -79,12 +80,18 @@ async function driveFetch(
     return res
 }
 
-/** Escape a value for use inside a Google Drive API query string literal (single-quoted).
- * Backslashes must be escaped before quotes to prevent query injection (audit S5).
- * Twin: scripts/drive-sandbox/seed.mjs escapeGDriveQueryValue — keep in sync. */
-export function escapeDriveQueryValue(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-}
+/**
+ * Escape a value for use inside a Google Drive API query string literal
+ * (single-quoted), preventing query injection (audit S5).
+ *
+ * The implementation moved to `@useupup/core/internal` so the client-mode
+ * `GoogleDrivePlugin` uses the SAME escaper instead of a second copy that could
+ * drift — it had none at all and interpolated folder ids raw. Re-exported here
+ * because this module is where drive-query callers look for it, and the query
+ * builders below call it. It is IMPORTED as well as re-exported: `export … from`
+ * alone re-exports without binding the name in this module's own scope.
+ */
+export { escapeDriveQueryValue }
 
 /**
  * Escape a user value for an OData string literal (Microsoft Graph). OData
@@ -117,7 +124,10 @@ async function listGoogleDriveFiles(
     accessToken: string,
     opts: { folderId?: string; search?: string },
 ): Promise<DriveFile[]> {
-    const parent = opts.folderId ?? 'root'
+    // Both halves are escaped. `search` always was; `folderId` was not, and it
+    // arrives from the client the same way `search` does — so a quote in it
+    // closed the literal exactly as one in `search` would have.
+    const parent = escapeDriveQueryValue(opts.folderId ?? 'root')
     const q = opts.search
         ? `name contains '${escapeDriveQueryValue(opts.search)}' and trashed = false`
         : `'${parent}' in parents and trashed = false`

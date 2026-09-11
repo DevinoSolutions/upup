@@ -8,6 +8,7 @@
 // Set them per app in an untracked env file (e.g. apps/storybook-react/.env.local;
 // see the matching .env.example):
 //   VITE_GOOGLE_CLIENT_ID, VITE_GOOGLE_API_KEY, VITE_GOOGLE_APP_ID
+//   VITE_GOOGLE_SHARED_DRIVES ('true' to browse shared drives + Shared with me)
 //   VITE_ONEDRIVE_CLIENT_ID, VITE_ONEDRIVE_REDIRECT_URI
 //   VITE_DROPBOX_CLIENT_ID,  VITE_DROPBOX_REDIRECT_URI
 //   VITE_BOX_CLIENT_ID,      VITE_BOX_REDIRECT_URI
@@ -18,7 +19,13 @@
 // sign-in without any code change.
 
 export type CloudDrivesConfig = {
-    googleDrive?: { clientId: string; apiKey: string; appId: string }
+    googleDrive?: {
+        clientId: string
+        apiKey: string
+        appId: string
+        /** Reach shared drives, not just My Drive (#391). Default false. */
+        sharedDrives?: boolean
+    }
     oneDrive?: { clientId: string; redirectUri?: string }
     dropbox?: { clientId: string; redirectUri?: string }
     box?: { clientId: string; redirectUri?: string }
@@ -42,6 +49,9 @@ export function buildCloudDrives(
             clientId: read(env, 'VITE_GOOGLE_CLIENT_ID'),
             apiKey: read(env, 'VITE_GOOGLE_API_KEY'),
             appId: read(env, 'VITE_GOOGLE_APP_ID'),
+            // Off unless the env says the exact string 'true', mirroring the
+            // prop's own default, so a story only widens the corpus when asked.
+            sharedDrives: read(env, 'VITE_GOOGLE_SHARED_DRIVES') === 'true',
         },
         oneDrive: {
             clientId: read(env, 'VITE_ONEDRIVE_CLIENT_ID'),

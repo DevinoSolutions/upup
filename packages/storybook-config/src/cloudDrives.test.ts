@@ -13,12 +13,37 @@ describe('buildCloudDrives', () => {
             clientId: 'gid',
             apiKey: 'gkey',
             appId: 'gapp',
+            sharedDrives: false,
         })
+    })
+
+    it('leaves sharedDrives off unless the env var says exactly "true", mirroring the prop default', () => {
+        expect(buildCloudDrives({}).googleDrive?.sharedDrives).toBe(false)
+        expect(
+            buildCloudDrives({ VITE_GOOGLE_SHARED_DRIVES: 'false' }).googleDrive
+                ?.sharedDrives,
+        ).toBe(false)
+        expect(
+            buildCloudDrives({ VITE_GOOGLE_SHARED_DRIVES: '1' }).googleDrive
+                ?.sharedDrives,
+        ).toBe(false)
+    })
+
+    it('turns sharedDrives on when the env var is "true", so a story can browse shared drives', () => {
+        expect(
+            buildCloudDrives({ VITE_GOOGLE_SHARED_DRIVES: ' true ' })
+                .googleDrive?.sharedDrives,
+        ).toBe(true)
     })
 
     it('defaults every provider to empty strings when env is bare (so the auth screen still renders)', () => {
         const cd = buildCloudDrives({})
-        expect(cd.googleDrive).toEqual({ clientId: '', apiKey: '', appId: '' })
+        expect(cd.googleDrive).toEqual({
+            clientId: '',
+            apiKey: '',
+            appId: '',
+            sharedDrives: false,
+        })
         expect(cd.oneDrive?.clientId).toBe('')
         expect(cd.dropbox?.clientId).toBe('')
         expect(cd.box?.clientId).toBe('')
