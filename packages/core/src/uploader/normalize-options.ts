@@ -5,6 +5,7 @@ import {
     getDir,
 } from '../orchestrator/helpers'
 import { resolveAccept } from '../utils/accept-presets'
+import { filterDefaultCaptureSources } from './capture-source-filter'
 import { createTranslator } from '../i18n/create-translator'
 import { enUS } from '../i18n/locales/en-US'
 import { resolveLocaleBundle } from '../i18n/resolve-locale'
@@ -29,19 +30,21 @@ export function normalizeUploaderOptions(
         (options.allowedFileTypes as string | string[] | undefined) ?? '*'
     const mini = options.mini ?? false
     const animations = options.animations ?? true
+    const accept = resolveAccept(
+        typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
+    )
+    // #340: an EXPLICIT sources array is honored verbatim; the DEFAULT set drops
+    // capture sources whose output can never satisfy `accept`.
     const resolvedSources = options.sources
         ? (options.sources
               .map(s => normalizeSource(s))
               .filter(Boolean) as FileSource[])
-        : DEFAULT_SOURCES
+        : filterDefaultCaptureSources(DEFAULT_SOURCES, accept)
     const resolvedLimit = options.maxFiles ?? 10
     const resolvedMode =
         options.mode ??
         (options.serverUrl && !options.uploadEndpoint ? 'server' : 'client')
     const maxFileSize = options.maxFileSize ?? DEFAULT_MAX_FILE_SIZE
-    const accept = resolveAccept(
-        typeof acceptProp === 'string' ? acceptProp : acceptProp.join(','),
-    )
     const limit = mini ? 1 : Math.max(resolvedLimit, 1)
     const multiple = mini ? false : limit > 1
     const folderUploadAllowDrop = options.folderUpload?.allowDrop ?? false

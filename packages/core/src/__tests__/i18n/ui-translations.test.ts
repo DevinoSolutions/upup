@@ -59,6 +59,75 @@ describe('flattenTranslatorToUiTranslations — count-based plurals', () => {
 })
 
 /**
+ * #367 item 2: the code-bearing upload-failure string used to interpolate the
+ * machine code and nothing else, so the host's own sentence never reached the
+ * panel. It now carries BOTH slots and each locale decides where they go — so
+ * the guard is per-bundle, not just en-US.
+ */
+describe('uploadFailedWithCode carries a message slot in every locale', () => {
+    const allBundles = [
+        ['en-US', enUS],
+        ['ar-SA', arSA],
+        ['de-DE', deDE],
+        ['es-ES', esES],
+        ['fr-FR', frFR],
+        ['ja-JP', jaJP],
+        ['ko-KR', koKR],
+        ['zh-CN', zhCN],
+        ['zh-TW', zhTW],
+    ] as const
+
+    it.each(allBundles)('%s bakes both slots', (_code, bundle) => {
+        const tr = flattenTranslatorToUiTranslations(
+            createTranslator({ bundle }),
+        )
+        expect(tr.uploadFailedWithCode).toContain('{{code}}')
+        expect(tr.uploadFailedWithCode).toContain('{{message}}')
+    })
+
+    it.each(allBundles)('%s interpolates both slots', (_code, bundle) => {
+        const tr = flattenTranslatorToUiTranslations(
+            createTranslator({ bundle }),
+        )
+        const rendered = t(tr.uploadFailedWithCode, {
+            code: 'QUOTA_EXCEEDED',
+            message: 'Bucket is full',
+        })
+        expect(rendered).toContain('QUOTA_EXCEEDED')
+        expect(rendered).toContain('Bucket is full')
+        expect(rendered).not.toContain('{{')
+    })
+
+    it('en-US reads naturally with both values filled in', () => {
+        const tr = flattenTranslatorToUiTranslations(
+            createTranslator({ bundle: enUS }),
+        )
+        expect(
+            t(tr.uploadFailedWithCode, {
+                code: 'PRESIGN_FAILED',
+                message: 'Presign request failed: 502 Bad Gateway',
+            }),
+        ).toBe(
+            'Upload failed with error code PRESIGN_FAILED: Presign request failed: 502 Bad Gateway',
+        )
+    })
+
+    it('a host override of the key controls slot placement', () => {
+        const tr = flattenTranslatorToUiTranslations(
+            createTranslator({
+                bundle: enUS,
+                overrides: {
+                    errors: { uploadFailedWithCode: '{message} [{code}]' },
+                },
+            }),
+        )
+        expect(t(tr.uploadFailedWithCode, { code: 'X', message: 'nope' })).toBe(
+            'nope [X]',
+        )
+    })
+})
+
+/**
  * Contract guard across ALL shipped locales. `countPluralOther` assumes the
  * count is the first `\p{Nd}+` run in every count-bearing `_other` form, so it
  * swaps exactly that run for `{{count}}`. A future locale that prefixes a

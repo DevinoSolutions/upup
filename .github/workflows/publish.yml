@@ -35,7 +35,7 @@ jobs:
                   # (git shortlog over the range) and the previous v-tag from them.
                   fetch-depth: 0
 
-            - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v4.4.0
+            - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
 
             - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
               with:
@@ -124,16 +124,21 @@ jobs:
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run smoke:packages
 
-            # Auth: OIDC trusted publishing ONLY — every @useupup package has its
-            # trusted publisher configured on npmjs.com (repo DevinoSolutions/upup,
-            # workflow publish.yml, configured 2026-08-01). With id-token:write
-            # (above) + Node >=22.14 + npm >=11.5.1, npm exchanges the GitHub OIDC
-            # token automatically; no registry secret, no registry-url .npmrc (a
-            # token-referencing .npmrc would preempt the OIDC path). The npm
-            # upgrade MUST come after this setup-node: switching Node replaces the
-            # active npm with that Node's bundled version, which is below the
-            # trusted-publishing floor — upgrading before the switch is a no-op
-            # (that exact ordering bug broke the first 3.1.0 publish attempt).
+            # Auth: OIDC trusted publishing ONLY — id-token:write (above) + Node
+            # >=22.14 + npm >=11.5.1 let npm exchange the GitHub OIDC token
+            # automatically; no registry secret, no registry-url .npmrc (a
+            # token-referencing .npmrc would preempt the OIDC path).
+            # PRECONDITION: every @useupup package must have an npm trusted
+            # publisher configured on npmjs.com (GitHub Actions, repo
+            # DevinoSolutions/upup, workflow publish.yml). A package without one
+            # fails its own publish and therefore this job — but its version
+            # number is NOT burned, so the fix is to add the publisher and
+            # re-run. Verify each package's npm "access" page before merging a
+            # Version Packages PR. The npm upgrade MUST come after this
+            # setup-node: switching Node replaces the active npm with that
+            # Node's bundled version, which is below the trusted-publishing
+            # floor — upgrading before the switch is a no-op (that exact
+            # ordering bug broke the first 3.1.0 publish attempt).
             - name: Set up Node 22 for OIDC publish
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

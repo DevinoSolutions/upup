@@ -54,7 +54,8 @@ vi.mock('../src/context/UploaderContext', () => ({
             pauseUpload: 'Pause',
             cancel: 'Cancel',
             uploadFailed: 'Upload failed: {{message}}',
-            uploadFailedWithCode: 'Upload failed with error code: {{code}}',
+            uploadFailedWithCode:
+                'Upload failed with error code {{code}}: {{message}}',
         },
     }),
     useUploaderUploadControls: () => ({
@@ -157,5 +158,28 @@ describe('FileList — default upload-error slot (P4/C10)', () => {
         expect(el).not.toBeNull()
         expect(el?.getAttribute('title')).toBe('SignatureDoesNotMatch')
         expect(el?.textContent).toContain('SignatureDoesNotMatch')
+    })
+
+    // #367 item 2: the code used to be the ONLY thing the panel showed, so a
+    // host that returned a useful sentence saw it vanish from the UI.
+    it('renders the host-supplied sentence alongside the code', () => {
+        _uploadStatus = 'FAILED'
+        _uploadError = 'Your plan allows 2 GB; this upload needs 3 GB.'
+        _uploadErrorCode = 'QUOTA_EXCEEDED_CUSTOM'
+        const { container } = render(<FileList />)
+        const el = container.querySelector('[data-testid="upup-upload-error"]')
+        expect(el?.textContent).toBe(
+            'Upload failed with error code QUOTA_EXCEEDED_CUSTOM: Your plan allows 2 GB; this upload needs 3 GB.',
+        )
+    })
+
+    it('renders a markup-looking host message as text, never as HTML', () => {
+        _uploadStatus = 'FAILED'
+        _uploadError = '<img src=x onerror="alert(1)">denied'
+        _uploadErrorCode = 'BAD_REQUEST_CUSTOM'
+        const { container } = render(<FileList />)
+        const el = container.querySelector('[data-testid="upup-upload-error"]')
+        expect(el?.querySelector('img')).toBeNull()
+        expect(el?.textContent).toContain('<img src=x onerror="alert(1)">')
     })
 })

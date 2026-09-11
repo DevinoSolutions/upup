@@ -163,14 +163,15 @@ export default memo(function FileRow({ file, index = 0 }: Props) {
                 >
                     {formatFileSize(file.size, tr)}
                 </div>
-                {!!progress && (
-                    <ProgressBar
-                        className="upup-mt-1"
-                        progressBarClassName="upup-rounded"
-                        progress={progress}
-                        showValue
-                    />
-                )}
+                {/* ProgressBar self-gates on `progress || isUploadActive` — an
+                    outer `!!progress` wrapper would hide the bar at 0% while a
+                    run is already active (#352). */}
+                <ProgressBar
+                    className="upup-mt-1"
+                    progressBarClassName="upup-rounded"
+                    progress={progress}
+                    showValue
+                />
             </div>
 
             {/* Edit affordance for images (list view) — enabled pre/post upload,

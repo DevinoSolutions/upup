@@ -11,20 +11,20 @@ upup — an MIT-licensed file uploader: one headless core plus native UI package
 for every major framework, with optional server-mode uploads (client → your
 server → S3-compatible storage) and cloud-drive sources (Google Drive, OneDrive,
 Dropbox, Box), camera, screen capture, and link imports. pnpm workspace + turbo;
-publishable packages are `@upupjs/*`, released together via changesets.
+publishable packages are `@useupup/*`, released together via changesets.
 
 ## Package map
 
 Publishable (`packages/`):
 
-- `@upupjs/core` — headless engine: file state + orchestrator, upload pipeline
+- `@useupup/core` — headless engine: file state + orchestrator, upload pipeline
   (compression, HEIC, web-worker offload), cloud-drive plugins, UI controllers,
   i18n, theme. **Zero framework dependencies — keep it that way.** The public
   `.` entry is a curated allow-list — every export is named explicitly, no
   `export *` — currently 53 values / 74 types (a snapshot, not a ceiling to
   preserve). Implementation details (`FileManager`, `UploadManager`,
   `PipelineEngine`, the orchestrator, controllers, context shapes, the
-  multipart-session store, low-level utils) live behind `@upupjs/core/internal`,
+  multipart-session store, low-level utils) live behind `@useupup/core/internal`,
   a deep-import-only subpath alongside the existing `./contracts`/`./i18n`/
   `./theme`/`./strategies` pattern — if you need one of them outside core's own
   `src/`, import it from `./internal`, never re-add it to the public entry.
@@ -32,30 +32,30 @@ Publishable (`packages/`):
   (ng-packagr cannot resolve `exports` conditional subpaths — angular's
   library build throws TS2307 without it), and a
   `packages/core/vitest.config.ts` alias entry placed BEFORE the bare
-  `@upupjs/core` key (Vite matches aliases in object order; the bare key
+  `@useupup/core` key (Vite matches aliases in object order; the bare key
   prefix-shadows subpaths — do not alphabetize).
-  Every one of the nine `@upupjs/*` packages carries a `public-api.test.ts`
+  Every one of the nine `@useupup/*` packages carries a `public-api.test.ts`
   (or `.spec.ts`, matching that package's own vitest convention) pinning its
   exact runtime export list, plus core alone also pins `./internal`'s list
   (`tests/internal-surface.test.ts`) — a name silently added or removed from
   either surface is a real API change the pin will catch; update the checked-in
   list deliberately, don't loosen the assertion to make it pass.
-- `@upupjs/react` — the canonical UI. Every other framework matches its DOM.
-- `@upupjs/vue`, `@upupjs/svelte`, `@upupjs/angular`, `@upupjs/vanilla` — native ports
+- `@useupup/react` — the canonical UI. Every other framework matches its DOM.
+- `@useupup/vue`, `@useupup/svelte`, `@useupup/angular`, `@useupup/vanilla` — native ports
   of the React UI (same DOM contract, same Tailwind classes).
-- `@upupjs/preact` — compat re-export of `@upupjs/react` via `preact/compat`; the
+- `@useupup/preact` — compat re-export of `@useupup/react` via `preact/compat`; the
   image editor lazily loads real React as an isolated island.
-- `@upupjs/next` — client re-export plus `/server` route handlers (App and Pages
+- `@useupup/next` — client re-export plus `/server` route handlers (App and Pages
   routers).
-- `@upupjs/server` — server-mode endpoints: S3/MinIO presign + proxy upload,
+- `@useupup/server` — server-mode endpoints: S3/MinIO presign + proxy upload,
   drive-token exchange, HMAC-signed trust model (signed length, key/uploadId
   binding, required secrets). Node<->Web request/response bridging for the
-  Node adapters (express/fastify/`@upupjs/next`'s pages-handler) lives in ONE
-  place — `@upupjs/server/node-bridge` (`toWebRequest`/`writeWebResponse`); a
+  Node adapters (express/fastify/`@useupup/next`'s pages-handler) lives in ONE
+  place — `@useupup/server/node-bridge` (`toWebRequest`/`writeWebResponse`); a
   future custom Node adapter imports it rather than re-hand-rolling the
   conversion. `createUpupHandler` requires `storage.type` to be an S3 /
   S3-compatible provider — it throws at construct time for a value with no
-  S3 surface (`NON_S3_STORAGE_PROVIDERS` in `@upupjs/core`, currently just
+  S3 surface (`NON_S3_STORAGE_PROVIDERS` in `@useupup/core`, currently just
   `azure`); `hono.ts`/`next.ts` (App Router) are web-native and don't need
   the bridge. `handler.ts` is decomposed by concern (the deferred N4 server
   decomposition, now done — P15): `respond.ts` is the single CORS-safe response
@@ -80,7 +80,7 @@ Private (`packages/`): `interactive-example`, `storybook-config`,
 `tailwind-config` (shared Tailwind/postcss factory — theme edits happen in one
 file, not per-package), `eslint-config` (shared flat-config factory mirroring
 `tailwind-config`; phase 1 lints TS/JS only — `.vue`/`.svelte` SFC and Angular
-HTML templates are deferred to phase 2; `@upupjs/react`/`@upupjs/preact`
+HTML templates are deferred to phase 2; `@useupup/react`/`@useupup/preact`
 additionally compose its `reactHooksConfig` named export — kept out of the
 shared default because vue/svelte composables are also named `use*` and would
 false-positive against `react-hooks/rules-of-hooks`).
@@ -92,9 +92,15 @@ fumadocs-core headless; there is no longer a standalone docs app), `e2e-test`
 svelte/vanilla/angular/preact` (per-framework style-parity references),
 `next-example`, `mastra` (agents/tools for the interactive playground).
 
+Name reservation (`sdk/`): `@useupup/sdk@0.0.1`, a parked placeholder whose only
+job is to hold the name on npm. It is NOT a workspace package and NOT part of
+the changesets release — it publishes by hand through `publish-sdk.yml`
+(`workflow_dispatch` only, so the release flow can never fire it as a side
+effect). Touching it, or giving it real contents, needs a maintainer decision.
+
 ## Non-negotiable principles
 
-1. **React is the visual canon.** UI changes land in `@upupjs/react` first; the
+1. **React is the visual canon.** UI changes land in `@useupup/react` first; the
    other frameworks are then made DOM-identical (the parity harness enforces
    this byte-for-byte).
 2. **No smoke-test theater.** "It renders" is not verification. Features are
@@ -107,15 +113,15 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
    abstractions that make single-framework edits harder to reason about.
 5. **Rebuild before dependents see your edit.** Packages consume each other's
    `dist/`, not `src/`. After editing `packages/core/src`, run
-   `pnpm --filter @upupjs/core build` (same idea for any `packages/*` edit)
-   unless the `pnpm run dev:package` watchers are running. Trap: `@upupjs/preact`
+   `pnpm --filter @useupup/core build` (same idea for any `packages/*` edit)
+   unless the `pnpm run dev:package` watchers are running. Trap: `@useupup/preact`
    tests exercise its BUILT bundle (which inlines react), so after react/core
    edits rebuild react + preact before trusting preact test results — a stale
    dist fails with errors whose sourcemaps point at up-to-date `src/` files.
 6. **Keep core's mandatory path lean.** Heavy capabilities are opt-in:
    `libheif-js` (HEIC) and `tus-js-client` (resumable) are
    `optionalDependencies` loaded via dynamic `import()` behind subpath exports
-   (`@upupjs/core/steps/heic`, `@upupjs/core/strategies/tus-upload`), and the
+   (`@useupup/core/steps/heic`, `@useupup/core/strategies/tus-upload`), and the
    pipeline worker is a separate module, not inlined. Never add a static
    top-level import of a heavy dependency to core's main entry.
    `.size-limit.json` holds the per-package budgets; `pnpm run size` enforces.
@@ -125,7 +131,7 @@ svelte/vanilla/angular/preact` (per-framework style-parity references),
    `packages/server/tests/handler-extended.test.ts` and
    `tests/integration/trust-model.integration.test.ts` assert this — a handler
    change that only passes by loosening a check is the wrong change.
-   `@upupjs/server` upload routes (`/presign`, `/multipart/init`) are
+   `@useupup/server` upload routes (`/presign`, `/multipart/init`) are
    secure-by-default: they 403 `AUTH_REQUIRED` unless `auth`, `getUserId`, or
    the explicit opt-in `allowAnonymousUploads:true` is configured. The upload
    token's `uid` is enforced on the multipart continuation routes
@@ -146,7 +152,7 @@ pnpm run e2e            # the REAL gate — see next section
 pnpm run prettier-check # CI blocks on this (all 9 publishable packages' src, .ts/.tsx ONLY — .vue/.svelte SFC + .css are NOT covered; one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
-pnpm run lint           # eslint flat-config: 9 @upupjs/* packages + 3 apps (playground, landing, docs); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
+pnpm run lint           # eslint flat-config: 9 @useupup/* packages + 2 apps (playground, landing); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
 pnpm run lint:ox        # oxlint fast first-line (built-ins only, seconds)
 pnpm run knip           # dead-code / unused-dep detection (workspace-aware)
 pnpm run env:check      # .env.minio.example ↔ validate-env schema drift guard
@@ -195,7 +201,7 @@ co-locate specs under `src` and were already covered). This closed the
 grading audit's consensus #1 — the type-level halves of the public-API pins
 (`expectTypeOf`, `@ts-expect-error` negatives) used to be dead in every gate.
 Its first execution surfaced real drift the runtime suites tolerated (specs
-importing types `@upupjs/core/internal` never exported, tests pinning the
+importing types `@useupup/core/internal` never exported, tests pinning the
 retired `enableWorkers`/`appKey` option names, a dead `"link"` source id) —
 treat a red test-tree typecheck as an API-drift signal, not test noise.
 
@@ -224,7 +230,7 @@ from CI. The fix is always `prettier --write`, never `--no-verify`.
 
 Flake protocol: if a test fails only in the full run, re-run it isolated
 before suspecting your change. Known load-sensitive cases:
-`@upupjs/server tests/token-refresh.test.ts` ("refresh success") and
+`@useupup/server tests/token-refresh.test.ts` ("refresh success") and
 `tests/transfer.test.ts` (the 4 MB single-PUT case) can exceed their 5 s
 timeouts when the whole suite runs but pass alone; six-storybook cf boots
 can throw transient Windows `STATUS_STACK_BUFFER_OVERRUN`s.
@@ -304,7 +310,7 @@ source of truth. After an intentional UI change:
 
 1. Set `UPDATE_PARITY=1` and run the parity spec against React only, invoking
    Playwright directly so the `--project` flag lands in flag position:
-   `pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @upupjs/e2e-test exec playwright test --config playwright.crossframework.config.ts --project react`
+   `pnpm exec dotenv -e local-dev/.env.minio -- pnpm --filter @useupup/e2e-test exec playwright test --config playwright.crossframework.config.ts --project react`
    — fixtures are rewritten from React's DOM. Do NOT use the
    `test:e2e:cf -- --project react` script form: pnpm forwards the literal `--`
    and Playwright reads `--project react` as positional filename filters, so only
@@ -405,7 +411,7 @@ the suites actually drive):
   `CloudProvider`, the `cloudDrives` config, i18n keys) and kebab-case on the
   wire / plugin / DOM (`one-drive` / `google-drive` — plugin ids, server
   provider slugs, event prefixes, `data-upup-slot` / selector strings).
-  `providerSlug()` in `@upupjs/core` `strategies/server-transfer.ts` is the ONE
+  `providerSlug()` in `@useupup/core` `strategies/server-transfer.ts` is the ONE
   camel→kebab mapping boundary. The bare third form `onedrive` is RETIRED in
   every layer — `pnpm run vocab:check` fails on any surviving bare token; the
   sole KEEP is `interactive-example`'s `localAssistant.ts`, which matches
@@ -420,7 +426,7 @@ the suites actually drive):
   reintroduce.
 - One name per function, one function per name: no aliased re-exports, and a
   name means the same thing in every package (`createUpupHandler` = the
-  @upupjs/server core factory; `createUpupNextHandler` = its Next wrapper).
+  @useupup/server core factory; `createUpupNextHandler` = its Next wrapper).
 - The error taxonomy is `UpupError` + its subclasses plus
   `uploadErrorFromResponse` — those `Upload*`-prefixed FUNCTION names stay
   (error domain, not UI vocabulary; only `Adapter*`/`Root*` were retired).
@@ -492,7 +498,7 @@ method carried the §16 rename across the whole monorepo without a regression.
 Choices that look like gaps but are rulings. Re-litigate with the maintainer
 if needed; never silently "improve" them:
 
-- **The image editor is react/preact-only.** `@upupjs/preact` ships the real
+- **The image editor is react/preact-only.** `@useupup/preact` ships the real
   Filerobot editor as a lazily-loaded real-React island (`filerobot-island.js`,
   budgeted separately in `.size-limit.json`); vue/svelte/angular/vanilla
   intentionally stub it. Do not port it to the other frameworks.
@@ -553,9 +559,12 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 
 ## Git & commits
 
-- Default branch `master`; current integration branch `v2-clean` (the v2 work
-  is intentionally unmerged). Do not merge, PR, or push to `master` without an
-  explicit maintainer decision.
+- `master` is the production / release branch — `publish.yml` runs on push to
+  `master`. `dev` is the integration branch: feature branches PR into `dev`.
+  `dev` is promoted to `master` via a dev→master PR, then `master` is synced
+  back with a master→dev PR. Self-approval is impossible on this repo, so PRs
+  merge with `gh pr merge --merge --admin --delete-branch=false`; both rollup
+  checks (`Status Check`, `E2E Status Check`) must be green first.
 - Conventional commits: `feat:`, `fix(scope):`, `refactor!:` for breaking.
 - **Stage explicit paths only** — never `git add -A` / `.` / `-u`. Never stage
   `dist/`, `test-results/`, `apps/e2e-test/dist/`, or `docs/superpowers/`.
@@ -603,7 +612,7 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   publishing: full e2e + real-MinIO suites + the a11y/overflow sweep
   (`pnpm run e2e:a11y` — the axe serious/critical ratchet vs
   `a11y-baseline.json`; runs in NO PR gate), the **Lighthouse** job
-  (`pnpm --filter @upupjs/landing run lighthouse`, config
+  (`pnpm --filter @useupup/landing run lighthouse`, config
   `apps/landing/lighthouserc.cjs`: production `next build`+`start`, asserts
   SEO=100 on every audited page and Best Practices 100 on docs pages /
   ratcheted ~0.74 on home+framework pages whose StackBlitz embed + ads tag set
@@ -621,7 +630,7 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   the suite, whole-job `::notice` if none set); a configured-but-broken token →
   RED. That same job also boots MinIO and runs a Playwright HTTP-surface layer
   (`apps/e2e-test/drive-sandbox/server-transfer.spec.ts`) proving the same
-  sandbox creds for all four providers through `@upupjs/server`'s route dispatch →
+  sandbox creds for all four providers through `@useupup/server`'s route dispatch →
   drive auth → drive→S3 transfer into a real bucket, under the same per-provider
   skip-green/red gating. That HTTP-surface layer also proves the >5 MiB
   streaming-multipart path (no incomplete upload left behind), the policy

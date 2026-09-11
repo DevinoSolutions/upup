@@ -212,7 +212,7 @@ export interface ErrorMessages {
     invalidFileType: string
     storageQuotaExceeded: string
     signedUrlGenerationFailed: string
-    /** ICU: "Upload failed with error code: {code}" */
+    /** ICU: "Upload failed with error code {code}: {message}" */
     uploadFailedWithCode: string
     /** ICU: "Upload failed: {message}" */
     uploadFailed: string
