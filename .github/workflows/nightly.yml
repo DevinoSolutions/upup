@@ -110,7 +110,7 @@ jobs:
             # future snapvisor.io baseline feed.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -119,7 +119,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: nightly-playwright-artifacts
                   path: |
@@ -391,7 +391,7 @@ jobs:
 
             - name: Upload Lighthouse reports
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: nightly-lighthouse-reports
                   path: apps/landing/.lighthouseci-reports/
@@ -470,7 +470,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && steps.creds.outputs.present == 'true'
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
