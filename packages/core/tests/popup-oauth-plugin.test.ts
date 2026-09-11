@@ -548,6 +548,78 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             expect(errors[0]!.error.code).toBe('AUTH_POPUP_BLOCKED')
         })
 
+        it('completes the code exchange when a spec-legal redirect puts the code in the FRAGMENT, which the poll would otherwise never see', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect#code=the-auth-code&state=xyz',
+            )
+            vi.stubGlobal(
+                'fetch',
+                vi.fn().mockResolvedValue({
+                    ok: true,
+                    status: 200,
+                    json: vi.fn().mockResolvedValue({
+                        access_token: 'tok',
+                        expires_in: 3600,
+                    }),
+                    text: vi.fn().mockResolvedValue(''),
+                }),
+            )
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            // Reading only `searchParams` left the code unread until the window
+            // closed, and the close was then reported as a cancellation — one
+            // wrong sentence swapped for another.
+            expect(authErrors()).toHaveLength(0)
+            expect(plugin.getState()).toBe('authenticated')
+            vi.useRealTimers()
+        })
+
+        it('reports a fragment-borne error=access_denied as a cancellation, on the same terms as a query-borne one', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect#error=access_denied&error_description=The+user+declined',
+            )
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            const errors = authErrors()
+            expect(errors).toHaveLength(1)
+            expect(errors[0]!.error.code).toBe('AUTH_DENIED')
+            expect(errors[0]!.error.message).toContain('The user declined')
+            vi.useRealTimers()
+        })
+
+        it('prefers the query over the fragment when both carry a code, because that is where the authorization-code flow answers', async () => {
+            vi.useFakeTimers()
+            stubPopupWindow(
+                'https://example.com/fake_redirect?code=query-code#code=fragment-code',
+            )
+            const fetchMock = vi.fn().mockResolvedValue({
+                ok: true,
+                status: 200,
+                json: vi.fn().mockResolvedValue({
+                    access_token: 'tok',
+                    expires_in: 3600,
+                }),
+                text: vi.fn().mockResolvedValue(''),
+            })
+            vi.stubGlobal('fetch', fetchMock)
+
+            const promise = plugin.authenticateViaPopup()
+            await vi.advanceTimersByTimeAsync(600)
+            await promise
+
+            const body = fetchMock.mock.calls[0]![1].body as URLSearchParams
+            expect(body.get('code')).toBe('query-code')
+            vi.useRealTimers()
+        })
+
         it('still completes the code exchange when the redirect carries a code and no error', async () => {
             vi.useFakeTimers()
             stubPopupWindow(

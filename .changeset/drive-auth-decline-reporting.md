@@ -1,6 +1,10 @@
 ---
 '@useupup/core': patch
 '@useupup/react': patch
+'@useupup/vue': patch
+'@useupup/svelte': patch
+'@useupup/angular': patch
+'@useupup/vanilla': patch
 ---
 
 Declining an OAuth consent screen is reported as a cancellation, not as
@@ -23,8 +27,12 @@ closed window resolved silently with no error and no state.
 
 Now:
 
-- All four drive components forward `error` into `DriveAuthFallback`, so the
-  existing no-auto-retry-after-an-error guard is reachable across the remount.
+- Every drive component in every framework forwards `error` into its auth
+  fallback, so the existing no-auto-retry-after-an-error guard is reachable
+  across the remount (the guard itself stays React-only — no other framework's
+  fallback auto-triggers on mount). The three popup providers had the same gap
+  in React, Vue, Svelte, Angular and vanilla; vanilla gated the prop on Google
+  Drive explicitly.
 - The poll reads `error` / `error_description` off the redirect and reports a
   refused or admin-walled consent as a cancellation; a closed window is a
   cancellation too, rather than a silent resolve. `authenticateViaPopup()` still
@@ -43,3 +51,14 @@ Now:
 
 `UpupAuthError` takes an optional third `code` argument, defaulting to the
 `AUTH_PROVIDER_ERROR` it always used, so existing call sites are unchanged.
+
+`ErrorMessages.authCancelled` is OPTIONAL, so a hand-written locale bundle still
+type-checks — that is why this is a patch and not a breaking minor. The uploader
+wires en-US as the fallback bundle and would resolve the key anyway;
+`driveErrorText` also carries the English wording for a translator built with no
+fallback at all, so an omission renders English rather than the key.
+
+The redirect poll reads the fragment as well as the query. The check it replaced
+matched `code=` anywhere in the href, so narrowing to `searchParams` alone would
+have left a spec-legal fragment-mode redirect unread until the window closed —
+reported, wrongly again, as a cancellation.

@@ -1,11 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import {
     useUploaderI18n,
     useUploaderTheme,
 } from '../../context/UploaderContext'
-import { driveErrorText } from '../../lib/driveErrorText'
 import SourceViewContainer from './SourceViewContainer'
 
 type Props = {

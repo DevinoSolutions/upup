@@ -240,8 +240,19 @@ export interface ErrorMessages {
     generatingThumbnails: string
     clientIdRequired: string
     popupBlocked: string
-    /** The person declined the provider's consent screen, or closed it. Never a popup block. */
-    authCancelled: string
+    /**
+     * The person declined the provider's consent screen, or closed it. Never a
+     * popup block.
+     *
+     * OPTIONAL because it was added after 2.x shipped: `ErrorMessages` is
+     * required inside `UpupMessages` and `LocaleBundle.messages` is the whole
+     * type, so a required key here would fail `tsc` for every consumer with a
+     * hand-written bundle — a breaking change in a patch. The uploader wires
+     * en-US as the fallback bundle, and `driveErrorText` carries the English
+     * wording for the case where a translator is built without one, so an
+     * omission renders English rather than the key.
+     */
+    authCancelled?: string
     dropboxClientIdMissing: string
     dropboxAuthFailed: string
     boxClientIdMissing: string

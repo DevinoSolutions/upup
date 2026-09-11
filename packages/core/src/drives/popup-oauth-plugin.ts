@@ -67,6 +67,29 @@ export interface PopupOAuthSpec {
  * Not for GoogleDrive: its GIS access-token model has no PKCE popup and no refresh
  * token, so it stays a standalone `implements DrivePlugin`.
  */
+/**
+ * The parameters an OAuth redirect carries, read from the query string AND the
+ * fragment.
+ *
+ * The check this replaced was `href.includes('code=')`, which matched a
+ * fragment too. Narrowing it to `searchParams` alone would have turned a
+ * fragment-mode redirect into a poll that never fires: the code would sit in
+ * the hash unread until the person closed the window, and the close would then
+ * be reported as a cancellation (#390) — swapping one wrong sentence for
+ * another. Every provider this plugin ships with uses `response_type=code` and
+ * answers on the query string, so nothing here is reachable today; the fragment
+ * is read anyway because a spec-legal redirect must not silently hang.
+ *
+ * The query wins a collision, since that is where the authorization-code flow
+ * puts its answer.
+ */
+function parseRedirectParams(href: string): URLSearchParams {
+    const url = new URL(href)
+    const params = new URLSearchParams(url.hash.replace(/^#/, ''))
+    for (const [key, value] of url.searchParams) params.set(key, value)
+    return params
+}
+
 export abstract class PopupOAuthPlugin implements DrivePlugin {
     abstract readonly spec: PopupOAuthSpec
 
@@ -332,7 +355,7 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                         // let an `?error=access_denied` fall through this poll
                         // until the person closed the window, so a refused or
                         // admin-walled consent was never reported as itself.
-                        const redirectParams = new URL(href).searchParams
+                        const redirectParams = parseRedirectParams(href)
                         const oauthError = redirectParams.get('error')
                         if (oauthError) {
                             this.cleanupPopup()
@@ -350,7 +373,7 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                         // Got the redirect with the code
                         this.cleanupPollTimer()
 
-                        const code = new URL(href).searchParams.get('code')
+                        const code = redirectParams.get('code')
                         this.popupWindow.close()
                         this.popupWindow = null
 

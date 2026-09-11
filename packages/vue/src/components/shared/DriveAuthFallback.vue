@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
 import SourceViewContainer from './SourceViewContainer.vue'
 
@@ -27,7 +27,7 @@ const { translations: tr } = useUploaderI18n()
                 role="alert"
                 class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
             >
-                {{ t(tr.driveLoadError, { message: props.error.message }) }}
+                {{ t(tr.driveLoadError, { message: driveErrorText(props.error, tr) }) }}
             </p>
             <p
                 :class="cn(

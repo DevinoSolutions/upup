@@ -34,8 +34,15 @@ export type DriveBrowserError = {
      * controller sets this from the error's machine `code` for the auth outcomes
      * a person can tell apart, and leaves it unset for everything else.
      */
-    messageKey?: 'popupBlocked' | 'authCancelled' | undefined
+    messageKey?: DriveErrorMessageKey | undefined
 }
+
+/**
+ * The auth outcomes a person can tell apart, as flat `UiTranslations` keys.
+ * Named so `driveErrorText`'s English fallback map is exhaustive by the
+ * compiler rather than by inspection.
+ */
+export type DriveErrorMessageKey = 'popupBlocked' | 'authCancelled'
 
 /**
  * A page returned by DrivePlugin.loadMoreFiles (F-125). `cursor` is an OPAQUE

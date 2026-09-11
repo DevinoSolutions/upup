@@ -7,14 +7,13 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import {
     useUploaderI18n,
     useUploaderOptions,
     useUploaderTheme,
 } from '../../context/UploaderContext'
 import { searchDriveFiles } from '../../lib/file'
-import { driveErrorText } from '../../lib/driveErrorText'
 import SourceViewContainer from './SourceViewContainer'
 import DriveBrowserHeader from './DriveBrowserHeader'
 import DriveBrowserItem from './DriveBrowserItem'

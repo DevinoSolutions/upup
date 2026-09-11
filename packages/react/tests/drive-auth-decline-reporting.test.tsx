@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import DriveAuthFallback from '../src/components/shared/DriveAuthFallback'
-import { driveErrorText } from '../src/lib/driveErrorText'
+import { driveErrorText } from '@useupup/core/internal'
 import type { DriveBrowserError, UiTranslations } from '@useupup/core'
 
 // Same isolation as drive-browser-error-loadmore.test.tsx: DriveAuthFallback
