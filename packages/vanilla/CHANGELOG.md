@@ -1,5 +1,90 @@
 # @useupup/vanilla
 
+## 3.3.1
+
+### Patch Changes
+
+- [#393](https://github.com/DevinoSolutions/upup/pull/393) [`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - The Google Drive picker can browse shared drives and "Shared with me", behind a
+  default-off `cloudDrives.googleDrive.sharedDrives` flag.
+
+    `GoogleDrivePlugin.loadFiles` and `loadMoreFiles` sent a Drive v3 `files.list`
+    with no `corpora`, no `includeItemsFromAllDrives` and no `supportsAllDrives`, so
+    the API answered from the signed-in user's own My Drive corpus only. For a
+    business account that is most of the person's files: a file living in a shared
+    drive never appeared at any depth, and the picker's search box did not
+    compensate because it filters the children already loaded rather than issuing a
+    query. The requested scope was never the limit — `drive.readonly` covers shared
+    drives, and `drives.list`, already.
+
+    With `sharedDrives: true`:
+
+    - Both listing calls send `corpora=allDrives`, `includeItemsFromAllDrives=true`
+      and `supportsAllDrives=true`, and the single-file download sends
+      `supportsAllDrives=true` so a file the widened listing surfaced can actually be
+      fetched instead of answering 404. `corpora` and `includeItemsFromAllDrives` are
+      `files.list`-only and stay off the download.
+    - The ROOT listing appends the user's shared drives, from a paginated
+      `drives.list`, as navigable folder rows after the My Drive children. Those
+      params widen which files a query CAN return, but every listing is still
+      `'<parentId>' in parents` and `'root'` resolves to My Drive root — so without
+      an entry to click, a shared drive stayed unreachable. A shared drive's root
+      folder id IS its drive id, so once one is listed the ordinary parent listing
+      walks it with no further special-casing.
+    - The root listing also carries one virtual "Shared with me" folder. Drive has no
+      parent whose children are the files others shared with you — it is the query
+      `sharedWithMe = true` — so that row uses a synthetic id the plugin branches on
+      in both `loadFiles` and `loadMoreFiles`. Every other part of the picker treats
+      it as an ordinary folder.
+
+    Both additions land on the root's first page only, never on a continuation page,
+    so they appear exactly once and pagination is unaffected in either the shared
+    drives or the "Shared with me" view.
+
+    The flag defaults off. Nothing is sent, no `drives.list` is issued and no extra
+    row appears when it is unset or false, so no existing picker changes shape.
+
+- [#397](https://github.com/DevinoSolutions/upup/pull/397) [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default panel now shows your error message next to the machine code, and a
+  skipped EXIF strip leaves a marker on the file (#367 items 2 and 4).
+
+    A failure carrying a code used to render as `uploadFailedWithCode`, which
+    interpolated the code and nothing else — so an endpoint that returned a useful
+    sentence watched it disappear between `onError` and the panel. The key now has a
+    second `{message}` slot carrying the error's own message, added to all nine
+    locale bundles so translators control placement (override the key to reorder the
+    slots, drop the code, or show only your own wording). All six framework panels
+    pass both values, and the message is rendered as text, never as markup.
+
+    `stripExifData` skips animated GIF/WebP/APNG because canvas has no animated
+    encoder, which means an animated WebP or APNG reaches storage with the EXIF you
+    asked to remove. The `exif` step now records that on the file:
+    `metadata.metadataStripSkipped === true` with
+    `metadata.metadataStripSkippedReason === 'animated-image'`. A file whose EXIF
+    really was stripped carries `exifStripped: true` and no marker, and
+    `imageCompression` skipping an animated image does not set it — nothing was asked
+    to be removed. No new event, no new option.
+
+- [#398](https://github.com/DevinoSolutions/upup/pull/398) [`32ae800`](https://github.com/DevinoSolutions/upup/commit/32ae80094b21ea7064a5061d14d652b0e8bc7d82) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The compact file row shows its progress bar as soon as a run starts (#352), and
+  the branding logo assets are ~92% smaller (#229).
+
+    `ProgressBar` already renders whenever the run is active or progress is
+    non-zero, but every framework's compact `FileRow` wrapped it in a second
+    `!!progress` gate. That outer gate won whenever it was falsy, so the row stayed
+    blank between "upload started" and "first byte acknowledged" while the grid
+    tile, the single-file hero and the list footer all showed their bars. The
+    redundant wrapper is removed in all five row templates; the self-gate inside
+    `ProgressBar` is now the only one. No change at idle — with no progress and no
+    active run the bar is still absent, so the parity fixtures do not move.
+
+    The four base64 PNG logo assets in `src/assets/logos.ts` are re-exported at
+    122x26, twice the fixed 61x13 CSS-pixel box every framework renders them in.
+    They were shipping at up to 1905x580 — roughly 30x the rendered area. Each
+    package's copy of that file drops from 167 KB to 13 KB, about 109 KB gzipped off
+    every UI bundle, with the rendered appearance unchanged. The assets stay PNG:
+    there is no vector source for them in the repo.
+
+- Updated dependencies [[`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce), [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf), [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718), [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036)]:
+    - @useupup/core@3.3.1
+
 ## 3.3.0
 
 ### Patch Changes

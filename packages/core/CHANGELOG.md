@@ -1,5 +1,112 @@
 # @useupup/core
 
+## 3.3.1
+
+### Patch Changes
+
+- [#393](https://github.com/DevinoSolutions/upup/pull/393) [`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - The Google Drive picker can browse shared drives and "Shared with me", behind a
+  default-off `cloudDrives.googleDrive.sharedDrives` flag.
+
+    `GoogleDrivePlugin.loadFiles` and `loadMoreFiles` sent a Drive v3 `files.list`
+    with no `corpora`, no `includeItemsFromAllDrives` and no `supportsAllDrives`, so
+    the API answered from the signed-in user's own My Drive corpus only. For a
+    business account that is most of the person's files: a file living in a shared
+    drive never appeared at any depth, and the picker's search box did not
+    compensate because it filters the children already loaded rather than issuing a
+    query. The requested scope was never the limit — `drive.readonly` covers shared
+    drives, and `drives.list`, already.
+
+    With `sharedDrives: true`:
+
+    - Both listing calls send `corpora=allDrives`, `includeItemsFromAllDrives=true`
+      and `supportsAllDrives=true`, and the single-file download sends
+      `supportsAllDrives=true` so a file the widened listing surfaced can actually be
+      fetched instead of answering 404. `corpora` and `includeItemsFromAllDrives` are
+      `files.list`-only and stay off the download.
+    - The ROOT listing appends the user's shared drives, from a paginated
+      `drives.list`, as navigable folder rows after the My Drive children. Those
+      params widen which files a query CAN return, but every listing is still
+      `'<parentId>' in parents` and `'root'` resolves to My Drive root — so without
+      an entry to click, a shared drive stayed unreachable. A shared drive's root
+      folder id IS its drive id, so once one is listed the ordinary parent listing
+      walks it with no further special-casing.
+    - The root listing also carries one virtual "Shared with me" folder. Drive has no
+      parent whose children are the files others shared with you — it is the query
+      `sharedWithMe = true` — so that row uses a synthetic id the plugin branches on
+      in both `loadFiles` and `loadMoreFiles`. Every other part of the picker treats
+      it as an ordinary folder.
+
+    Both additions land on the root's first page only, never on a continuation page,
+    so they appear exactly once and pagination is unaffected in either the shared
+    drives or the "Shared with me" view.
+
+    The flag defaults off. Nothing is sent, no `drives.list` is issued and no extra
+    row appears when it is unset or false, so no existing picker changes shape.
+
+- [#396](https://github.com/DevinoSolutions/upup/pull/396) [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default source set no longer shows capture sources whose output can never
+  satisfy `allowedFileTypes` (#340).
+
+    `allowedFileTypes: 'application/pdf'` used to leave the camera, microphone and
+    screen chips in place, and every recording they produced was rejected the moment
+    it was added. `normalizeUploaderOptions` now drops a default capture source when
+    no entry in the resolved accept list could match anything that source can emit —
+    camera emits `image/jpeg` (with `image/png` as the `toDataURL` fallback),
+    microphone `audio/webm` / `audio/ogg` / `audio/mp4`, screen `video/webm` /
+    `video/mp4`, all read off the code that builds the `File`.
+
+    The match fails open: a wildcard, an unrecognized extension, or anything that is
+    neither a MIME type nor an extension keeps every source. `local` and `url` are
+    never filtered, cloud drives are untouched, and an explicitly passed `sources`
+    array is always honored verbatim. A dropped source logs one dev-only
+    `console.warn` naming the source and the accept list.
+
+- [#397](https://github.com/DevinoSolutions/upup/pull/397) [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default panel now shows your error message next to the machine code, and a
+  skipped EXIF strip leaves a marker on the file (#367 items 2 and 4).
+
+    A failure carrying a code used to render as `uploadFailedWithCode`, which
+    interpolated the code and nothing else — so an endpoint that returned a useful
+    sentence watched it disappear between `onError` and the panel. The key now has a
+    second `{message}` slot carrying the error's own message, added to all nine
+    locale bundles so translators control placement (override the key to reorder the
+    slots, drop the code, or show only your own wording). All six framework panels
+    pass both values, and the message is rendered as text, never as markup.
+
+    `stripExifData` skips animated GIF/WebP/APNG because canvas has no animated
+    encoder, which means an animated WebP or APNG reaches storage with the EXIF you
+    asked to remove. The `exif` step now records that on the file:
+    `metadata.metadataStripSkipped === true` with
+    `metadata.metadataStripSkippedReason === 'animated-image'`. A file whose EXIF
+    really was stripped carries `exifStripped: true` and no marker, and
+    `imageCompression` skipping an animated image does not set it — nothing was asked
+    to be removed. No new event, no new option.
+
+- [#381](https://github.com/DevinoSolutions/upup/pull/381) [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Presign failures no longer surface a reverse proxy's HTML error page, and the
+  animated-image guard stops reading whole files.
+
+    `TokenEndpointCredentials.getPresignedUrl` reads a failed presign body so the
+    endpoint's own sentence reaches `onError`, but `parseErrorBody`'s text fallback
+    also caught the error pages nginx and Cloudflare write for a 502 or 413 — so a
+    handler that used to get `Presign request failed: 502 Bad Gateway` got 200
+    characters of `<html>` instead. A markup body carrying no error code is now
+    treated as nothing to surface and the status-line wording is kept. An S3-style
+    `<Error><Code>` body is unaffected: it parses to a real code and still comes
+    through. The error is also built with its final message rather than having
+    `message` reassigned afterwards, so the body is parsed once and the error never
+    carries wording it does not keep. `uploadErrorFromResponse` gained two optional
+    arguments for this — `fallbackMessage` (wording to use when the body carries
+    nothing) and `ignoreErrorPageBody` (opt into the markup guard); callers that
+    pass neither behave exactly as before.
+
+    `isAnimatedImage` — the guard that keeps `imageCompression` and `stripExifData`
+    from flattening animated GIF/WebP/APNG — used to call `arrayBuffer()` on the
+    whole file, a read the main-thread path never made before that guard existed,
+    so a still 40 MB photo was materialized in full just to learn it was still. It
+    now sniffs the first 64 KiB, which is where every one of these formats declares
+    animation (APNG's `acTL` before the first `IDAT`, WebP's `VP8X`/`ANIM` at the
+    top of the container, a looping GIF's `NETSCAPE2.0` extension in the header).
+    Only a GIF that has announced nothing by then is read in full, because its
+    second Image Descriptor can sit anywhere in the stream. Verdicts are unchanged.
+
 ## 3.3.0
 
 ### Minor Changes
