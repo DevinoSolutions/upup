@@ -25,26 +25,29 @@ test.describe('Adapter switching', () => {
         await expect(page.getByText('Capture')).toBeVisible()
     })
 
-    test('Google Drive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-googleDrive"]')
-        await expect(
-            page.locator('[data-upup-slot="google-drive-uploader"]'),
-        ).toBeVisible()
-    })
+    // The slot alone was never enough. It sits on BOTH branches of every drive
+    // component — the auth fallback and the browser — so a perpetual loader
+    // satisfied it just as well as a sign-in screen, and these passed for months
+    // over a spinner that could never resolve. Each case now asserts the prompt
+    // the test is named after. No drive is configured in this app, so the sign-in
+    // screen is the only correct answer for all three.
+    const authPrompts = [
+        ['googleDrive', 'google-drive-uploader', 'Google Drive'],
+        ['oneDrive', 'one-drive-uploader', 'OneDrive'],
+        ['dropbox', 'dropbox-uploader', 'Dropbox'],
+    ] as const
 
-    test('OneDrive adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-oneDrive"]')
-        await expect(
-            page.locator('[data-upup-slot="one-drive-uploader"]'),
-        ).toBeVisible()
-    })
-
-    test('Dropbox adapter shows auth prompt', async ({ page }) => {
-        await page.click('[data-testid="upup-source-dropbox"]')
-        await expect(
-            page.locator('[data-upup-slot="dropbox-uploader"]'),
-        ).toBeVisible()
-    })
+    for (const [source, slot, provider] of authPrompts) {
+        test(`${provider} adapter shows auth prompt`, async ({ page }) => {
+            await page.click(`[data-testid="upup-source-${source}"]`)
+            await expect(
+                page.locator(`[data-upup-slot="${slot}"]`),
+            ).toBeVisible()
+            await expect(
+                page.getByRole('button', { name: `Sign in with ${provider}` }),
+            ).toBeVisible()
+        })
+    }
 
     test('Cancel button returns to main view', async ({ page }) => {
         await page.click('[data-testid="upup-source-url"]')
