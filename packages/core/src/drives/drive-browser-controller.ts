@@ -77,6 +77,21 @@ function driveErrorMessageKey(
 }
 
 /**
+ * The `DriveBrowserError` for an attempt that threw without emitting anything,
+ * so the view is never left with a failure it cannot describe or detect.
+ */
+function driveErrorFromThrown(thrown: unknown): DriveBrowserError {
+    const err = thrown instanceof Error ? thrown : undefined
+    return {
+        message: err?.message || 'Sign-in did not complete',
+        action: 'authenticateViaPopup',
+        messageKey: driveErrorMessageKey(
+            (err as (Error & { code?: string }) | undefined)?.code,
+        ),
+    }
+}
+
+/**
  * Framework-agnostic cloud-drive browser store. One instance per provider per
  * mounted drive view. Mirrors UploaderOrchestrator's subscribe/getSnapshot
  * pattern so every framework binds it the same way.
@@ -422,23 +437,46 @@ export class DriveBrowserController {
         // person asked for does not sit under the sentence explaining why the
         // last one ended.
         this.setState({ isLoading: true, error: undefined })
+        let thrown: unknown
         try {
             await plugin.authenticateViaPopup()
             if (plugin.isAuthenticated()) {
                 await plugin.loadFiles(this.descriptor.loadFilesRootArg)
             }
-        } catch {
-            // upup-catch: the plugin already emitted `${prefix}:error`, which the
-            // onError binding above turned into state.error — the two call sites
+        } catch (err) {
+            // upup-catch: kept for the `finally` below — the two call sites
             // invoke this as `void runPopupAuth()`, so rethrowing would only
             // become an unhandled rejection.
+            thrown = err
         } finally {
-            // An attempt that ends unauthenticated MUST clear isLoading (#390).
-            // A blocked popup throws before setState('authenticating') ever runs,
-            // so nothing else lowers the flag and the view stayed on the spinner
-            // forever — the auth fallback that carries the error never rendered.
             if (!plugin.isAuthenticated()) {
-                this.setState({ isLoading: false })
+                // An attempt that ends unauthenticated MUST clear isLoading
+                // (#390). A blocked popup throws before setState('authenticating')
+                // ever runs, so nothing else lowers the flag and the view sat on
+                // the spinner forever — the auth fallback carrying the error never
+                // rendered at all.
+                //
+                // It MUST also leave an error behind, and that is not cosmetic.
+                // The React auth fallback opens ONE popup on mount, while the
+                // tile click's user activation is still live, and reads `error`
+                // to know an attempt has already happened. Its own ref cannot
+                // tell it: clearing isLoading re-renders the uploader into the
+                // fallback branch, and the remount hands it a fresh ref. So an
+                // attempt that ended with NOTHING recorded looped — mount,
+                // attempt, unmount, remount — fast enough to peg the main thread,
+                // which is what took the OneDrive and Dropbox adapters down in
+                // the cross-framework E2E.
+                //
+                // Most failures arrive on the provider's error event and are
+                // already in state by now; `?? ` keeps those, which carry the
+                // richer payload. The gap is the ones that only THROW: an
+                // unconfigured clientId is thrown out of `getAuthUrl()` and
+                // never emitted, so before this the view learned nothing and the
+                // person saw an unexplained sign-in screen.
+                this.setState({
+                    isLoading: false,
+                    error: this.state.error ?? driveErrorFromThrown(thrown),
+                })
             }
         }
     }

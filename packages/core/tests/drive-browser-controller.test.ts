@@ -560,6 +560,70 @@ describe('DriveBrowserController — auth-outcome reporting (#390)', () => {
         expect(controller.getSnapshot().isLoading).toBe(false)
     })
 
+    it('records an error for an attempt that throws WITHOUT emitting one, because the view reads error to know an attempt already happened', async () => {
+        // The regression this pins took the OneDrive and Dropbox cross-framework
+        // E2E adapters down. An unconfigured clientId is THROWN out of
+        // `getAuthUrl()` and never emitted, so nothing reached state.error. The
+        // React auth fallback opens one popup on mount and uses `error` to know
+        // not to do it again — its own ref cannot tell it, because clearing
+        // isLoading remounts the view with a fresh one. An attempt that recorded
+        // nothing therefore looped: mount, attempt, unmount, remount, fast
+        // enough to peg the main thread, so the adapter slot never painted.
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        vi.spyOn(plugin, 'authenticateViaPopup').mockRejectedValue(
+            new Error('OneDrive client_id is not configured'),
+        )
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        const err = controller.getSnapshot().error
+        expect(err?.message).toBe('OneDrive client_id is not configured')
+        expect(err?.action).toBe('authenticateViaPopup')
+        expect(controller.getSnapshot().isLoading).toBe(false)
+    })
+
+    it('records an error for an attempt that ends unauthenticated without throwing at all, so the same loop cannot open on a silent path', async () => {
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        // Resolves, but no session — the shape `authenticateViaPopup` returns
+        // when the person closes the popup.
+        vi.spyOn(plugin, 'authenticateViaPopup').mockResolvedValue(undefined)
+        vi.spyOn(plugin, 'isAuthenticated').mockReturnValue(false)
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        expect(controller.getSnapshot().error).toBeDefined()
+        expect(controller.getSnapshot().isLoading).toBe(false)
+    })
+
+    it('keeps the emitted error rather than the thrown one, because the event payload carries the code the translation key is read from', async () => {
+        const { core, controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        vi.spyOn(plugin, 'authenticateViaPopup').mockImplementation(() => {
+            core.emit('one-drive:error', {
+                error: Object.assign(
+                    new Error('OneDrive sign-in was cancelled (access_denied)'),
+                    { code: 'AUTH_DENIED' },
+                ),
+                action: 'authenticateViaPopup',
+            })
+            return Promise.reject(new Error('a less useful diagnostic'))
+        })
+
+        controller.signIn()
+        await Promise.resolve()
+        await Promise.resolve()
+        await Promise.resolve()
+
+        const err = controller.getSnapshot().error
+        expect(err?.messageKey).toBe('authCancelled')
+        expect(err?.message).toContain('access_denied')
+    })
+
     it('clears the previous attempt error when a retry starts, so a fresh sign-in is not shown under the last failure', async () => {
         const { core, controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
         core.emit('one-drive:error', {

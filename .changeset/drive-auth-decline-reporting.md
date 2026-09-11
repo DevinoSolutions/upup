@@ -44,10 +44,17 @@ Now:
   renderer shows the matching catalogue string — the nine-locale `popupBlocked`
   that shipped unused, or a new `errors.authCancelled`. Every other failure keeps
   its own message, which carries detail a generic string would throw away.
-- A popup attempt that ends without a session now clears `isLoading` and cannot
-  become an unhandled rejection. A blocked popup threw before the state ever
-  moved to `authenticating`, so the view sat on the spinner and the auth fallback
-  carrying the error never rendered at all.
+- A popup attempt that ends without a session now clears `isLoading`, cannot
+  become an unhandled rejection, and ALWAYS leaves an error behind. A blocked
+  popup threw before the state ever moved to `authenticating`, so the view sat on
+  the spinner and the auth fallback carrying the error never rendered at all.
+  Recording the error is not cosmetic: the React auth fallback opens one popup on
+  mount while the tile click's user activation is live, and reads `error` to know
+  an attempt has already happened — its own ref cannot, because clearing
+  `isLoading` remounts the view with a fresh one. Most failures arrive on the
+  provider's error event and are already in state; the gap was the ones that only
+  THROW, such as an unconfigured `clientId`, which `getAuthUrl()` throws and never
+  emits.
 
 `UpupAuthError` takes an optional third `code` argument, defaulting to the
 `AUTH_PROVIDER_ERROR` it always used, so existing call sites are unchanged.
