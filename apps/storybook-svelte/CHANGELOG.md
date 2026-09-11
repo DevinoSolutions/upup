@@ -1,5 +1,13 @@
 # @useupup/storybook-svelte
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`bf817fc`](https://github.com/DevinoSolutions/upup/commit/bf817fc1bf57b56cc4ca7e6e11209a6ab4429f4d)]:
+    - @useupup/core@3.3.3
+    - @useupup/svelte@3.3.3
+
 ## 0.1.6
 
 ### Patch Changes
