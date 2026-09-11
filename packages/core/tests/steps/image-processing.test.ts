@@ -250,7 +250,43 @@ describe('animated images skip the canvas re-encode steps', () => {
             expect(result.type).toBe(type)
             expect(result.metadata.exifStripped).toBeUndefined()
         })
+
+        // #367 item 4: the skip is privacy-relevant (animated WebP and APNG both
+        // carry EXIF), so it leaves a marker the host can read off the file.
+        it(`flags the skipped EXIF strip on ${label}`, async () => {
+            installImageRuntime('reencoded')
+            const original = makeUploadFile(name, type, bytes)
+
+            const result = await exifStep().process(original, ctx)
+
+            expect(result.metadata.metadataStripSkipped).toBe(true)
+            expect(result.metadata.metadataStripSkippedReason).toBe(
+                'animated-image',
+            )
+        })
+
+        // The compress skip is not a metadata-retention event: nothing was asked
+        // to be removed, so it must NOT claim the strip was skipped.
+        it(`does not flag a skipped EXIF strip from the compress step on ${label}`, async () => {
+            installImageRuntime('compressed')
+            const original = makeUploadFile(name, type, bytes)
+
+            const result = await compressStep().process(original, ctx)
+
+            expect(result.metadata.metadataStripSkipped).toBeUndefined()
+        })
     }
+
+    it('does not flag a skipped EXIF strip for a still image the exif step really stripped', async () => {
+        installImageRuntime('reencoded')
+        const original = makeUploadFile()
+
+        const result = await exifStep().process(original, ctx)
+
+        expect(result.metadata.exifStripped).toBe(true)
+        expect(result.metadata.metadataStripSkipped).toBeUndefined()
+        expect(result.metadata.metadataStripSkippedReason).toBeUndefined()
+    })
 
     it('leaves an animated GIF untouched on the web-worker path too', async () => {
         installImageRuntime('compressed')

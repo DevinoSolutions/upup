@@ -14,7 +14,21 @@ export function exifStep(): PipelineStep {
             // Stripping EXIF re-encodes through a canvas, and canvas has no
             // animated encoder — an animated GIF/WebP/APNG would come back as
             // its first frame. Leave those alone; the upload is unaffected.
-            if (await isAnimatedImage(file)) return file
+            //
+            // The skip IS observable though: animated WebP and APNG both carry
+            // EXIF, so the file reaches storage with the metadata the host asked
+            // to remove (#367 item 4). Record that on the file rather than
+            // emitting a new event — a privacy-sensitive host reads the marker
+            // off the upload and branches server-side. Same assign-a-new-
+            // metadata-object-onto-the-file shape the thumbnail step uses.
+            if (await isAnimatedImage(file)) {
+                file.metadata = {
+                    ...file.metadata,
+                    metadataStripSkipped: true,
+                    metadataStripSkippedReason: 'animated-image',
+                }
+                return file
+            }
 
             if (context.worker) {
                 try {
