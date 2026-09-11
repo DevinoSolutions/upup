@@ -117,6 +117,7 @@ export type UiTranslations = {
     errorCompressingFile: string
     clientIdRequired: string
     popupBlocked: string
+    authCancelled: string
     dropboxClientIdMissing: string
     dropboxAuthFailed: string
     boxClientIdMissing: string
@@ -392,6 +393,7 @@ export function flattenTranslatorToUiTranslations(
         }),
         clientIdRequired: tr('errors.clientIdRequired'),
         popupBlocked: tr('errors.popupBlocked'),
+        authCancelled: tr('errors.authCancelled'),
         dropboxClientIdMissing: tr('errors.dropboxClientIdMissing'),
         dropboxAuthFailed: tr('errors.dropboxAuthFailed'),
         boxClientIdMissing: tr('errors.boxClientIdMissing'),

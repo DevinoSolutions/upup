@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import type { DriveBrowserError } from '@useupup/core'
 import type { UploaderContext } from '../../lib/types'
 import { sourceViewContainer } from './source-view-container'
@@ -29,7 +29,9 @@ export function driveAuthFallback(
                       role="alert"
                       class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                   >
-                      ${t(tr.driveLoadError, { message: opts.error.message })}
+                      ${t(tr.driveLoadError, {
+                          message: driveErrorText(opts.error, tr),
+                      })}
                   </p>`
                 : nothing
         }

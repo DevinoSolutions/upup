@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import {
     useUploaderI18n,
     useUploaderTheme,
@@ -29,6 +29,14 @@ export default function DriveAuthFallback({
     // mount goes straight to the provider instead of an interstitial. If the
     // popup is blocked (activation consumed/expired), this view stays as the
     // manual fallback. Never auto-retries after an error.
+    //
+    // `error` is what makes that guard reachable across a REMOUNT (#390): this
+    // view unmounts while an attempt is in flight and comes back with a fresh
+    // `attemptedRef`, so only a caller that hands the outcome back can stop the
+    // second `window.open` — which has no user activation left, returns null,
+    // and gets reported as a popup block over a choice the person made. All four
+    // drive components now forward it, and every way an attempt can end without
+    // a session sets it.
     const attemptedRef = useRef(false)
     useEffect(() => {
         if (attemptedRef.current || error) return
@@ -46,7 +54,9 @@ export default function DriveAuthFallback({
                         role="alert"
                         className="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                     >
-                        {t(tr.driveLoadError, { message: error.message })}
+                        {t(tr.driveLoadError, {
+                            message: driveErrorText(error, tr),
+                        })}
                     </p>
                 )}
                 <p

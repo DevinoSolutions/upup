@@ -1,6 +1,6 @@
 import { Component, Input, inject } from '@angular/core'
 import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
 
@@ -56,7 +56,9 @@ export class DriveAuthFallbackComponent {
     get errorText(): string {
         const err = this.error?.()
         const tr = this.store.translations()
-        return err ? t(tr.driveLoadError, { message: err.message }) : ''
+        return err
+            ? t(tr.driveLoadError, { message: driveErrorText(err, tr) })
+            : ''
     }
 
     /** Resolved i18n string: "Sign in to access {{provider}}" → "Sign in to access Google Drive" */

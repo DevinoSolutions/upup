@@ -36,6 +36,7 @@ async function handleSignOut() {
         v-if="!isAuthenticated && !token && !isLoading"
         provider-name="Dropbox"
         :on-retry="authenticate"
+        :error="error"
         data-upup-slot="dropbox-uploader"
     />
     <DriveBrowser

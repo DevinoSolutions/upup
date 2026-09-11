@@ -9,7 +9,7 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@useupup/core'
-import { searchDriveFiles, cn } from '@useupup/core/internal'
+import { searchDriveFiles, cn, driveErrorText } from '@useupup/core/internal'
 import { UpupStore } from '../../upup-store.service'
 import { SourceViewContainerComponent } from '../source-view-container.component'
 import { DriveBrowserHeaderComponent } from './drive-browser-header.component'
@@ -196,7 +196,11 @@ export class DriveBrowserComponent {
 
     get errorText(): string {
         const err = this.error?.()
-        return err ? t(this.tr.driveLoadError, { message: err.message }) : ''
+        return err
+            ? t(this.tr.driveLoadError, {
+                  message: driveErrorText(err, this.tr),
+              })
+            : ''
     }
 
     get loader(): Type<unknown> {

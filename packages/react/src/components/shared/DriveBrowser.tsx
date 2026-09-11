@@ -7,7 +7,7 @@ import {
     formatUiMessage as t,
     pluralUiMessage as plural,
 } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import {
     useUploaderI18n,
     useUploaderOptions,
@@ -132,7 +132,7 @@ export default function DriveBrowser({
                                         className="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                                     >
                                         {t(tr.driveLoadError, {
-                                            message: error.message,
+                                            message: driveErrorText(error, tr),
                                         })}
                                     </p>
                                 </div>

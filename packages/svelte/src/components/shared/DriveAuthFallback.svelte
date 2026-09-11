@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store'
   import { type DriveBrowserError, formatUiMessage as t } from '@useupup/core'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
   import { useUploaderI18n, useUploaderTheme } from '../../context/uploader-context'
   import SourceViewContainer from './SourceViewContainer.svelte'
 
@@ -30,7 +30,7 @@ import { cn } from '@useupup/core/internal'
         role="alert"
         class="upup-p-4 upup-text-sm upup-text-red-600 dark:upup-text-red-400"
       >
-        {t(tr.driveLoadError, { message: $error.message })}
+        {t(tr.driveLoadError, { message: driveErrorText($error, tr) })}
       </p>
     {/if}
     <p
