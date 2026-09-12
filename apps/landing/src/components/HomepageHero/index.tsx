@@ -227,7 +227,11 @@ export default function HeroSection({
                             variants={headingVariants}
                         >
                             <BlurText
-                                text="One File Uploader,"
+                                text={
+                                    fw
+                                        ? `${fw.name} File Uploader`
+                                        : 'Open-Source File Uploader'
+                                }
                                 delay={150}
                                 animateBy="words"
                                 direction="top"
@@ -247,7 +251,9 @@ export default function HeroSection({
                                     showBorder={false}
                                     className="font-bold"
                                 >
-                                    {fw?.name ?? 'Every Framework'}
+                                    {fw
+                                        ? 'One core, every framework'
+                                        : 'for Every Framework'}
                                 </GradientText>
                             </span>
                         </motion.h1>
@@ -259,8 +265,8 @@ export default function HeroSection({
                             className="text-base sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
                             variants={subtitleVariants}
                         >
-                            A drag-and-drop file uploader with a headless core
-                            and native UI for{' '}
+                            A free, open-source drag-and-drop file uploader with
+                            a headless core and native UI for{' '}
                             <span className="font-semibold text-gray-900 dark:text-white">
                                 {fw?.name ??
                                     'React, Vue, Svelte, Angular, Vanilla JS & Preact'}
@@ -307,6 +313,21 @@ export default function HeroSection({
                                     <ExternalLink className="w-4 h-4" />
                                 </a>
                             </motion.div>
+
+                            {/* Framework pages only: the shortest path from
+                                this page to working code is that framework's
+                                own quickstart doc (/docs/quickstarts/<id>/).
+                                Plain Link — no motion wrapper — so the CTA row
+                                stays trivially mergeable. */}
+                            {fw && (
+                                <Link
+                                    href={`/docs/quickstarts/${fw.id}/`}
+                                    className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-white/[0.05] border border-black/5 dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold hover:border-black/10 dark:hover:border-white/20 transition-colors duration-200"
+                                >
+                                    {fw.name} Quickstart
+                                    <ArrowRight className="w-5 h-5" />
+                                </Link>
+                            )}
                         </motion.div>
 
                         {/* Install Command with Package Manager Select — the page's
