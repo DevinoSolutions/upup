@@ -225,6 +225,22 @@ export function DocsHome() {
                         </motion.div>
                     ))}
                 </div>
+                {/* The machine-readable entry point, as a real anchor. The
+                    "AI assistants" card above explains llms.txt; this is the
+                    link that actually reaches it — a crawler cannot follow
+                    prose, and the corpus was previously unlinked from every
+                    HTML page on the site. */}
+                <p className="mt-6 text-sm text-gray-600 dark:text-gray-400">
+                    Reading these docs with an agent? Start from{' '}
+                    <a
+                        href="/llms.txt"
+                        data-testid="docs-llms-link"
+                        className="font-medium text-gray-900 underline underline-offset-4 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
+                    >
+                        llms.txt
+                    </a>
+                    .
+                </p>
             </div>
         </div>
     )

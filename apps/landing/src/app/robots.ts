@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { AI_CRAWLER_USER_AGENTS } from '@/lib/seo/ai-crawlers'
 import { isProductionSite, siteUrl } from '@/lib/site-url'
 
 // Replaces the former static public/robots.txt, which hardcoded the PRODUCTION
@@ -27,12 +28,27 @@ export default function robots(): MetadataRoute.Robots {
         }
     }
 
+    // ONE disallow set, shared by both groups. A named AI crawler that got a
+    // laxer list than `*` would be a side door into /api/ and the demo harness;
+    // sharing the constant makes divergence impossible rather than unlikely.
+    const disallow = ['/api/', '/mobile-demo/']
+
     return {
         rules: [
             {
                 userAgent: '*',
                 allow: '/',
-                disallow: ['/api/', '/mobile-demo/'],
+                disallow,
+            },
+            // The `*` rule above already permits these agents. Naming them is
+            // an explicit, auditable allow: several are opt-out tokens
+            // (Google-Extended, Applebot-Extended, anthropic-ai) whose absence
+            // reads as "undecided" to a reviewer, and the docs corpus + llms.txt
+            // exist precisely so these crawlers can quote us accurately.
+            {
+                userAgent: [...AI_CRAWLER_USER_AGENTS],
+                allow: '/',
+                disallow,
             },
         ],
         sitemap,
