@@ -12,13 +12,39 @@ import {
     ChevronDown,
 } from 'lucide-react'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import GradientText from '@/components/TextAnimation/GradientText'
-import BlurText from '@/components/TextAnimation/BlurText'
+import RisingWords from '@/components/TextAnimation/RisingWords'
 import FrameworkSnippets from '@/components/FrameworkSnippets'
 import FrameworkStrip from '@/components/FrameworkStrip'
-import { HeroSession } from '@/components/UploaderScene'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
+
+// The hero visual is decorative (aria-hidden) and expensive: the scene engine,
+// a pile of react-icons, and eleven <img> tags that React 19 hoists into
+// `<link rel="preload" as="image">` at the very top of the document, ahead of
+// the CSS the hero COPY needs. None of it is indexable, so it loads client-side
+// only, behind the same viewport gate the scene already used for its timeline.
+// The placeholder reserves the box so nothing shifts when it arrives.
+const HeroSession = dynamic(
+    () => import('@/components/UploaderScene/HeroSession'),
+    {
+        ssr: false,
+        loading: () => <HeroVisualPlaceholder />,
+    },
+)
+
+// Matches HeroSession's own root box (mx-auto, max-w-[440px]) and its measured
+// height — 735px at a 412px viewport, 743px at desktop — so mounting the real
+// scene is a zero-shift swap.
+function HeroVisualPlaceholder() {
+    return (
+        <div
+            aria-hidden="true"
+            className="mx-auto min-h-[740px] w-full max-w-[440px]"
+        />
+    )
+}
 
 export default function HeroSection({
     framework,
@@ -36,6 +62,12 @@ export default function HeroSection({
     // HeroSession — we just pass the gate down.
     const visualRef = useRef(null)
     const visualActive = useInView(visualRef, { amount: 0.2 })
+    // …and a one-way latch on top of it, so the scene's chunk is fetched only
+    // once the box has actually been on screen, and stays mounted after that.
+    const [visualMounted, setVisualMounted] = useState(false)
+    useEffect(() => {
+        if (visualActive) setVisualMounted(true)
+    }, [visualActive])
 
     const pkg = fw?.pkg ?? '@useupup/react'
     const packageManagers = useMemo(
@@ -92,111 +124,16 @@ export default function HeroSection({
 
     const easeCurve: [number, number, number, number] = [0.25, 0.46, 0.45, 0.94]
 
-    // Animation variants — y/opacity/scale only (no x-slides; the section is
-    // overflow-hidden and clips horizontal entrances at narrow viewports).
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.15,
-                delayChildren: 0.2,
-            },
-        },
-    }
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 30, scale: 0.95 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.7,
-                ease: easeCurve,
-            },
-        },
-    }
-
-    const badgeVariants = {
-        hidden: { opacity: 0, y: -20, scale: 0.8 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.6,
-                ease: easeCurve,
-            },
-        },
-    }
-
-    const headingVariants = {
-        hidden: { opacity: 0, y: 40 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.8,
-                ease: easeCurve,
-                delay: 0.2,
-            },
-        },
-    }
-
-    const subtitleVariants = {
-        hidden: { opacity: 0, y: 30 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.7,
-                ease: easeCurve,
-                delay: 0.4,
-            },
-        },
-    }
-
-    const buttonVariants = {
-        hidden: { opacity: 0, y: 20, scale: 0.95 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.6,
-                ease: easeCurve,
-            },
-        },
-    }
-
-    const installBoxVariants = {
-        hidden: { opacity: 0, y: 30, scale: 0.9 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.7,
-                ease: easeCurve,
-                delay: 0.8,
-            },
-        },
-    }
-
-    const visualVariants = {
-        hidden: { opacity: 0, y: 40, scale: 0.96 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-                duration: 0.9,
-                ease: easeCurve,
-                delay: 0.3,
-            },
-        },
-    }
+    // The hero copy's entrance is CSS (`.hero-rise` / `.hero-word` in
+    // globals.css), staggered by an inline `--hero-delay`. It used to be a
+    // framer-motion `initial="hidden"` variant tree, which is why the server
+    // HTML shipped the H1, subtitle, CTAs and install box at opacity 0 — on a
+    // throttled phone the LCP text waited for hydration before it painted at
+    // all. Delays stay short and the subtitle (the LCP element) is close to
+    // first paint. Only whileHover/whileTap motion survives here, and only on
+    // elements with no `initial`, so nothing starts invisible again.
+    const rise = (seconds: number) =>
+        ({ '--hero-delay': `${seconds}s` }) as React.CSSProperties
 
     return (
         <section className="relative mt-28 overflow-hidden px-6 pt-12 pb-16">
@@ -206,34 +143,30 @@ export default function HeroSection({
                     right under the fold copy. */}
                 <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
                     {/* LEFT — copy, CTAs, install box */}
-                    <motion.div
-                        className="flex flex-col items-center text-center lg:items-start lg:text-left"
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="visible"
-                    >
+                    <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
                         {/* Badge — hairline pill (the one border recipe). */}
-                        <motion.div
-                            className="mb-6 inline-flex items-center gap-2.5 rounded-full border border-black/5 px-4 py-2 text-sm font-medium text-gray-600 dark:border-white/10 dark:text-gray-300"
-                            variants={badgeVariants}
+                        <div
+                            className="hero-rise mb-6 inline-flex items-center gap-2.5 rounded-full border border-black/5 px-4 py-2 text-sm font-medium text-gray-600 dark:border-white/10 dark:text-gray-300"
+                            style={rise(0)}
                         >
                             <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400" />
                             <span>Open source · One core, six frameworks</span>
-                        </motion.div>
+                        </div>
 
                         {/* Main Heading */}
-                        <motion.h1
-                            className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.1]"
-                            variants={headingVariants}
-                        >
-                            <BlurText
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-[1.1]">
+                            <RisingWords
                                 text="One File Uploader,"
-                                delay={150}
-                                animateBy="words"
-                                direction="top"
+                                startDelay={50}
+                                stagger={50}
                                 className="text-gray-900 dark:text-white justify-center lg:justify-start"
                             />
 
+                            {/* No entrance class here: GradientText's root is a
+                                flex block with its own infinite gradient
+                                animation, and wrapping it in an animated inline
+                                span would drop the transform silently. It
+                                simply paints with the server HTML. */}
                             <span className="relative">
                                 <GradientText
                                     colors={[
@@ -250,14 +183,17 @@ export default function HeroSection({
                                     {fw?.name ?? 'Every Framework'}
                                 </GradientText>
                             </span>
-                        </motion.h1>
+                        </h1>
 
                         {/* Subtitle — tightened; every claim carries over verbatim
                             (drag-and-drop, headless core, native UI, cloud drives,
                             camera, screen capture, secure S3 server-mode). */}
-                        <motion.p
-                            className="text-base sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
-                            variants={subtitleVariants}
+                        {/* `hero-lift`, not `hero-rise`: this paragraph is the
+                            page's LCP element, and an opacity fade would delay
+                            its paint by the whole animation. */}
+                        <p
+                            className="hero-lift text-base sm:text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl"
+                            style={rise(0.15)}
                         >
                             A drag-and-drop file uploader with a headless core
                             and native UI for{' '}
@@ -267,16 +203,16 @@ export default function HeroSection({
                             </span>
                             . Cloud drives, camera, screen capture, and secure
                             server-mode uploads to any S3-compatible storage.
-                        </motion.p>
+                        </p>
 
                         {/* CTA Buttons */}
-                        <motion.div
-                            className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-8"
-                            variants={itemVariants}
-                            transition={{ delay: 0.6 }}
+                        <div
+                            className="hero-rise flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-8"
+                            style={rise(0.3)}
                         >
+                            {/* whileHover/whileTap only — no `initial`, so these
+                                never render at opacity 0. */}
                             <motion.div
-                                variants={buttonVariants}
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                             >
@@ -291,10 +227,8 @@ export default function HeroSection({
                             </motion.div>
 
                             <motion.div
-                                variants={buttonVariants}
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
-                                transition={{ delay: 0.1 }}
                             >
                                 <a
                                     href="https://github.com/DevinoSolutions/upup"
@@ -307,13 +241,13 @@ export default function HeroSection({
                                     <ExternalLink className="w-4 h-4" />
                                 </a>
                             </motion.div>
-                        </motion.div>
+                        </div>
 
                         {/* Install Command with Package Manager Select — the page's
                             ONE install surface. Behaviour is unchanged. */}
-                        <motion.div
-                            className="w-full max-w-lg mx-auto lg:mx-0"
-                            variants={installBoxVariants}
+                        <div
+                            className="hero-rise w-full max-w-lg mx-auto lg:mx-0"
+                            style={rise(0.45)}
                         >
                             {/* Flat hairline surface — the page's ONE install
                                 surface. No overflow-hidden so the absolute z-50
@@ -321,27 +255,16 @@ export default function HeroSection({
                             <div className="rounded-2xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10">
                                 <div className="relative rounded-2xl p-4">
                                     <div className="flex items-center justify-between">
-                                        <motion.code
-                                            className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{
-                                                delay: 1,
-                                                duration: 0.5,
-                                            }}
-                                        >
+                                        {/* Plain nodes: these used to fade in
+                                            from opacity 0 a full second after
+                                            hydration, which meant the install
+                                            command itself was invisible in the
+                                            server HTML. */}
+                                        <code className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate">
                                             {currentCommand}
-                                        </motion.code>
+                                        </code>
 
-                                        <motion.div
-                                            className="flex items-center gap-2"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{
-                                                delay: 1.1,
-                                                duration: 0.5,
-                                            }}
-                                        >
+                                        <div className="flex items-center gap-2">
                                             {/* Copy Button */}
                                             <motion.button
                                                 onClick={handleCopy}
@@ -524,25 +447,24 @@ export default function HeroSection({
                                                     )}
                                                 </AnimatePresence>
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </div>
+                    </div>
 
                     {/* RIGHT — the live-usage animation as the hero's visual
                         anchor. Decorative, so it carries no copy; the left
-                        column holds all the info. */}
-                    <motion.div
-                        ref={visualRef}
-                        className="relative"
-                        variants={visualVariants}
-                        initial="hidden"
-                        animate="visible"
-                    >
-                        <HeroSession active={visualActive} />
-                    </motion.div>
+                        column holds all the info. Client-only and mounted the
+                        first time the box reaches the viewport. */}
+                    <div ref={visualRef} className="relative">
+                        {visualMounted ? (
+                            <HeroSession active={visualActive} />
+                        ) : (
+                            <HeroVisualPlaceholder />
+                        )}
+                    </div>
                 </div>
 
                 {/* Full-width below the grid: framework strip, then the

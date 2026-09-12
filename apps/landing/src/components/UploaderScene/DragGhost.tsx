@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { FaRegFolderOpen } from 'react-icons/fa'
+import { sceneImageSize } from './scene-media'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DragGhost — the "thing being dragged" the timeline glides across the panel: the
@@ -116,6 +117,11 @@ export default function DragGhost({
                                                     <img
                                                         src={thumb}
                                                         alt=""
+                                                        {...sceneImageSize(
+                                                            thumb,
+                                                        )}
+                                                        loading="lazy"
+                                                        decoding="async"
                                                         className="absolute inset-0 h-full w-full object-cover"
                                                     />
                                                 )}

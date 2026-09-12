@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react'
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { FaCheck, FaFolderOpen, FaPlay } from 'react-icons/fa'
-import { SCENE_MEDIA } from './scene-media'
+import { SCENE_MEDIA, sceneImageSize } from './scene-media'
 import type { DriveProvider, DriveThumb } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,6 +49,9 @@ export default function MockDriveBrowser({
                     <img
                         src={SCENE_MEDIA.photos.portrait}
                         alt=""
+                        {...sceneImageSize(SCENE_MEDIA.photos.portrait)}
+                        loading="lazy"
+                        decoding="async"
                         className="h-5 w-5 rounded-full object-cover ring-1 ring-white/20"
                     />
                     <span className="text-[11px] font-medium text-sky-300">
@@ -173,6 +176,9 @@ function ThumbMedia({ thumb, reduce }: { thumb: DriveThumb; reduce: boolean }) {
         <img
             src={thumb.src}
             alt=""
+            {...sceneImageSize(thumb.src)}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
         />
     )
