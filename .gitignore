@@ -68,3 +68,4 @@ apps/e2e-test/screenshots/
 # filesystem report output uploaded as a CI artifact
 .lighthouseci/
 apps/landing/.lighthouseci-reports/
+apps/landing/.lighthouseci-mobile-reports/

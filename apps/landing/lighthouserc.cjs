@@ -1,8 +1,10 @@
 // Nightly Lighthouse gate for the public site — SEO + Best Practices ONLY.
 // Accessibility is deliberately not asserted here (the nightly axe ratchet in
-// `pnpm run e2e:a11y` owns it — Lighthouse's a11y audits are axe-core anyway),
-// and Performance is excluded (score is unusably noisy on shared CI runners;
-// bundle weight is already gated by size-limit).
+// `pnpm run e2e:a11y` owns it — Lighthouse's a11y audits are axe-core anyway).
+// Performance is not asserted in THIS config: it runs alongside, mobile-only
+// and warn-only, from `lighthouserc.mobile.cjs` (the score is noisy on shared
+// CI runners, so it is a visible ratchet rather than a gate; bundle weight
+// stays gated by size-limit).
 //
 // Run locally after building:
 //   pnpm exec turbo run build --filter=@useupup/landing
