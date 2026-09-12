@@ -46,7 +46,7 @@ const heroRows: HeroRow[] = [
         icon: <FaUpload className="h-6 w-6" />,
         title: 'Six Frameworks, One Uploader',
         description:
-            'Native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — one uploader that renders byte-identical DOM in every framework, enforced by a cross-framework parity suite.',
+            'Native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact — one uploader that renders the same DOM structure, classes, and accessibility tree in every framework, enforced by a cross-framework parity suite.',
         Visual: FrameworksScene,
         live: true,
     },
