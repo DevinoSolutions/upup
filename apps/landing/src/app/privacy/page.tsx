@@ -16,7 +16,7 @@ export default function Privacy() {
             <Section clearNav>
                 <SectionHeading
                     as="h1"
-                    badge="Last updated April 25th, 2025"
+                    badge="Last updated September 12th, 2026"
                     title={
                         <>
                             Privacy{' '}
@@ -36,8 +36,9 @@ export default function Privacy() {
                     <h2>1. Information We Collect</h2>
                     <p>
                         We may collect personal data such as your name and email
-                        address when you sign up or contact us. Additionally, we
-                        gather usage data via cookies and similar technologies.
+                        address when you contact us, submit the support form, or
+                        request a provider integration. Additionally, we gather
+                        usage data via cookies and similar technologies.
                     </p>
 
                     <h2>2. How We Use Your Information</h2>
