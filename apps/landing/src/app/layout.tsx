@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
-        title: 'upup – One File Uploader for Every Framework',
+        title: 'upup – Open-Source File Uploader for Every Framework',
         description:
             'One open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage. MIT-licensed.',
         images: [`${siteUrl()}/img/social-card.png`],
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'upup – One File Uploader for Every Framework',
+        title: 'upup – Open-Source File Uploader for Every Framework',
         description:
             'One uploader, native UI for React, Vue, Svelte, Angular, Vanilla JS & Preact. Headless core, cloud drives, and secure server-mode uploads to any S3-compatible storage. Open-source, MIT.',
         images: [`${siteUrl()}/img/social-card.png`],

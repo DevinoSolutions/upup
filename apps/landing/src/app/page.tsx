@@ -11,10 +11,13 @@ import FAQSection from '@/components/FAQSection'
 import Section from '@/components/ui/Section'
 import { canonicalUrl } from '@/lib/site-url'
 
+// Title is brand-first and ≤60 chars ("upup" is the site's biggest query and
+// the old 77-char title truncated in SERPs); description is ≤155 so it renders
+// whole. Both budgets are pinned by src/__tests__/seo-copy-budgets.test.ts.
 export const metadata = {
-    title: 'upup – One File Uploader for React, Vue, Svelte, Angular, Vanilla JS & Preact',
+    title: 'upup – Open-Source File Uploader for Every Framework',
     description:
-        'One open-source, MIT-licensed file uploader with a headless core and byte-identical native UI for six frameworks. Drag-and-drop, cloud drives (Google Drive, OneDrive, Dropbox, Box), camera, screen capture, and secure server-mode uploads to S3-compatible storage.',
+        'upup is a free, open-source drag and drop file uploader with native UI for React, Vue, Svelte, Angular, Vanilla JS and Preact. MIT-licensed.',
     alternates: {
         canonical: canonicalUrl(),
     },
