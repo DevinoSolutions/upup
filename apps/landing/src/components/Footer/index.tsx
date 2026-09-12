@@ -96,6 +96,18 @@ export default function Footer() {
                                     FAQ
                                 </Link>
                             </li>
+                            <li>
+                                {/* A plain <a>: /llms.txt is a rewrite to a
+                                    text route, not an app page, so next/link's
+                                    client navigation has nothing to render.
+                                    This is also the site's ONLY crawlable link
+                                    to the corpus — the convention is a
+                                    well-known path, but a linked file is the
+                                    one an agent finds by following the site. */}
+                                <a href="/llms.txt" className={FOOTER_LINK}>
+                                    llms.txt
+                                </a>
+                            </li>
                         </ul>
                     </div>
 

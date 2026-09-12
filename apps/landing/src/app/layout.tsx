@@ -10,6 +10,7 @@ import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import EntityStructuredData from '@/components/StructuredData/EntityStructuredData'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -152,6 +153,11 @@ export default function RootLayout({
             })();
           `}
                 </Script>
+                {/* Organization + WebSite JSON-LD. It lives in the ROOT
+                    layout on purpose: the entity graph has to be on every
+                    page — the 64 docs pages are the bulk of the indexable
+                    surface and they mount no page-level <StructuredData/>. */}
+                <EntityStructuredData />
                 {process.env.NODE_ENV === 'production' && (
                     <>
                         <Script

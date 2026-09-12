@@ -72,6 +72,46 @@ const nextConfig = {
     // then one trailingSlash hop appends the slash).
     async redirects() {
         return [
+            // http -> https, FIRST so no other rule can answer a plaintext
+            // request with a 200. Keyed on Cloudflare's `cf-visitor` header
+            // (`{"scheme":"http"}`) and NOTHING else: `x-forwarded-proto` is
+            // rewritten by Traefik on the way to this container, so a rule
+            // reading it sees "http" on every request and redirects forever.
+            // Cloudflare's own "Always Use HTTPS" toggle is the belt (an owner
+            // item); this is the braces that lives in the repo and survives a
+            // zone-settings change.
+            //
+            // TWO rules, because Next strips the trailing slash before matching
+            // a source and does NOT re-append it to an ABSOLUTE destination
+            // (it does for relative ones) — a single `${SITE_BASE}/:path*`
+            // sends /react/ to `…/react`, costing a second 308. The first rule
+            // therefore matches extensionless paths only (`[^/.]+` final
+            // segment) and restores the slash; file paths and the bare root
+            // fall through to the second, which must NOT gain one.
+            {
+                source: '/:path((?:[^/]+/)*[^/.]+)',
+                has: [
+                    {
+                        type: 'header',
+                        key: 'cf-visitor',
+                        value: '.*"scheme":"http".*',
+                    },
+                ],
+                destination: `${SITE_BASE}/:path/`,
+                permanent: true,
+            },
+            {
+                source: '/:path*',
+                has: [
+                    {
+                        type: 'header',
+                        key: 'cf-visitor',
+                        value: '.*"scheme":"http".*',
+                    },
+                ],
+                destination: `${SITE_BASE}/:path*`,
+                permanent: true,
+            },
             // The wildcard `/documentation/:path*` rule below also covers the
             // bare path (`:path*` matches zero segments) — this explicit entry
             // is kept for clarity, not necessity.
@@ -121,11 +161,30 @@ const nextConfig = {
                 destination: '/docs/api-reference/upupuploader/required-props/',
                 permanent: true,
             },
+            // Two sitemap URLs still registered in Search Console from the
+            // Docusaurus era, both currently dead: `/sitemap-landing.xml` is a
+            // bare 404 (nothing ever served it), and `/documentation/sitemap.xml`
+            // fell through to the wildcard below, which appends a slash to a
+            // FILE path and lands on the docs catch-all's 404. GSC has been
+            // reporting "couldn't fetch" for both ever since. Extension paths
+            // get no trailing-slash hop, so each of these is a single 308.
+            // They must precede the wildcard. (Owner follow-up: delete the two
+            // stale submissions in Search Console once these are live.)
+            {
+                source: '/sitemap-landing.xml',
+                destination: '/sitemap.xml',
+                permanent: true,
+            },
+            {
+                source: '/documentation/sitemap.xml',
+                destination: '/sitemap.xml',
+                permanent: true,
+            },
             // Destination carries the trailing slash so trailingSlash:true
             // does not have to spend a SECOND 308 appending it. Safe here only
             // because every extensionless legacy path maps to a real page and
-            // the two file paths under /documentation are handled by the
-            // explicit llms rules above — a slash appended to a file URL would
+            // the file paths under /documentation are handled by the explicit
+            // llms + sitemap rules above — a slash appended to a file URL would
             // break it (Next never slashes paths with an extension).
             {
                 source: '/documentation/:path*',
@@ -137,12 +196,30 @@ const nextConfig = {
             // /documentation/* -> /docs/* hop first (staying on the alias
             // host), then the /docs/* rule below moves it to the main host.
             //
-            // The three explicit rules come before the two catch-alls because
-            // a catch-all destination of `/docs/:path*/` is wrong for exactly
+            // The explicit rules come before the two catch-alls because a
+            // catch-all destination of `/docs/:path*/` is wrong for exactly
             // two shapes: an EMPTY `:path*` (which would render `/docs//`) and
             // a FILE path (which must not gain a trailing slash). Listing them
             // explicitly lets the catch-alls stay slashed for the page shapes
             // that are 99% of alias traffic.
+            //
+            // robots.txt and sitemap.xml are the file paths a crawler probes on
+            // any host it meets. Without these two they took the catch-all to
+            // `${SITE_BASE}/docs/robots.txt/`, then a trailing-slash hop, then
+            // the docs catch-all's 404 — a broken robots on a live alias host.
+            // They belong on the APEX copies, not under /docs.
+            {
+                source: '/robots.txt',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/robots.txt`,
+                permanent: true,
+            },
+            {
+                source: '/sitemap.xml',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/sitemap.xml`,
+                permanent: true,
+            },
             {
                 source: '/llms.txt',
                 has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
@@ -200,11 +277,35 @@ const nextConfig = {
             },
         ]
     },
-    // Non-production hosts (dev, previews) serve a byte-identical copy of the
-    // whole site. robots.txt disallows crawling there; this header is what
-    // actually keeps a URL discovered some other way out of the index.
+    // Two mutually exclusive header sets.
+    //
+    // PRODUCTION: HSTS. Two years + includeSubDomains + preload is the
+    // preload-list-eligible value; the site is https-only in practice and the
+    // cf-visitor redirect above guarantees a plaintext request never gets a
+    // 200, so there is no http-only subdomain this can strand. (Submitting to
+    // hstspreload.org is an owner step, taken only after the header has been
+    // live for a while — `preload` in the value is a prerequisite, not the
+    // submission itself.)
+    //
+    // NON-PRODUCTION (dev, previews): those hosts serve a byte-identical copy
+    // of the whole site. robots.txt disallows crawling there; this header is
+    // what actually keeps a URL discovered some other way out of the index.
+    // They get no HSTS — a preload directive from a preview host is a
+    // liability, not a protection.
     async headers() {
-        if (IS_PRODUCTION_SITE) return []
+        if (IS_PRODUCTION_SITE) {
+            return [
+                {
+                    source: '/:path*',
+                    headers: [
+                        {
+                            key: 'Strict-Transport-Security',
+                            value: 'max-age=63072000; includeSubDomains; preload',
+                        },
+                    ],
+                },
+            ]
+        }
         return [
             {
                 source: '/:path*',
