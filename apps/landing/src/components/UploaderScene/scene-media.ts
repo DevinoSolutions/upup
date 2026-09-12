@@ -35,3 +35,37 @@ export const SCENE_MEDIA = {
         devino: '/devino.png',
     },
 } as const
+
+// Every stock photo in the kit was exported at this size; the two video poster
+// frames are 16:9 and the two logos are their own shapes.
+const DEFAULT_PHOTO_SIZE = { width: 400, height: 300 } as const
+
+const IMAGE_SIZES: Readonly<
+    Record<string, { readonly width: number; readonly height: number }>
+> = {
+    [SCENE_MEDIA.videos.beachWaves.poster]: { width: 640, height: 360 },
+    [SCENE_MEDIA.videos.screenShare.poster]: { width: 640, height: 360 },
+    [SCENE_MEDIA.logos.upup]: { width: 3200, height: 679 },
+    [SCENE_MEDIA.logos.devino]: { width: 1905, height: 580 },
+}
+
+/**
+ * Intrinsic pixel dimensions for a scene asset, so every scene `<img>` can
+ * carry `width`/`height`. Two reasons they are not optional:
+ *
+ *   - Lighthouse flags width/height-less images as a layout-shift risk on every
+ *     page a scene renders on.
+ *   - React 19 hoists an eagerly-loaded `<img>` into a `<link rel="preload"
+ *     as="image">` at the top of the document. Eleven decorative scene photos
+ *     were therefore being preloaded ahead of the CSS and fonts the hero COPY
+ *     needs; pairing these attributes with `loading="lazy"` stops that.
+ *
+ * The scene images are all `object-cover` inside absolutely-positioned boxes,
+ * so the attributes never change layout — they only describe the file.
+ */
+export function sceneImageSize(src: string | undefined): {
+    readonly width: number
+    readonly height: number
+} {
+    return (src && IMAGE_SIZES[src]) || DEFAULT_PHOTO_SIZE
+}

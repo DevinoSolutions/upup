@@ -360,7 +360,7 @@ jobs:
               run: pnpm --filter @useupup/e2e-test test:e2e:drive-sandbox
 
     Lighthouse:
-        name: Lighthouse (landing SEO + Best Practices)
+        name: Lighthouse (landing SEO + Best Practices + mobile perf ratchet)
         runs-on: ubuntu-latest
         steps:
             - name: Checkout the repository
@@ -384,17 +384,27 @@ jobs:
             # lhci boots `next start` itself and asserts per lighthouserc.cjs:
             # SEO=100 everywhere; Best Practices 100 on docs pages, ratcheted
             # on home/framework pages (third-party embed cookies). A11y is NOT
-            # asserted here — the axe ratchet above owns it; perf is excluded
-            # (noisy on shared runners; size-limit owns bundle weight).
+            # asserted here — the axe ratchet above owns it. Performance is not
+            # asserted in THIS config either; it has its own mobile run below.
             - name: Lighthouse audit + assertions (SEO / Best Practices)
               run: pnpm --filter @useupup/landing run lighthouse
+
+            # Mobile performance, on its own port and its own config, asserted
+            # at WARN level only: the score is genuinely noisy on a shared
+            # runner, so this is a visible ratchet in the log and the uploaded
+            # report rather than a gate. (`continue-on-error` is banned by the
+            # test-quality guard and unnecessary — warn assertions never fail.)
+            - name: Lighthouse mobile performance ratchet (warn-only)
+              run: pnpm --filter @useupup/landing run lighthouse:mobile
 
             - name: Upload Lighthouse reports
               if: always()
               uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
                   name: nightly-lighthouse-reports
-                  path: apps/landing/.lighthouseci-reports/
+                  path: |
+                      apps/landing/.lighthouseci-reports/
+                      apps/landing/.lighthouseci-mobile-reports/
                   if-no-files-found: warn
                   retention-days: 14
 

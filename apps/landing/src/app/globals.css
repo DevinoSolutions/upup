@@ -26,6 +26,68 @@
 html {
     scroll-behavior: smooth;
 }
+
+/* ── Hero entrance — CSS only, never JS ───────────────────────────
+   The hero copy (badge, H1, subtitle, CTAs, install box) used to enter
+   through framer-motion `initial="hidden"`, which means the SERVER HTML
+   ships it at opacity 0 and it only becomes visible once hydration has
+   finished. On a throttled phone that was 92% of a 10.5 s LCP, all of it
+   "render delay" — the text was in the HTML the whole time, just painted
+   transparent. A CSS animation runs off the server HTML instead, so the
+   first paint already carries the copy.
+   Stagger with an inline `--hero-delay`; keep every delay short, because
+   the element is invisible until its delay elapses (fill-mode `both`) and
+   the subtitle is the LCP element. */
+@keyframes hero-rise {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Transform-only twin, for the H1 and the subtitle. An element at opacity 0
+   has not painted, so fading in the LCP text pushes LCP out by the fade's
+   delay AND duration — measured at ~+1.9 s on throttled mobile even though the
+   text was in the server HTML the whole time. These elements are therefore
+   painted at full opacity from the first frame and only slide into place. */
+@keyframes hero-lift {
+    from {
+        transform: translate3d(0, 12px, 0);
+    }
+    to {
+        transform: none;
+    }
+}
+
+.hero-rise {
+    animation: hero-rise 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation-delay: var(--hero-delay, 0s);
+}
+
+.hero-lift {
+    animation: hero-lift 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation-delay: var(--hero-delay, 0s);
+}
+
+/* Per-word variant for the H1 (the old BlurText). Words are plain text nodes
+   either way — this only slides them in. */
+.hero-word {
+    display: inline-block;
+    animation: hero-lift 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation-delay: var(--hero-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-rise,
+    .hero-lift,
+    .hero-word {
+        animation: none;
+    }
+}
 body {
     background: var(--bg-base);
     color: var(--fg-base);

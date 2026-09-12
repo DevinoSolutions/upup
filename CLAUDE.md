@@ -617,8 +617,15 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   SEO=100 on every audited page and Best Practices 100 on docs pages /
   ratcheted ~0.74 on home+framework pages whose StackBlitz embed + ads tag set
   third-party cookies; a11y is deliberately NOT asserted — the axe ratchet
-  owns it, Lighthouse's a11y audits are axe-core anyway — and perf is excluded
-  as CI-runner noise; size-limit owns bundle weight), static `build:storybook`
+  owns it, Lighthouse's a11y audits are axe-core anyway; perf is not asserted
+  in THIS config. Performance is no longer skipped outright: a second step in
+  the same job runs `pnpm --filter @useupup/landing run lighthouse:mobile`
+  (config `apps/landing/lighthouserc.mobile.cjs`: mobile emulation, its own
+  port 4464 so both configs run back to back, median of 5) and asserts
+  `categories:performance` at **warn** level — a visible ratchet in the log and
+  the uploaded report, never a red night, since the score really is noisy on a
+  shared runner and `continue-on-error` is banned by the test-quality guard;
+  size-limit still owns bundle weight), static `build:storybook`
   for all six frameworks, `smoke:packages`, the mastra LLM evals (only when the
   `OPENROUTER_API_KEY` Actions secret exists — absent, the job goes green with
   a loud skip notice, never silently), and the **Drive-Sandbox** job — the live
