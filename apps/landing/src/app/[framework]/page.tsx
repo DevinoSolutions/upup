@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import '@useupup/interactive-example/styles'
-import { InteractiveExampleClient } from '@/components/InteractiveExampleClient'
+import DeferredInteractiveExample from '@/components/DeferredInteractiveExample'
 import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import { FRAMEWORK_IDS, getFramework } from '@/lib/frameworks'
 import StructuredData from '@/components/StructuredData'
@@ -73,7 +73,7 @@ export default async function FrameworkPage({
             />
             <HeroSection framework={fw.id} />
             <Section id="demo">
-                <InteractiveExampleClient
+                <DeferredInteractiveExample
                     {...interactiveExampleEnvProps(
                         fw.hasImageEditor
                             ? undefined

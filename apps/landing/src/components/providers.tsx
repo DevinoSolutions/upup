@@ -10,7 +10,9 @@ export function Providers({ children }: { children: ReactNode }) {
         if (!gtag.GA_TRACKING_ID) return
 
         const handleRouteChange = (event: Event) => {
-            const url = (event as CustomEvent<string>).detail || window.location.pathname
+            const url =
+                (event as CustomEvent<string>).detail ||
+                window.location.pathname
             gtag.pageView(url)
         }
 
@@ -25,11 +27,16 @@ export function Providers({ children }: { children: ReactNode }) {
         <>
             {gtag.GA_TRACKING_ID && (
                 <>
+                    {/* lazyOnload on BOTH halves — the loader and its config
+                        script must share a strategy, or the config can run
+                        before gtag.js exists. Analytics is never on the
+                        critical path; afterInteractive put ~90 KB of
+                        third-party JS in front of hydration on mobile. */}
                     <Script
-                        strategy="afterInteractive"
+                        strategy="lazyOnload"
                         src={`https://www.googletagmanager.com/gtag/js?id=${gtag.GA_TRACKING_ID}`}
                     />
-                    <Script id="gtag-init" strategy="afterInteractive">
+                    <Script id="gtag-init" strategy="lazyOnload">
                         {`
                     window.dataLayer = window.dataLayer || [];
                     function gtag(){dataLayer.push(arguments);}

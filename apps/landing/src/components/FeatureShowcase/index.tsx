@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useInView } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import {
     FaUpload,
     FaGlobe,
@@ -19,14 +20,36 @@ import {
 import Card from '@/components/ui/Card'
 import { H3_HEADING } from '@/components/ui/SectionHeading'
 import { ICON_CHIP } from '@/components/ui/recipes'
-import {
-    FrameworksScene,
-    DriveScene,
-    EditorScene,
-    ResumeScene,
-    PipelineScene,
-} from '@/components/UploaderScene'
-import { ServerModeVignette } from './vignettes'
+
+// The row visuals are decorative (their column is aria-hidden) and expensive:
+// five UploaderScene mocks plus a diagram, each with its own framer timeline,
+// react-icons and <img> tags that React hoists into document-head image
+// preloads. The row TEXT is indexable and stays server-rendered; only the
+// visuals load client-side, and only once their row is near the viewport.
+const FrameworksScene = dynamic(
+    () => import('@/components/UploaderScene/FrameworksScene'),
+    { ssr: false },
+)
+const DriveScene = dynamic(
+    () => import('@/components/UploaderScene/DriveScene'),
+    { ssr: false },
+)
+const EditorScene = dynamic(
+    () => import('@/components/UploaderScene/EditorScene'),
+    { ssr: false },
+)
+const ResumeScene = dynamic(
+    () => import('@/components/UploaderScene/ResumeScene'),
+    { ssr: false },
+)
+const PipelineScene = dynamic(
+    () => import('@/components/UploaderScene/PipelineScene'),
+    { ssr: false },
+)
+const ServerModeVignette = dynamic(
+    () => import('./vignettes').then(m => m.ServerModeVignette),
+    { ssr: false },
+)
 
 interface HeroRow {
     icon: React.ReactNode
@@ -130,6 +153,17 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
     // Non-`once` viewport gate so scenes only animate while on-screen (perf,
     // not an entrance animation — rows themselves render static).
     const active = useInView(ref, { amount: 0.2 })
+    // A SECOND, deliberately earlier observer decides when the visual mounts:
+    // a scene renders taller than the card's reserved min-height, so mounting
+    // it on `active` (20% visible) would resize a card the visitor is already
+    // looking at. At 600px of lead the growth happens off-screen — no visible
+    // shift, and the scene is ready by the time the row scrolls in. `once`
+    // keeps it mounted, so scrolling back never re-downloads the chunk.
+    const near = useInView(ref, { once: true, margin: '600px' })
+    const [visualMounted, setVisualMounted] = useState(false)
+    useEffect(() => {
+        if (near) setVisualMounted(true)
+    }, [near])
     const flipped = index % 2 === 1
     const { Visual } = row
 
@@ -166,8 +200,11 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                 aria-hidden="true"
                 className={`order-1 ${flipped ? 'lg:order-1' : 'lg:order-2'}`}
             >
+                {/* min-h keeps the card's box reserved while the visual is
+                    still deferred; the early mount above is what keeps the
+                    resize itself off-screen. */}
                 <Card className="flex min-h-[320px] items-center justify-center p-5 sm:p-6">
-                    <Visual active={active} />
+                    {visualMounted && <Visual active={active} />}
                 </Card>
             </div>
         </div>

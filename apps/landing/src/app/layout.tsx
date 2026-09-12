@@ -154,9 +154,13 @@ export default function RootLayout({
                 </Script>
                 {process.env.NODE_ENV === 'production' && (
                     <>
+                        {/* lazyOnload: Hotjar is session-recording, never
+                            needed for the page to work, and on a throttled
+                            phone its loader competed with hydration for the
+                            main thread. */}
                         <Script
                             defer
-                            strategy="afterInteractive"
+                            strategy="lazyOnload"
                             dangerouslySetInnerHTML={{
                                 __html: `
                               (function(h,o,t,j,a,r){
