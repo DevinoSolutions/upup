@@ -27,6 +27,7 @@ jobs:
     E2E-Full:
         name: Full E2E + a11y sweep (Playwright + MinIO)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -130,6 +131,7 @@ jobs:
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -152,6 +154,7 @@ jobs:
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -174,6 +177,7 @@ jobs:
     Mastra-Evals:
         name: Mastra LLM evals (paid key; explicit skip without it)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -232,6 +236,7 @@ jobs:
     Drive-Sandbox:
         name: Cloud-drive live integration (sandbox creds; explicit skip without them)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -362,6 +367,7 @@ jobs:
     Lighthouse:
         name: Lighthouse (landing SEO + Best Practices)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -405,6 +411,7 @@ jobs:
     Landing-Feedback:
         name: Landing feedback e2e + PostHog ingestion (capture token; explicit skip without it)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -481,6 +488,7 @@ jobs:
     Nightly-Status:
         name: Nightly Status Check
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         # issues:write is granted HERE only (the workflow default stays
         # contents:read) so the single job that files the tracking issue is the
         # only thing in this file holding a write scope.
