@@ -2,11 +2,13 @@
 'use client'
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { Code, ExternalLink, Maximize2, Minimize2 } from 'lucide-react'
 import { FaExclamationTriangle } from 'react-icons/fa'
 import { SiStackblitz } from 'react-icons/si'
-import sdk, { type Project } from '@stackblitz/sdk'
+// Type-only: the SDK itself (~4.2 MB of staticblitz client + monaco once the
+// embed runs) is imported dynamically, so it never reaches the initial bundle.
+import { type Project } from '@stackblitz/sdk'
 import Link from 'next/link'
 import Section from '@/components/ui/Section'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
@@ -159,9 +161,19 @@ function EditorLoadingOverlay() {
     )
 }
 
+// One module-level loader so the SDK is fetched at most once per page, whether
+// the embed effect or the "Open in StackBlitz" button asks for it first.
+const loadStackBlitzSdk = () => import('@stackblitz/sdk').then(m => m.default)
+
 export default function StackBlitzDemoSection() {
     const containerRef = useRef<HTMLDivElement | null>(null)
+    const gateRef = useRef<HTMLDivElement | null>(null)
     const cancelButtonRef = useRef<HTMLButtonElement | null>(null)
+    // The embed used to run on mount, on every homepage and framework-page
+    // load, pulling megabytes of third-party JS for a section most visitors
+    // never scroll to. It now waits until the editor card is within ~300px of
+    // the viewport; `once` keeps it embedded from then on.
+    const nearViewport = useInView(gateRef, { once: true, margin: '300px' })
     const warningTitleId = useId()
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -170,10 +182,12 @@ export default function StackBlitzDemoSection() {
     const [pendingFullscreenState, setPendingFullscreenState] = useState(false)
 
     const openInStackBlitz = () => {
-        sdk.openProject(stackblitzProject, {
-            openFile: OPEN_FILE,
-            newWindow: true,
-        })
+        void loadStackBlitzSdk().then(sdk =>
+            sdk.openProject(stackblitzProject, {
+                openFile: OPEN_FILE,
+                newWindow: true,
+            }),
+        )
     }
 
     // lock body scroll while full screen is active
@@ -190,11 +204,15 @@ export default function StackBlitzDemoSection() {
         }
     }, [isFullscreen])
 
-    // embed once, on mount and handle fullscreen transitions
+    // Embed once the section is near the viewport, and re-embed across
+    // fullscreen transitions.
     useEffect(() => {
+        if (!nearViewport) return
+
         // Fallback timer for the pathological case where embedProject never
         // resolves; declared in effect scope so the cleanup below can clear it.
         let fallbackTimer: ReturnType<typeof setTimeout> | undefined
+        let cancelled = false
 
         // Add a small delay to ensure DOM is ready, especially for fullscreen container
         const timeoutId = setTimeout(
@@ -214,63 +232,67 @@ export default function StackBlitzDemoSection() {
                     setIsLoading(true)
                     setEmbedFailed(false)
 
-                    try {
-                        // Editor-only view: WebContainer preview needs the page
-                        // to be cross-origin isolated (COOP/COEP), which we do
-                        // NOT set globally because it breaks the drive OAuth
-                        // popups in the live demo. So the embed shows the real
-                        // (credible) source; "Open in StackBlitz" runs it live
-                        // on stackblitz.com, which is isolated.
-                        // The SDK replaces targetContainer with its iframe, so
-                        // hold the parent to find the frame afterwards.
-                        const embedParent = targetContainer.parentElement
-                        sdk.embedProject(targetContainer, stackblitzProject, {
-                            openFile: OPEN_FILE,
-                            view: 'editor',
-                            theme: 'dark',
-                            hideNavigation: true,
-                            hideDevTools: true,
+                    // Editor-only view: WebContainer preview needs the page
+                    // to be cross-origin isolated (COOP/COEP), which we do
+                    // NOT set globally because it breaks the drive OAuth
+                    // popups in the live demo. So the embed shows the real
+                    // (credible) source; "Open in StackBlitz" runs it live
+                    // on stackblitz.com, which is isolated.
+                    // The SDK replaces targetContainer with its iframe, so
+                    // hold the parent to find the frame afterwards.
+                    const embedParent = targetContainer.parentElement
+                    void loadStackBlitzSdk()
+                        .then(sdk => {
+                            if (cancelled) return
+                            return (
+                                sdk
+                                    .embedProject(
+                                        targetContainer,
+                                        stackblitzProject,
+                                        {
+                                            openFile: OPEN_FILE,
+                                            view: 'editor',
+                                            theme: 'dark',
+                                            hideNavigation: true,
+                                            hideDevTools: true,
+                                        },
+                                    )
+                                    // Dismiss the loader when the editor is
+                                    // actually ready, not on a fixed timer.
+                                    .then(() => {
+                                        // The SDK's iframe ships without a title;
+                                        // screen readers need one.
+                                        const frame =
+                                            embedParent?.querySelector(
+                                                'iframe:not([title])',
+                                            )
+                                        frame?.setAttribute(
+                                            'title',
+                                            'StackBlitz code editor — upup React example',
+                                        )
+                                        setIsLoading(false)
+                                    })
+                            )
                         })
-                            // Dismiss the loader when the editor is actually
-                            // ready, not on a fixed timer.
-                            .then(() => {
-                                // The SDK's iframe ships without a title;
-                                // screen readers need one.
-                                const frame = embedParent?.querySelector(
-                                    'iframe:not([title])',
-                                )
-                                frame?.setAttribute(
-                                    'title',
-                                    'StackBlitz code editor — upup React example',
-                                )
-                                setIsLoading(false)
-                            })
-                            .catch(error => {
-                                console.error('StackBlitz embed failed:', error)
-                                setIsLoading(false)
-                                setEmbedFailed(true)
-                            })
+                        .catch(error => {
+                            console.error('StackBlitz embed failed:', error)
+                            setIsLoading(false)
+                            setEmbedFailed(true)
+                        })
 
-                        // Safety net: never leave the loader up indefinitely.
-                        fallbackTimer = setTimeout(
-                            () => setIsLoading(false),
-                            15000,
-                        )
-                    } catch (error) {
-                        console.error('StackBlitz embed error:', error)
-                        setIsLoading(false)
-                        setEmbedFailed(true)
-                    }
+                    // Safety net: never leave the loader up indefinitely.
+                    fallbackTimer = setTimeout(() => setIsLoading(false), 15000)
                 }
             },
             isFullscreen ? 100 : 0,
         ) // Delay for fullscreen to ensure DOM is ready
 
         return () => {
+            cancelled = true
             clearTimeout(timeoutId)
             if (fallbackTimer) clearTimeout(fallbackTimer)
         }
-    }, [isFullscreen])
+    }, [isFullscreen, nearViewport])
 
     const toggleFullScreen = () => {
         const newState = !isFullscreen
@@ -323,7 +345,10 @@ export default function StackBlitzDemoSection() {
 
                 {/* Regular container when not fullscreen */}
                 {!isFullscreen && (
-                    <div className="relative overflow-hidden rounded-3xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10">
+                    <div
+                        ref={gateRef}
+                        className="relative overflow-hidden rounded-3xl border border-black/5 bg-[var(--bg-base)] dark:border-white/10"
+                    >
                         <EditorWindowBar
                             variant="inline"
                             onOpenInStackBlitz={openInStackBlitz}

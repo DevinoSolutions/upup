@@ -1,4 +1,5 @@
 import { loadPages } from '@/lib/docs/llms'
+import { canonicalUrl } from '@/lib/site-url'
 
 // One raw-markdown endpoint per docs page, consumed by the "Copy page" button.
 // Frozen at build time like the llms.txt routes — a docs edit appears only
@@ -28,7 +29,16 @@ export async function GET(
     // lives in frontmatter and is rendered as the <h1> on the article page), so
     // prepend it — mirrors buildLlmsFull's per-page shape.
     const markdown = `# ${page.title}\n\n${page.body}\n`
+    // RFC 8288 canonical link. This route serves the same content as the HTML
+    // docs page under a second URL, so without it a crawler that discovers the
+    // twin has two competing originals. A header (rather than a noindex) is the
+    // right tool here: agents are welcome to fetch and quote these bytes, they
+    // just must not treat the twin as a page in its own right.
+    const canonical = canonicalUrl(target ? `docs/${target}` : 'docs')
     return new Response(markdown, {
-        headers: { 'content-type': 'text/markdown; charset=utf-8' },
+        headers: {
+            'content-type': 'text/markdown; charset=utf-8',
+            link: `<${canonical}>; rel="canonical"`,
+        },
     })
 }

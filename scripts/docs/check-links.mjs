@@ -49,13 +49,16 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const DEFAULT_CONTENT_DIR = resolve(HERE, '../../apps/landing/content/docs')
 const DEFAULT_NEXT_CONFIG = resolve(HERE, '../../apps/landing/next.config.mjs')
 
-// Targets that resolve via next.config.mjs rewrites rather than a content
-// page — valid link/redirect destinations that own no .mdx file.
+// Targets that resolve via next.config.mjs rewrites or Next metadata routes
+// (app/robots.ts, app/sitemap.ts) rather than a content page — valid
+// link/redirect destinations that own no .mdx file.
 const NON_PAGE_TARGETS = new Set([
     '/docs/llms.txt',
     '/docs/llms-full.txt',
     '/llms.txt',
     '/llms-full.txt',
+    '/robots.txt',
+    '/sitemap.xml',
 ])
 
 // ── github-slugger v2 (rehype-slug) — replicated verbatim ──────────────────
