@@ -927,7 +927,7 @@ export default function HomepageFeatures() {
                         </h3>
                         <p className="text-lg text-gray-600 dark:text-gray-300">
                             You can connect to upup using any S3 provider. We
-                            also support some non-S3 connections.
+                            also support Azure Blob Storage in client mode.
                         </p>
                     </div>
 
