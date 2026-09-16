@@ -19,6 +19,7 @@ jobs:
     Prettier-check:
         name: Prettier Check
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -41,6 +42,7 @@ jobs:
     Test:
         name: Run Tests and Coverage
         runs-on: ubuntu-latest
+        timeout-minutes: 20
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -86,6 +88,7 @@ jobs:
     Build:
         name: Build project
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Prettier-check, Test]
         steps:
             - name: Checkout repo
@@ -116,6 +119,7 @@ jobs:
     Typecheck:
         name: Typecheck project
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -139,6 +143,7 @@ jobs:
     Bundle-Size:
         name: Bundle size check
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Build]
         steps:
             - name: Checkout repo
@@ -172,6 +177,7 @@ jobs:
     Dependency-Audit:
         name: Dependency audit (packages/*, production scope)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -195,6 +201,7 @@ jobs:
     Lint:
         name: Lint
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -218,6 +225,7 @@ jobs:
     Oxlint:
         name: Oxlint (fast lint)
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         steps:
             - name: Checkout repo
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -240,6 +248,7 @@ jobs:
     Knip:
         name: Knip (dead code)
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -263,6 +272,7 @@ jobs:
     Docs-Gate:
         name: Docs sync gate
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Prettier-check]
         steps:
             - name: Checkout repo
@@ -309,6 +319,7 @@ jobs:
     Status-Check:
         name: Status Check
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         needs:
             [
                 Prettier-check,

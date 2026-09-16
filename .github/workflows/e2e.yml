@@ -24,6 +24,7 @@ jobs:
     Resolve-Affected:
         name: Resolve affected suites
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         outputs:
             e2e: ${{ steps.resolve.outputs.e2e }}
             minio: ${{ steps.resolve.outputs.minio }}
@@ -55,6 +56,7 @@ jobs:
     E2E:
         name: Cross-framework E2E (Playwright + MinIO)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true'
         steps:
@@ -182,6 +184,7 @@ jobs:
     LocalStack-Integration:
         name: Server integration suite (LocalStack — AWS ListParts semantics)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.minio == 'true'
         steps:
@@ -238,6 +241,7 @@ jobs:
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.smoke == 'true'
         steps:
@@ -269,6 +273,7 @@ jobs:
     Docs-E2E:
         name: Docs E2E (landing /docs Playwright project)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.docsE2e == 'true'
         steps:
@@ -330,6 +335,7 @@ jobs:
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.storybook == 'true'
         steps:
@@ -360,6 +366,7 @@ jobs:
     E2E-Status:
         name: E2E Status Check
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs:
             [
                 Resolve-Affected,
