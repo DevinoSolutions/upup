@@ -5,12 +5,21 @@
 
 import { faqs } from '@/lib/faqs'
 import { canonicalUrl } from '@/lib/site-url'
+import {
+    ORGANIZATION_ID,
+    SOFTWARE_APPLICATION_ID,
+} from './EntityStructuredData'
 
 const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
 
+// The site-wide Organization/WebSite nodes are emitted from the root layout
+// (./EntityStructuredData) so they reach every page including the docs. This
+// application node names its author/publisher by @id instead of repeating the
+// organization inline — one entity, referenced, not seven copies.
 const softwareApplication = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
+    '@id': SOFTWARE_APPLICATION_ID,
     name: 'upup',
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Web',
@@ -24,6 +33,8 @@ const softwareApplication = {
         priceCurrency: 'USD',
     },
     sameAs: [GITHUB_URL],
+    author: { '@id': ORGANIZATION_ID },
+    publisher: { '@id': ORGANIZATION_ID },
 }
 
 const faqPage = {

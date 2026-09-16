@@ -8,6 +8,7 @@ import { DocsToc } from '@/components/docs/DocsToc'
 import { DocsHome } from '@/components/docs/DocsHome'
 import { DocsPageNav } from '@/components/docs/DocsPageNav'
 import { DocsCopyPage } from '@/components/docs/DocsCopyPage'
+import { DocsStructuredData } from '@/components/docs/DocsStructuredData'
 import { canonicalUrl, siteUrl } from '@/lib/site-url'
 
 // content/docs is edited on the canonical master branch on GitHub.
@@ -33,11 +34,22 @@ export async function generateMetadata(props: {
     const description = page.data.description
     const url = canonicalUrl(slug?.length ? `docs/${slug.join('/')}` : 'docs')
     const image = `${siteUrl()}/img/social-card.png`
+    // The raw-markdown twin is an alternate REPRESENTATION of this page, not a
+    // second page. Declaring it renders <link rel="alternate"
+    // type="text/markdown">, which is how an agent finds the token-cheap copy
+    // without us needing it to be indexed in its own right (the route answers
+    // with a `Link: …; rel="canonical"` header pointing back here).
+    const markdownUrl = `${siteUrl()}/docs-md/${
+        slug?.length ? `${slug.join('/')}/` : ''
+    }`
 
     return {
         title,
         description,
-        alternates: { canonical: url },
+        alternates: {
+            canonical: url,
+            types: { 'text/markdown': markdownUrl },
+        },
         openGraph: {
             title,
             description,
@@ -80,8 +92,27 @@ export default async function DocsPage(props: {
                     with the copy button, so no extra bottom margin here. */}
                 <div className="flex items-start justify-between gap-4">
                     <DocsBreadcrumb tree={tree} url={url} />
-                    <DocsCopyPage mdUrl={mdUrl} />
+                    {/* The Copy button fetches the twin from JS; this anchor is
+                        the crawlable path to the same bytes — a link an agent
+                        (or a person who wants the markdown) can actually
+                        follow. Both point at the slashed canonical URL. */}
+                    <div className="flex items-center gap-2">
+                        <DocsCopyPage mdUrl={mdUrl} />
+                        <a
+                            href={mdUrl}
+                            data-testid="docs-view-markdown"
+                            className="inline-flex items-center rounded-md border border-black/5 px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:border-black/10 hover:text-gray-900 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
+                        >
+                            View as Markdown
+                        </a>
+                    </div>
                 </div>
+                <DocsStructuredData
+                    tree={tree}
+                    url={url}
+                    title={page.data.title}
+                    description={page.data.description}
+                />
                 {/* prose-code:before/after content-none: the typography
                     plugin's default renders literal backtick glyphs around
                     inline code; the chip styling replaces them, scoped via
