@@ -45,7 +45,7 @@ docker run -p 9100:9000 -p 9101:9001 \
   -e MINIO_ROOT_PASSWORD=upupadmin123 \
   -e MINIO_API_CORS_ALLOW_ORIGIN='*' \
   -v minio-data:/data \
-  minio/minio server /data --console-address ':9001'
+  quay.io/minio/minio server /data --console-address ':9001'
 ```
 
 MinIO listens on two ports and they are not interchangeable. The **S3 API** is
