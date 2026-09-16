@@ -9,7 +9,7 @@ export interface Faq {
 export const faqs: Faq[] = [
     {
         question: 'Which frameworks does upup support?',
-        answer: 'upup ships one uploader with native UI packages for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Every framework renders byte-identical DOM, verified by a cross-framework parity test suite, so the uploader looks and behaves the same everywhere.',
+        answer: 'upup ships one uploader with native UI packages for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Every framework renders the same DOM structure, classes, and accessibility tree, verified by a cross-framework parity test suite, so the uploader looks and behaves the same everywhere.',
     },
     {
         question: 'Is upup free and open source?',
