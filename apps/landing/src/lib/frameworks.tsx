@@ -46,7 +46,11 @@ export interface FrameworkMeta {
     docsLang: string
     /** The image editor is a real-React island — React/Preact only. */
     hasImageEditor: boolean
-    /** Framework-specific hero sub-line. */
+    /**
+     * The page's meta description — query-led ("<name> file uploader", "free",
+     * "open-source", "drag and drop", "npm install <pkg>") and held to
+     * 120–155 chars by src/__tests__/seo-copy-budgets.test.ts.
+     */
     tagline: string
     /** Official brand logo (react-icons/si). */
     Icon: IconType
@@ -118,7 +122,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'tsx',
         hasImageEditor: true,
         tagline:
-            'A headless-core React file uploader with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
+            'Free, open-source React file uploader with drag and drop, cloud drives, an image editor and resumable S3 uploads — npm install @useupup/react.',
         Icon: SiReact,
         brand: '#61DAFB',
     },
@@ -132,7 +136,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'vue',
         hasImageEditor: false,
         tagline:
-            'A native Vue file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
+            'Free, open-source Vue file uploader with drag and drop, cloud drives and resumable uploads to any S3 storage — npm install @useupup/vue.',
         Icon: SiVuedotjs,
         brand: '#42B883',
     },
@@ -146,7 +150,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'svelte',
         hasImageEditor: false,
         tagline:
-            'A native Svelte file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
+            'Free, open-source Svelte file uploader with drag and drop, cloud drives and resumable uploads to any S3 storage — npm install @useupup/svelte.',
         Icon: SiSvelte,
         brand: '#FF3E00',
     },
@@ -160,7 +164,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'ts',
         hasImageEditor: false,
         tagline:
-            'A native Angular file uploader — the same headless core and UI as React, drag & drop, cloud drives, and secure server-mode uploads.',
+            'Free, open-source Angular file uploader with drag and drop, cloud drives and resumable uploads to any S3 storage — npm install @useupup/angular.',
         Icon: SiAngular,
         brand: '#DD0031',
     },
@@ -174,7 +178,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'ts',
         hasImageEditor: false,
         tagline:
-            'A framework-free file uploader for plain JavaScript & TypeScript — drag & drop, cloud drives, and secure server-mode uploads.',
+            'Free, open-source file uploader for plain JavaScript and TypeScript — drag and drop, cloud drives, resumable S3 uploads. npm install @useupup/vanilla.',
         Icon: SiJavascript,
         brand: '#F7DF1E',
     },
@@ -188,7 +192,7 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsLang: 'tsx',
         hasImageEditor: true,
         tagline:
-            'A Preact file uploader (React-compatible) with drag & drop, cloud drives, an image editor, and secure server-mode uploads.',
+            'Free, open-source Preact file uploader with drag and drop, cloud drives, an image editor and resumable S3 uploads — npm install @useupup/preact.',
         Icon: SiPreact,
         brand: '#673AB8',
     },
