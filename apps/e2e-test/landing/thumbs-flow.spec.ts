@@ -168,6 +168,13 @@ test.describe('Ask AI thumbs feedback', () => {
             )
             .toBe(true)
 
+        // The demo section is client-only and mounts the first time it comes
+        // within ~400px of the viewport (it is the heaviest thing on the page,
+        // and on a phone it costs seconds of main-thread time nobody who never
+        // scrolls to it should pay). Scroll it into view so the Ask-AI panel
+        // below actually exists.
+        await page.locator('#demo').scrollIntoViewIfNeeded()
+
         // Ask one short question and wait for the assistant's completed turn.
         const panel = page.locator('.upup-ie-ai-panel')
         const input = panel.locator('#upup-ai-message')

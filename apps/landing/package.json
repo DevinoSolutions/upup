@@ -8,6 +8,7 @@
         "start": "next start",
         "lint": "eslint . --max-warnings 0",
         "lighthouse": "lhci autorun --config=lighthouserc.cjs",
+        "lighthouse:mobile": "lhci autorun --config=lighthouserc.mobile.cjs",
         "typecheck": "fumadocs-mdx && tsc --noEmit",
         "test": "vitest run",
         "clean": "rm -rf .next node_modules/.cache"
