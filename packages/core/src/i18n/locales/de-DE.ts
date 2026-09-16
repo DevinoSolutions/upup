@@ -208,6 +208,7 @@ export const deDE: LocaleBundle = {
             generatingThumbnails: 'Vorschaubilder werden generiert...',
             clientIdRequired: 'Client-ID erforderlich...',
             popupBlocked: 'Popup blockiert',
+            authCancelled: 'Anmeldung abgebrochen',
             dropboxClientIdMissing: 'Dropbox clientId fehlt',
             dropboxAuthFailed: 'Dropbox-Authentifizierung fehlgeschlagen',
             boxClientIdMissing: 'Box clientId missing',

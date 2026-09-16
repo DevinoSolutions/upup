@@ -319,4 +319,99 @@ test.describe('docs', () => {
             await expect(vueTabAgain).toHaveAttribute('aria-selected', 'true')
         }).toPass({ timeout: 15_000 })
     })
+
+    // ── SEO surfaces ──────────────────────────────────────────────────────
+    // The dev server this project boots leaves NEXT_PUBLIC_BASE_URL unset, so
+    // next.config.mjs computes SITE_BASE = https://useupup.com and takes the
+    // PRODUCTION branch of headers()/redirects(). That is what lets these
+    // assertions exercise the real prod rules without a second webServer.
+    const PRODUCTION_ORIGIN = 'https://useupup.com'
+
+    test('docs page declares its canonical URL and its markdown twin as an alternate', async ({
+        page,
+        request,
+    }) => {
+        await page.goto('/docs/getting-started/')
+        await expect(page.locator('link[rel=canonical]')).toHaveAttribute(
+            'href',
+            `${PRODUCTION_ORIGIN}/docs/getting-started/`,
+        )
+        const alternate = page.locator(
+            'link[rel=alternate][type="text/markdown"]',
+        )
+        await expect(alternate).toHaveAttribute(
+            'href',
+            `${PRODUCTION_ORIGIN}/docs-md/getting-started/`,
+        )
+        // Fetch the PATH against this server — following the absolute href
+        // would test production, not the build under test.
+        const href = await alternate.getAttribute('href')
+        const twin = await request.get(new URL(href ?? '').pathname)
+        expect(twin.status()).toBe(200)
+        expect(twin.headers()['content-type']).toContain('text/markdown')
+        // The twin must declare the HTML page as its original, or it is a
+        // duplicate of every docs page under a second URL.
+        expect(twin.headers()['link']).toContain('rel="canonical"')
+        expect(twin.headers()['link']).toContain(
+            `${PRODUCTION_ORIGIN}/docs/getting-started/`,
+        )
+    })
+
+    test('plaintext request identified by the Cloudflare visitor header is redirected to https', async ({
+        request,
+    }) => {
+        const redirected = await request.get('/react/', {
+            headers: { 'cf-visitor': '{"scheme":"http"}' },
+            maxRedirects: 0,
+        })
+        expect(redirected.status()).toBe(308)
+        expect(redirected.headers()['location']).toBe(
+            `${PRODUCTION_ORIGIN}/react/`,
+        )
+        // The header is the ONLY trigger: an ordinary request must still be
+        // served, or the rule would loop every visitor behind the proxy.
+        const plain = await request.get('/react/')
+        expect(plain.status()).toBe(200)
+    })
+
+    test('stale search-console sitemap URL permanently redirects to the live sitemap', async ({
+        request,
+    }) => {
+        // /sitemap-landing.xml is a Docusaurus-era submission that nothing has
+        // ever served; it 404'd until this rule landed.
+        const res = await request.get('/sitemap-landing.xml', {
+            maxRedirects: 0,
+        })
+        expect(res.status()).toBe(308)
+        expect(res.headers()['location']).toContain('/sitemap.xml')
+    })
+
+    test('production responses carry a preload-eligible HSTS header', async ({
+        request,
+    }) => {
+        const res = await request.get('/')
+        expect(res.headers()['strict-transport-security']).toBe(
+            'max-age=63072000; includeSubDomains; preload',
+        )
+    })
+
+    test('robots.txt names the AI crawler allow-list explicitly', async ({
+        request,
+    }) => {
+        const res = await request.get('/robots.txt')
+        expect(res.status()).toBe(200)
+        const body = await res.text()
+        expect(body).toContain('User-Agent: GPTBot')
+        expect(body).toContain('User-Agent: ClaudeBot')
+        expect(body).toContain('User-Agent: PerplexityBot')
+    })
+
+    test('footer links the llms.txt corpus from every page', async ({
+        page,
+    }) => {
+        await page.goto('/docs/getting-started/')
+        await expect(
+            page.locator('footer a[href="/llms.txt"]'),
+        ).toHaveAttribute('href', '/llms.txt')
+    })
 })

@@ -1,5 +1,206 @@
 # @useupup/core
 
+## 3.3.3
+
+### Patch Changes
+
+- [#394](https://github.com/DevinoSolutions/upup/pull/394) [`bf817fc`](https://github.com/DevinoSolutions/upup/commit/bf817fc1bf57b56cc4ca7e6e11209a6ab4429f4d) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - Declining an OAuth consent screen is reported as a cancellation, not as
+  "Popup was blocked by the browser".
+
+    Three things compounded. `DriveAuthFallback` auto-triggers sign-in on mount so
+    the tile click's transient user activation is still live — but OneDrive, Dropbox
+    and Box rendered it WITHOUT passing `error` (it stayed inside the
+    `...uploaderProps` rest), so its `|| error` guard could never fire. A decline
+    drove `isLoading` false, the view re-mounted with a fresh `attemptedRef`, and it
+    retried by itself. That second `window.open` had no activation left, returned
+    null, and `popup-oauth-plugin` reported the block — truthful about its own call,
+    misleading about the user, who was sent into their browser's popup settings over
+    a choice they had made themselves.
+
+    The decline was also never surfaced on its own: the popup poll accepted only
+    `href.startsWith(redirectUri) && href.includes('code=')`, so an
+    `?error=access_denied` redirect fell through until the window closed, and a
+    closed window resolved silently with no error and no state.
+
+    Now:
+
+    - Every drive component in every framework forwards `error` into its auth
+      fallback, so the existing no-auto-retry-after-an-error guard is reachable
+      across the remount (the guard itself stays React-only — no other framework's
+      fallback auto-triggers on mount). The three popup providers had the same gap
+      in React, Vue, Svelte, Angular and vanilla; vanilla gated the prop on Google
+      Drive explicitly.
+    - The poll reads `error` / `error_description` off the redirect and reports a
+      refused or admin-walled consent as a cancellation; a closed window is a
+      cancellation too, rather than a silent resolve. `authenticateViaPopup()` still
+      RESOLVES in both cases — the promise contract is unchanged, and the
+      cancellation travels on the provider's existing error event.
+    - Cancellations carry `AUTH_DENIED` and a real popup block carries the new
+      `AUTH_POPUP_BLOCKED` code, so the two can finally be told apart. The drive
+      controller turns those into a `messageKey` on `DriveBrowserError`, and the
+      renderer shows the matching catalogue string — the nine-locale `popupBlocked`
+      that shipped unused, or a new `errors.authCancelled`. Every other failure keeps
+      its own message, which carries detail a generic string would throw away.
+    - A popup attempt that ends without a session now clears `isLoading`, cannot
+      become an unhandled rejection, and ALWAYS leaves an error behind. A blocked
+      popup threw before the state ever moved to `authenticating`, so the view sat on
+      the spinner and the auth fallback carrying the error never rendered at all.
+      Recording the error is not cosmetic: the React auth fallback opens one popup on
+      mount while the tile click's user activation is live, and reads `error` to know
+      an attempt has already happened — its own ref cannot, because clearing
+      `isLoading` remounts the view with a fresh one. Most failures arrive on the
+      provider's error event and are already in state; the gap was the ones that only
+      THROW, such as an unconfigured `clientId`, which `getAuthUrl()` throws and never
+      emits.
+
+    `UpupAuthError` takes an optional third `code` argument, defaulting to the
+    `AUTH_PROVIDER_ERROR` it always used, so existing call sites are unchanged.
+
+    `ErrorMessages.authCancelled` is OPTIONAL, so a hand-written locale bundle still
+    type-checks — that is why this is a patch and not a breaking minor. The uploader
+    wires en-US as the fallback bundle and would resolve the key anyway;
+    `driveErrorText` also carries the English wording for a translator built with no
+    fallback at all, so an omission renders English rather than the key.
+
+    The redirect poll reads the fragment as well as the query. The check it replaced
+    matched `code=` anywhere in the href, so narrowing to `searchParams` alone would
+    have left a spec-legal fragment-mode redirect unread until the window closed —
+    reported, wrongly again, as a cancellation.
+
+## 3.3.2
+
+### Patch Changes
+
+- [#407](https://github.com/DevinoSolutions/upup/pull/407) [`5921da4`](https://github.com/DevinoSolutions/upup/commit/5921da4d1c3094d76fbbd0f5deee7a1c5e7efbe9) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - Review fixes for the Google Drive shared-drives support that shipped in 3.3.1,
+  behind the same default-off `cloudDrives.googleDrive.sharedDrives` flag. Nothing
+  changes for a picker that leaves the flag unset.
+
+    A `drives.list` failure — a 403 under a Workspace sharing policy, a 429, a 5xx —
+    now degrades to no shared-drive rows instead of taking the whole root listing
+    down with it. The call was awaited unguarded inside `loadFiles`, so for a user
+    with the flag on, one non-2xx from that endpoint threw away the My Drive
+    children the listing had already fetched and left the picker empty. The failure
+    is reported on a new non-fatal `google-drive:shared-drives-error` event, and
+    drives collected before a mid-pagination failure are kept.
+
+    Drive folder ids are escaped into the `files.list` query instead of interpolated
+    raw, using the same `escapeDriveQueryValue` the server-mode drive client uses.
+    That escaper moved from `@useupup/server` into `@useupup/core/internal` and
+    `@useupup/server` re-exports it, so the two halves share ONE implementation that
+    cannot drift.
+
+    The shared-drive rows and the virtual "Shared with me" row lead the root's first
+    page rather than trailing it, so they stay above a second page of My Drive files
+    instead of being pushed below one. They are still emitted on the first page only,
+    so they appear exactly once and pagination is unaffected in either view.
+
+## 3.3.1
+
+### Patch Changes
+
+- [#393](https://github.com/DevinoSolutions/upup/pull/393) [`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - The Google Drive picker can browse shared drives and "Shared with me", behind a
+  default-off `cloudDrives.googleDrive.sharedDrives` flag.
+
+    `GoogleDrivePlugin.loadFiles` and `loadMoreFiles` sent a Drive v3 `files.list`
+    with no `corpora`, no `includeItemsFromAllDrives` and no `supportsAllDrives`, so
+    the API answered from the signed-in user's own My Drive corpus only. For a
+    business account that is most of the person's files: a file living in a shared
+    drive never appeared at any depth, and the picker's search box did not
+    compensate because it filters the children already loaded rather than issuing a
+    query. The requested scope was never the limit — `drive.readonly` covers shared
+    drives, and `drives.list`, already.
+
+    With `sharedDrives: true`:
+
+    - Both listing calls send `corpora=allDrives`, `includeItemsFromAllDrives=true`
+      and `supportsAllDrives=true`, and the single-file download sends
+      `supportsAllDrives=true` so a file the widened listing surfaced can actually be
+      fetched instead of answering 404. `corpora` and `includeItemsFromAllDrives` are
+      `files.list`-only and stay off the download.
+    - The ROOT listing appends the user's shared drives, from a paginated
+      `drives.list`, as navigable folder rows after the My Drive children. Those
+      params widen which files a query CAN return, but every listing is still
+      `'<parentId>' in parents` and `'root'` resolves to My Drive root — so without
+      an entry to click, a shared drive stayed unreachable. A shared drive's root
+      folder id IS its drive id, so once one is listed the ordinary parent listing
+      walks it with no further special-casing.
+    - The root listing also carries one virtual "Shared with me" folder. Drive has no
+      parent whose children are the files others shared with you — it is the query
+      `sharedWithMe = true` — so that row uses a synthetic id the plugin branches on
+      in both `loadFiles` and `loadMoreFiles`. Every other part of the picker treats
+      it as an ordinary folder.
+
+    Both additions land on the root's first page only, never on a continuation page,
+    so they appear exactly once and pagination is unaffected in either the shared
+    drives or the "Shared with me" view.
+
+    The flag defaults off. Nothing is sent, no `drives.list` is issued and no extra
+    row appears when it is unset or false, so no existing picker changes shape.
+
+- [#396](https://github.com/DevinoSolutions/upup/pull/396) [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default source set no longer shows capture sources whose output can never
+  satisfy `allowedFileTypes` (#340).
+
+    `allowedFileTypes: 'application/pdf'` used to leave the camera, microphone and
+    screen chips in place, and every recording they produced was rejected the moment
+    it was added. `normalizeUploaderOptions` now drops a default capture source when
+    no entry in the resolved accept list could match anything that source can emit —
+    camera emits `image/jpeg` (with `image/png` as the `toDataURL` fallback),
+    microphone `audio/webm` / `audio/ogg` / `audio/mp4`, screen `video/webm` /
+    `video/mp4`, all read off the code that builds the `File`.
+
+    The match fails open: a wildcard, an unrecognized extension, or anything that is
+    neither a MIME type nor an extension keeps every source. `local` and `url` are
+    never filtered, cloud drives are untouched, and an explicitly passed `sources`
+    array is always honored verbatim. A dropped source logs one dev-only
+    `console.warn` naming the source and the accept list.
+
+- [#397](https://github.com/DevinoSolutions/upup/pull/397) [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The default panel now shows your error message next to the machine code, and a
+  skipped EXIF strip leaves a marker on the file (#367 items 2 and 4).
+
+    A failure carrying a code used to render as `uploadFailedWithCode`, which
+    interpolated the code and nothing else — so an endpoint that returned a useful
+    sentence watched it disappear between `onError` and the panel. The key now has a
+    second `{message}` slot carrying the error's own message, added to all nine
+    locale bundles so translators control placement (override the key to reorder the
+    slots, drop the code, or show only your own wording). All six framework panels
+    pass both values, and the message is rendered as text, never as markup.
+
+    `stripExifData` skips animated GIF/WebP/APNG because canvas has no animated
+    encoder, which means an animated WebP or APNG reaches storage with the EXIF you
+    asked to remove. The `exif` step now records that on the file:
+    `metadata.metadataStripSkipped === true` with
+    `metadata.metadataStripSkippedReason === 'animated-image'`. A file whose EXIF
+    really was stripped carries `exifStripped: true` and no marker, and
+    `imageCompression` skipping an animated image does not set it — nothing was asked
+    to be removed. No new event, no new option.
+
+- [#381](https://github.com/DevinoSolutions/upup/pull/381) [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Presign failures no longer surface a reverse proxy's HTML error page, and the
+  animated-image guard stops reading whole files.
+
+    `TokenEndpointCredentials.getPresignedUrl` reads a failed presign body so the
+    endpoint's own sentence reaches `onError`, but `parseErrorBody`'s text fallback
+    also caught the error pages nginx and Cloudflare write for a 502 or 413 — so a
+    handler that used to get `Presign request failed: 502 Bad Gateway` got 200
+    characters of `<html>` instead. A markup body carrying no error code is now
+    treated as nothing to surface and the status-line wording is kept. An S3-style
+    `<Error><Code>` body is unaffected: it parses to a real code and still comes
+    through. The error is also built with its final message rather than having
+    `message` reassigned afterwards, so the body is parsed once and the error never
+    carries wording it does not keep. `uploadErrorFromResponse` gained two optional
+    arguments for this — `fallbackMessage` (wording to use when the body carries
+    nothing) and `ignoreErrorPageBody` (opt into the markup guard); callers that
+    pass neither behave exactly as before.
+
+    `isAnimatedImage` — the guard that keeps `imageCompression` and `stripExifData`
+    from flattening animated GIF/WebP/APNG — used to call `arrayBuffer()` on the
+    whole file, a read the main-thread path never made before that guard existed,
+    so a still 40 MB photo was materialized in full just to learn it was still. It
+    now sniffs the first 64 KiB, which is where every one of these formats declares
+    animation (APNG's `acTL` before the first `IDAT`, WebP's `VP8X`/`ANIM` at the
+    top of the container, a looping GIF's `NETSCAPE2.0` extension in the header).
+    Only a GIF that has announced nothing by then is read in full, because its
+    second Image Descriptor can sit anywhere in the stream. Verdicts are unchanged.
+
 ## 3.3.0
 
 ### Minor Changes

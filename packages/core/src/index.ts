@@ -136,6 +136,7 @@ export type {
     DriveState,
     DriveEventMap,
     DriveBrowserError,
+    DriveErrorMessageKey,
     DriveListPage,
 } from './drives/types'
 export type {

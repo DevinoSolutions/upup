@@ -18,6 +18,7 @@ import { DriveBrowserComponent } from './shared/drive-browser.component'
             <upup-drive-auth-fallback
                 providerName="Box"
                 [onRetry]="authenticate"
+                [error]="svc.error"
                 slotName="box-uploader"
             />
         } @else {

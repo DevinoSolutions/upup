@@ -35,15 +35,18 @@ export function clientDriveUploader(
     const notAuthed =
         !st.token && !st.isAuthenticated && (st.isAuthReady || !st.isLoading)
     if (notAuthed) {
-        // Only the GIS provider (Google) wires error into the auth-fallback, matching
-        // react/vue/svelte's GoogleDriveUploader — the popup providers (OneDrive/Dropbox/Box)
-        // never surface an error at this pre-auth stage in any other framework either.
+        // Every provider wires its error into the auth-fallback (#390). It used
+        // to be Google only, on the reasoning that the popup providers never
+        // surfaced an error at this stage in any other framework — which is no
+        // longer true: a declined consent is now reported as a decline, and it
+        // arrives on exactly this view. Withholding it would leave the person
+        // staring at an unchanged sign-in screen after refusing the prompt.
         return driveAuthFallback(ctx, {
             providerName: meta.providerName,
             onRetry: () => {
                 controller.retryAuth()
             },
-            error: source === FileSource.GOOGLE_DRIVE ? st.error : undefined,
+            error: st.error,
             dataUpupSlot: meta.slot,
         })
     }

@@ -2,6 +2,8 @@ export enum UpupErrorCode {
     AUTH_EXPIRED = 'AUTH_EXPIRED',
     AUTH_DENIED = 'AUTH_DENIED',
     AUTH_PROVIDER_ERROR = 'AUTH_PROVIDER_ERROR',
+    /** The browser refused `window.open` — a real popup block, never a person's choice. */
+    AUTH_POPUP_BLOCKED = 'AUTH_POPUP_BLOCKED',
     FILE_TOO_LARGE = 'FILE_TOO_LARGE',
     FILE_TOO_SMALL = 'FILE_TOO_SMALL',
     TYPE_MISMATCH = 'TYPE_MISMATCH',
@@ -53,8 +55,19 @@ export class UpupError extends Error {
 
 export class UpupAuthError extends UpupError {
     provider: string
-    constructor(message: string, provider: string) {
-        super(message, UpupErrorCode.AUTH_PROVIDER_ERROR, false)
+    /**
+     * `code` defaults to AUTH_PROVIDER_ERROR, so every existing call site is
+     * unchanged. Pass one to distinguish auth outcomes a consumer must be able to
+     * tell apart — AUTH_DENIED (the person declined consent or closed the
+     * window) versus AUTH_POPUP_BLOCKED (the browser refused `window.open`),
+     * which used to be reported as the same thing.
+     */
+    constructor(
+        message: string,
+        provider: string,
+        code: string = UpupErrorCode.AUTH_PROVIDER_ERROR,
+    ) {
+        super(message, code, false)
         this.name = 'UpupAuthError'
         this.provider = provider
     }

@@ -20,6 +20,7 @@ describe('UpupErrorCode', () => {
             'AUTH_EXPIRED',
             'AUTH_DENIED',
             'AUTH_PROVIDER_ERROR',
+            'AUTH_POPUP_BLOCKED',
             'FILE_TOO_LARGE',
             'FILE_TOO_SMALL',
             'TYPE_MISMATCH',
@@ -47,8 +48,8 @@ describe('UpupErrorCode', () => {
         }
     })
 
-    it('has 24 distinct error codes', () => {
-        expect(new Set(Object.values(UpupErrorCode)).size).toBe(24)
+    it('has 25 distinct error codes', () => {
+        expect(new Set(Object.values(UpupErrorCode)).size).toBe(25)
     })
 })
 

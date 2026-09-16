@@ -10,6 +10,7 @@ import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import EntityStructuredData from '@/components/StructuredData/EntityStructuredData'
 
 const geistSans = Geist({
     variable: '--font-geist-sans',
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     title: siteConfig.title,
     description: siteConfig.tagline,
     openGraph: {
-        title: 'upup – One File Uploader for Every Framework',
+        title: 'upup – Open-Source File Uploader for Every Framework',
         description:
             'One open-source file uploader with a headless core and native UI for React, Vue, Svelte, Angular, Vanilla JS, and Preact. Cloud drives, camera, screen capture, and secure server-mode uploads to any S3-compatible storage. MIT-licensed.',
         images: [`${siteUrl()}/img/social-card.png`],
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'upup – One File Uploader for Every Framework',
+        title: 'upup – Open-Source File Uploader for Every Framework',
         description:
             'One uploader, native UI for React, Vue, Svelte, Angular, Vanilla JS & Preact. Headless core, cloud drives, and secure server-mode uploads to any S3-compatible storage. Open-source, MIT.',
         images: [`${siteUrl()}/img/social-card.png`],
@@ -152,11 +153,20 @@ export default function RootLayout({
             })();
           `}
                 </Script>
+                {/* Organization + WebSite JSON-LD. It lives in the ROOT
+                    layout on purpose: the entity graph has to be on every
+                    page — the 64 docs pages are the bulk of the indexable
+                    surface and they mount no page-level <StructuredData/>. */}
+                <EntityStructuredData />
                 {process.env.NODE_ENV === 'production' && (
                     <>
+                        {/* lazyOnload: Hotjar is session-recording, never
+                            needed for the page to work, and on a throttled
+                            phone its loader competed with hydration for the
+                            main thread. */}
                         <Script
                             defer
-                            strategy="afterInteractive"
+                            strategy="lazyOnload"
                             dangerouslySetInnerHTML={{
                                 __html: `
                               (function(h,o,t,j,a,r){

@@ -3,6 +3,7 @@ import type { DrivePlugin } from './plugin'
 import type { GoogleDriveConfig } from './configs'
 import type { DriveFile, DriveState } from './types'
 import { storageGet, storageSet, storageDel } from './session-storage'
+import { escapeDriveQueryValue } from './query-escape'
 import { UpupAuthError, UpupNetworkError } from '../errors'
 
 // ── Session storage keys ──
@@ -11,7 +12,27 @@ const SK_EXPIRY = 'upup_gdrive_token_expiry'
 
 // ── Google API endpoints ──
 const FILES_URL = 'https://www.googleapis.com/drive/v3/files'
+const DRIVES_URL = 'https://www.googleapis.com/drive/v3/drives'
 const USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
+
+const FOLDER_MIME = 'application/vnd.google-apps.folder'
+
+/**
+ * The synthetic folder id standing for Drive's "Shared with me" view (#391).
+ * It is not a real Drive file id — "shared with me" is a QUERY
+ * (`sharedWithMe = true`), not a parent, so `'<id>' in parents` cannot express
+ * it. `loadFiles`/`loadMoreFiles` branch on this one value; everything else in
+ * the picker (navigation, breadcrumbs, pagination) treats it as an ordinary
+ * folder id and needs no knowledge of it.
+ */
+export const SHARED_WITH_ME_FOLDER_ID = '__upup_shared_with_me__'
+
+/**
+ * Shown as the label of that virtual folder. English, like the per-provider root
+ * names in `drive-browser-descriptors.ts` — plugins have no translator, and a
+ * localised label needs a marker on `DriveFile` that no other entry carries.
+ */
+const SHARED_WITH_ME_FOLDER_NAME = 'Shared with me'
 
 // ── Google Drive API response shapes (only the fields this file reads) ──
 
@@ -23,6 +44,11 @@ interface GoogleUserInfoResponse {
 
 interface GoogleFilesListResponse {
     files?: Record<string, unknown>[]
+    nextPageToken?: string
+}
+
+interface GoogleDrivesListResponse {
+    drives?: { id?: string; name?: string }[]
     nextPageToken?: string
 }
 
@@ -115,6 +141,119 @@ export class GoogleDrivePlugin implements DrivePlugin {
     private accessToken: string | null = null
     private tokenExpiry = 0
     private state: DriveState = 'idle'
+
+    /**
+     * The shared-drive query params, or nothing when `sharedDrives` is off (#391).
+     * Drive v3 answers a `files.list` from the caller's own corpus unless all
+     * three are present, so a file living in a shared drive is invisible at every
+     * depth — including to the picker's search box, which filters the children
+     * already loaded. Spread into the params of every listing call.
+     */
+    private sharedDriveParams(): Record<string, string> {
+        return this.config.sharedDrives
+            ? {
+                  corpora: 'allDrives',
+                  includeItemsFromAllDrives: 'true',
+                  supportsAllDrives: 'true',
+              }
+            : {}
+    }
+
+    /**
+     * The `files.list` query for one picker folder. Every id is a parent except
+     * the synthetic "Shared with me" one, which is a query instead — Drive has no
+     * folder whose children are the files other people shared with you.
+     *
+     * The id is escaped, not interpolated raw: a folder id reaches here from a
+     * Drive API response or a host-supplied argument, and an unescaped `'` ends
+     * the literal and lets the rest of the value become query syntax. Same
+     * escaper the server-mode drive client uses — one implementation in
+     * `query-escape.ts`, so the two halves cannot drift.
+     */
+    private listQuery(parentId: string): string {
+        return parentId === SHARED_WITH_ME_FOLDER_ID
+            ? 'sharedWithMe = true and trashed = false'
+            : `'${escapeDriveQueryValue(parentId)}' in parents and trashed = false`
+    }
+
+    /**
+     * The user's shared drives as navigable folder entries (#391).
+     *
+     * `corpora=allDrives` widens which files a query CAN return, but every
+     * listing is still `'<parentId>' in parents`, and `'root'` resolves to My
+     * Drive root — so without this a shared drive has no entry to click and its
+     * contents stay unreachable at every depth. A shared drive's root folder id
+     * IS its drive id, so once one is listed the ordinary parent listing walks it
+     * with no further special-casing.
+     *
+     * Requires no extra OAuth scope: `drive.readonly` covers `drives.list`.
+     *
+     * NEVER throws. `drives.list` can answer 403 under a Workspace sharing
+     * policy, or 429, or 5xx — and this runs inside the ROOT listing, so letting
+     * that escape would take a working My Drive listing down with it and leave
+     * the picker empty. A failure degrades to no shared-drive rows plus a
+     * `shared-drives-error` event, which is separate from the `error` event
+     * precisely because the browse did NOT fail. A partial result is kept: if
+     * page 3 of 5 fails, the drives already collected are still returned.
+     */
+    private async listSharedDriveFolders(): Promise<DriveFile[]> {
+        const folders: DriveFile[] = []
+        let pageToken: string | undefined
+
+        // Bounded at 10 pages of 100. Someone in more than a thousand shared
+        // drives is past what a flat picker list serves anyway, and the cap means
+        // a malformed nextPageToken cannot spin here forever.
+        for (let page = 0; page < 10; page++) {
+            const params = new URLSearchParams({
+                pageSize: '100',
+                fields: 'nextPageToken,drives(id,name)',
+                key: this.config.apiKey,
+            })
+            if (pageToken) params.set('pageToken', pageToken)
+
+            let data: GoogleDrivesListResponse
+            try {
+                // oxlint-disable-next-line no-await-in-loop -- cursor pagination: each page's token comes from the previous response, so these cannot run in parallel
+                const res = await this.apiRequest(
+                    `${DRIVES_URL}?${params.toString()}`,
+                    { method: 'GET' },
+                )
+                // oxlint-disable-next-line no-await-in-loop -- same round trip as the request above
+                data = (await res.json()) as GoogleDrivesListResponse
+            } catch (err) {
+                // upup-catch: reported on shared-drives-error and swallowed, per
+                // the contract above — the root listing must survive this.
+                this.emitter?.emit('google-drive:shared-drives-error', {
+                    error: err instanceof Error ? err : new Error(String(err)),
+                })
+                break
+            }
+
+            for (const drive of data.drives ?? []) {
+                folders.push(
+                    mapGoogleEntry({
+                        id: drive.id,
+                        name: drive.name,
+                        mimeType: FOLDER_MIME,
+                    }),
+                )
+            }
+
+            pageToken = data.nextPageToken
+            if (!pageToken) break
+        }
+
+        return folders
+    }
+
+    /** The virtual "Shared with me" entry, shaped like any other folder row. */
+    private sharedWithMeFolder(): DriveFile {
+        return mapGoogleEntry({
+            id: SHARED_WITH_ME_FOLDER_ID,
+            name: SHARED_WITH_ME_FOLDER_NAME,
+            mimeType: FOLDER_MIME,
+        })
+    }
 
     // ── Plugin lifecycle ──
 
@@ -257,13 +396,13 @@ export class GoogleDrivePlugin implements DrivePlugin {
 
         try {
             const parentId = folderId || 'root'
-            const q = `'${parentId}' in parents and trashed = false`
 
             const params = new URLSearchParams({
-                q,
+                q: this.listQuery(parentId),
                 fields: 'nextPageToken,files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
                 key: this.config.apiKey,
                 pageSize: '1000',
+                ...this.sharedDriveParams(),
             })
 
             const res = await this.apiRequest(
@@ -272,7 +411,22 @@ export class GoogleDrivePlugin implements DrivePlugin {
             )
 
             const data = (await res.json()) as GoogleFilesListResponse
-            const files: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
+            const ownFiles: DriveFile[] = (data.files ?? []).map(mapGoogleEntry)
+
+            // The two doors out of My Drive, on the root page only and never on a
+            // continuation page, so they appear exactly once (#391). They go
+            // FIRST: a root with more than one page appends its later pages to
+            // the end of the list, which would bury them under My Drive files
+            // that arrived after them.
+            const files: DriveFile[] =
+                this.config.sharedDrives && parentId === 'root'
+                    ? [
+                          ...(await this.listSharedDriveFolders()),
+                          this.sharedWithMeFolder(),
+                          ...ownFiles,
+                      ]
+                    : ownFiles
+
             const hasMore = !!data.nextPageToken
             const cursor = hasMore
                 ? JSON.stringify({
@@ -317,14 +471,16 @@ export class GoogleDrivePlugin implements DrivePlugin {
                 folderId: string
                 pageToken: string
             }
-            const q = `'${folderId}' in parents and trashed = false`
-
             const params = new URLSearchParams({
-                q,
+                // Same builder as loadFiles, so page 2 of the "Shared with me"
+                // view stays a sharedWithMe query and does not silently become
+                // `'__upup_shared_with_me__' in parents`, which matches nothing.
+                q: this.listQuery(folderId),
                 fields: 'nextPageToken,files(fileExtension,id,mimeType,name,parents,size,thumbnailLink)',
                 key: this.config.apiKey,
                 pageSize: '1000',
                 pageToken,
+                ...this.sharedDriveParams(),
             })
 
             const res = await this.apiRequest(
@@ -392,9 +548,14 @@ export class GoogleDrivePlugin implements DrivePlugin {
     private async downloadRegularFile(
         driveFile: DriveFile,
     ): Promise<File | null> {
+        // `supportsAllDrives` is the files.get half of #391: without it a file
+        // the widened listing surfaced answers 404 on download, which would make
+        // the picker list shared-drive files it cannot fetch. `corpora` and
+        // `includeItemsFromAllDrives` are files.list-only and stay out of here.
         const params = new URLSearchParams({
             key: this.config.apiKey,
             alt: 'media',
+            ...(this.config.sharedDrives ? { supportsAllDrives: 'true' } : {}),
         })
 
         const res = await this.apiRequest(

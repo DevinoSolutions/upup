@@ -213,6 +213,7 @@ export const frFR: LocaleBundle = {
             generatingThumbnails: 'G\u00E9n\u00E9ration des miniatures...',
             clientIdRequired: 'Client ID requis...',
             popupBlocked: 'Popup bloqu\u00E9e',
+            authCancelled: 'Connexion annulée',
             dropboxClientIdMissing: 'clientId Dropbox manquant',
             dropboxAuthFailed: 'Authentification Dropbox \u00E9chou\u00E9e',
             boxClientIdMissing: 'Box clientId missing',

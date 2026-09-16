@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit-html'
 import { repeat } from 'lit-html/directives/repeat.js'
 import { formatUiMessage as t, pluralUiMessage as plural } from '@useupup/core'
-import { cn, searchDriveFiles } from '@useupup/core/internal'
+import { cn, driveErrorText, searchDriveFiles } from '@useupup/core/internal'
 import type {
     DriveBrowserError,
     DriveFile,
@@ -173,7 +173,7 @@ export function driveBrowser(
                               class="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                           >
                               ${t(tr.driveLoadError, {
-                                  message: error.message,
+                                  message: driveErrorText(error, tr),
                               })}
                           </p>
                       </div>`

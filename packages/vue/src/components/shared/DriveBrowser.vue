@@ -14,7 +14,7 @@ import {
     useUploaderTheme,
 } from '../../context/uploader-context'
 import { searchDriveFiles } from '@useupup/core/internal'
-import { cn } from '@useupup/core/internal'
+import { cn, driveErrorText } from '@useupup/core/internal'
 import SourceViewContainer from './SourceViewContainer.vue'
 import DriveBrowserHeader from './DriveBrowserHeader.vue'
 import DriveBrowserItem from './DriveBrowserItem.vue'
@@ -108,7 +108,7 @@ function noopClick() { /* disabled click */ }
                                     role="alert"
                                     class="upup-text-sm upup-text-red-600 dark:upup-text-red-400"
                                 >
-                                    {{ t(tr.driveLoadError, { message: props.error.message }) }}
+                                    {{ t(tr.driveLoadError, { message: driveErrorText(props.error, tr) }) }}
                                 </p>
                             </div>
                         </template>

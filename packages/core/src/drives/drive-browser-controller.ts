@@ -8,6 +8,7 @@ import type {
 } from './types'
 import type { DriveProviderDescriptor } from './drive-browser-descriptors'
 import { loadGoogleIdentityServices } from '../utils/load-gapi'
+import { UpupErrorCode } from '../errors'
 import type { DrivePlugin } from './plugin'
 
 export interface DriveBrowserState {
@@ -60,6 +61,35 @@ type GoogleDriveConfigLike = { clientId?: string; apiKey?: string }
 
 const GIS_SCOPE =
     'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.profile'
+
+/**
+ * The auth outcomes a person can tell apart, as a flat UiTranslations key the
+ * renderer shows instead of the plugin's English diagnostic (#390). Deliberately
+ * two entries: every other failure keeps its own message, which carries detail a
+ * generic translated string would throw away.
+ */
+function driveErrorMessageKey(
+    code: string | undefined,
+): DriveBrowserError['messageKey'] {
+    if (code === UpupErrorCode.AUTH_POPUP_BLOCKED) return 'popupBlocked'
+    if (code === UpupErrorCode.AUTH_DENIED) return 'authCancelled'
+    return undefined
+}
+
+/**
+ * The `DriveBrowserError` for an attempt that threw without emitting anything,
+ * so the view is never left with a failure it cannot describe or detect.
+ */
+function driveErrorFromThrown(thrown: unknown): DriveBrowserError {
+    const err = thrown instanceof Error ? thrown : undefined
+    return {
+        message: err?.message || 'Sign-in did not complete',
+        action: 'authenticateViaPopup',
+        messageKey: driveErrorMessageKey(
+            (err as (Error & { code?: string }) | undefined)?.code,
+        ),
+    }
+}
 
 /**
  * Framework-agnostic cloud-drive browser store. One instance per provider per
@@ -244,7 +274,8 @@ export class DriveBrowserController {
             },
             onError: (payload?: unknown) => {
                 const p = payload as
-                    { error?: Error; action?: string } | undefined
+                    | { error?: Error & { code?: string }; action?: string }
+                    | undefined
                 this.setState({
                     isClickLoading: false,
                     showLoader: false,
@@ -252,6 +283,7 @@ export class DriveBrowserController {
                     error: {
                         message: p?.error?.message || 'Unknown error',
                         action: p?.action,
+                        messageKey: driveErrorMessageKey(p?.error?.code),
                     },
                 })
             },
@@ -401,10 +433,51 @@ export class DriveBrowserController {
     private async runPopupAuth(): Promise<void> {
         const plugin = this.plugin
         if (!plugin?.authenticateViaPopup) return
-        this.setState({ isLoading: true })
-        await plugin.authenticateViaPopup()
-        if (plugin.isAuthenticated()) {
-            await plugin.loadFiles(this.descriptor.loadFilesRootArg)
+        // Clear the previous attempt's error as this one starts, so a retry the
+        // person asked for does not sit under the sentence explaining why the
+        // last one ended.
+        this.setState({ isLoading: true, error: undefined })
+        let thrown: unknown
+        try {
+            await plugin.authenticateViaPopup()
+            if (plugin.isAuthenticated()) {
+                await plugin.loadFiles(this.descriptor.loadFilesRootArg)
+            }
+        } catch (err) {
+            // upup-catch: kept for the `finally` below — the two call sites
+            // invoke this as `void runPopupAuth()`, so rethrowing would only
+            // become an unhandled rejection.
+            thrown = err
+        } finally {
+            if (!plugin.isAuthenticated()) {
+                // An attempt that ends unauthenticated MUST clear isLoading
+                // (#390). A blocked popup throws before setState('authenticating')
+                // ever runs, so nothing else lowers the flag and the view sat on
+                // the spinner forever — the auth fallback carrying the error never
+                // rendered at all.
+                //
+                // It MUST also leave an error behind, and that is not cosmetic.
+                // The React auth fallback opens ONE popup on mount, while the
+                // tile click's user activation is still live, and reads `error`
+                // to know an attempt has already happened. Its own ref cannot
+                // tell it: clearing isLoading re-renders the uploader into the
+                // fallback branch, and the remount hands it a fresh ref. So an
+                // attempt that ended with NOTHING recorded looped — mount,
+                // attempt, unmount, remount — fast enough to peg the main thread,
+                // which is what took the OneDrive and Dropbox adapters down in
+                // the cross-framework E2E.
+                //
+                // Most failures arrive on the provider's error event and are
+                // already in state by now; `?? ` keeps those, which carry the
+                // richer payload. The gap is the ones that only THROW: an
+                // unconfigured clientId is thrown out of `getAuthUrl()` and
+                // never emitted, so before this the view learned nothing and the
+                // person saw an unexplained sign-in screen.
+                this.setState({
+                    isLoading: false,
+                    error: this.state.error ?? driveErrorFromThrown(thrown),
+                })
+            }
         }
     }
 

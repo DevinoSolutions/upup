@@ -175,6 +175,7 @@ export const koKR: LocaleBundle = {
             generatingThumbnails: '썸네일 생성 중...',
             clientIdRequired: '클라이언트 ID가 필요합니다...',
             popupBlocked: '팝업이 차단되었습니다',
+            authCancelled: '로그인이 취소되었습니다',
             dropboxClientIdMissing: 'Dropbox clientId 누락',
             dropboxAuthFailed: 'Dropbox 인증 실패',
             boxClientIdMissing: 'Box clientId missing',

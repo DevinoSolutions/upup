@@ -194,6 +194,7 @@ export const enUS: LocaleBundle = {
             generatingThumbnails: 'Generating thumbnails...',
             clientIdRequired: 'Client ID is required...',
             popupBlocked: 'Popup blocked',
+            authCancelled: 'Sign-in was cancelled',
             dropboxClientIdMissing: 'Dropbox clientId missing',
             dropboxAuthFailed: 'Dropbox authentication failed',
             boxClientIdMissing: 'Box clientId missing',

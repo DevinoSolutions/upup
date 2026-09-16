@@ -8,6 +8,7 @@
         "start": "next start",
         "lint": "eslint . --max-warnings 0",
         "lighthouse": "lhci autorun --config=lighthouserc.cjs",
+        "lighthouse:mobile": "lhci autorun --config=lighthouserc.mobile.cjs",
         "typecheck": "fumadocs-mdx && tsc --noEmit",
         "test": "vitest run",
         "clean": "rm -rf .next node_modules/.cache"
@@ -27,7 +28,7 @@
         "gray-matter": "^4.0.3",
         "gsap": "^3.13.0",
         "lucide-react": "^0.503.0",
-        "next": "16.2.11",
+        "next": "16.3.3",
         "nodemailer": "^9.0.3",
         "posthog-js": "^1.399.2",
         "posthog-node": "^5.45.2",

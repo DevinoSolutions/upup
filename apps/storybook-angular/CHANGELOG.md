@@ -1,5 +1,29 @@
 # @useupup/storybook-angular
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`bf817fc`](https://github.com/DevinoSolutions/upup/commit/bf817fc1bf57b56cc4ca7e6e11209a6ab4429f4d)]:
+    - @useupup/core@3.3.3
+    - @useupup/angular@3.3.3
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [[`5921da4`](https://github.com/DevinoSolutions/upup/commit/5921da4d1c3094d76fbbd0f5deee7a1c5e7efbe9)]:
+    - @useupup/core@3.3.2
+    - @useupup/angular@3.3.2
+
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [[`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce), [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf), [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718), [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036), [`32ae800`](https://github.com/DevinoSolutions/upup/commit/32ae80094b21ea7064a5061d14d652b0e8bc7d82)]:
+    - @useupup/core@3.3.1
+    - @useupup/angular@3.3.1
+
 ## 0.1.4
 
 ### Patch Changes

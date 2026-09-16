@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fa'
 import { SiGoogledrive, SiDropbox, SiBox } from 'react-icons/si'
 import { GrOnedrive } from 'react-icons/gr'
-import { SCENE_MEDIA } from './scene-media'
+import { SCENE_MEDIA, sceneImageSize } from './scene-media'
 import type { QueueFile, QueueStage, SourceDef } from './types'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -255,6 +255,9 @@ export default function MockUploader({
                     <img
                         src={SCENE_MEDIA.logos.upup}
                         alt=""
+                        {...sceneImageSize(SCENE_MEDIA.logos.upup)}
+                        loading="lazy"
+                        decoding="async"
                         className="h-4 w-auto"
                     />
                     <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
@@ -262,6 +265,9 @@ export default function MockUploader({
                         <img
                             src={SCENE_MEDIA.logos.devino}
                             alt=""
+                            {...sceneImageSize(SCENE_MEDIA.logos.devino)}
+                            loading="lazy"
+                            decoding="async"
                             className="h-3.5 w-auto"
                         />
                     </span>
@@ -428,6 +434,9 @@ function FileThumb({ file }: { file: QueueFile }) {
             <img
                 src={file.thumb}
                 alt=""
+                {...sceneImageSize(file.thumb)}
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 h-full w-full object-cover"
             />
             <span className="absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />

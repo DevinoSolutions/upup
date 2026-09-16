@@ -256,6 +256,8 @@ export const arSA: LocaleBundle = {
                 '\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0645\u064A\u0644 \u0645\u0637\u0644\u0648\u0628...',
             popupBlocked:
                 '\u062A\u0645 \u062D\u0638\u0631 \u0627\u0644\u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0645\u0646\u0628\u062B\u0642\u0629',
+            authCancelled:
+                '\u062A\u0645 \u0625\u0644\u063A\u0627\u0621 \u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644',
             dropboxClientIdMissing:
                 '\u0645\u0639\u0631\u0641 Dropbox \u0645\u0641\u0642\u0648\u062F',
             dropboxAuthFailed:

@@ -215,6 +215,7 @@ function App() {
                         'googleDrive',
                         'oneDrive',
                         'dropbox',
+                        'box',
                         'url',
                         'camera',
                         'microphone',
@@ -245,6 +246,9 @@ function App() {
                         dropbox: {
                             clientId:
                                 import.meta.env.VITE_DROPBOX_CLIENT_ID || '',
+                        },
+                        box: {
+                            clientId: import.meta.env.VITE_BOX_CLIENT_ID || '',
                         },
                     }}
                 />

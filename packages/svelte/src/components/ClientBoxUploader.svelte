@@ -35,6 +35,7 @@
   <DriveAuthFallback
     providerName="Box"
     onRetry={authenticate}
+    {error}
     dataUpupSlot="box-uploader"
   />
 {:else}
