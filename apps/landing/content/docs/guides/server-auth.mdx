@@ -128,7 +128,7 @@ The token binds:
   from `exp`, since `init` is the only issuer and has always used the same TTL.
 
 It is signed with HMAC-SHA-256 over the payload using your
-`uploadTokenSecret`, via Web Crypto (so it works on Node 18+, edge runtimes,
+`uploadTokenSecret`, via Web Crypto (so it works on Node 20+, edge runtimes,
 and Cloudflare Workers). On every continuation request the handler verifies the
 signature **before** trusting any payload byte, compares it in constant time,
 and checks expiry — the one exception being `resume`, which applies the resume

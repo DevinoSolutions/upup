@@ -7,12 +7,11 @@
 <h3 align="center">One file uploader. Every framework.</h3>
 
 <p align="center">
-  A headless upload engine with native, byte-identical UI packages for
+  A headless upload engine with native, DOM-identical UI packages for
   <b>React</b>, <b>Vue</b>, <b>Svelte</b>, <b>Angular</b>, <b>Vanilla&nbsp;JS</b>, and <b>Preact</b> —
   with optional server-mode uploads, cloud drives, camera, screen capture, and link imports.
 </p>
 
-<!-- npm badges: add after first @useupup publish -->
 <p align="center">
   <a href="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml"><img src="https://github.com/DevinoSolutions/upup/actions/workflows/main.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
@@ -31,15 +30,15 @@
 **upup** is a free, MIT-licensed file uploader built as one headless
 [`@useupup/core`](packages/core) engine with a matching native UI for every major
 framework. React is the visual canon; the Vue, Svelte, Angular, Vanilla, and
-Preact ports render the **same DOM** with the **same props**, verified
-byte-for-byte by a cross-framework parity harness. Upload straight from the
-browser to any S3-compatible storage (Client Mode), or route through your own
-backend with an HMAC-signed trust model (Server Mode via
-[`@useupup/server`](packages/server)).
+Preact ports render the **same DOM** with the **same props**, verified by a
+cross-framework parity harness (structure, classes, accessibility attributes,
+text). Upload straight from the browser to any S3-compatible storage (Client
+Mode), or route through your own backend with an HMAC-signed trust model
+(Server Mode via [`@useupup/server`](packages/server)).
 
 ## Install
 
-Pick the package for your framework — the component API and rendered DOM are identical across all of them:
+Pick the package for your framework — the component API and the rendered DOM contract are identical across all of them:
 
 | Package            | Install                  | Get started                                                        |
 | ------------------ | ------------------------ | ------------------------------------------------------------------ |
@@ -113,7 +112,7 @@ Express, Fastify, and Hono handlers ship as subpath exports
 ## Features
 
 - **Headless core.** `@useupup/core` is a zero-framework-dependency engine: file state, an upload pipeline (compression, HEIC→JPEG, EXIF stripping, checksums, thumbnails, optional Web Worker offload), cloud-drive plugins, i18n, and theming. Build your own UI on it, or use a native package.
-- **Native UI for six frameworks.** React, Vue, Svelte, Angular, Vanilla JS, and Preact — same DOM, same Tailwind classes, enforced byte-for-byte by a parity harness.
+- **Native UI for six frameworks.** React, Vue, Svelte, Angular, Vanilla JS, and Preact — same DOM structure, same `upup-` classes, enforced by a cross-framework parity harness.
 - **Client or Server mode.** Direct browser → storage presigned uploads, or a server-proxied [`@useupup/server`](packages/server) with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets).
 - **S3-compatible storage.** AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi — any S3-compatible endpoint.
 - **Cloud drives.** Import from Google Drive, OneDrive, Dropbox, and Box, in client or server mode.
@@ -123,7 +122,10 @@ Express, Fastify, and Hono handlers ship as subpath exports
 - **i18n & theming.** ICU-based localization with 9 bundled locales and RTL support, plus a slot-level theming system that targets every rendered element.
 - **TypeScript-first.** Full type definitions out of the box.
 
-## Battle-tested in production
+## Used in production
+
+Both apps below run the upup v3.1 engine under its previous `@upupjs/*` scope —
+the same codebase, published before the rename to `@useupup/*`.
 
 - **uNotes** — AI doc uploads for past exams → [unotes.net](https://unotes.net)
 - **Shorty** — media uploads for transcripts → [aishorty.com](https://aishorty.com)
