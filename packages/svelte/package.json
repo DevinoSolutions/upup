@@ -96,6 +96,6 @@
         "svelte-check": "^4.1.0",
         "typescript": "^5.3.2",
         "vite": "^7",
-        "vitest": "^4.1.2"
+        "vitest": "^4.1.11"
     }
 }
