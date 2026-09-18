@@ -1,5 +1,49 @@
 # @useupup/server
 
+## 3.3.3
+
+### Patch Changes
+
+- Updated dependencies [[`bf817fc`](https://github.com/DevinoSolutions/upup/commit/bf817fc1bf57b56cc4ca7e6e11209a6ab4429f4d)]:
+    - @useupup/core@3.3.3
+
+## 3.3.2
+
+### Patch Changes
+
+- [#407](https://github.com/DevinoSolutions/upup/pull/407) [`5921da4`](https://github.com/DevinoSolutions/upup/commit/5921da4d1c3094d76fbbd0f5deee7a1c5e7efbe9) Thanks [@BSalaeddin](https://github.com/BSalaeddin)! - Review fixes for the Google Drive shared-drives support that shipped in 3.3.1,
+  behind the same default-off `cloudDrives.googleDrive.sharedDrives` flag. Nothing
+  changes for a picker that leaves the flag unset.
+
+    A `drives.list` failure — a 403 under a Workspace sharing policy, a 429, a 5xx —
+    now degrades to no shared-drive rows instead of taking the whole root listing
+    down with it. The call was awaited unguarded inside `loadFiles`, so for a user
+    with the flag on, one non-2xx from that endpoint threw away the My Drive
+    children the listing had already fetched and left the picker empty. The failure
+    is reported on a new non-fatal `google-drive:shared-drives-error` event, and
+    drives collected before a mid-pagination failure are kept.
+
+    Drive folder ids are escaped into the `files.list` query instead of interpolated
+    raw, using the same `escapeDriveQueryValue` the server-mode drive client uses.
+    That escaper moved from `@useupup/server` into `@useupup/core/internal` and
+    `@useupup/server` re-exports it, so the two halves share ONE implementation that
+    cannot drift.
+
+    The shared-drive rows and the virtual "Shared with me" row lead the root's first
+    page rather than trailing it, so they stay above a second page of My Drive files
+    instead of being pushed below one. They are still emitted on the first page only,
+    so they appear exactly once and pagination is unaffected in either view.
+
+- Updated dependencies [[`5921da4`](https://github.com/DevinoSolutions/upup/commit/5921da4d1c3094d76fbbd0f5deee7a1c5e7efbe9)]:
+    - @useupup/core@3.3.2
+
+## 3.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`7df75e6`](https://github.com/DevinoSolutions/upup/commit/7df75e6b430e080bf8f3931297ec171d86ff19ce), [`e4393b5`](https://github.com/DevinoSolutions/upup/commit/e4393b5652add229c9d5fa849cba2ba97913f7cf), [`db9ea90`](https://github.com/DevinoSolutions/upup/commit/db9ea90af5b1916763d607baee81e118b6d7c718), [`720d273`](https://github.com/DevinoSolutions/upup/commit/720d2735d268b242338b70afa380161cf7107036)]:
+    - @useupup/core@3.3.1
+
 ## 3.3.0
 
 ### Minor Changes

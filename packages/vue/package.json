@@ -1,6 +1,6 @@
 {
     "name": "@useupup/vue",
-    "version": "3.3.0",
+    "version": "3.3.3",
     "description": "Vue 3 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
         "file-upload",
@@ -93,7 +93,7 @@
         "tsup": "^8.4.0",
         "typescript": "^5.3.2",
         "unplugin-vue": "^7.2.0",
-        "vitest": "^4.1.2",
+        "vitest": "^4.1.11",
         "vue": "^3.4.0",
         "vue-tsc": "^2.0.0"
     }

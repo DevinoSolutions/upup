@@ -1,6 +1,6 @@
 {
     "name": "@useupup/svelte",
-    "version": "3.3.0",
+    "version": "3.3.3",
     "description": "Svelte 5 file uploader with cloud-drive sources, resumable uploads, theming, and ICU i18n.",
     "keywords": [
         "file-upload",
@@ -96,6 +96,6 @@
         "svelte-check": "^4.1.0",
         "typescript": "^5.3.2",
         "vite": "^7",
-        "vitest": "^4.1.2"
+        "vitest": "^4.1.11"
     }
 }

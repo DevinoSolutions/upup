@@ -24,6 +24,7 @@ jobs:
     Resolve-Affected:
         name: Resolve affected suites
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         outputs:
             e2e: ${{ steps.resolve.outputs.e2e }}
             minio: ${{ steps.resolve.outputs.minio }}
@@ -55,6 +56,7 @@ jobs:
     E2E:
         name: Cross-framework E2E (Playwright + MinIO)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true'
         steps:
@@ -62,7 +64,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -153,7 +155,7 @@ jobs:
             # nothing, which means the capture layer itself broke.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -162,7 +164,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
               with:
                   name: e2e-playwright-artifacts
                   path: |
@@ -182,6 +184,7 @@ jobs:
     LocalStack-Integration:
         name: Server integration suite (LocalStack — AWS ListParts semantics)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.minio == 'true'
         steps:
@@ -189,7 +192,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -238,6 +241,7 @@ jobs:
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.smoke == 'true'
         steps:
@@ -245,7 +249,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -269,6 +273,7 @@ jobs:
     Docs-E2E:
         name: Docs E2E (landing /docs Playwright project)
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.docsE2e == 'true'
         steps:
@@ -276,7 +281,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -312,7 +317,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure()
-              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
               with:
                   name: docs-e2e-playwright-artifacts
                   path: |
@@ -330,6 +335,7 @@ jobs:
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
         runs-on: ubuntu-latest
+        timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.storybook == 'true'
         steps:
@@ -337,7 +343,7 @@ jobs:
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
             - name: Setup pnpm
-              uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
               uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -360,6 +366,7 @@ jobs:
     E2E-Status:
         name: E2E Status Check
         runs-on: ubuntu-latest
+        timeout-minutes: 45
         needs:
             [
                 Resolve-Affected,

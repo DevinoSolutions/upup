@@ -1,6 +1,6 @@
 {
     "name": "@useupup/storybook-preact",
-    "version": "0.1.4",
+    "version": "0.1.7",
     "private": true,
     "type": "module",
     "scripts": {
@@ -29,7 +29,7 @@
         "tailwindcss": "^3.4.17",
         "typescript": "^5.3.2",
         "vite": "^7",
-        "vitest": "^4.1.2"
+        "vitest": "^4.1.11"
     },
     "msw": {
         "workerDirectory": [
