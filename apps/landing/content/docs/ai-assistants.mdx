@@ -19,6 +19,15 @@ directly:
 
 Point your assistant at either URL when you want it to work with upup.
 
+## One-sentence onboarding
+
+The fastest path: copy the "Onboard your agent to upup" prompt from
+[/agent-setup/](/agent-setup/) (it is also in the docs sidebar and on the
+homepage) and paste it into Claude Code, Codex, Cursor, or OpenCode. The agent
+fetches `https://useupup.com/agent-setup/prompt.md`, installs the right
+`@useupup/*` package, mounts the uploader, adds the presign route, and saves the
+context block below into its own instructions file.
+
 ## Paste-ready context block
 
 Drop this into your project's assistant config — `CLAUDE.md`, `.cursorrules`,
@@ -26,7 +35,7 @@ Drop this into your project's assistant config — `CLAUDE.md`, `.cursorrules`,
 
 ```text
 # upup — MIT self-hosted file uploader (docs: https://useupup.com/docs/)
-upup is one headless core plus native, DOM-identical UI packages for six frameworks.
+upup is one headless core plus native UI packages for six frameworks; every package renders the same uploader.
 Nine published @useupup/* packages:
 - @useupup/core     headless engine: file state, upload pipeline (compression, HEIC, web-worker), cloud-drive plugins, i18n, theme. Zero framework deps.
 - @useupup/react    canonical UI (React 19). @useupup/vue, @useupup/svelte, @useupup/angular, @useupup/vanilla, @useupup/preact are native ports with the same DOM.
@@ -40,7 +49,8 @@ Server mode: point the uploader at @useupup/server with mode="server" serverUrl=
   — uploadTokenSecret is REQUIRED and must be >= 16 chars, or it throws at construction.
 Sources: local drag-and-drop, URL/link import, camera, screen capture, and cloud drives (Google Drive, OneDrive, Dropbox, Box).
 Optional: image compression, HEIC conversion, resumable uploads (tus or S3 multipart), ICU i18n, theming. Image editor is React/Preact only.
-Quickstarts: https://useupup.com/docs/quickstarts/<react|vue|svelte|angular|vanilla|preact|next>
+Quickstarts: https://useupup.com/docs/quickstarts/<react|vue|svelte|angular|vanilla|preact|next>/
+Machine-readable docs: https://useupup.com/llms.txt (index) and https://useupup.com/llms-full.txt (full corpus). FAQ: https://useupup.com/docs/faq/
 ```
 
 Every line above is verified against the packages as they ship — a snippet from

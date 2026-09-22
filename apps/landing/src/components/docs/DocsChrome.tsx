@@ -10,6 +10,7 @@ import {
     DocsSearchTrigger,
 } from '@/components/docs/DocsSearch'
 import { DocsAskAi } from '@/components/docs/DocsAskAi'
+import { AgentSetupPill } from '@/components/AgentSetupPill'
 import { useDocsChat } from '@/lib/docs/use-docs-chat'
 
 // Client shell that owns the Ask-AI state so the chat transcript survives
@@ -53,6 +54,7 @@ export function DocsChrome({
                         testId="docs-ask-ai-trigger-menu"
                         onClick={openAi}
                     />
+                    <AgentSetupPill surface="docs-menu" className="w-full" />
                     <DocsSidebar tree={tree} />
                 </div>
             </details>
@@ -65,6 +67,10 @@ export function DocsChrome({
                         <AskAiTrigger
                             testId="docs-ask-ai-trigger-desktop"
                             onClick={openAi}
+                        />
+                        <AgentSetupPill
+                            surface="docs-sidebar"
+                            className="w-full"
                         />
                         <DocsSidebar tree={tree} />
                     </div>

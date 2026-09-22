@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { FRAMEWORK_IDS } from '@/lib/frameworks'
 import { source } from '@/lib/docs/source'
 import { canonicalUrl } from '@/lib/site-url'
+import { AGENT_IDS } from '@/lib/agent-setup/config'
 
 // A handful of docs entry points get a priority bump over the 0.6 docs
 // baseline — the pages searchers actually land on first.
@@ -43,6 +44,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'yearly',
             priority: 0.3,
         },
+        // Agent onboarding: the index + one guide per agent. prompt.md is
+        // deliberately NOT listed — it is a fetch target for agents, not a
+        // page (robots still allows it).
+        {
+            url: canonicalUrl('agent-setup'),
+            changeFrequency: 'monthly',
+            priority: 0.7,
+        },
+        ...AGENT_IDS.map((agent): MetadataRoute.Sitemap[number] => ({
+            url: canonicalUrl(`agent-setup/${agent}`),
+            changeFrequency: 'monthly',
+            priority: 0.5,
+        })),
         // EVERY docs page, derived from the fumadocs source — a page added to
         // content/docs lands here (and in search engines) with no manual list
         // to forget. page.url already carries the /docs prefix.
