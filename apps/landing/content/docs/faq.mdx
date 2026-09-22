@@ -1,0 +1,100 @@
+---
+title: FAQ
+description: The questions people ask most about upup — frameworks, licensing, storage, cloud drives, client vs server mode, custom UI, and common setup errors.
+---
+
+The questions we get most often, in one place. `https://useupup.com/faq` and
+`faq.useupup.com` both land here.
+
+## Which frameworks does upup support?
+
+upup ships one uploader with native UI packages for React, Vue, Svelte, Angular,
+Vanilla JS, and Preact. Every framework renders the same DOM structure, classes,
+and accessibility tree, verified by a cross-framework parity test suite, so the
+uploader looks and behaves the same everywhere. Next.js gets its own package,
+[`@useupup/next`](/docs/quickstarts/next/), which bundles the React UI with server
+route handlers.
+
+## Is upup free and open source?
+
+Yes. upup is MIT-licensed and free to use in commercial and personal projects.
+The source lives on GitHub at
+[github.com/DevinoSolutions/upup](https://github.com/DevinoSolutions/upup). There
+is no hosted service, no account, and no paid tier — uploads go to storage you
+own.
+
+## Does upup work with S3-compatible storage like MinIO or Cloudflare R2?
+
+Yes. upup uploads to any S3-compatible storage, including AWS S3, Cloudflare R2,
+MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi, and more, as well as Azure Blob
+Storage. Provider-specific setup, including the CORS rules each bucket needs, is
+under [Guides → Storage](/docs/guides/storage/aws-s3/).
+
+## Which cloud drives can users upload from?
+
+Users can import files directly from Google Drive, OneDrive, Dropbox, and Box.
+upup also supports uploads from the device camera, screen capture, and link (URL)
+imports. Each drive needs an OAuth client from that provider's developer console;
+see [Credentials configuration](/docs/credentials-configuration/).
+
+## What is the difference between client mode and server mode?
+
+In client mode the browser uploads directly to your storage using short-lived
+credentials issued by your server. In server mode uploads are proxied through
+your own server using the `@useupup/server` package, which isolates storage
+credentials behind an HMAC-signed trust model. Start with
+[Server Mode — Setup](/docs/guides/server-mode-setup/) when you need server mode.
+
+## Can I use my own UI with upup?
+
+Yes. The engine lives in `@useupup/core`, a framework-agnostic headless package.
+You can use the built-in native UI for your framework or build a fully custom
+interface on the same core using the exported hooks and controllers. See
+[Headless core](/docs/guides/headless/).
+
+## Why does `createUpupHandler` throw at startup?
+
+The server handler requires an `uploadTokenSecret` of at least 16 characters and
+throws at construction time if it is missing or too short — it is the key that
+HMAC-signs every upload token, so the handler refuses to start without one. Set
+it from an environment variable and keep it identical on every server instance.
+Details in [Server Mode — Setup](/docs/guides/server-mode-setup/).
+
+## Why do uploads fail with a CORS error?
+
+In client mode the browser PUTs bytes straight to your bucket, so the bucket
+itself must allow your origin, the `PUT` method, and the headers the presigned
+URL carries. The per-provider pages under
+[Guides → Storage](/docs/guides/storage/aws-s3/) include the exact CORS rule to
+apply. The presign endpoint returning a URL but the upload failing afterwards is
+almost always this.
+
+## Which React and Next.js versions are required?
+
+`@useupup/react` and `@useupup/preact` require React 19. `@useupup/next` requires
+Next.js 15 or newer. If you are on Next.js, add
+`serverExternalPackages: ['@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner']`
+to `next.config` so the AWS SDK stays out of your client bundle — see the
+[Next.js quickstart](/docs/quickstarts/next/).
+
+## Why is the image editor missing in Vue, Svelte, Angular, or Vanilla JS?
+
+The image editor (crop, rotate, annotate) ships for React and Preact only; the
+other frameworks intentionally stub it. Every other feature — cloud drives,
+camera, screen capture, link import, compression, HEIC conversion, resumable
+uploads, i18n, and theming — is identical across all six frameworks.
+
+## How do I set up an AI coding agent to use upup?
+
+Copy the "Onboard your agent to upup" prompt from
+[/agent-setup/](/agent-setup/) and paste it into Claude Code, Codex, Cursor, or
+OpenCode. The agent fetches `/agent-setup/prompt.md`, installs the right
+`@useupup/*` package, mounts the uploader, and saves a verified context block into
+its instructions file. The context block on its own is on
+[Use upup with AI assistants](/docs/ai-assistants/).
+
+## Where do I ask something that is not answered here?
+
+Open a [GitHub issue](https://github.com/DevinoSolutions/upup/issues) for bugs and
+feature requests, or use the [support form](/support/) to reach the team
+directly.

@@ -3,6 +3,11 @@ import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
 import { siteUrl } from '@/lib/site-url'
+import {
+    AGENT_SETUP_PATH,
+    DOCS_FAQ_PATH,
+    agentSetupPromptUrl,
+} from '@/lib/agent-setup/config'
 
 // Filesystem-based (not fumadocs-based) so this works identically under
 // vitest and under Next — fumadocs' `.source/server` is a generated file
@@ -65,6 +70,16 @@ export function buildLlmsIndex(): string {
         'upup is an MIT-licensed, self-hosted file uploader: one headless core plus',
         'native, DOM-identical UI packages for React, Vue, Svelte, Angular, Vanilla JS,',
         'and Preact, with optional server-mode uploads and cloud-drive sources.',
+        '',
+        '## Start here',
+        '',
+        // Not `- [` bullets on purpose: the "## Docs" list below is pinned to
+        // the page inventory by docs-llms.test.ts, and these are not pages
+        // in the corpus.
+        `Agent setup (fetch and execute to install + wire upup): ${agentSetupPromptUrl()}`,
+        `Agent setup, human guide: ${siteUrl()}${AGENT_SETUP_PATH}`,
+        `FAQ: ${siteUrl()}${DOCS_FAQ_PATH}`,
+        `Full docs corpus: ${siteUrl()}/llms-full.txt`,
         '',
         '## Docs',
         '',
