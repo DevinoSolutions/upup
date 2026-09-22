@@ -23,7 +23,7 @@ on:
 jobs:
     Resolve-Affected:
         name: Resolve affected suites
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         outputs:
             e2e: ${{ steps.resolve.outputs.e2e }}
@@ -55,7 +55,7 @@ jobs:
 
     E2E:
         name: Cross-framework E2E (Playwright + MinIO)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true'
@@ -183,7 +183,7 @@ jobs:
     # so presigned-URL trust-model tests keep their AWS semantics.
     LocalStack-Integration:
         name: Server integration suite (LocalStack — AWS ListParts semantics)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.minio == 'true'
@@ -240,7 +240,7 @@ jobs:
 
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.smoke == 'true'
@@ -272,7 +272,7 @@ jobs:
     # for the heavy suites on a docs-only PR; runs in nightly.yml too (unrouted).
     Docs-E2E:
         name: Docs E2E (landing /docs Playwright project)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.docsE2e == 'true'
@@ -334,7 +334,7 @@ jobs:
     # Same turbo task nightly.yml runs; both call `pnpm run build:storybook`.
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.storybook == 'true'
@@ -365,7 +365,7 @@ jobs:
     # resolver) fails the rollup, so routing can never hide required coverage.
     E2E-Status:
         name: E2E Status Check
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         needs:
             [

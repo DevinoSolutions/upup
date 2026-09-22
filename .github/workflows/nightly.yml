@@ -26,7 +26,7 @@ on:
 jobs:
     E2E-Full:
         name: Full E2E + a11y sweep (Playwright + MinIO)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         steps:
             - name: Checkout the repository
@@ -130,7 +130,7 @@ jobs:
 
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         steps:
             - name: Checkout the repository
@@ -153,7 +153,7 @@ jobs:
 
     Smoke-Packages:
         name: Package smoke (real tarball consumer)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         steps:
             - name: Checkout the repository
@@ -176,7 +176,7 @@ jobs:
 
     Mastra-Evals:
         name: Mastra LLM evals (paid key; explicit skip without it)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         steps:
             - name: Checkout the repository
@@ -235,7 +235,7 @@ jobs:
 
     Drive-Sandbox:
         name: Cloud-drive live integration (sandbox creds; explicit skip without them)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         steps:
             - name: Checkout the repository
@@ -366,7 +366,7 @@ jobs:
 
     Lighthouse:
         name: Lighthouse (landing SEO + Best Practices + mobile perf ratchet)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         steps:
             - name: Checkout the repository
@@ -420,7 +420,7 @@ jobs:
     # absent; that is an explicit documented skip, not a silent pass.
     Landing-Feedback:
         name: Landing feedback e2e + PostHog ingestion (capture token; explicit skip without it)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         steps:
             - name: Checkout the repository
@@ -497,7 +497,7 @@ jobs:
 
     Nightly-Status:
         name: Nightly Status Check
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 45
         # issues:write is granted HERE only (the workflow default stays
         # contents:read) so the single job that files the tracking issue is the

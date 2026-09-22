@@ -18,7 +18,7 @@ on:
 jobs:
     Prettier-check:
         name: Prettier Check
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         steps:
             - name: Checkout the repository
@@ -41,7 +41,7 @@ jobs:
 
     Test:
         name: Run Tests and Coverage
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 20
         needs: [Prettier-check]
         steps:
@@ -87,7 +87,7 @@ jobs:
 
     Build:
         name: Build project
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Prettier-check, Test]
         steps:
@@ -118,7 +118,7 @@ jobs:
 
     Typecheck:
         name: Typecheck project
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         needs: [Prettier-check]
         steps:
@@ -142,7 +142,7 @@ jobs:
 
     Bundle-Size:
         name: Bundle size check
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Build]
         steps:
@@ -176,7 +176,7 @@ jobs:
 
     Dependency-Audit:
         name: Dependency audit (packages/*, production scope)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Prettier-check]
         steps:
@@ -200,7 +200,7 @@ jobs:
 
     Lint:
         name: Lint
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         needs: [Prettier-check]
         steps:
@@ -224,7 +224,7 @@ jobs:
 
     Oxlint:
         name: Oxlint (fast lint)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         steps:
             - name: Checkout repo
@@ -247,7 +247,7 @@ jobs:
 
     Knip:
         name: Knip (dead code)
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         needs: [Prettier-check]
         steps:
@@ -271,7 +271,7 @@ jobs:
 
     Docs-Gate:
         name: Docs sync gate
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 30
         needs: [Prettier-check]
         steps:
@@ -318,7 +318,7 @@ jobs:
 
     Status-Check:
         name: Status Check
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-devino
         timeout-minutes: 15
         needs:
             [
