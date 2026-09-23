@@ -27,7 +27,8 @@ export function AgentSetupPill({
     /**
      * `inline` is the one-row pill (hero, /agent-setup/). `stacked` puts the
      * agent icons on a second row so the label stays readable inside narrow
-     * containers like the docs sidebar (inline truncated to "Onboa…" there).
+     * containers like the docs sidebar (inline truncated to "Onboa…" there);
+     * the stacked label wraps instead of truncating, so it never clips.
      */
     layout?: 'inline' | 'stacked'
     className?: string
@@ -52,7 +53,7 @@ export function AgentSetupPill({
             <div
                 className={`max-w-full border border-black/5 bg-[var(--bg-base)] text-sm dark:border-white/10 ${
                     stacked
-                        ? 'flex flex-col gap-1.5 rounded-2xl px-3 py-2'
+                        ? 'flex flex-col gap-1.5 rounded-2xl px-2.5 py-2'
                         : 'inline-flex items-center gap-1 rounded-full py-1 pl-3 pr-1'
                 }`}
             >
@@ -65,7 +66,9 @@ export function AgentSetupPill({
                         stacked ? 'w-full justify-between' : ''
                     }`}
                 >
-                    <span className="truncate">
+                    <span
+                        className={stacked ? 'min-w-0 text-left' : 'truncate'}
+                    >
                         Onboard your agent to {APP_NAME}
                     </span>
                     {copied ? (
