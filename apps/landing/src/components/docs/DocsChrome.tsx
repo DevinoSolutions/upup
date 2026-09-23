@@ -54,7 +54,11 @@ export function DocsChrome({
                         testId="docs-ask-ai-trigger-menu"
                         onClick={openAi}
                     />
-                    <AgentSetupPill surface="docs-menu" className="w-full" />
+                    <AgentSetupPill
+                        surface="docs-menu"
+                        layout="stacked"
+                        className="w-full"
+                    />
                     <DocsSidebar tree={tree} />
                 </div>
             </details>
@@ -70,6 +74,7 @@ export function DocsChrome({
                         />
                         <AgentSetupPill
                             surface="docs-sidebar"
+                            layout="stacked"
                             className="w-full"
                         />
                         <DocsSidebar tree={tree} />
