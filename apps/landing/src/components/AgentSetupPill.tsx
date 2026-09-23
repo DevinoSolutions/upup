@@ -19,13 +19,21 @@ import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 // Each agent icon is a link to that agent's human guide.
 export function AgentSetupPill({
     surface,
+    layout = 'inline',
     className = '',
 }: {
     /** Which placement fired the copy — the PostHog `surface` property. */
     surface: 'docs-sidebar' | 'docs-menu' | 'home-hero' | 'agent-setup'
+    /**
+     * `inline` is the one-row pill (hero, /agent-setup/). `stacked` puts the
+     * agent icons on a second row so the label stays readable inside narrow
+     * containers like the docs sidebar (inline truncated to "Onboa…" there).
+     */
+    layout?: 'inline' | 'stacked'
     className?: string
 }) {
     const { copied, copy } = useCopyToClipboard(2500)
+    const stacked = layout === 'stacked'
 
     const onCopy = () => {
         copy(agentSetupSentence())
@@ -41,13 +49,21 @@ export function AgentSetupPill({
             data-testid={`agent-setup-pill-${surface}`}
             className={`inline-flex max-w-full flex-col gap-1.5 ${className}`}
         >
-            <div className="inline-flex max-w-full items-center gap-1 rounded-full border border-black/5 bg-[var(--bg-base)] py-1 pl-3 pr-1 text-sm dark:border-white/10">
+            <div
+                className={`max-w-full border border-black/5 bg-[var(--bg-base)] text-sm dark:border-white/10 ${
+                    stacked
+                        ? 'flex flex-col gap-1.5 rounded-2xl px-3 py-2'
+                        : 'inline-flex items-center gap-1 rounded-full py-1 pl-3 pr-1'
+                }`}
+            >
                 <button
                     type="button"
                     onClick={onCopy}
                     data-testid="agent-setup-copy"
                     aria-label={`Copy the ${APP_NAME} agent-setup prompt`}
-                    className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-800 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white"
+                    className={`inline-flex min-w-0 items-center gap-2 font-medium text-gray-800 transition-colors hover:text-gray-900 dark:text-gray-200 dark:hover:text-white ${
+                        stacked ? 'w-full justify-between' : ''
+                    }`}
                 >
                     <span className="truncate">
                         Onboard your agent to {APP_NAME}
@@ -65,7 +81,9 @@ export function AgentSetupPill({
                     )}
                 </button>
                 <span
-                    className="mx-1 h-4 w-px shrink-0 bg-black/10 dark:bg-white/15"
+                    className={`shrink-0 bg-black/10 dark:bg-white/15 ${
+                        stacked ? 'h-px w-full' : 'mx-1 h-4 w-px'
+                    }`}
                     aria-hidden
                 />
                 <ul className="flex shrink-0 items-center gap-0.5">
