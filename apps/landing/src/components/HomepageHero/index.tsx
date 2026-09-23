@@ -19,6 +19,7 @@ import FrameworkSnippets from '@/components/FrameworkSnippets'
 import FrameworkStrip from '@/components/FrameworkStrip'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
+import { AgentSetupPill } from '@/components/AgentSetupPill'
 
 // The hero visual is decorative (aria-hidden) and expensive: the scene engine,
 // a pile of react-icons, and eleven <img> tags that React 19 hoists into
@@ -472,6 +473,15 @@ export default function HeroSection({
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Agent onboarding: one sentence to paste into any
+                            coding agent — see src/lib/agent-setup. */}
+                        <div
+                            className="hero-rise mt-5 flex justify-center lg:justify-start"
+                            style={rise(0.55)}
+                        >
+                            <AgentSetupPill surface="home-hero" />
                         </div>
                     </div>
 

@@ -18,6 +18,10 @@ const SITE_BASE = (
 ).replace(/\/+$/, '')
 const SITE_HOST = new URL(SITE_BASE).host
 const DOCS_ALIAS_HOST = `docs.${SITE_HOST}`
+// `faq.<host>` is the same kind of courtesy alias: every path on it 301s to
+// the docs FAQ page, as does `/faq` on the main host.
+const FAQ_ALIAS_HOST = `faq.${SITE_HOST}`
+const DOCS_FAQ_URL = `${SITE_BASE}/docs/faq/`
 // `www.<host>` resolves to this same app, so without a redirect the whole site
 // is served twice under two hostnames. Page canonicals already point at the
 // apex, but a canonical is a hint — this makes the apex the only 200.
@@ -191,6 +195,28 @@ const nextConfig = {
                 destination: '/docs/:path*/',
                 permanent: true,
             },
+            // /faq on the main host and EVERY path on faq.<host> land on the
+            // docs FAQ page. Relative destination for the main-host rule so
+            // trailingSlash keeps it a single hop; the alias-host rules need
+            // the absolute URL to change host. These precede the docs-alias
+            // rules only for grouping — the host conditions never overlap.
+            {
+                source: '/faq',
+                destination: '/docs/faq/',
+                permanent: true,
+            },
+            {
+                source: '/',
+                has: [{ type: 'host', value: FAQ_ALIAS_HOST }],
+                destination: DOCS_FAQ_URL,
+                permanent: true,
+            },
+            {
+                source: '/:path*',
+                has: [{ type: 'host', value: FAQ_ALIAS_HOST }],
+                destination: DOCS_FAQ_URL,
+                permanent: true,
+            },
             // docs.<host> alias — placed AFTER the /documentation rules on
             // purpose: a legacy path on the alias host takes the relative
             // /documentation/* -> /docs/* hop first (staying on the alias
@@ -230,6 +256,37 @@ const nextConfig = {
                 source: '/llms-full.txt',
                 has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
                 destination: `${SITE_BASE}/docs/llms-full.txt`,
+                permanent: true,
+            },
+            // The agent-setup surface lives at the site root, not under
+            // /docs: an agent told "docs.<host>/agent-setup/prompt.md" must
+            // reach the real file, not `/docs/agent-setup/prompt.md/` (the
+            // catch-all's shape, a 404). File path first (no slash appended),
+            // then the human pages.
+            {
+                source: '/agent-setup/prompt.md',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/agent-setup/prompt.md`,
+                permanent: true,
+            },
+            {
+                source: '/agent-setup',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/agent-setup/`,
+                permanent: true,
+            },
+            {
+                source: '/agent-setup/:path*',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: `${SITE_BASE}/agent-setup/:path*/`,
+                permanent: true,
+            },
+            // `/faq` on the docs alias goes to the FAQ page, not `/docs/faq/`
+            // via the catch-all — same page, but this keeps it one hop.
+            {
+                source: '/faq',
+                has: [{ type: 'host', value: DOCS_ALIAS_HOST }],
+                destination: DOCS_FAQ_URL,
                 permanent: true,
             },
             // Bare alias root and a bare `/docs` on the alias — the empty
