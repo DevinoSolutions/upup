@@ -2,8 +2,7 @@
 
 import React from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { FaGlobe, FaServer, FaShieldAlt } from 'react-icons/fa'
-import { SiAmazonwebservices } from 'react-icons/si'
+import { FaAws, FaGlobe, FaServer, FaShieldAlt } from 'react-icons/fa'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ServerModeVignette — the one remaining diagram vignette (the other five
@@ -70,9 +69,7 @@ export function ServerModeVignette({ active = true }: VignetteProps) {
                 {/* S3 */}
                 <Node
                     label="S3"
-                    icon={
-                        <SiAmazonwebservices className="h-5 w-5 text-[#FF9900]" />
-                    }
+                    icon={<FaAws className="h-5 w-5 text-[#FF9900]" />}
                 />
             </div>
 

@@ -22,9 +22,9 @@ import {
     FaImage,
     FaVideo,
     FaMusic,
+    FaAws,
 } from 'react-icons/fa'
 import {
-    SiAmazonwebservices,
     SiDigitalocean,
     SiBackblaze,
     SiBox,
@@ -40,9 +40,8 @@ import {
     SiHetzner,
     SiScaleway,
     SiWasabi,
-    SiOracle,
 } from 'react-icons/si'
-import { GrOnedrive } from 'react-icons/gr'
+import { GrOnedrive, GrOracle } from 'react-icons/gr'
 import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
 import * as gtag from '@/lib/gtag'
@@ -229,7 +228,7 @@ const developerStorageProviders: Integration[] = [
     {
         id: 'aws',
         name: 'AWS S3',
-        icon: SiAmazonwebservices,
+        icon: FaAws,
         status: 'supported',
         description: 'Amazon S3 buckets',
         category: 'Developer Storage',
@@ -314,7 +313,7 @@ const developerStorageProviders: Integration[] = [
     {
         id: 'oracle',
         name: 'Oracle Cloud Object Storage',
-        icon: SiOracle,
+        icon: GrOracle,
         status: 'supported',
         description: 'Oracle cloud storage',
         category: 'Developer Storage',
