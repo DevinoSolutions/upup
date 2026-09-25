@@ -136,6 +136,41 @@ test.describe('shared PostHog e2e ingestion', () => {
         expect(matched?.[2]).toBe('e2e')
     })
 
+    test('the install_command_copied conversion landed with this run’s ids', async ({
+        testRunId,
+    }) => {
+        const artifacts = readArtifacts()
+        expect(
+            artifacts.installCopyScenario,
+            'install-copy-flow must have run and recorded its scenario',
+        ).toBe('install-copy')
+
+        const installQuery = `
+            SELECT properties.surface, properties.package_manager, properties.package
+            FROM events
+            WHERE event = 'install_command_copied'
+              AND properties.test_run_id = '${testRunId}'
+              AND properties.test_scenario = 'install-copy'
+              AND properties.app_id = 'upup-landing'
+              AND timestamp > now() - INTERVAL 2 HOUR
+            LIMIT 100`
+
+        let row: unknown[] | undefined
+        await expect
+            .poll(
+                async () => {
+                    row = (await runHogql(installQuery))?.[0]
+                    return Boolean(row)
+                },
+                { timeout: 90_000, intervals: [2_000, 3_000, 5_000, 8_000] },
+            )
+            .toBe(true)
+
+        expect(row?.[0]).toBe('home-hero')
+        expect(row?.[1]).toBe('pnpm')
+        expect(row?.[2]).toBe('@useupup/react')
+    })
+
     test('the AI thumbs events landed and correlate to an $ai_generation trace', async ({
         testRunId,
     }) => {
