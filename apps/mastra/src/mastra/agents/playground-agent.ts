@@ -1,4 +1,6 @@
 import { Agent } from '@mastra/core/agent'
+import { env } from '../../lib/env.js'
+import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
 import { applyConfigPatch } from '../tools/applyConfigPatch.js'
 import { renderSchemaForPrompt } from '../schema/upup-config.schema.js'
 
@@ -52,6 +54,7 @@ Examples of good patches:
 Tone: terse, helpful, no emoji, no marketing language. You are a config tool with
 a chat interface — not a chatbot.
     `.trim(),
-    model: 'openrouter/anthropic/claude-haiku-4.5',
+    model: agentModel(env),
+    ...agentDefaultOptions(env),
     tools: { applyConfigPatch },
 })
