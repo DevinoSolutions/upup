@@ -7,7 +7,10 @@ function fail(scope: string, error: z.ZodError): never {
     )
 }
 
-const serverSchema = z.object({
+export const DEFAULT_OPENROUTER_API_URL = 'https://openrouter.ai/api/v1'
+export const DEFAULT_OPENROUTER_MODEL = 'anthropic/claude-haiku-4.5'
+
+export const serverSchema = z.object({
     PORT: z.coerce.number().int().positive().default(4111),
     MASTRA_HOST: z.string().default('localhost'),
     ORIGIN_TOKEN_SECRET: z.string().min(1).optional(),
@@ -15,6 +18,25 @@ const serverSchema = z.object({
     DAILY_REQUEST_CAP: z.coerce.number().int().positive().default(5000),
     RATE_LIMIT_CAPACITY: z.coerce.number().int().positive().default(30),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+    // OpenAI-compatible base URL for the agents' model. Unset = OpenRouter
+    // through Mastra's built-in `openrouter/...` router (today's behaviour);
+    // https://proxyai.devino.ca/v1 routes the agents through the Devino proxy.
+    OPENROUTER_API_URL: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z
+            .string()
+            .url()
+            .default(DEFAULT_OPENROUTER_API_URL)
+            .transform(url => url.replace(/\/+$/, '')),
+    ),
+    // Key for OPENROUTER_API_URL. Mastra's OpenRouter router reads it from
+    // process.env on its own; the proxy path passes it explicitly.
+    OPENROUTER_API_KEY: z.string().min(1).optional(),
+    // Model id both agents use, as the base URL's API names it.
+    OPENROUTER_MODEL: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z.string().min(1).default(DEFAULT_OPENROUTER_MODEL),
+    ),
     MASTRA_API_URL: z.string().default('http://localhost:4111'),
     AGENT_ID: z.string().default('playground-agent'),
     // Deployed docs origin the search-docs tool fetches `/docs/llms-full.txt`
