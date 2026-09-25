@@ -54,13 +54,22 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
         // e2e-only affordance: a short-lived automated page closes before
         // posthog's batch flush fires, so expose an awaitable flush the spec
         // calls before it ends (`shutdown()` flushes the queues and resolves).
+        // captureClientEvent() delivers through a dynamic import of posthog-js,
+        // so a capture fired just before the flush can still be waiting on that
+        // import (a dev server compiles the chunk on first request) and would
+        // land after shutdown and be lost. Awaiting the same import, then one
+        // task, lets every capture already in flight reach the queue first.
         // Never attached on production/disabled.
         if (dataset === 'e2e') {
             ;(
                 window as unknown as {
                     __upupFlushAnalytics?: () => Promise<void>
                 }
-            ).__upupFlushAnalytics = () => posthog.shutdown()
+            ).__upupFlushAnalytics = async () => {
+                await import('posthog-js')
+                await new Promise(resolve => setTimeout(resolve, 0))
+                await posthog.shutdown()
+            }
         }
     }, [])
 
