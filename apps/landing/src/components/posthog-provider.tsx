@@ -27,6 +27,11 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
             capture_pageleave: true,
             autocapture: true,
             person_profiles: 'identified_only',
+            // No PostHog surveys run on this site, and the self-hosted
+            // instance answers the versioned surveys.js path with a redirect
+            // to its login page, so loading it only produced a CORS error in
+            // every visitor's console. Re-enable if surveys are ever added.
+            disable_surveys: true,
             // Session-replay privacy defaults. Replay itself stays
             // dashboard-controlled (not force-enabled here); when a session IS
             // recorded, inputs are masked and any [data-ph-mask] text is hidden.
