@@ -45,6 +45,13 @@ export default defineConfig({
             name: 'docs',
             testMatch: /docs\.spec\.ts$/,
         },
+        // Real uploads through the homepage + docs demos. Needs the landing
+        // server's S3_* + UPUP_UPLOAD_TOKEN_SECRET env pointing at a real
+        // S3-compatible bucket (the Docs-E2E job boots LocalStack for it).
+        {
+            name: 'demo',
+            testMatch: /demo-upload\.spec\.ts$/,
+        },
         {
             name: 'flows',
             testMatch: /(support-flow|thumbs-flow)\.spec\.ts$/,
