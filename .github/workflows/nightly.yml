@@ -471,6 +471,33 @@ jobs:
                   sudo rm -f /etc/apt/sources.list.d/google-chrome.sources
                   pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
+            # `pnpm run e2e:landing` runs EVERY landing project, including
+            # `demo`, whose homepage + docs demos upload through the landing
+            # app's /api/upup mount. Same pinned LocalStack + CORS rule as
+            # e2e.yml's Docs-E2E job.
+            - name: Boot LocalStack for the demo-upload project (S3 only, signature validation ON)
+              if: steps.creds.outputs.present == 'true'
+              run: |
+                  docker run -d --name upup-localstack -p 4566:4566 \
+                    -e SERVICES=s3 -e S3_SKIP_SIGNATURE_VALIDATION=0 \
+                    localstack/localstack@sha256:59373b4a27dba3ec15c4db0b7455f0cb68c8a42300e2cbbe362b440f9a131697 # 4.9.2
+                  for i in $(seq 1 60); do
+                    if curl -sf http://localhost:4566/_localstack/health > /dev/null; then
+                      echo "LocalStack healthy on :4566"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "LocalStack failed to become healthy on :4566" >&2
+                  docker logs upup-localstack >&2 || true
+                  exit 1
+
+            - name: Create the demo bucket with a CORS rule for the landing origin
+              if: steps.creds.outputs.present == 'true'
+              run: |
+                  docker exec upup-localstack awslocal s3 mb s3://upup-e2e
+                  docker exec upup-localstack awslocal s3api put-bucket-cors --bucket upup-e2e \
+                    --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:31080"],"AllowedMethods":["GET","PUT","HEAD"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
+
             - name: Run landing feedback e2e + shared-PostHog ingestion verification
               if: steps.creds.outputs.present == 'true'
               env:
@@ -483,6 +510,13 @@ jobs:
                   POSTHOG_E2E_TEST_PROJECT_ID: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_ID }}
                   POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY }}
                   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+                  # The demo project's storage: LocalStack's public test creds.
+                  S3_ENDPOINT: http://localhost:4566
+                  S3_BUCKET: upup-e2e
+                  S3_REGION: us-east-1
+                  S3_KEY_ID: test
+                  S3_SECRET: test
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
               run: pnpm run e2e:landing
 
             - name: Upload Playwright report
