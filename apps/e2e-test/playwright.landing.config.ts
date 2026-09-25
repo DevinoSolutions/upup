@@ -52,6 +52,11 @@ export default defineConfig({
             name: 'demo',
             testMatch: /demo-upload\.spec\.ts$/,
         },
+        // Homepage interactions with no backend or PostHog dependency.
+        {
+            name: 'home',
+            testMatch: /home-hero\.spec\.ts$/,
+        },
         {
             name: 'flows',
             testMatch: /(support-flow|thumbs-flow)\.spec\.ts$/,

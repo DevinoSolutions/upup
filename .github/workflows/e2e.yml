@@ -264,9 +264,9 @@ jobs:
               run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
 
     # The docs live at /docs inside apps/landing (fumadocs). This job runs the
-    # `docs` and `demo` Playwright projects ONLY — the landing config's other
+    # `docs`, `demo` and `home` Playwright projects ONLY — the landing config's other
     # projects (flows/ingestion) need live PostHog creds and MUST NOT run here.
-    # Both are secret-less: the docs project's Ask-AI drawer is mocked via
+    # All are secret-less: the docs project's Ask-AI drawer is mocked via
     # page.route and the landing env schema (apps/landing/src/lib/env.ts)
     # tolerates every PostHog / OAuth secret being absent, so no env file is
     # provisioned; the demo project uploads to a throwaway LocalStack bucket
@@ -342,8 +342,8 @@ jobs:
             # form, which Playwright reads as filename filters — see CLAUDE.md).
             # The S3_* / UPUP_UPLOAD_TOKEN_SECRET env reaches the landing dev
             # server through Playwright's webServer (it merges over process.env).
-            - name: Run the docs + demo Playwright projects (agent mocked via page.route; demo uploads real)
-              run: pnpm --filter @useupup/e2e-test exec playwright test --config playwright.landing.config.ts --project docs --project demo
+            - name: Run the docs + demo + home Playwright projects (agent mocked via page.route; demo uploads real)
+              run: pnpm --filter @useupup/e2e-test exec playwright test --config playwright.landing.config.ts --project docs --project demo --project home
               env:
                   S3_ENDPOINT: http://localhost:4566
                   S3_BUCKET: upup-e2e
