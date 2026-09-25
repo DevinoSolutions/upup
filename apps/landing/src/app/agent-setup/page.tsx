@@ -18,7 +18,7 @@ import { canonicalUrl } from '@/lib/site-url'
 export const metadata: Metadata = {
     title: 'Onboard your AI coding agent to upup',
     description:
-        'One sentence to paste into Claude Code, Codex, Cursor, or OpenCode: the agent fetches upup’s setup prompt and installs and wires the right @useupup package itself.',
+        'Paste one sentence into Claude Code, Codex, Cursor, or OpenCode: the agent fetches upup’s setup prompt, then installs and wires the right @useupup package.',
     alternates: { canonical: canonicalUrl('agent-setup') },
 }
 
