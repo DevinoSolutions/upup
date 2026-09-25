@@ -9,6 +9,13 @@ export const APP_VERSION: string = pkg.version
 /** Canonical event name for a submitted support request. */
 export const SUPPORT_REQUEST_SUBMITTED = 'support_request_submitted'
 
+/**
+ * The hero install box's copy button was pressed: the site's main conversion.
+ * Autocapture only saw an unlabeled icon click, so this names it and carries
+ * the chosen package manager.
+ */
+export const INSTALL_COMMAND_COPIED = 'install_command_copied'
+
 export interface FeedbackPropertyInput {
     feedbackId: string
     feedbackSource: string

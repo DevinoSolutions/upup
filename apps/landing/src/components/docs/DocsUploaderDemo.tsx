@@ -12,10 +12,11 @@ import '@useupup/react/styles'
 import type { UpupThemeConfig } from '@useupup/core'
 import { ThemeContext } from '@/lib/contexts'
 
-// The real uploader, loaded client-only so docs pages stay static-light. The
-// homepage demo proves this exact creds-free config (packages/interactive-example/
-// src/preview/UploaderPreview.tsx): with serverUrl="" the whole client pipeline
-// (drag-drop, previews, validation) works and nothing is persisted anywhere.
+import { DEMO_UPLOAD_TARGETS } from '@/lib/interactive-example-props'
+
+// The real uploader, loaded client-only so docs pages stay static-light. It
+// uploads to the same target as the homepage demo (DEMO_UPLOAD_TARGETS): with
+// no target, the Upload button could only fail with NO_UPLOAD_TARGET.
 const UpupUploader = dynamic(
     () => import('@useupup/react').then(m => m.UpupUploader),
     {
@@ -65,15 +66,15 @@ export function DocsUploaderDemo({
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-300/60 to-transparent dark:via-white/30" />
                 <UpupUploader
                     provider="aws"
-                    serverUrl=""
+                    uploadEndpoint={DEMO_UPLOAD_TARGETS.uploadEndpoint}
                     maxFiles={maxFiles}
                     mini={mini}
                     theme={composedTheme}
                 />
             </div>
             <p className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
-                Live demo — drag a file in. Demo mode: nothing leaves your
-                browser.
+                Live demo — drag a file in. Uploads are real: files go to a demo
+                storage bucket, so don&apos;t upload anything private.
             </p>
         </div>
     )
