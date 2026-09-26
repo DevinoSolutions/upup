@@ -366,9 +366,21 @@ const nextConfig = {
                 destination: `${SITE_BASE}/docs/:path*/`,
                 permanent: true,
             },
-            // www.<host> -> apex. Catch-all only: www serves the SAME routes,
-            // so unlike the docs alias there is no /docs prefixing. The bare
-            // root is listed separately for the same empty-`:path*` reason.
+            // www.<host> -> apex. www serves the SAME routes, so unlike the
+            // docs alias there is no /docs prefixing. The destinations are
+            // absolute, so this is the same trailing-slash problem the
+            // http -> https pair at the top of this list solves, solved the
+            // same way (see the comment there): extensionless paths first,
+            // slash restored; then the bare root (the empty-`:path*` case);
+            // then the catch-all for file paths, which must NOT gain one.
+            // A lone `${SITE_BASE}/:path*` sent www/angular/ to apex/angular,
+            // a second 308 before the apex page.
+            {
+                source: '/:path((?:[^/]+/)*[^/.]+)',
+                has: [{ type: 'host', value: WWW_HOST }],
+                destination: `${SITE_BASE}/:path/`,
+                permanent: true,
+            },
             {
                 source: '/',
                 has: [{ type: 'host', value: WWW_HOST }],
