@@ -30,8 +30,8 @@ const HUBS = [
 ] as const
 
 // Every docs page that carries `faq:` frontmatter, with its visible question
-// count. The FAQ page asks each question as a `## ` heading; the comparison
-// pages ask theirs as `### ` headings under a `## FAQ` section.
+// count. The FAQ page asks each question as a `## ` heading; every other page
+// asks its questions as `### ` headings under a `## FAQ` section.
 const FAQ_PAGES = [
     { slug: ['faq'], file: 'faq.mdx', questions: 12 },
     { slug: ['comparisons'], file: 'comparisons/index.mdx', questions: 4 },
@@ -54,6 +54,11 @@ const FAQ_PAGES = [
         slug: ['comparisons', 'best-angular-file-upload-libraries'],
         file: 'comparisons/best-angular-file-upload-libraries.mdx',
         questions: 5,
+    },
+    {
+        slug: ['guides', 'storage', 'azure-blob'],
+        file: 'guides/storage/azure-blob.mdx',
+        questions: 6,
     },
 ] as const
 
