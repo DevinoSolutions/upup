@@ -26,8 +26,9 @@ describe('docs source', () => {
         // file-processing, sources, reliability, auth-recipes, accessibility,
         // plugins) = 45, + 19 (2026-08 SEO split: 7 guides/storage +
         // 4 guides/auth + 4 guides/server-adapters + 3 guides/processing +
-        // writing-plugins) = 64, + 1 (2026-09 FAQ) = 65.
-        expect(pages.length).toBe(65)
+        // writing-plugins) = 64, + 1 (2026-09 FAQ) = 65, + 3 (2026-09 folder
+        // hubs: guides/, guides/storage/, quickstarts/) = 68.
+        expect(pages.length).toBe(68)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()
@@ -40,10 +41,11 @@ describe('docs source', () => {
     })
 
     it('every internal /docs link in the corpus resolves to a real page', () => {
-        // Section folders (quickstarts/, guides/, api-reference/, ...) have NO
-        // index pages — a link to a bare section URL 404s in production (and
-        // next/link prefetch surfaces it as a console error on every page that
-        // renders the link). This walked twice before this pin existed.
+        // Only some section folders have a hub (index) page — guides/,
+        // guides/storage/ and quickstarts/ do; api-reference/, auth/ and the
+        // rest do NOT, and a link to a hub-less section URL 404s in production
+        // (next/link prefetch surfaces it as a console error on every page
+        // that renders the link). This walked twice before this pin existed.
         const validUrls = new Set(
             source
                 .getPages()

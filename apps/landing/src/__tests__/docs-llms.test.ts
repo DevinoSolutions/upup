@@ -17,19 +17,20 @@ describe('llms corpus', () => {
         expect(full.length).toBeGreaterThan(20_000)
     })
 
-    it('index lists 65 pages and full contains all 65 page bodies', () => {
+    it('index lists 68 pages and full contains all 68 page bodies', () => {
         // Pinned to the docs page inventory (same count as docs-source.test.ts) —
         // bump deliberately when pages are added/removed. 36 + 9 (2026-08
         // coverage sprint) + 19 (2026-08 SEO split: 7 storage + 4 auth +
         // 4 server-adapters + 3 processing + writing-plugins) = 64, + 1
-        // (2026-09 FAQ) = 65. The "## Start here" links above the page list are
-        // plain lines, not `- [` bullets, so they do not count here.
+        // (2026-09 FAQ) = 65, + 3 (2026-09 folder hubs) = 68. The "## Start
+        // here" links above the page list are plain lines, not `- [` bullets,
+        // so they do not count here.
         const index = buildLlmsIndex()
         const linkCount = (index.match(/^- \[/gm) ?? []).length
-        expect(linkCount).toBe(65)
+        expect(linkCount).toBe(68)
 
         const full = buildLlmsFull()
         const pageCount = (full.match(/\n---\n/g)?.length ?? 0) + 1
-        expect(pageCount).toBe(65)
+        expect(pageCount).toBe(68)
     })
 })

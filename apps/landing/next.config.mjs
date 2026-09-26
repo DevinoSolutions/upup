@@ -60,6 +60,21 @@ const nextConfig = {
                 source: '/llms-full.txt',
                 destination: '/docs-llms/llms-full.txt',
             },
+            // `/docs/<slug>.md` — the markdown-twin URL shape agents guess
+            // first (the convention other uploader docs sites serve) — answers
+            // with the same bytes as the canonical `/docs-md/<slug>/` route.
+            // A rewrite, not a redirect: the URL an agent asked for returns the
+            // markdown directly, and the twin's `Link: rel="canonical"` header
+            // still points search engines at the HTML page. trailingSlash never
+            // touches these (Next does not slash a path whose last segment has
+            // an extension), so this is a single 200 with no 308 hop. The
+            // final segment excludes dots so `/docs/llms.txt`-style file paths
+            // can never match. `/docs.md` is the docs root's twin.
+            {
+                source: '/docs/:slug((?:[^/]+/)*[^/.]+).md',
+                destination: '/docs-md/:slug/',
+            },
+            { source: '/docs.md', destination: '/docs-md/' },
         ]
     },
     // The legacy Docusaurus app (apps/docs) that used to serve /documentation
@@ -139,15 +154,15 @@ const nextConfig = {
                 destination: '/docs/migration/v1-to-v3/',
                 permanent: true,
             },
-            // Docusaurus generated-index (category) pages have no counterpart
-            // in the new tree — sections are sidebar folders without index
-            // pages — so each legacy section URL maps to the section's first
-            // page (meta.json order). Two shapes existed: default
+            // Docusaurus generated-index (category) pages: a section that now
+            // has a hub page (content/docs/<section>/index.mdx) maps onto it;
+            // a section that is still a hub-less sidebar folder maps to its
+            // first page (meta.json order). Two shapes existed: default
             // `/category/<label>` URLs and custom-slug URLs (quickstarts,
             // comparisons). Must precede the wildcard below.
             {
                 source: '/documentation/quickstarts',
-                destination: '/docs/quickstarts/react/',
+                destination: '/docs/quickstarts/',
                 permanent: true,
             },
             {

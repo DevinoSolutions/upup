@@ -21,11 +21,11 @@ test.describe('docs', () => {
     test('legacy category/section index URLs land on a real page', async ({
         request,
     }) => {
-        // Docusaurus generated-index pages have no counterpart in the new
-        // tree; each maps to its section's first page (meta.json order). The
+        // Docusaurus generated-index pages: a section with a hub page lands on
+        // it; a hub-less section maps to its first page (meta.json order). The
         // wildcard alone would send these to /docs/category/* 404s.
         const cases: Array<[string, RegExp]> = [
-            ['/documentation/quickstarts', /\/docs\/quickstarts\/react\/$/],
+            ['/documentation/quickstarts', /\/docs\/quickstarts\/$/],
             [
                 '/documentation/comparisons',
                 /\/docs\/comparisons\/upup-vs-uppy\/$/,

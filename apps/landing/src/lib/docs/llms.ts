@@ -34,12 +34,14 @@ function walk(dir: string): string[] {
     return files
 }
 
-// content/docs/index.mdx -> '' (the /docs/ root); everything else keeps its
-// relative path minus the extension, forward-slashed for the URL.
-function slugFromPath(filePath: string): string {
+// content/docs/index.mdx -> '' (the /docs/ root) and a folder hub such as
+// guides/storage/index.mdx -> 'guides/storage' (fumadocs serves a folder's
+// index page at the folder URL); everything else keeps its relative path
+// minus the extension, forward-slashed for the URL.
+export function slugFromPath(filePath: string): string {
     const rel = relative(CONTENT_DIR, filePath).split(sep).join('/')
     const withoutExt = rel.replace(/\.mdx$/, '')
-    return withoutExt === 'index' ? '' : withoutExt
+    return withoutExt.replace(/(^|\/)index$/, '')
 }
 
 function pageUrl(slug: string): string {
