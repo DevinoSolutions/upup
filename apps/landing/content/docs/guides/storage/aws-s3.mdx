@@ -52,8 +52,10 @@ native AWS S3 uses virtual-hosted-style addressing.
    server (preferred on EC2, ECS, and Lambda) or create an IAM user with
    programmatic access and copy its access key ID and secret.
 3. **Attach the policy** below to that role or user.
-4. **Add CORS** if — and only if — you use client mode, where the browser talks
-   to the bucket directly.
+4. **Add CORS.** The browser uploads straight to the bucket by default in
+   both client and server mode — server mode hands it a presigned URL rather
+   than proxying the bytes — so the bucket needs a CORS policy allowing your
+   app's origin. See [CORS](#cors) below for the two exceptions.
 
 ### IAM policy
 
@@ -99,7 +101,7 @@ the execution role on Lambda. That is the safer production setup: nothing to
 rotate, nothing to leak. upup validates the pair as both-or-neither, so a
 half-set pair fails at construct time rather than at the first upload.
 
-### CORS (client mode only)
+### CORS
 
 ```json
 [
@@ -115,8 +117,14 @@ half-set pair fails at construct time rather than at the first upload.
 
 `ExposeHeaders: ["ETag"]` is not optional for multipart uploads: the browser
 must read each part's `ETag` to complete the upload, and without it the final
-`CompleteMultipartUpload` fails with parts it cannot identify. In server mode
-none of this applies — the browser only ever talks to your origin.
+`CompleteMultipartUpload` fails with parts it cannot identify. This applies in
+both client and server mode: server mode's `/presign`, `/multipart/init`, and
+`/multipart/sign-part` routes hand the browser a presigned S3 URL, so by
+default it uploads directly to the bucket there too. The two exceptions are
+cloud-drive transfers (Google Drive/OneDrive/Dropbox/Box → S3), which go
+server-to-S3 and never touch the browser, and a deployment that rewrites
+`uploadUrl` in [`onPresignResponse`](/docs/guides/server-mode-setup/#rewriting-presign-responses)
+to a same-origin proxy route.
 
 <Callout type="warning" title="Region mismatch is the usual 403">
     A `SignatureDoesNotMatch` or `PermanentRedirect` on the first upload almost

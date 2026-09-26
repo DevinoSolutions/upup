@@ -45,8 +45,8 @@ inside a Space.
 2. **Generate Spaces keys.** API → Spaces Keys → Generate New Key. The secret is
    shown once. Newer accounts can scope a key to a single Space; scope it if you
    can.
-3. **Add a CORS configuration** (client mode only) from the Space's Settings
-   tab.
+3. **Add a CORS configuration** from the Space's Settings tab — the browser
+   uploads straight to Spaces by default in both client and server mode.
 
 <Callout type="warning" title="A DigitalOcean API token is not a Spaces key">
     Spaces access keys and DigitalOcean personal access tokens are different
@@ -56,12 +56,15 @@ inside a Space.
     that they came from the Spaces Keys page.
 </Callout>
 
-### CORS (client mode only)
+### CORS
 
 Add an origin under the Space's Settings → CORS Configurations, allow `PUT`,
 `POST`, `GET`, and `HEAD`, and add `ETag` to the exposed headers so the browser
-can complete multipart uploads. In server mode the browser never contacts
-Spaces, so no CORS entry is needed. See
+can complete multipart uploads. This applies in both client and server mode: by
+default the browser uploads straight to Spaces either way, since server mode
+hands it a presigned URL instead of proxying the bytes. The exceptions are
+cloud-drive transfers (server-to-S3) and a deployment using
+`onPresignResponse` to rewrite the URL to a same-origin proxy. See
 [Credentials And CORS](/docs/credentials-configuration/).
 
 ## Serving files back through the CDN

@@ -32,9 +32,10 @@
 framework. React is the visual canon; the Vue, Svelte, Angular, Vanilla, and
 Preact ports render the **same DOM** with the **same props**, verified by a
 cross-framework parity harness (structure, classes, accessibility attributes,
-text). Upload straight from the browser to any S3-compatible storage (Client
-Mode), or route through your own backend with an HMAC-signed trust model
-(Server Mode via [`@useupup/server`](packages/server)).
+text). Uploads go straight from the browser to any S3-compatible storage over
+presigned URLs, signed either by a route you write (Client Mode) or by
+[`@useupup/server`](packages/server) on your backend, with an HMAC-signed trust
+model and server-side cloud-drive OAuth (Server Mode).
 
 ## Install
 
@@ -50,7 +51,7 @@ Pick the package for your framework — the component API and the rendered DOM c
 | `@useupup/preact`  | `npm i @useupup/preact`  | [Preact quickstart](https://useupup.com/docs/quickstarts/preact)   |
 | `@useupup/next`    | `npm i @useupup/next`    | Client re-export + `/server` route handlers (App & Pages routers)  |
 | `@useupup/core`    | `npm i @useupup/core`    | Headless engine — state, pipeline, drive plugins, i18n, theme      |
-| `@useupup/server`  | `npm i @useupup/server`  | Server Mode — S3 presign/proxy, drive OAuth, HMAC trust model      |
+| `@useupup/server`  | `npm i @useupup/server`  | Server Mode — S3 presign/multipart, drive OAuth, HMAC trust model  |
 
 ## Quick start (React)
 
@@ -73,8 +74,10 @@ quickstarts in the [install table](#install) above.
 
 ## Server mode
 
-Route uploads through your own backend so storage credentials and drive OAuth
-tokens never reach the browser. `createUpupHandler` mounts on any Node or edge
+Let your own backend sign every upload and run cloud-drive OAuth, so storage
+credentials and drive OAuth tokens never reach the browser. File bytes still go
+straight from the browser to your bucket over presigned URLs; drive files stream
+from your server into the bucket. `createUpupHandler` mounts on any Node or edge
 framework and enforces an HMAC-signed trust model — `uploadTokenSecret` is
 **required** and must be at least 16 characters:
 
@@ -113,7 +116,7 @@ Express, Fastify, and Hono handlers ship as subpath exports
 
 - **Headless core.** `@useupup/core` is a zero-framework-dependency engine: file state, an upload pipeline (compression, HEIC→JPEG, EXIF stripping, checksums, thumbnails, optional Web Worker offload), cloud-drive plugins, i18n, and theming. Build your own UI on it, or use a native package.
 - **Native UI for six frameworks.** React, Vue, Svelte, Angular, Vanilla JS, and Preact — same DOM structure, same `upup-` classes, enforced by a cross-framework parity harness.
-- **Client or Server mode.** Direct browser → storage presigned uploads, or a server-proxied [`@useupup/server`](packages/server) with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets).
+- **Client or Server mode.** Direct browser → storage presigned uploads in both: sign them with a route you write, or let [`@useupup/server`](packages/server) sign them with an HMAC-signed trust model (signed length, key/uploadId binding, mandatory secrets) and run cloud drives server-side.
 - **S3-compatible storage.** AWS S3, Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2, Wasabi — any S3-compatible endpoint.
 - **Cloud drives.** Import from Google Drive, OneDrive, Dropbox, and Box, in client or server mode.
 - **More sources.** Drag-and-drop, file picker, camera, screen capture, audio recording, and link (URL) import.
@@ -153,7 +156,7 @@ upup/
 ├── packages/vanilla/  # @useupup/vanilla — framework-free port
 ├── packages/preact/   # @useupup/preact  — preact/compat re-export of react
 ├── packages/next/     # @useupup/next    — client re-export + /server route handlers
-├── packages/server/   # @useupup/server  — server-mode endpoints (S3 presign/proxy, drive OAuth)
+├── packages/server/   # @useupup/server  — server-mode endpoints (S3 presign/multipart, drive OAuth)
 ├── apps/playground/   # Main dev app
 ├── apps/landing/      # Marketing site (useupup.com) + docs served at /docs (fumadocs; MDX in content/docs)
 ├── apps/e2e-test/     # Playwright: deep React suite + cross-framework parity harness

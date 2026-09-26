@@ -39,10 +39,13 @@ see [Credentials configuration](/docs/credentials-configuration/).
 
 ## What is the difference between client mode and server mode?
 
-In client mode the browser uploads directly to your storage using short-lived
-credentials issued by your server. In server mode uploads are proxied through
-your own server using the `@useupup/server` package, which isolates storage
-credentials behind an HMAC-signed trust model. Start with
+In both modes the browser sends local file bytes straight to your bucket over
+short-lived presigned URLs, and your storage credentials stay on your server.
+In client mode you write the endpoint that signs those URLs, and cloud-drive
+sign-in and downloads run in the browser. In server mode the `@useupup/server`
+package is that endpoint — HMAC-signed upload tokens, per-user auth, size and
+type limits, and multipart coordination — and it also runs cloud-drive OAuth
+and streams drive files into your bucket from the server. Start with
 [Server Mode — Setup](/docs/guides/server-mode-setup/) when you need server mode.
 
 ## Can I use my own UI with upup?
@@ -62,9 +65,9 @@ Details in [Server Mode — Setup](/docs/guides/server-mode-setup/).
 
 ## Why do uploads fail with a CORS error?
 
-In client mode the browser PUTs bytes straight to your bucket, so the bucket
-itself must allow your origin, the `PUT` method, and the headers the presigned
-URL carries. The per-provider pages under
+The browser PUTs file bytes straight to your bucket in both client and server
+mode, so the bucket itself must allow your origin, the `PUT` method, and the
+headers the presigned URL carries. The per-provider pages under
 [Guides → Storage](/docs/guides/storage/aws-s3/) include the exact CORS rule to
 apply. The presign endpoint returning a URL but the upload failing afterwards is
 almost always this.
