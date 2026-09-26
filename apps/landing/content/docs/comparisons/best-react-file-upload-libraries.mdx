@@ -1,6 +1,17 @@
 ---
 title: Best React File Upload Libraries Compared
 description: React file upload libraries compared - upup, react-dropzone, Uppy, FilePond, UploadThing and react-uploady on drag and drop, S3 and resumable uploads.
+faq:
+    - q: What is the best file upload library for React?
+      a: For a complete uploader against your own storage, upup or Uppy. For the smallest possible building block, react-dropzone. For a hosted service, UploadThing.
+    - q: Is react-dropzone enough on its own?
+      a: Only if you write the rest. react-dropzone handles selecting files; you still need upload requests, progress, retries, error states and a storage backend.
+    - q: Which React upload libraries upload directly to S3?
+      a: upup, with presigned URLs from your endpoint or @useupup/server, and Uppy, with its AWS S3 plugin. The others either upload to your server or to a hosted service, or leave it to you.
+    - q: Which React upload libraries support resumable uploads?
+      a: upup (tus or S3 multipart), Uppy (tus or S3 multipart), react-uploady (tus) and UploadThing. FilePond supports chunked uploads to your server.
+    - q: Are these libraries free?
+      a: upup, react-dropzone, Uppy, FilePond and react-uploady are MIT-licensed. UploadThing's SDK is MIT, but the service it uploads to is paid with a free tier.
 ---
 
 **The short answer:** for a complete React uploader that sends files straight to

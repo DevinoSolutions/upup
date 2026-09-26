@@ -15,6 +15,20 @@ import { AI_CRAWLER_USER_AGENTS } from '@/lib/seo/ai-crawlers'
 
 const PRODUCTION_ORIGIN = 'https://useupup.com'
 
+// The nine publishable @useupup/* packages, core and the canonical React UI
+// first — the order EntityStructuredData lists them in sameAs.
+const PUBLISHED_PACKAGES = [
+    'core',
+    'react',
+    'vue',
+    'svelte',
+    'angular',
+    'vanilla',
+    'preact',
+    'next',
+    'server',
+]
+
 /** Every `application/ld+json` payload in a rendered markup string. */
 function parseJsonLdBlocks(markup: string): unknown[] {
     const blocks = [
@@ -148,6 +162,66 @@ describe('entity JSON-LD ties the brand to one referenced organization', () => {
         expect(sameAs.length).toBeGreaterThanOrEqual(2)
         for (const profile of sameAs)
             expect(profile.startsWith('https://')).toBe(true)
+    })
+
+    it('links the Organization to the GitHub repo and every published npm package', () => {
+        const org = nodeOfType(entityNodes, 'Organization')
+        expect(org.sameAs).toEqual([
+            'https://github.com/DevinoSolutions/upup',
+            ...PUBLISHED_PACKAGES.map(
+                pkg => `https://www.npmjs.com/package/@useupup/${pkg}`,
+            ),
+            'https://discord.gg/ny5WUE9ayc',
+        ])
+    })
+
+    it('gives the WebSite the alternate names that separate it from other "upup" sites', () => {
+        // "upup" alone is ambiguous with upup.be, upup.com and others in
+        // Search Console; the site-name system reads WebSite.alternateName.
+        const site = nodeOfType(entityNodes, 'WebSite')
+        expect(site.name).toBe('upup')
+        expect(site.alternateName).toEqual([
+            'useupup',
+            'upup file uploader',
+            'useupup.com',
+        ])
+    })
+
+    it('describes the repository as a SoftwareSourceCode node linked by id', () => {
+        const code = nodeOfType(entityNodes, 'SoftwareSourceCode')
+        expect(code['@id']).toBe(`${PRODUCTION_ORIGIN}/#source`)
+        expect(code.codeRepository).toBe(
+            'https://github.com/DevinoSolutions/upup',
+        )
+        expect(code.programmingLanguage).toBe('TypeScript')
+        expect(code.license).toBe('https://opensource.org/licenses/MIT')
+        expect(code.author).toEqual({
+            '@id': `${PRODUCTION_ORIGIN}/#organization`,
+        })
+        expect(code.targetProduct).toEqual({
+            '@id': `${PRODUCTION_ORIGIN}/#software`,
+        })
+        expect(code.sameAs).toContain(
+            'https://www.npmjs.com/package/@useupup/core',
+        )
+    })
+
+    it('emits the entity graph as valid JSON-LD whose @id references all resolve', () => {
+        // Every {"@id": …} reference must name a node in this graph or the
+        // page-level SoftwareApplication node (./index) it is emitted with.
+        const [document] = parseJsonLdBlocks(
+            renderToStaticMarkup(createElement(EntityStructuredData)),
+        ) as Record<string, unknown>[]
+        expect(document['@context']).toBe('https://schema.org')
+        const known = new Set([
+            ...entityNodes.map(node => node['@id']),
+            `${PRODUCTION_ORIGIN}/#software`,
+        ])
+        const references = [
+            ...JSON.stringify(document).matchAll(/\{"@id":"([^"]+)"\}/g),
+        ].map(match => match[1])
+        expect(references.length).toBeGreaterThan(0)
+        expect(references.filter(id => !known.has(id))).toEqual([])
     })
 
     it('names Devino as the parent organization', () => {
