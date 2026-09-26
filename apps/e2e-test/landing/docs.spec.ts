@@ -421,6 +421,33 @@ test.describe('docs', () => {
         expect(plain.status()).toBe(200)
     })
 
+    test('www host redirects to the apex in one hop, keeping the slash on pages and adding none to files', async ({
+        request,
+    }) => {
+        // Like the plaintext rule above, the www rule answers with an
+        // absolute destination, which Next never re-slashes: a www page must
+        // land on the apex page itself, not on an unslashed apex URL that
+        // costs a second 308.
+        const cases: Array<[string, string]> = [
+            ['/angular/', `${PRODUCTION_ORIGIN}/angular/`],
+            [
+                '/docs/ai-assistants/',
+                `${PRODUCTION_ORIGIN}/docs/ai-assistants/`,
+            ],
+            ['/llms.txt', `${PRODUCTION_ORIGIN}/llms.txt`],
+        ]
+        for (const [path, location] of cases) {
+            const res = await request.get(path, {
+                headers: { host: 'www.useupup.com' },
+                maxRedirects: 0,
+            })
+            expect(res.status(), `www ${path} status`).toBe(308)
+            expect(res.headers()['location'], `www ${path} location`).toBe(
+                location,
+            )
+        }
+    })
+
     test('stale search-console sitemap URL permanently redirects to the live sitemap', async ({
         request,
     }) => {
