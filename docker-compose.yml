@@ -3,14 +3,18 @@
 #   Up:   pnpm e2e:minio:up        Down: pnpm e2e:minio:down
 # Env is injected from local-dev/.env.minio by the pnpm scripts (dotenv-cli).
 # Images are pinned by digest for reproducibility — the exact versions the
-# upload-validation gate was verified against. They are pulled from quay.io:
-# Docker Hub's minio/minio and minio/mc repositories were removed upstream
-# (pull access denied, 2026-09-12) and quay.io/minio/* carries the SAME
-# digests. To bump: pull quay.io/minio/minio:latest, then
-# `docker image inspect quay.io/minio/minio:latest --format '{{index .RepoDigests 0}}'`.
+# upload-validation gate was verified against. MinIO withdrew its public
+# images: Docker Hub's minio/minio and minio/mc went first (pull access
+# denied, 2026-09-12), then quay.io/minio/* (401, 2026-09-24). We re-host the
+# SAME builds on our org's GHCR, pushed unmodified from a cached copy
+# (linux/amd64 only): minio RELEASE.2025-09-07T16-13-09Z (was
+# quay.io/minio/minio@sha256:14cea493…) and mc RELEASE.2025-08-13T08-35-41Z
+# (was quay.io/minio/mc@sha256:a7fe349e…). Upstream publishes no new free
+# images, so there is nothing to bump to; moving off these builds means
+# picking a new source and re-verifying the gate.
 services:
     minio:
-        image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+        image: ghcr.io/devinosolutions/minio@sha256:a1a8bd4ac40ad7881a245bab97323e18f971e4d4cba2c2007ec1bedd21cbaba2
         command: server /data --console-address ":9001"
         ports:
             # Host ports default to 9100/9101 (the upup-reserved pair — validate-env.mjs
@@ -29,7 +33,7 @@ services:
             - upup-minio-data:/data
 
     minio-setup:
-        image: quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+        image: ghcr.io/devinosolutions/mc@sha256:eb4ea9884b77704230e2423e9004d2fa738dc272876b9cc41a297d29443b8780
         depends_on:
             - minio
         environment:
