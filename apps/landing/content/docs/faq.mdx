@@ -11,13 +11,13 @@ faq:
     - q: Which cloud drives can users upload from?
       a: Users can import files directly from Google Drive, OneDrive, Dropbox, and Box. upup also supports uploads from the device camera, screen capture, and link (URL) imports. Each drive needs an OAuth client from that provider's developer console.
     - q: What is the difference between client mode and server mode?
-      a: In client mode the browser uploads directly to your storage using short-lived credentials issued by your server. In server mode uploads are proxied through your own server using the @useupup/server package, which isolates storage credentials behind an HMAC-signed trust model.
+      a: In both modes the browser sends local file bytes straight to your bucket over short-lived presigned URLs, and your storage credentials stay on your server. In client mode you write the endpoint that signs those URLs, and cloud-drive sign-in and downloads run in the browser. In server mode the @useupup/server package is that endpoint — HMAC-signed upload tokens, per-user auth, size and type limits, and multipart coordination — and it also runs cloud-drive OAuth and streams drive files into your bucket from the server.
     - q: Can I use my own UI with upup?
       a: Yes. The engine lives in @useupup/core, a framework-agnostic headless package. You can use the built-in native UI for your framework or build a fully custom interface on the same core using the exported hooks and controllers.
     - q: Why does createUpupHandler throw at startup?
       a: The server handler requires an uploadTokenSecret of at least 16 characters and throws at construction time if it is missing or too short — it is the key that HMAC-signs every upload token. Set it from an environment variable and keep it identical on every server instance.
     - q: Why do uploads fail with a CORS error?
-      a: In client mode the browser PUTs bytes straight to your bucket, so the bucket itself must allow your origin, the PUT method, and the headers the presigned URL carries. The per-provider pages under Guides → Storage include the exact CORS rule to apply.
+      a: The browser PUTs file bytes straight to your bucket in both client and server mode, so the bucket itself must allow your origin, the PUT method, and the headers the presigned URL carries. The per-provider pages under Guides → Storage include the exact CORS rule to apply.
     - q: Which React and Next.js versions are required?
       a: "@useupup/react and @useupup/preact require React 19. @useupup/next requires Next.js 15 or newer. If you are on Next.js, add serverExternalPackages: ['@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner'] to next.config so the AWS SDK stays out of your client bundle."
     - q: Why is the image editor missing in Vue, Svelte, Angular, or Vanilla JS?
@@ -64,10 +64,13 @@ see [Credentials configuration](/docs/credentials-configuration/).
 
 ## What is the difference between client mode and server mode?
 
-In client mode the browser uploads directly to your storage using short-lived
-credentials issued by your server. In server mode uploads are proxied through
-your own server using the `@useupup/server` package, which isolates storage
-credentials behind an HMAC-signed trust model. Start with
+In both modes the browser sends local file bytes straight to your bucket over
+short-lived presigned URLs, and your storage credentials stay on your server.
+In client mode you write the endpoint that signs those URLs, and cloud-drive
+sign-in and downloads run in the browser. In server mode the `@useupup/server`
+package is that endpoint — HMAC-signed upload tokens, per-user auth, size and
+type limits, and multipart coordination — and it also runs cloud-drive OAuth
+and streams drive files into your bucket from the server. Start with
 [Server Mode — Setup](/docs/guides/server-mode-setup/) when you need server mode.
 
 ## Can I use my own UI with upup?
@@ -87,9 +90,9 @@ Details in [Server Mode — Setup](/docs/guides/server-mode-setup/).
 
 ## Why do uploads fail with a CORS error?
 
-In client mode the browser PUTs bytes straight to your bucket, so the bucket
-itself must allow your origin, the `PUT` method, and the headers the presigned
-URL carries. The per-provider pages under
+The browser PUTs file bytes straight to your bucket in both client and server
+mode, so the bucket itself must allow your origin, the `PUT` method, and the
+headers the presigned URL carries. The per-provider pages under
 [Guides → Storage](/docs/guides/storage/aws-s3/) include the exact CORS rule to
 apply. The presign endpoint returning a URL but the upload failing afterwards is
 almost always this.
