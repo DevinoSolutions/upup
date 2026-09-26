@@ -60,6 +60,21 @@ const nextConfig = {
                 source: '/llms-full.txt',
                 destination: '/docs-llms/llms-full.txt',
             },
+            // `/docs/<slug>.md` — the markdown-twin URL shape agents guess
+            // first (the convention other uploader docs sites serve) — answers
+            // with the same bytes as the canonical `/docs-md/<slug>/` route.
+            // A rewrite, not a redirect: the URL an agent asked for returns the
+            // markdown directly, and the twin's `Link: rel="canonical"` header
+            // still points search engines at the HTML page. trailingSlash never
+            // touches these (Next does not slash a path whose last segment has
+            // an extension), so this is a single 200 with no 308 hop. The
+            // final segment excludes dots so `/docs/llms.txt`-style file paths
+            // can never match. `/docs.md` is the docs root's twin.
+            {
+                source: '/docs/:slug((?:[^/]+/)*[^/.]+).md',
+                destination: '/docs-md/:slug/',
+            },
+            { source: '/docs.md', destination: '/docs-md/' },
         ]
     },
     // The legacy Docusaurus app (apps/docs) that used to serve /documentation

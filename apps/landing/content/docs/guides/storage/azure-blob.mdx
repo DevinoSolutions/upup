@@ -1,6 +1,19 @@
 ---
 title: Upload Files to Azure Blob Storage from the Browser
 description: Upload files and images to Azure Blob Storage from the browser with a SAS URL. Create the SAS, send x-ms-blob-type, set CORS, and fix 403 errors.
+faq:
+    - q: Can the browser upload to Azure Blob Storage without exposing the account key?
+      a: Yes, and it should. Your server signs a SAS for one blob with the account key or a user delegation key and returns only the finished URL. The browser never sees the key, and the SAS can do nothing beyond writing that one blob until it expires.
+    - q: Which headers does a Put Blob with a SAS URL need?
+      a: "x-ms-blob-type: BlockBlob is required. Content-Type is optional but sets the blob's content type, so send the file's real type. The SAS itself travels in the URL's query string, so no Authorization header is needed."
+    - q: Does the container need to be public?
+      a: No. Keep it private. The SAS grants write access per request. For downloads, issue read SAS URLs the same way, or put a CDN in front of the account.
+    - q: Does upup server mode support Azure Blob Storage?
+      a: "No. createUpupHandler throws at construction for storage.type: 'azure', because server mode speaks only the S3 API. Use client mode with a SAS endpoint, as in this tutorial."
+    - q: How large a file can I upload this way?
+      a: As large as one Put Blob request allows for your account's service version, since upup sends each file in a single PUT. Set maxFileSize below that limit. Resumable multipart in upup targets S3, not Azure.
+    - q: Why does the upload work with curl but fail in the browser?
+      a: curl doesn't do CORS. If the same SAS URL and headers succeed from curl but fail in the browser, the storage account's CORS rule is missing or doesn't match your origin, method or headers.
 ---
 
 **The short answer:** to upload a file to Azure Blob Storage from the browser,

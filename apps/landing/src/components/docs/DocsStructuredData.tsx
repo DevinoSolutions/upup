@@ -1,8 +1,9 @@
-// Server component: the per-docs-page JSON-LD — BreadcrumbList + TechArticle.
+// Server component: the per-docs-page JSON-LD — BreadcrumbList + TechArticle,
+// plus a FAQPage node on pages whose frontmatter carries `faq:`.
 //
 // Built from the SAME `tree`/`url` inputs <DocsBreadcrumb> renders visually, so
 // the markup can never describe a different hierarchy than the page shows. The
-// two nodes point at the site-wide entities by @id (emitted once from the root
+// nodes point at the site-wide entities by @id (emitted once from the root
 // layout) rather than restating publisher details per page.
 //
 // No `datePublished`/`dateModified`: content/docs carries no frontmatter dates
@@ -17,16 +18,24 @@ import {
 import { findTrail, type SidebarNode } from '@/lib/docs/sidebar-tree'
 import { canonicalUrl } from '@/lib/site-url'
 
+/** One `faq:` frontmatter entry (schema in source.config.ts). */
+interface DocsFaqItem {
+    q: string
+    a: string
+}
+
 export function DocsStructuredData({
     tree,
     url,
     title,
     description,
+    faq,
 }: {
     tree: SidebarNode[]
     url: string
     title: string
     description?: string
+    faq?: DocsFaqItem[]
 }) {
     // Same call the visual breadcrumb makes; the "Docs" root crumb is rendered
     // unconditionally there, so it leads the list here too.
@@ -49,14 +58,32 @@ export function DocsStructuredData({
         })),
     }
 
+    const pageUrl = canonicalUrl(url)
     const techArticle = {
         '@type': 'TechArticle',
         headline: title,
         ...(description ? { description } : {}),
-        url: canonicalUrl(url),
+        url: pageUrl,
         isPartOf: { '@id': WEBSITE_ID },
         publisher: { '@id': ORGANIZATION_ID },
     }
+
+    // Only pages that opt in via frontmatter get a FAQPage node — an empty
+    // FAQPage is invalid markup, and FAQ markup on a page with no visible
+    // Q&A is a structured-data policy violation.
+    const faqPage = faq?.length
+        ? {
+              '@type': 'FAQPage',
+              '@id': `${pageUrl}#faq`,
+              url: pageUrl,
+              isPartOf: { '@id': WEBSITE_ID },
+              mainEntity: faq.map(item => ({
+                  '@type': 'Question',
+                  name: item.q,
+                  acceptedAnswer: { '@type': 'Answer', text: item.a },
+              })),
+          }
+        : null
 
     return (
         <script
@@ -64,7 +91,9 @@ export function DocsStructuredData({
             dangerouslySetInnerHTML={{
                 __html: JSON.stringify({
                     '@context': 'https://schema.org',
-                    '@graph': [breadcrumbList, techArticle],
+                    '@graph': faqPage
+                        ? [breadcrumbList, techArticle, faqPage]
+                        : [breadcrumbList, techArticle],
                 }),
             }}
         />
