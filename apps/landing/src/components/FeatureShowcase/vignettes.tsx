@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { FaGlobe, FaServer, FaShieldAlt } from 'react-icons/fa'
 import { SiAmazonwebservices } from 'react-icons/si'
 
@@ -45,7 +45,7 @@ export function ServerModeVignette({ active = true }: VignetteProps) {
                     {!reduce && <Packet color="#22c55e" delay={0} />}
                     {!reduce && (
                         // An unsigned request is refused with a 403.
-                        <motion.span
+                        <m.span
                             className="absolute top-1/2 left-0 -translate-y-1/2 rounded bg-red-500 px-1 text-[8px] font-bold text-white"
                             animate={{ x: [0, 26, 0], opacity: [0, 1, 0] }}
                             transition={{
@@ -56,7 +56,7 @@ export function ServerModeVignette({ active = true }: VignetteProps) {
                             }}
                         >
                             403
-                        </motion.span>
+                        </m.span>
                     )}
                 </Track>
 
@@ -129,7 +129,7 @@ function Track({ children }: { children?: React.ReactNode }) {
 
 function Packet({ color, delay }: { color: string; delay: number }) {
     return (
-        <motion.span
+        <m.span
             className="absolute top-1/2 left-0 h-2 w-2 -translate-y-1/2 rounded-full"
             style={{ backgroundColor: color }}
             animate={{ x: ['0%', '100%'], opacity: [0, 1, 1, 0] }}

@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import {
     FaCheck,
     FaCloudUploadAlt,
@@ -118,7 +118,7 @@ export default function MockUploader({
                     {DEFAULT_SOURCES.map(source => {
                         const active = activeSource === source.id
                         return (
-                            <motion.div
+                            <m.div
                                 key={source.id}
                                 className="flex w-12 flex-col items-center gap-1"
                                 animate={{ scale: active ? 0.9 : 1 }}
@@ -132,7 +132,7 @@ export default function MockUploader({
                                           }
                                 }
                             >
-                                <motion.span
+                                <m.span
                                     data-scene-target={`source-${source.id}`}
                                     className="flex h-9 w-9 items-center justify-center rounded-xl ring-1"
                                     animate={{
@@ -153,11 +153,11 @@ export default function MockUploader({
                                         className="h-4 w-4"
                                         style={{ color: source.color }}
                                     />
-                                </motion.span>
+                                </m.span>
                                 <span className="text-[10px] font-medium text-gray-400">
                                     {source.name}
                                 </span>
-                            </motion.div>
+                            </m.div>
                         )
                     })}
                 </div>
@@ -172,7 +172,7 @@ export default function MockUploader({
                 >
                     <AnimatePresence>
                         {!hasQueue && (
-                            <motion.div
+                            <m.div
                                 key="dropzone"
                                 className="absolute inset-0"
                                 initial={reduce ? false : { opacity: 0 }}
@@ -183,7 +183,7 @@ export default function MockUploader({
                                 }
                             >
                                 <Dropzone />
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                     <div className="flex flex-col gap-2">
@@ -206,7 +206,7 @@ export default function MockUploader({
                         below the overlay (z-30) and never intercepts pointers. */}
                     <AnimatePresence>
                         {dragOver && (
-                            <motion.div
+                            <m.div
                                 aria-hidden
                                 className="pointer-events-none absolute inset-0 z-20 rounded-xl border-2 border-dashed border-sky-400/70 bg-sky-400/[0.06]"
                                 initial={reduce ? false : { opacity: 0 }}
@@ -223,7 +223,7 @@ export default function MockUploader({
                         over the panel body */}
                     <AnimatePresence>
                         {overlayVisible && overlayNode && (
-                            <motion.div
+                            <m.div
                                 className="absolute inset-0 z-30"
                                 initial={
                                     reduce ? false : { y: '18%', opacity: 0 }
@@ -245,7 +245,7 @@ export default function MockUploader({
                                 }
                             >
                                 {overlayNode}
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>
@@ -316,7 +316,7 @@ function FileRow({
         : `.${file.ext}`
 
     return (
-        <motion.div
+        <m.div
             className="flex items-center gap-3 rounded-lg bg-white/[0.04] p-2.5 ring-1 ring-white/[0.06]"
             initial={reduce ? false : { opacity: 0, y: 14, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -345,7 +345,7 @@ function FileRow({
                         {/* Type badge — morphs on HEIC → JPG rows */}
                         <span className="relative inline-flex h-4 min-w-[2.4rem] items-center justify-center rounded bg-white/10 px-1 text-[9px] font-semibold uppercase text-gray-300">
                             <AnimatePresence mode="popLayout" initial={false}>
-                                <motion.span
+                                <m.span
                                     key={badge}
                                     initial={
                                         reduce ? false : { y: 6, opacity: 0 }
@@ -359,7 +359,7 @@ function FileRow({
                                     transition={{ duration: 0.25 }}
                                 >
                                     {badge}
-                                </motion.span>
+                                </m.span>
                             </AnimatePresence>
                         </span>
                     </span>
@@ -371,7 +371,7 @@ function FileRow({
                             compressed={compressed}
                             reduce={reduce}
                         />
-                        <motion.span
+                        <m.span
                             className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white"
                             initial={false}
                             animate={{
@@ -390,13 +390,13 @@ function FileRow({
                             }
                         >
                             <FaCheck className="h-2 w-2" />
-                        </motion.span>
+                        </m.span>
                     </span>
                 </div>
 
                 {/* Progress bar — scaleX only */}
                 <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                    <motion.div
+                    <m.div
                         className={`h-full w-full rounded-full ${ACCENT_BAR[file.accent]}`}
                         style={{ transformOrigin: 'left' }}
                         initial={{ scaleX: 0 }}
@@ -413,7 +413,7 @@ function FileRow({
                     />
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     )
 }
 
@@ -477,22 +477,22 @@ function SizeText({
 
     return (
         <span className="relative inline-grid text-right text-[11px] tabular-nums">
-            <motion.span
+            <m.span
                 className="col-start-1 row-start-1 text-gray-500 line-through"
                 initial={false}
                 animate={{ opacity: compressed ? 0 : 1 }}
                 transition={reduce ? { duration: 0 } : { duration: 0.3 }}
             >
                 {file.sizeFrom}
-            </motion.span>
-            <motion.span
+            </m.span>
+            <m.span
                 className="col-start-1 row-start-1 font-medium text-emerald-300"
                 initial={false}
                 animate={{ opacity: compressed ? 1 : 0 }}
                 transition={reduce ? { duration: 0 } : { duration: 0.3 }}
             >
                 {file.sizeTo}
-            </motion.span>
+            </m.span>
         </span>
     )
 }

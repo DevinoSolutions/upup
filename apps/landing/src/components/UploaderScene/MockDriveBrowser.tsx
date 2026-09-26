@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react'
 import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { FaCheck, FaFolderOpen, FaPlay } from 'react-icons/fa'
 import { SCENE_MEDIA, sceneImageSize } from './scene-media'
 import type { DriveProvider, DriveThumb } from './types'
@@ -65,7 +65,7 @@ export default function MockDriveBrowser({
                 {thumbs.map((thumb, i) => {
                     const selected = i < selectedCount
                     return (
-                        <motion.div
+                        <m.div
                             key={thumb.id}
                             data-scene-target={`thumb-${i}`}
                             className="relative aspect-[4/3] overflow-hidden rounded-lg ring-1"
@@ -87,7 +87,7 @@ export default function MockDriveBrowser({
                             {/* Soft photo sheen */}
                             <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-white/10" />
                             {/* Selection checkmark */}
-                            <motion.span
+                            <m.span
                                 className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-white shadow"
                                 initial={false}
                                 animate={{
@@ -105,8 +105,8 @@ export default function MockDriveBrowser({
                                 }
                             >
                                 <FaCheck className="h-2.5 w-2.5" />
-                            </motion.span>
-                        </motion.div>
+                            </m.span>
+                        </m.div>
                     )
                 })}
             </div>
