@@ -1,6 +1,17 @@
 ---
 title: Best Vue File Upload Libraries Compared
 description: Vue file upload libraries compared - upup, vue-upload-component, PrimeVue FileUpload, FilePond and Uppy on drag and drop, S3 and resumable uploads.
+faq:
+    - q: What is the best file upload library for Vue 3?
+      a: For a complete uploader against your own storage, upup or Uppy. Inside a PrimeVue app, PrimeVue FileUpload. For a custom UI with chunked uploads, vue-upload-component.
+    - q: Which Vue upload libraries upload directly to S3?
+      a: upup, with presigned URLs from your endpoint or @useupup/server, and Uppy, with its AWS S3 plugin. With the others you write the S3 signing and upload code yourself.
+    - q: Does upup's Vue package include the image editor?
+      a: No. The image editor ships in @useupup/react and @useupup/preact only. Everything else, including cloud drives, camera, screen capture and resumable uploads, works the same in Vue.
+    - q: Which Vue upload libraries support resumable uploads?
+      a: upup and Uppy support tus and S3 multipart. vue-upload-component and FilePond support chunked uploads to your own server.
+    - q: Are these libraries free?
+      a: Yes. All five are MIT-licensed. FilePond's full image editor, Pintura, is a separate commercial product.
 ---
 
 **The short answer:** for a Vue 3 uploader that sends files straight to your own

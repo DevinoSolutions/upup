@@ -1,6 +1,15 @@
 ---
 title: JavaScript File Upload Libraries Compared
 description: Compare upup, Uppy, FilePond, UploadThing, react-dropzone and Uploadcare on UI, cloud drives, resumable uploads, direct-to-S3 and hosting model.
+faq:
+    - q: What is the best JavaScript file upload library?
+      a: It depends on the job. For a full uploader against your own S3-compatible storage across several frameworks, upup or Uppy. For one polished component posting to your own server, FilePond. For a bare React drop target, react-dropzone. For no storage setup at all, a hosted service such as UploadThing or Uploadcare.
+    - q: Which file upload libraries are free and open source?
+      a: upup, Uppy, FilePond and react-dropzone are MIT-licensed. UploadThing's SDK is MIT but the service it talks to is paid, with a free tier. Uploadcare is a paid service with a free tier.
+    - q: Which libraries upload directly to S3?
+      a: upup (presigned URLs, with @useupup/server or your own signing endpoint) and Uppy (its AWS S3 plugin). With FilePond or react-dropzone you write the S3 signing and upload code yourself.
+    - q: Which libraries support Google Drive and Dropbox?
+      a: upup supports Google Drive, OneDrive, Dropbox and Box. Uppy supports those and more through its Companion server. Uploadcare supports cloud sources as part of its hosted service.
 ---
 
 **The short answer:** the main JavaScript file upload options split three ways.

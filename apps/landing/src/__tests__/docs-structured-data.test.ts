@@ -29,10 +29,43 @@ const HUBS = [
     { slug: ['comparisons'], dir: 'comparisons' },
 ] as const
 
+// Every docs page that carries `faq:` frontmatter, with its visible question
+// count. The FAQ page asks each question as a `## ` heading; the comparison
+// pages ask theirs as `### ` headings under a `## FAQ` section.
+const FAQ_PAGES = [
+    { slug: ['faq'], file: 'faq.mdx', questions: 12 },
+    { slug: ['comparisons'], file: 'comparisons/index.mdx', questions: 4 },
+    {
+        slug: ['comparisons', 'upup-vs-uploadthing'],
+        file: 'comparisons/upup-vs-uploadthing.mdx',
+        questions: 7,
+    },
+    {
+        slug: ['comparisons', 'best-react-file-upload-libraries'],
+        file: 'comparisons/best-react-file-upload-libraries.mdx',
+        questions: 5,
+    },
+    {
+        slug: ['comparisons', 'best-vue-file-upload-libraries'],
+        file: 'comparisons/best-vue-file-upload-libraries.mdx',
+        questions: 5,
+    },
+    {
+        slug: ['comparisons', 'best-angular-file-upload-libraries'],
+        file: 'comparisons/best-angular-file-upload-libraries.mdx',
+        questions: 5,
+    },
+] as const
+
 const tree = toSidebarTree(source.pageTree)
 
+// LF-normalized: a Windows (core.autocrlf) checkout reads CRLF, and the
+// heading splits below match on `\n`.
 function readContent(relative: string): string {
-    return readFileSync(fileURLToPath(new URL(relative, CONTENT_DIR)), 'utf8')
+    return readFileSync(
+        fileURLToPath(new URL(relative, CONTENT_DIR)),
+        'utf8',
+    ).replace(/\r\n/g, '\n')
 }
 
 function renderGraph(props: Parameters<typeof DocsStructuredData>[0]) {
@@ -62,20 +95,34 @@ function propsFor(slug: string[]) {
     }
 }
 
-/** Markdown source reduced to the text a reader sees: no links, no code ticks. */
+/**
+ * Markdown source reduced to the text a reader sees: no links, no code ticks,
+ * no list bullets, no bold markers.
+ */
 function visibleText(markdown: string): string {
     return markdown
         .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
         .replace(/`/g, '')
+        .replace(/^[ \t]*[-*+][ \t]+/gm, '')
+        .replace(/\*\*/g, '')
         .replace(/\s+/g, ' ')
         .trim()
 }
 
-/** faq.mdx body split into `{ heading, text }` sections at each `## `. */
-function faqSections(): { heading: string; text: string }[] {
-    const body = readContent('faq.mdx').replace(/^---\n[\s\S]*?\n---\n/, '')
-    return body
-        .split(/^## /m)
+/**
+ * A page's visible Q&A as `{ heading, text }` sections: one per `### ` heading
+ * inside its `## FAQ` section, or, on a page without one (faq.mdx), one per
+ * `## ` heading of the whole body.
+ */
+function faqSections(file: string): { heading: string; text: string }[] {
+    const body = readContent(file).replace(/^---\n[\s\S]*?\n---\n/, '')
+    const faqSection = body.split(/^## FAQ\n/m)[1]
+    const [scope, question] =
+        faqSection === undefined
+            ? [body, /^## /m]
+            : [faqSection.split(/^## /m)[0], /^### /m]
+    return scope
+        .split(question)
         .slice(1)
         .map(section => {
             const [heading, ...rest] = section.split('\n')
@@ -86,59 +133,68 @@ function faqSections(): { heading: string; text: string }[] {
         })
 }
 
-describe('docs FAQPage JSON-LD mirrors the visible FAQ', () => {
-    const faq = source.getPage(['faq'])?.data.faq ?? []
-    const sections = faqSections()
+describe.each(FAQ_PAGES)(
+    'FAQPage JSON-LD on $file mirrors its visible FAQ',
+    ({ slug, file, questions: questionCount }) => {
+        const faq = source.getPage([...slug])?.data.faq ?? []
+        const sections = faqSections(file)
+        const pageUrl = `${PRODUCTION_ORIGIN}/docs/${slug.join('/')}/`
 
-    it('carries one faq frontmatter entry per question heading, in page order', () => {
-        expect(sections).toHaveLength(12)
-        expect(faq.map(item => item.q)).toEqual(
-            sections.map(section => section.heading),
-        )
-    })
+        it('carries one faq frontmatter entry per question heading, in page order', () => {
+            expect(sections).toHaveLength(questionCount)
+            expect(faq.map(item => item.q)).toEqual(
+                sections.map(section => section.heading),
+            )
+        })
 
-    it('draws every answer sentence from the text under its question', () => {
-        const unmatched: string[] = []
-        faq.forEach((item, i) => {
-            for (const sentence of item.a.split(/(?<=\.)\s+/)) {
-                const needle = sentence.replace(/\.$/, '')
-                if (!sections[i].text.includes(needle))
-                    unmatched.push(`${item.q} -> ${needle}`)
+        it('draws every answer sentence from the text under its question', () => {
+            const unmatched: string[] = []
+            faq.forEach((item, i) => {
+                for (const sentence of item.a.split(/(?<=\.)\s+/)) {
+                    const needle = sentence.replace(/\.$/, '')
+                    if (!sections[i].text.includes(needle))
+                        unmatched.push(`${item.q} -> ${needle}`)
+                }
+            })
+            expect(unmatched).toEqual([])
+        })
+
+        it('emits a FAQPage node with a Question and Answer per entry', () => {
+            const graph = renderGraph(propsFor([...slug]))
+            const faqPage = graph.find(node => node['@type'] === 'FAQPage')
+            expect(faqPage, `no FAQPage node on ${pageUrl}`).toBeDefined()
+            expect(faqPage?.['@id']).toBe(`${pageUrl}#faq`)
+            expect(faqPage?.isPartOf).toEqual({
+                '@id': `${PRODUCTION_ORIGIN}/#website`,
+            })
+            const questions = faqPage?.mainEntity as {
+                '@type': string
+                name: string
+                acceptedAnswer: { '@type': string; text: string }
+            }[]
+            expect(questions).toHaveLength(questionCount)
+            expect(questions.map(q => q.name)).toEqual(faq.map(item => item.q))
+            for (const [i, question] of questions.entries()) {
+                expect(question['@type']).toBe('Question')
+                expect(question.acceptedAnswer).toEqual({
+                    '@type': 'Answer',
+                    text: faq[i].a,
+                })
             }
         })
-        expect(unmatched).toEqual([])
-    })
+    },
+)
 
-    it('emits a FAQPage node with a Question and Answer per entry on /docs/faq/', () => {
-        const graph = renderGraph(propsFor(['faq']))
-        const faqPage = graph.find(node => node['@type'] === 'FAQPage')
-        expect(faqPage, 'no FAQPage node on /docs/faq/').toBeDefined()
-        expect(faqPage?.['@id']).toBe(`${PRODUCTION_ORIGIN}/docs/faq/#faq`)
-        expect(faqPage?.isPartOf).toEqual({
-            '@id': `${PRODUCTION_ORIGIN}/#website`,
-        })
-        const questions = faqPage?.mainEntity as {
-            '@type': string
-            name: string
-            acceptedAnswer: { '@type': string; text: string }
-        }[]
-        expect(questions).toHaveLength(12)
-        expect(questions.map(q => q.name)).toEqual(faq.map(item => item.q))
-        for (const [i, question] of questions.entries()) {
-            expect(question['@type']).toBe('Question')
-            expect(question.acceptedAnswer).toEqual({
-                '@type': 'Answer',
-                text: faq[i].a,
-            })
-        }
-    })
-
+describe('docs FAQPage JSON-LD is opt-in per page', () => {
     it('emits no FAQPage node for a docs page without faq frontmatter', () => {
         const withFaq = source
             .getPages()
             .filter(page => page.data.faq !== undefined)
-            .map(page => page.url)
-        expect(withFaq).toEqual(['/docs/faq'])
+            .map(page => normalizeUrl(page.url))
+            .sort()
+        expect(withFaq).toEqual(
+            FAQ_PAGES.map(({ slug }) => `/docs/${slug.join('/')}`).sort(),
+        )
 
         const graph = renderGraph(propsFor(['getting-started']))
         expect(graph.map(node => node['@type'])).toEqual([
