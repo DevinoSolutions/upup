@@ -3,12 +3,18 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FaChevronDown } from 'react-icons/fa'
-import { faqs } from '@/lib/faqs'
+import { faqs as homeFaqs, type Faq } from '@/lib/faqs'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
 
-export default function FAQSection() {
+// `items` must be the SAME list the page hands StructuredData (both read
+// faqsFor() in src/lib/faqs), so the visible questions and the FAQPage
+// JSON-LD never drift. With no props this renders the home page's set.
+export default function FAQSection({
+    items = homeFaqs,
+    frameworkName,
+}: Readonly<{ items?: Faq[]; frameworkName?: string }> = {}) {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
@@ -16,17 +22,26 @@ export default function FAQSection() {
             <div className="mx-auto max-w-3xl">
                 <SectionHeading
                     title={
-                        <>
-                            Frequently asked
-                            <span className={`block ${GRADIENT_TEXT}`}>
-                                questions
-                            </span>
-                        </>
+                        frameworkName ? (
+                            <>
+                                {frameworkName} file upload{' '}
+                                <span className={`block ${GRADIENT_TEXT}`}>
+                                    questions
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                Frequently asked
+                                <span className={`block ${GRADIENT_TEXT}`}>
+                                    questions
+                                </span>
+                            </>
+                        )
                     }
                 />
 
                 <div className="space-y-4">
-                    {faqs.map((faq, index) => {
+                    {items.map((faq, index) => {
                         const isOpen = openIndex === index
                         return (
                             <Card key={faq.question}>
