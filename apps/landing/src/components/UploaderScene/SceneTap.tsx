@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SceneTap — a finger-tap dot the timeline glides around the panel. It reads as
@@ -34,7 +34,7 @@ export default function SceneTap({
     reduce = false,
 }: SceneTapProps) {
     return (
-        <motion.div
+        <m.div
             aria-hidden
             className="pointer-events-none absolute left-0 top-0 z-50"
             initial={false}
@@ -61,7 +61,7 @@ export default function SceneTap({
                 {/* Tap ripple — one expanding ring per tapId bump, centred on the dot. */}
                 {!reduce && (
                     <AnimatePresence>
-                        <motion.span
+                        <m.span
                             key={tapId}
                             className="absolute left-1/2 top-1/2 h-[26px] w-[26px] rounded-full border border-sky-300/80"
                             style={{ marginLeft: -13, marginTop: -13 }}
@@ -76,7 +76,7 @@ export default function SceneTap({
                 {/* Soft halo — reads on both the dark panel and light content. */}
                 <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-white/15 shadow-[0_2px_8px_rgba(2,6,23,0.45)] ring-1 ring-white/40">
                     {/* Inner dot — a quick press pulse on each tapId bump. */}
-                    <motion.div
+                    <m.div
                         key={reduce ? undefined : tapId}
                         className="h-2.5 w-2.5 rounded-full bg-white/95"
                         animate={reduce ? {} : { scale: [1, 0.65, 1] }}
@@ -92,6 +92,6 @@ export default function SceneTap({
                     />
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     )
 }

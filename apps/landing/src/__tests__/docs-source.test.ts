@@ -27,8 +27,9 @@ describe('docs source', () => {
         // plugins) = 45, + 19 (2026-08 SEO split: 7 guides/storage +
         // 4 guides/auth + 4 guides/server-adapters + 3 guides/processing +
         // writing-plugins) = 64, + 1 (2026-09 FAQ) = 65, + 3 (2026-09 folder
-        // hubs: guides/, guides/storage/, quickstarts/) = 68.
-        expect(pages.length).toBe(68)
+        // hubs: guides/, guides/storage/, quickstarts/) = 68, + 4 (2026-09
+        // comparisons hub + React/Vue/Angular roundups) = 72.
+        expect(pages.length).toBe(72)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()

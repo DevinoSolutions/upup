@@ -27,6 +27,10 @@ const COPY_SOURCES: Record<string, string> = {
     'src/components/HomepageFeatures/index.tsx':
         '../components/HomepageFeatures/index.tsx',
     'src/app/privacy/page.tsx': '../app/privacy/page.tsx',
+    'src/components/FrameworkGuide/index.tsx':
+        '../components/FrameworkGuide/index.tsx',
+    'src/components/FrameworkGuide/content.ts':
+        '../components/FrameworkGuide/content.ts',
 }
 
 function readCopySources(): [string, string][] {
