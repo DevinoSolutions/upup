@@ -140,10 +140,12 @@ ignored for native AWS S3.
 `bucket` exists in that `region`, and that the region segment inside `endpoint`
 matches `region`.
 
-**CORS (client mode only).** When the browser uploads directly to storage, the
-bucket must allow your app's origin for the signed `PUT` (and its headers). In
-server mode the browser only talks to your server, so bucket CORS isn't part of
-the upload path. See [Credentials And CORS](/docs/credentials-configuration/).
+**CORS.** The browser uploads directly to storage by default in both client
+and server mode — server mode's presign routes hand it a signed URL rather than
+proxying the bytes — so the bucket must allow your app's origin for the signed
+`PUT` (and its headers). The exceptions are cloud-drive transfers (server-to-S3)
+and a deployment using `onPresignResponse` to rewrite the URL to a same-origin
+proxy. See [Credentials And CORS](/docs/credentials-configuration/).
 
 ## Next steps
 
