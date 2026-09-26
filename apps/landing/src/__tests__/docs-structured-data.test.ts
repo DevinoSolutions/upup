@@ -26,6 +26,7 @@ const HUBS = [
     { slug: ['guides'], dir: 'guides' },
     { slug: ['guides', 'storage'], dir: 'guides/storage' },
     { slug: ['quickstarts'], dir: 'quickstarts' },
+    { slug: ['comparisons'], dir: 'comparisons' },
 ] as const
 
 const tree = toSidebarTree(source.pageTree)

@@ -43,8 +43,8 @@ describe('docs source', () => {
 
     it('every internal /docs link in the corpus resolves to a real page', () => {
         // Only some section folders have a hub (index) page — guides/,
-        // guides/storage/ and quickstarts/ do; api-reference/, auth/ and the
-        // rest do NOT, and a link to a hub-less section URL 404s in production
+        // guides/storage/, quickstarts/ and comparisons/ do; api-reference/,
+        // auth/ and the rest do NOT, and a link to a hub-less section URL 404s in production
         // (next/link prefetch surfaces it as a console error on every page
         // that renders the link). This walked twice before this pin existed.
         const validUrls = new Set(

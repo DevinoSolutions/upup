@@ -167,7 +167,7 @@ const nextConfig = {
             },
             {
                 source: '/documentation/comparisons',
-                destination: '/docs/comparisons/upup-vs-uppy/',
+                destination: '/docs/comparisons/',
                 permanent: true,
             },
             {

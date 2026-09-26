@@ -26,10 +26,7 @@ test.describe('docs', () => {
         // wildcard alone would send these to /docs/category/* 404s.
         const cases: Array<[string, RegExp]> = [
             ['/documentation/quickstarts', /\/docs\/quickstarts\/$/],
-            [
-                '/documentation/comparisons',
-                /\/docs\/comparisons\/upup-vs-uppy\/$/,
-            ],
+            ['/documentation/comparisons', /\/docs\/comparisons\/$/],
             [
                 '/documentation/category/api-reference',
                 /\/docs\/api-reference\/s3-generate-presigned-url\/$/,
