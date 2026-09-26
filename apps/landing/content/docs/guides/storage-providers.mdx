@@ -8,12 +8,13 @@ shape — the only thing that changes between AWS S3, Cloudflare R2, MinIO,
 Backblaze B2, and the rest is the `storage` block you hand the server (or the
 presign endpoint you point the client at).
 
-There are two ways to wire storage. In **client mode** the browser uploads bytes
-directly to storage using short-lived URLs your own presign endpoint signs — the
-storage credentials never leave your server, and upup never sees them. In
-**server mode** the browser talks only to your server and
-[`@useupup/server`](/docs/guides/server-mode-setup/) holds the credentials and writes to
-storage for you. Which one to pick, and what changes on the wire, is covered in
+There are two ways to wire storage, and in both the browser uploads bytes
+directly to storage using short-lived presigned URLs — the storage credentials
+never leave your server. In **client mode** your own presign endpoint signs
+those URLs, and upup never sees the credentials. In **server mode**
+[`@useupup/server`](/docs/guides/server-mode-setup/) holds the credentials,
+signs the URLs for you, and writes cloud-drive files to storage itself. Which
+one to pick, and what changes on the wire, is covered in
 [Client Mode vs Server Mode](/docs/guides/modes/).
 
 This page focuses on server mode, where the storage provider is a
