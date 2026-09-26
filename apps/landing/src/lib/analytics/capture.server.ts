@@ -1,6 +1,7 @@
 import { PostHog } from 'posthog-node'
 import { APP_ID } from './contract'
-import { serverDatasetCredentials, type E2ETestContext } from './dataset'
+import { type E2ETestContext } from './dataset'
+import { serverDatasetCredentials } from './dataset.server'
 
 export interface CaptureResult {
     ok: boolean

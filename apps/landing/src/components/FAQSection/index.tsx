@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { FaChevronDown } from 'react-icons/fa'
 import { faqs } from '@/lib/faqs'
 import Section from '@/components/ui/Section'
@@ -58,7 +58,7 @@ export default function FAQSection() {
                                 >
                                     <AnimatePresence initial={false}>
                                         {isOpen && (
-                                            <motion.div
+                                            <m.div
                                                 initial={{
                                                     height: 0,
                                                     opacity: 0,
@@ -73,7 +73,7 @@ export default function FAQSection() {
                                                 <p className="px-6 pb-5 text-gray-600 dark:text-gray-300 leading-relaxed">
                                                     {faq.answer}
                                                 </p>
-                                            </motion.div>
+                                            </m.div>
                                         )}
                                     </AnimatePresence>
                                 </div>

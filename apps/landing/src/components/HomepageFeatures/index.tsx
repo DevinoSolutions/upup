@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import {
     FaFileAlt,
     FaStar,
@@ -472,14 +472,14 @@ const EmailModal: React.FC<EmailModalProps> = ({
     return (
         <AnimatePresence>
             {isOpen ? (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     onClick={onClose}
                 >
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -489,7 +489,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                     >
                         {!isSubmitted ? (
                             <>
-                                <motion.div
+                                <m.div
                                     className="flex items-center justify-between mb-6"
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -500,15 +500,15 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             ? 'Request Custom Provider'
                                             : `Get notified for ${integrationName}`}
                                     </h3>
-                                    <motion.button
+                                    <m.button
                                         onClick={onClose}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     >
                                         <FaTimes className="w-4 h-4 text-gray-500" />
-                                    </motion.button>
-                                </motion.div>
+                                    </m.button>
+                                </m.div>
 
-                                <motion.p
+                                <m.p
                                     className="text-gray-600 dark:text-gray-400 mb-6"
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -517,16 +517,16 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                     {isCustom
                                         ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
                                         : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
-                                </motion.p>
+                                </m.p>
 
-                                <motion.form
+                                <m.form
                                     onSubmit={handleSubmit}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: 0.3 }}
                                 >
                                     {isCustom && (
-                                        <motion.input
+                                        <m.input
                                             type="text"
                                             value={customToolName}
                                             onChange={e =>
@@ -543,7 +543,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         />
                                     )}
 
-                                    <motion.input
+                                    <m.input
                                         type="email"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
@@ -584,7 +584,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         </p>
                                     )}
 
-                                    <motion.div
+                                    <m.div
                                         className="flex gap-3"
                                         initial={{ y: 10, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
@@ -592,14 +592,14 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             delay: isCustom ? 0.6 : 0.5,
                                         }}
                                     >
-                                        <motion.button
+                                        <m.button
                                             type="button"
                                             onClick={onClose}
                                             className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
                                         >
                                             Cancel
-                                        </motion.button>
-                                        <motion.button
+                                        </m.button>
+                                        <m.button
                                             type="submit"
                                             disabled={isSubmitting}
                                             className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
@@ -616,12 +616,12 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             ) : (
                                                 'Notify me'
                                             )}
-                                        </motion.button>
-                                    </motion.div>
-                                </motion.form>
+                                        </m.button>
+                                    </m.div>
+                                </m.form>
                             </>
                         ) : (
-                            <motion.div
+                            <m.div
                                 className="text-center"
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -631,7 +631,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                     stiffness: 300,
                                 }}
                             >
-                                <motion.div
+                                <m.div
                                     className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
@@ -642,7 +642,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         stiffness: 400,
                                     }}
                                 >
-                                    <motion.div
+                                    <m.div
                                         className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
@@ -653,7 +653,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             stiffness: 400,
                                         }}
                                     >
-                                        <motion.svg
+                                        <m.svg
                                             className="w-4 h-4 text-white"
                                             fill="none"
                                             stroke="currentColor"
@@ -671,29 +671,29 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                                 strokeWidth={2}
                                                 d="M5 13l4 4L19 7"
                                             />
-                                        </motion.svg>
-                                    </motion.div>
-                                </motion.div>
-                                <motion.h3
+                                        </m.svg>
+                                    </m.div>
+                                </m.div>
+                                <m.h3
                                     className="text-xl font-bold text-gray-900 dark:text-white mb-2"
                                     initial={{ y: 10, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.3 }}
                                 >
                                     You&apos;re all set!
-                                </motion.h3>
-                                <motion.p
+                                </m.h3>
+                                <m.p
                                     className="text-gray-600 dark:text-gray-400"
                                     initial={{ y: 10, opacity: 0 }}
                                     animate={{ y: 0, opacity: 1 }}
                                     transition={{ delay: 0.4 }}
                                 >
                                     {`We’ll email you when ${providerName} integration is ready.`}
-                                </motion.p>
-                            </motion.div>
+                                </m.p>
+                            </m.div>
                         )}
-                    </motion.div>
-                </motion.div>
+                    </m.div>
+                </m.div>
             ) : null}
         </AnimatePresence>
     )
