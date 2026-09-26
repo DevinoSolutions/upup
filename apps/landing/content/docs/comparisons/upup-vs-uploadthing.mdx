@@ -23,9 +23,9 @@ and other full-stack frameworks.
 
 It is, in effect, a managed layer over object storage. UploadThing runs the
 storage, the request signing and the file URLs, so there is no bucket, IAM
-policy or CORS rule for you to manage. The SDK is MIT-licensed. The service is
-a paid product with usage-based plans; see their pricing page for current
-limits and prices.
+policy or CORS rule for you to manage. The SDK is MIT-licensed. The service has
+a free tier and paid plans; see [Is UploadThing free?](#is-uploadthing-free)
+below.
 
 ## UploadThing vs your own S3 bucket
 
@@ -130,7 +130,7 @@ interrupted by a reload continues from the parts storage already holds. See
 | Feature                 | UploadThing                                                                | upup                                                                             |
 | ----------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Model                   | Hosted service (managed storage and file URLs)                             | Self-hosted library (your storage)                                               |
-| License / pricing       | MIT SDK; the service is paid (see their pricing page)                      | MIT, free; you pay only your storage provider                                    |
+| License / pricing       | MIT SDK; hosted service with a free 2 GB tier and paid plans               | MIT, free; you pay only your storage provider                                    |
 | Storage                 | UploadThing's infrastructure                                               | Any S3-compatible bucket: AWS, R2, MinIO, Spaces, Wasabi, Backblaze B2 and more  |
 | First-party UI          | React components and hooks, with adapters for Next.js and other frameworks | Native UI for React, Vue, Svelte, Angular, Preact and vanilla JS                 |
 | Headless core           | Framework hooks tied to the service                                        | `@useupup/core`, framework-agnostic                                              |
@@ -299,6 +299,20 @@ React.
 No. UploadThing is a service: storage, request signing, per-route upload rules
 and file URLs, all run for you. An S3 bucket is only the storage. Everything
 else is yours to build, or to take from a library such as upup.
+
+### Is UploadThing free?
+
+It has a free tier. As of September 2026, UploadThing's pricing page lists:
+
+- **Free:** $0 a month for 2 GB of storage, shared across all your apps, with
+  unlimited uploads and downloads.
+- **$10 a month:** 100 GB of storage, plus regions and private files.
+- **Usage-based:** from $25 a month with 250 GB included, then $0.08 per GB
+  over 250 GB.
+
+Plans change, so check [uploadthing.com/pricing](https://uploadthing.com/pricing)
+before you decide. upup itself costs nothing: you pay only your storage
+provider, at that provider's rates.
 
 ### Is upup a drop-in replacement for UploadThing?
 
