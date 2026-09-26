@@ -1,11 +1,38 @@
 // Fixture standing in for apps/landing/next.config.mjs — only the
-// `async redirects()` block is scanned by check-links.mjs.
+// `async redirects()` block is scanned by check-links.mjs. Carries both legacy
+// Docusaurus route shapes: the older `/documentation/docs/*` rules sit BEFORE
+// the newer `/documentation/:path*` wildcard, as in the real config.
 const nextConfig = {
     async redirects() {
         return [
             {
                 source: '/old/guide',
                 destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/category/guides',
+                destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/category/guides',
+                destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/:path*',
+                destination: '/docs/:path*/',
                 permanent: true,
             },
             {

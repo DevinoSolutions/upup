@@ -46,6 +46,53 @@ test.describe('docs', () => {
         }
     })
 
+    test('older-shape legacy /documentation/docs URLs land on the same page, never /docs/docs', async ({
+        request,
+    }) => {
+        // Before 2026-07-12 the Docusaurus app served docs one segment deeper
+        // (routeBasePath 'docs'): /documentation/docs/<slug>. Search Console
+        // still ranks those URLs; the newer-shape wildcard alone doubled them
+        // into /docs/docs/<slug>/ 404s.
+        const hop = await request.get('/documentation/docs/getting-started/', {
+            maxRedirects: 0,
+        })
+        expect(hop.status()).toBe(308)
+        expect(hop.headers()['location']).toMatch(/\/docs\/getting-started\/$/)
+        expect(hop.headers()['location']).not.toContain('/docs/docs/')
+
+        const cases: Array<[string, RegExp]> = [
+            ['/documentation/docs/', /\/docs\/$/],
+            [
+                '/documentation/docs/getting-started/',
+                /\/docs\/getting-started\/$/,
+            ],
+            [
+                '/documentation/docs/api-reference/upupuploader/icon-prop',
+                /\/docs\/api-reference\/upupuploader\/icon-prop\/$/,
+            ],
+            [
+                '/documentation/docs/category/upupuploader/',
+                /\/docs\/api-reference\/upupuploader\/required-props\/$/,
+            ],
+            [
+                '/documentation/docs/category/api-reference',
+                /\/docs\/api-reference\/s3-generate-presigned-url\/$/,
+            ],
+            [
+                '/documentation/docs/migration/v2-to-v2.1/',
+                /\/docs\/migration\/v1-to-v3\/$/,
+            ],
+        ]
+        for (const [legacy, target] of cases) {
+            const followed = await request.get(legacy)
+            expect(followed.url(), `${legacy} final URL`).toMatch(target)
+            expect(followed.url(), `${legacy} final URL`).not.toContain(
+                '/docs/docs/',
+            )
+            expect(followed.status(), `${legacy} final status`).toBe(200)
+        }
+    })
+
     test('docs page renders chrome and content', async ({ page }) => {
         await page.goto('/docs/getting-started/')
         await expect(
