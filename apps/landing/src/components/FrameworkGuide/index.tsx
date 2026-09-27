@@ -268,6 +268,17 @@ export default function FrameworkGuide({
                         </tbody>
                     </table>
                 </div>
+                <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+                    For resumable uploads, direct-to-S3 and image editing side
+                    by side, see{' '}
+                    <Link
+                        href={guide.comparisonLink.href}
+                        className={LINK_CLASS}
+                    >
+                        {guide.comparisonLink.label}
+                    </Link>
+                    .
+                </p>
 
                 <h3 className={`${H3_HEADING} mb-6 mt-16`}>Keep reading</h3>
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

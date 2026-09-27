@@ -38,6 +38,8 @@ export interface FrameworkGuideContent {
     /** Short framework/SSR notes — one or two sentences each. */
     notes: { title: string; body: string }[]
     competitors: Competitor[]
+    /** Linked under the table: the docs roundup, or the hub when none. */
+    comparisonLink: GuideLink
     links: GuideLink[]
 }
 
@@ -140,6 +142,18 @@ function quickstart(id: string, name: string): GuideLink {
     return { href: `/docs/quickstarts/${id}/`, label: `${name} quickstart` }
 }
 
+function roundup(id: string, name: string): GuideLink {
+    return {
+        href: `/docs/comparisons/best-${id}-file-upload-libraries/`,
+        label: `${name} file upload libraries compared`,
+    }
+}
+
+const COMPARISONS_HUB: GuideLink = {
+    href: '/docs/comparisons/',
+    label: 'all upup comparisons',
+}
+
 export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
     react: {
         drivesFile: 'Uploader.tsx',
@@ -170,6 +184,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             FILEPOND,
             UPPY,
         ],
+        comparisonLink: roundup('react', 'React'),
         links: [
             quickstart('react', 'React'),
             quickstart('next', 'Next.js'),
@@ -218,6 +233,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
                 license: 'Apache-2.0',
             },
         ],
+        comparisonLink: roundup('vue', 'Vue'),
         links: [quickstart('vue', 'Vue'), PROPS_REFERENCE, ...SHARED_LINKS],
     },
     svelte: {
@@ -243,6 +259,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             { ...FILEPOND, what: 'Upload widget with a Svelte adapter' },
             UPPY,
         ],
+        comparisonLink: COMPARISONS_HUB,
         links: [
             quickstart('svelte', 'Svelte'),
             PROPS_REFERENCE,
@@ -288,6 +305,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
                 license: 'MIT',
             },
         ],
+        comparisonLink: roundup('angular', 'Angular'),
         links: [
             quickstart('angular', 'Angular'),
             PROPS_REFERENCE,
@@ -317,6 +335,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             FILEPOND,
             UPPY,
         ],
+        comparisonLink: COMPARISONS_HUB,
         links: [quickstart('vanilla', 'Vanilla JS'), ...SHARED_LINKS],
     },
     preact: {
@@ -333,6 +352,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             },
         ],
         competitors: [FILEPOND, UPPY],
+        comparisonLink: COMPARISONS_HUB,
         links: [
             quickstart('preact', 'Preact'),
             quickstart('react', 'React'),
