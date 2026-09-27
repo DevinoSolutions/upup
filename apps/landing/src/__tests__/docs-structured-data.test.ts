@@ -204,6 +204,57 @@ describe('docs FAQPage JSON-LD is opt-in per page', () => {
     })
 })
 
+describe('docs BreadcrumbList JSON-LD meets the Google breadcrumb rules', () => {
+    // Google requires `item` on every ListItem except the last
+    // (https://developers.google.com/search/docs/appearance/structured-data/breadcrumb).
+    // schema.org alone accepts a name-only crumb, so this walks every docs page
+    // rather than a sample. The docs root renders <DocsHome/>, which emits no
+    // per-page JSON-LD.
+    const pages = source.getPages().filter(page => page.slugs.length > 0)
+    const docsUrls = new Set([
+        `${PRODUCTION_ORIGIN}/docs/`,
+        ...pages.map(page => `${PRODUCTION_ORIGIN}${normalizeUrl(page.url)}/`),
+    ])
+
+    it('numbers every trail 1..n and links every crumb but the last to a docs page', () => {
+        expect(pages.length).toBeGreaterThan(0)
+        const violations: string[] = []
+        for (const page of pages) {
+            const where = normalizeUrl(page.url)
+            const graph = renderGraph(propsFor(page.slugs))
+            const list = graph.find(node => node['@type'] === 'BreadcrumbList')
+            const crumbs = (list?.itemListElement ?? []) as {
+                '@type': string
+                position: number
+                name: string
+                item?: string
+            }[]
+            if (crumbs.length === 0) violations.push(`${where}: no ListItem`)
+            crumbs.forEach((crumb, i) => {
+                const label = `${where}: "${crumb.name}"`
+                if (crumb['@type'] !== 'ListItem')
+                    violations.push(`${label} is a ${crumb['@type']}`)
+                if (crumb.position !== i + 1)
+                    violations.push(
+                        `${label} at position ${crumb.position}, expected ${i + 1}`,
+                    )
+                if (crumb.item === undefined) {
+                    if (i < crumbs.length - 1)
+                        violations.push(`${label} has no item`)
+                } else if (!docsUrls.has(crumb.item)) {
+                    violations.push(
+                        `${label} item ${crumb.item} is not a docs page`,
+                    )
+                }
+            })
+            const last = crumbs[crumbs.length - 1]
+            if (last && last.item !== `${PRODUCTION_ORIGIN}${where}/`)
+                violations.push(`${where}: last crumb is not the page itself`)
+        }
+        expect(violations).toEqual([])
+    })
+})
+
 describe('docs folder hub pages', () => {
     it.each(HUBS)(
         'serves /docs/$dir/ as a page listed in the sitemap',
