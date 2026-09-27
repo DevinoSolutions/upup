@@ -22,7 +22,12 @@ import { source } from '@/lib/docs/source'
 const PRODUCTION_ORIGIN = 'https://useupup.com'
 const CONTENT_DIR = new URL('../../content/docs/', import.meta.url)
 
-const HUBS = [{ slug: ['comparisons'], dir: 'comparisons' }] as const
+const HUBS = [
+    { slug: ['guides'], dir: 'guides' },
+    { slug: ['guides', 'storage'], dir: 'guides/storage' },
+    { slug: ['quickstarts'], dir: 'quickstarts' },
+    { slug: ['comparisons'], dir: 'comparisons' },
+] as const
 
 // Every docs page that carries `faq:` frontmatter, with its visible question
 // count. The FAQ page asks each question as a `## ` heading; every other page
@@ -272,13 +277,52 @@ describe('docs folder hub pages', () => {
     it.each(HUBS)('links every child of $dir from its hub', ({ dir }) => {
         const hub = readContent(`${dir}/index.mdx`)
         const prefix = `/docs/${dir}/`
+        // A nested hub page itself is not linked: the docs link check
+        // (scripts/docs/check-links.mjs) still resolves guides/storage/index.mdx
+        // to /docs/guides/storage/index, so an MDX link to /docs/guides/storage/
+        // fails it. The nested hub's own children are linked from here too.
+        const nestedHubs = HUBS.map(other => `/docs/${other.dir}`).filter(
+            other => other.startsWith(prefix),
+        )
         const children = source
             .getPages()
             .map(page => normalizeUrl(page.url))
             .filter(url => url.startsWith(prefix))
+            .filter(url => !nestedHubs.includes(url))
         expect(children.length).toBeGreaterThan(0)
         const missing = children.filter(url => !hub.includes(`](${url}/)`))
         expect(missing).toEqual([])
+    })
+
+    it('links every breadcrumb middle crumb to its hub on a nested page', () => {
+        const graph = renderGraph(propsFor(['guides', 'storage', 'azure-blob']))
+        const list = graph.find(node => node['@type'] === 'BreadcrumbList')
+        expect(list?.itemListElement).toEqual([
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Docs',
+                item: `${PRODUCTION_ORIGIN}/docs/`,
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Guides',
+                item: `${PRODUCTION_ORIGIN}/docs/guides/`,
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: 'Storage',
+                item: `${PRODUCTION_ORIGIN}/docs/guides/storage/`,
+            },
+            {
+                '@type': 'ListItem',
+                position: 4,
+                name: 'Upload Files to Azure Blob Storage from the Browser',
+                item: `${PRODUCTION_ORIGIN}/docs/guides/storage/azure-blob/`,
+            },
+        ])
     })
 })
 
@@ -311,16 +355,15 @@ describe('nested index pages map to their folder slug in the agent surfaces', ()
             expect(params).toContain(slug.join('/'))
         }
 
+        // The two-level hub: guides/storage/index.mdx.
         const res = await markdownTwin(
-            new Request(`${PRODUCTION_ORIGIN}/docs-md/comparisons/`),
-            { params: Promise.resolve({ slug: ['comparisons'] }) },
+            new Request(`${PRODUCTION_ORIGIN}/docs-md/guides/storage/`),
+            { params: Promise.resolve({ slug: ['guides', 'storage'] }) },
         )
         expect(res.status).toBe(200)
         expect(res.headers.get('link')).toBe(
-            `<${PRODUCTION_ORIGIN}/docs/comparisons/>; rel="canonical"`,
+            `<${PRODUCTION_ORIGIN}/docs/guides/storage/>; rel="canonical"`,
         )
-        expect(await res.text()).toMatch(
-            /^# JavaScript File Upload Libraries Compared\n/,
-        )
+        expect(await res.text()).toMatch(/^# Storage provider guides\n/)
     })
 })
