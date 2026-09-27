@@ -11,7 +11,7 @@ faq:
     - q: Which Vue upload libraries support resumable uploads?
       a: upup and Uppy support tus and S3 multipart. vue-upload-component and FilePond support chunked uploads to your own server.
     - q: Are these libraries free?
-      a: Yes. All five are MIT-licensed. FilePond's full image editor, Pintura, is a separate commercial product.
+      a: Most are. upup, FilePond and Uppy are MIT-licensed, and vue-upload-component is Apache-2.0-licensed. PrimeVue is MIT through version 4; version 5 moved to the PrimeUI License, which is free for individuals and eligible small organizations and paid otherwise. FilePond's full image editor, Pintura, is a separate commercial product.
 ---
 
 **The short answer:** for a Vue 3 uploader that sends files straight to your own
@@ -25,13 +25,13 @@ usually decide the choice, then explains how to pick.
 
 ## Comparison table
 
-| Library              | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                         | Image editing                                            | License | Bundle approach                                         |
-| -------------------- | ------------- | ------------------------------------ | ------------------------------ | ------------------------------------ | -------------------------------------------------------- | ------- | ------------------------------------------------------- |
-| upup                 | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)                 | No (the editor is React/Preact only)                     | MIT     | Headless core + native Vue UI; heavy features on demand |
-| vue-upload-component | Yes           | No                                   | Chunked uploads                | Not built in                         | No                                                       | MIT     | One component; you build the UI around it               |
-| PrimeVue FileUpload  | Yes           | No                                   | No                             | Not built in (custom upload handler) | No                                                       | MIT     | Part of the PrimeVue component suite                    |
-| FilePond             | Yes           | No                                   | Chunked uploads to your server | Not built in                         | Crop/resize plugins; full editor is Pintura (commercial) | MIT     | Vanilla JS core + Vue adapter + plugins                 |
-| Uppy                 | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)                  | Yes (Image Editor plugin)                                | MIT     | Modular plugins; install only what you use              |
+| Library              | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                         | Image editing                                            | License                                                                      | Bundle approach                                         |
+| -------------------- | ------------- | ------------------------------------ | ------------------------------ | ------------------------------------ | -------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------- |
+| upup                 | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)                 | No (the editor is React/Preact only)                     | MIT                                                                          | Headless core + native Vue UI; heavy features on demand |
+| vue-upload-component | Yes           | No                                   | Chunked uploads                | Not built in                         | No                                                       | Apache-2.0                                                                   | One component; you build the UI around it               |
+| PrimeVue FileUpload  | Yes           | No                                   | No                             | Not built in (custom upload handler) | No                                                       | v5+: PrimeUI License (paid, with a free community tier); v4 and earlier: MIT | Part of the PrimeVue component suite                    |
+| FilePond             | Yes           | No                                   | Chunked uploads to your server | Not built in                         | Crop/resize plugins; full editor is Pintura (commercial) | MIT                                                                          | Vanilla JS core + Vue adapter + plugins                 |
+| Uppy                 | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)                  | Yes (Image Editor plugin)                                | MIT                                                                          | Modular plugins; install only what you use              |
 
 ## The libraries
 
@@ -58,7 +58,10 @@ Check that you install the major version that matches Vue 3.
 FileUpload is one component in the PrimeVue suite. It offers a basic button
 mode and an advanced mode with a drop zone, file list and progress bar, and it
 posts to a URL you give it or hands the files to your own upload function.
-It's the natural choice if PrimeVue is already your component library.
+PrimeVue 4 and earlier are MIT-licensed. Version 5 moved to PrimeTek's PrimeUI
+License, which is free for individuals and eligible small organizations, paid
+otherwise, and requires a license key. It's the natural choice if PrimeVue is
+already your component library.
 
 ### FilePond
 
@@ -140,7 +143,10 @@ support chunked uploads to your own server.
 
 ### Are these libraries free?
 
-Yes. All five are MIT-licensed. FilePond's full image editor, Pintura, is a
+Most are. upup, FilePond and Uppy are MIT-licensed, and vue-upload-component
+is Apache-2.0-licensed. PrimeVue is MIT through version 4; version 5 moved to
+the PrimeUI License, which is free for individuals and eligible small
+organizations and paid otherwise. FilePond's full image editor, Pintura, is a
 separate commercial product.
 
 ## Related comparisons
