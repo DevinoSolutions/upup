@@ -1,0 +1,157 @@
+---
+title: Best Angular File Upload Libraries Compared
+description: Angular file upload libraries compared - upup, ngx-file-drop, PrimeNG FileUpload, FilePond and Uppy on drag and drop, S3 and resumable uploads.
+faq:
+    - q: What is the best file upload library for Angular?
+      a: For a complete uploader against your own storage, upup or Uppy. Inside a PrimeNG app, PrimeNG FileUpload. For just a drop zone, ngx-file-drop.
+    - q: Which Angular upload libraries upload directly to S3?
+      a: upup, with presigned URLs from your endpoint or @useupup/server, and Uppy, with its AWS S3 plugin. With the others you write the S3 signing and upload code yourself.
+    - q: Does upup's Angular package include the image editor?
+      a: No. The image editor ships in @useupup/react and @useupup/preact only. Everything else, including cloud drives, camera, screen capture and resumable uploads, works the same in Angular.
+    - q: Is upup's Angular component standalone?
+      a: Yes. UpupUploaderComponent is a standalone component with the selector upup-uploader. Add it to a standalone component's imports, or to an NgModule's imports.
+    - q: Are these libraries free?
+      a: Yes. All five are MIT-licensed. FilePond's full image editor, Pintura, is a separate commercial product.
+---
+
+**The short answer:** for an Angular uploader that sends files straight to your
+own S3-compatible bucket, with cloud drives and resumable uploads, use upup or
+Uppy. If your app already uses PrimeNG, its FileUpload component is the
+smallest step. ngx-file-drop only handles the drop zone, and FilePond gives you
+one polished component that posts to your server.
+
+This roundup compares five Angular file upload libraries on the features that
+usually decide the choice, then explains how to pick.
+
+## Comparison table
+
+| Library            | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                         | Image editing                                            | License | Bundle approach                             |
+| ------------------ | ------------- | ------------------------------------ | ------------------------------ | ------------------------------------ | -------------------------------------------------------- | ------- | ------------------------------------------- |
+| upup               | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)                 | No (the editor is React/Preact only)                     | MIT     | Headless core + native standalone component |
+| ngx-file-drop      | Yes           | No                                   | No                             | You build it                         | No                                                       | MIT     | One drop-zone component; no upload code     |
+| PrimeNG FileUpload | Yes           | No                                   | No                             | Not built in (custom upload handler) | No                                                       | MIT     | Part of the PrimeNG component suite         |
+| FilePond           | Yes           | No                                   | Chunked uploads to your server | Not built in                         | Crop/resize plugins; full editor is Pintura (commercial) | MIT     | Vanilla JS core + Angular adapter + plugins |
+| Uppy               | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)                  | Yes (Image Editor plugin)                                | MIT     | Modular plugins; install only what you use  |
+
+## The libraries
+
+### upup
+
+upup's `@useupup/angular` is a native Angular port of its uploader: a
+standalone component with a single `config` input, built on the same headless
+core as every other upup package. It uploads directly to S3-compatible storage
+with presigned URLs, either from your own signing endpoint or through
+`@useupup/server`, and lets users pick files from the device, Google Drive,
+OneDrive, Dropbox, Box, a camera, a screen capture or a link. The built-in image
+editor is available in the React and Preact packages only, not in Angular. See
+the [Angular file uploader](/angular/) page for a three-step setup.
+
+### ngx-file-drop
+
+ngx-file-drop is a drop-zone component that accepts dropped files and folders
+and hands them to your code. It does not upload anything, so you add the HTTP
+requests, progress and storage yourself. It is a good fit when you only need
+the drop target.
+
+### PrimeNG FileUpload
+
+FileUpload is one component in the PrimeNG suite. It offers a basic button mode
+and an advanced mode with a drop zone, file list and progress bar, and it posts
+to a URL you give it or hands the files to your own upload handler. It's the
+natural choice if PrimeNG is already your component library.
+
+### FilePond
+
+FilePond is a single animated upload component with an Angular adapter. It
+posts files to your own server endpoint, supports chunked uploads, and extends
+through plugins for previews, validation and image transforms. See
+[upup vs FilePond](/docs/comparisons/upup-vs-filepond/).
+
+### Uppy
+
+Uppy is a modular uploader with Angular components. Plugins cover the Dashboard
+UI, sources (webcam, screen capture, remote drives through Companion, a server
+you host) and destinations such as tus and S3. See
+[upup vs Uppy](/docs/comparisons/upup-vs-uppy/).
+
+## How to choose
+
+- **You want a finished uploader on your own bucket:** upup or Uppy.
+- **Your users pick files from Google Drive, OneDrive, Dropbox or Box:** upup
+  or Uppy. Uppy routes remote files through Companion; upup does it in the
+  browser (client mode) or in `@useupup/server` (server mode).
+- **You already use PrimeNG:** start with PrimeNG FileUpload and switch only if
+  you need S3, cloud drives or resumable uploads.
+- **You only need a drop target:** ngx-file-drop, then write the upload code.
+- **You need image editing in Angular:** Uppy's Image Editor plugin, or
+  FilePond's plugins. upup's editor is not available in Angular.
+- **You upload very large files:** use resumable uploads, with upup or Uppy.
+
+## Minimal upup example
+
+Install the package:
+
+```sh
+npm i @useupup/angular
+```
+
+Add the standalone component and point it at an endpoint that returns a
+presigned URL:
+
+```ts
+import { Component } from '@angular/core'
+import { UpupUploaderComponent } from '@useupup/angular'
+
+@Component({
+    selector: 'app-root',
+    standalone: true,
+    imports: [UpupUploaderComponent],
+    template: `<upup-uploader
+        [config]="{ provider: 'aws', uploadEndpoint: '/api/upload-token' }"
+    />`,
+})
+export class AppComponent {}
+```
+
+Load the stylesheet once globally: add `@useupup/angular/styles` to the
+`styles` array in `angular.json`, or `@import '@useupup/angular/styles';` in
+your global `styles.css`. The [Angular quickstart](/docs/quickstarts/angular/)
+covers the endpoint, and [Code Examples](/docs/code-examples/) has a
+ready-to-copy presign handler.
+
+## FAQ
+
+### What is the best file upload library for Angular?
+
+For a complete uploader against your own storage, upup or Uppy. Inside a
+PrimeNG app, PrimeNG FileUpload. For just a drop zone, ngx-file-drop.
+
+### Which Angular upload libraries upload directly to S3?
+
+upup, with presigned URLs from your endpoint or `@useupup/server`, and Uppy,
+with its AWS S3 plugin. With the others you write the S3 signing and upload
+code yourself.
+
+### Does upup's Angular package include the image editor?
+
+No. The image editor ships in `@useupup/react` and `@useupup/preact` only.
+Everything else, including cloud drives, camera, screen capture and resumable
+uploads, works the same in Angular.
+
+### Is upup's Angular component standalone?
+
+Yes. `UpupUploaderComponent` is a standalone component with the selector
+`upup-uploader`. Add it to a standalone component's `imports`, or to an
+`NgModule`'s `imports`.
+
+### Are these libraries free?
+
+Yes. All five are MIT-licensed. FilePond's full image editor, Pintura, is a
+separate commercial product.
+
+## Related comparisons
+
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
+- [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/)
+- [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)

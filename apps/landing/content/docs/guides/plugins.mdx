@@ -87,11 +87,11 @@ plugin:
   the page, talks to the provider's API directly, downloads the selected files
   as real `File` objects, and those flow through the normal pipeline and upload
   path. This is the path `cloudDrives` configures.
-- **Server mode.** The browser talks only to your server. The drive views route
+- **Server mode.** The drive views talk only to your server: they route
   through `@useupup/server`'s drive endpoints instead of a plugin — listing,
-  auth, and the drive → S3 transfer all happen server-side, and the file bytes
-  never pass through the browser. Credentials live in your server environment,
-  so no client IDs go in `cloudDrives`.
+  auth, and the drive → S3 transfer all happen server-side, and the drive file
+  bytes never pass through the browser. Credentials live in your server
+  environment, so no client IDs go in `cloudDrives`.
 
 Because server mode bypasses the plugin path entirely, a plugin you register
 yourself only runs in client mode. Full comparison in

@@ -1,11 +1,13 @@
 ---
-title: Server Mode Setup — Upload Through Your Server
+title: Server Mode Setup — Signed Uploads and Drive OAuth
 description: Set up upup server mode — mount createUpupHandler, configure S3 storage, secrets, limits and hooks, then pick an Express, Fastify, Hono or Next.js adapter.
 ---
 
-End-to-end setup for `mode="server"`. In server mode the browser talks only
-to your server: it holds the storage credentials and the cloud-drive OAuth
-secrets, and it is the trust boundary every upload passes through.
+End-to-end setup for `mode="server"`. In server mode your server holds the
+storage credentials and the cloud-drive OAuth secrets, and it is the trust
+boundary every upload must pass: the browser gets a presigned URL only after
+the server's checks, then PUTs the bytes straight to your bucket. Cloud-drive
+files never touch the browser — the server streams them into the bucket.
 
 This page is the hub — the config object, the routes, the limits, the hooks,
 and the observability seam. The per-framework mount recipes live on their
@@ -258,8 +260,8 @@ when there is no refresh token or the refresh itself fails.
 function. Every adapter wraps that same handler and takes the same config
 object — the one you built in step 2.
 
-| Framework                                                      | Entry point              | Import from              |
-| -------------------------------------------------------------- | ------------------------ | ------------------------ |
+| Framework                                                      | Entry point              | Import from               |
+| -------------------------------------------------------------- | ------------------------ | ------------------------- |
 | [Express](/docs/guides/server-adapters/express/)               | `createUpupMiddleware`   | `@useupup/server/express` |
 | [Fastify](/docs/guides/server-adapters/fastify/)               | `createUpupPlugin`       | `@useupup/server/fastify` |
 | [Hono](/docs/guides/server-adapters/hono/)                     | `createUpupRoutes`       | `@useupup/server/hono`    |
@@ -442,11 +444,11 @@ Return an object to replace the payload; return nothing to leave it alone.
 
 It fires on exactly three responses, told apart by `ctx.phase`:
 
-| `ctx.phase`            | Route                       | Payload                                     |
-| ---------------------- | --------------------------- | ------------------------------------------- |
-| `presign`              | `POST /presign`             | `PresignedUrlResponse`                      |
-| `multipart-init`       | `POST /multipart/init`      | `MultipartInitResponse` plus the `token`    |
-| `multipart-sign-part`  | `POST /multipart/sign-part` | `MultipartSignPartResponse`                 |
+| `ctx.phase`           | Route                       | Payload                                  |
+| --------------------- | --------------------------- | ---------------------------------------- |
+| `presign`             | `POST /presign`             | `PresignedUrlResponse`                   |
+| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus the `token` |
+| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`              |
 
 `ctx` also carries `req`, the server-chosen `key` (always the key in the
 payload), the resolved `userId`, and `metadata` — the client-declared file
@@ -737,7 +739,7 @@ resolves in this order:
 Two things to keep in mind:
 
 - **It authorizes nothing.** It signs whatever key you hand it. Check that the
-  current user may see that object *before* you call it — this is the same
+  current user may see that object _before_ you call it — this is the same
   trust position as `S3Client.getSignedUrl`, not a replacement for your access
   control.
 - **S3-compatible providers only**, like the rest of the package. A

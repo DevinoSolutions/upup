@@ -1,0 +1,136 @@
+---
+title: JavaScript File Upload Libraries Compared
+description: Compare upup, Uppy, FilePond, UploadThing, react-dropzone and Uploadcare on UI, cloud drives, resumable uploads, direct-to-S3 and hosting model.
+faq:
+    - q: What is the best JavaScript file upload library?
+      a: It depends on the job. For a full uploader against your own S3-compatible storage across several frameworks, upup or Uppy. For one polished component posting to your own server, FilePond. For a bare React drop target, react-dropzone. For no storage setup at all, a hosted service such as UploadThing or Uploadcare.
+    - q: Which file upload libraries are free and open source?
+      a: upup, Uppy, FilePond and react-dropzone are MIT-licensed. UploadThing's SDK is MIT but the service it talks to is paid, with a free tier. Uploadcare is a paid service with a free tier.
+    - q: Which libraries upload directly to S3?
+      a: upup (presigned URLs, with @useupup/server or your own signing endpoint) and Uppy (its AWS S3 plugin). With FilePond or react-dropzone you write the S3 signing and upload code yourself.
+    - q: Which libraries support Google Drive and Dropbox?
+      a: upup supports Google Drive, OneDrive, Dropbox and Box. Uppy supports those and more through its Companion server. Uploadcare supports cloud sources as part of its hosted service.
+---
+
+**The short answer:** the main JavaScript file upload options split three ways.
+react-dropzone is a file-selection primitive with no upload logic. Uppy, FilePond
+and upup are open-source uploaders you run against your own backend. UploadThing
+and Uploadcare are hosted services that also store your files. Pick by who owns
+the storage and how much UI you want.
+
+This page compares them side by side, then links to a detailed page for each
+pairing and to per-framework roundups.
+
+## Feature matrix
+
+| Feature                | upup                                            | Uppy                                         | FilePond                                                 | UploadThing                                   | react-dropzone                    | Uploadcare                              |
+| ---------------------- | ----------------------------------------------- | -------------------------------------------- | -------------------------------------------------------- | --------------------------------------------- | --------------------------------- | --------------------------------------- |
+| What it is             | Uploader library + optional server              | Uploader library + optional Companion server | Uploader component                                       | Hosted upload service + SDK                   | Drag-and-drop selection hook      | Hosted file service + uploader widget   |
+| Ready-made UI          | Yes                                             | Yes (Dashboard)                              | Yes                                                      | Yes (button and dropzone)                     | No, you render it                 | Yes                                     |
+| Frameworks             | React, Vue, Svelte, Angular, Preact, vanilla JS | Vanilla JS, React, Vue, Svelte, Angular      | Vanilla JS core + React, Vue, Angular, Svelte, jQuery    | React, Next.js and other framework adapters   | React only                        | Web components, usable in any framework |
+| Where files are stored | Your S3-compatible bucket                       | Your backend, tus server or S3 bucket        | Your server endpoint                                     | UploadThing's infrastructure                  | Wherever your own code sends them | Uploadcare's storage by default         |
+| Cloud-drive sources    | Google Drive, OneDrive, Dropbox, Box            | Many, via Companion                          | No                                                       | Not built in                                  | No                                | Yes, several                            |
+| Resumable uploads      | Yes (tus or S3 multipart)                       | Yes (tus or S3 multipart)                    | Chunked uploads to your server                           | Yes (since v7)                                | No                                | Multipart uploads for large files       |
+| Direct-to-S3           | Yes (presigned URLs, your bucket)               | Yes (AWS S3 plugin)                          | Not built in                                             | No, uploads go to UploadThing                 | You build it                      | Not by default; see their docs          |
+| Image editing          | Yes, React/Preact only                          | Yes (Image Editor plugin)                    | Crop/resize plugins; full editor is Pintura (commercial) | Not built in                                  | No                                | Yes                                     |
+| License / cost         | MIT, free                                       | MIT, free                                    | MIT, free                                                | MIT SDK; the service is paid with a free tier | MIT, free                         | Paid service with a free tier           |
+
+Hosted services change plans and limits often. For UploadThing and Uploadcare,
+see their pricing pages for current numbers.
+
+## The three kinds of upload library
+
+### Selection primitives
+
+[react-dropzone](/docs/comparisons/upup-vs-react-dropzone/) gives you a hook
+that turns an element into a drop target and hands you `File` objects. Upload
+requests, progress, retries, previews and storage are all yours to write. It is
+the right choice when you want total control over a small React UI and already
+have an upload path.
+
+### Self-hosted uploaders
+
+[Uppy](/docs/comparisons/upup-vs-uppy/),
+[FilePond](/docs/comparisons/upup-vs-filepond/) and upup ship a complete
+uploader (UI, progress, retries) but send files to storage you control. They
+differ mainly in where the UI comes from and how much server you need:
+
+- **Uppy** is a modular toolkit: pick plugins for the Dashboard, sources and
+  upload destination. Remote sources such as Google Drive go through
+  Companion, a server you run.
+- **FilePond** is a polished single component that posts files to your own
+  server endpoint, with plugins for previews and image transforms.
+- **upup** renders a native component per framework from one headless core,
+  uploads straight to an S3-compatible bucket with presigned URLs, and ships
+  `@useupup/server` for signing, multipart and cloud-drive transfers.
+
+### Hosted upload services
+
+[UploadThing](/docs/comparisons/upup-vs-uploadthing/) and Uploadcare run the
+storage for you. You trade monthly cost and vendor lock-in for zero bucket
+setup. Uploadcare adds a CDN and image transformations on top; UploadThing
+focuses on a type-safe upload flow for TypeScript full-stack apps.
+
+## How to choose
+
+1. **Do you need to own the storage?** For compliance, data residency or egress
+   control, rule out the hosted services and pick a self-hosted uploader.
+2. **Which frameworks do you ship?** react-dropzone is React-only. upup, Uppy
+   and FilePond cover the major frameworks.
+3. **Do users pick files from cloud drives?** upup and Uppy support Google
+   Drive, OneDrive, Dropbox and Box; Uploadcare supports cloud sources as a
+   hosted feature. FilePond and react-dropzone don't.
+4. **How large are the files?** For multi-gigabyte uploads, you need resumable
+   uploads: tus or S3 multipart in upup and Uppy.
+5. **How much UI do you want to build?** None: upup, Uppy, FilePond or a hosted
+   widget. All of it: react-dropzone.
+
+## Roundups by framework
+
+- [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/):
+  upup, react-dropzone, Uppy, FilePond, UploadThing and react-uploady.
+- [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/):
+  upup, vue-upload-component, PrimeVue FileUpload, FilePond and Uppy.
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/):
+  upup, ngx-file-drop, PrimeNG FileUpload, FilePond and Uppy.
+
+## Head-to-head comparisons
+
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
+- [upup vs react-dropzone](/docs/comparisons/upup-vs-react-dropzone/)
+- [UploadThing vs S3: a self-hosted alternative](/docs/comparisons/upup-vs-uploadthing/)
+
+## FAQ
+
+### What is the best JavaScript file upload library?
+
+It depends on the job. For a full uploader against your own S3-compatible
+storage across several frameworks, upup or Uppy. For one polished component
+posting to your own server, FilePond. For a bare React drop target,
+react-dropzone. For no storage setup at all, a hosted service such as
+UploadThing or Uploadcare.
+
+### Which file upload libraries are free and open source?
+
+upup, Uppy, FilePond and react-dropzone are MIT-licensed. UploadThing's SDK is
+MIT but the service it talks to is paid, with a free tier. Uploadcare is a paid
+service with a free tier.
+
+### Which libraries upload directly to S3?
+
+upup (presigned URLs, with `@useupup/server` or your own signing endpoint) and
+Uppy (its AWS S3 plugin). With FilePond or react-dropzone you write the S3
+signing and upload code yourself.
+
+### Which libraries support Google Drive and Dropbox?
+
+upup supports Google Drive, OneDrive, Dropbox and Box. Uppy supports those and
+more through its Companion server. Uploadcare supports cloud sources as part of
+its hosted service.
+
+## Next steps
+
+- [Quickstart for React](/docs/quickstarts/react/)
+- [Client mode vs server mode](/docs/guides/modes/)
+- [Storage providers](/docs/guides/storage-providers/)

@@ -112,6 +112,7 @@ export default async function DocsPage(props: {
                     url={url}
                     title={page.data.title}
                     description={page.data.description}
+                    faq={page.data.faq}
                 />
                 {/* prose-code:before/after content-none: the typography
                     plugin's default renders literal backtick glyphs around

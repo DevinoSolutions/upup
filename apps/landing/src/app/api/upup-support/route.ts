@@ -5,7 +5,7 @@ import {
     SUPPORT_REQUEST_SUBMITTED,
     buildFeedbackProperties,
 } from '@/lib/analytics/contract'
-import { serverDatasetCredentials } from '@/lib/analytics/dataset'
+import { serverDatasetCredentials } from '@/lib/analytics/dataset.server'
 import { sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
 import { clientIpFromHeaders, takeToken } from '@/lib/support/rate-limit'
