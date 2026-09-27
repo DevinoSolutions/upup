@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import {
     createElement,
     isValidElement,
@@ -97,6 +99,32 @@ function textContent(markup: string): string {
         .trim()
 }
 
+/** Every docs page URL, without the trailing slash. */
+function docsPageUrls(): Set<string> {
+    return new Set(source.getPages().map(page => page.url.replace(/\/$/, '')))
+}
+
+/** The /docs/ hrefs in rendered markup, in order. */
+function docsHrefs(markup: string): string[] {
+    return [...markup.matchAll(/href="(\/docs\/[^"#?]*)"/g)].map(
+        // next/link drops the trailing slash outside the Next runtime
+        // (trailingSlash is a next.config setting), so compare slashless
+        // paths.
+        match => match[1].replace(/\/$/, ''),
+    )
+}
+
+// Search Console shows the framework pages collecting "best/most popular
+// <framework> file upload" impressions at positions 43-60, while the docs
+// roundups that answer those queries had no link from them. React, Vue and
+// Angular link their own roundup; the others have none and link the hub.
+const ROUNDUPS: Partial<Record<FrameworkId, string>> = {
+    react: '/docs/comparisons/best-react-file-upload-libraries',
+    vue: '/docs/comparisons/best-vue-file-upload-libraries',
+    angular: '/docs/comparisons/best-angular-file-upload-libraries',
+}
+const COMPARISONS_HUB = '/docs/comparisons'
+
 describe('per-framework FAQ sets', () => {
     const homeQuestions = homeFaqs.map(faq => faq.question)
 
@@ -185,22 +213,11 @@ describe('framework guide section', () => {
     it.each(FRAMEWORK_IDS)(
         'links /%s/ to at least eight docs pages, every one of which exists',
         id => {
-            const validUrls = new Set(
-                source.getPages().map(page => page.url.replace(/\/$/, '')),
-            )
+            const validUrls = docsPageUrls()
             const markup = renderToStaticMarkup(
                 createElement(FrameworkGuide, { framework: id }),
             )
-            const docsLinks = [
-                ...new Set(
-                    [...markup.matchAll(/href="(\/docs\/[^"#?]*)"/g)].map(
-                        // next/link drops the trailing slash outside the
-                        // Next runtime (trailingSlash is a next.config
-                        // setting), so compare slashless paths.
-                        match => match[1].replace(/\/$/, ''),
-                    ),
-                ),
-            ]
+            const docsLinks = [...new Set(docsHrefs(markup))]
             expect(docsLinks.length).toBeGreaterThanOrEqual(8)
             expect(docsLinks).toContain(`/docs/quickstarts/${id}`)
             expect(docsLinks.filter(href => !validUrls.has(href))).toEqual([])
@@ -219,6 +236,50 @@ describe('framework guide section', () => {
                 expect(row.license.trim()).not.toBe('')
                 expect(markup).toContain(`>${row.name}</th>`)
             }
+        },
+    )
+
+    it.each(FRAMEWORK_IDS)(
+        'links /%s/ from under its comparison table to its own docs roundup, or to the comparisons hub when it has none',
+        id => {
+            const expected = ROUNDUPS[id] ?? COMPARISONS_HUB
+            const markup = renderToStaticMarkup(
+                createElement(FrameworkGuide, { framework: id }),
+            )
+            const tableEnd = markup.indexOf('</table>')
+            const keepReading = markup.indexOf('Keep reading')
+            expect(tableEnd).toBeGreaterThan(-1)
+            expect(keepReading).toBeGreaterThan(tableEnd)
+            expect(docsHrefs(markup.slice(tableEnd, keepReading))).toEqual([
+                expected,
+            ])
+            expect(
+                docsHrefs(markup).filter(href => href === expected),
+            ).toHaveLength(1)
+            expect(
+                docsPageUrls().has(expected),
+                `${expected} is a real docs page`,
+            ).toBe(true)
+        },
+    )
+
+    it.each(Object.keys(ROUNDUPS) as FrameworkId[])(
+        'links the %s docs roundup back to its framework page',
+        id => {
+            const mdx = readFileSync(
+                fileURLToPath(
+                    new URL(
+                        `../../content${ROUNDUPS[id]}.mdx`,
+                        import.meta.url,
+                    ),
+                ),
+                'utf8',
+            )
+            const siteLinks = [...mdx.matchAll(/\]\((\/[^)\s]*)\)/g)]
+                .map(match => match[1])
+                .filter(href => !href.startsWith('/docs/'))
+            expect(FRAMEWORK_IDS).toContain(id)
+            expect(siteLinks).toContain(`/${id}/`)
         },
     )
 })
