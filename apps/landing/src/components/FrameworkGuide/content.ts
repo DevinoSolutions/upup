@@ -272,7 +272,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
         notes: [
             {
                 title: 'Standalone or NgModule',
-                body: "UpupUploaderComponent is standalone (Angular 19+). Add it to a standalone component's imports or an NgModule's imports, and pass everything through its single config input.",
+                body: "UpupUploaderComponent is standalone (Angular 19–22). Add it to a standalone component's imports or an NgModule's imports, and pass everything through its single config input.",
             },
             {
                 title: 'Styles',
