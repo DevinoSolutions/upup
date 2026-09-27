@@ -151,7 +151,7 @@ function roundup(id: string, name: string): GuideLink {
 
 const COMPARISONS_HUB: GuideLink = {
     href: '/docs/comparisons/',
-    label: 'All upup comparisons',
+    label: 'all upup comparisons',
 }
 
 export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
