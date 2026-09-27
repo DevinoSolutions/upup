@@ -294,36 +294,45 @@ describe('docs folder hub pages', () => {
         expect(missing).toEqual([])
     })
 
-    it('links every breadcrumb middle crumb to its hub on a nested page', () => {
-        const graph = renderGraph(propsFor(['guides', 'storage', 'azure-blob']))
-        const list = graph.find(node => node['@type'] === 'BreadcrumbList')
-        expect(list?.itemListElement).toEqual([
-            {
-                '@type': 'ListItem',
-                position: 1,
-                name: 'Docs',
-                item: `${PRODUCTION_ORIGIN}/docs/`,
-            },
-            {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Guides',
-                item: `${PRODUCTION_ORIGIN}/docs/guides/`,
-            },
-            {
-                '@type': 'ListItem',
-                position: 3,
-                name: 'Storage',
-                item: `${PRODUCTION_ORIGIN}/docs/guides/storage/`,
-            },
-            {
-                '@type': 'ListItem',
-                position: 4,
-                name: 'Upload Files to Azure Blob Storage from the Browser',
-                item: `${PRODUCTION_ORIGIN}/docs/guides/storage/azure-blob/`,
-            },
-        ])
-    })
+    it.each([
+        {
+            page: 'guides/storage/azure-blob',
+            trail: [
+                ['Docs', '/docs/'],
+                ['Guides', '/docs/guides/'],
+                ['Storage', '/docs/guides/storage/'],
+                [
+                    'Upload Files to Azure Blob Storage from the Browser',
+                    '/docs/guides/storage/azure-blob/',
+                ],
+            ],
+        },
+        {
+            page: 'comparisons/best-angular-file-upload-libraries',
+            trail: [
+                ['Docs', '/docs/'],
+                ['Comparisons', '/docs/comparisons/'],
+                [
+                    'Best Angular File Upload Libraries Compared',
+                    '/docs/comparisons/best-angular-file-upload-libraries/',
+                ],
+            ],
+        },
+    ])(
+        'links every breadcrumb middle crumb to its hub on $page',
+        ({ page, trail }) => {
+            const graph = renderGraph(propsFor(page.split('/')))
+            const list = graph.find(node => node['@type'] === 'BreadcrumbList')
+            expect(list?.itemListElement).toEqual(
+                trail.map(([name, path], i) => ({
+                    '@type': 'ListItem',
+                    position: i + 1,
+                    name,
+                    item: `${PRODUCTION_ORIGIN}${path}`,
+                })),
+            )
+        },
+    )
 })
 
 describe('nested index pages map to their folder slug in the agent surfaces', () => {
