@@ -22,7 +22,12 @@ import { source } from '@/lib/docs/source'
 const PRODUCTION_ORIGIN = 'https://useupup.com'
 const CONTENT_DIR = new URL('../../content/docs/', import.meta.url)
 
-const HUBS = [{ slug: ['comparisons'], dir: 'comparisons' }] as const
+const HUBS = [
+    { slug: ['guides'], dir: 'guides' },
+    { slug: ['guides', 'storage'], dir: 'guides/storage' },
+    { slug: ['quickstarts'], dir: 'quickstarts' },
+    { slug: ['comparisons'], dir: 'comparisons' },
+] as const
 
 // Every docs page that carries `faq:` frontmatter, with its visible question
 // count. The FAQ page asks each question as a `## ` heading; every other page
@@ -204,6 +209,57 @@ describe('docs FAQPage JSON-LD is opt-in per page', () => {
     })
 })
 
+describe('docs BreadcrumbList JSON-LD meets the Google breadcrumb rules', () => {
+    // Google requires `item` on every ListItem except the last
+    // (https://developers.google.com/search/docs/appearance/structured-data/breadcrumb).
+    // schema.org alone accepts a name-only crumb, so this walks every docs page
+    // rather than a sample. The docs root renders <DocsHome/>, which emits no
+    // per-page JSON-LD.
+    const pages = source.getPages().filter(page => page.slugs.length > 0)
+    const docsUrls = new Set([
+        `${PRODUCTION_ORIGIN}/docs/`,
+        ...pages.map(page => `${PRODUCTION_ORIGIN}${normalizeUrl(page.url)}/`),
+    ])
+
+    it('numbers every trail 1..n and links every crumb but the last to a docs page', () => {
+        expect(pages.length).toBeGreaterThan(0)
+        const violations: string[] = []
+        for (const page of pages) {
+            const where = normalizeUrl(page.url)
+            const graph = renderGraph(propsFor(page.slugs))
+            const list = graph.find(node => node['@type'] === 'BreadcrumbList')
+            const crumbs = (list?.itemListElement ?? []) as {
+                '@type': string
+                position: number
+                name: string
+                item?: string
+            }[]
+            if (crumbs.length === 0) violations.push(`${where}: no ListItem`)
+            crumbs.forEach((crumb, i) => {
+                const label = `${where}: "${crumb.name}"`
+                if (crumb['@type'] !== 'ListItem')
+                    violations.push(`${label} is a ${crumb['@type']}`)
+                if (crumb.position !== i + 1)
+                    violations.push(
+                        `${label} at position ${crumb.position}, expected ${i + 1}`,
+                    )
+                if (crumb.item === undefined) {
+                    if (i < crumbs.length - 1)
+                        violations.push(`${label} has no item`)
+                } else if (!docsUrls.has(crumb.item)) {
+                    violations.push(
+                        `${label} item ${crumb.item} is not a docs page`,
+                    )
+                }
+            })
+            const last = crumbs[crumbs.length - 1]
+            if (last && last.item !== `${PRODUCTION_ORIGIN}${where}/`)
+                violations.push(`${where}: last crumb is not the page itself`)
+        }
+        expect(violations).toEqual([])
+    })
+})
+
 describe('docs folder hub pages', () => {
     it.each(HUBS)(
         'serves /docs/$dir/ as a page listed in the sitemap',
@@ -221,14 +277,62 @@ describe('docs folder hub pages', () => {
     it.each(HUBS)('links every child of $dir from its hub', ({ dir }) => {
         const hub = readContent(`${dir}/index.mdx`)
         const prefix = `/docs/${dir}/`
+        // A nested hub page itself is not linked: the docs link check
+        // (scripts/docs/check-links.mjs) still resolves guides/storage/index.mdx
+        // to /docs/guides/storage/index, so an MDX link to /docs/guides/storage/
+        // fails it. The nested hub's own children are linked from here too.
+        const nestedHubs = HUBS.map(other => `/docs/${other.dir}`).filter(
+            other => other.startsWith(prefix),
+        )
         const children = source
             .getPages()
             .map(page => normalizeUrl(page.url))
             .filter(url => url.startsWith(prefix))
+            .filter(url => !nestedHubs.includes(url))
         expect(children.length).toBeGreaterThan(0)
         const missing = children.filter(url => !hub.includes(`](${url}/)`))
         expect(missing).toEqual([])
     })
+
+    it.each([
+        {
+            page: 'guides/storage/azure-blob',
+            trail: [
+                ['Docs', '/docs/'],
+                ['Guides', '/docs/guides/'],
+                ['Storage', '/docs/guides/storage/'],
+                [
+                    'Upload Files to Azure Blob Storage from the Browser',
+                    '/docs/guides/storage/azure-blob/',
+                ],
+            ],
+        },
+        {
+            page: 'comparisons/best-angular-file-upload-libraries',
+            trail: [
+                ['Docs', '/docs/'],
+                ['Comparisons', '/docs/comparisons/'],
+                [
+                    'Best Angular File Upload Libraries Compared',
+                    '/docs/comparisons/best-angular-file-upload-libraries/',
+                ],
+            ],
+        },
+    ])(
+        'links every breadcrumb middle crumb to its hub on $page',
+        ({ page, trail }) => {
+            const graph = renderGraph(propsFor(page.split('/')))
+            const list = graph.find(node => node['@type'] === 'BreadcrumbList')
+            expect(list?.itemListElement).toEqual(
+                trail.map(([name, path], i) => ({
+                    '@type': 'ListItem',
+                    position: i + 1,
+                    name,
+                    item: `${PRODUCTION_ORIGIN}${path}`,
+                })),
+            )
+        },
+    )
 })
 
 describe('nested index pages map to their folder slug in the agent surfaces', () => {
@@ -260,16 +364,15 @@ describe('nested index pages map to their folder slug in the agent surfaces', ()
             expect(params).toContain(slug.join('/'))
         }
 
+        // The two-level hub: guides/storage/index.mdx.
         const res = await markdownTwin(
-            new Request(`${PRODUCTION_ORIGIN}/docs-md/comparisons/`),
-            { params: Promise.resolve({ slug: ['comparisons'] }) },
+            new Request(`${PRODUCTION_ORIGIN}/docs-md/guides/storage/`),
+            { params: Promise.resolve({ slug: ['guides', 'storage'] }) },
         )
         expect(res.status).toBe(200)
         expect(res.headers.get('link')).toBe(
-            `<${PRODUCTION_ORIGIN}/docs/comparisons/>; rel="canonical"`,
+            `<${PRODUCTION_ORIGIN}/docs/guides/storage/>; rel="canonical"`,
         )
-        expect(await res.text()).toMatch(
-            /^# JavaScript File Upload Libraries Compared\n/,
-        )
+        expect(await res.text()).toMatch(/^# Storage provider guides\n/)
     })
 })

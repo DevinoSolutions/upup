@@ -1,9 +1,9 @@
 ---
 title: Best React File Upload Libraries Compared
-description: React file upload libraries compared - upup, react-dropzone, Uppy, FilePond, UploadThing and react-uploady on drag and drop, S3 and resumable uploads.
+description: React file upload libraries compared - upup, react-dropzone, Uppy, FilePond, UploadThing, react-uploady and PrimeReact on S3, resumable uploads and licensing.
 faq:
     - q: What is the best file upload library for React?
-      a: For a complete uploader against your own storage, upup or Uppy. For the smallest possible building block, react-dropzone. For a hosted service, UploadThing.
+      a: For a complete uploader against your own storage, upup or Uppy. For the smallest possible building block, react-dropzone. For a hosted service, UploadThing. Inside a PrimeReact app, PrimeReact FileUpload.
     - q: Is react-dropzone enough on its own?
       a: Only if you write the rest. react-dropzone handles selecting files; you still need upload requests, progress, retries, error states and a storage backend.
     - q: Which React upload libraries upload directly to S3?
@@ -11,28 +11,30 @@ faq:
     - q: Which React upload libraries support resumable uploads?
       a: upup (tus or S3 multipart), Uppy (tus or S3 multipart), react-uploady (tus) and UploadThing. FilePond supports chunked uploads to your server.
     - q: Are these libraries free?
-      a: upup, react-dropzone, Uppy, FilePond and react-uploady are MIT-licensed. UploadThing's SDK is MIT, but the service it uploads to is paid with a free tier.
+      a: upup, react-dropzone, Uppy, FilePond and react-uploady are MIT-licensed. UploadThing's SDK is MIT, but the service it uploads to is paid with a free tier. PrimeReact is MIT through version 10; version 11 moved to the PrimeUI License, which is free for individuals and eligible small organizations and paid otherwise.
 ---
 
 **The short answer:** for a complete React uploader that sends files straight to
 your own S3-compatible bucket, with cloud drives and resumable uploads, use upup
 or Uppy. For a bare drop target you style yourself, use react-dropzone. For
 modular hooks, react-uploady. For one polished component, FilePond. For no
-storage setup at all, UploadThing's hosted service.
+storage setup at all, UploadThing's hosted service. If your app already uses
+PrimeReact, its FileUpload component is the smallest step.
 
-This roundup compares six React file upload libraries on the features that
+This roundup compares seven React file upload libraries on the features that
 decide most projects, then shows how to pick one.
 
 ## Comparison table
 
-| Library        | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                | Image editing                                            | License                         | Bundle approach                                         |
-| -------------- | ------------- | ------------------------------------ | ------------------------------ | --------------------------- | -------------------------------------------------------- | ------------------------------- | ------------------------------------------------------- |
-| upup           | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)        | Yes                                                      | MIT                             | Headless core + React UI; heavy features load on demand |
-| react-dropzone | Yes           | No                                   | No                             | You build it                | No                                                       | MIT                             | One small hook; no upload code                          |
-| Uppy           | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)         | Yes (Image Editor plugin)                                | MIT                             | Modular plugins; install only what you use              |
-| FilePond       | Yes           | No                                   | Chunked uploads to your server | Not built in                | Crop/resize plugins; full editor is Pintura (commercial) | MIT                             | Vanilla JS core + React adapter + plugins               |
-| UploadThing    | Yes           | Not built in                         | Yes (since v7)                 | No, files go to UploadThing | Not built in                                             | MIT SDK; hosted service is paid | SDK packages talking to a hosted service                |
-| react-uploady  | Yes           | No                                   | Yes, with its tus package      | Not built in                | No                                                       | MIT                             | Many small `@rpldy/*` packages; hooks-first             |
+| Library               | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                         | Image editing                                            | License                                                                        | Bundle approach                                         |
+| --------------------- | ------------- | ------------------------------------ | ------------------------------ | ------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| upup                  | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)                 | Yes                                                      | MIT                                                                            | Headless core + React UI; heavy features load on demand |
+| react-dropzone        | Yes           | No                                   | No                             | You build it                         | No                                                       | MIT                                                                            | One small hook; no upload code                          |
+| Uppy                  | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)                  | Yes (Image Editor plugin)                                | MIT                                                                            | Modular plugins; install only what you use              |
+| FilePond              | Yes           | No                                   | Chunked uploads to your server | Not built in                         | Crop/resize plugins; full editor is Pintura (commercial) | MIT                                                                            | Vanilla JS core + React adapter + plugins               |
+| UploadThing           | Yes           | Not built in                         | Yes (since v7)                 | No, files go to UploadThing          | Not built in                                             | MIT SDK; hosted service is paid                                                | SDK packages talking to a hosted service                |
+| react-uploady         | Yes           | No                                   | Yes, with its tus package      | Not built in                         | No                                                       | MIT                                                                            | Many small `@rpldy/*` packages; hooks-first             |
+| PrimeReact FileUpload | Yes           | No                                   | No                             | Not built in (custom upload handler) | No                                                       | v11+: PrimeUI License (paid, with a free community tier); v10 and earlier: MIT | Part of the PrimeReact component suite                  |
 
 ## The libraries
 
@@ -86,6 +88,19 @@ react-uploady is a hooks-first React upload library split into many small
 tus-based resumable uploads and more. You install the pieces you need and build
 the UI yourself from its hooks and components.
 
+### PrimeReact FileUpload
+
+FileUpload is one component in the PrimeReact suite. It offers drag and drop,
+multiple files, automatic upload, progress, and size and type validation, and
+it posts to a URL you give it or, with `customUpload`, hands the files to your
+own `uploadHandler`. Version 11 splits it into composable parts such as
+`FileUpload.Root` and `FileUpload.Trigger`, plus a headless `useFileUpload`
+hook; version 10 is a single component with basic and advanced modes.
+PrimeReact 10 and earlier are MIT-licensed. Version 11 moved to PrimeTek's
+PrimeUI License, which is free for individuals and eligible small
+organizations, paid otherwise, and requires a license key. It's the natural
+choice if PrimeReact is already your component library.
+
 ## How to choose
 
 - **You want it working today, on your own bucket:** upup or Uppy. Both ship a
@@ -96,6 +111,8 @@ the UI yourself from its hooks and components.
 - **You have a design system and want to build the UI:** react-dropzone for
   selection only, react-uploady for selection plus upload hooks, or upup's
   headless core.
+- **You already use PrimeReact:** start with PrimeReact FileUpload and switch
+  only if you need S3, cloud drives or resumable uploads.
 - **You don't want to run storage at all:** UploadThing. Check their pricing
   page against your expected volume and egress.
 - **You upload very large files:** pick a library with resumable uploads: upup,
@@ -134,7 +151,8 @@ server handlers; see the [Next.js quickstart](/docs/quickstarts/next/).
 
 For a complete uploader against your own storage, upup or Uppy. For the
 smallest possible building block, react-dropzone. For a hosted service,
-UploadThing. The table above shows the trade-offs.
+UploadThing. Inside a PrimeReact app, PrimeReact FileUpload. The table above
+shows the trade-offs.
 
 ### Is react-dropzone enough on its own?
 
@@ -156,7 +174,9 @@ and UploadThing. FilePond supports chunked uploads to your server.
 
 upup, react-dropzone, Uppy, FilePond and react-uploady are MIT-licensed.
 UploadThing's SDK is MIT, but the service it uploads to is paid with a free
-tier; see their pricing page.
+tier; see their pricing page. PrimeReact is MIT through version 10; version 11
+moved to the PrimeUI License, which is free for individuals and eligible small
+organizations and paid otherwise.
 
 ## Related comparisons
 
