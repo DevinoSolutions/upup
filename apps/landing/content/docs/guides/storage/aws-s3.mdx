@@ -14,6 +14,8 @@ browser `PUT`s straight to the bucket — see
 [Client Mode vs Server Mode](/docs/guides/modes/) for the split, and
 [S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/) for the
 response shape a client-mode endpoint must return.
+[Upload Files to S3 from React with Presigned URLs](/docs/guides/s3-presigned-url-upload-react/)
+builds that client-mode endpoint step by step with the AWS SDK v3.
 
 ## The config
 
@@ -149,6 +151,9 @@ that are never resumed.
 
 ## Next steps
 
+- [Upload Files to S3 from React with Presigned URLs](/docs/guides/s3-presigned-url-upload-react/)
+  — the client-mode flow written by hand: signing, a React upload with
+  progress, CORS, and 403 errors.
 - [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
   the shared `storage` config reference.
 - [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,

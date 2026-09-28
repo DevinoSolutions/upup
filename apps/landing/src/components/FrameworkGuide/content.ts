@@ -191,6 +191,10 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             PROPS_REFERENCE,
             ...SHARED_LINKS,
             {
+                href: '/docs/guides/s3-presigned-url-upload-react/',
+                label: 'Upload to S3 from React with presigned URLs',
+            },
+            {
                 href: '/docs/comparisons/upup-vs-react-dropzone/',
                 label: 'upup vs react-dropzone',
             },
