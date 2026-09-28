@@ -39,11 +39,12 @@ export default defineConfig({
         trace: 'retain-on-failure',
     },
     projects: [
-        // docs.spec.ts has no PostHog/dataset dependency — it runs standalone,
-        // independent of the flows -> ingestion ordering below.
+        // docs.spec.ts and seo-surfaces.spec.ts have no PostHog/dataset
+        // dependency — they run standalone, independent of the flows ->
+        // ingestion ordering below.
         {
             name: 'docs',
-            testMatch: /docs\.spec\.ts$/,
+            testMatch: /(docs|seo-surfaces)\.spec\.ts$/,
         },
         {
             name: 'flows',
