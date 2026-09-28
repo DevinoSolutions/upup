@@ -71,6 +71,15 @@ export default function DeferredInteractiveExample(
             ) : (
                 <DemoPlaceholder />
             )}
+            {/* The demo uploads for real (see DEMO_UPLOAD_TARGETS in
+                src/lib/interactive-example-props.ts), so say where files go. */}
+            <p
+                data-testid="demo-upload-notice"
+                className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400"
+            >
+                Uploads in this demo are real: files go to a demo storage
+                bucket, so don&apos;t upload anything private.
+            </p>
         </div>
     )
 }
