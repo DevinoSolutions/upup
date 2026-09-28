@@ -65,6 +65,11 @@ const FAQ_PAGES = [
         file: 'guides/storage/digitalocean-spaces.mdx',
         questions: 5,
     },
+    {
+        slug: ['guides', 's3-presigned-url-upload-react'],
+        file: 'guides/s3-presigned-url-upload-react.mdx',
+        questions: 4,
+    },
 ] as const
 
 const tree = toSidebarTree(source.pageTree)
