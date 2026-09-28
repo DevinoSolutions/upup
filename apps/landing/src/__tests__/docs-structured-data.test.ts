@@ -60,6 +60,11 @@ const FAQ_PAGES = [
         file: 'guides/storage/azure-blob.mdx',
         questions: 7,
     },
+    {
+        slug: ['guides', 'storage', 'digitalocean-spaces'],
+        file: 'guides/storage/digitalocean-spaces.mdx',
+        questions: 5,
+    },
 ] as const
 
 const tree = toSidebarTree(source.pageTree)
