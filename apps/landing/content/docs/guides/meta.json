@@ -9,6 +9,7 @@
         "auth",
         "storage-providers",
         "storage",
+        "s3-presigned-url-upload-react",
         "file-processing",
         "processing",
         "sources",

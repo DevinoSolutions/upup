@@ -1,12 +1,24 @@
 ---
 title: Upload Files to DigitalOcean Spaces from the Browser
-description: Upload files to DigitalOcean Spaces with upup — Spaces access keys, the regional S3 endpoint, CORS, the CDN, and a copy-paste React, Vue or plain JS config.
+description: Upload files to DigitalOcean Spaces from the browser with upup. Covers access keys, the regional endpoint, CORS, multipart uploads, the CDN and 403 errors.
+faq:
+    - q: Can I upload files to DigitalOcean Spaces directly from the browser?
+      a: Yes. Your server signs a short-lived presigned URL with a Spaces access key, and the browser sends the file straight to that URL. The key never reaches the browser. The Space needs a CORS rule that allows your origin, the PUT method and the Content-Type header.
+    - q: Does DigitalOcean Spaces support multipart uploads?
+      a: "Yes. Spaces implements the S3 multipart API: parts of at least 5 MiB (except the last) and up to 5 GB, up to 10,000 parts, and up to 5 TB per object. A single PUT is limited to 5 GB. In upup, multipart runs in server mode with resumable: { protocol: 'multipart' }, and the CORS rule must expose the ETag header."
+    - q: How large a file can I upload in the Spaces control panel?
+      a: The control panel uploads files smaller than 2 GB, in batches of fewer than 100 files. For larger files or batches, use an S3-compatible tool such as s3cmd or the AWS CLI, or the Spaces API with multipart uploads.
+    - q: Are files uploaded to a Space public?
+      a: No. Files in a Space are private by default, and @useupup/server uploads them without an ACL, so they stay private. Share them through presigned download URLs, or make individual files public in the control panel or with s3cmd setacl.
+    - q: Can I upload through the Spaces CDN endpoint?
+      a: Upload to the origin endpoint, such as nyc3.digitaloceanspaces.com, and use the CDN hostname for reads. Requests with presigned URLs are never cached by the CDN. DigitalOcean also caps PUT and multipart requests sent to the CDN with presigned URLs at 8100 KiB.
 ---
 
-DigitalOcean Spaces is S3-compatible object storage where the datacenter region
-is the whole configuration story: `nyc3`, `sfo3`, `ams3`, `fra1`, `sgp1`, and
-friends are simultaneously the `region` value and the endpoint hostname. Get
-those two to agree and Spaces behaves exactly like S3.
+DigitalOcean Spaces is S3-compatible object storage. It implements a subset of
+the S3 API that includes presigned URLs and multipart uploads, which covers
+every operation upup uses. The datacenter region (`nyc3`, `sfo3`, `ams3`,
+`fra1`, `sgp1` and the others) is part of the endpoint hostname, and the
+endpoint decides which datacenter receives a request.
 
 This page covers server mode, where [`@useupup/server`](/docs/guides/server-mode-setup/)
 holds the credentials. See [Client Mode vs Server Mode](/docs/guides/modes/) if
@@ -15,7 +27,7 @@ you would rather sign URLs yourself and have the browser upload directly.
 ## The config
 
 Only the `storage` block differs from the
-[AWS S3 example](/docs/guides/storage/aws-s3/) — keep `uploadTokenSecret` and the
+[AWS S3 example](/docs/guides/storage/aws-s3/). Keep `uploadTokenSecret` and the
 rest of the handler as they are there.
 
 ```ts
@@ -29,9 +41,9 @@ const storage = {
 }
 ```
 
-`bucket` is the Space name — DigitalOcean's UI says "Space", the S3 API says
-"bucket", and they are the same thing. The endpoint host is the **region**, not
-the Space: `https://nyc3.digitaloceanspaces.com`, never
+`bucket` is the Space name. DigitalOcean's UI says "Space" or "bucket", the S3
+API says "bucket", and they are the same thing. The endpoint host is the
+**region**, not the Space: `https://nyc3.digitaloceanspaces.com`, never
 `https://my-space.nyc3.digitaloceanspaces.com`. upup turns on path-style
 addressing whenever `endpoint` is set, so the Space name is added to the path
 for you; putting it in the hostname as well produces requests aimed at a Space
@@ -40,49 +52,236 @@ inside a Space.
 ## Console setup
 
 1. **Create the Space.** DigitalOcean control panel → Spaces Object Storage →
-   Create a Space, and pick the datacenter region. Set File Listing to
-   Restricted unless you specifically want the contents publicly enumerable.
-2. **Generate Spaces keys.** API → Spaces Keys → Generate New Key. The secret is
-   shown once. Newer accounts can scope a key to a single Space; scope it if you
-   can.
-3. **Add a CORS configuration** from the Space's Settings tab — the browser
-   uploads straight to Spaces by default in both client and server mode.
+   Create Bucket. Pick the datacenter region, which cannot be changed later,
+   and **Standard Storage**: Cold Storage buckets do not support CORS, so a
+   browser cannot upload to them. File listing is private by default; leave it
+   that way unless you want the contents publicly enumerable.
+2. **Create an access key.** Spaces Object Storage → Access Keys → Create
+   Access Key. Choose **Limited access** and give the key **Read/Write/Delete**
+   on this one bucket, which covers the object and multipart operations upup
+   performs. The secret key is shown once.
+3. **Add a CORS configuration** from the bucket's Settings tab, as described
+   below. The browser uploads straight to Spaces by default in both client and
+   server mode.
 
 <Callout type="warning" title="A DigitalOcean API token is not a Spaces key">
     Spaces access keys and DigitalOcean personal access tokens are different
     credentials issued from different pages. The API token that works with
-    `doctl` and the DigitalOcean API will not authenticate an S3 request — if
+    `doctl` and the DigitalOcean API will not authenticate an S3 request. If
     uploads come back as 403 with credentials you are sure are correct, check
-    that they came from the Spaces Keys page.
+    that they came from the Access Keys tab under Spaces Object Storage.
 </Callout>
 
 ### CORS
 
-Add an origin under the Space's Settings → CORS Configurations, allow `PUT`,
-`POST`, `GET`, and `HEAD`, and add `ETag` to the exposed headers so the browser
-can complete multipart uploads. This applies in both client and server mode: by
-default the browser uploads straight to Spaces either way, since server mode
-hands it a presigned URL instead of proxying the bytes. The exceptions are
-cloud-drive transfers (server-to-S3) and a deployment using
-`onPresignResponse` to rewrite the URL to a same-origin proxy. See
+In the bucket's Settings tab, under CORS Configurations, click Add. Enter your
+app's full origin (for example `https://app.example.com`; one wildcard is
+allowed in the hostname), allow `PUT` (plus `GET` and `HEAD` if the browser
+reads files back), and add `Content-Type` under Allowed Headers, because upup
+sends it with every upload. That is enough for single-request uploads.
+
+The control panel has no field for exposed headers. Multipart uploads need the
+`ETag` header exposed, so if you enable them, upload the rule as XML instead;
+see [Multipart uploads fail at the last step](#multipart-uploads-fail-at-the-last-step).
+
+CORS applies in both client and server mode: by default the browser uploads
+straight to Spaces either way, since server mode hands it a presigned URL
+instead of proxying the bytes. The exceptions are cloud-drive transfers
+(server to Spaces) and a deployment using `onPresignResponse` to rewrite the
+URL to a same-origin proxy. See
 [Credentials And CORS](/docs/credentials-configuration/).
+
+## Large files and multipart uploads
+
+A single `PUT` to Spaces can be up to 5 GB. Past that, or when you want uploads
+to survive a dropped connection, use multipart: Spaces accepts parts of at
+least 5 MiB (except the last) and up to 5 GB, up to 10,000 parts, and objects
+up to 5 TB.
+
+In upup, multipart is part of server mode. Turn it on in the uploader:
+
+```tsx
+<UpupUploader
+    mode="server"
+    serverUrl="/api/upup"
+    provider="digitalocean"
+    resumable={{ protocol: 'multipart' }}
+/>
+```
+
+Files of 5 MiB or more (`thresholdBytes`) are split into parts of at least
+5 MiB (`chunkSizeBytes`), and the part size grows for very large files so that
+no upload needs more than 10,000 parts. The `/multipart/*` routes of
+`@useupup/server` start, sign and complete the upload, each part goes to Spaces
+through its own presigned URL, and a failed part is retried without restarting
+the file. See [Resumable uploads](/docs/resumable-uploads/).
+
+Interrupted uploads keep their parts so a later attempt can continue
+([cross-reload resume](/docs/resumable-uploads/#cross-reload-resume) is on by
+default). Spaces deletes incomplete multipart uploads older than 30 days on its
+own, and a bucket lifecycle rule can remove them sooner.
 
 ## Serving files back through the CDN
 
 Each Space can enable a CDN endpoint on a hostname of the form
-`<space>.<region>.cdn.digitaloceanspaces.com`. That is a read path only — keep
-uploading to the origin endpoint in the config above, and use the CDN hostname
-when you build URLs for users. Uploading through the CDN hostname is not
-supported.
+`<space>.<region>.cdn.digitaloceanspaces.com`. Use it for reads, and keep
+uploading to the origin endpoint in the config above: requests with presigned
+URLs are never cached by the CDN, and DigitalOcean caps `PUT` and multipart
+requests sent to the CDN with presigned URLs at 8100 KiB.
 
-Objects are private unless you make them public, and the upload path above never
-changes an object's visibility.
+The CDN serves public files from its cache. A private file needs a presigned
+URL, which bypasses the cache and works on the CDN hostname only when it was
+generated in virtual-hosted style, so for private files the origin URL that
+upup returns is the simpler choice.
+
+## Troubleshooting
+
+### CORS preflight fails
+
+The browser console shows the `PUT` blocked by CORS policy. Check, in order:
+
+- The Space has a CORS rule, and it is a Standard Storage bucket. Cold Storage
+  buckets do not support CORS.
+- The origin matches exactly: scheme, host and port.
+- `PUT` is an allowed method, and `Content-Type` is an allowed header, along
+  with any other header your endpoint returns in `uploadHeaders`.
+- The browser is not reusing a cached preflight. DigitalOcean recommends an
+  Access Control Max Age of 5 seconds while you test.
+- If you read files through the CDN, purge its cache after changing CORS.
+  Responses cached before the change carry no CORS headers.
+
+### Multipart uploads fail at the last step
+
+Every part uploads, then completion fails. upup reads each part's `ETag`
+response header in the browser and sends the list to your server, which
+completes the upload with it. If the CORS rule does not expose `ETag`, the
+browser cannot read the header and Spaces rejects the part list.
+
+The control panel cannot set exposed headers, so upload the rule as XML with
+[s3cmd](https://docs.digitalocean.com/products/spaces/reference/s3cmd/),
+configured with the Space's region endpoint:
+
+```xml
+<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
+  <CORSRule>
+    <AllowedOrigin>https://app.example.com</AllowedOrigin>
+    <AllowedMethod>PUT</AllowedMethod>
+    <AllowedMethod>GET</AllowedMethod>
+    <AllowedMethod>HEAD</AllowedMethod>
+    <AllowedHeader>*</AllowedHeader>
+    <ExposeHeader>ETag</ExposeHeader>
+    <MaxAgeSeconds>3000</MaxAgeSeconds>
+  </CORSRule>
+</CORSConfiguration>
+```
+
+```sh
+s3cmd setcors cors.xml s3://my-space
+```
+
+Changing a bucket's CORS configuration through the API needs a **Full access**
+key. The Limited access key upup uses cannot do it, so run this with a separate
+key.
+
+### 403 SignatureDoesNotMatch
+
+Spaces computed a different signature from the one in the URL. The usual
+causes:
+
+- The credentials are not a Spaces access key. A DigitalOcean API token, or a
+  mistyped secret, produces a signature Spaces cannot match.
+- The browser sent a different `Content-Type` from the one that was signed.
+  `@useupup/server` signs the content type and length and returns the
+  `Content-Type` header in `uploadHeaders`, which upup sends unchanged. A
+  client-mode endpoint that signs a content type must return it the same way;
+  see [S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/).
+- The URL changed after signing. A presigned URL is bound to its host and
+  path, so moving a path-style URL onto the CDN hostname, or rewriting it into
+  virtual-hosted style, breaks the signature.
+
+### Other 403 errors on the upload
+
+- The key lacks write access. A Limited access key with only Read permission on
+  the bucket cannot upload; it needs Read/Write/Delete.
+- The presigned URL expired before the upload started. Keep `expiresIn` longer
+  than the time between signing and uploading, and keep the server's clock
+  synced: presigned URLs are time-scoped.
+
+### Uploaded files return 403 when opened
+
+Files in a Space are private by default, and `@useupup/server` uploads without
+an ACL, so a plain `https://my-space.nyc3.digitaloceanspaces.com/<key>` link
+returns 403. Either:
+
+- Share them through presigned download URLs. `@useupup/server` returns a
+  signed `downloadUrl` with each upload, valid for `downloadUrlExpiresIn`
+  seconds (three days by default).
+- Make them public: in the control panel, open the Files tab, then the file's
+  **…** menu → **Manage Permissions** → **Public**, or run
+  `s3cmd setacl s3://my-space/<key> --acl-public`.
+
+The bucket's File Listing setting is separate. It controls whether anyone can
+list the Space's keys, not whether a file can be read.
+
+### The CDN serves an old file
+
+The CDN keeps each file for the edge cache TTL, one hour by default.
+`@useupup/server`'s default key layout puts a random UUID in every key, so a
+new upload never replaces a cached file. Stale content comes from objects you
+overwrite at the same key, or from responses cached before a CORS change. Purge them in the
+control panel (the bucket's Settings tab → CDN → Purge CDN Cache, or a file's
+**…** menu → Purge from CDN cache) or with `doctl`:
+
+```sh
+doctl compute cdn flush <cdn-id> --files /path/to/file.jpg
+```
+
+`doctl` authenticates with a DigitalOcean API token, not a Spaces key.
+
+## FAQ
+
+### Can I upload files to DigitalOcean Spaces directly from the browser?
+
+Yes. Your server signs a short-lived presigned URL with a Spaces access key, and
+the browser sends the file straight to that URL. The key never reaches the
+browser. The Space needs a CORS rule that allows your origin, the `PUT` method
+and the `Content-Type` header.
+
+### Does DigitalOcean Spaces support multipart uploads?
+
+Yes. Spaces implements the S3 multipart API: parts of at least 5 MiB (except
+the last) and up to 5 GB, up to 10,000 parts, and up to 5 TB per object. A
+single `PUT` is limited to 5 GB. In upup, multipart runs in server mode with
+`resumable: { protocol: 'multipart' }`, and the CORS rule must expose the
+`ETag` header.
+
+### How large a file can I upload in the Spaces control panel?
+
+The control panel uploads files smaller than 2 GB, in batches of fewer than 100
+files. For larger files or batches, use an S3-compatible tool such as `s3cmd`
+or the AWS CLI, or the Spaces API with multipart uploads.
+
+### Are files uploaded to a Space public?
+
+No. Files in a Space are private by default, and `@useupup/server` uploads them
+without an ACL, so they stay private. Share them through presigned download
+URLs, or make individual files public in the control panel or with
+`s3cmd setacl`.
+
+### Can I upload through the Spaces CDN endpoint?
+
+Upload to the origin endpoint, such as `nyc3.digitaloceanspaces.com`, and use
+the CDN hostname for reads. Requests with presigned URLs are never cached by the
+CDN. DigitalOcean also caps `PUT` and multipart requests sent to the CDN with
+presigned URLs at 8100 KiB.
 
 ## Next steps
 
-- [Storage Providers](/docs/guides/storage-providers/) — the provider matrix and
+- [Storage Providers](/docs/guides/storage-providers/): the provider matrix and
   the shared `storage` config reference.
-- [Server Mode — Setup](/docs/guides/server-mode-setup/) — `getUserId`,
+- [Server Mode Setup](/docs/guides/server-mode-setup/): `getUserId`,
   `providers`, `tokenStore`, and tuning.
-- [Client Mode vs Server Mode](/docs/guides/modes/) — which one you want and what
+- [Client Mode vs Server Mode](/docs/guides/modes/): which one you want and what
   changes on the wire.
+- [DigitalOcean Spaces documentation](https://docs.digitalocean.com/products/spaces/):
+  limits, CORS and CDN reference.
