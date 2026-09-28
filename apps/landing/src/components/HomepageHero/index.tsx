@@ -266,9 +266,15 @@ export default function HeroSection({
                         </div>
 
                         {/* Install Command with Package Manager Select — the page's
-                            ONE install surface. Behaviour is unchanged. */}
+                            ONE install surface. `relative z-30` because
+                            `.hero-rise` leaves a transform behind (fill-mode
+                            both), which makes this wrapper its own stacking
+                            context: the menu's z-50 only counts inside it.
+                            Without a z-index here the agent-setup pill and the
+                            hero visual, later in the DOM, paint over the open
+                            menu on stacked layouts and swallow its taps. */}
                         <div
-                            className="hero-rise w-full max-w-lg mx-auto lg:mx-0"
+                            className="hero-rise relative z-30 w-full max-w-lg mx-auto lg:mx-0"
                             style={rise(0.45)}
                         >
                             {/* Flat hairline surface — the page's ONE install
