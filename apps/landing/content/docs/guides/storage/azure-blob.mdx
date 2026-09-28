@@ -1,6 +1,6 @@
 ---
-title: Upload Files to Azure Blob Storage from the Browser
-description: Upload files and images to Azure Blob Storage from the browser with a SAS URL. Create the SAS, send x-ms-blob-type, set CORS, and fix 403 errors.
+title: Browser Uploads to Azure Blob Storage with JavaScript
+description: Upload files and images to Azure Blob Storage from the browser with JavaScript and a SAS URL. Test the SAS with the Azure CLI, set CORS, fix 403s.
 faq:
     - q: Can the browser upload to Azure Blob Storage without exposing the account key?
       a: Yes, and it should. Your server signs a SAS for one blob with the account key or a user delegation key and returns only the finished URL. The browser never sees the key, and the SAS can do nothing beyond writing that one blob until it expires.
@@ -14,6 +14,8 @@ faq:
       a: As large as one Put Blob request allows for your account's service version, since upup sends each file in a single PUT. Set maxFileSize below that limit. Resumable multipart in upup targets S3, not Azure.
     - q: Why does the upload work with curl but fail in the browser?
       a: curl doesn't do CORS. If the same SAS URL and headers succeed from curl but fail in the browser, the storage account's CORS rule is missing or doesn't match your origin, method or headers.
+    - q: How do I upload a file to Azure Blob Storage with the Azure CLI?
+      a: Run az storage blob upload with --account-name, --container-name, --name and --file, plus --auth-mode login to use your Microsoft Entra ID sign-in. That sign-in needs a data role such as Storage Blob Data Contributor on the account. To use a SAS instead, pass --sas-token in place of --auth-mode login. The CLI suits scripts and CI; users uploading from a web page need a SAS URL from your server.
 ---
 
 **The short answer:** to upload a file to Azure Blob Storage from the browser,
@@ -22,9 +24,9 @@ to that URL with the header `x-ms-blob-type: BlockBlob`. The storage account
 needs a CORS rule that allows your origin. The account key never reaches the
 browser.
 
-This tutorial walks through every step: the container, the SAS (from the az CLI,
-the portal and Node), CORS, the upload itself, and the errors you will hit on
-the way. It uses upup's uploader for the browser side, but the Azure setup is
+This tutorial walks through every step: the container, the SAS (from the
+portal and Node), a command-line test with the Azure CLI and `curl`, CORS, the
+upload itself in JavaScript, and the errors you will hit on the way. It uses upup's uploader for the browser side, but the Azure setup is
 the same whatever sends the `PUT`.
 
 <Callout type="info" title="Client mode only">
@@ -83,39 +85,8 @@ resource until an expiry time. For a browser upload you want:
 - **Expiry:** minutes, not days.
 - **Protocol:** HTTPS only.
 
-### With the az CLI
-
-Useful for testing the whole flow before you write any code:
-
-```sh
-az storage blob generate-sas \
-  --account-name mystorageacct \
-  --container-name uploads \
-  --name photo.jpg \
-  --permissions cw \
-  --expiry "$(date -u -d '+30 minutes' '+%Y-%m-%dT%H:%MZ')" \
-  --https-only \
-  --auth-mode login --as-user \
-  --full-uri \
-  --output tsv
-```
-
-`--auth-mode login --as-user` signs with a user delegation key from your Entra
-ID sign-in, which needs a data-plane role such as Storage Blob Data Contributor
-on the account, and a user delegation SAS can be valid for at most seven days.
-Use `--account-key` instead to sign with the account key. The `date -u -d`
-syntax is GNU `date`; on macOS, type an ISO 8601 UTC time a few minutes ahead.
-`--full-uri` prints the complete blob URL with the SAS attached.
-
-Test it with `curl`. A `201 Created` means the SAS and headers are right:
-
-```sh
-curl -X PUT \
-  -H "x-ms-blob-type: BlockBlob" \
-  -H "Content-Type: image/jpeg" \
-  --data-binary @photo.jpg \
-  "https://mystorageacct.blob.core.windows.net/uploads/photo.jpg?<sas>"
-```
+In production your backend signs a fresh SAS for each file (step 5). To try the
+flow first, generate one from the command line (step 3) or the portal.
 
 ### In the portal
 
@@ -126,12 +97,68 @@ and URL**. That produces a container-level SAS; to upload a file, insert the
 blob name into the URL path before the `?`.
 
 Portal-generated tokens are for testing. In production your server creates a
-fresh one per file, as in step 4.
+fresh one per file, as in step 5.
 
-### Uploading from the CLI instead
+## 3. Test the SAS URL from the command line
 
-If you searched for `az storage blob upload`: that command uploads a local file
-from a machine you control, with your own credentials. No SAS is involved:
+Before you write any backend code, check the storage side with the
+[Azure CLI](https://learn.microsoft.com/cli/azure/) and `curl`. If an upload
+works here, anything that still fails in the browser is CORS or your endpoint,
+not the SAS.
+
+Your Microsoft Entra ID account needs a data role such as **Storage Blob Data
+Contributor** on the storage account for the commands below. Owning the account
+is not enough: data operations need their own role assignment.
+
+### Generate a user delegation SAS
+
+```sh
+SAS=$(az storage container generate-sas \
+  --account-name mystorageacct \
+  --name uploads \
+  --permissions cw \
+  --expiry "$(date -u -d '30 minutes' '+%Y-%m-%dT%H:%MZ')" \
+  --https-only \
+  --auth-mode login --as-user \
+  --output tsv)
+```
+
+`--as-user` signs the SAS with a user delegation key from your Entra ID sign-in
+instead of the account key. It requires `--auth-mode login` and `--expiry`, and
+a user delegation SAS is valid for at most seven days. `--permissions cw`
+allows create and write only, `--https-only` rejects plain HTTP, and
+`--output tsv` prints the bare token rather than a quoted JSON string. The
+`date -u -d` syntax is GNU `date`; on macOS, type an ISO 8601 UTC time a few
+minutes ahead.
+
+This SAS covers every blob in the `uploads` container, which is fine for a
+test. Your backend should scope each SAS to one blob instead:
+`az storage blob generate-sas` takes the same flags plus `--container-name` and
+the blob `--name`, and `--full-uri` prints the complete blob URL with the SAS
+attached.
+
+### Upload with curl
+
+Send the same request the browser will send, a Put Blob with the blob-type
+header:
+
+```sh
+curl -i -X PUT \
+  -H "x-ms-blob-type: BlockBlob" \
+  -H "Content-Type: image/jpeg" \
+  --data-binary @photo.jpg \
+  "https://mystorageacct.blob.core.windows.net/uploads/photo.jpg?$SAS"
+```
+
+A `201 Created` status means the SAS, its permissions and the headers are
+right. curl does not do CORS, so a `403` here comes from the SAS or the
+account's network rules, never from a CORS rule; see
+[Troubleshooting](#troubleshooting).
+
+### Upload with az storage blob upload
+
+To upload a local file from a machine you control, you don't need a SAS at all.
+`az storage blob upload` authenticates with your own sign-in:
 
 ```sh
 az storage blob upload \
@@ -142,10 +169,12 @@ az storage blob upload \
   --auth-mode login
 ```
 
-It is the right tool for scripts and CI, not for end users uploading from a web
-page. Those need the SAS flow in this tutorial.
+The command fails if the blob already exists; add `--overwrite` to replace it.
+To test the SAS itself with the CLI, replace `--auth-mode login` with
+`--sas-token "$SAS"`. The CLI is the right tool for scripts and CI, not for end
+users uploading from a web page. Those need the SAS flow in this tutorial.
 
-## 3. Configure CORS on the storage account
+## 4. Configure CORS on the storage account
 
 The browser's `PUT` goes to `<account>.blob.core.windows.net`, a different
 origin from your app, and it carries a custom `x-ms-blob-type` header, so the
@@ -172,7 +201,7 @@ you send (`x-ms-blob-type`, `Content-Type`), and exposed header `ETag`.
 Unlike S3, Azure CORS is an **account-level setting per service**, not a
 per-container one. Every container in the account shares it.
 
-## 4. Issue the SAS from your backend
+## 5. Issue the SAS from your backend
 
 This is **your own backend code**, not part of upup. It is a minimal Express
 route that returns upup's presign contract with
@@ -259,7 +288,7 @@ A Next.js route handler works the same way: parse the body with
     ever receive the finished URL.
 </Callout>
 
-## 5. Point upup at the endpoint
+## 6. Point upup at the endpoint
 
 ```tsx
 import { UpupUploader } from '@useupup/react'
@@ -432,6 +461,16 @@ limit. Resumable multipart in upup targets S3, not Azure.
 curl doesn't do CORS. If the same SAS URL and headers succeed from curl but
 fail in the browser, the storage account's CORS rule is missing or doesn't
 match your origin, method or headers.
+
+### How do I upload a file to Azure Blob Storage with the Azure CLI?
+
+Run `az storage blob upload` with `--account-name`, `--container-name`,
+`--name` and `--file`, plus `--auth-mode login` to use your Microsoft Entra ID
+sign-in. That sign-in needs a data role such as Storage Blob Data Contributor
+on the account. To use a SAS instead, pass `--sas-token` in place of
+`--auth-mode login`. The CLI suits scripts and CI; users uploading from a web
+page need a SAS URL from your server. The full commands are in
+[step 3](#3-test-the-sas-url-from-the-command-line).
 
 ## Next steps
 
