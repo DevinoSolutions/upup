@@ -175,7 +175,7 @@ export const FRAMEWORK_PACKAGES: readonly FrameworkPackage[] = [
         id: 'angular',
         name: 'Angular',
         pkg: '@useupup/angular',
-        detect: '`@angular/core` (17+) in package.json dependencies',
+        detect: '`@angular/core` (19–22) in package.json dependencies',
         quickstart: '/docs/quickstarts/angular/',
         snippet: [
             "import { Component } from '@angular/core'",
