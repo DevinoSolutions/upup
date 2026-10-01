@@ -4,8 +4,10 @@ import '@useupup/interactive-example/styles'
 import DeferredInteractiveExample from '@/components/DeferredInteractiveExample'
 import { interactiveExampleEnvProps } from '@/lib/interactive-example-props'
 import { FRAMEWORK_IDS, getFramework } from '@/lib/frameworks'
+import { faqsFor } from '@/lib/faqs'
 import StructuredData from '@/components/StructuredData'
 import HeroSection from '@/components/HomepageHero'
+import FrameworkGuide from '@/components/FrameworkGuide'
 import HomepageFeatures from '@/components/HomepageFeatures'
 import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import FeedbackSection from '@/components/FeedbackSection'
@@ -62,6 +64,12 @@ export async function generateMetadata({
     }
 }
 
+// The same layout as the home page (src/app/page.tsx), parameterized by
+// framework — never a separate design. Three things differ, all so each page
+// carries content of its own instead of duplicating the home page: the
+// FrameworkGuide block (quickstart, notes, comparison, docs links), this
+// framework's own FAQ set (visible accordion AND FAQPage JSON-LD read the same
+// faqsFor() list), and a BreadcrumbList emitted by StructuredData.
 export default async function FrameworkPage({
     params,
 }: {
@@ -92,9 +100,10 @@ export default async function FrameworkPage({
                     )}
                 />
             </Section>
+            <FrameworkGuide framework={fw.id} />
             <HomepageFeatures />
             {fw.id === 'react' && <StackBlitzDemoSection />}
-            <FAQSection />
+            <FAQSection items={faqsFor(fw.id)} frameworkName={fw.name} />
             <FeedbackSection />
             <Toast />
         </>

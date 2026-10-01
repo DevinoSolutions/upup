@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { FaCrop, FaSyncAlt, FaPen, FaSlidersH } from 'react-icons/fa'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
@@ -88,7 +88,7 @@ function MockImageEditor({
         <div className="flex h-full flex-col gap-3 rounded-xl bg-[#0b1120] p-3 ring-1 ring-white/10">
             {/* Preview */}
             <div className="relative flex-1 overflow-hidden rounded-lg">
-                <motion.div
+                <m.div
                     className="absolute inset-0"
                     animate={{ rotate }}
                     transition={
@@ -128,10 +128,10 @@ function MockImageEditor({
                         />
                         <path d="M0 160 L54 108 L104 160 Z" fill="#3f6b41" />
                     </svg>
-                </motion.div>
+                </m.div>
 
                 {/* Warm filter tint (adjust tool). */}
-                <motion.span
+                <m.span
                     className="absolute inset-0 bg-gradient-to-br from-orange-400/30 to-fuchsia-500/25 mix-blend-overlay"
                     initial={false}
                     animate={{ opacity: filter ? 1 : 0 }}
@@ -144,7 +144,7 @@ function MockImageEditor({
                     className="absolute inset-0 h-full w-full"
                     aria-hidden="true"
                 >
-                    <motion.path
+                    <m.path
                         d="M48 118 C74 92, 104 132, 138 96"
                         fill="none"
                         stroke="#f43f5e"
@@ -164,7 +164,7 @@ function MockImageEditor({
                     className="absolute inset-0 h-full w-full"
                     aria-hidden="true"
                 >
-                    <motion.rect
+                    <m.rect
                         x="26"
                         y="22"
                         width="172"
@@ -195,7 +195,7 @@ function MockImageEditor({
                 {TOOLS.map((Icon, i) => {
                     const on = i === tool
                     return (
-                        <motion.span
+                        <m.span
                             key={i}
                             className="flex h-7 w-7 items-center justify-center rounded-lg ring-1"
                             animate={{
@@ -213,7 +213,7 @@ function MockImageEditor({
                             <Icon
                                 className={`h-3.5 w-3.5 ${on ? 'text-sky-300' : 'text-gray-400'}`}
                             />
-                        </motion.span>
+                        </m.span>
                     )
                 })}
             </div>

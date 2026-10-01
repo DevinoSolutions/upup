@@ -8,6 +8,7 @@ import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
 import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
+import { MotionProvider } from '@/components/motion-provider'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import EntityStructuredData from '@/components/StructuredData/EntityStructuredData'
@@ -158,30 +159,6 @@ export default function RootLayout({
                     page — the 64 docs pages are the bulk of the indexable
                     surface and they mount no page-level <StructuredData/>. */}
                 <EntityStructuredData />
-                {process.env.NODE_ENV === 'production' && (
-                    <>
-                        {/* lazyOnload: Hotjar is session-recording, never
-                            needed for the page to work, and on a throttled
-                            phone its loader competed with hydration for the
-                            main thread. */}
-                        <Script
-                            defer
-                            strategy="lazyOnload"
-                            dangerouslySetInnerHTML={{
-                                __html: `
-                              (function(h,o,t,j,a,r){
-                                  h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-                                  h._hjSettings={hjid:6368230,hjsv:6};
-                                  a=o.getElementsByTagName('head')[0];
-                                  r=o.createElement('script');r.async=1;
-                                  r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-                                  a.appendChild(r);
-                              })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
-                            `,
-                            }}
-                        />
-                    </>
-                )}
             </head>
             <body
                 className={`overflow-x-hidden ${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--bg-base)]`}
@@ -192,15 +169,17 @@ export default function RootLayout({
                 <PostHogProvider>
                     <Providers>
                         <ThemeProvider>
-                            <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
-                                <Navbar />
-                                {/* The single main landmark for every page —
-                                    pages must not render their own <main>. */}
-                                <main className="flex w-full flex-1 flex-col">
-                                    {children}
-                                </main>
-                                <Footer />
-                            </div>
+                            <MotionProvider>
+                                <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
+                                    <Navbar />
+                                    {/* The single main landmark for every page —
+                                        pages must not render their own <main>. */}
+                                    <main className="flex w-full flex-1 flex-col">
+                                        {children}
+                                    </main>
+                                    <Footer />
+                                </div>
+                            </MotionProvider>
                         </ThemeProvider>
                     </Providers>
                 </PostHogProvider>

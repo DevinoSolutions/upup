@@ -33,7 +33,7 @@ export async function generateMetadata({
     if (!agent) return {}
     return {
         title: `Set up upup with ${agent.name}`,
-        description: `What ${agent.name} installs and wires when you paste the upup agent-setup prompt: the matching @useupup package, the uploader mount, the presign route, and a verified context block in ${agent.contextPath}.`,
+        description: `What ${agent.name} does with the upup setup prompt: installs the right @useupup package, mounts the uploader, adds a presign route, and writes ${agent.contextPath}.`,
         alternates: { canonical: canonicalUrl(`agent-setup/${agent.id}`) },
     }
 }

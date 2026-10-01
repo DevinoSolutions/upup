@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { SiGoogledrive, SiDropbox, SiBox } from 'react-icons/si'
 import { GrOnedrive } from 'react-icons/gr'
 import MockUploader from './MockUploader'
@@ -226,7 +226,7 @@ export default function DriveScene({
             {/* Provider caption — reinforces which drive is on stage this loop. */}
             <div className="mt-4 flex h-5 items-center justify-center">
                 <AnimatePresence mode="wait">
-                    <motion.p
+                    <m.p
                         key={provider.name}
                         className="flex items-center gap-1.5 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
                         initial={frozen ? false : { opacity: 0, y: 6 }}
@@ -239,7 +239,7 @@ export default function DriveScene({
                             style={{ color: provider.color }}
                         />
                         Import straight from {provider.name}
-                    </motion.p>
+                    </m.p>
                 </AnimatePresence>
             </div>
         </div>
