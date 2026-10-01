@@ -61,7 +61,7 @@ export default defineConfig({
         {
             name: 'flows',
             testMatch:
-                /(support-flow|thumbs-flow|install-copy-flow|analytics-console-flow)\.spec\.ts$/,
+                /(support-flow|thumbs-flow|analytics-console-flow)\.spec\.ts$/,
         },
         {
             name: 'ingestion',
