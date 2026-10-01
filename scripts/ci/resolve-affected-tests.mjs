@@ -219,7 +219,8 @@ export const IMPACT_RULES = [
     {
         // The docs live in apps/landing (MDX under content/docs, served at
         // /docs by fumadocs) and are proven by the `docs` Playwright project in
-        // apps/e2e-test/landing. The landing app also renders a live creds-free
+        // apps/e2e-test/landing (plus the `demo` project, which uploads through
+        // the landing app's /api/upup mount). The landing app renders a live
         // uploader demo built from @useupup/{core,react,server} + the private
         // interactive-example, so a change to ANY landing-consumed package can
         // regress the docs surface — those are exactly apps/landing/package.json's
