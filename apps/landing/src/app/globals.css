@@ -2,15 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Stopgap for #472 — delete once it merges (the landing builds
-   @useupup/react from the workspace). @scaleflex/ui portals the image
-   editor's menus (watermark type, zoom, font, colour) to <body> at
-   z-index 1300, under the inline editor (z-9999) and the modal
-   (z-2147483647), so they opened out of sight on the demos. */
-.SfxPopper-wrapper {
-    z-index: 2147483647 !important;
-}
-
 /* ── Dark-radiant design tokens ──────────────────────────────────
    Themed by the .dark class toggle (app/theme-provider.tsx sets
    documentElement.className), NOT prefers-color-scheme. :root holds
