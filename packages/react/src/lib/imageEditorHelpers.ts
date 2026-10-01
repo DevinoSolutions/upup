@@ -104,6 +104,14 @@ export function getImageEditorCssOverrides(isDarkTheme: boolean): string {
         .FIE_root {
             height: 100% !important;
         }
+
+        /* @scaleflex/ui portals its menus (watermark type, zoom, font,
+           colour) to <body> at z-index 1300 — under the inline editor
+           (z-9999) and the modal (z-2147483647) — so they opened out of
+           sight. */
+        .SfxPopper-wrapper {
+            z-index: 2147483647 !important;
+        }
     `
 
     return isDarkTheme
