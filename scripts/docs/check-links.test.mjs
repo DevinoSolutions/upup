@@ -45,6 +45,23 @@ test('a corpus of valid links, anchors, and redirects passes with no failures', 
     assert.equal(counts.redirectsChecked, 1)
 })
 
+test('a link to a folder hub (guides/index.mdx) resolves at the folder URL', () => {
+    // content/guides/index.mdx is served at /docs/guides/, like the root
+    // index.mdx at /docs/. Before the slug walker stripped nested `index`
+    // segments this corpus failed with "page /docs/guides does not exist".
+    const { failures, counts } = checkDocsLinks({
+        contentDir: fixture('nested-index', 'content'),
+        nextConfigPath: fixture('nested-index', 'redirects.config.txt'),
+    })
+    assert.deepEqual(failures, [], JSON.stringify(failures, null, 2))
+    assert.equal(counts.pages, 3)
+    assert.ok(
+        counts.anchorsChecked >= 1,
+        'expected the hub anchor to be walked',
+    )
+    assert.equal(counts.redirectsChecked, 1)
+})
+
 test('a config the redirects scanner cannot parse fails instead of dropping the leg to zero', () => {
     const { failures } = checkDocsLinks({
         contentDir: fixture('valid', 'content'),

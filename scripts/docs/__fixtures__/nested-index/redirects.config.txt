@@ -1,0 +1,13 @@
+// Fixture standing in for apps/landing/next.config.mjs — a legacy section URL
+// redirected onto a folder hub page (content/guides/index.mdx).
+const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/documentation/guides',
+                destination: '/docs/guides/',
+                permanent: true,
+            },
+        ]
+    },
+}

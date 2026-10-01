@@ -72,6 +72,22 @@ describe('sitemap enumerates only canonical, indexable page URLs', () => {
         expect(entries).toHaveLength(1 + 6 + 2 + 1 + 4 + 73)
     })
 
+    it('lists the docs folder hubs the breadcrumb middle crumbs link to', () => {
+        // Before these hub pages existed, /docs/guides/, /docs/guides/storage/
+        // and /docs/quickstarts/ were 404s and the "Guides" / "Storage"
+        // breadcrumb crumbs had no URL at all. /docs/comparisons/ arrived as a
+        // hub with the comparison pages (#446).
+        const urls = entries.map(entry => entry.url)
+        for (const hub of [
+            'guides',
+            'guides/storage',
+            'quickstarts',
+            'comparisons',
+        ]) {
+            expect(urls).toContain(`${PRODUCTION_ORIGIN}/docs/${hub}/`)
+        }
+    })
+
     it('points every entry at the production origin with the trailing slash the site actually serves', () => {
         for (const entry of entries) {
             expect(entry.url.startsWith(`${PRODUCTION_ORIGIN}/`)).toBe(true)
