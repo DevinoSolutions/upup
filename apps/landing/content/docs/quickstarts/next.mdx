@@ -35,8 +35,9 @@ export default function Uploader() {
 ```
 
 That's **client mode** — the browser uploads directly to your storage and needs no
-server package. To proxy uploads and cloud drives through your own server, point
-the same component at the handler below:
+server package. To have `@useupup/server` sign uploads and run cloud drives on
+your own server, point the same component at the handler below — file bytes
+still go straight from the browser to your bucket:
 
 ```tsx
 <UpupUploader mode="server" serverUrl="/api/upup" />

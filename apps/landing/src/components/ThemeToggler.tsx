@@ -1,5 +1,5 @@
 import { ThemeContext } from '@/lib/contexts'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useContext } from 'react'
 import { MdDarkMode, MdOutlineLightMode } from 'react-icons/md'
 
@@ -23,7 +23,7 @@ const ThemeToggler = ({
             className="flex items-center justify-center rounded-full transition-all duration-300"
             onClick={switchTheme}
         >
-            <motion.div
+            <m.div
                 key={isDarkMode ? 'moon-icon' : 'sun-icon'}
                 initial={{ rotate: 180, scale: 0.8, opacity: 0.5 }}
                 animate={{ rotate: 0, scale: 1, opacity: 1 }}
@@ -34,7 +34,7 @@ const ThemeToggler = ({
                 ) : (
                     <MdDarkMode className={darkModeClassName} />
                 )}
-            </motion.div>
+            </m.div>
         </button>
     )
 }

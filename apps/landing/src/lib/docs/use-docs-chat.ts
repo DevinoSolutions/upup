@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { clientEnv } from '@/lib/env'
+import { clientEnv } from '@/lib/client/env'
 
 export interface DocsChatMessage {
     id: string
