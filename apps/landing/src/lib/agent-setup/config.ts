@@ -175,7 +175,7 @@ export const FRAMEWORK_PACKAGES: readonly FrameworkPackage[] = [
         id: 'angular',
         name: 'Angular',
         pkg: '@useupup/angular',
-        detect: '`@angular/core` (17+) in package.json dependencies',
+        detect: '`@angular/core` (19–22) in package.json dependencies',
         quickstart: '/docs/quickstarts/angular/',
         snippet: [
             "import { Component } from '@angular/core'",
@@ -248,7 +248,7 @@ export function agentContextBlock(): string {
         '- @useupup/core     headless engine: file state, upload pipeline (compression, HEIC, web-worker), cloud-drive plugins, i18n, theme. Zero framework deps.',
         '- @useupup/react    canonical UI (React 19). @useupup/vue, @useupup/svelte, @useupup/angular, @useupup/vanilla, @useupup/preact are native ports with the same DOM.',
         '- @useupup/next     Next.js client re-export + /server route handlers (App and Pages routers).',
-        '- @useupup/server   server-mode endpoints: S3-compatible presign + proxy, cloud-drive token exchange, HMAC-signed upload-token trust model.',
+        '- @useupup/server   server-mode endpoints: S3-compatible presign + multipart signing (bytes still go browser → bucket), cloud-drive token exchange + drive → bucket transfer, HMAC-signed upload-token trust model.',
         'Client mode (default): the browser uploads straight to your storage; your app returns presigned URLs at `uploadEndpoint`. No server package required.',
         "  React example: import { UpupUploader } from '@useupup/react'; import '@useupup/react/styles'",
         `                 <UpupUploader provider="aws" uploadEndpoint="${PRESIGN_ROUTE}" />`,

@@ -45,15 +45,22 @@ export function DocsStructuredData({
         ...trail.map(node => ({ name: node.name, url: node.url })),
     ]
 
+    // Google requires `item` on every ListItem except the last
+    // (https://developers.google.com/search/docs/appearance/structured-data/breadcrumb),
+    // and a folder with no index page has no URL to point at. So the trail
+    // drops those name-only folder crumbs rather than fabricating a target,
+    // and positions are numbered over what remains. The page's own crumb is
+    // always last and always keeps its URL.
+    const linkedCrumbs = crumbs.filter(
+        (crumb, i) => crumb.url || i === crumbs.length - 1,
+    )
+
     const breadcrumbList = {
         '@type': 'BreadcrumbList',
-        itemListElement: crumbs.map((crumb, i) => ({
+        itemListElement: linkedCrumbs.map((crumb, i) => ({
             '@type': 'ListItem',
             position: i + 1,
             name: crumb.name,
-            // A folder with no index page has no URL to point at; schema.org
-            // allows a ListItem to carry only a name, so omit `item` instead
-            // of fabricating a target.
             ...(crumb.url ? { item: canonicalUrl(crumb.url) } : {}),
         })),
     }

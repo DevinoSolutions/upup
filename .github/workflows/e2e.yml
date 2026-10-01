@@ -264,12 +264,14 @@ jobs:
               run: pnpm run smoke:packages # self-builds via build:package; no browser, no MinIO
 
     # The docs live at /docs inside apps/landing (fumadocs). This job runs the
-    # `docs` Playwright project ONLY — the landing config's other projects
-    # (flows/ingestion) need live PostHog creds and MUST NOT run here. The docs
-    # project is secret-less: its Ask-AI drawer is mocked via page.route and the
-    # landing env schema (apps/landing/src/lib/env.ts) tolerates every PostHog /
-    # OAuth secret being absent, so no env file is provisioned. Cheap replacement
-    # for the heavy suites on a docs-only PR; runs in nightly.yml too (unrouted).
+    # `docs`, `demo` and `home` Playwright projects ONLY — the landing config's other
+    # projects (flows/ingestion) need live PostHog creds and MUST NOT run here.
+    # All are secret-less: the docs project's Ask-AI drawer is mocked via
+    # page.route and the landing env schema (apps/landing/src/lib/env.ts)
+    # tolerates every PostHog / OAuth secret being absent, so no env file is
+    # provisioned; the demo project uploads to a throwaway LocalStack bucket
+    # with LocalStack's public test credentials. Cheap replacement for the
+    # heavy suites on a docs-only PR; the docs project runs in nightly.yml too.
     Docs-E2E:
         name: Docs E2E (landing /docs Playwright project)
         runs-on: ubuntu-latest
@@ -310,10 +312,45 @@ jobs:
                   sudo rm -f /etc/apt/sources.list.d/google-chrome.sources
                   pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
 
+            # Real storage for the `demo` project: the homepage + docs demos
+            # upload through the landing app's own /api/upup mount, so the dev
+            # server needs an S3-compatible bucket. Same pinned LocalStack as
+            # the MinIO job, plus a CORS rule because the browser PUTs to it
+            # cross-origin from the landing port (31080).
+            - name: Boot LocalStack (S3 only, signature validation ON)
+              run: |
+                  docker run -d --name upup-localstack -p 4566:4566 \
+                    -e SERVICES=s3 -e S3_SKIP_SIGNATURE_VALIDATION=0 \
+                    localstack/localstack@sha256:59373b4a27dba3ec15c4db0b7455f0cb68c8a42300e2cbbe362b440f9a131697 # 4.9.2
+                  for i in $(seq 1 60); do
+                    if curl -sf http://localhost:4566/_localstack/health > /dev/null; then
+                      echo "LocalStack healthy on :4566"; exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "LocalStack failed to become healthy on :4566" >&2
+                  docker logs upup-localstack >&2 || true
+                  exit 1
+
+            - name: Create the demo bucket with a CORS rule for the landing origin
+              run: |
+                  docker exec upup-localstack awslocal s3 mb s3://upup-e2e
+                  docker exec upup-localstack awslocal s3api put-bucket-cors --bucket upup-e2e \
+                    --cors-configuration '{"CORSRules":[{"AllowedOrigins":["http://localhost:31080"],"AllowedMethods":["GET","PUT","HEAD"],"AllowedHeaders":["*"],"ExposeHeaders":["ETag"],"MaxAgeSeconds":3600}]}'
+
             # Flag-position --project (never the `-- --project` pnpm-forwarding
             # form, which Playwright reads as filename filters — see CLAUDE.md).
-            - name: Run the docs Playwright project (secret-less; agent mocked via page.route)
-              run: pnpm --filter @useupup/e2e-test exec playwright test --config playwright.landing.config.ts --project docs
+            # The S3_* / UPUP_UPLOAD_TOKEN_SECRET env reaches the landing dev
+            # server through Playwright's webServer (it merges over process.env).
+            - name: Run the docs + demo + home Playwright projects (agent mocked via page.route; demo uploads real)
+              run: pnpm --filter @useupup/e2e-test exec playwright test --config playwright.landing.config.ts --project docs --project demo --project home
+              env:
+                  S3_ENDPOINT: http://localhost:4566
+                  S3_BUCKET: upup-e2e
+                  S3_REGION: us-east-1
+                  S3_KEY_ID: test
+                  S3_SECRET: test
+                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
 
             - name: Upload Playwright report
               if: failure()

@@ -8,6 +8,26 @@ import { APP_ID } from './analytics/contract'
 type CloudDrives = NonNullable<UpupConfig['cloudDrives']>
 
 /**
+ * Where the demo's Upload button sends files. The landing app mounts
+ * @useupup/server at /api/upup (src/app/api/upup/[...path]/route.ts), and its
+ * /presign route also answers the client-mode token-endpoint contract
+ * (POST {name,size,type} → {key, uploadUrl, …}). Both targets are seeded; the
+ * preview and the Code tab each keep only the one matching the selected mode
+ * (see normalizeRuntimeConfig / generateCode in @useupup/interactive-example),
+ * so a visitor who flips to server mode keeps a working demo.
+ *
+ * Without these the demo shipped with no upload target at all, so every
+ * Upload click on the homepage ended in NO_UPLOAD_TARGET.
+ *
+ * Trailing slash on the endpoint: the site runs trailingSlash:true, and an
+ * unslashed POST would take a 308 hop first.
+ */
+export const DEMO_UPLOAD_TARGETS = {
+    uploadEndpoint: '/api/upup/presign/',
+    serverUrl: '/api/upup',
+} as const satisfies Pick<UpupConfig, 'uploadEndpoint' | 'serverUrl'>
+
+/**
  * Seed cloud-drive credentials into the interactive demo from the landing app's
  * build-time public env, so the homepage uploader can actually open Google
  * Drive / OneDrive / Dropbox instead of rendering with the empty ConfigContext
@@ -43,9 +63,10 @@ function cloudDrivesFromEnv(): CloudDrives | undefined {
  * Build the `<InteractiveExample>` props derived from the landing app's env:
  * the AI assistant's Mastra base URL and the cloud-drive credentials. Callers
  * pass any page-specific `base` props (e.g. the per-framework image-editor
- * overrides); cloudDrives is merged INTO `base.initialConfig` so it composes
- * rather than clobbers. When no env is set the returned props are behavior-
- * identical to `base` (AI falls back to localhost, drives stay empty).
+ * overrides); the demo upload targets and cloudDrives are merged INTO
+ * `base.initialConfig` so they compose rather than clobber (a base that sets
+ * its own target wins). When no env is set the AI falls back to localhost and
+ * drives stay empty; the upload targets are always present.
  *
  * This is the single place both landing pages read env from, so the two call
  * sites cannot drift.
@@ -59,24 +80,27 @@ export function interactiveExampleEnvProps(
     // every configured drive (mirrors the playground's seeding) so the demo
     // shows them without the visitor touching the Sources panel. A base that
     // sets its own `sources` still wins.
-    const initialConfig: UpupConfig | undefined = cloudDrives
-        ? {
-              ...(baseInitial ?? {}),
-              cloudDrives,
-              sources: baseInitial?.sources ?? [
-                  'local',
-                  ...(Object.keys(cloudDrives) as (keyof CloudDrives)[]),
-                  'url',
-                  'camera',
-                  'microphone',
-                  'screen',
-              ],
-          }
-        : baseInitial
+    const initialConfig: UpupConfig = {
+        ...DEMO_UPLOAD_TARGETS,
+        ...(baseInitial ?? {}),
+        ...(cloudDrives
+            ? {
+                  cloudDrives,
+                  sources: baseInitial?.sources ?? [
+                      'local',
+                      ...(Object.keys(cloudDrives) as (keyof CloudDrives)[]),
+                      'url',
+                      'camera',
+                      'microphone',
+                      'screen',
+                  ],
+              }
+            : {}),
+    }
 
     return {
         ...base,
-        ...(initialConfig ? { initialConfig } : {}),
+        initialConfig,
         // Always tag the AI panel with the landing app id so traces + thumbs
         // events share an `app_id`. The client-only pieces (visitor distinct
         // id + the onAiFeedback sink) are injected by InteractiveExampleClient,

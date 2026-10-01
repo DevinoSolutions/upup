@@ -88,7 +88,7 @@ export function buildAgentSetupPrompt(): string {
         '',
         `In client mode the uploader POSTs to \`uploadEndpoint\` once per file and expects a presigned upload URL back; the browser then PUTs the bytes straight to the bucket. Add a route at \`/api/upload-token\` in the project's server framework. A ready-to-copy handler for every supported storage provider is at ${origin}/docs/code-examples/ — fetch it and adapt the route to the project. Read the bucket name, region, and credentials from environment variables; never hardcode them. If the project has no server at all (a pure static SPA), skip this step and tell the user the route is still needed before uploads work.`,
         '',
-        `If the user wants uploads and cloud-drive OAuth proxied through their own server instead, install \`${SERVER_PACKAGE}\` and follow ${origin}/docs/guides/server-mode-setup/ — \`createUpupHandler\` requires an \`uploadTokenSecret\` of at least 16 characters and throws at construction without it.`,
+        `If the user wants \`${SERVER_PACKAGE}\` to sign uploads and run cloud-drive OAuth on their own server instead (file bytes still go straight to the bucket), install it and follow ${origin}/docs/guides/server-mode-setup/ — \`createUpupHandler\` requires an \`uploadTokenSecret\` of at least 16 characters and throws at construction without it.`,
         '',
         `## Step 4: Save the ${APP_NAME} context block`,
         '',

@@ -154,20 +154,20 @@ const nextConfig = {
                 destination: '/docs/migration/v1-to-v3/',
                 permanent: true,
             },
-            // Docusaurus generated-index (category) pages: a section that now
-            // has a hub page (content/docs/<section>/index.mdx) maps onto it;
-            // a section that is still a hub-less sidebar folder maps to its
-            // first page (meta.json order). Two shapes existed: default
+            // Docusaurus generated-index (category) pages have no counterpart
+            // in the new tree — sections are sidebar folders without index
+            // pages — so each legacy section URL maps to the section's first
+            // page (meta.json order). Two shapes existed: default
             // `/category/<label>` URLs and custom-slug URLs (quickstarts,
             // comparisons). Must precede the wildcard below.
             {
                 source: '/documentation/quickstarts',
-                destination: '/docs/quickstarts/',
+                destination: '/docs/quickstarts/react/',
                 permanent: true,
             },
             {
                 source: '/documentation/comparisons',
-                destination: '/docs/comparisons/',
+                destination: '/docs/comparisons/upup-vs-uppy/',
                 permanent: true,
             },
             {
@@ -187,8 +187,9 @@ const nextConfig = {
             // FILE path and lands on the docs catch-all's 404. GSC has been
             // reporting "couldn't fetch" for both ever since. Extension paths
             // get no trailing-slash hop, so each of these is a single 308.
-            // They must precede the wildcard. (Owner follow-up: delete the two
-            // stale submissions in Search Console once these are live.)
+            // They must precede the wildcard. (The two stale Search Console
+            // submissions were deleted on 2026-09-26; these rules stay for any
+            // crawler or bookmark that still requests them.)
             {
                 source: '/sitemap-landing.xml',
                 destination: '/sitemap.xml',
@@ -197,6 +198,54 @@ const nextConfig = {
             {
                 source: '/documentation/sitemap.xml',
                 destination: '/sitemap.xml',
+                permanent: true,
+            },
+            // The OLDER Docusaurus route shape. Everything above handles the
+            // newer one; the deleted app used both. It always sat under
+            // baseUrl `/documentation/`, but from the monorepo import
+            // (8813b1f4, 2025-11) until 00eaa6bb (2026-07-12) its docs plugin
+            // ran with routeBasePath 'docs', so a page lived at
+            // `/documentation/docs/<slug>` and a generated-index section at
+            // `/documentation/docs/category/<label>`; 00eaa6bb flipped it to
+            // '/', producing the `/documentation/<slug>` shape. Search Console
+            // still ranks older-shape URLs (getting-started, icon-prop at
+            // ~position 2, category/upupuploader, required-props, …), and the
+            // wildcard below would capture one as `:path* = docs/<slug>` and
+            // send it to a `/docs/docs/<slug>/` 404. These rules drop the
+            // extra `docs` segment instead, mirroring the newer-shape rules
+            // above so every older URL is still a single 308: the bare path,
+            // the one renamed page, the two generated-index sections, then a
+            // wildcard for the rest (every older-shape slug has a same-slug
+            // page under /docs). The quickstarts/comparisons section indexes
+            // landed after the flip, so they have no older-shape twin. The
+            // `:path*` rule would also cover the bare path (an empty `:path*`
+            // renders `/docs/`); the explicit entry is for clarity, like the
+            // bare `/documentation` rule. All must precede the wildcard below.
+            // src/__tests__/legacy-docs-redirects.test.ts replays every legacy
+            // URL of both shapes, slashed and not, through Next's own matcher.
+            {
+                source: '/documentation/docs',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/migration/v2-to-v2.1',
+                destination: '/docs/migration/v1-to-v3/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/category/api-reference',
+                destination: '/docs/api-reference/s3-generate-presigned-url/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/category/upupuploader',
+                destination: '/docs/api-reference/upupuploader/required-props/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/:path*',
+                destination: '/docs/:path*/',
                 permanent: true,
             },
             // Destination carries the trailing slash so trailingSlash:true
@@ -332,9 +381,21 @@ const nextConfig = {
                 destination: `${SITE_BASE}/docs/:path*/`,
                 permanent: true,
             },
-            // www.<host> -> apex. Catch-all only: www serves the SAME routes,
-            // so unlike the docs alias there is no /docs prefixing. The bare
-            // root is listed separately for the same empty-`:path*` reason.
+            // www.<host> -> apex. www serves the SAME routes, so unlike the
+            // docs alias there is no /docs prefixing. The destinations are
+            // absolute, so this is the same trailing-slash problem the
+            // http -> https pair at the top of this list solves, solved the
+            // same way (see the comment there): extensionless paths first,
+            // slash restored; then the bare root (the empty-`:path*` case);
+            // then the catch-all for file paths, which must NOT gain one.
+            // A lone `${SITE_BASE}/:path*` sent www/angular/ to apex/angular,
+            // a second 308 before the apex page.
+            {
+                source: '/:path((?:[^/]+/)*[^/.]+)',
+                has: [{ type: 'host', value: WWW_HOST }],
+                destination: `${SITE_BASE}/:path/`,
+                permanent: true,
+            },
             {
                 source: '/',
                 has: [{ type: 'host', value: WWW_HOST }],

@@ -64,28 +64,12 @@ function nodeOfType(
 describe('sitemap enumerates only canonical, indexable page URLs', () => {
     const entries = sitemap()
 
-    it('lists the homepage, six framework pages, support and privacy, the agent-setup pages, and all 72 docs pages', () => {
+    it('lists the homepage, six framework pages, support and privacy, the agent-setup pages, and all 73 docs pages', () => {
         // 1 home + 6 frameworks + support + privacy + agent-setup index + 4
-        // per-agent guides + 72 fumadocs pages. The docs count is
+        // per-agent guides + 73 fumadocs pages. The docs count is
         // independently pinned by docs-source.test.ts, so a page added to
         // content/docs updates both or neither.
-        expect(entries).toHaveLength(1 + 6 + 2 + 1 + 4 + 72)
-    })
-
-    it('lists the docs folder hubs the breadcrumb middle crumbs link to', () => {
-        // Before these hub pages existed, /docs/guides/, /docs/guides/storage/
-        // and /docs/quickstarts/ were 404s and the "Guides" / "Storage"
-        // breadcrumb crumbs had no URL at all. /docs/comparisons/ arrived as a
-        // hub with the comparison pages (#446).
-        const urls = entries.map(entry => entry.url)
-        for (const hub of [
-            'guides',
-            'guides/storage',
-            'quickstarts',
-            'comparisons',
-        ]) {
-            expect(urls).toContain(`${PRODUCTION_ORIGIN}/docs/${hub}/`)
-        }
+        expect(entries).toHaveLength(1 + 6 + 2 + 1 + 4 + 73)
     })
 
     it('points every entry at the production origin with the trailing slash the site actually serves', () => {

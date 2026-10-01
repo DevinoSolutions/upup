@@ -34,7 +34,7 @@ export const faqs: Faq[] = [
     },
     {
         question: 'What is the difference between client mode and server mode?',
-        answer: 'In client mode the browser uploads directly to your storage using short-lived credentials issued by your server. In server mode uploads are proxied through your own server using the @useupup/server package, which isolates storage credentials behind an HMAC-signed trust model.',
+        answer: 'In both modes the browser sends local file bytes straight to your bucket over short-lived presigned URLs, and your storage credentials stay on your server. In client mode you write the endpoint that signs those URLs, and cloud-drive sign-in and downloads run in the browser. In server mode the @useupup/server package is that endpoint — HMAC-signed upload tokens, per-user auth, size and type limits, and multipart coordination — and it also runs cloud-drive OAuth and streams drive files into your bucket from the server.',
     },
     {
         question: 'Can I use my own UI with upup?',
@@ -139,7 +139,7 @@ export const frameworkFaqs: Record<FrameworkId, Faq[]> = {
         {
             question:
                 'Does the Angular uploader work with standalone components and NgModules?',
-            answer: "Yes. UpupUploaderComponent is a standalone component (selector upup-uploader) for Angular 19 and later. Add it to a standalone component's imports or to an NgModule's imports. Everything is passed through one config input, and the stylesheet loads once from angular.json.",
+            answer: "Yes. UpupUploaderComponent is a standalone component (selector upup-uploader) for Angular 19 through 22. Add it to a standalone component's imports or to an NgModule's imports. Everything is passed through one config input, and the stylesheet loads once from angular.json.",
         },
         {
             question:

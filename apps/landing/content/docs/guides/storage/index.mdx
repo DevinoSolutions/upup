@@ -3,10 +3,21 @@ title: Storage provider guides
 description: Upload files from the browser to AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, MinIO, Azure Blob, or any S3-compatible store with upup.
 ---
 
-upup uploads straight to storage you own. Each guide below covers one
-provider end to end: credentials, the endpoint and region settings, the bucket
-CORS rule the browser needs, and a copy-paste config. For how the providers fit
-together, read [Storage Providers](/docs/guides/storage-providers/) first.
+upup uploads straight to storage you own. In both modes the browser uploads file
+bytes directly to your bucket over short-lived signed URLs, and the storage
+credentials never leave your server. In client mode your own endpoint signs
+those URLs. In server mode [`@useupup/server`](/docs/guides/server-mode-setup/)
+holds the credentials, signs the URLs for you, and writes cloud-drive files to
+storage itself.
+
+Each guide below walks through the setup for its provider and includes a
+config you can copy. For the full `storage.type` table and the shared `storage`
+config reference, read [Storage Providers](/docs/guides/storage-providers/).
+
+## S3-compatible providers
+
+These work in client mode and in server mode. In server mode you pick one with
+the `storage.type` value in your `createUpupHandler` config.
 
 - [Amazon S3](/docs/guides/storage/aws-s3/) — bucket setup, the IAM policy,
   CORS, and a `createUpupHandler` config.
@@ -18,7 +29,18 @@ together, read [Storage Providers](/docs/guides/storage-providers/) first.
   access keys, the regional endpoint, CORS, and the CDN.
 - [MinIO](/docs/guides/storage/minio/) — a self-hosted MinIO server with Docker,
   path-style addressing, and CORS.
-- [Azure Blob Storage](/docs/guides/storage/azure-blob/) — a server-issued SAS
-  URL and the mandatory `x-ms-blob-type` header.
 - [Any S3-compatible storage](/docs/guides/storage/s3-compatible/) — Wasabi,
-  Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and more.
+  Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and any other store
+  that speaks the S3 API.
+
+## Azure Blob Storage
+
+Azure Blob Storage has no S3-compatible API, so `createUpupHandler` rejects it
+and server mode cannot serve it.
+
+- [Azure Blob Storage](/docs/guides/storage/azure-blob/) — client mode only:
+  your endpoint returns a SAS URL, the browser uploads straight to the blob,
+  and the guide covers the mandatory `x-ms-blob-type` header.
+
+Not sure which mode you need? [Client Mode vs Server Mode](/docs/guides/modes/)
+covers what runs where in each.

@@ -6,8 +6,8 @@ description: Every upup guide in one place — client vs server mode, server ada
 Task-focused guides for running upup in production: picking a mode, mounting
 the server package on your framework, scoping uploads to your users, connecting
 a storage provider, processing files before they upload, and making the
-uploader look and behave the way your app needs. New to upup? Start with the
-[framework quickstarts](/docs/quickstarts/) first.
+uploader look and behave the way your app needs. New to upup? Start with
+[Getting Started](/docs/getting-started/) and the quickstart for your framework.
 
 ## Modes and server setup
 
@@ -41,11 +41,26 @@ uploader look and behave the way your app needs. New to upup? Start with the
 
 ## Storage
 
-- [Storage Providers](/docs/guides/storage-providers/) — how upup talks to any
-  S3-compatible store, with a guide per provider.
-- [Storage provider guides](/docs/guides/storage/) — the per-provider setup
-  pages for AWS S3, Cloudflare R2, Backblaze B2, DigitalOcean Spaces, MinIO,
-  Azure Blob Storage, and other S3-compatible stores.
+- [Storage Providers](/docs/guides/storage-providers/) — how upup connects to
+  S3-compatible storage, the full `storage.type` table, and why Azure Blob
+  Storage is the exception.
+- [Amazon S3](/docs/guides/storage/aws-s3/) — bucket setup, the IAM policy,
+  CORS, and a `createUpupHandler` config.
+- [Upload Files to S3 from React with Presigned URLs](/docs/guides/s3-presigned-url-upload-react/)
+  — a presigned `PUT` signed with the AWS SDK v3, a React upload with progress,
+  bucket CORS, and the common 403 errors.
+- [Cloudflare R2](/docs/guides/storage/cloudflare-r2/) — the account-scoped
+  endpoint, region `auto`, API tokens, and CORS.
+- [Backblaze B2](/docs/guides/storage/backblaze-b2/) — application keys, the
+  region-scoped S3 endpoint, and CORS.
+- [DigitalOcean Spaces](/docs/guides/storage/digitalocean-spaces/) — Spaces
+  access keys, the regional endpoint, CORS, and the CDN.
+- [MinIO](/docs/guides/storage/minio/) — a self-hosted MinIO server with Docker,
+  path-style addressing, and CORS.
+- [Azure Blob Storage](/docs/guides/storage/azure-blob/) — client mode only: a
+  SAS URL from your endpoint and the mandatory `x-ms-blob-type` header.
+- [Any S3-compatible storage](/docs/guides/storage/s3-compatible/) — Wasabi,
+  Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and more.
 
 ## Files and sources
 

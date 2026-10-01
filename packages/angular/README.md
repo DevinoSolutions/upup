@@ -1,12 +1,12 @@
 # @useupup/angular
 
-Angular 19+ standalone file uploader with cloud-drive sources (Google Drive,
+Angular 19–22 standalone file uploader with cloud-drive sources (Google Drive,
 OneDrive, Dropbox, Box), resumable uploads, theming, and ICU i18n. A native port
 of the canonical [upup](https://github.com/DevinoSolutions/upup) React UI,
 DOM-identical to it.
 
-Requires Angular 19+ (`@angular/core`, `@angular/common`, and `rxjs` are peer
-dependencies).
+Requires Angular 19, 20, 21, or 22 (`@angular/core`, `@angular/common`,
+`@angular/platform-browser`, and `rxjs` are peer dependencies).
 
 ## Install
 

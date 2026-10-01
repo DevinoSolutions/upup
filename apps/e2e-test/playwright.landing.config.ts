@@ -39,11 +39,24 @@ export default defineConfig({
         trace: 'retain-on-failure',
     },
     projects: [
-        // docs.spec.ts has no PostHog/dataset dependency — it runs standalone,
-        // independent of the flows -> ingestion ordering below.
+        // docs.spec.ts and seo-surfaces.spec.ts have no PostHog/dataset
+        // dependency — they run standalone, independent of the flows ->
+        // ingestion ordering below.
         {
             name: 'docs',
-            testMatch: /docs\.spec\.ts$/,
+            testMatch: /(docs|seo-surfaces)\.spec\.ts$/,
+        },
+        // Real uploads through the homepage + docs demos. Needs the landing
+        // server's S3_* + UPUP_UPLOAD_TOKEN_SECRET env pointing at a real
+        // S3-compatible bucket (the Docs-E2E job boots LocalStack for it).
+        {
+            name: 'demo',
+            testMatch: /demo-upload\.spec\.ts$/,
+        },
+        // Homepage interactions with no backend or PostHog dependency.
+        {
+            name: 'home',
+            testMatch: /home-hero\.spec\.ts$/,
         },
         {
             name: 'flows',
