@@ -7,7 +7,7 @@ import type { LocaleBundle } from '@useupup/core'
 
 import '@useupup/react/styles'
 import { ThemeContext } from '@/lib/contexts'
-import { clientEnv } from '@/lib/env'
+import { clientEnv } from '@/lib/client/env'
 import { toast } from 'react-toastify'
 
 const customFields = {

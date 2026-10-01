@@ -8,6 +8,7 @@ import Script from 'next/script'
 import ThemeProvider from '@/app/theme-provider'
 import { Providers } from '@/components/providers'
 import { PostHogProvider } from '@/components/posthog-provider'
+import { MotionProvider } from '@/components/motion-provider'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import EntityStructuredData from '@/components/StructuredData/EntityStructuredData'
@@ -168,15 +169,17 @@ export default function RootLayout({
                 <PostHogProvider>
                     <Providers>
                         <ThemeProvider>
-                            <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
-                                <Navbar />
-                                {/* The single main landmark for every page —
-                                    pages must not render their own <main>. */}
-                                <main className="flex w-full flex-1 flex-col">
-                                    {children}
-                                </main>
-                                <Footer />
-                            </div>
+                            <MotionProvider>
+                                <div className="flex flex-col min-h-screen w-full bg-[var(--bg-base)]">
+                                    <Navbar />
+                                    {/* The single main landmark for every page —
+                                        pages must not render their own <main>. */}
+                                    <main className="flex w-full flex-1 flex-col">
+                                        {children}
+                                    </main>
+                                    <Footer />
+                                </div>
+                            </MotionProvider>
                         </ThemeProvider>
                     </Providers>
                 </PostHogProvider>

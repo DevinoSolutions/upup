@@ -119,48 +119,7 @@ export const env: z.infer<typeof serverSchema> = (() => {
 })()
 
 // ── Client (NEXT_PUBLIC_* — inlined at build time) ───────────────────────
-const clientSchema = z.object({
-    NEXT_PUBLIC_BASE_URL: z.string().optional(),
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().default(''),
-    NEXT_PUBLIC_GOOGLE_API_KEY: z.string().default(''),
-    NEXT_PUBLIC_GOOGLE_APP_ID: z.string().default(''),
-    NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: z.string().default(''),
-    NEXT_PUBLIC_DROPBOX_CLIENT_ID: z.string().default(''),
-    NEXT_PUBLIC_BOX_CLIENT_ID: z.string().default(''),
-    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
-    NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
-    NEXT_PUBLIC_POSTHOG_HOST: z.string().default('https://posthog.devino.ca'),
-    // Analytics dataset selector, mirrored from the server POSTHOG_DATASET at
-    // build time. Kept a plain string (not an enum) so an empty build arg can
-    // never crash the client boot — dataset.ts validates the value.
-    NEXT_PUBLIC_POSTHOG_DATASET: z.string().optional(),
-    // e2e-project credentials — used ONLY when the dataset resolves to 'e2e'.
-    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: z.string().optional(),
-    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: z.string().optional(),
-    // Base URL of the deployed Mastra AI server that powers the Ask-AI panel.
-    // Unset → the interactive example falls back to http://localhost:4111.
-    NEXT_PUBLIC_MASTRA_BASE_URL: z.string().optional(),
-})
-
-const clientParsed = clientSchema.safeParse({
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    NEXT_PUBLIC_GOOGLE_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_API_KEY,
-    NEXT_PUBLIC_GOOGLE_APP_ID: process.env.NEXT_PUBLIC_GOOGLE_APP_ID,
-    NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: process.env.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID,
-    NEXT_PUBLIC_DROPBOX_CLIENT_ID: process.env.NEXT_PUBLIC_DROPBOX_CLIENT_ID,
-    NEXT_PUBLIC_BOX_CLIENT_ID: process.env.NEXT_PUBLIC_BOX_CLIENT_ID,
-    NEXT_PUBLIC_GOOGLE_ANALYTICS_ID:
-        process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID,
-    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
-    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    NEXT_PUBLIC_POSTHOG_DATASET: process.env.NEXT_PUBLIC_POSTHOG_DATASET,
-    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:
-        process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST,
-    NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:
-        process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN,
-    NEXT_PUBLIC_MASTRA_BASE_URL: process.env.NEXT_PUBLIC_MASTRA_BASE_URL,
-})
-export const clientEnv = clientParsed.success
-    ? clientParsed.data
-    : fail('client', clientParsed.error)
+// Lives in its own zod-free module so client components can read it without
+// shipping the zod runtime (see client/env.ts). Re-exported here so server
+// code keeps one import site for both halves.
+export { clientEnv } from './client/env'

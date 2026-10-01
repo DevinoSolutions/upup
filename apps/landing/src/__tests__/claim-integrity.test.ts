@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
@@ -27,6 +28,10 @@ const COPY_SOURCES: Record<string, string> = {
     'src/components/HomepageFeatures/index.tsx':
         '../components/HomepageFeatures/index.tsx',
     'src/app/privacy/page.tsx': '../app/privacy/page.tsx',
+    'src/components/FrameworkGuide/index.tsx':
+        '../components/FrameworkGuide/index.tsx',
+    'src/components/FrameworkGuide/content.ts':
+        '../components/FrameworkGuide/content.ts',
 }
 
 function readCopySources(): [string, string][] {
@@ -88,6 +93,67 @@ describe('landing copy claim integrity', () => {
                 expect(
                     prose,
                     `${label} makes an unsubstantiated "${phrase}" claim — upup has no published adoption figures to back it`,
+                ).not.toContain(phrase)
+            }
+        }
+    })
+
+    it('never says server mode sends local-file bytes through your server, because the browser PUTs them straight to the bucket in both modes', () => {
+        // Server mode uses the same DirectUpload strategy as client mode
+        // (packages/core/src/resolve-upload-config.ts): @useupup/server signs
+        // the URL and the browser PUTs the bytes to the bucket. Only cloud-drive
+        // transfers run server -> storage, so "proxies uploads" copy is false.
+        const RETIRED_DATA_PATH_CLAIMS = [
+            'proxies uploads',
+            'proxy uploads',
+            'proxied through your own server',
+            'browser talks only to',
+            'writes bytes to storage',
+            'route uploads through',
+            'route through your own backend',
+            'presign + proxy',
+            'presign/proxy',
+            'presigns and proxies',
+            'upload through your server',
+        ]
+        const docsRoot = fileURLToPath(
+            new URL('../../content/docs/', import.meta.url),
+        )
+        const docs: [string, string][] = readdirSync(docsRoot, {
+            recursive: true,
+            encoding: 'utf8',
+        })
+            .filter(file => file.endsWith('.mdx'))
+            .map(file => [
+                `content/docs/${file}`,
+                readFileSync(join(docsRoot, file), 'utf8'),
+            ])
+        expect(docs.length, 'docs content tree not found').toBeGreaterThan(50)
+        const agentSetup: [string, string][] = [
+            'src/lib/agent-setup/prompt.ts',
+            'src/lib/agent-setup/config.ts',
+        ].map(label => [
+            label,
+            readFileSync(
+                fileURLToPath(
+                    new URL(
+                        `../${label.slice('src/'.length)}`,
+                        import.meta.url,
+                    ),
+                ),
+                'utf8',
+            ),
+        ])
+        for (const [label, text] of [
+            ...readCopySources(),
+            ...agentSetup,
+            ...docs,
+        ]) {
+            const prose = normalizeWhitespace(text).toLowerCase()
+            for (const phrase of RETIRED_DATA_PATH_CLAIMS) {
+                expect(
+                    prose,
+                    `${label} says "${phrase}" — local-file bytes go browser -> bucket in server mode too`,
                 ).not.toContain(phrase)
             }
         }

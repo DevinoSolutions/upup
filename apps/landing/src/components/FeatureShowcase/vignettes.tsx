@@ -1,17 +1,18 @@
 'use client'
 
 import React from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { FaGlobe, FaServer, FaShieldAlt } from 'react-icons/fa'
 import { SiAmazonwebservices } from 'react-icons/si'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ServerModeVignette — the one remaining diagram vignette (the other five
 // feature visuals are now UploaderScene segments). A pure JSX/SVG/framer-motion
-// loop showing Browser → Your Server (HMAC-signed) → S3, with signed packets
-// flowing through and an unsigned one bounced back with a 403. Gentle, reads in
-// both themes, and honors prefers-reduced-motion (static final frame) plus the
-// row's `active` viewport gate.
+// loop showing Your Server (HMAC-signed) → Browser → S3: the server hands the
+// browser a signed upload URL (an unsigned request gets a 403 instead), and the
+// browser sends the file bytes straight to S3 — they never pass through the
+// server. Gentle, reads in both themes, and honors prefers-reduced-motion
+// (static final frame) plus the row's `active` viewport gate.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface VignetteProps {
@@ -27,30 +28,7 @@ export function ServerModeVignette({ active = true }: VignetteProps) {
     return (
         <div className="w-full max-w-[320px]">
             <div className="flex items-center justify-between gap-2">
-                {/* Browser */}
-                <Node label="Browser" icon={<FaGlobe className="h-5 w-5" />} />
-
-                {/* Hop 1 */}
-                <Track>
-                    {!reduce && <Packet color="#22c55e" delay={0} />}
-                    {!reduce && (
-                        // Unsigned packet bounces back with a 403.
-                        <motion.span
-                            className="absolute top-1/2 left-0 -translate-y-1/2 rounded bg-red-500 px-1 text-[8px] font-bold text-white"
-                            animate={{ x: [0, 26, 0], opacity: [0, 1, 0] }}
-                            transition={{
-                                duration: 3,
-                                repeat: Infinity,
-                                ease: 'easeInOut',
-                                delay: 1.4,
-                            }}
-                        >
-                            403
-                        </motion.span>
-                    )}
-                </Track>
-
-                {/* Your Server */}
+                {/* Your Server — signs the upload URL or refuses the request */}
                 <Node
                     label="Your Server"
                     icon={
@@ -62,7 +40,30 @@ export function ServerModeVignette({ active = true }: VignetteProps) {
                     tag="HMAC-signed"
                 />
 
-                {/* Hop 2 */}
+                {/* Hop 1 — the signed URL goes to the browser */}
+                <Track>
+                    {!reduce && <Packet color="#22c55e" delay={0} />}
+                    {!reduce && (
+                        // An unsigned request is refused with a 403.
+                        <m.span
+                            className="absolute top-1/2 left-0 -translate-y-1/2 rounded bg-red-500 px-1 text-[8px] font-bold text-white"
+                            animate={{ x: [0, 26, 0], opacity: [0, 1, 0] }}
+                            transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                                delay: 1.4,
+                            }}
+                        >
+                            403
+                        </m.span>
+                    )}
+                </Track>
+
+                {/* Browser */}
+                <Node label="Browser" icon={<FaGlobe className="h-5 w-5" />} />
+
+                {/* Hop 2 — the file bytes go straight to S3 */}
                 <Track>
                     {!reduce && <Packet color="#22c55e" delay={0.8} />}
                 </Track>
@@ -128,7 +129,7 @@ function Track({ children }: { children?: React.ReactNode }) {
 
 function Packet({ color, delay }: { color: string; delay: number }) {
     return (
-        <motion.span
+        <m.span
             className="absolute top-1/2 left-0 h-2 w-2 -translate-y-1/2 rounded-full"
             style={{ backgroundColor: color }}
             animate={{ x: ['0%', '100%'], opacity: [0, 1, 1, 0] }}

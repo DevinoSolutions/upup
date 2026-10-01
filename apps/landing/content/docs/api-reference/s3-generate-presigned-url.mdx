@@ -17,9 +17,13 @@ type PresignedUrlResponse = {
 }
 ```
 
-Do not sign browser-forbidden headers such as `Content-Length` for direct
-browser `PUT` requests. If the content type is signed, return it in
-`uploadHeaders` so upup can send the exact same value.
+Do not return browser-forbidden headers such as `Content-Length` in
+`uploadHeaders`: the browser sets them itself and ignores a script-set value.
+Signing `Content-Length` is fine as long as it equals the file size, which is
+how `@useupup/server` limits an upload to the size it approved. If the content
+type is signed, return it in `uploadHeaders` so upup can send the exact same
+value. [Upload Files to S3 from React with Presigned URLs](/docs/guides/s3-presigned-url-upload-react/)
+builds a complete endpoint.
 
 ```ts
 return Response.json({
