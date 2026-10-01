@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
@@ -58,7 +58,7 @@ export default function FrameworksScene({
                     </span>
                     <span className="relative h-4 w-20">
                         <AnimatePresence mode="popLayout">
-                            <motion.span
+                            <m.span
                                 key={fw.id}
                                 className="absolute inset-0 inline-flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-white"
                                 initial={frozen ? false : { y: 12, opacity: 0 }}
@@ -73,7 +73,7 @@ export default function FrameworksScene({
                                     style={{ color: fw.brand }}
                                 />
                                 {fw.name}
-                            </motion.span>
+                            </m.span>
                         </AnimatePresence>
                     </span>
                 </div>

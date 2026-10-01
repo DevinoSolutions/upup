@@ -44,7 +44,7 @@ function installSection() {
         '# pick your framework',
         'npm i @useupup/react     # or @useupup/vue · @useupup/svelte · @useupup/angular · @useupup/vanilla · @useupup/preact',
         '',
-        '# server mode — presign + proxy uploads to any S3-compatible storage',
+        '# server mode — signed direct uploads + server-side cloud drives, any S3-compatible storage',
         'npm i @useupup/server    # plus @useupup/next for Next.js route handlers',
         '```',
     ].join('\n')

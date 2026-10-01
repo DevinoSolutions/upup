@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { FaRegFolderOpen } from 'react-icons/fa'
 import { sceneImageSize } from './scene-media'
 
@@ -52,7 +52,7 @@ export default function DragGhost({
     reduce = false,
 }: DragGhostProps) {
     return (
-        <motion.div
+        <m.div
             aria-hidden
             className="pointer-events-none absolute left-0 top-0 z-40"
             initial={false}
@@ -67,7 +67,7 @@ export default function DragGhost({
             >
                 <AnimatePresence>
                     {visible && (
-                        <motion.div
+                        <m.div
                             // key by dropId so a fresh grab after a drop replays
                             // the enter rather than reusing the exiting element.
                             key={dropId}
@@ -133,10 +133,10 @@ export default function DragGhost({
                                     )}
                                 </div>
                             </div>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>
-        </motion.div>
+        </m.div>
     )
 }

@@ -1,5 +1,8 @@
 {
     "extends": "./tsconfig.json",
-    "compilerOptions": { "types": ["vitest/globals"] },
+    "compilerOptions": {
+        "types": ["vitest/globals"],
+        "resolveJsonModule": true
+    },
     "include": ["src/**/*.spec.ts", "src/test-setup.ts"]
 }

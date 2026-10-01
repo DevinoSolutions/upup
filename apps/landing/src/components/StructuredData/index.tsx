@@ -3,7 +3,8 @@
 // (headless engine), @useupup/server (HMAC-signed server mode), and the cloud-drive
 // plugins (Google Drive, OneDrive, Dropbox, Box).
 
-import { faqs } from '@/lib/faqs'
+import { faqsFor } from '@/lib/faqs'
+import type { FrameworkId } from '@/lib/frameworks'
 import { canonicalUrl } from '@/lib/site-url'
 import {
     ORGANIZATION_ID,
@@ -37,22 +38,66 @@ const softwareApplication = {
     publisher: { '@id': ORGANIZATION_ID },
 }
 
-const faqPage = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map(faq => ({
-        '@type': 'Question',
-        name: faq.question,
-        acceptedAnswer: {
-            '@type': 'Answer',
-            text: faq.answer,
-        },
-    })),
+// Built from the SAME list FAQSection renders for the page (faqsFor), so the
+// FAQPage a page emits always matches its visible questions — Google treats a
+// FAQPage whose questions are not on the page as spammy markup.
+function faqPage(framework?: FrameworkId) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqsFor(framework).map(faq => ({
+            '@type': 'Question',
+            name: faq.question,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: faq.answer,
+            },
+        })),
+    }
+}
+
+// Framework pages sit one level under the home page. The crumb name matches
+// the page's H1 ("<Framework> File Uploader").
+function breadcrumbList(framework: { id: FrameworkId; name: string }) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: canonicalUrl(),
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: `${framework.name} File Uploader`,
+                item: canonicalUrl(framework.id),
+            },
+        ],
+    }
+}
+
+// Framework FAQ answers quote markup (`<UpupUploader … />`), so `<` is escaped
+// to its JSON unicode form: the payload stays identical JSON, but no string in
+// it can ever close the surrounding <script> element.
+function JsonLd({ data }: Readonly<{ data: object }>) {
+    return (
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+                __html: JSON.stringify(data).replace(/</g, '\\u003c'),
+            }}
+        />
+    )
 }
 
 export default function StructuredData({
     framework,
-}: Readonly<{ framework?: { id: string; name: string; pkg: string } }> = {}) {
+}: Readonly<{
+    framework?: { id: FrameworkId; name: string; pkg: string }
+}> = {}) {
     const app = framework
         ? {
               ...softwareApplication,
@@ -62,14 +107,9 @@ export default function StructuredData({
         : softwareApplication
     return (
         <>
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(app) }}
-            />
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPage) }}
-            />
+            <JsonLd data={app} />
+            <JsonLd data={faqPage(framework?.id)} />
+            {framework && <JsonLd data={breadcrumbList(framework)} />}
         </>
     )
 }

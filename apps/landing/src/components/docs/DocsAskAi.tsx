@@ -12,7 +12,7 @@ import {
     Trash2,
     X,
 } from 'lucide-react'
-import { clientEnv } from '@/lib/env'
+import { clientEnv } from '@/lib/client/env'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 import type { useDocsChat, DocsChatMessage } from '@/lib/docs/use-docs-chat'

@@ -47,7 +47,8 @@ the same env var, as above, keeps them from drifting apart.
    to that one bucket, with Read and Write access. Backblaze shows `keyID` and
    `applicationKey` once. `keyID` is `accessKeyId`; `applicationKey` is
    `secretAccessKey`.
-4. **Add CORS rules** (client mode only) from the bucket's CORS Rules panel.
+4. **Add CORS rules** from the bucket's CORS Rules panel — the browser
+   uploads straight to B2 by default in both client and server mode.
 
 <Callout type="danger" title="The master application key does not work">
     Backblaze's account-level master key is rejected by the S3-compatible API —
@@ -57,13 +58,16 @@ the same env var, as above, keeps them from drifting apart.
     bucket, too, so you can scope it to that bucket.
 </Callout>
 
-### CORS (client mode only)
+### CORS
 
 B2's CORS rules live on the bucket, configured in the console (or with the `b2`
 CLI). Allow your app's origin for `PUT`, `POST`, `GET`, and `HEAD`, and expose
 the `ETag` response header — the browser needs to read each part's `ETag` to
-complete a multipart upload. In server mode the browser only talks to your
-server, so no CORS rule is needed at all. See
+complete a multipart upload. This applies in both client and server mode: by
+default the browser uploads straight to B2 either way, since server mode hands
+it a presigned URL instead of proxying the bytes. The exceptions are
+cloud-drive transfers (server-to-S3) and a deployment using
+`onPresignResponse` to rewrite the URL to a same-origin proxy. See
 [Credentials And CORS](/docs/credentials-configuration/).
 
 ## Versions and abandoned uploads

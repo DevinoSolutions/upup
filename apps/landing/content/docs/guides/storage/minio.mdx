@@ -79,13 +79,16 @@ mc mb local/upup-uploads
     network name such as `http://minio:9000` is fine.
 </Callout>
 
-### CORS (client mode only)
+### CORS
 
 MinIO takes its CORS policy from the server process, not from per-bucket rules:
 set `MINIO_API_CORS_ALLOW_ORIGIN` to a comma-separated list of origins (`*` is
 fine locally, as in the container above; name your real origins in production).
-In server mode the browser only talks to your server, so CORS never enters the
-upload path. See [Credentials And CORS](/docs/credentials-configuration/).
+This applies in both client and server mode: by default the browser uploads
+straight to MinIO either way, since server mode hands it a presigned URL
+instead of proxying the bytes. The exceptions are cloud-drive transfers
+(server-to-S3) and a deployment using `onPresignResponse` to rewrite the URL to
+a same-origin proxy. See [Credentials And CORS](/docs/credentials-configuration/).
 
 ## Going to production
 
