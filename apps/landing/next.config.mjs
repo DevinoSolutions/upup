@@ -60,6 +60,21 @@ const nextConfig = {
                 source: '/llms-full.txt',
                 destination: '/docs-llms/llms-full.txt',
             },
+            // `/docs/<slug>.md` — the markdown-twin URL shape agents guess
+            // first (the convention other uploader docs sites serve) — answers
+            // with the same bytes as the canonical `/docs-md/<slug>/` route.
+            // A rewrite, not a redirect: the URL an agent asked for returns the
+            // markdown directly, and the twin's `Link: rel="canonical"` header
+            // still points search engines at the HTML page. trailingSlash never
+            // touches these (Next does not slash a path whose last segment has
+            // an extension), so this is a single 200 with no 308 hop. The
+            // final segment excludes dots so `/docs/llms.txt`-style file paths
+            // can never match. `/docs.md` is the docs root's twin.
+            {
+                source: '/docs/:slug((?:[^/]+/)*[^/.]+).md',
+                destination: '/docs-md/:slug/',
+            },
+            { source: '/docs.md', destination: '/docs-md/' },
         ]
     },
     // The legacy Docusaurus app (apps/docs) that used to serve /documentation
@@ -206,8 +221,8 @@ const nextConfig = {
             // `:path*` rule would also cover the bare path (an empty `:path*`
             // renders `/docs/`); the explicit entry is for clarity, like the
             // bare `/documentation` rule. All must precede the wildcard below.
-            // scripts/docs/check-links.mjs replays every legacy URL of both
-            // shapes through this map on every PR.
+            // src/__tests__/legacy-docs-redirects.test.ts replays every legacy
+            // URL of both shapes, slashed and not, through Next's own matcher.
             {
                 source: '/documentation/docs',
                 destination: '/docs/',

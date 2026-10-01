@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
 import type { TimelineStep } from './useSceneTimeline'
@@ -115,7 +115,7 @@ function WorkerLane({ reduce }: { reduce: boolean }) {
                 </span>
                 <div className="flex h-3 w-28 items-center gap-1">
                     {[0, 1, 2, 3, 4].map(i => (
-                        <motion.span
+                        <m.span
                             key={i}
                             className="h-full flex-1 rounded-sm bg-sky-400/80"
                             style={{ transformOrigin: 'center' }}

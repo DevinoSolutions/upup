@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { SiGoogledrive } from 'react-icons/si'
 import MockUploader from './MockUploader'
 import MockDriveBrowser from './MockDriveBrowser'
@@ -450,7 +450,7 @@ export default function HeroSession({
                 {/* Phase caption — crossfades with the story beats */}
                 <div className="mt-4 flex h-5 items-center justify-center">
                     <AnimatePresence mode="wait">
-                        <motion.p
+                        <m.p
                             key={state.caption}
                             className="text-center text-sm font-medium text-gray-500 dark:text-gray-400"
                             initial={frozen ? false : { opacity: 0, y: 6 }}
@@ -461,7 +461,7 @@ export default function HeroSession({
                             transition={{ duration: 0.35 }}
                         >
                             {state.caption}
-                        </motion.p>
+                        </m.p>
                     </AnimatePresence>
                 </div>
             </div>

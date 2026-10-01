@@ -1,0 +1,35 @@
+---
+title: Framework quickstarts
+description: Add the upup file uploader to React, Vue, Svelte, Angular, Vanilla JS, Preact, or Next.js — one install per framework and the same drag-and-drop UI.
+---
+
+Pick your framework and get a working uploader. Every quickstart starts in
+client mode: the browser uploads straight to your storage, your app only issues
+short-lived upload credentials at `uploadEndpoint`, and there is no upup server
+package to run. Each one then shows how to add server mode, where
+[`@useupup/server`](/docs/guides/server-mode-setup/) signs uploads and runs
+cloud drives on your own server. For the concepts behind them, see
+[Getting Started](/docs/getting-started/).
+
+- [React](/docs/quickstarts/react/) — `@useupup/react`, the canonical upup UI,
+  for React 19 apps.
+- [Vue](/docs/quickstarts/vue/) — `@useupup/vue` for Vue 3.4+ apps.
+- [Svelte](/docs/quickstarts/svelte/) — `@useupup/svelte` for Svelte 5 apps.
+- [Angular](/docs/quickstarts/angular/) — `@useupup/angular`, a standalone
+  component for Angular 19–22 apps.
+- [Vanilla JS](/docs/quickstarts/vanilla/) — `@useupup/vanilla`, framework-free,
+  for any page.
+- [Preact](/docs/quickstarts/preact/) — `@useupup/preact`, a `preact/compat`
+  re-export of the React UI.
+- [Next.js](/docs/quickstarts/next/) — `@useupup/next`, client UI and server
+  handlers in one install.
+
+## The same uploader in every framework
+
+The Vue, Svelte, Angular and Vanilla JS packages are native ports that render
+the same DOM as the React UI. Cloud drives, camera, screen capture, link import,
+compression, HEIC conversion, resumable uploads, i18n, and theming work the
+same in every framework. The one difference is the image editor (crop, rotate,
+annotate), which ships for React and Preact only; the other frameworks
+intentionally stub it. Next.js re-exports the React UI, so it includes the
+editor too.

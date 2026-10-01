@@ -45,6 +45,10 @@ export function DiagramFrame({
     height: number
     children: ReactNode
 }) {
+    // null during SSR, the real preference on the client's first render. So
+    // `reduce` may only choose transitions, never `initial`: the server HTML
+    // has to match every client, and reduced motion jumps straight to the end
+    // state (a zero-duration transition) rather than skipping the animation.
     const reduce = useReducedMotion() ?? false
     // useId() can contain ':' which is unsafe inside url(#...) references; strip it.
     const uid = useId().replace(/:/g, '')
@@ -278,7 +282,7 @@ export function Flow({
                     strokeLinecap="round"
                     strokeDasharray="5 5"
                     markerEnd={markerEnd}
-                    initial={reduce ? false : { strokeDashoffset: 0 }}
+                    initial={{ strokeDashoffset: 0 }}
                     animate={
                         reduce ? undefined : { strokeDashoffset: [0, -20] }
                     }
@@ -301,12 +305,12 @@ export function Flow({
                     strokeWidth={1.25}
                     strokeLinecap="round"
                     markerEnd={markerEnd}
-                    initial={reduce ? false : { pathLength: 0 }}
-                    whileInView={reduce ? undefined : { pathLength: 1 }}
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
                     viewport={{ once: true }}
                     transition={
                         reduce
-                            ? undefined
+                            ? { duration: 0 }
                             : { duration: 0.8, ease: 'easeOut', delay }
                     }
                 />
@@ -349,12 +353,12 @@ export function CheckCircle({
                 strokeWidth={1.5}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                initial={reduce ? false : { pathLength: 0 }}
-                whileInView={reduce ? undefined : { pathLength: 1 }}
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
                 viewport={{ once: true }}
                 transition={
                     reduce
-                        ? undefined
+                        ? { duration: 0 }
                         : { duration: 0.4, ease: 'easeOut', delay }
                 }
             />

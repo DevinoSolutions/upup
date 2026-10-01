@@ -107,6 +107,17 @@ describe('getImageEditorCssOverrides', () => {
         expect(getImageEditorCssOverrides(false).length).toBeGreaterThan(0)
     })
 
+    it('lifts the editor menus above the editor layer in both themes', () => {
+        // @scaleflex/ui portals the watermark-type, zoom, font and colour
+        // menus to <body> at z-index 1300, under the inline editor (z-9999)
+        // and the modal (z-2147483647), so they opened out of sight.
+        for (const dark of [true, false]) {
+            expect(getImageEditorCssOverrides(dark)).toMatch(
+                /\.SfxPopper-wrapper\s*\{\s*z-index:\s*2147483647 !important;/,
+            )
+        }
+    })
+
     it('dark overrides target data-upup-theme=dark selector', () => {
         const css = getImageEditorCssOverrides(true)
         expect(css).toContain("[data-upup-theme='dark']")

@@ -46,9 +46,10 @@ regardless. Passing a real AWS region here produces a signature error.
    **Object Read & Write** permission. Scope it to the one bucket rather than
    the whole account. Cloudflare shows the access key ID, the secret access key,
    and the endpoint once — the secret is not retrievable later.
-4. **Add a CORS policy** (client mode only) under the bucket's Settings tab.
+4. **Add a CORS policy** under the bucket's Settings tab — the browser
+   uploads straight to R2 by default in both client and server mode.
 
-### CORS (client mode only)
+### CORS
 
 ```json
 [
@@ -62,8 +63,11 @@ regardless. Passing a real AWS region here produces a signature error.
 ]
 ```
 
-In server mode the browser never contacts R2, so the bucket needs no CORS policy
-at all. See [Credentials And CORS](/docs/credentials-configuration/).
+This applies in both client and server mode: by default the browser uploads
+straight to R2 either way, since server mode hands it a presigned URL instead
+of proxying the bytes. The exceptions are cloud-drive transfers (server-to-S3)
+and a deployment using `onPresignResponse` to rewrite the URL to a same-origin
+proxy. See [Credentials And CORS](/docs/credentials-configuration/).
 
 <Callout type="warning" title="R2 multipart parts must be equal-sized">
     R2 requires every part of a multipart upload except the last to be exactly

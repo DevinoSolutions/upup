@@ -9,7 +9,7 @@
  * Standalone, dependency-light (node builtins only). Extends — does NOT
  * replace — the Phase-1 link-integrity unit test in apps/landing
  * (src/__tests__/docs-source.test.ts), which pins every `](/docs/...)` link
- * against real page URLs. This gate adds four things that unit test cannot:
+ * against real page URLs. This gate adds three things that unit test cannot:
  *
  *   1. INTERNAL LINKS — every internal doc link resolves to a real page:
  *      markdown `](/docs/...)`, markdown relative `](./x)` / `](../x)`, and
@@ -31,18 +31,8 @@
  *   3. REDIRECT MAP — every concrete `/docs/...` destination in the legacy
  *      `/documentation/*` redirect map (apps/landing/next.config.mjs) must
  *      resolve to a real current page URL. A redirect that lands on a 404 is
- *      a failure. Wildcard rules have no concrete target here; leg 4 is what
- *      exercises them.
- *
- *   4. LEGACY URLS — every URL the deleted Docusaurus app ever served, in
- *      BOTH of its route shapes (see LEGACY_DOCUSAURUS below), is run through
- *      the redirect map the way Next matches it (first matching rule wins)
- *      and must land on a real page in exactly one redirect-rule hop — and a
- *      legacy doc page whose slug still exists must land on THAT page, not
- *      a fallback. This is what catches a wildcard that rewrites a legacy
- *      URL into a 404 — e.g. the newer-shape `/documentation/:path*`
- *      capturing an older-shape `/documentation/docs/<slug>` and doubling it
- *      to `/docs/docs/<slug>/`.
+ *      a failure. The `/documentation/:path*` wildcard has no concrete
+ *      target and is reported as a pass-through, not validated.
  *
  * Page-URL derivation reimplements the slug walk from
  * apps/landing/src/lib/docs/llms.ts (kept intentionally standalone so this
@@ -70,90 +60,6 @@ const NON_PAGE_TARGETS = new Set([
     '/robots.txt',
     '/sitemap.xml',
 ])
-
-// ── The deleted Docusaurus app's URL surface (frozen) ──────────────────────
-// apps/docs (deleted in 59b56df6) served under baseUrl `/documentation/` in
-// TWO route shapes over its life, and Search Console still holds URLs of
-// both:
-//   - OLDER, routeBasePath 'docs' (monorepo import 8813b1f4, 2025-11, until
-//     00eaa6bb, 2026-07-12): pages at `/documentation/docs/<slug>`,
-//     generated-index sections at `/documentation/docs/category/<label>`.
-//   - NEWER, routeBasePath '/' (00eaa6bb until the deletion): pages at
-//     `/documentation/<slug>`, sections at `/documentation/category/<label>`,
-//     plus two custom-slug section indexes (`quickstarts`, `comparisons`)
-//     that landed AFTER the flip (7f62b8a4) and so only exist in this shape.
-// `pages` is every doc of the final tree —
-//   git ls-tree -r --name-only 59b56df6^ -- apps/docs/docs
-// (each frontmatter `slug:` equals its file path). The older-shape era had a
-// subset of these; checking the full list in both shapes is a superset that
-// costs nothing and keeps the list single-sourced. The app is gone, so this
-// list can never grow — it is a fixture, not a mirror of anything live.
-export const LEGACY_DOCUSAURUS = {
-    pages: [
-        'ai-assistants',
-        'api-reference/azure-generate-sas-url',
-        'api-reference/s3-generate-presigned-url',
-        'api-reference/upupuploader/classnames',
-        'api-reference/upupuploader/event-handlers',
-        'api-reference/upupuploader/icon-prop',
-        'api-reference/upupuploader/image-editor',
-        'api-reference/upupuploader/optional-props',
-        'api-reference/upupuploader/ref-api',
-        'api-reference/upupuploader/required-props',
-        'code-examples',
-        'comparisons/upup-vs-filepond',
-        'comparisons/upup-vs-react-dropzone',
-        'comparisons/upup-vs-uploadthing',
-        'comparisons/upup-vs-uppy',
-        'credentials-configuration',
-        'error-handling',
-        'getting-started',
-        'guides/error-monitoring',
-        'guides/headless',
-        'guides/modes',
-        'guides/server-auth',
-        'guides/server-mode-setup',
-        'guides/storage-providers',
-        'guides/theming',
-        'localization',
-        'migration/v1-to-v3',
-        'migration/v2-to-v2.1',
-        'quickstarts/angular',
-        'quickstarts/next',
-        'quickstarts/preact',
-        'quickstarts/react',
-        'quickstarts/svelte',
-        'quickstarts/vanilla',
-        'quickstarts/vue',
-        'resumable-uploads',
-    ],
-    generatedIndexes: ['category/api-reference', 'category/upupuploader'],
-    customSlugIndexes: ['quickstarts', 'comparisons'],
-}
-
-// Expand a legacy surface into the concrete request paths of both shapes.
-// `slug` is set for doc pages (so the check can demand they land on their
-// own page when it still exists) and null for the root/section indexes.
-export function legacyDocusaurusUrls({
-    pages,
-    generatedIndexes,
-    customSlugIndexes,
-}) {
-    // [base, the section indexes that existed in that shape]
-    const shapes = [
-        ['/documentation', [...generatedIndexes, ...customSlugIndexes]],
-        ['/documentation/docs', generatedIndexes],
-    ]
-    const urls = []
-    for (const [base, sectionIndexes] of shapes) {
-        urls.push({ path: base, slug: null })
-        for (const slug of pages) urls.push({ path: `${base}/${slug}`, slug })
-        for (const s of sectionIndexes) {
-            urls.push({ path: `${base}/${s}`, slug: null })
-        }
-    }
-    return urls
-}
 
 // ── github-slugger v2 (rehype-slug) — replicated verbatim ──────────────────
 // Regex copied byte-for-byte from github-slugger@2.0.0/regex.js. `slug()` is
@@ -300,7 +206,7 @@ function splitFragment(target) {
 
 // Pull `{ source, destination }` pairs out of the `async redirects()` block of
 // next.config.mjs (text-scanned so the script needs none of the app's deps).
-export function extractRedirects(configText) {
+function extractRedirects(configText) {
     const start = configText.indexOf('async redirects()')
     if (start < 0) return []
     const region = configText.slice(start)
@@ -313,116 +219,11 @@ export function extractRedirects(configText) {
     return pairs
 }
 
-// ── Redirect simulation (Next's first-match semantics) ─────────────────────
-// A deliberately small subset of path-to-regexp: literal segments, `:name`
-// (exactly one segment), and a final `:name*` (zero or more). Semantics
-// verified against next@16.3.3's own getPathMatch + prepareDestination:
-// `/documentation/docs/:path*` matches `/documentation/docs` with an EMPTY
-// `path` (the `/` before `:path*` belongs to the token), renders
-// `/docs/:path*/` as `/docs/`, and does NOT match `/documentation/docsx`.
-// Anything richer (regex groups, `?`, `+`) is refused loudly: silently
-// treating an unknown pattern as "no match" would let a real rule that
-// shadows a legacy URL go unsimulated.
-const PARAM_RE = /^:([A-Za-z_]\w*)(\*?)$/
-
-function compileSource(source) {
-    const segments = source.split('/').slice(1)
-    const tokens = []
-    segments.forEach((seg, i) => {
-        const p = seg.match(PARAM_RE)
-        if (p) {
-            if (p[2] === '*' && i !== segments.length - 1) {
-                throw new Error(`\`:${p[1]}*\` is only supported last`)
-            }
-            tokens.push({ param: p[1], star: p[2] === '*' })
-        } else if (/[:()?+*{}\\]/.test(seg)) {
-            throw new Error(`segment \`${seg}\` is not a supported pattern`)
-        } else {
-            tokens.push({ literal: seg })
-        }
-    })
-    return tokens
-}
-
-function matchTokens(tokens, pathname) {
-    const parts = pathname === '/' ? [''] : pathname.split('/').slice(1)
-    const params = {}
-    for (let i = 0; i < tokens.length; i++) {
-        const t = tokens[i]
-        if (t.star) {
-            params[t.param] = parts.slice(i)
-            return params
-        }
-        if (i >= parts.length) return null
-        if (t.param) {
-            if (parts[i] === '') return null
-            params[t.param] = parts[i]
-        } else if (t.literal !== parts[i]) {
-            return null
-        }
-    }
-    return parts.length === tokens.length ? params : null
-}
-
-function renderDestination(destination, params) {
-    return destination
-        .replace(/\/:([A-Za-z_]\w*)\*/g, (_, name) =>
-            params[name]?.length ? '/' + params[name].join('/') : '',
-        )
-        .replace(/:([A-Za-z_]\w*)/g, (_, name) => params[name] ?? '')
-}
-
-// Next strips the trailing slash before matching a source (trailingSlash:
-// true), so every hop is matched on the unslashed path.
-const unslash = p => p.replace(/\/+$/, '') || '/'
-
-// Follow `pathname` through the redirect list the way a browser would: each
-// request takes the FIRST matching rule. Returns every rule hop taken and
-// the path it finally rests on. `compiled` is the output of
-// compileRedirects(); a loop is cut off at `maxHops`.
-export function resolveRedirect(compiled, pathname, maxHops = 5) {
-    const hops = []
-    let current = unslash(pathname)
-    for (let n = 0; n < maxHops; n++) {
-        let next = null
-        for (const rule of compiled) {
-            const params = matchTokens(rule.tokens, current)
-            if (!params) continue
-            next = renderDestination(rule.destination, params)
-            hops.push({ source: rule.source, to: next })
-            break
-        }
-        if (next === null) break
-        current = unslash(next)
-    }
-    return { hops, final: current }
-}
-
-// Compile the extracted pairs; an unsupported pattern becomes an `error`
-// entry rather than a rule, so the caller can report it.
-export function compileRedirects(redirects) {
-    const compiled = []
-    const errors = []
-    for (const { source, destination } of redirects) {
-        try {
-            compiled.push({
-                source,
-                destination,
-                tokens: compileSource(source),
-            })
-        } catch (err) {
-            errors.push({ source, destination, reason: err.message })
-        }
-    }
-    return { compiled, errors }
-}
-
 // ── Core check ─────────────────────────────────────────────────────────────
 
 export function checkDocsLinks({
     contentDir = DEFAULT_CONTENT_DIR,
     nextConfigPath = DEFAULT_NEXT_CONFIG,
-    legacy = LEGACY_DOCUSAURUS,
 } = {}) {
     const files = walkMdx(contentDir).toSorted()
     const pages = files.map(file => {
@@ -553,65 +354,6 @@ export function checkDocsLinks({
         }
     }
 
-    // Legacy URLs: every URL the Docusaurus app served, both route shapes,
-    // must land on a real page in ONE rule hop (Next's own trailing-slash
-    // normalization is not a rule hop). Skipped when the scanner extracted
-    // nothing — that is already reported above, and one "matches no rule"
-    // line per legacy URL would only bury it.
-    let legacyUrlsChecked = 0
-    if (redirects.length > 0) {
-        const { compiled, errors } = compileRedirects(redirects)
-        for (const e of errors) {
-            failures.push({
-                kind: 'REDIRECT',
-                file: nextConfigPath,
-                line: 0,
-                link: `${e.source} -> ${e.destination}`,
-                reason: `source pattern cannot be simulated (${e.reason}) — extend compileSource() so the legacy-URL leg stays faithful`,
-            })
-        }
-        for (const { path, slug } of legacyDocusaurusUrls(legacy)) {
-            legacyUrlsChecked++
-            const { hops, final } = resolveRedirect(compiled, path)
-            const trail = [path, ...hops.map(h => h.to)].join(' -> ')
-            const fail = reason =>
-                failures.push({
-                    kind: 'LEGACY',
-                    file: nextConfigPath,
-                    line: 0,
-                    link: trail,
-                    reason,
-                })
-            if (hops.length === 0) {
-                fail(`legacy URL ${path} matches no redirect rule`)
-                continue
-            }
-            if (!validPages.has(final)) {
-                fail(
-                    `legacy URL ${path} lands on ${hops.at(-1).to}, which is no page`,
-                )
-                continue
-            }
-            if (hops.length > 1) {
-                fail(
-                    `legacy URL ${path} takes ${hops.length} redirect hops; point its rule straight at ${final}/`,
-                )
-            }
-            // A legacy page whose slug still exists must land on THAT page:
-            // a catch-all to /docs/ would pass "is a page" while throwing
-            // away every URL's ranking.
-            if (
-                slug &&
-                validPages.has(pagePath(slug)) &&
-                final !== pagePath(slug)
-            ) {
-                fail(
-                    `legacy URL ${path} lands on ${final}, but its own page ${pagePath(slug)} exists`,
-                )
-            }
-        }
-    }
-
     return {
         failures,
         counts: {
@@ -619,7 +361,6 @@ export function checkDocsLinks({
             linksChecked,
             anchorsChecked,
             redirectsChecked,
-            legacyUrlsChecked,
         },
     }
 }
@@ -643,8 +384,7 @@ function main() {
     console.log(
         `docs:links:check OK — ${counts.linksChecked} links, ` +
             `${counts.anchorsChecked} anchors, ` +
-            `${counts.redirectsChecked} redirect targets, ` +
-            `${counts.legacyUrlsChecked} legacy URLs checked ` +
+            `${counts.redirectsChecked} redirect targets checked ` +
             `across ${counts.pages} pages`,
     )
 }

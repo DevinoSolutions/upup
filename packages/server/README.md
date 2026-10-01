@@ -1,9 +1,10 @@
 # @useupup/server
 
 Server-mode endpoints for [upup](https://github.com/DevinoSolutions/upup): S3/MinIO
-presign + proxy upload, drive-token exchange (Google Drive / OneDrive /
-Dropbox / Box), and an HMAC-signed upload-token trust model so the client
-never asserts the object key or S3 `uploadId` it's writing to.
+presign + multipart signing (the browser PUTs file bytes straight to the
+bucket), drive-token exchange and server-side drive → S3 transfer (Google
+Drive / OneDrive / Dropbox / Box), and an HMAC-signed upload-token trust model
+so the client never asserts the object key or S3 `uploadId` it's writing to.
 
 `createUpupHandler(config)` returns a framework-agnostic `(req: Request) =>
 Promise<Response>`. Thin adapters wire it into Express, Fastify, Hono, and
