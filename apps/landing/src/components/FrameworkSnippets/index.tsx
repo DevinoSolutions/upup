@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { Check, Copy } from 'lucide-react'
 import {
     FRAMEWORK_LIST,
@@ -149,7 +149,7 @@ export default function FrameworkSnippets({
     )
 
     return (
-        <motion.div
+        <m.div
             className="max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -206,7 +206,7 @@ export default function FrameworkSnippets({
                             }`}
                         >
                             {isActive && (
-                                <motion.span
+                                <m.span
                                     layoutId="framework-tab-active"
                                     className="absolute inset-0 rounded-lg bg-primary/10 dark:bg-primary-dark/10 border border-primary/20 dark:border-primary-dark/20"
                                     transition={{
@@ -248,7 +248,7 @@ export default function FrameworkSnippets({
                     >
                         <AnimatePresence mode="wait">
                             {copiedCode ? (
-                                <motion.span
+                                <m.span
                                     key="check"
                                     initial={{ scale: 0, rotate: -180 }}
                                     animate={{ scale: 1, rotate: 0 }}
@@ -257,9 +257,9 @@ export default function FrameworkSnippets({
                                     className="block"
                                 >
                                     <Check className="w-4 h-4 text-green-600" />
-                                </motion.span>
+                                </m.span>
                             ) : (
-                                <motion.span
+                                <m.span
                                     key="copy"
                                     initial={{ scale: 0, rotate: -180 }}
                                     animate={{ scale: 1, rotate: 0 }}
@@ -268,7 +268,7 @@ export default function FrameworkSnippets({
                                     className="block"
                                 >
                                     <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                </motion.span>
+                                </m.span>
                             )}
                         </AnimatePresence>
                     </button>
@@ -277,7 +277,7 @@ export default function FrameworkSnippets({
                 {/* Code body */}
                 <div className="overflow-x-auto p-4">
                     <AnimatePresence mode="wait">
-                        <motion.div
+                        <m.div
                             key={active.id}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -285,10 +285,10 @@ export default function FrameworkSnippets({
                             transition={{ duration: 0.2 }}
                         >
                             <HighlightedCode code={active.code} />
-                        </motion.div>
+                        </m.div>
                     </AnimatePresence>
                 </div>
             </div>
-        </motion.div>
+        </m.div>
     )
 }

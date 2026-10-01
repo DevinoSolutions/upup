@@ -1,45 +1,361 @@
 ---
-title: upup vs UploadThing — Self-Hosted Alternative
-description: A factual upup vs UploadThing comparison — a free, MIT-licensed uploader you self-host against your own S3 bucket versus a managed, hosted upload service.
+title: 'UploadThing vs S3: A Self-Hosted Alternative'
+description: UploadThing vs your own S3 bucket, compared on ownership, cost model, egress and lock-in, plus a self-hosted UploadThing alternative built on upup.
+faq:
+    - q: Is UploadThing just S3?
+      a: 'No. UploadThing is a service: storage, request signing, per-route upload rules and file URLs, all run for you. An S3 bucket is only the storage. Everything else is yours to build, or to take from a library such as upup.'
+    - q: Is UploadThing free?
+      a: "It has a free tier. As of September 2026, UploadThing's pricing page lists: Free: $0 a month for 2 GB of storage, shared across all your apps, with unlimited uploads and downloads. $10 a month: 100 GB of storage, plus regions and private files. Usage-based: from $25 a month with 250 GB included, then $0.08 per GB over 250 GB. Plans change, so check uploadthing.com/pricing before you decide. upup itself costs nothing: you pay only your storage provider, at that provider's rates."
+    - q: Is upup a drop-in replacement for UploadThing?
+      a: No. The component, the server config and the completion hooks have different shapes.
+    - q: Does upup work with Cloudflare R2 or MinIO instead of AWS S3?
+      a: 'Yes. Server mode speaks the S3 API to any S3-compatible provider: set storage.type and, for anything other than AWS, storage.endpoint.'
+    - q: Do uploaded bytes go through my server?
+      a: 'Not for normal uploads. The server signs the request and the browser sends the bytes straight to the bucket, in both client and server mode. The exception is cloud-drive transfers in server mode: the server pulls the file from the drive and streams it into the bucket in bounded 5 MiB chunks.'
+    - q: What does upup cost?
+      a: Nothing. It is MIT-licensed with no hosted tier and no account. You pay only your storage provider.
+    - q: Can I keep a hosted-service feel without the hosted service?
+      a: Mostly. Server mode gives you one route, server-chosen keys, size and type limits, per-user namespacing and lifecycle hooks. What you take on is the bucket itself, so start from the storage guide for your provider.
 ---
 
-UploadThing (by Ping Labs) is a hosted file-upload **service** for full-stack
-TypeScript apps: you install its open-source SDK, drop in its `UploadButton` /
-`UploadDropzone` components, and files land in UploadThing's managed storage — no
-bucket or infrastructure to run. It's a fast, type-safe way to ship uploads,
-especially on Next.js. The core trade-off against upup is the model: UploadThing
-is a paid managed service that stores your files on its own infrastructure and is
-focused on the upload button/dropzone, while upup is an MIT, self-hosted library
-that writes to **your** S3-compatible storage and adds cloud drives, camera and
-screen capture, image editing, and native UI for six frameworks.
+**The short answer:** UploadThing is a hosted upload service that stores your
+files in infrastructure it runs. An S3 bucket is storage you own and pay for
+directly, but uploading straight to S3 means building presigned URLs, CORS, an
+upload widget and multipart handling yourself. upup is the MIT-licensed library
+that supplies those pieces.
 
-## At a glance
+This page compares the two models honestly, lists what "direct to S3" actually
+requires, and shows the migration path with upup's real server API.
 
-| Feature                 | UploadThing                                                                                                                                            | upup                                                                                                |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Model                   | Hosted SaaS (managed storage + CDN)                                                                                                                    | Self-hosted library (your storage)                                                                  |
-| Native first-party UI   | React components (`UploadButton` / `UploadDropzone`) + adapters for Next.js and other full-stack frameworks (Solid, Svelte, Vue, Nuxt, Expo, and more) | React, Vue, Svelte, Angular, Vanilla JS, Preact                                                     |
-| Headless core           | React hooks (coupled to the service)                                                                                                                   | Yes (`@useupup/core`, framework-agnostic)                                                           |
-| License / pricing       | Open-source SDK (MIT); the service is a paid SaaS with a free tier and usage-based plans                                                               | MIT, free & open source (you pay only for your own storage)                                         |
-| Storage / self-host     | Managed — files are stored on UploadThing's infrastructure                                                                                             | Any S3-compatible storage you own (AWS, MinIO, R2, Spaces, Wasabi, Backblaze) via `@useupup/server` |
-| Cloud-drive sources     | Not built in                                                                                                                                           | Google Drive, OneDrive, Dropbox, Box                                                                |
-| Camera / screen capture | Not built in                                                                                                                                           | Yes (both)                                                                                          |
-| Image editor            | Not built in                                                                                                                                           | Yes — React/Preact only                                                                             |
-| Resumable uploads       | Yes — `createUpload` (start, pause, resume), since v7                                                                                                  | Yes — optional (tus or S3 multipart)                                                                |
-| i18n                    | No                                                                                                                                                     | Yes (ICU locale bundles)                                                                            |
+## What UploadThing is
 
-## Choose UploadThing if
+UploadThing (by Ping Labs) is a hosted file-upload service for full-stack
+TypeScript apps. You declare a **file router** on your server (what each
+endpoint accepts, who may call it, and what runs when an upload finishes),
+install its open-source SDK, and render its `UploadButton` or `UploadDropzone`
+React components, or build your own UI with its hooks. Adapters cover Next.js
+and other full-stack frameworks.
 
-- You want zero storage infrastructure — a managed service that stores files and
-  serves them over a CDN for you.
-- You're building on Next.js (or another supported full-stack framework) and want
-  the fastest, most type-safe path to a working upload button.
-- You're comfortable with a hosted, paid service owning the storage layer.
+It is, in effect, a managed layer over object storage. UploadThing runs the
+storage, the request signing and the file URLs, so there is no bucket, IAM
+policy or CORS rule for you to manage. The SDK is MIT-licensed. The service has
+a free tier and paid plans; see [Is UploadThing free?](#is-uploadthing-free)
+below.
 
-## Choose upup if
+## UploadThing vs your own S3 bucket
 
-- You want files kept in your own S3-compatible storage, avoiding a per-GB SaaS
-  bill and third-party custody of your data.
-- You need cloud-drive sources, camera, screen capture, or image editing.
-- You want native UI across six frameworks and a fully MIT, self-hosted stack —
-  including an HMAC-signed server trust model.
+The question behind "UploadThing vs S3" is not really which storage is better.
+It is whether you want a service to own the upload layer, or want the files in
+an account you control.
+
+| Concern              | UploadThing                                         | Your own S3 bucket                                                                  |
+| -------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Where the files live | Storage that UploadThing operates                   | A bucket in your own cloud account (or your own MinIO)                              |
+| Who you pay          | UploadThing, per its plans (see their pricing page) | Your storage provider, at its storage, request and transfer rates                   |
+| Egress (downloads)   | Governed by UploadThing's plan terms                | Billed by your provider; some S3-compatible providers do not charge for it          |
+| File URLs you store  | Point at UploadThing's domains                      | Point at your bucket, your CDN or your own domain                                   |
+| Region and residency | Chosen by the service                               | You pick the region, or run storage on-premises                                     |
+| Switching away later | Export the files and rewrite every stored URL       | The S3 API is implemented by many providers, so a move is mostly an endpoint change |
+| Setup work           | Minimal: an API key and a file router               | Bucket, credentials and CORS, plus the upload plumbing described below              |
+
+### Ownership
+
+With UploadThing, your users' files sit in an account that is not yours. That is
+the point of a managed service, and for many apps it is the right call. With
+your own bucket, access policies, encryption settings, lifecycle rules, backups
+and audit logs are all yours to configure with your provider's own tooling.
+
+### Cost model
+
+UploadThing bundles storage, signing and delivery into one plan. S3 bills the
+parts separately: stored bytes, requests, and data transfer out. Neither is
+universally cheaper. A bucket tends to win when you already have cloud credits
+or a committed-spend agreement, store a lot of data, or want to pick a provider
+per workload. A plan tends to win when your volume is small and you value not
+running anything. Price both against your own numbers; don't take anyone's
+headline figure, including this page's (it has none on purpose).
+
+### Egress
+
+Egress, the bytes your users download, is where object-storage bills surprise
+people. AWS S3 charges for data transferred out to the internet. S3-compatible
+alternatives differ: Cloudflare R2 does not charge egress fees, and self-hosted
+MinIO has no vendor egress bill at all, only your own bandwidth. Because upup
+speaks the S3 API, choosing a provider for its egress pricing doesn't change
+your upload code.
+
+### Lock-in
+
+Moving off a hosted upload service means copying every file out and rewriting
+every URL your database stores. Moving between S3-compatible providers means
+changing an endpoint and credentials, then copying objects with standard S3
+tooling. Your upload code stays put.
+
+## What you need to go direct to S3
+
+Uploading from a browser straight to a bucket, without routing every byte
+through your server, takes four pieces. Here is what each one is and which part
+of upup covers it.
+
+### 1. Presigned URLs
+
+The browser must never hold your storage credentials, so your server signs a
+short-lived URL for exactly one object, and the browser `PUT`s the bytes to it.
+
+- **Client mode:** point `uploadEndpoint` at your own route. It returns upup's
+  presign contract (`key`, `uploadUrl`, optional `uploadHeaders`, `expiresIn`);
+  see [S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/).
+- **Server mode:** `@useupup/server`'s `createUpupHandler` answers `POST
+/presign` for you. The server chooses the object key, so a client can never
+  write to a key it made up, and the upload routes stay closed (`403
+AUTH_REQUIRED`) until you configure `getUserId`, `auth`, or the explicit
+  `allowAnonymousUploads` opt-in. See
+  [Server Auth & Trust Model](/docs/guides/server-auth/).
+
+### 2. CORS on the bucket
+
+Whenever the browser `PUT`s to the bucket itself, the bucket must allow your
+origin, the `PUT` method and the headers the signed request carries, and it
+must expose `ETag` so multipart uploads can complete. Each storage guide has
+the exact rule: [AWS S3](/docs/guides/storage/aws-s3/),
+[Cloudflare R2](/docs/guides/storage/cloudflare-r2/),
+[MinIO](/docs/guides/storage/minio/).
+
+### 3. An upload widget
+
+A dropzone is the easy part. Previews, per-file progress, retries, cancel,
+file-type and size limits, accessibility and i18n are the parts that take
+weeks. `UpupUploader` ships all of that as native components for React, Vue,
+Svelte, Angular, Preact and vanilla JS, plus Google Drive, OneDrive, Dropbox and
+Box sources, camera and screen capture. See
+[Sources](/docs/guides/sources/).
+
+### 4. Resumable multipart uploads
+
+A single `PUT` fails badly on a 2 GB video over hotel Wi-Fi. S3's answer is
+multipart upload, which needs an init call, a signed URL per part, a complete
+call, and cleanup. Set `resumable: { protocol: 'multipart' }` in server mode and
+upup runs that lifecycle against `@useupup/server`, using an HMAC-signed token
+that binds the object key, the S3 `uploadId` and a size envelope. An upload
+interrupted by a reload continues from the parts storage already holds. See
+[Resumable uploads](/docs/resumable-uploads/).
+
+## Feature comparison
+
+| Feature                 | UploadThing                                                                | upup                                                                             |
+| ----------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Model                   | Hosted service (managed storage and file URLs)                             | Self-hosted library (your storage)                                               |
+| License / pricing       | MIT SDK; hosted service with a free 2 GB tier and paid plans               | MIT, free; you pay only your storage provider                                    |
+| Storage                 | UploadThing's infrastructure                                               | Any S3-compatible bucket: AWS, R2, MinIO, Spaces, Wasabi, Backblaze B2 and more  |
+| First-party UI          | React components and hooks, with adapters for Next.js and other frameworks | Native UI for React, Vue, Svelte, Angular, Preact and vanilla JS                 |
+| Headless core           | Framework hooks tied to the service                                        | `@useupup/core`, framework-agnostic                                              |
+| Server-side rules       | File router: per-route types, sizes, middleware, completion callback       | `createUpupHandler`: `maxFileSize`, `allowedTypes`, `getUserId`, lifecycle hooks |
+| Cloud-drive sources     | Not built in                                                               | Google Drive, OneDrive, Dropbox, Box                                             |
+| Camera / screen capture | Not built in                                                               | Both                                                                             |
+| Image editor            | Not built in                                                               | React and Preact only                                                            |
+| Resumable uploads       | Yes (pause and resume, since v7)                                           | Optional: S3 multipart or tus                                                    |
+| i18n                    | Not built in                                                               | ICU locale bundles                                                               |
+
+## Migrating from UploadThing to S3 with upup
+
+upup is not a drop-in replacement: the API is different, and nothing here reads
+an UploadThing file router. The concepts map one to one, though.
+
+| In UploadThing                            | In upup                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| An API token in your environment          | Your bucket credentials plus `UPUP_UPLOAD_TOKEN_SECRET` (min 16 characters)                                        |
+| A file route's allowed types and max size | `allowedTypes` and `maxFileSize` (bytes) on the server, mirrored by the `allowedFileTypes` and `maxFileSize` props |
+| `.middleware()` for auth                  | `getUserId` (or `auth`), plus `hooks.onBeforeUpload` as an admission gate                                          |
+| `.onUploadComplete()`                     | The client `onFileUploadComplete` / `onUploadComplete` props, and `hooks.onFileUploaded` on multipart completes    |
+| `UploadButton` / `UploadDropzone`         | `UpupUploader`                                                                                                     |
+
+The steps below use the Next.js App Router, the most common UploadThing setup.
+[Express, Fastify and Hono](/docs/guides/server-mode-setup/) take the same
+config object through a one-line adapter.
+
+### 1. Create the bucket
+
+Create the bucket, credentials and CORS rule with your provider's guide:
+[AWS S3](/docs/guides/storage/aws-s3/),
+[Cloudflare R2](/docs/guides/storage/cloudflare-r2/) or
+[MinIO](/docs/guides/storage/minio/). Other S3-compatible services are covered
+in [Storage Providers](/docs/guides/storage-providers/).
+
+### 2. Install
+
+```sh
+npm i @useupup/next
+```
+
+`@useupup/next` bundles the React UI and the route handlers, and depends on
+`@useupup/server`.
+
+### 3. Replace the file router with one config
+
+```ts
+// lib/upup-config.ts
+import { defineUpupConfig } from '@useupup/next/server'
+
+export const upupConfig = defineUpupConfig({
+    storage: {
+        type: 'aws', // or 'r2', 'minio', … plus `endpoint` for non-AWS
+        bucket: process.env.S3_BUCKET!,
+        region: process.env.S3_REGION!,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    },
+    // Required, server-only: stable, high-entropy, min 16 chars, the same on
+    // every instance. createUpupHandler throws at startup without it.
+    uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET!,
+    // Your auth, the job UploadThing's .middleware() did. Returning null
+    // rejects the upload.
+    getUserId: async req => {
+        const session = await getSessionFromCookie(req) // your session helper
+        return session?.userId ?? null
+    },
+    maxFileSize: 4 * 1024 * 1024, // 4 MB
+    allowedTypes: ['image/*'],
+})
+```
+
+Objects are keyed `<userId>/<uuid>/<sanitized-filename>` by default, so every
+upload is namespaced to the user who made it. Override that with `keyStrategy`.
+
+### 4. Mount the route
+
+```ts
+// app/api/upup/[...route]/route.ts
+import { createUpupNextHandler } from '@useupup/next/server'
+import { upupConfig } from '@/lib/upup-config'
+
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(upupConfig)
+```
+
+The segment must be a catch-all, because the handler dispatches on the path
+below it (`/presign`, `/multipart/init`, …). You can delete the old
+`app/api/uploadthing` route once nothing calls it. Details:
+[Next.js adapter](/docs/guides/server-adapters/nextjs/).
+
+### 5. Swap the component
+
+```tsx
+'use client'
+
+import { UpupUploader } from '@useupup/next'
+import '@useupup/next/styles'
+
+export default function AvatarUploader() {
+    return (
+        <UpupUploader
+            mode="server"
+            serverUrl="/api/upup"
+            provider="aws"
+            allowedFileTypes="image/*"
+            maxFileSize={{ size: 4, unit: 'MB' }}
+            onFileUploadComplete={(file, key) => {
+                // What used to live in .onUploadComplete(): record the upload.
+                void fetch('/api/files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, name: file.name }),
+                })
+            }}
+        />
+    )
+}
+```
+
+### 6. Move the completion logic
+
+This is the one real behavioural difference. UploadThing calls your
+`onUploadComplete` on the server. With upup, a single presigned `PUT` goes from
+the browser straight to the bucket, so **your server never sees it finish** and
+no server hook fires for it. You have two options:
+
+- **Record it from the client**, as above. Treat the reported key as untrusted:
+  in `/api/files`, check that it starts with the signed-in user's id (the
+  default key layout makes this a prefix check), and optionally confirm the
+  object exists before writing the row.
+- **Use the server hooks.** `hooks.onFileUploaded` fires once per file on
+  `POST /multipart/complete` and on cloud-drive transfers, the paths where the
+  server itself completes the upload. See the per-route table in
+  [Server Mode Setup](/docs/guides/server-mode-setup/).
+
+### 7. Copy existing files
+
+upup does not import files from UploadThing. Copy them with a one-off script:
+list them through UploadThing's server SDK (see their docs), download each
+file, upload it to your bucket, then rewrite the URLs you stored. Do this before
+you cancel the plan.
+
+## When UploadThing is the better choice
+
+Be honest about the trade. UploadThing is the better fit when:
+
+- **You don't want any storage account at all.** No bucket, no IAM, no CORS, no
+  lifecycle rules, and no cloud bill to read.
+- **You're on Next.js and want the typed route definition.** The file router
+  keeps types, limits and auth for each upload endpoint in one typed place,
+  which is pleasant to work with.
+- **Your volume is small and predictable**, and a plan price is simpler than
+  metering storage, requests and transfer separately.
+- **Nobody on the team wants to own the upload infrastructure.** With a service,
+  outages and scaling are someone else's job.
+
+Pick S3 plus upup when you want the files in your own account, want to choose
+your storage provider (and its egress pricing), need cloud-drive, camera or
+screen-capture sources, or build in Vue, Svelte, Angular or plain JS as well as
+React.
+
+## FAQ
+
+### Is UploadThing just S3?
+
+No. UploadThing is a service: storage, request signing, per-route upload rules
+and file URLs, all run for you. An S3 bucket is only the storage. Everything
+else is yours to build, or to take from a library such as upup.
+
+### Is UploadThing free?
+
+It has a free tier. As of September 2026, UploadThing's pricing page lists:
+
+- **Free:** $0 a month for 2 GB of storage, shared across all your apps, with
+  unlimited uploads and downloads.
+- **$10 a month:** 100 GB of storage, plus regions and private files.
+- **Usage-based:** from $25 a month with 250 GB included, then $0.08 per GB
+  over 250 GB.
+
+Plans change, so check [uploadthing.com/pricing](https://uploadthing.com/pricing)
+before you decide. upup itself costs nothing: you pay only your storage
+provider, at that provider's rates.
+
+### Is upup a drop-in replacement for UploadThing?
+
+No. The component, the server config and the completion hooks have different
+shapes. The [concept map](#migrating-from-uploadthing-to-s3-with-upup) above
+lines them up, and most apps migrate by replacing one route and one component.
+
+### Does upup work with Cloudflare R2 or MinIO instead of AWS S3?
+
+Yes. Server mode speaks the S3 API to any S3-compatible provider: set
+`storage.type` and, for anything other than AWS, `storage.endpoint`. See
+[Cloudflare R2](/docs/guides/storage/cloudflare-r2/) and
+[MinIO](/docs/guides/storage/minio/).
+
+### Do uploaded bytes go through my server?
+
+Not for normal uploads. The server signs the request and the browser sends the
+bytes straight to the bucket, in both client and server mode. The exception is
+cloud-drive transfers in server mode: the server pulls the file from the drive
+and streams it into the bucket in bounded 5 MiB chunks.
+
+### What does upup cost?
+
+Nothing. It is MIT-licensed with no hosted tier and no account. You pay only
+your storage provider.
+
+### Can I keep a hosted-service feel without the hosted service?
+
+Mostly. Server mode gives you one route, server-chosen keys, size and type
+limits, per-user namespacing and lifecycle hooks. What you take on is the
+bucket itself, so start from the storage guide for your provider.

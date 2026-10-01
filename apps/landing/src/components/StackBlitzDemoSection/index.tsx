@@ -2,7 +2,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { m, AnimatePresence, useInView } from 'framer-motion'
 import { Code, ExternalLink, Maximize2, Minimize2 } from 'lucide-react'
 import { FaExclamationTriangle } from 'react-icons/fa'
 import { SiStackblitz } from 'react-icons/si'
@@ -163,7 +163,8 @@ function EditorLoadingOverlay() {
 
 // One module-level loader so the SDK is fetched at most once per page, whether
 // the embed effect or the "Open in StackBlitz" button asks for it first.
-const loadStackBlitzSdk = () => import('@stackblitz/sdk').then(m => m.default)
+const loadStackBlitzSdk = () =>
+    import('@stackblitz/sdk').then(mod => mod.default)
 
 export default function StackBlitzDemoSection() {
     const containerRef = useRef<HTMLDivElement | null>(null)
@@ -451,7 +452,7 @@ export default function StackBlitzDemoSection() {
             {/* Minimalist Warning Modal */}
             <AnimatePresence>
                 {showFullscreenWarning && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -459,7 +460,7 @@ export default function StackBlitzDemoSection() {
                         className="fixed inset-0 bg-black/70 z-[10000] flex items-center justify-center p-4"
                         onClick={cancelFullscreenChange}
                     >
-                        <motion.div
+                        <m.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
@@ -509,8 +510,8 @@ export default function StackBlitzDemoSection() {
                                     Continue
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
+                        </m.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </>

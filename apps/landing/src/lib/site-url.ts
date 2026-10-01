@@ -1,4 +1,4 @@
-import { clientEnv } from '@/lib/env'
+import { clientEnv } from '@/lib/client/env'
 
 // The ONE home for the site's public base URL. Canonical/OG metadata, the
 // sitemap, JSON-LD, and llms.txt all derive from here — a hardcoded
