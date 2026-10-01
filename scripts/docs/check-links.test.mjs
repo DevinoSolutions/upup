@@ -85,6 +85,12 @@ test('a link to a folder hub (guides/index.mdx) resolves at the folder URL', () 
     const { failures, counts } = checkDocsLinks({
         contentDir: fixture('nested-index', 'content'),
         nextConfigPath: fixture('nested-index', 'redirects.config.txt'),
+        // The hub is also the legacy section-index target: /documentation/guides.
+        legacy: {
+            pages: [],
+            generatedIndexes: [],
+            customSlugIndexes: ['guides'],
+        },
     })
     assert.deepEqual(failures, [], JSON.stringify(failures, null, 2))
     assert.equal(counts.pages, 3)
@@ -92,7 +98,8 @@ test('a link to a folder hub (guides/index.mdx) resolves at the folder URL', () 
         counts.anchorsChecked >= 1,
         'expected the hub anchor to be walked',
     )
-    assert.equal(counts.redirectsChecked, 1)
+    assert.equal(counts.redirectsChecked, 3)
+    assert.equal(counts.legacyUrlsChecked, 3)
 })
 
 test('a config the redirects scanner cannot parse fails instead of dropping the leg to zero', () => {
