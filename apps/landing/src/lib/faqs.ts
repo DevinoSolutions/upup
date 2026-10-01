@@ -139,7 +139,7 @@ export const frameworkFaqs: Record<FrameworkId, Faq[]> = {
         {
             question:
                 'Does the Angular uploader work with standalone components and NgModules?',
-            answer: "Yes. UpupUploaderComponent is a standalone component (selector upup-uploader) for Angular 19 and later. Add it to a standalone component's imports or to an NgModule's imports. Everything is passed through one config input, and the stylesheet loads once from angular.json.",
+            answer: "Yes. UpupUploaderComponent is a standalone component (selector upup-uploader) for Angular 19 through 22. Add it to a standalone component's imports or to an NgModule's imports. Everything is passed through one config input, and the stylesheet loads once from angular.json.",
         },
         {
             question:
