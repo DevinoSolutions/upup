@@ -20,6 +20,8 @@ import FrameworkStrip from '@/components/FrameworkStrip'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 import { AgentSetupPill } from '@/components/AgentSetupPill'
+import { captureClientEvent } from '@/lib/analytics/capture.client'
+import { INSTALL_COMMAND_COPIED } from '@/lib/analytics/contract'
 
 // The hero visual is decorative (aria-hidden) and expensive: the scene engine,
 // a pile of react-icons, and eleven <img> tags that React 19 hoists into
@@ -100,7 +102,13 @@ export default function HeroSection({
 
     const handleCopy = useCallback(() => {
         copy(currentCommand)
-    }, [copy, currentCommand])
+        captureClientEvent(INSTALL_COMMAND_COPIED, {
+            surface: fw ? 'framework-hero' : 'home-hero',
+            package_manager: selectedManager,
+            package: pkg,
+            ...(fw ? { framework: fw.id } : {}),
+        })
+    }, [copy, currentCommand, fw, selectedManager, pkg])
 
     // An open menu closes on Escape (returning focus to its trigger) and on a
     // click anywhere outside it — without these it stayed open until something
@@ -266,9 +274,15 @@ export default function HeroSection({
                         </div>
 
                         {/* Install Command with Package Manager Select — the page's
-                            ONE install surface. Behaviour is unchanged. */}
+                            ONE install surface. `relative z-30` because
+                            `.hero-rise` leaves a transform behind (fill-mode
+                            both), which makes this wrapper its own stacking
+                            context: the menu's z-50 only counts inside it.
+                            Without a z-index here the agent-setup pill and the
+                            hero visual, later in the DOM, paint over the open
+                            menu on stacked layouts and swallow its taps. */}
                         <div
-                            className="hero-rise w-full max-w-lg mx-auto lg:mx-0"
+                            className="hero-rise relative z-30 w-full max-w-lg mx-auto lg:mx-0"
                             style={rise(0.45)}
                         >
                             {/* Flat hairline surface — the page's ONE install

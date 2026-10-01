@@ -58,7 +58,17 @@ const FAQ_PAGES = [
     {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
-        questions: 6,
+        questions: 7,
+    },
+    {
+        slug: ['guides', 'storage', 'digitalocean-spaces'],
+        file: 'guides/storage/digitalocean-spaces.mdx',
+        questions: 5,
+    },
+    {
+        slug: ['guides', 's3-presigned-url-upload-react'],
+        file: 'guides/s3-presigned-url-upload-react.mdx',
+        questions: 4,
     },
 ] as const
 
@@ -302,7 +312,7 @@ describe('docs folder hub pages', () => {
                 ['Guides', '/docs/guides/'],
                 ['Storage', '/docs/guides/storage/'],
                 [
-                    'Upload Files to Azure Blob Storage from the Browser',
+                    'Browser Uploads to Azure Blob Storage with JavaScript',
                     '/docs/guides/storage/azure-blob/',
                 ],
             ],
