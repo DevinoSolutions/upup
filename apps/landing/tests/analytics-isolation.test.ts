@@ -60,7 +60,7 @@ const E2E_CREDS = {
 }
 
 async function loadDataset() {
-    return import('@/lib/analytics/dataset')
+    return import('@/lib/analytics/dataset.server')
 }
 
 describe('serverDatasetCredentials — runtime isolation', () => {

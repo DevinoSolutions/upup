@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { FaLock } from 'react-icons/fa'
 import { SCENE_MEDIA } from './scene-media'
 
@@ -51,7 +51,7 @@ export default function MockScreenShare({
                     <span className="truncate">app.useupup.com</span>
                 </div>
                 <span className="flex shrink-0 items-center gap-1 text-[10px] font-semibold text-red-400">
-                    <motion.span
+                    <m.span
                         className="h-2 w-2 rounded-full bg-red-500"
                         animate={reduce ? {} : { opacity: [1, 0.3, 1] }}
                         transition={

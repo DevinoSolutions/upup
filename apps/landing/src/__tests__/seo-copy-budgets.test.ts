@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { generateMetadata as frameworkMetadata } from '@/app/[framework]/page'
 import { metadata as homeMetadata } from '@/app/page'
+import { metadata as agentSetupMetadata } from '@/app/agent-setup/page'
+import { generateMetadata as agentGuideMetadata } from '@/app/agent-setup/[agent]/page'
+import { AGENT_IDS } from '@/lib/agent-setup/config'
 import { FRAMEWORK_IDS, FRAMEWORKS } from '@/lib/frameworks'
 import { siteConfig } from '@/lib/siteConfig'
 import { source } from '@/lib/docs/source'
@@ -127,6 +130,32 @@ describe('docs frontmatter search-result copy', () => {
             .map(entry => `${entry.url} (${entry.description.length})`)
         expect(overBudget).toEqual([])
     })
+})
+
+// The agent-setup pages went live with descriptions of 165-200 characters,
+// which Google cuts mid-sentence. Same budgets as every other page.
+describe('agent-setup search-result copy', () => {
+    it('keeps the /agent-setup/ title and description inside the budgets', () => {
+        expect(textOf(agentSetupMetadata.title).length).toBeLessThanOrEqual(
+            MAX_TITLE,
+        )
+        const description = textOf(agentSetupMetadata.description)
+        expect(description.length).toBeGreaterThanOrEqual(MIN_DESCRIPTION)
+        expect(description.length).toBeLessThanOrEqual(MAX_DESCRIPTION)
+    })
+
+    it.each(AGENT_IDS)(
+        'gives /agent-setup/%s/ a title and description inside the budgets',
+        async id => {
+            const meta = await agentGuideMetadata({
+                params: Promise.resolve({ agent: id }),
+            })
+            expect(textOf(meta.title).length).toBeLessThanOrEqual(MAX_TITLE)
+            const description = textOf(meta.description)
+            expect(description.length).toBeGreaterThanOrEqual(MIN_DESCRIPTION)
+            expect(description.length).toBeLessThanOrEqual(MAX_DESCRIPTION)
+        },
+    )
 })
 
 describe('retired parity claim', () => {

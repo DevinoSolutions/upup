@@ -7,6 +7,7 @@ import {
     type AiFeedbackEvent,
 } from '@useupup/interactive-example'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
+import { whenPostHogReady } from '@/lib/analytics/posthog-client'
 
 /**
  * Client wrapper that injects the two client-only pieces the Ask-AI panel needs
@@ -26,24 +27,22 @@ import { captureClientEvent } from '@/lib/analytics/capture.client'
 export function InteractiveExampleClient(props: InteractiveExampleProps) {
     const [distinctId, setDistinctId] = useState<string | undefined>(undefined)
 
-    useEffect(() => {
-        let cancelled = false
-        void import('posthog-js')
-            .then(({ default: posthog }) => {
-                if (cancelled) return
+    // The live instance arrives through the analytics registry: on the landing
+    // routes PostHog boots after page load, so reading the SDK module directly
+    // here could see it before init() and get no id. On a disabled dataset it
+    // never arrives and the trace falls back to the 'anonymous' distinct id.
+    useEffect(
+        () =>
+            whenPostHogReady(posthog => {
                 try {
                     const id = posthog.get_distinct_id?.()
                     if (id) setDistinctId(id)
                 } catch {
-                    // posthog not initialised (disabled dataset) — leave unset;
-                    // the trace falls back to the 'anonymous' distinct id.
+                    // Leave unset — same 'anonymous' fallback.
                 }
-            })
-            .catch(() => {})
-        return () => {
-            cancelled = true
-        }
-    }, [])
+            }),
+        [],
+    )
 
     const onAiFeedback = useCallback((event: AiFeedbackEvent) => {
         captureClientEvent(event.name, event.properties)

@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { FaMicrophone, FaStop } from 'react-icons/fa'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -26,9 +26,9 @@ const BAR_COUNT = 24
 
 function formatTime(total: number): string {
     const safe = Math.max(0, Math.floor(total))
-    const m = Math.floor(safe / 60)
+    const mins = Math.floor(safe / 60)
     const s = safe % 60
-    return `${m}:${String(s).padStart(2, '0')}`
+    return `${mins}:${String(s).padStart(2, '0')}`
 }
 
 export default function MockAudioRecorder({
@@ -49,7 +49,7 @@ export default function MockAudioRecorder({
                     // envelope with no Math.random, so it's stable across renders.
                     const base = 0.3 + 0.7 * Math.abs(Math.sin(i * 1.3))
                     return (
-                        <motion.span
+                        <m.span
                             key={i}
                             className="h-full w-1 rounded-full bg-purple-300/80"
                             style={{ transformOrigin: 'center' }}

@@ -12,7 +12,7 @@ interface FlatPage {
 // order is byte-identical to the visible sidebar order. Separators set the
 // section label for their following siblings; a folder with an index url is a
 // navigable page in its own right, and also sets the section for its children.
-// Folders without a url (e.g. Quickstarts) are section labels only, not pages.
+// Folders without a url (e.g. Auth) are section labels only, not pages.
 function flatten(
     nodes: SidebarNode[],
     section: string | undefined,

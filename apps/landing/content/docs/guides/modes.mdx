@@ -1,11 +1,13 @@
 ---
 title: Client Mode vs Server Mode
-description: Choose between client mode (your presign endpoint) and server mode (@useupup/server proxies uploads) — what runs where and when to pick each.
+description: Choose between client mode (your presign endpoint) and server mode (@useupup/server signs uploads and runs drives) — what runs where and when to pick each.
 ---
 
 `@useupup/react` supports local-only collection plus two upload hosts. `mode`
 controls where upload/provider operations run, not whether users can select
-local files.
+local files. In both modes local file bytes go straight from the browser to
+your bucket over short-lived presigned URLs, and your storage credentials stay
+on your server.
 
 <ModesDiagram />
 
@@ -17,8 +19,8 @@ local files.
 
 ## Client mode
 
-**Browser talks directly to storage.** Your server's only job is to
-sign short-lived upload URLs.
+**You write the signing endpoint.** Your server's only job is to sign
+short-lived upload URLs; the browser uploads straight to storage.
 
 ```text
 browser ──POST /sign──> your server
@@ -27,51 +29,82 @@ browser ──PUT bytes────> S3 / R2 / etc.
 ```
 
 Cloud drives (Google Drive, OneDrive, Dropbox, Box) use OAuth from the
-browser — tokens stay in browser memory, never touch your server.
+browser — tokens stay in browser memory, never touch your server. Picked
+drive files download into the browser, then upload like local files.
 
 **Choose client mode when:**
 
 - You want the simplest setup.
 - You're OK exposing OAuth client IDs (not secrets) to the browser.
-- You don't need server-side virus scanning or compliance logging
-  inside the upload path.
-- Latency matters — bytes go direct to storage, no relay hop.
+- Your backend isn't JavaScript, or you already sign S3 URLs — the endpoint
+  is one small route in any language.
+- Each file fits a single PUT — S3 multipart and cross-reload resume need
+  server mode.
 
 ## Server mode
 
-**Browser talks only to your server.** Your server proxies drive APIs,
-stores OAuth tokens, and writes bytes to storage.
+**`@useupup/server` is your signing endpoint and your drive backend.** Local
+file bytes still go straight from the browser to storage; the server decides
+who may upload what, and where it lands. Cloud-drive OAuth, listing, and
+transfers run on the server, so drive bytes never touch the browser.
 
 ```text
+local files — signed on your server, bytes go direct:
+browser ──POST /presign, /multipart/*──> your server
+browser <──presigned URL(s)───────────── your server
+browser ──PUT bytes──────────────────> S3 / R2 / etc.
+
+cloud drives — OAuth, listing, and transfer on your server:
 browser ──GET  /files/:provider ──> your server ──> Google / MS / ...
 browser ──POST /files/:provider/transfer ──> your server ──> S3
+                       (drive → server → S3, in bounded 5 MiB chunks)
 ```
 
-The uploader hits one origin. You own the access tokens and the
-storage credentials.
+The uploader calls one API origin, plus your bucket for the PUTs — so the
+bucket needs the same CORS rule as in client mode. You own the drive access
+tokens and the storage credentials; neither reaches the browser. Sending local
+bytes through a server is opt-in: `hooks.onPresignResponse` can rewrite the
+upload URL to a same-origin proxy route that you run (see
+[Rewriting presign responses](/docs/guides/server-mode-setup/#rewriting-presign-responses)).
 
 **Choose server mode when:**
 
-- Compliance or policy forbids shipping OAuth client secrets or
-  storage credentials to the browser.
-- You want to scan, log, or transform files on the server before they
-  reach storage.
-- Your end users can't reach the drive APIs directly (corporate
-  firewall, region block).
-- Files may be larger than the browser can hold in memory. Server mode
-  streams drive → S3 without buffering the whole file.
+- You want a ready-made signing endpoint that is secure by default — upload
+  routes return `403 AUTH_REQUIRED` until you configure `auth`, `getUserId`,
+  or `allowAnonymousUploads`.
+- You want server-side admission: `hooks.onBeforeUpload(file, req)` can reject
+  an upload, and `maxFileSize` / `allowedTypes` are enforced, before any URL is
+  issued.
+- You want the server to choose object keys — `<userId>/<uuid>/<filename>` by
+  default, so with `getUserId` set each user writes into their own namespace.
+- Cloud-drive OAuth must stay off the browser (the client secret and access
+  tokens live on your server), or your users can't reach the drive APIs
+  directly (corporate firewall, region block).
+- Drive files may be large. The server pulls the picked file and streams it
+  into the bucket in bounded 5 MiB chunks, so it never downloads to the
+  browser.
+- You need S3 multipart uploads that resume after a reload.
+
+Server-side completion hooks only see what the server finishes itself:
+`onFileUploaded` fires on multipart complete and drive transfers,
+`onUploadComplete` on multipart complete only. A single presigned PUT never
+reaches your server on completion — see
+[Lifecycle hooks](/docs/guides/server-mode-setup/#lifecycle-hooks).
 
 ## What changes between modes?
 
-| Concern                 | Client mode            | Server mode             |
-| ----------------------- | ---------------------- | ----------------------- |
-| Upload target           | `uploadEndpoint`       | `serverUrl`             |
-| OAuth client ID         | Shipped to browser     | Server-only             |
-| OAuth client secret     | Not used               | Server-only, required   |
-| Drive API calls         | Browser → provider     | Server → provider       |
-| Storage credentials     | Signed URLs only       | Server holds real creds |
-| Multipart               | Browser-coordinated    | Server-coordinated      |
-| Re-auth on token expiry | Same: user re-signs-in | Same: user re-signs-in  |
+| Concern             | Client mode                       | Server mode                                  |
+| ------------------- | --------------------------------- | -------------------------------------------- |
+| Upload target       | `uploadEndpoint`                  | `serverUrl`                                  |
+| Signing endpoint    | You write it, any backend         | `createUpupHandler` (`@useupup/server`)      |
+| Local file bytes    | Browser → bucket (presigned PUT)  | Browser → bucket (presigned PUT)             |
+| Drive file bytes    | Provider → browser → bucket       | Provider → server → bucket                   |
+| OAuth client ID     | Shipped to browser                | Server config only                           |
+| OAuth client secret | Not used                          | Server-only, required                        |
+| Drive API calls     | Browser → provider                | Server → provider                            |
+| Storage credentials | Your server; browser gets URLs    | Your server; browser gets URLs               |
+| Multipart           | Not available (single PUT)        | Server-signed parts, browser PUTs            |
+| Drive token expiry  | Browser refreshes; Google re-auth | Server refreshes if it holds a refresh token |
 
 ## Feature parity
 

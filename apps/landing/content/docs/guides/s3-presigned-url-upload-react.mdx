@@ -1,0 +1,462 @@
+---
+title: Upload Files to S3 from React with Presigned URLs
+description: Upload files to S3 from React with presigned URLs. Sign a PUT with the AWS SDK v3, show upload progress, set bucket CORS and fix 403 errors.
+faq:
+    - q: Do I need a backend to upload files to S3 from React?
+      a: Yes, a small one. Long-lived AWS access keys must never reach the browser, so a server route signs each upload and the browser sends the file straight to S3 with the signed URL.
+    - q: How long should a presigned upload URL be valid?
+      a: A few minutes is enough. S3 checks the expiry at the time of the request, not when the transfer ends, so sign the URL just before the upload starts. The SDK accepts up to seven days, but a URL signed with temporary credentials stops working when those credentials expire.
+    - q: Why does my presigned PUT return 403 SignatureDoesNotMatch?
+      a: The request differs from what the server signed. The usual cause is a Content-Type header that is not the ContentType the URL was signed with. A different body size when Content-Length is signed, a URL changed after signing, a skewed clock or the wrong region produce the same error.
+    - q: Can a presigned URL limit the upload size?
+      a: Yes, if the server signs Content-Length. The browser sets that header from the file, so a body of any other size no longer matches the signature and S3 rejects it with 403 SignatureDoesNotMatch.
+---
+
+A presigned URL lets the browser upload a file straight to an S3 bucket without
+ever holding AWS credentials. Your server checks the request, signs a
+short-lived URL for one object key, and the browser sends the file to S3 with a
+`PUT`. This tutorial builds that flow by hand with the AWS SDK for JavaScript v3
+and plain React, sets up the bucket's CORS rule, walks through the errors you
+are most likely to hit, and then drives the same endpoint with the upup
+uploader component.
+
+The code targets Amazon S3. The flow is the same on S3-compatible storage such
+as Cloudflare R2, DigitalOcean Spaces or MinIO: point the `S3Client` at the
+provider's `endpoint`. [Storage Providers](/docs/guides/storage-providers/)
+links a setup page for each one.
+
+## How a presigned upload works
+
+```text
+browser ──POST /api/upload-url { name, size, type }──> your server
+browser <──{ key, uploadUrl, uploadHeaders }────────── your server (signs)
+browser ──PUT file, headers from uploadHeaders───────> S3 bucket
+```
+
+The signature lives in the URL's query string (`X-Amz-Algorithm`,
+`X-Amz-Credential`, `X-Amz-Date`, `X-Amz-Expires`, `X-Amz-SignedHeaders`,
+`X-Amz-Signature`). It covers the HTTP method, the bucket and key, the expiry
+and every header named in `X-Amz-SignedHeaders`, but not the file's bytes: the
+SDK marks the body `UNSIGNED-PAYLOAD`. S3 recomputes the signature when the
+`PUT` arrives and rejects the request if anything differs. That has three
+consequences:
+
+- The URL acts with the permissions of the IAM identity that signed it, so that
+  identity needs `s3:PutObject` on the key.
+- Anyone holding the URL can upload to that key until it expires, as many times
+  as they like, and each upload replaces the object already stored under that
+  key.
+- The client can change anything the server did not sign. Sign the content type
+  and the length, and the browser cannot swap either.
+
+## 1. Create the bucket and an IAM policy
+
+Create the bucket in the region you will put in `S3_REGION` and leave Block
+Public Access on: uploads go through signed requests, so the bucket never needs
+to be public. The server's credentials (an IAM role on AWS compute, or an IAM
+user's access keys in `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`) need only
+one action for this flow:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::my-upload-bucket/uploads/*"
+        }
+    ]
+}
+```
+
+## 2. Sign the upload on your server
+
+```sh
+npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
+The route below is a Next.js App Router handler. The same logic works in
+Express, Fastify or any other Node.js server.
+
+```ts
+// app/api/upload-url/route.ts
+import { randomUUID } from 'node:crypto'
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+
+const s3 = new S3Client({
+    region: process.env.S3_REGION,
+    // Keep checksum parameters out of presigned URLs (see below).
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+})
+
+const MAX_BYTES = 10 * 1024 * 1024 // 10 MB
+const EXPIRES_IN = 300 // seconds
+const ALLOWED_TYPES = new Map([
+    ['image/jpeg', 'jpg'],
+    ['image/png', 'png'],
+    ['image/webp', 'webp'],
+    ['application/pdf', 'pdf'],
+])
+
+export async function POST(request: Request) {
+    // Authenticate the caller here and return 401 for anonymous requests.
+
+    const body = await request.json().catch(() => null)
+    const size = body?.size
+    const type = body?.type
+    const extension =
+        typeof type === 'string' ? ALLOWED_TYPES.get(type) : undefined
+
+    if (!extension) {
+        return Response.json(
+            { error: 'This file type is not allowed.' },
+            { status: 415 },
+        )
+    }
+    if (!Number.isInteger(size) || size <= 0 || size > MAX_BYTES) {
+        return Response.json(
+            { error: 'Files must be 10 MB or smaller.' },
+            { status: 413 },
+        )
+    }
+
+    const key = `uploads/${randomUUID()}.${extension}`
+    const uploadUrl = await getSignedUrl(
+        s3,
+        new PutObjectCommand({
+            Bucket: process.env.S3_BUCKET,
+            Key: key,
+            ContentType: type,
+            ContentLength: size,
+        }),
+        {
+            expiresIn: EXPIRES_IN,
+            signableHeaders: new Set(['content-type', 'content-length']),
+        },
+    )
+
+    return Response.json({
+        key,
+        uploadUrl,
+        uploadHeaders: { 'Content-Type': type },
+        expiresIn: EXPIRES_IN,
+    })
+}
+```
+
+What each part is for:
+
+- **Validation.** The size and type in the request body are claims made by the
+  browser. The route rejects types outside the allow list and sizes over the
+  limit, then signs `ContentType` and `ContentLength` into the URL so S3
+  enforces both: a `PUT` with another `Content-Type` or another body size fails
+  with `403 SignatureDoesNotMatch`. By default the SDK's presigner leaves
+  `content-type` out of the signature; `signableHeaders` makes it sign
+  `content-type` along with `content-length`.
+- **Keys.** The key is `uploads/<random UUID>.<extension>`, and the extension
+  comes from the allow list, not from the file name. A key built from the user's
+  file name can collide with another upload and replace it. Store the original
+  name next to the key in your database if you need it, and put the user's ID
+  in the prefix if uploads belong to users.
+- **Expiry.** `expiresIn: 300` gives the browser five minutes to start the
+  upload. S3 checks the expiry at the time of the request, not when the
+  transfer ends, so sign the URL just before the upload rather than when the
+  page loads.
+- **Checksums.** With their default settings, current AWS SDK v3 releases add
+  `x-amz-sdk-checksum-algorithm=CRC32` and `x-amz-checksum-crc32=AAAAAA==` to
+  presigned `PUT` URLs. That value is the CRC32 of an empty body, computed at
+  signing time, not a checksum of the file.
+  `requestChecksumCalculation: 'WHEN_REQUIRED'` leaves both parameters out of
+  the URL.
+- **Response.** `uploadHeaders` tells the browser which headers to send with the
+  `PUT`. `Content-Length` is not in it: the browser computes that header from the
+  file and does not let scripts set it.
+
+## 3. Upload from React with progress
+
+`fetch` has no upload progress events, so this component sends the file with
+`XMLHttpRequest`:
+
+```tsx
+'use client'
+
+import { useState, type ChangeEvent } from 'react'
+
+type UploadTarget = {
+    key: string
+    uploadUrl: string
+    uploadHeaders: Record<string, string>
+}
+
+function putFile(
+    target: UploadTarget,
+    file: File,
+    onProgress: (percent: number) => void,
+) {
+    return new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.open('PUT', target.uploadUrl)
+        for (const [name, value] of Object.entries(target.uploadHeaders)) {
+            xhr.setRequestHeader(name, value)
+        }
+        xhr.upload.onprogress = event => {
+            if (event.lengthComputable) {
+                onProgress(Math.round((event.loaded / event.total) * 100))
+            }
+        }
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve()
+            } else {
+                // S3 describes the error in an XML body.
+                const detail = `${xhr.status} ${xhr.responseText}`
+                reject(new Error(`S3 rejected the upload: ${detail}`))
+            }
+        }
+        // No response at all: usually a CORS rule that does not match.
+        xhr.onerror = () => reject(new Error('The upload request failed.'))
+        xhr.send(file)
+    })
+}
+
+export function S3Uploader() {
+    const [progress, setProgress] = useState(0)
+    const [message, setMessage] = useState('')
+
+    async function handleChange(event: ChangeEvent<HTMLInputElement>) {
+        const file = event.target.files?.[0]
+        if (!file) return
+        setProgress(0)
+
+        const response = await fetch('/api/upload-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: file.name,
+                size: file.size,
+                type: file.type,
+            }),
+        })
+        if (!response.ok) {
+            const { error } = await response.json()
+            setMessage(error)
+            return
+        }
+
+        const target: UploadTarget = await response.json()
+        try {
+            await putFile(target, file, setProgress)
+            setMessage(`Uploaded to ${target.key}`)
+        } catch (error) {
+            setMessage(error instanceof Error ? error.message : String(error))
+        }
+    }
+
+    return (
+        <div>
+            <input type="file" onChange={handleChange} />
+            <progress value={progress} max={100} />
+            <p>{message}</p>
+        </div>
+    )
+}
+```
+
+Send the headers from `uploadHeaders` exactly as the server returned them. If
+you do not need progress, `fetch` works with the same inputs:
+
+```ts
+await fetch(target.uploadUrl, {
+    method: 'PUT',
+    headers: target.uploadHeaders,
+    body: file,
+})
+```
+
+## 4. Allow your origin in the bucket CORS
+
+A `PUT` with a `Content-Type` such as `image/jpeg` is not a simple request, so
+the browser first sends a preflight `OPTIONS` request, and S3 answers it from
+the bucket's CORS configuration. Save this as `cors.json`:
+
+```json
+{
+    "CORSRules": [
+        {
+            "AllowedOrigins": ["http://localhost:3000", "https://your-app.com"],
+            "AllowedMethods": ["PUT"],
+            "AllowedHeaders": ["content-type"],
+            "MaxAgeSeconds": 3000
+        }
+    ]
+}
+```
+
+Apply it with the AWS CLI:
+
+```sh
+aws s3api put-bucket-cors --bucket my-upload-bucket --cors-configuration file://cors.json
+```
+
+In the S3 console, open the bucket's Permissions tab and edit the Cross-origin
+resource sharing (CORS) section; it takes the same rules as a JSON array,
+without the `CORSRules` wrapper. List every origin that uploads, with its
+scheme and port (`http://localhost:3000` and `http://localhost:5173` are
+different origins), and every header your route returns in `uploadHeaders`.
+Single `PUT` uploads do not read any response headers, so `ExposeHeaders` can
+stay empty until you add multipart uploads.
+
+## Common errors
+
+### The browser reports a CORS error
+
+The console says the request was blocked by the CORS policy, or the `PUT`
+fails with no response. Check that the page's exact origin is in
+`AllowedOrigins`, that `PUT` is in `AllowedMethods`, that every header in
+`uploadHeaders` is in `AllowedHeaders`, and that the rule is on the bucket the
+URL points at. Then replay the upload without a browser:
+
+```sh
+curl -i -X PUT -H "Content-Type: image/jpeg" --data-binary @photo.jpg "$UPLOAD_URL"
+```
+
+curl does not enforce CORS. If it returns `200` while the browser still fails,
+the CORS rule is the problem. Use the same file you asked the route to sign,
+because the signature covers its type and size. If curl fails too, its response
+body names the S3 error, which is one of the ones below.
+
+### 403 SignatureDoesNotMatch
+
+S3 computed a different signature from the request it received. In this flow
+the causes are, most common first:
+
+- The `Content-Type` header differs from the `ContentType` the URL was signed
+  with: the code hardcodes a header, drops one, or uses an HTTP library that
+  sets its own. Send `uploadHeaders` as returned.
+- The body size differs from the signed `ContentLength`, usually because the
+  file was changed after signing, for example by client-side compression. Sign
+  after any processing.
+- The URL was changed after signing: decoded, re-encoded or given an extra
+  parameter.
+- The server's clock is off, or the `S3Client` region is not the bucket's
+  region.
+
+### 403 AccessDenied: Request has expired
+
+The URL's `X-Amz-Expires` window has passed. Request a new URL for every
+attempt, including retries, instead of reusing one signed at page load.
+
+### Other 403 AccessDenied errors
+
+The identity that signed the URL is not allowed to write the key. Check that
+its policy grants `s3:PutObject` on the key's prefix (a key outside `uploads/`
+does not match the policy above) and that no bucket policy denies the request.
+A URL also stops working when the credentials that signed it are revoked or
+deleted, even before its own expiry. An `ExpiredToken` error means the
+temporary credentials that signed the URL have expired; sign with fresh
+credentials.
+
+## The same endpoint with upup
+
+upup's client mode uses this contract. Point `uploadEndpoint` at the route from
+step 2 and the component does what the hand-written React code does: for each
+file it POSTs `{ name, size, type, metadata }` as JSON, sends a `PUT` to
+`uploadUrl` with every header in `uploadHeaders`, reports progress, and treats
+any 2xx response as success.
+
+```tsx
+'use client'
+
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            provider="aws"
+            uploadEndpoint="/api/upload-url"
+            allowedFileTypes={[
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'application/pdf',
+            ]}
+            maxFileSize={{ size: 10, unit: 'MB' }}
+        />
+    )
+}
+```
+
+`allowedFileTypes` and `maxFileSize` repeat the route's limits so users see the
+error before any request is made; the route's checks are still the ones that
+count. The response must include `key`, `uploadUrl` and `expiresIn`, and may add
+`publicUrl` and `downloadUrl`; see
+[S3 Presign Responses](/docs/api-reference/s3-generate-presigned-url/) for the
+shape and the [React Quickstart](/docs/quickstarts/react/) for installation.
+
+## Large files: multipart and resume
+
+A single `PUT` is limited to 5 GB, and a failed `PUT` starts again from the
+first byte. S3 multipart upload splits a file into parts that are signed and
+uploaded separately, so a failure costs one part. Every part needs its own
+signed URL, so the browser calls your server for each one. In upup that is
+server mode, where [`@useupup/server`](/docs/guides/server-mode-setup/) signs
+the parts and the browser uploads them to the bucket:
+
+```tsx
+<UpupUploader
+    mode="server"
+    serverUrl="/api/upup"
+    provider="aws"
+    resumable={{ protocol: 'multipart' }}
+/>
+```
+
+Client-mode `uploadEndpoint` only issues single-`PUT` URLs, so multipart does
+not run there. With multipart, the bucket's CORS rule must also expose the
+`ETag` header, and an `AbortIncompleteMultipartUpload` lifecycle rule should
+clean up abandoned parts. The [Amazon S3 guide](/docs/guides/storage/aws-s3/)
+has both, and [Resumable Uploads](/docs/resumable-uploads/) covers thresholds,
+part sizes and resuming after a page reload.
+
+## FAQ
+
+### Do I need a backend to upload files to S3 from React?
+
+Yes, a small one. Long-lived AWS access keys must never reach the browser, so a
+server route signs each upload and the browser sends the file straight to S3
+with the signed URL.
+
+### How long should a presigned upload URL be valid?
+
+A few minutes is enough. S3 checks the expiry at the time of the request, not
+when the transfer ends, so sign the URL just before the upload starts. The SDK
+accepts up to seven days, but a URL signed with temporary credentials stops
+working when those credentials expire.
+
+### Why does my presigned PUT return 403 SignatureDoesNotMatch?
+
+The request differs from what the server signed. The usual cause is a
+`Content-Type` header that is not the `ContentType` the URL was signed with. A
+different body size when `Content-Length` is signed, a URL changed after
+signing, a skewed clock or the wrong region produce the same error. See
+[403 SignatureDoesNotMatch](#403-signaturedoesnotmatch) above.
+
+### Can a presigned URL limit the upload size?
+
+Yes, if the server signs `Content-Length`. The browser sets that header from the
+file, so a body of any other size no longer matches the signature and S3
+rejects it with 403 SignatureDoesNotMatch.
+
+## Next steps
+
+- [Amazon S3](/docs/guides/storage/aws-s3/) — the bucket, IAM policy and CORS
+  setup for upup server mode.
+- [React Quickstart](/docs/quickstarts/react/) — install `@useupup/react` and
+  choose sources and cloud drives.
+- [Server Mode Setup](/docs/guides/server-mode-setup/) — `@useupup/server` for
+  multipart, resumable uploads and per-user scoping.
+- [Client Mode vs Server Mode](/docs/guides/modes/) — what runs where in each
+  mode.

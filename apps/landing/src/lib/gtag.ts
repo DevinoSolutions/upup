@@ -1,4 +1,4 @@
-import { clientEnv } from '@/lib/env'
+import { clientEnv } from '@/lib/client/env'
 
 export const GA_TRACKING_ID = clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
 
