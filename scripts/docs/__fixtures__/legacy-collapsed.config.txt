@@ -1,0 +1,29 @@
+// An older-shape catch-all that lands every legacy URL on the docs home. Each
+// one reaches a real page in a single hop, yet a legacy page whose own slug
+// still exists is thrown away — the legacy-URL leg must demand it land there.
+const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/documentation',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/category/guides',
+                destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/docs/:path*',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/:path*',
+                destination: '/docs/:path*/',
+                permanent: true,
+            },
+        ]
+    },
+}

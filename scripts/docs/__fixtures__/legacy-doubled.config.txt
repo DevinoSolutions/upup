@@ -1,0 +1,25 @@
+// The pre-fix shape of apps/landing/next.config.mjs: newer-shape legacy rules
+// only. The `/documentation/:path*` wildcard captures an older-shape
+// `/documentation/docs/<slug>` as `:path* = docs/<slug>` and renders the
+// doubled `/docs/docs/<slug>/` — a 404 the legacy-URL leg must report.
+const nextConfig = {
+    async redirects() {
+        return [
+            {
+                source: '/documentation',
+                destination: '/docs/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/category/guides',
+                destination: '/docs/guide/',
+                permanent: true,
+            },
+            {
+                source: '/documentation/:path*',
+                destination: '/docs/:path*/',
+                permanent: true,
+            },
+        ]
+    },
+}
