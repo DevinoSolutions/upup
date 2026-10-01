@@ -198,10 +198,13 @@ function walkMdx(dir) {
     return out
 }
 
+// A folder hub (`guides/index.mdx`) is served at the folder URL, exactly like
+// the root `index.mdx` is served at /docs — strip a trailing `index` segment
+// at any depth, not just the root.
 function slugFromPath(contentDir, filePath) {
     const rel = relative(contentDir, filePath).split(sep).join('/')
     const withoutExt = rel.replace(/\.mdx$/, '')
-    return withoutExt === 'index' ? '' : withoutExt
+    return withoutExt.replace(/(^|\/)index$/, '')
 }
 
 // Canonical, comparison-normalized page path (no host, no trailing slash).
