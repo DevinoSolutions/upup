@@ -11,7 +11,7 @@ import {
     ArrowRight,
     ChevronDown,
 } from 'lucide-react'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { m, AnimatePresence, useInView } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import GradientText from '@/components/TextAnimation/GradientText'
 import RisingWords from '@/components/TextAnimation/RisingWords'
@@ -227,7 +227,7 @@ export default function HeroSection({
                         >
                             {/* whileHover/whileTap only — no `initial`, so these
                                 never render at opacity 0. */}
-                            <motion.div
+                            <m.div
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                             >
@@ -239,9 +239,9 @@ export default function HeroSection({
                                     Try Live Demo
                                     <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
-                            </motion.div>
+                            </m.div>
 
-                            <motion.div
+                            <m.div
                                 whileHover={{ scale: 1.05, y: -2 }}
                                 whileTap={{ scale: 0.95 }}
                             >
@@ -255,7 +255,7 @@ export default function HeroSection({
                                     View Source
                                     <ExternalLink className="w-4 h-4" />
                                 </a>
-                            </motion.div>
+                            </m.div>
 
                             {/* Framework pages only: the shortest path from
                                 this page to working code is that framework's
@@ -302,7 +302,7 @@ export default function HeroSection({
 
                                         <div className="flex items-center gap-2">
                                             {/* Copy Button */}
-                                            <motion.button
+                                            <m.button
                                                 onClick={handleCopy}
                                                 aria-label="Copy install command"
                                                 className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -311,7 +311,7 @@ export default function HeroSection({
                                             >
                                                 <AnimatePresence mode="wait">
                                                     {copied ? (
-                                                        <motion.div
+                                                        <m.div
                                                             key="check"
                                                             initial={{
                                                                 scale: 0,
@@ -330,9 +330,9 @@ export default function HeroSection({
                                                             }}
                                                         >
                                                             <Check className="w-4 h-4 text-green-600" />
-                                                        </motion.div>
+                                                        </m.div>
                                                     ) : (
-                                                        <motion.div
+                                                        <m.div
                                                             key="copy"
                                                             initial={{
                                                                 scale: 0,
@@ -351,17 +351,17 @@ export default function HeroSection({
                                                             }}
                                                         >
                                                             <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                                        </motion.div>
+                                                        </m.div>
                                                     )}
                                                 </AnimatePresence>
-                                            </motion.button>
+                                            </m.button>
 
                                             {/* Package Manager Select */}
                                             <div
                                                 className="relative"
                                                 ref={menuRef}
                                             >
-                                                <motion.button
+                                                <m.button
                                                     ref={menuButtonRef}
                                                     type="button"
                                                     onClick={() =>
@@ -384,7 +384,7 @@ export default function HeroSection({
                                                             )?.name
                                                         }
                                                     </span>
-                                                    <motion.div
+                                                    <m.div
                                                         animate={{
                                                             rotate: isOpen
                                                                 ? 180
@@ -396,12 +396,12 @@ export default function HeroSection({
                                                         }}
                                                     >
                                                         <ChevronDown className="w-4 h-4" />
-                                                    </motion.div>
-                                                </motion.button>
+                                                    </m.div>
+                                                </m.button>
 
                                                 <AnimatePresence>
                                                     {isOpen && (
-                                                        <motion.div
+                                                        <m.div
                                                             initial={{
                                                                 opacity: 0,
                                                                 y: -10,
@@ -430,7 +430,7 @@ export default function HeroSection({
                                                                     manager,
                                                                     index,
                                                                 ) => (
-                                                                    <motion.button
+                                                                    <m.button
                                                                         key={
                                                                             manager.id
                                                                         }
@@ -476,10 +476,10 @@ export default function HeroSection({
                                                                         {
                                                                             manager.name
                                                                         }
-                                                                    </motion.button>
+                                                                    </m.button>
                                                                 ),
                                                             )}
-                                                        </motion.div>
+                                                        </m.div>
                                                     )}
                                                 </AnimatePresence>
                                             </div>

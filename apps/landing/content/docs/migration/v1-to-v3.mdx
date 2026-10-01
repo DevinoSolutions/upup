@@ -28,8 +28,8 @@ control on the ref API.
   bundles, and theme contracts. You can build a fully custom UI on it.
 - **Two upload modes.** v1's single `tokenEndpoint` becomes either
   `uploadEndpoint` (**client mode** — your route signs URLs, the browser uploads
-  directly) or `mode="server"` + `serverUrl` (**server mode** — the browser
-  talks only to `@useupup/server`, which holds credentials and proxies drives).
+  directly) or `mode="server"` + `serverUrl` (**server mode** —
+  `@useupup/server` signs the URLs, holds credentials, and proxies drives).
 - **Prop renames.** `limit` → `maxFiles`, `accept` → `allowedFileTypes`, `dark`
   → `theme.mode`, `classNames` → `theme.slots`, `uploadAdapters` → `sources`,
   `driveConfigs` → `cloudDrives`, `customProps` → `metadata`,
@@ -96,7 +96,7 @@ left; exact v3 names on the right.
 | `uploadAdapters={[UploadAdapter.INTERNAL, …]}` | `sources={['local', …]}`                                                              | Enum array → string-id array. Mapping below.                                                                                                                                                                                                                          |
 | `driveConfigs={{ … }}`                         | `cloudDrives={{ … }}`                                                                 | Renamed, keys are camelCased. See [Sources & cloud drives](#sources--cloud-drives).                                                                                                                                                                                   |
 | `imageEditor={true}`                           | `imageEditor={true}`                                                                  | Unchanged (`boolean \| ImageEditorOptions`). React/Preact only.                                                                                                                                                                                                       |
-| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v3's are camelCase, imported from `@useupup/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                      |
+| `localePack={fr_FR}`                           | `i18n={{ locale: frFR }}`                                                             | Locale bundles now live under `i18n`. v1 exported snake_case bundles; v3's are camelCase, imported from `@useupup/core` (`enUS`, `frFR`, `arSA`, `deDE`, `esES`, `jaJP`, `koKR`, `zhCN`, `zhTW`).                                                                     |
 | `translations={{ browseFiles: '…' }}`          | `i18n={{ overrides: { … } }}`                                                         | Per-key overrides move under `i18n.overrides`, and are **namespaced** (e.g. `{ fileList: { uploadFiles: '…' } }`) rather than flat.                                                                                                                                   |
 | `customProps={{ … }}`                          | `metadata={{ … }}`                                                                    | Renamed. Still forwarded to your upload route.                                                                                                                                                                                                                        |
 | `enableAutoCorsConfig={true}`                  | `cors={{ dangerouslyAutoConfigure: true, allowedOrigins: [...] }}`                    | Replaced by the `cors` object. Auto-configuration is now explicitly opt-in and named `dangerouslyAutoConfigure`.                                                                                                                                                      |
@@ -138,7 +138,10 @@ Adapter → source id mapping:
 | `CAMERA`           | `'camera'`                          |
 | _(new)_            | `'box'`, `'screen'`, `'microphone'` |
 
-<Callout type="warning" title="v3's default sources add camera, microphone, and screen recording">
+<Callout
+    type="warning"
+    title="v3's default sources add camera, microphone, and screen recording"
+>
     v1's default surface was effectively local files plus link imports. v3
     defaults `sources` to `['local', 'url', 'camera', 'microphone', 'screen']`,
     so an uploader migrated **without** a `sources` prop silently grows three

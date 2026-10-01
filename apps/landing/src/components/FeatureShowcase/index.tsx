@@ -85,7 +85,7 @@ const heroRows: HeroRow[] = [
         icon: <FaShieldAlt className="h-6 w-6" />,
         title: 'Secure Server Mode',
         description:
-            'Optional server mode proxies uploads through your own backend with an HMAC-signed trust model, keeping storage credentials off the client — with ready-made adapters for Express, Fastify, Hono, and Next.js.',
+            'Optional server mode signs every upload on your own backend with an HMAC-signed trust model and runs cloud-drive OAuth there too, while file bytes still go straight to your bucket — with ready-made adapters for Express, Fastify, Hono, and Next.js.',
         Visual: ServerModeVignette,
         live: false,
     },

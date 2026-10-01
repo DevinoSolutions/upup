@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 import { FaCheck, FaSyncAlt } from 'react-icons/fa'
 import MockUploader from './MockUploader'
 import { useSceneTimeline } from './useSceneTimeline'
@@ -95,7 +95,7 @@ export default function ResumeScene({
                 {/* Resumed tick — floats in once the transfer picks back up. */}
                 <AnimatePresence>
                     {state.resumed && (
-                        <motion.span
+                        <m.span
                             className="absolute right-4 top-4 z-40 inline-flex items-center gap-1 rounded-full bg-emerald-700 px-2 py-1 text-[11px] font-semibold text-white shadow-lg"
                             initial={
                                 frozen ? false : { scale: 0.6, opacity: 0 }
@@ -113,14 +113,14 @@ export default function ResumeScene({
                             }
                         >
                             <FaCheck className="h-2.5 w-2.5" /> Resumed
-                        </motion.span>
+                        </m.span>
                     )}
                 </AnimatePresence>
 
                 {/* Reconnect overlay — covers the whole panel chrome on reload. */}
                 <AnimatePresence>
                     {state.reloading && (
-                        <motion.div
+                        <m.div
                             className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-2 rounded-2xl bg-[#0a0e1a]/85 backdrop-blur-[2px]"
                             initial={frozen ? false : { opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -129,7 +129,7 @@ export default function ResumeScene({
                                 frozen ? { duration: 0 } : { duration: 0.18 }
                             }
                         >
-                            <motion.span
+                            <m.span
                                 className="text-sky-400"
                                 animate={
                                     frozen ? undefined : { rotate: [0, 360] }
@@ -145,11 +145,11 @@ export default function ResumeScene({
                                 }
                             >
                                 <FaSyncAlt className="h-6 w-6" />
-                            </motion.span>
+                            </m.span>
                             <span className="text-xs font-medium text-gray-300">
                                 Reconnecting…
                             </span>
-                        </motion.div>
+                        </m.div>
                     )}
                 </AnimatePresence>
             </div>
@@ -157,7 +157,7 @@ export default function ResumeScene({
             {/* Phase caption — crossfades with the story beats. */}
             <div className="mt-4 flex h-5 items-center justify-center">
                 <AnimatePresence mode="wait">
-                    <motion.p
+                    <m.p
                         key={state.caption}
                         className="text-center text-sm font-medium text-gray-500 dark:text-gray-400"
                         initial={frozen ? false : { opacity: 0, y: 6 }}
@@ -166,7 +166,7 @@ export default function ResumeScene({
                         transition={{ duration: 0.35 }}
                     >
                         {state.caption}
-                    </motion.p>
+                    </m.p>
                 </AnimatePresence>
             </div>
         </div>

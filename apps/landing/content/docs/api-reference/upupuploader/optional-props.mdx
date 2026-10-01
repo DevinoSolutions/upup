@@ -24,7 +24,7 @@ Props are identical across React, Vue, Svelte, Angular, Vanilla, Preact, and Nex
 
 `mode?: 'client' | 'server'` — default `'client'`, or `'server'` when `serverUrl` is set and `uploadEndpoint` is not.
 
-In client mode the browser talks to storage directly and your server only signs URLs. In server mode the browser talks only to `serverUrl`, which proxies drive APIs and storage writes. Pick server mode when you cannot expose OAuth client secrets to the browser, or when uploads must pass through your own compliance or scanning layer. See [Client Mode vs Server Mode](/docs/guides/modes/).
+In both modes the browser PUTs local file bytes straight to storage over presigned URLs. In client mode your own endpoint signs them. In server mode `serverUrl` (`@useupup/server`) signs them, and also runs cloud-drive OAuth, listing, and drive → storage transfers. Pick server mode when cloud-drive OAuth must stay off the browser, or when you want server-side admission (`hooks.onBeforeUpload`), size and type limits, and per-user keys enforced before a URL is issued. See [Client Mode vs Server Mode](/docs/guides/modes/).
 
 ```tsx
 <UpupUploader mode="server" serverUrl="/api/upup" />

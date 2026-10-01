@@ -27,6 +27,13 @@ import { extname } from 'node:path'
 // ── Retired tokens ───────────────────────────────────────────────────────
 
 const RETIRED = [
+    // Third-party session recorder, replaced by PostHog session replay
+    // everywhere; the landing site must never load it again.
+    {
+        name: 'hotjar',
+        pattern: /hotjar/i,
+        useInstead: 'PostHog (session replay + heatmaps)',
+    },
     // Uploader-panel DOM vocabulary (kebab covers upup-main-box* selectors too)
     { name: 'main-box', pattern: /main-box/, useInstead: 'uploader-panel' },
     { name: 'MainBox', pattern: /MainBox/, useInstead: 'UploaderPanel' },

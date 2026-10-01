@@ -1,0 +1,93 @@
+---
+title: Guides
+description: Every upup guide in one place — client vs server mode, server adapters, auth, storage providers, file processing, sources, reliability, theming, and plugins.
+---
+
+Task-focused guides for running upup in production: picking a mode, mounting
+the server package on your framework, scoping uploads to your users, connecting
+a storage provider, processing files before they upload, and making the
+uploader look and behave the way your app needs. New to upup? Start with
+[Getting Started](/docs/getting-started/) and the quickstart for your framework.
+
+## Modes and server setup
+
+- [Client Mode vs Server Mode](/docs/guides/modes/) — what runs where in each
+  mode, and when to pick each.
+- [Server Mode Setup](/docs/guides/server-mode-setup/) — mount
+  `createUpupHandler`, configure S3 storage, secrets, limits and hooks.
+- [Express](/docs/guides/server-adapters/express/) — mount `@useupup/server` on
+  an Express route with `createUpupMiddleware`.
+- [Fastify](/docs/guides/server-adapters/fastify/) — register `@useupup/server`
+  as a Fastify plugin with `createUpupPlugin`.
+- [Hono](/docs/guides/server-adapters/hono/) — the web-native mount with
+  `createUpupRoutes`, including edge runtimes.
+- [Next.js](/docs/guides/server-adapters/nextjs/) — App Router and Pages Router
+  handlers from `@useupup/next`.
+
+## Auth
+
+- [Server Auth & Trust Model](/docs/guides/server-auth/) — the HMAC upload-token
+  secret, the secure-by-default 403 on anonymous uploads, and per-user scoping.
+- [Auth Recipes](/docs/guides/auth-recipes/) — one `getUserId` hook, plus Redis
+  and SQL token stores.
+- [Better Auth](/docs/guides/auth/better-auth/) — scope every upload to the
+  signed-in Better Auth session.
+- [NextAuth (Auth.js v5)](/docs/guides/auth/next-auth/) — the `auth()` helper
+  in the App Router and `getToken` outside a request.
+- [Clerk](/docs/guides/auth/clerk/) — `authenticateRequest` inside `getUserId`,
+  and why `authorizedParties` is mandatory.
+- [Custom JWT](/docs/guides/auth/custom-jwt/) — verify your own bearer or cookie
+  JWT with `jose`, including remote JWKS.
+
+## Storage
+
+- [Storage Providers](/docs/guides/storage-providers/) — how upup connects to
+  S3-compatible storage, the full `storage.type` table, and why Azure Blob
+  Storage is the exception.
+- [Amazon S3](/docs/guides/storage/aws-s3/) — bucket setup, the IAM policy,
+  CORS, and a `createUpupHandler` config.
+- [Upload Files to S3 from React with Presigned URLs](/docs/guides/s3-presigned-url-upload-react/)
+  — a presigned `PUT` signed with the AWS SDK v3, a React upload with progress,
+  bucket CORS, and the common 403 errors.
+- [Cloudflare R2](/docs/guides/storage/cloudflare-r2/) — the account-scoped
+  endpoint, region `auto`, API tokens, and CORS.
+- [Backblaze B2](/docs/guides/storage/backblaze-b2/) — application keys, the
+  region-scoped S3 endpoint, and CORS.
+- [DigitalOcean Spaces](/docs/guides/storage/digitalocean-spaces/) — Spaces
+  access keys, the regional endpoint, CORS, and the CDN.
+- [MinIO](/docs/guides/storage/minio/) — a self-hosted MinIO server with Docker,
+  path-style addressing, and CORS.
+- [Azure Blob Storage](/docs/guides/storage/azure-blob/) — client mode only: a
+  SAS URL from your endpoint and the mandatory `x-ms-blob-type` header.
+- [Any S3-compatible storage](/docs/guides/storage/s3-compatible/) — Wasabi,
+  Google Cloud Storage, Supabase, Hetzner, Scaleway, Storj, and more.
+
+## Files and sources
+
+- [File Processing](/docs/guides/file-processing/) — the client-side pipeline:
+  compression, HEIC conversion, EXIF stripping, thumbnails, and checksums.
+- [Image compression](/docs/guides/processing/compression/) — compress and
+  resize images in the browser before they upload.
+- [HEIC to JPEG](/docs/guides/processing/heic-conversion/) — convert iPhone
+  HEIC/HEIF photos with the optional libheif decoder.
+- [Custom pipeline steps](/docs/guides/processing/custom-steps/) — write your
+  own `PipelineStep`, with Web Worker offload.
+- [Upload Sources](/docs/guides/sources/) — local files, drag and drop, paste,
+  folders, camera, microphone, screen capture, URL import, and cloud drives.
+- [Reliability](/docs/guides/reliability/) — per-file retries and backoff,
+  upload concurrency, and multipart resume.
+- [Error Monitoring](/docs/guides/error-monitoring/) — send `upload-error`
+  events and `UpupError` codes to your error tracker.
+
+## UI and extensibility
+
+- [Theming](/docs/guides/theming/) — light, dark and system modes, design
+  tokens, and slot class overrides.
+- [Accessibility](/docs/guides/accessibility/) — keyboard interaction, ARIA
+  live regions, focus management, and reduced motion.
+- [Headless Usage](/docs/guides/headless/) — build your own UI on the upup
+  engine with `useUpupUpload` or `UpupCore`.
+- [Plugins & Extensions](/docs/guides/plugins/) — enable the built-in
+  cloud-drive plugins and register third-party ones.
+- [Write a custom plugin](/docs/guides/writing-plugins/) — the `UpupPlugin`
+  contract, namespaced events, and `PopupOAuthPlugin`.
