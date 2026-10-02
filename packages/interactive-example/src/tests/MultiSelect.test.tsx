@@ -42,9 +42,7 @@ describe('MultiSelect', () => {
     it('toggles an option on click', async () => {
         const user = userEvent.setup()
         render(
-            <ConfigProvider
-                initialConfig={{ sources: ['local'] } as any}
-            >
+            <ConfigProvider initialConfig={{ sources: ['local'] } as any}>
                 <MultiSelect
                     propId="sources"
                     label="Sources"

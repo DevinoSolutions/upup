@@ -149,7 +149,7 @@ pnpm run typecheck      # turbo, all packages
 pnpm run test           # turbo, all unit suites
 pnpm run build          # turbo, all packages
 pnpm run e2e            # the REAL gate — see next section
-pnpm run prettier-check # CI blocks on this (all 9 publishable packages' src, .ts/.tsx ONLY — .vue/.svelte SFC + .css are NOT covered; one root config)
+pnpm run prettier-check # CI blocks on this (all 9 publishable packages' src + interactive-example/landing/playground src, .ts/.tsx ONLY — .vue/.svelte SFC + .css are NOT covered; one root config)
 pnpm run size           # size-limit bundle budgets
 pnpm run audit:prod     # high+ advisories in the publishable prod trees
 pnpm run lint           # eslint flat-config: 9 @useupup/* packages + 2 apps (playground, landing); each leaf is `eslint . --max-warnings 0` so warnings gate (F-784)
@@ -205,7 +205,9 @@ importing types `@useupup/core/internal` never exported, tests pinning the
 retired `enableWorkers`/`appKey` option names, a dead `"link"` source id) —
 treat a red test-tree typecheck as an API-drift signal, not test noise.
 
-`prettier-check`/`prettier-write` cover all 9 publishable packages' `src` —
+`prettier-check`/`prettier-write` cover all 9 publishable packages' `src`,
+plus (since 2026-10-01) `packages/interactive-example/src`,
+`apps/landing/src` and `apps/playground/src` —
 but **`.ts`/`.tsx` ONLY** (P22, 2026-07-04): one root `.prettierrc.json` +
 `.prettierignore`, byte-identical across packages (`packages/react/.prettierrc.json`
 is gone — promoted to root). NOT repo-wide: the 78 `.vue`/`.svelte` SFCs under
@@ -217,14 +219,15 @@ Run either through `rtk proxy`: the rtk filter has reported "all files
 formatted" on a red `--check` (see Machine-local notes).
 
 **The consequence of that src-only scope: CI is BLIND to formatting outside
-`packages/*/src`, and the pre-commit hook is not.** Everything else —
-`packages/*/tests/**`, `.changeset/*.md`, scripts, apps — is format-checked
+those `src` trees, and the pre-commit hook is not.** Everything else —
+`packages/*/tests/**`, `.changeset/*.md`, scripts, the other apps
+(`e2e-test`, storybooks, `mastra`, `next-example`) — is format-checked
 ONLY by `lint-staged` in the hook. So a PR that adds a badly-formatted TEST
 file goes fully green on GitHub and still cannot be committed locally; it
 looks clean in review and blocks the author. Found 2026-08-21 on
 `fix/firefox-reload-resume`: two 82-char `new DOMException(...)` lines in a new
 test file failed the hook while every CI check was green. **When authoring or
-reviewing a change that touches files outside `packages/*/src`, run
+reviewing a change that touches files outside the gated `src` trees, run
 `prettier --check` on those paths explicitly** — never infer formatting health
 from CI. The fix is always `prettier --write`, never `--no-verify`.
 
@@ -650,8 +653,19 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   `refresh-one-drive-token.mjs` (needs the `GH_SECRETS_WRITE_PAT` secret — absent,
   OneDrive is skipped and its stored token untouched). We never automate the
   consent — a human clicks "Allow" once. Full runbook:
-  `docs/drive-sandbox-setup.md`. Playwright traces/reports upload as
-  artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
+  `docs/drive-sandbox-setup.md`. The **Live-Drive-Login** job
+  (`pnpm --filter @useupup/e2e-test test:e2e:live`, config
+  `playwright.live.config.ts`, specs under `apps/e2e-test/live/`, no
+  webServer, `UPUP_LIVE_BASE_URL` defaults to `https://useupup.com`) checks
+  the DEPLOYED site: each drive's homepage-demo popup and server-mode start
+  route must reach the provider's real sign-in page with this origin's
+  redirect and no redirect_uri error, plus a self-check that an unregistered
+  redirect IS flagged. It exists because the registrations live in the
+  providers' consoles (Dropbox/Box popup redirects were unregistered on prod
+  until 2026-10-02). It stops at the sign-in page — never automate a sign-in
+  or consent — and Microsoft only validates redirect_uri after sign-in, so
+  OneDrive's registration still needs a human run. Playwright traces/reports
+  upload as artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,

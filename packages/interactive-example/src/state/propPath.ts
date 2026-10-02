@@ -14,12 +14,17 @@ export function readPath(obj: unknown, path: string): unknown {
     return cur
 }
 
-export function isVisible(visibleWhen: VisibleWhen | undefined, config: unknown): boolean {
+export function isVisible(
+    visibleWhen: VisibleWhen | undefined,
+    config: unknown,
+): boolean {
     if (!visibleWhen) return true
     const cur = readPath(config, visibleWhen.propId)
     if (visibleWhen.equals !== undefined) {
-        const expected = Array.isArray(visibleWhen.equals) ? visibleWhen.equals : [visibleWhen.equals]
-        return expected.some((v) => v === cur)
+        const expected = Array.isArray(visibleWhen.equals)
+            ? visibleWhen.equals
+            : [visibleWhen.equals]
+        return expected.some(v => v === cur)
     }
     if (visibleWhen.notEquals !== undefined) {
         return cur !== visibleWhen.notEquals

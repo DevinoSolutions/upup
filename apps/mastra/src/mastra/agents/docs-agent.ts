@@ -1,4 +1,6 @@
 import { Agent } from '@mastra/core/agent'
+import { env } from '../../lib/env.js'
+import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
 import { searchDocs } from '../tools/search-docs.js'
 
 /**
@@ -23,6 +25,7 @@ Rules:
 - Be concise. Prefer a short answer plus a code example in a fenced code block over prose.
 - Only answer questions about upup and its documentation. For anything else, say you only cover the upup docs.
     `.trim(),
-    model: 'openrouter/anthropic/claude-haiku-4.5',
+    model: agentModel(env),
+    ...agentDefaultOptions(env),
     tools: { searchDocs },
 })

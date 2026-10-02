@@ -78,6 +78,12 @@ services:
             - PORT=4111
             # LLM provider key for the default model (openrouter/anthropic/...).
             - OPENROUTER_API_KEY
+            # Optional LLM base URL + model (bare passthrough, unset -> absent ->
+            # OpenRouter + anthropic/claude-haiku-4.5). The Devino proxy is
+            # OPENROUTER_API_URL=https://proxyai.devino.ca/v1 with a proxy model
+            # id in OPENROUTER_MODEL and the proxy key in OPENROUTER_API_KEY.
+            - OPENROUTER_API_URL
+            - OPENROUTER_MODEL
             # Comma-separated CORS allowlist (the landing origin must be listed).
             # Unset -> mastra's local-dev origin fallback.
             - ALLOWED_ORIGINS

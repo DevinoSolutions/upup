@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react'
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useRef,
+    useState,
+    type ReactNode,
+} from 'react'
 
 export type EventLogEntry = {
     id: number
@@ -29,7 +36,7 @@ export function EventLogProvider({ children }: { children: ReactNode }) {
             args,
             timestamp: Date.now(),
         }
-        setEntries((prev) => {
+        setEntries(prev => {
             const next = [...prev, entry]
             // Ring buffer so long-running sessions don't grow unbounded
             return next.length > MAX_ENTRIES ? next.slice(-MAX_ENTRIES) : next

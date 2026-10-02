@@ -52,14 +52,15 @@ export function NumberInput({
     }
 
     if (display === 'slider' && min != null && max != null) {
-        const sliderValue = value == null ? (defaultValue ?? min) : Number(value)
+        const sliderValue =
+            value == null ? (defaultValue ?? min) : Number(value)
         const numericValue = value == null ? null : Number(value)
         const readout =
             numericValue == null
                 ? '—'
                 : format === 'percent'
-                    ? `${Math.round(numericValue * 100)}%`
-                    : String(numericValue)
+                  ? `${Math.round(numericValue * 100)}%`
+                  : String(numericValue)
         return (
             <div className="upup-ie-field">
                 <FieldLabel label={label} description={description} />
@@ -71,7 +72,7 @@ export function NumberInput({
                         max={max}
                         step={step}
                         value={sliderValue}
-                        onChange={(e) => commit(e.currentTarget.value)}
+                        onChange={e => commit(e.currentTarget.value)}
                     />
                     <span className="upup-ie-range-readout">{readout}</span>
                 </div>
@@ -89,9 +90,11 @@ export function NumberInput({
                 max={max}
                 step={step}
                 value={local}
-                placeholder={defaultValue != null ? String(defaultValue) : undefined}
-                onChange={(e) => setLocal(e.currentTarget.value)}
-                onBlur={(e) => commit(e.currentTarget.value)}
+                placeholder={
+                    defaultValue != null ? String(defaultValue) : undefined
+                }
+                onChange={e => setLocal(e.currentTarget.value)}
+                onBlur={e => commit(e.currentTarget.value)}
             />
         </label>
     )

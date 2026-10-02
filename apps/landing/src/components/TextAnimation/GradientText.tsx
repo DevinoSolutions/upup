@@ -1,25 +1,25 @@
-import "./GradientText.css";
-import React, { ReactNode } from "react";
+import './GradientText.css'
+import React, { ReactNode } from 'react'
 
 interface GradientTextProps {
-    children: ReactNode;
-    className?: string;
-    colors?: string[];
-    animationSpeed?: number;
-    showBorder?: boolean;
+    children: ReactNode
+    className?: string
+    colors?: string[]
+    animationSpeed?: number
+    showBorder?: boolean
 }
 
 export default function GradientText({
-                                         children,
-                                         className = "",
-                                         colors = ["#40ffaa", "#4079ff", "#40ffaa", "#4079ff", "#40ffaa"],
-                                         animationSpeed = 8,
-                                         showBorder = false,
-                                     }: GradientTextProps) {
+    children,
+    className = '',
+    colors = ['#40ffaa', '#4079ff', '#40ffaa', '#4079ff', '#40ffaa'],
+    animationSpeed = 8,
+    showBorder = false,
+}: GradientTextProps) {
     const gradientStyle = {
-        backgroundImage: `linear-gradient(to right, ${colors.join(", ")})`,
+        backgroundImage: `linear-gradient(to right, ${colors.join(', ')})`,
         animationDuration: `${animationSpeed}s`,
-    };
+    }
 
     return (
         <div className={`animated-gradient-text ${className}`}>
@@ -30,5 +30,5 @@ export default function GradientText({
                 {children}
             </div>
         </div>
-    );
+    )
 }

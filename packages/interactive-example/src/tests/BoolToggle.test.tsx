@@ -7,7 +7,9 @@ import { BoolToggle } from '../sidebar/primitives/BoolToggle'
 
 function Wrapped(props: { propId: string; initial?: boolean }) {
     return (
-        <ConfigProvider initialConfig={{ [props.propId]: props.initial } as any}>
+        <ConfigProvider
+            initialConfig={{ [props.propId]: props.initial } as any}
+        >
             <BoolToggle propId={props.propId} label="Test Label" />
         </ConfigProvider>
     )
@@ -27,7 +29,9 @@ describe('BoolToggle', () => {
 
     it('reflects false/undefined initial value as unchecked', () => {
         render(<Wrapped propId="mini" />)
-        expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false)
+        expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(
+            false,
+        )
     })
 
     it('clicking toggles the value', async () => {

@@ -12,13 +12,7 @@ export const sourcesCategory: CategoryDefinition = {
             id: 'sources',
             label: 'Enabled sources',
             primitive: 'multi',
-            defaultValue: [
-                'local',
-                'url',
-                'camera',
-                'microphone',
-                'screen',
-            ],
+            defaultValue: ['local', 'url', 'camera', 'microphone', 'screen'],
             options: {
                 options: [
                     'local',
@@ -43,14 +37,16 @@ export const sourcesCategory: CategoryDefinition = {
                     {
                         id: 'allowDrop',
                         label: 'Allow folder drag/drop',
-                        description: 'Traverse directories when a user drops a folder onto the uploader.',
+                        description:
+                            'Traverse directories when a user drops a folder onto the uploader.',
                         primitive: 'bool',
                         defaultValue: false,
                     },
                     {
                         id: 'showSelectFolderButton',
                         label: 'Show Select Folder button',
-                        description: 'Show a Select Folder action in the My Device source.',
+                        description:
+                            'Show a Select Folder action in the My Device source.',
                         primitive: 'bool',
                         defaultValue: false,
                     },

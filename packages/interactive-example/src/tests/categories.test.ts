@@ -3,13 +3,23 @@ import { categories, allEntries } from '../categories'
 import type { CategoryId } from '../types'
 
 const EXPECTED_IDS: CategoryId[] = [
-    'upload', 'sources', 'limits', 'processing', 'editor',
-    'behavior', 'appearance', 'language', 'events', 'advanced',
+    'upload',
+    'sources',
+    'limits',
+    'processing',
+    'editor',
+    'behavior',
+    'appearance',
+    'language',
+    'events',
+    'advanced',
 ]
 
 describe('category manifest', () => {
     it('contains all expected categories', () => {
-        expect(categories.map((c) => c.id).sort()).toEqual([...EXPECTED_IDS].sort())
+        expect(categories.map(c => c.id).sort()).toEqual(
+            [...EXPECTED_IDS].sort(),
+        )
     })
 
     it('every toggle entry has non-empty id and label', () => {
@@ -20,7 +30,17 @@ describe('category manifest', () => {
     })
 
     it('every entry has a recognized primitive kind', () => {
-        const kinds = new Set(['bool', 'number', 'enum', 'multi', 'string', 'nested', 'size-unit', 'color', 'combo'])
+        const kinds = new Set([
+            'bool',
+            'number',
+            'enum',
+            'multi',
+            'string',
+            'nested',
+            'size-unit',
+            'color',
+            'combo',
+        ])
         for (const entry of allEntries()) {
             expect(kinds.has(entry.primitive)).toBe(true)
         }
@@ -30,7 +50,9 @@ describe('category manifest', () => {
         for (const entry of allEntries()) {
             if (entry.primitive === 'enum' || entry.primitive === 'multi') {
                 expect(Array.isArray(entry.options?.options)).toBe(true)
-                expect((entry.options?.options as unknown[]).length).toBeGreaterThan(0)
+                expect(
+                    (entry.options?.options as unknown[]).length,
+                ).toBeGreaterThan(0)
             }
         }
     })

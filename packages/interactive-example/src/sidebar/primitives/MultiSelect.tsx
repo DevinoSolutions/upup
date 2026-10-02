@@ -36,7 +36,7 @@ export function MultiSelect({
         // drive in their config can still remove it.
         if (isDisabled && !isSelected) return
         const next = isSelected
-            ? selected.filter((s) => s !== opt)
+            ? selected.filter(s => s !== opt)
             : [...selected, opt]
         set(next.length === 0 ? undefined : next)
     }
@@ -46,7 +46,7 @@ export function MultiSelect({
             <div className="upup-ie-field">
                 <span className="upup-ie-field-label">{label}</span>
                 <div className="upup-ie-source-grid">
-                    {options.map((o) => {
+                    {options.map(o => {
                         const entry = meta[o]
                         const Icon = entry?.Icon
                         const labelText = entry?.label ?? o
@@ -61,14 +61,20 @@ export function MultiSelect({
                                 data-active={isSelected || undefined}
                                 data-unavailable={isDisabled || undefined}
                                 aria-pressed={isSelected}
-                                aria-disabled={isDisabled && !isSelected ? true : undefined}
+                                aria-disabled={
+                                    isDisabled && !isSelected ? true : undefined
+                                }
                                 title={reason ?? labelText}
                                 onClick={() => toggle(o)}
                             >
                                 {Icon ? (
-                                    <span className="upup-ie-source-tile-icon"><Icon /></span>
+                                    <span className="upup-ie-source-tile-icon">
+                                        <Icon />
+                                    </span>
                                 ) : null}
-                                <span className="upup-ie-source-tile-label">{labelText}</span>
+                                <span className="upup-ie-source-tile-label">
+                                    {labelText}
+                                </span>
                             </button>
                         )
                     })}
@@ -81,7 +87,7 @@ export function MultiSelect({
         <div className="upup-ie-field">
             <span className="upup-ie-field-label">{label}</span>
             <div className="upup-ie-multiselect">
-                {options.map((o) => {
+                {options.map(o => {
                     const reason = unavailable?.[o]
                     const isDisabled = Boolean(reason)
                     const isSelected = selected.includes(o)

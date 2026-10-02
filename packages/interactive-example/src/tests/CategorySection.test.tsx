@@ -10,7 +10,10 @@ describe('CategorySection', () => {
     it('renders category label', () => {
         render(
             <ConfigProvider initialConfig={{}}>
-                <CategorySection category={uploadCategory} defaultExpanded={false} />
+                <CategorySection
+                    category={uploadCategory}
+                    defaultExpanded={false}
+                />
             </ConfigProvider>,
         )
         expect(screen.getByText('Upload')).toBeTruthy()
@@ -19,7 +22,10 @@ describe('CategorySection', () => {
     it('body hidden when collapsed', () => {
         render(
             <ConfigProvider initialConfig={{}}>
-                <CategorySection category={uploadCategory} defaultExpanded={false} />
+                <CategorySection
+                    category={uploadCategory}
+                    defaultExpanded={false}
+                />
             </ConfigProvider>,
         )
         expect(screen.queryByText('Provider')).toBeNull()
@@ -28,7 +34,10 @@ describe('CategorySection', () => {
     it('body visible when expanded', () => {
         render(
             <ConfigProvider initialConfig={{}}>
-                <CategorySection category={uploadCategory} defaultExpanded={true} />
+                <CategorySection
+                    category={uploadCategory}
+                    defaultExpanded={true}
+                />
             </ConfigProvider>,
         )
         expect(screen.getByText('Provider')).toBeTruthy()
@@ -38,7 +47,10 @@ describe('CategorySection', () => {
         const user = userEvent.setup()
         render(
             <ConfigProvider initialConfig={{}}>
-                <CategorySection category={uploadCategory} defaultExpanded={false} />
+                <CategorySection
+                    category={uploadCategory}
+                    defaultExpanded={false}
+                />
             </ConfigProvider>,
         )
         await user.click(screen.getByText('Upload'))
@@ -47,8 +59,13 @@ describe('CategorySection', () => {
 
     it('counter shows how many props are set', () => {
         render(
-            <ConfigProvider initialConfig={{ provider: 'backblaze', maxRetries: 5 } as any}>
-                <CategorySection category={uploadCategory} defaultExpanded={false} />
+            <ConfigProvider
+                initialConfig={{ provider: 'backblaze', maxRetries: 5 } as any}
+            >
+                <CategorySection
+                    category={uploadCategory}
+                    defaultExpanded={false}
+                />
             </ConfigProvider>,
         )
         expect(screen.getByText(/2 set/)).toBeTruthy()
