@@ -653,8 +653,19 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   `refresh-one-drive-token.mjs` (needs the `GH_SECRETS_WRITE_PAT` secret — absent,
   OneDrive is skipped and its stored token untouched). We never automate the
   consent — a human clicks "Allow" once. Full runbook:
-  `docs/drive-sandbox-setup.md`. Playwright traces/reports upload as
-  artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
+  `docs/drive-sandbox-setup.md`. The **Live-Drive-Login** job
+  (`pnpm --filter @useupup/e2e-test test:e2e:live`, config
+  `playwright.live.config.ts`, specs under `apps/e2e-test/live/`, no
+  webServer, `UPUP_LIVE_BASE_URL` defaults to `https://useupup.com`) checks
+  the DEPLOYED site: each drive's homepage-demo popup and server-mode start
+  route must reach the provider's real sign-in page with this origin's
+  redirect and no redirect_uri error, plus a self-check that an unregistered
+  redirect IS flagged. It exists because the registrations live in the
+  providers' consoles (Dropbox/Box popup redirects were unregistered on prod
+  until 2026-10-02). It stops at the sign-in page — never automate a sign-in
+  or consent — and Microsoft only validates redirect_uri after sign-in, so
+  OneDrive's registration still needs a human run. Playwright traces/reports
+  upload as artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,

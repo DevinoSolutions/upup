@@ -12,7 +12,9 @@ import {
 } from '@/lib/analytics/posthog-client'
 import {
     LANDING_FRAMEWORK_SLUGS,
+    OAUTH_REDIRECT_PATHS,
     isMarketingLandingPath,
+    isOAuthRedirectPath,
 } from '@/lib/analytics/landing-routes'
 
 // The marketing landing routes boot PostHog after the page has loaded, and
@@ -198,5 +200,48 @@ describe('which routes defer the PostHog boot', () => {
         expect(ids.length).toBeGreaterThan(0)
         expect(new Set(LANDING_FRAMEWORK_SLUGS)).toEqual(new Set(ids))
         expect(LANDING_FRAMEWORK_SLUGS).toHaveLength(ids.length)
+    })
+})
+
+describe('drive sign-in popup routes never boot PostHog', () => {
+    const repoFile = (path: string) =>
+        fileURLToPath(new URL(`../../../${path}`, import.meta.url))
+
+    it('matches each popup redirect path with or without the trailing slash', () => {
+        for (const path of [
+            '/od_redirect',
+            '/od_redirect/',
+            '/dp_redirect/',
+            '/box_redirect/',
+        ])
+            expect(isOAuthRedirectPath(path)).toBe(true)
+        for (const path of ['/', '/docs/', '/od_redirect/x/', null])
+            expect(isOAuthRedirectPath(path)).toBe(false)
+    })
+
+    it('lists exactly the redirect paths the core popup plugins send users to', () => {
+        // Read as text: these plugins are core internals, and the landing app
+        // only consumes @useupup/core through its built dist.
+        const plugins = [
+            'one-drive-plugin.ts',
+            'dropbox-plugin.ts',
+            'box-plugin.ts',
+        ].map(name =>
+            readFileSync(repoFile(`packages/core/src/drives/${name}`), 'utf8'),
+        )
+        const paths = plugins.map(
+            source => source.match(/redirectPath:\s*'([^']+)'/)?.[1],
+        )
+        expect(new Set(paths)).toEqual(new Set(OAUTH_REDIRECT_PATHS))
+    })
+
+    it('gives every popup redirect path a real page instead of the 404', () => {
+        for (const path of OAUTH_REDIRECT_PATHS) {
+            const page = readFileSync(
+                repoFile(`apps/landing/src/app${path}/page.tsx`),
+                'utf8',
+            )
+            expect(page).toContain('oauthRedirectMetadata(')
+        }
     })
 })

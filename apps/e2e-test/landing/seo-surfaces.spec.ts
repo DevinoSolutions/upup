@@ -217,6 +217,32 @@ test.describe('seo surfaces', () => {
         expect(missing, 'covered pages missing from the sitemap').toEqual([])
     })
 
+    // The drive sign-in popups land on these paths with a one-time code. They
+    // used to render the site's 404; now each is a real, never-indexed page
+    // that stays out of the sitemap.
+    for (const [path, provider] of [
+        ['/od_redirect/', 'OneDrive'],
+        ['/dp_redirect/', 'Dropbox'],
+        ['/box_redirect/', 'Box'],
+    ] as const) {
+        test(`drive sign-in popup page ${path} renders and is noindex`, async ({
+            page,
+            request,
+        }) => {
+            const res = await page.goto(`${path}?code=e2e-code&state=e2e-state`)
+            expect(res?.status()).toBe(200)
+            await expect(page.locator('h1')).toHaveText(
+                `Finishing ${provider} sign-in…`,
+            )
+            await expect(
+                page.locator('meta[name="robots"]').first(),
+            ).toHaveAttribute('content', /noindex/)
+
+            const sitemap = await (await request.get('/sitemap.xml')).text()
+            expect(sitemap).not.toContain(path)
+        })
+    }
+
     test('llms.txt is served and links the S3 presigned-URL tutorial', async ({
         request,
     }) => {
