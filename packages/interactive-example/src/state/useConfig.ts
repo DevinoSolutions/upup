@@ -21,7 +21,11 @@ function setPath(obj: UpupConfig, path: string, value: unknown): UpupConfig {
     }
     const lastKey = keys[keys.length - 1]
     if (lastKey !== undefined) cursor[lastKey] = value
-    if (keys[0] === 'folderUpload' && next.folderUpload && typeof next.folderUpload === 'object') {
+    if (
+        keys[0] === 'folderUpload' &&
+        next.folderUpload &&
+        typeof next.folderUpload === 'object'
+    ) {
         delete next.folderUpload.enabled
         delete next.folderUpload.showPickerButton
     }
@@ -35,7 +39,7 @@ export function useConfig(path: string) {
     }
     const value = getPath(ctx.config, path)
     const set = useCallback(
-        (next: unknown) => ctx.setConfig((prev) => setPath(prev, path, next)),
+        (next: unknown) => ctx.setConfig(prev => setPath(prev, path, next)),
         [ctx.setConfig, path],
     )
     return { value, set, config: ctx.config }

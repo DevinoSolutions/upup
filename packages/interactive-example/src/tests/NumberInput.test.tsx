@@ -12,7 +12,9 @@ describe('NumberInput', () => {
                 <NumberInput propId="limit" label="Limit" min={1} max={100} />
             </ConfigProvider>,
         )
-        expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe('10')
+        expect((screen.getByRole('spinbutton') as HTMLInputElement).value).toBe(
+            '10',
+        )
     })
 
     it('updates on change', async () => {

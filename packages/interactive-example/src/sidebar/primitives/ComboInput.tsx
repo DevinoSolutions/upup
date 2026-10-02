@@ -49,7 +49,7 @@ export function ComboInput({
     }, [open])
 
     const current = typeof value === 'string' ? value : ''
-    const activePreset = presets.find((p) => p.value === current)
+    const activePreset = presets.find(p => p.value === current)
 
     return (
         <div className="upup-ie-field" ref={wrapperRef}>
@@ -60,7 +60,7 @@ export function ComboInput({
                     type="text"
                     value={current}
                     placeholder={placeholder}
-                    onChange={(e) => set(e.currentTarget.value || undefined)}
+                    onChange={e => set(e.currentTarget.value || undefined)}
                     className="upup-ie-combo-input"
                 />
                 <button
@@ -69,16 +69,20 @@ export function ComboInput({
                     aria-haspopup="listbox"
                     aria-expanded={open}
                     aria-label={`${label} presets`}
-                    onClick={() => setOpen((v) => !v)}
+                    onClick={() => setOpen(v => !v)}
                 >
                     <ChevronDown size={16} />
                 </button>
                 {open && (
                     <ul className="upup-ie-combo-popover" role="listbox">
-                        {presets.map((p) => {
+                        {presets.map(p => {
                             const isActive = activePreset?.value === p.value
                             return (
-                                <li key={p.label} role="option" aria-selected={isActive}>
+                                <li
+                                    key={p.label}
+                                    role="option"
+                                    aria-selected={isActive}
+                                >
                                     <button
                                         type="button"
                                         className="upup-ie-combo-preset"
@@ -88,12 +92,18 @@ export function ComboInput({
                                             setOpen(false)
                                         }}
                                     >
-                                        <span className="upup-ie-combo-preset-label">{p.label}</span>
+                                        <span className="upup-ie-combo-preset-label">
+                                            {p.label}
+                                        </span>
                                         {p.description && (
-                                            <span className="upup-ie-combo-preset-desc">{p.description}</span>
+                                            <span className="upup-ie-combo-preset-desc">
+                                                {p.description}
+                                            </span>
                                         )}
                                         {p.value && (
-                                            <span className="upup-ie-combo-preset-value">{p.value}</span>
+                                            <span className="upup-ie-combo-preset-value">
+                                                {p.value}
+                                            </span>
                                         )}
                                     </button>
                                 </li>

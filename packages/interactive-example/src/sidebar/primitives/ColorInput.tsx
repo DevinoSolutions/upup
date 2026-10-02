@@ -46,7 +46,7 @@ export function ColorInput({
                     className="upup-ie-color-swatch"
                     value={pickerValue}
                     aria-label={`${label} picker`}
-                    onChange={(e) => set(e.currentTarget.value)}
+                    onChange={e => set(e.currentTarget.value)}
                 />
                 <input
                     id={id}
@@ -54,7 +54,7 @@ export function ColorInput({
                     className="upup-ie-color-hex"
                     value={current}
                     placeholder={placeholder ?? defaultValue ?? '#3b82f6'}
-                    onChange={(e) => {
+                    onChange={e => {
                         const next = e.currentTarget.value
                         set(next === '' ? undefined : normalise(next))
                     }}

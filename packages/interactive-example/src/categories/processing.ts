@@ -6,7 +6,7 @@ export const processingCategory: CategoryDefinition = {
     label: 'Processing',
     description: 'Pipeline steps before upload',
     icon: Wand2,
-    intro: 'These run during file pickup. Toggle one, then pick or drop a file in the preview to see it fire — the sidebar update alone won\'t change anything visible until a file is added.',
+    intro: "These run during file pickup. Toggle one, then pick or drop a file in the preview to see it fire — the sidebar update alone won't change anything visible until a file is added.",
     entries: [
         {
             id: 'imageCompression',
@@ -18,21 +18,24 @@ export const processingCategory: CategoryDefinition = {
         {
             id: 'thumbnailGenerator',
             label: 'Generate thumbnails',
-            description: 'Emit a lightweight preview alongside each image upload',
+            description:
+                'Emit a lightweight preview alongside each image upload',
             primitive: 'bool',
             defaultValue: false,
         },
         {
             id: 'checksumVerification',
             label: 'Checksum verification (SHA-256)',
-            description: 'Compute SHA-256 and include it in the upload payload for integrity checks',
+            description:
+                'Compute SHA-256 and include it in the upload payload for integrity checks',
             primitive: 'bool',
             defaultValue: false,
         },
         {
             id: 'heicConversion',
             label: 'HEIC → JPEG conversion',
-            description: 'Convert Apple HEIC/HEIF to JPEG so non-Apple viewers can render them',
+            description:
+                'Convert Apple HEIC/HEIF to JPEG so non-Apple viewers can render them',
             primitive: 'bool',
             defaultValue: false,
         },
@@ -46,7 +49,8 @@ export const processingCategory: CategoryDefinition = {
         {
             id: 'contentDeduplication',
             label: 'Content deduplication',
-            description: 'Skip duplicate files by hashing content on the client',
+            description:
+                'Skip duplicate files by hashing content on the client',
             primitive: 'bool',
             defaultValue: false,
         },

@@ -51,7 +51,7 @@ const GROUPS: Array<{ label: string; ids: readonly string[] }> = [
 ]
 
 const entries: ToggleEntry[] = GROUPS.flatMap(({ label, ids }) =>
-    ids.map((id) => ({
+    ids.map(id => ({
         id: `events.${id}`,
         label: id,
         description: `Fires when ${id} triggers — payload shows in the event log below the preview.`,
@@ -64,7 +64,8 @@ const entries: ToggleEntry[] = GROUPS.flatMap(({ label, ids }) =>
 export const eventsCategory: CategoryDefinition = {
     id: 'events',
     label: 'Events',
-    description: 'Log UpupUploader callbacks live as you interact with the preview',
+    description:
+        'Log UpupUploader callbacks live as you interact with the preview',
     icon: Activity,
     intro: 'Toggle a callback then drag, paste, or pick a file in the preview — every fired event lands in the Event Log panel below with its arguments.',
     entries,

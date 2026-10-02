@@ -36,8 +36,13 @@ function computeUnavailableSources(config: UpupConfig): Record<string, string> {
     const out: Record<string, string> = {}
     for (const [source, path] of Object.entries(DRIVE_CREDENTIAL_PATHS)) {
         const clientId = readPath(config, path)
-        if (!clientId || typeof clientId !== 'string' || clientId.trim() === '') {
-            out[source] = 'Client ID and secret not provided. Set the corresponding NEXT_PUBLIC_*_CLIENT_ID env var (or fill Advanced → self-host → cloud drive section) to enable this source.'
+        if (
+            !clientId ||
+            typeof clientId !== 'string' ||
+            clientId.trim() === ''
+        ) {
+            out[source] =
+                'Client ID and secret not provided. Set the corresponding NEXT_PUBLIC_*_CLIENT_ID env var (or fill Advanced → self-host → cloud drive section) to enable this source.'
         }
     }
     return out
@@ -47,23 +52,140 @@ function renderEntry(entry: ToggleEntry, config: UpupConfig) {
     if (!isVisible(entry.visibleWhen, config)) return null
     switch (entry.primitive) {
         case 'bool':
-            return <BoolToggle key={entry.id} propId={entry.id} label={entry.label} description={entry.description} defaultValue={entry.defaultValue as boolean | undefined} />
+            return (
+                <BoolToggle
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    description={entry.description}
+                    defaultValue={entry.defaultValue as boolean | undefined}
+                />
+            )
         case 'number':
-            return <NumberInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} min={entry.options?.min as number | undefined} max={entry.options?.max as number | undefined} step={entry.options?.step as number | undefined} defaultValue={entry.defaultValue as number | undefined} display={entry.options?.display as 'slider' | 'number' | undefined} format={entry.options?.format as 'percent' | undefined} />
+            return (
+                <NumberInput
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    description={entry.description}
+                    min={entry.options?.min as number | undefined}
+                    max={entry.options?.max as number | undefined}
+                    step={entry.options?.step as number | undefined}
+                    defaultValue={entry.defaultValue as number | undefined}
+                    display={
+                        entry.options?.display as
+                            'slider' | 'number' | undefined
+                    }
+                    format={entry.options?.format as 'percent' | undefined}
+                />
+            )
         case 'enum':
-            return <EnumSelect key={entry.id} propId={entry.id} label={entry.label} description={entry.description} options={(entry.options?.options as string[]) ?? []} layout={entry.options?.layout as 'segmented' | 'select' | undefined} defaultValue={entry.defaultValue as string | undefined} meta={ENUM_META_BY_PROP[entry.id]} expandAfter={entry.options?.expandAfter as number | undefined} />
+            return (
+                <EnumSelect
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    description={entry.description}
+                    options={(entry.options?.options as string[]) ?? []}
+                    layout={
+                        entry.options?.layout as
+                            'segmented' | 'select' | undefined
+                    }
+                    defaultValue={entry.defaultValue as string | undefined}
+                    meta={ENUM_META_BY_PROP[entry.id]}
+                    expandAfter={
+                        entry.options?.expandAfter as number | undefined
+                    }
+                />
+            )
         case 'multi':
-            return <MultiSelect key={entry.id} propId={entry.id} label={entry.label} options={(entry.options?.options as string[]) ?? []} meta={entry.id === 'sources' ? SOURCE_META : (entry.options?.meta as Record<string, SourceMeta> | undefined)} unavailable={entry.id === 'sources' ? computeUnavailableSources(config) : undefined} />
+            return (
+                <MultiSelect
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    options={(entry.options?.options as string[]) ?? []}
+                    meta={
+                        entry.id === 'sources'
+                            ? SOURCE_META
+                            : (entry.options?.meta as
+                                  Record<string, SourceMeta> | undefined)
+                    }
+                    unavailable={
+                        entry.id === 'sources'
+                            ? computeUnavailableSources(config)
+                            : undefined
+                    }
+                />
+            )
         case 'string':
-            return <StringInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} placeholder={entry.options?.placeholder as string | undefined} />
+            return (
+                <StringInput
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    description={entry.description}
+                    placeholder={
+                        entry.options?.placeholder as string | undefined
+                    }
+                />
+            )
         case 'nested':
-            return <NestedConfig key={entry.id} parentPath={entry.id} label={entry.label} fields={(entry.options?.fields as ToggleEntry[]) ?? []} legendIcon={entry.options?.legendIcon as React.FC | undefined} />
+            return (
+                <NestedConfig
+                    key={entry.id}
+                    parentPath={entry.id}
+                    label={entry.label}
+                    fields={(entry.options?.fields as ToggleEntry[]) ?? []}
+                    legendIcon={
+                        entry.options?.legendIcon as React.FC | undefined
+                    }
+                />
+            )
         case 'size-unit':
-            return <SizeUnitInput key={entry.id} propId={entry.id} label={entry.label} defaultSize={entry.options?.defaultSize as number | undefined} defaultUnit={entry.options?.defaultUnit as 'B' | 'KB' | 'MB' | 'GB' | undefined} serialize={entry.options?.serialize as 'object' | 'bytes' | undefined} />
+            return (
+                <SizeUnitInput
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    defaultSize={
+                        entry.options?.defaultSize as number | undefined
+                    }
+                    defaultUnit={
+                        entry.options?.defaultUnit as
+                            'B' | 'KB' | 'MB' | 'GB' | undefined
+                    }
+                    serialize={
+                        entry.options?.serialize as
+                            'object' | 'bytes' | undefined
+                    }
+                />
+            )
         case 'color':
-            return <ColorInput key={entry.id} propId={entry.id} label={entry.label} placeholder={entry.options?.placeholder as string | undefined} defaultValue={entry.defaultValue as string | undefined} />
+            return (
+                <ColorInput
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    placeholder={
+                        entry.options?.placeholder as string | undefined
+                    }
+                    defaultValue={entry.defaultValue as string | undefined}
+                />
+            )
         case 'combo':
-            return <ComboInput key={entry.id} propId={entry.id} label={entry.label} description={entry.description} placeholder={entry.options?.placeholder as string | undefined} presets={(entry.options?.presets as ComboPreset[]) ?? []} />
+            return (
+                <ComboInput
+                    key={entry.id}
+                    propId={entry.id}
+                    label={entry.label}
+                    description={entry.description}
+                    placeholder={
+                        entry.options?.placeholder as string | undefined
+                    }
+                    presets={(entry.options?.presets as ComboPreset[]) ?? []}
+                />
+            )
     }
 }
 
@@ -90,7 +212,10 @@ function countSet(config: unknown, entries: ToggleEntry[]): number {
         const path = entry.id.split('.')
         let cur: any = config
         for (const k of path) {
-            if (cur == null) { cur = undefined; break }
+            if (cur == null) {
+                cur = undefined
+                break
+            }
             cur = cur[k]
         }
         const isEmpty =
@@ -118,16 +243,30 @@ export function CategorySection({
     const Icon = category.icon
     return (
         <section className="upup-ie-category" data-open={open}>
-            <button type="button" className="upup-ie-category-header" onClick={() => setOpen((v) => !v)}>
-                <span className="upup-ie-category-chevron">{open ? '▾' : '▸'}</span>
-                {Icon ? <span className="upup-ie-category-icon" aria-hidden="true"><Icon /></span> : null}
+            <button
+                type="button"
+                className="upup-ie-category-header"
+                onClick={() => setOpen(v => !v)}
+            >
+                <span className="upup-ie-category-chevron">
+                    {open ? '▾' : '▸'}
+                </span>
+                {Icon ? (
+                    <span className="upup-ie-category-icon" aria-hidden="true">
+                        <Icon />
+                    </span>
+                ) : null}
                 <span className="upup-ie-category-label">{category.label}</span>
-                <span className="upup-ie-category-count">{setCount > 0 ? `${setCount} set` : ''}</span>
+                <span className="upup-ie-category-count">
+                    {setCount > 0 ? `${setCount} set` : ''}
+                </span>
             </button>
             {open && (
                 <div className="upup-ie-category-body">
                     {category.intro ? (
-                        <p className="upup-ie-category-intro">{category.intro}</p>
+                        <p className="upup-ie-category-intro">
+                            {category.intro}
+                        </p>
                     ) : null}
                     {renderBody(category.entries, ctx?.config ?? {})}
                 </div>
@@ -138,8 +277,8 @@ export function CategorySection({
 
 function renderBody(entries: ToggleEntry[], config: UpupConfig) {
     // Flat render when no entry declares a group
-    if (!entries.some((e) => e.group)) {
-        return entries.map((e) => renderEntry(e, config))
+    if (!entries.some(e => e.group)) {
+        return entries.map(e => renderEntry(e, config))
     }
     // Grouped render — preserves input order while inserting subheaders
     const groups: Array<{ label: string | null; items: ToggleEntry[] }> = []
@@ -152,7 +291,7 @@ function renderBody(entries: ToggleEntry[], config: UpupConfig) {
     return groups.map((g, idx) => (
         <React.Fragment key={g.label ?? `__ungrouped-${idx}`}>
             {g.label && <div className="upup-ie-group-heading">{g.label}</div>}
-            {g.items.map((e) => renderEntry(e, config))}
+            {g.items.map(e => renderEntry(e, config))}
         </React.Fragment>
     ))
 }

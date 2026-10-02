@@ -2,8 +2,13 @@ import React, { useId, useState, useEffect } from 'react'
 import { useConfig } from '../../state/useConfig'
 
 const UNITS = ['B', 'KB', 'MB', 'GB'] as const
-type Unit = typeof UNITS[number]
-const MULT: Record<Unit, number> = { B: 1, KB: 1024, MB: 1024 * 1024, GB: 1024 * 1024 * 1024 }
+type Unit = (typeof UNITS)[number]
+const MULT: Record<Unit, number> = {
+    B: 1,
+    KB: 1024,
+    MB: 1024 * 1024,
+    GB: 1024 * 1024 * 1024,
+}
 
 /**
  * Decompose a raw byte count into the largest unit that yields an integer
@@ -49,7 +54,8 @@ export function SizeUnitInput({
 
     const isBytes = serialize === 'bytes'
     const objValue = (value ?? {}) as { size?: number; unit?: Unit }
-    const derived = isBytes && typeof value === 'number' ? bytesToSizeUnit(value) : null
+    const derived =
+        isBytes && typeof value === 'number' ? bytesToSizeUnit(value) : null
     // Track the user's chosen unit in bytes mode so picking "MB" doesn't
     // snap back to "KB" for sub-MB values on every keystroke.
     const [byteUnit, setByteUnit] = useState<Unit>(derived?.unit ?? defaultUnit)
@@ -59,11 +65,16 @@ export function SizeUnitInput({
     }, [value])
 
     const size: number | '' = isBytes
-        ? (derived ? derived.size : '')
+        ? derived
+            ? derived.size
+            : ''
         : (objValue.size ?? '')
     const unit: string = isBytes ? byteUnit : (objValue.unit ?? '')
 
-    const update = (next: { size?: number | undefined; unit?: string | undefined }) => {
+    const update = (next: {
+        size?: number | undefined
+        unit?: string | undefined
+    }) => {
         if (!isBytes) {
             const merged = { size: objValue.size, unit: objValue.unit, ...next }
             if (merged.size === undefined && !merged.unit) {
@@ -74,8 +85,14 @@ export function SizeUnitInput({
             return
         }
         // bytes mode: combine into a single numeric byte count.
-        const nextSize = next.size !== undefined ? next.size : (typeof size === 'number' ? size : undefined)
-        const nextUnitRaw = (next.unit !== undefined ? next.unit : unit) as Unit | ''
+        const nextSize =
+            next.size !== undefined
+                ? next.size
+                : typeof size === 'number'
+                  ? size
+                  : undefined
+        const nextUnitRaw = (next.unit !== undefined ? next.unit : unit) as
+            Unit | ''
         const nextUnit = (nextUnitRaw || defaultUnit) as Unit
         if (next.unit !== undefined) setByteUnit(nextUnit)
         if (nextSize === undefined) {
@@ -87,8 +104,14 @@ export function SizeUnitInput({
 
     return (
         <div className="upup-ie-field">
-            <span id={groupId} className="upup-ie-field-label">{label}</span>
-            <div className="upup-ie-size-unit" role="group" aria-labelledby={groupId}>
+            <span id={groupId} className="upup-ie-field-label">
+                {label}
+            </span>
+            <div
+                className="upup-ie-size-unit"
+                role="group"
+                aria-labelledby={groupId}
+            >
                 <input
                     id={inputId}
                     className="upup-ie-size-unit-input"
@@ -97,18 +120,19 @@ export function SizeUnitInput({
                     aria-label={`${label} — size`}
                     value={size === undefined ? '' : size}
                     placeholder={placeholder ?? String(defaultSize)}
-                    onChange={(e) => {
+                    onChange={e => {
                         const raw = e.currentTarget.value
                         if (raw === '') {
                             update({ size: undefined })
                             return
                         }
                         const n = Number(raw)
-                        if (!Number.isNaN(n)) update({ size: n, unit: unit || defaultUnit })
+                        if (!Number.isNaN(n))
+                            update({ size: n, unit: unit || defaultUnit })
                     }}
                 />
                 <div className="upup-ie-size-unit-segmented">
-                    {UNITS.map((u) => {
+                    {UNITS.map(u => {
                         const active = unit === u
                         return (
                             <button
@@ -118,7 +142,9 @@ export function SizeUnitInput({
                                 aria-checked={active}
                                 data-active={active || undefined}
                                 className="upup-ie-segmented-option upup-ie-size-unit-option"
-                                onClick={() => update({ unit: active ? undefined : u })}
+                                onClick={() =>
+                                    update({ unit: active ? undefined : u })
+                                }
                             >
                                 {u}
                             </button>

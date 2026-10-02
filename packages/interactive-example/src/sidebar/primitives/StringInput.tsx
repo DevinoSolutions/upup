@@ -23,7 +23,7 @@ export function StringInput({
                 type="text"
                 placeholder={placeholder}
                 value={typeof value === 'string' ? value : ''}
-                onChange={(e) => set(e.currentTarget.value || undefined)}
+                onChange={e => set(e.currentTarget.value || undefined)}
             />
         </label>
     )

@@ -28,9 +28,11 @@ export function EnumSelect({
     const current = typeof value === 'string' ? value : ''
     const visual = current || (defaultValue ?? '')
 
-    const resolvedLayout = layout ?? (options.length > 0 && options.length <= 6 ? 'segmented' : 'select')
+    const resolvedLayout =
+        layout ??
+        (options.length > 0 && options.length <= 6 ? 'segmented' : 'select')
 
-    const useTileLayout = !!meta && options.some((o) => !!meta[o]?.Icon)
+    const useTileLayout = !!meta && options.some(o => !!meta[o]?.Icon)
 
     if (useTileLayout && meta) {
         const hasOverflow = expandAfter != null && options.length > expandAfter
@@ -56,22 +58,33 @@ export function EnumSelect({
                     onClick={() => set(current === o ? undefined : o)}
                 >
                     {Icon ? (
-                        <span className="upup-ie-source-tile-icon"><Icon /></span>
+                        <span className="upup-ie-source-tile-icon">
+                            <Icon />
+                        </span>
                     ) : null}
-                    <span className="upup-ie-source-tile-label">{labelText}</span>
+                    <span className="upup-ie-source-tile-label">
+                        {labelText}
+                    </span>
                 </button>
             )
         }
 
         return (
-            <div className="upup-ie-field" role="radiogroup" aria-labelledby={id}>
+            <div
+                className="upup-ie-field"
+                role="radiogroup"
+                aria-labelledby={id}
+            >
                 <FieldLabel id={id} label={label} description={description} />
                 <div className="upup-ie-source-grid">
                     {primary.map(renderTile)}
                 </div>
                 {overflow.length > 0 && (
                     <>
-                        <div className="upup-ie-expand-wrap" data-expanded={expanded || undefined}>
+                        <div
+                            className="upup-ie-expand-wrap"
+                            data-expanded={expanded || undefined}
+                        >
                             <div className="upup-ie-expand-inner">
                                 <div className="upup-ie-source-grid">
                                     {overflow.map(renderTile)}
@@ -81,9 +94,11 @@ export function EnumSelect({
                         <button
                             type="button"
                             className="upup-ie-expand-toggle"
-                            onClick={() => setExpanded((v) => !v)}
+                            onClick={() => setExpanded(v => !v)}
                         >
-                            {expanded ? 'Show less' : `See more (${overflow.length})`}
+                            {expanded
+                                ? 'Show less'
+                                : `See more (${overflow.length})`}
                         </button>
                     </>
                 )}
@@ -93,10 +108,14 @@ export function EnumSelect({
 
     if (resolvedLayout === 'segmented') {
         return (
-            <div className="upup-ie-field" role="radiogroup" aria-labelledby={id}>
+            <div
+                className="upup-ie-field"
+                role="radiogroup"
+                aria-labelledby={id}
+            >
                 <FieldLabel id={id} label={label} description={description} />
                 <div className="upup-ie-segmented">
-                    {options.map((o) => {
+                    {options.map(o => {
                         const active = visual === o
                         const isDefaultFallback = !current && defaultValue === o
                         const labelText = meta?.[o]?.label ?? o
@@ -107,9 +126,13 @@ export function EnumSelect({
                                 role="radio"
                                 aria-checked={active}
                                 data-active={active || undefined}
-                                data-default-fallback={isDefaultFallback || undefined}
+                                data-default-fallback={
+                                    isDefaultFallback || undefined
+                                }
                                 className="upup-ie-segmented-option"
-                                onClick={() => set(current === o ? undefined : o)}
+                                onClick={() =>
+                                    set(current === o ? undefined : o)
+                                }
                             >
                                 {labelText}
                             </button>
@@ -126,10 +149,10 @@ export function EnumSelect({
             <select
                 id={id}
                 value={visual}
-                onChange={(e) => set(e.currentTarget.value || undefined)}
+                onChange={e => set(e.currentTarget.value || undefined)}
             >
                 <option value="">—</option>
-                {options.map((o) => (
+                {options.map(o => (
                     <option key={o} value={o}>
                         {meta?.[o]?.label ?? o}
                     </option>

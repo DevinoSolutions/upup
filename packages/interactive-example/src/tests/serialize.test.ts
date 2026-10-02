@@ -9,7 +9,10 @@ describe('serialize', () => {
     })
 
     it('round-trips a simple config', () => {
-        const cfg = { provider: 'backblaze', maxConcurrentUploads: 3 } as UpupConfig
+        const cfg = {
+            provider: 'backblaze',
+            maxConcurrentUploads: 3,
+        } as UpupConfig
         expect(decodeConfig(encodeConfig(cfg))).toEqual(cfg)
     })
 
@@ -31,7 +34,9 @@ describe('serialize', () => {
     })
 
     it('drops unknown top-level keys but keeps known ones', () => {
-        const decoded = decodeConfig(encodeConfig({ bogusKey: 1, provider: 's3' } as any))
+        const decoded = decodeConfig(
+            encodeConfig({ bogusKey: 1, provider: 's3' } as any),
+        )
         expect(decoded).not.toHaveProperty('bogusKey')
         expect((decoded as any).provider).toBe('s3')
     })

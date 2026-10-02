@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import dynamic from 'next/dynamic';
-import { ReactNode } from 'react';
+import dynamic from 'next/dynamic'
+import { ReactNode } from 'react'
 
 const NoSSR = ({ children }: { children: ReactNode }) => {
-  return <>{children}</>;
-};
+    return <>{children}</>
+}
 
 export default dynamic(() => Promise.resolve(NoSSR), {
-  ssr: false,
-});
+    ssr: false,
+})

@@ -23,20 +23,23 @@ export function BoolToggle({
     const { value, set } = useConfig(propId)
     // Display: explicit true beats anything; otherwise fall back to the
     // declared default so default-true bools render the switch as on.
-    const checked = value === true || (value === undefined && defaultValue === true)
+    const checked =
+        value === true || (value === undefined && defaultValue === true)
     return (
         <label htmlFor={id} className="upup-ie-toggle">
             <div className="upup-ie-toggle-text">
                 <span className="upup-ie-toggle-label">{label}</span>
                 {description && (
-                    <span className="upup-ie-toggle-description">{description}</span>
+                    <span className="upup-ie-toggle-description">
+                        {description}
+                    </span>
                 )}
             </div>
             <input
                 id={id}
                 type="checkbox"
                 checked={checked}
-                onChange={(e) => {
+                onChange={e => {
                     const next = e.currentTarget.checked
                     // Match-default → undefined (clean URL), diverge → write
                     // the explicit boolean. Default-undefined bools collapse

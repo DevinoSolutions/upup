@@ -17,7 +17,9 @@ export function FieldLabel({
 }) {
     return (
         <>
-            <span id={id} className="upup-ie-field-label">{label}</span>
+            <span id={id} className="upup-ie-field-label">
+                {label}
+            </span>
             {description && (
                 <span className="upup-ie-field-description">{description}</span>
             )}
