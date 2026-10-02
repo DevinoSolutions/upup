@@ -7,7 +7,12 @@ import { NestedConfig } from '../sidebar/primitives/NestedConfig'
 import type { ToggleEntry } from '../types'
 
 const fields: ToggleEntry[] = [
-    { id: 'clientId', label: 'Client ID', primitive: 'string', defaultValue: '' },
+    {
+        id: 'clientId',
+        label: 'Client ID',
+        primitive: 'string',
+        defaultValue: '',
+    },
     { id: 'apiKey', label: 'API Key', primitive: 'string', defaultValue: '' },
 ]
 
@@ -15,7 +20,11 @@ describe('NestedConfig', () => {
     it('renders nested fields', () => {
         render(
             <ConfigProvider initialConfig={{}}>
-                <NestedConfig parentPath="cloudDrives.googleDrive" label="Google Drive" fields={fields} />
+                <NestedConfig
+                    parentPath="cloudDrives.googleDrive"
+                    label="Google Drive"
+                    fields={fields}
+                />
             </ConfigProvider>,
         )
         expect(screen.getByText('Client ID')).toBeTruthy()
@@ -26,7 +35,11 @@ describe('NestedConfig', () => {
         const user = userEvent.setup()
         render(
             <ConfigProvider initialConfig={{}}>
-                <NestedConfig parentPath="cloudDrives.googleDrive" label="Google Drive" fields={fields} />
+                <NestedConfig
+                    parentPath="cloudDrives.googleDrive"
+                    label="Google Drive"
+                    fields={fields}
+                />
             </ConfigProvider>,
         )
         const inputs = screen.getAllByRole('textbox')

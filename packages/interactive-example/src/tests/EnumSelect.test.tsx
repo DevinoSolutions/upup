@@ -19,7 +19,7 @@ describe('EnumSelect', () => {
             )
             const radios = screen.getAllByRole('radio')
             expect(radios).toHaveLength(3)
-            const s3 = radios.find((r) => r.textContent === 's3')!
+            const s3 = radios.find(r => r.textContent === 's3')!
             expect(s3.getAttribute('aria-checked')).toBe('true')
         })
 
@@ -36,7 +36,7 @@ describe('EnumSelect', () => {
             )
             const backblaze = screen
                 .getAllByRole('radio')
-                .find((r) => r.textContent === 'backblaze')!
+                .find(r => r.textContent === 'backblaze')!
             await user.click(backblaze)
             expect(backblaze.getAttribute('aria-checked')).toBe('true')
         })
@@ -54,7 +54,9 @@ describe('EnumSelect', () => {
                     />
                 </ConfigProvider>,
             )
-            expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('s3')
+            expect(
+                (screen.getByRole('combobox') as HTMLSelectElement).value,
+            ).toBe('s3')
         })
 
         it('updates on selection change', async () => {
@@ -80,7 +82,17 @@ describe('EnumSelect', () => {
                     <EnumSelect
                         propId="lang"
                         label="Language"
-                        options={['en-US', 'ar-SA', 'de-DE', 'es-ES', 'fr-FR', 'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW']}
+                        options={[
+                            'en-US',
+                            'ar-SA',
+                            'de-DE',
+                            'es-ES',
+                            'fr-FR',
+                            'ja-JP',
+                            'ko-KR',
+                            'zh-CN',
+                            'zh-TW',
+                        ]}
                     />
                 </ConfigProvider>,
             )

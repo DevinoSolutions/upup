@@ -12,7 +12,9 @@ describe('StringInput', () => {
                 <StringInput propId="serverUrl" label="Server URL" />
             </ConfigProvider>,
         )
-        expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('/api/upup')
+        expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe(
+            '/api/upup',
+        )
     })
 
     it('updates on change', async () => {

@@ -69,12 +69,18 @@ export function decodeConfig(token: string): Partial<UpupConfig> {
         const bytes = base64ToBytes(fromBase64Url(token))
         const json = pako.inflate(bytes, { to: 'string' })
         const parsed: unknown = JSON.parse(json)
-        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        if (
+            typeof parsed !== 'object' ||
+            parsed === null ||
+            Array.isArray(parsed)
+        ) {
             return {}
         }
         const knownKeys = new Set(Object.keys(buildDefaultConfig()))
         const out: Record<string, unknown> = {}
-        for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+        for (const [key, value] of Object.entries(
+            parsed as Record<string, unknown>,
+        )) {
             if (knownKeys.has(key)) {
                 out[key] = value
             }
