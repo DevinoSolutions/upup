@@ -529,6 +529,53 @@ jobs:
                       apps/e2e-test/test-results/
                   retention-days: 14
 
+    # Read-only checks against the DEPLOYED site: each of the four drive
+    # sign-ins (homepage demo popups + server-mode start routes) must reach the
+    # provider's real sign-in page with useupup.com's redirect and no
+    # redirect_uri error. The registrations live in the providers' consoles,
+    # outside this repo — a drift there is invisible to every other job. Stops
+    # at the sign-in page: nothing signs in, nothing reaches consent.
+    Live-Drive-Login:
+        name: Live drive sign-in checks (useupup.com)
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Install Playwright Chromium
+              # See the Full E2E job above: Google's chrome-stable apt index is
+              # serving a broken Packages.gz, and `--with-deps` fails on it.
+              run: |
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+                  sudo rm -f /etc/apt/sources.list.d/google-chrome.sources
+                  pnpm --filter @useupup/e2e-test exec playwright install --with-deps chromium
+
+            - name: Run the live drive sign-in checks
+              run: pnpm --filter @useupup/e2e-test test:e2e:live
+
+            - name: Upload Playwright report
+              if: failure()
+              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              with:
+                  name: live-drive-login-playwright-artifacts
+                  path: |
+                      apps/e2e-test/playwright-report/
+                      apps/e2e-test/test-results/
+                  retention-days: 14
+
     Nightly-Status:
         name: Nightly Status Check
         runs-on: ubuntu-latest
@@ -548,6 +595,7 @@ jobs:
                 Drive-Sandbox,
                 Lighthouse,
                 Landing-Feedback,
+                Live-Drive-Login,
             ]
         if: always()
         steps:
@@ -569,6 +617,7 @@ jobs:
                   record "Drive-Sandbox" "${{ needs.Drive-Sandbox.result }}"
                   record "Lighthouse" "${{ needs.Lighthouse.result }}"
                   record "Landing-Feedback" "${{ needs.Landing-Feedback.result }}"
+                  record "Live-Drive-Login" "${{ needs.Live-Drive-Login.result }}"
                   if [ -n "$failed" ]; then
                     echo "One or more nightly jobs failed"
                     printf '%s' "$failed"

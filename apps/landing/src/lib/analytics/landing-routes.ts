@@ -20,6 +20,25 @@ export const LANDING_FRAMEWORK_SLUGS = [
     'preact',
 ] as const
 
+/**
+ * Where the cloud-drive sign-in popups land (`spec.redirectPath` of the
+ * OneDrive / Dropbox / Box plugins in @useupup/core). The URL carries the
+ * provider's one-time `code` and `state` until the opener reads it and closes
+ * the popup, so PostHog never boots on these routes: a $pageview there would
+ * copy the code into analytics. A unit test pins this list to the plugins.
+ */
+export const OAUTH_REDIRECT_PATHS = [
+    '/od_redirect',
+    '/dp_redirect',
+    '/box_redirect',
+] as const
+
+export function isOAuthRedirectPath(pathname: string | null): boolean {
+    if (!pathname) return false
+    const clean = pathname.replace(/\/+$/, '')
+    return (OAUTH_REDIRECT_PATHS as readonly string[]).includes(clean)
+}
+
 export function isMarketingLandingPath(pathname: string | null): boolean {
     if (!pathname) return false
     const clean = pathname.replace(/\/+$/, '')

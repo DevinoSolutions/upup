@@ -7,7 +7,10 @@ import {
     e2eSuperProperties,
     readE2ETestContext,
 } from '@/lib/analytics/dataset'
-import { isMarketingLandingPath } from '@/lib/analytics/landing-routes'
+import {
+    isMarketingLandingPath,
+    isOAuthRedirectPath,
+} from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
 
 // Guard against re-initialising during React Strict Mode's double-invoke and
@@ -158,6 +161,9 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (typeof window === 'undefined' || bootStarted) return
+        // A drive sign-in popup carries the provider's one-time code in its
+        // URL; it must never reach a $pageview.
+        if (isOAuthRedirectPath(pathname)) return
         // Every route other than the marketing landing pages (docs, support,
         // agent-setup, …) initialises at mount, exactly as before.
         if (!isMarketingLandingPath(pathname)) {

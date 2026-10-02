@@ -16,6 +16,7 @@
         "visual",
         "drive-sandbox",
         "landing",
+        "live",
         "*.config.ts"
     ]
 }

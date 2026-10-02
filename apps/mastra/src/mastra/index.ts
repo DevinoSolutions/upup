@@ -4,6 +4,7 @@ import { buildObservability } from '../lib/observability.js'
 import { playgroundAgent } from './agents/playground-agent.js'
 import { docsAgent } from './agents/docs-agent.js'
 import { corsMiddleware } from './middleware/cors.js'
+import { noindexMiddleware } from './middleware/noindex.js'
 import { authMiddleware } from './middleware/auth.js'
 import { rateLimitMiddleware } from './middleware/rate-limit.js'
 import { dailyBudgetMiddleware } from './middleware/daily-budget.js'
@@ -34,6 +35,9 @@ export const mastra = new Mastra({
         port: env.PORT,
         host: env.MASTRA_HOST,
         middleware: [
+            // First, so its post-next() header also lands on the guards'
+            // early 401/403/429 responses.
+            { handler: noindexMiddleware() as any, path: '/*' },
             { handler: corsMiddleware() as any, path: '/*' },
             { handler: dailyBudgetMiddleware() as any, path: '/*' },
             { handler: rateLimitMiddleware() as any, path: '/*' },
