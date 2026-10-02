@@ -31,7 +31,10 @@ export const serverSchema = z.object({
     ),
     // Key for OPENROUTER_API_URL. Mastra's OpenRouter router reads it from
     // process.env on its own; the proxy path passes it explicitly.
-    OPENROUTER_API_KEY: z.string().min(1).optional(),
+    OPENROUTER_API_KEY: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z.string().min(1).optional(),
+    ),
     // Model id both agents use, as the base URL's API names it.
     OPENROUTER_MODEL: z.preprocess(
         v => (v === '' ? undefined : v),

@@ -22,9 +22,11 @@ describe('the agents model base URL', () => {
     it('treats empty strings from a bare compose passthrough as unset', () => {
         const e = serverSchema.parse({
             OPENROUTER_API_URL: '',
+            OPENROUTER_API_KEY: '',
             OPENROUTER_MODEL: '',
         })
         expect(e.OPENROUTER_API_URL).toBe(DEFAULT_OPENROUTER_API_URL)
+        expect(e.OPENROUTER_API_KEY).toBeUndefined()
         expect(e.OPENROUTER_MODEL).toBe(DEFAULT_OPENROUTER_MODEL)
     })
 
