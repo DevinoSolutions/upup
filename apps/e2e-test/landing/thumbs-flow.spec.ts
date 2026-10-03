@@ -1,4 +1,11 @@
-import { test, expect, applyE2EContext, recordArtifact } from './fixtures'
+import {
+    test,
+    expect,
+    applyE2EContext,
+    awaitAnalyticsDelivered,
+    recordArtifact,
+    trackAnalyticsDelivery,
+} from './fixtures'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -151,6 +158,7 @@ test.describe('Ask AI thumbs feedback', () => {
     }) => {
         test.skip(Boolean(skipReason), skipReason ?? 'mastra unavailable')
 
+        const delivery = trackAnalyticsDelivery(page)
         await applyE2EContext(page, testRunId, 'thumbs-down-comment')
         await page.goto('/')
 
@@ -220,17 +228,12 @@ test.describe('Ask AI thumbs feedback', () => {
         ).toHaveAttribute('aria-pressed', 'false')
 
         // posthog-js batches browser captures; a short-lived automated page
-        // closes before the batch timer fires. Flush explicitly (the e2e-only
-        // hook awaits the network) so the rating + comment events land before
-        // the context tears down.
-        await page.evaluate(async () => {
-            const flush = (
-                window as unknown as {
-                    __upupFlushAnalytics?: () => Promise<void>
-                }
-            ).__upupFlushAnalytics
-            if (flush) await flush()
-        })
+        // closes before the batch timer fires. Keep the page open until the
+        // capture endpoint has ACKed both events, so teardown cannot drop them.
+        await awaitAnalyticsDelivered(delivery, [
+            'ai_response_rated',
+            'ai_response_feedback_comment',
+        ])
 
         recordArtifact('thumbsRan', true)
     })
