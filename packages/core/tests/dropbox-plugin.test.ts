@@ -300,6 +300,47 @@ describe('DropboxPlugin', () => {
             )
         })
 
+        // Dropbox RPC endpoints with no arguments reject a JSON Content-Type
+        // over an empty body with a 500 ("unexpected error occurred"), which
+        // left `user` undefined and hid the drive header's Log out + search.
+        it('sends a JSON null body when fetching the user profile', async () => {
+            await plugin.getAuthUrl()
+
+            const fetchMock = vi
+                .fn()
+                .mockResolvedValueOnce({
+                    ok: true,
+                    status: 200,
+                    json: vi.fn().mockResolvedValue({
+                        access_token: 'access-123',
+                        refresh_token: 'refresh-456',
+                        expires_in: 14400,
+                    }),
+                    text: vi.fn().mockResolvedValue(''),
+                })
+                .mockResolvedValueOnce({
+                    ok: true,
+                    status: 200,
+                    json: vi.fn().mockResolvedValue({
+                        name: { display_name: 'Test User' },
+                        email: 'test@example.com',
+                    }),
+                    text: vi.fn().mockResolvedValue(''),
+                })
+            vi.stubGlobal('fetch', fetchMock)
+
+            await plugin.authenticate('auth-code-xyz')
+
+            const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit]
+            expect(url).toBe(
+                'https://api.dropbox.com/2/users/get_current_account',
+            )
+            expect(new Headers(init.headers).get('Content-Type')).toBe(
+                'application/json',
+            )
+            expect(init.body).toBe('null')
+        })
+
         it('emits state-change to authenticating then authenticated', async () => {
             await plugin.getAuthUrl()
 
