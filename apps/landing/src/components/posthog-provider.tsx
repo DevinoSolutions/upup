@@ -96,18 +96,6 @@ function bootPostHog(): void {
 
             // Replays anything captured while the SDK was loading.
             setPostHogClient(posthog)
-
-            // e2e-only affordance: a short-lived automated page closes before
-            // posthog's batch flush fires, so expose an awaitable flush the
-            // spec calls before it ends (`shutdown()` flushes the queues and
-            // resolves). Never attached on production/disabled.
-            if (dataset === 'e2e') {
-                ;(
-                    window as unknown as {
-                        __upupFlushAnalytics?: () => Promise<void>
-                    }
-                ).__upupFlushAnalytics = () => posthog.shutdown()
-            }
         })
         .catch(() => {
             // Analytics failing to load must never break the page.
