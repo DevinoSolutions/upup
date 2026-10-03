@@ -44,15 +44,19 @@ module.exports = {
             },
         },
         assert: {
-            // Judge the median of the five runs, not the worst one — a single
-            // runner hiccup must not read as a regression.
-            aggregationMethod: 'median',
+            // Every matrix entry judges the median of the five runs, not the
+            // worst one — a single runner hiccup must not read as a regression.
+            // `aggregationMethod` lives INSIDE each entry: lhci throws "Cannot
+            // use assertMatrix with other options" if it sits beside
+            // `assertMatrix` here, which redded every nightly from 2026-09-30
+            // until it moved.
             assertMatrix: [
                 {
                     // Home + framework pages: the live uploader demo, the
                     // StackBlitz editor and the scene animations all load
                     // behind viewport gates, so the initial page is light.
                     matchingUrlPattern: '^https?://[^/]+/(react/)?$',
+                    aggregationMethod: 'median',
                     // Measured medians on this build: / = 0.74, /react/ = 0.71.
                     assertions: {
                         'categories:performance': ['warn', { minScore: 0.66 }],
@@ -61,6 +65,7 @@ module.exports = {
                 {
                     // Docs pages carry no embeds at all.
                     matchingUrlPattern: '.*/docs/.*',
+                    aggregationMethod: 'median',
                     // Measured median on this build: 0.73.
                     assertions: {
                         'categories:performance': ['warn', { minScore: 0.68 }],
