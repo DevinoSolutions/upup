@@ -322,10 +322,13 @@ export class DropboxPlugin extends PopupOAuthPlugin {
     // ── Private: fetch user profile ──
 
     protected async fetchUserProfile(): Promise<DriveUser> {
+        // A no-argument Dropbox RPC still needs a JSON body: an empty body
+        // with this Content-Type gets a 500, which leaves `user` undefined
+        // and hides the drive header's Log out + search.
         const res = await this.apiRequest(USER_INFO_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: null,
+            body: 'null',
         })
 
         const data = (await res.json()) as DropboxUserResponse
