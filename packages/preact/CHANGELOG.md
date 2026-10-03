@@ -1,5 +1,19 @@
 # @useupup/preact
 
+## 3.3.4
+
+### Patch Changes
+
+- [#472](https://github.com/DevinoSolutions/upup/pull/472) [`900a560`](https://github.com/DevinoSolutions/upup/commit/900a5605e269d15df1a1fa2a2c921f351c44e888) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Image editor menus now open on top of the editor. Filerobot's menus (watermark
+  type, zoom, font and colour pickers) are portalled to `<body>` at z-index 1300,
+  which put them underneath the inline editor (z-9999) and the modal editor
+  (z-2147483647). Clicking "Add watermark" or the zoom control appeared to do
+  nothing, because the menu opened out of sight. The editor's style overrides now
+  lift those menus to the top layer.
+- Updated dependencies [[`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734), [`900a560`](https://github.com/DevinoSolutions/upup/commit/900a5605e269d15df1a1fa2a2c921f351c44e888)]:
+    - @useupup/core@3.3.4
+    - @useupup/react@3.3.4
+
 ## 3.3.3
 
 ### Patch Changes
