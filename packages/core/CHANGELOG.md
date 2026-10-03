@@ -1,5 +1,14 @@
 # @useupup/core
 
+## 3.3.4
+
+### Patch Changes
+
+- [#494](https://github.com/DevinoSolutions/upup/pull/494) [`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The Dropbox drive view shows Log out and search again. The account-profile
+  request sent a JSON Content-Type with an empty body, which Dropbox answers with
+  a 500, so the signed-in user was never loaded and the header hid both
+  controls. The request now sends a JSON `null` body.
+
 ## 3.3.3
 
 ### Patch Changes

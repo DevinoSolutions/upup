@@ -1,5 +1,12 @@
 # @useupup/vue
 
+## 3.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734)]:
+    - @useupup/core@3.3.4
+
 ## 3.3.3
 
 ### Patch Changes
