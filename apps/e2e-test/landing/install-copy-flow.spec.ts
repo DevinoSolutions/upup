@@ -1,4 +1,11 @@
-import { test, expect, applyE2EContext, recordArtifact } from './fixtures'
+import {
+    test,
+    expect,
+    applyE2EContext,
+    awaitAnalyticsDelivered,
+    recordArtifact,
+    trackAnalyticsDelivery,
+} from './fixtures'
 
 // Drives the homepage hero's install box the way a converting visitor does:
 // pick a package manager, press copy. The copy is the site's main conversion
@@ -13,6 +20,7 @@ test.describe('homepage install command copy', () => {
         testRunId,
     }) => {
         await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+        const delivery = trackAnalyticsDelivery(page)
         await applyE2EContext(page, testRunId, 'install-copy')
         await page.goto('/')
 
@@ -27,16 +35,9 @@ test.describe('homepage install command copy', () => {
             .poll(() => page.evaluate(() => navigator.clipboard.readText()))
             .toBe('pnpm add @useupup/react')
 
-        // posthog-js batches browser captures; flush through the e2e-only hook
-        // (it awaits the network) so the event lands before teardown.
-        await page.evaluate(async () => {
-            const flush = (
-                window as unknown as {
-                    __upupFlushAnalytics?: () => Promise<void>
-                }
-            ).__upupFlushAnalytics
-            if (flush) await flush()
-        })
+        // posthog-js batches browser captures; keep the page open until the
+        // capture endpoint has ACKed the event, so teardown cannot drop it.
+        await awaitAnalyticsDelivered(delivery, ['install_command_copied'])
 
         recordArtifact('installCopyScenario', 'install-copy')
     })
