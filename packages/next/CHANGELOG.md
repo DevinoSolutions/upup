@@ -1,5 +1,14 @@
 # @useupup/next
 
+## 3.3.4
+
+### Patch Changes
+
+- Updated dependencies [[`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734), [`900a560`](https://github.com/DevinoSolutions/upup/commit/900a5605e269d15df1a1fa2a2c921f351c44e888)]:
+    - @useupup/core@3.3.4
+    - @useupup/react@3.3.4
+    - @useupup/server@3.3.4
+
 ## 3.3.3
 
 ### Patch Changes
