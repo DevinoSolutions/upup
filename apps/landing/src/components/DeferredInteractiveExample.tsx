@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import type { InteractiveExampleProps } from '@useupup/interactive-example'
+import { useDemoUploadTracking } from '@/lib/analytics/demo-upload-tracking'
 
 // The live uploader demo is the single heaviest thing on the marketing pages:
 // `@useupup/interactive-example` drags in @useupup/react, @useupup/core,
@@ -40,6 +41,7 @@ export default function DeferredInteractiveExample(
 ) {
     const ref = useRef<HTMLDivElement | null>(null)
     const [mounted, setMounted] = useState(false)
+    useDemoUploadTracking(ref, 'interactive-demo')
 
     useEffect(() => {
         if (mounted) return

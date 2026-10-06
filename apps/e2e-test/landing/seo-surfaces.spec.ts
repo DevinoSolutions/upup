@@ -24,6 +24,24 @@ type Surface = {
 
 const FRAMEWORKS = ['react', 'vue', 'svelte', 'angular', 'vanilla', 'preact']
 
+// Each per-framework roundup and the framework page its demo CTA points at.
+const ROUNDUP_FRAMEWORKS = [
+    { slug: 'react', framework: 'react', name: 'React', quickstart: 'React' },
+    { slug: 'vue', framework: 'vue', name: 'Vue', quickstart: 'Vue' },
+    {
+        slug: 'angular',
+        framework: 'angular',
+        name: 'Angular',
+        quickstart: 'Angular',
+    },
+    {
+        slug: 'vanilla-js',
+        framework: 'vanilla',
+        name: 'vanilla JS',
+        quickstart: 'Vanilla JS',
+    },
+]
+
 const SURFACES: Surface[] = [
     { path: '/', breadcrumbs: false, faq: true },
     ...FRAMEWORKS.map(id => ({
@@ -49,11 +67,11 @@ const SURFACES: Surface[] = [
         breadcrumbs: true,
         faq: true,
     },
-    {
-        path: '/docs/comparisons/best-react-file-upload-libraries/',
+    ...ROUNDUP_FRAMEWORKS.map(({ slug }) => ({
+        path: `/docs/comparisons/best-${slug}-file-upload-libraries/`,
         breadcrumbs: true,
         faq: true,
-    },
+    })),
 ]
 
 const TUTORIAL_PATH = '/docs/guides/s3-presigned-url-upload-react/'
@@ -267,6 +285,56 @@ test.describe('seo surfaces', () => {
                 .filter({ hasText: /^\s*npm i @useupup\/react\s*$/ }),
         ).toBeVisible()
     })
+
+    // Roundup readers stayed ~40 s and left without a click: the first link to
+    // the product sat ~1,500 px down the page. Each roundup now opens with a
+    // demo + quickstart CTA right under its short answer.
+    for (const { slug, framework, name, quickstart } of ROUNDUP_FRAMEWORKS) {
+        test(`the ${name} roundup opens with a live-demo CTA that lands on the /${framework}/ demo`, async ({
+            page,
+            request,
+        }) => {
+            await page.setViewportSize({ width: 1280, height: 800 })
+            await page.goto(
+                `/docs/comparisons/best-${slug}-file-upload-libraries/`,
+            )
+
+            const demoLink = page.getByRole('link', {
+                name: `live ${name} demo`,
+                exact: true,
+            })
+            const quickstartLink = page
+                .getByRole('link', {
+                    name: `${quickstart} quickstart`,
+                    exact: true,
+                })
+                .first()
+            await expect(demoLink).toBeInViewport()
+            await expect(quickstartLink).toBeInViewport()
+            // Above the comparison table, not buried after it.
+            const ctaTop = (await demoLink.boundingBox())?.y ?? Infinity
+            const tableTop =
+                (await page.locator('table').first().boundingBox())?.y ?? -1
+            expect(ctaTop, 'CTA sits above the table').toBeLessThan(tableTop)
+
+            const quickstartHref =
+                (await quickstartLink.getAttribute('href')) ?? ''
+            expect(quickstartHref).toMatch(
+                new RegExp(`^/docs/quickstarts/${framework}/?$`),
+            )
+            expect((await request.get(quickstartHref)).status()).toBe(200)
+
+            await demoLink.click()
+            await expect(page).toHaveURL(new RegExp(`/${framework}/#demo$`))
+            const demo = page.locator('#demo')
+            await expect(demo).toBeInViewport()
+            // The demo mounts on approach, so an attached file input proves
+            // the uploader itself loaded.
+            await expect(
+                demo.locator('[data-testid="upup-file-input"]'),
+            ).toBeAttached()
+        })
+    }
 
     test('Try Live Demo on the homepage brings the live uploader into view', async ({
         page,

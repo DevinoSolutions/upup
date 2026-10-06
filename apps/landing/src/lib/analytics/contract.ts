@@ -16,6 +16,15 @@ export const SUPPORT_REQUEST_SUBMITTED = 'support_request_submitted'
  */
 export const INSTALL_COMMAND_COPIED = 'install_command_copied'
 
+/**
+ * The live demos' upload funnel: a visitor pressed Upload, then the run ended
+ * in success or failure. Before these, a demo upload left no trace beyond an
+ * unlabeled autocapture click, so demo success and failure were unmeasurable.
+ */
+export const DEMO_UPLOAD_STARTED = 'demo_upload_started'
+export const DEMO_UPLOAD_SUCCEEDED = 'demo_upload_succeeded'
+export const DEMO_UPLOAD_FAILED = 'demo_upload_failed'
+
 export interface FeedbackPropertyInput {
     feedbackId: string
     feedbackSource: string

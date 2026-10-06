@@ -116,12 +116,14 @@ function docsHrefs(markup: string): string[] {
 
 // Search Console shows the framework pages collecting "best/most popular
 // <framework> file upload" impressions at positions 43-60, while the docs
-// roundups that answer those queries had no link from them. React, Vue and
-// Angular link their own roundup; the others have none and link the hub.
+// roundups that answer those queries had no link from them. React, Vue,
+// Angular and vanilla link their own roundup; the others have none and link
+// the hub.
 const ROUNDUPS: Partial<Record<FrameworkId, string>> = {
     react: '/docs/comparisons/best-react-file-upload-libraries',
     vue: '/docs/comparisons/best-vue-file-upload-libraries',
     angular: '/docs/comparisons/best-angular-file-upload-libraries',
+    vanilla: '/docs/comparisons/best-vanilla-js-file-upload-libraries',
 }
 const COMPARISONS_HUB = '/docs/comparisons'
 
