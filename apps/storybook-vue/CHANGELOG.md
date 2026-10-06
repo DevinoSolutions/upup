@@ -1,5 +1,13 @@
 # @useupup/storybook-vue
 
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies [[`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734)]:
+    - @useupup/core@3.3.4
+    - @useupup/vue@3.3.4
+
 ## 0.1.7
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @useupup/angular
 
+## 3.3.4
+
+### Patch Changes
+
+- [#463](https://github.com/DevinoSolutions/upup/pull/463) [`3881173`](https://github.com/DevinoSolutions/upup/commit/38811736a66b97022d3121c50ca6785691b89c9c) Thanks [@AminDhouib](https://github.com/AminDhouib)! - `@useupup/angular` now installs on Angular 20, 21 and 22. The peer range was
+  `^19` only, so npm refused with ERESOLVE. It also declares
+  `@angular/platform-browser`, which it already imports, as a peer.
+- Updated dependencies [[`4f9324d`](https://github.com/DevinoSolutions/upup/commit/4f9324d9ee3c63238b0d9478fa21110ad390b734)]:
+    - @useupup/core@3.3.4
+
 ## 3.3.3
 
 ### Patch Changes
