@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext } from 'react'
+import { useContext, useRef } from 'react'
 import dynamic from 'next/dynamic'
 // The uploader's stylesheet is imported per-module everywhere in landing
 // (see Uploader.tsx) — without this, a docs page that mounts only the demo
@@ -13,6 +13,7 @@ import type { UpupThemeConfig } from '@useupup/core'
 import { ThemeContext } from '@/lib/contexts'
 
 import { DEMO_UPLOAD_TARGETS } from '@/lib/interactive-example-props'
+import { useDemoUploadTracking } from '@/lib/analytics/demo-upload-tracking'
 
 // The real uploader, loaded client-only so docs pages stay static-light. It
 // uploads to the same target as the homepage demo (DEMO_UPLOAD_TARGETS): with
@@ -48,6 +49,8 @@ export function DocsUploaderDemo({
     // guide's demo) COMPOSES on top and wins — its own `mode`/tokens/slots are
     // preserved, and only an unset `mode` falls back to the site's.
     const { isDarkMode } = useContext(ThemeContext)
+    const demoRef = useRef<HTMLDivElement | null>(null)
+    useDemoUploadTracking(demoRef, 'docs-demo')
     // Spread FIRST, then resolve `mode`: with the site mode written before the
     // spread, a caller passing an explicit `{ mode: undefined }` overwrote it
     // with undefined and the panel fell back to light on a dark page.
@@ -57,7 +60,11 @@ export function DocsUploaderDemo({
     }
 
     return (
-        <div data-testid="docs-uploader-demo" className="not-prose my-8">
+        <div
+            ref={demoRef}
+            data-testid="docs-uploader-demo"
+            className="not-prose my-8"
+        >
             {/* Device chrome — theme-aware: a light frame (white → gray-100,
                 gray-200 ring, soft shadow) in light mode, the dark navy gradient
                 frame in dark mode. The uploader's own gradient panel adapts to

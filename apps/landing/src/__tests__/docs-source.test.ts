@@ -29,8 +29,9 @@ describe('docs source', () => {
         // writing-plugins) = 64, + 1 (2026-09 FAQ) = 65, + 4 (2026-09
         // comparisons hub + React/Vue/Angular roundups) = 69, + 3 (2026-09
         // folder hubs: guides/, guides/storage/, quickstarts/) = 72, + 1
-        // (2026-09 S3 presigned-URL React tutorial) = 73.
-        expect(pages.length).toBe(73)
+        // (2026-09 S3 presigned-URL React tutorial) = 73, + 1
+        // (2026-10 vanilla JS roundup) = 74.
+        expect(pages.length).toBe(74)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()

@@ -171,6 +171,46 @@ test.describe('shared PostHog e2e ingestion', () => {
         expect(row?.[2]).toBe('@useupup/react')
     })
 
+    test('the homepage demo upload funnel events landed with this run’s ids', async ({
+        testRunId,
+    }) => {
+        const artifacts = readArtifacts()
+        expect(
+            artifacts.demoUploadScenario,
+            'demo-upload-flow must have run and recorded its scenario',
+        ).toBe('demo-upload')
+
+        const funnelQuery = `
+            SELECT event, properties.surface, properties.route
+            FROM events
+            WHERE event IN ('demo_upload_started', 'demo_upload_succeeded')
+              AND properties.test_run_id = '${testRunId}'
+              AND properties.test_scenario = 'demo-upload'
+              AND properties.app_id = 'upup-landing'
+              AND timestamp > now() - INTERVAL 2 HOUR
+            LIMIT 100`
+
+        let rows: unknown[][] = []
+        await expect
+            .poll(
+                async () => {
+                    rows = (await runHogql(funnelQuery)) ?? []
+                    const names = new Set(rows.map(r => r[0]))
+                    return (
+                        names.has('demo_upload_started') &&
+                        names.has('demo_upload_succeeded')
+                    )
+                },
+                { timeout: 90_000, intervals: [2_000, 3_000, 5_000, 8_000] },
+            )
+            .toBe(true)
+
+        for (const row of rows) {
+            expect(row[1]).toBe('interactive-demo')
+            expect(row[2]).toBe('/')
+        }
+    })
+
     test('the AI thumbs events landed and correlate to an $ai_generation trace', async ({
         testRunId,
     }) => {
