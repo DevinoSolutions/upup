@@ -339,7 +339,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             FILEPOND,
             UPPY,
         ],
-        comparisonLink: COMPARISONS_HUB,
+        comparisonLink: roundup('vanilla-js', 'Vanilla JavaScript'),
         links: [quickstart('vanilla', 'Vanilla JS'), ...SHARED_LINKS],
     },
     preact: {

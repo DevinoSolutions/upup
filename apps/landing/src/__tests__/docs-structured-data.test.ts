@@ -56,6 +56,11 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'best-vanilla-js-file-upload-libraries'],
+        file: 'comparisons/best-vanilla-js-file-upload-libraries.mdx',
+        questions: 5,
+    },
+    {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
         questions: 7,
@@ -312,7 +317,7 @@ describe('docs folder hub pages', () => {
                 ['Guides', '/docs/guides/'],
                 ['Storage', '/docs/guides/storage/'],
                 [
-                    'Browser Uploads to Azure Blob Storage with JavaScript',
+                    'Upload Files to Azure Blob Storage from the Browser',
                     '/docs/guides/storage/azure-blob/',
                 ],
             ],

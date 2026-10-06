@@ -1,0 +1,190 @@
+---
+title: Best Vanilla JavaScript File Upload Libraries
+description: Framework-free JavaScript file upload libraries compared - upup, Uppy, FilePond, Dropzone.js, Uploadcare and tus-js-client on S3, resumable uploads.
+faq:
+    - q: What is the best JavaScript file upload library without a framework?
+      a: For a complete uploader against your own S3-compatible storage, upup or Uppy. For one polished component that posts to your server, FilePond or Dropzone.js. For no storage setup at all, Uploadcare's hosted service. For resumable uploads under your own UI, tus-js-client.
+    - q: Can I use upup without React?
+      a: Yes. @useupup/vanilla mounts the uploader into any element with createUploader(), or declaratively as an <upup-uploader> custom element. It renders the same UI as the React package, minus the image editor.
+    - q: Which vanilla JavaScript upload libraries upload directly to S3?
+      a: upup, with presigned URLs from your endpoint or @useupup/server, and Uppy, with its AWS S3 plugin. FilePond and Dropzone.js post to your own server, Uploadcare uploads to its own storage, and tus-js-client needs a tus server.
+    - q: Which of them support resumable uploads?
+      a: upup and Uppy (tus or S3 multipart), Uploadcare (multipart uploads to its service) and tus-js-client (any tus server). FilePond and Dropzone.js upload large files in chunks to your own server.
+    - q: Are these libraries free?
+      a: upup, Uppy, FilePond, Dropzone.js and tus-js-client are MIT-licensed. Uploadcare's File Uploader is MIT, but the service it uploads to is paid with a free tier. FilePond's full image editor, Pintura, is a separate commercial product.
+---
+
+**The short answer:** for a framework-free uploader that sends files straight to
+your own S3-compatible bucket, with cloud drives and resumable uploads, use upup
+or Uppy. For one polished component that posts to your own server, use FilePond
+or Dropzone.js. For no storage setup at all, use Uploadcare's hosted service.
+If you only need resumable uploads behind your own UI, use tus-js-client.
+
+**Try it first:** the [live vanilla JS demo](/vanilla/#demo) uploads a real
+file from your browser, and the
+[Vanilla JS quickstart](/docs/quickstarts/vanilla/) gets it running on your
+page.
+
+This roundup compares six JavaScript upload libraries that work without React,
+Vue or Angular, then shows how to pick one.
+
+## Comparison table
+
+| Library                  | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3               | Image editing                                            | License                             | Bundle approach                                              |
+| ------------------------ | ------------- | ------------------------------------ | ------------------------------ | -------------------------- | -------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| upup                     | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)       | No (the editor is React/Preact only)                     | MIT                                 | Framework-free UI on lit-html, plus an `<upup-uploader>` tag |
+| Uppy                     | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)        | Yes (Image Editor plugin)                                | MIT                                 | Modular plugins; install only what you use                   |
+| FilePond                 | Yes           | No                                   | Chunked uploads to your server | Not built in               | Crop/resize plugins; full editor is Pintura (commercial) | MIT                                 | One component that enhances a file input, plus plugins       |
+| Dropzone.js              | Yes           | No                                   | Chunked uploads to your server | Not built in               | No (image thumbnails only)                               | MIT                                 | One library that posts to your server URL                    |
+| Uploadcare File Uploader | Yes           | Dropbox, Google Drive and more       | Yes (multipart to Uploadcare)  | No, files go to Uploadcare | Yes (built-in editor)                                    | MIT library; hosted service is paid | Web components talking to a hosted service                   |
+| tus-js-client            | No (no UI)    | No                                   | Yes (tus protocol)             | No, it needs a tus server  | No                                                       | MIT                                 | Upload client only; you build the UI                         |
+
+## The libraries
+
+### upup
+
+upup's `@useupup/vanilla` is the framework-free build of its uploader: the same
+UI as the React package, rendered with lit-html. Mount it with
+`createUploader('#uploader', options)` or drop an `<upup-uploader>` custom
+element into your HTML. It uploads directly to S3-compatible storage with
+presigned URLs, either from your own signing endpoint (client mode) or through
+`@useupup/server` (server mode, which adds multipart and cloud-drive
+transfers). Users can pick files from the device, Google Drive, OneDrive,
+Dropbox, Box, a camera, a screen capture or a link. The image editor is the one
+feature it leaves out: it ships in the React and Preact packages only. See the
+[vanilla JS file uploader](/vanilla/) page for a three-step setup.
+
+### Uppy
+
+Uppy, from Transloadit, is a modular uploader with a plain JavaScript core:
+add plugins for the Dashboard UI, sources (webcam, screen capture, remote
+drives) and destinations (tus, XHR, S3). Remote sources run through Companion,
+a Node server you host. It is the most feature-rich option here. See
+[upup vs Uppy](/docs/comparisons/upup-vs-uppy/).
+
+### FilePond
+
+FilePond is a single, carefully animated upload component written in plain
+JavaScript. `FilePond.create()` turns a file input into the widget, which posts
+files to your own server endpoint, supports chunked uploads, and extends
+through plugins for previews, validation and image transforms. See
+[upup vs FilePond](/docs/comparisons/upup-vs-filepond/).
+
+### Dropzone.js
+
+Dropzone.js turns any element into a drop zone with image thumbnails and
+progress bars, then posts each file to the URL you configure. It can split
+large files into chunks and retry failed chunks, but the server side of that
+is yours to write. There are no cloud-drive sources and no direct-to-S3 mode.
+
+### Uploadcare File Uploader
+
+Uploadcare's File Uploader is a set of MIT-licensed web components backed by
+Uploadcare's hosted service. Files go to Uploadcare's storage and CDN, with
+sources such as Dropbox and Google Drive, resumable multipart uploads and a
+built-in image editor. You need an Uploadcare project key, and the service is
+paid beyond its free tier; see their pricing page for current numbers.
+
+### tus-js-client
+
+tus-js-client is the reference browser client for the tus resumable upload
+protocol. It uploads a file in pieces to any tus server and can resume after a
+dropped connection or a page reload. It has no UI at all: you wire it to your
+own file input and progress display, and you run the tus server.
+
+### Older libraries you may still find
+
+Fine Uploader and Resumable.js still appear in search results, but neither has
+had an npm release in years (Fine Uploader since April 2018, Resumable.js since
+November 2017). Prefer a maintained option for new projects.
+
+## How to choose
+
+- **You want it working today, on your own bucket:** upup or Uppy. Both ship a
+  full UI and upload straight to S3-compatible storage.
+- **Your users keep files in Google Drive or Dropbox:** upup, Uppy or
+  Uploadcare. Uppy needs its Companion server, upup's server mode handles drive
+  transfers in `@useupup/server`, and Uploadcare does it inside its service.
+- **You already have an upload endpoint on your server:** FilePond or
+  Dropzone.js post straight to it.
+- **You don't want to run storage at all:** Uploadcare. Check their pricing
+  page against your expected volume.
+- **You upload very large files:** pick resumable uploads: upup or Uppy (tus or
+  S3 multipart), Uploadcare, or tus-js-client with your own UI.
+- **You need image editing before upload:** Uppy or Uploadcare in plain
+  JavaScript. upup's editor needs its React or Preact package.
+
+## Minimal upup example
+
+Install the package:
+
+```sh
+npm i @useupup/vanilla
+```
+
+Mount the uploader and point it at an endpoint that returns a presigned URL:
+
+```ts
+import { createUploader } from '@useupup/vanilla'
+import '@useupup/vanilla/styles'
+
+const uploader = createUploader('#uploader', {
+    provider: 'aws',
+    uploadEndpoint: '/api/upload-token',
+})
+```
+
+Prefer HTML? Import `@useupup/vanilla/element` once, then use the tag:
+
+```html
+<upup-uploader
+    provider="aws"
+    upload-endpoint="/api/upload-token"
+></upup-uploader>
+```
+
+The [Vanilla JS quickstart](/docs/quickstarts/vanilla/) covers the endpoint,
+and [Code Examples](/docs/code-examples/) has a ready-to-copy presign handler.
+
+## FAQ
+
+### What is the best JavaScript file upload library without a framework?
+
+For a complete uploader against your own S3-compatible storage, upup or Uppy.
+For one polished component that posts to your server, FilePond or Dropzone.js.
+For no storage setup at all, Uploadcare's hosted service. For resumable uploads
+under your own UI, tus-js-client.
+
+### Can I use upup without React?
+
+Yes. `@useupup/vanilla` mounts the uploader into any element with
+`createUploader()`, or declaratively as an `<upup-uploader>` custom element. It
+renders the same UI as the React package, minus the image editor.
+
+### Which vanilla JavaScript upload libraries upload directly to S3?
+
+upup, with presigned URLs from your endpoint or `@useupup/server`, and Uppy,
+with its AWS S3 plugin. FilePond and Dropzone.js post to your own server,
+Uploadcare uploads to its own storage, and tus-js-client needs a tus server.
+
+### Which of them support resumable uploads?
+
+upup and Uppy (tus or S3 multipart), Uploadcare (multipart uploads to its
+service) and tus-js-client (any tus server). FilePond and Dropzone.js upload
+large files in chunks to your own server.
+
+### Are these libraries free?
+
+upup, Uppy, FilePond, Dropzone.js and tus-js-client are MIT-licensed.
+Uploadcare's File Uploader is MIT, but the service it uploads to is paid with a
+free tier. FilePond's full image editor, Pintura, is a separate commercial
+product.
+
+## Related comparisons
+
+- [JavaScript file upload libraries compared](/docs/comparisons/)
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
+- [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/)
+- [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/)
