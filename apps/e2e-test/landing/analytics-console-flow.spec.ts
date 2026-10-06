@@ -1,4 +1,4 @@
-import { test, expect, applyE2EContext } from './fixtures'
+import { test, expect, applyE2EContext, isCaptureUrl } from './fixtures'
 
 // With analytics live (e2e dataset), a page view must not make the browser log
 // errors. posthog-js lazy-loads surveys.js from a versioned static path the
@@ -27,9 +27,7 @@ test.describe('analytics loads cleanly', () => {
         // So once that first capture POST has answered, any surveys request
         // this page view would make has already been issued.
         const firstCapture = page.waitForResponse(
-            res =>
-                res.request().method() === 'POST' &&
-                /^\/(e|i\/v0\/e)\/$/.test(new URL(res.url()).pathname),
+            res => res.request().method() === 'POST' && isCaptureUrl(res.url()),
         )
         await page.goto('/')
         expect((await firstCapture).ok()).toBe(true)
