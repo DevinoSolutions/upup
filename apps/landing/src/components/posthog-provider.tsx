@@ -12,6 +12,10 @@ import {
     isOAuthRedirectPath,
 } from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
+import {
+    TELEMETRY_PATH,
+    rewriteTelemetryPath,
+} from '@/lib/analytics/telemetry-proxy'
 
 // Guard against re-initialising during React Strict Mode's double-invoke and
 // across client-side navigations (the provider lives in the root layout).
@@ -39,7 +43,13 @@ function bootPostHog(): void {
     void import('posthog-js')
         .then(({ default: posthog }) => {
             posthog.init(token, {
-                api_host: host,
+                // Same-origin path, so ad blockers that filter the PostHog
+                // host or its well-known paths still let events through.
+                // next.config rewrites it to `host`, which stays the UI host
+                // so toolbar and dashboard links resolve.
+                api_host: TELEMETRY_PATH,
+                ui_host: host,
+                rewriteRequestPath: rewriteTelemetryPath,
                 capture_pageview: 'history_change',
                 capture_pageleave: true,
                 autocapture: true,

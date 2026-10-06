@@ -1,6 +1,10 @@
 import { test as base, expect, type Page, type Request } from '@playwright/test'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
+import {
+    TELEMETRY_PATH,
+    rewriteTelemetryPath,
+} from '../../landing/src/lib/analytics/telemetry-proxy'
 import { ARTIFACTS_FILE, RUN_CONTEXT_FILE } from './run-context'
 
 // Shared landing-e2e fixtures: the run's correlation id, the localStorage
@@ -73,8 +77,22 @@ export function readArtifacts(): Record<string, unknown> {
     }
 }
 
-// posthog-js capture endpoints: /e/ (first request), /i/v0/e/ (batches), /batch/.
-const CAPTURE_PATH = /\/(i\/v0\/)?e\/?$|\/batch\/?$/
+// posthog-js capture endpoints, /e/ (first request) and /i/v0/e/ (batches), as
+// the browser requests them: through the landing app's first-party path. A
+// capture sent straight to the PostHog host never counts as delivered.
+const CAPTURE_PATHS = new Set(
+    ['/e/', '/i/v0/e/'].map(
+        path =>
+            rewriteTelemetryPath(
+                new URL(`${TELEMETRY_PATH}${path}`, 'http://localhost'),
+            ).pathname,
+    ),
+)
+
+/** Whether a URL is a posthog-js capture endpoint on the first-party path. */
+export function isCaptureUrl(url: string): boolean {
+    return CAPTURE_PATHS.has(new URL(url).pathname)
+}
 
 /** Event names carried by one posthog-js capture request (gzip or plain JSON). */
 function capturedEventNames(request: Request): string[] {
@@ -92,6 +110,8 @@ function capturedEventNames(request: Request): string[] {
 export interface AnalyticsDelivery {
     /** Resolves once a capture request carrying the event got a 2xx back. */
     delivered(eventName: string): Promise<void>
+    /** Requests that bypassed the first-party path for a PostHog host. */
+    readonly direct: string[]
 }
 
 /**
@@ -106,9 +126,14 @@ export interface AnalyticsDelivery {
 export function trackAnalyticsDelivery(page: Page): AnalyticsDelivery {
     const seen = new Set<string>()
     const waiting = new Map<string, Array<() => void>>()
+    const direct: string[] = []
+    page.on('request', request => {
+        const { host, origin, pathname } = new URL(request.url())
+        if (/posthog/i.test(host)) direct.push(`${origin}${pathname}`)
+    })
     page.on('response', response => {
         if (!response.ok()) return
-        if (!CAPTURE_PATH.test(new URL(response.url()).pathname)) return
+        if (!isCaptureUrl(response.url())) return
         for (const name of capturedEventNames(response.request())) {
             seen.add(name)
             for (const resolve of waiting.get(name) ?? []) resolve()
@@ -116,6 +141,7 @@ export function trackAnalyticsDelivery(page: Page): AnalyticsDelivery {
         }
     })
     return {
+        direct,
         delivered(eventName) {
             if (seen.has(eventName)) return Promise.resolve()
             return new Promise<void>(resolve => {
@@ -140,4 +166,6 @@ export async function awaitAnalyticsDelivered(
     eventNames: string[],
 ): Promise<void> {
     await Promise.all(eventNames.map(name => delivery.delivered(name)))
+    // Ad blockers filter the PostHog host; nothing may go to it directly.
+    expect(delivery.direct).toEqual([])
 }
