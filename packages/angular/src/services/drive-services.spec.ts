@@ -57,6 +57,42 @@ function setupService<
     return { svc, ctrl }
 }
 
+/** Selector signals every drive service exposes 1:1 from the controller snapshot. */
+const SHARED_SELECTORS = [
+    'user',
+    'path',
+    'selectedFiles',
+    'showLoader',
+    'isClickLoading',
+    'error',
+    'hasMore',
+    'isLoadingMore',
+] as const
+
+/**
+ * Read every selector signal and assert it mirrors its snapshot field. Reading the
+ * signal (not just checking it exists) runs each computed(), so a selector wired to
+ * the wrong field fails here.
+ */
+function expectSelectorsMirrorSnapshot(
+    svc: object,
+    ctrl: DriveBrowserController,
+    filesSignal: string,
+    serviceSelectors: readonly string[],
+) {
+    const signals = svc as unknown as Record<string, unknown>
+    const snapshot = ctrl.getSnapshot() as unknown as Record<string, unknown>
+    const read = (name: string) => {
+        const signal = signals[name]
+        expect(signal, name).toBeTypeOf('function')
+        return (signal as () => unknown)()
+    }
+    expect(read(filesSignal)).toBe(snapshot.folder)
+    for (const key of [...SHARED_SELECTORS, ...serviceSelectors]) {
+        expect(read(key), key).toBe(snapshot[key])
+    }
+}
+
 // ── LoadGapiService ───────────────────────────────────────────────────────────
 
 describe('LoadGapiService', () => {
@@ -171,16 +207,12 @@ describe('GoogleDriveService delegation', () => {
         expect(ctrl.onSelectCurrentFolder).toHaveBeenCalled()
     })
 
-    it('exposes computed signals derived from controller snapshot', () => {
-        // Signals should exist and return values from the snapshot
-        expect(svc.user).toBeDefined()
-        expect(svc.googleFiles).toBeDefined()
-        expect(svc.token).toBeDefined()
-        expect(svc.isAuthReady).toBeDefined()
-        expect(svc.path).toBeDefined()
-        expect(svc.selectedFiles).toBeDefined()
-        expect(svc.showLoader).toBeDefined()
-        expect(svc.isClickLoading).toBeDefined()
+    it('selector signals mirror the controller snapshot', () => {
+        expectSelectorsMirrorSnapshot(svc, ctrl, 'googleFiles', [
+            'token',
+            'authCancelled',
+            'isAuthReady',
+        ])
     })
 })
 
@@ -234,10 +266,15 @@ describe('OneDriveService delegation', () => {
         svc.handleCancelDownload()
         expect(ctrl.handleCancelDownload).toHaveBeenCalled()
     })
-    it('exposes isAuthenticated, isLoading, token signals', () => {
-        expect(svc.isAuthenticated).toBeDefined()
-        expect(svc.isLoading).toBeDefined()
-        expect(svc.token).toBeDefined()
+    it('selector signals mirror the controller snapshot', () => {
+        expectSelectorsMirrorSnapshot(svc, ctrl, 'oneDriveFiles', [
+            'isAuthenticated',
+            'isLoading',
+        ])
+    })
+    it('token is undefined while signed out', () => {
+        expect(svc.isAuthenticated()).toBe(false)
+        expect(svc.token()).toBeUndefined()
     })
 })
 
@@ -283,9 +320,15 @@ describe('DropboxService delegation', () => {
         svc.setPath(p)
         expect(ctrl.setPath).toHaveBeenCalledWith(p)
     })
-    it('exposes dropboxFiles, isAuthenticated signals', () => {
-        expect(svc.dropboxFiles).toBeDefined()
-        expect(svc.isAuthenticated).toBeDefined()
+    it('selector signals mirror the controller snapshot', () => {
+        expectSelectorsMirrorSnapshot(svc, ctrl, 'dropboxFiles', [
+            'isAuthenticated',
+            'isLoading',
+        ])
+    })
+    it('token is undefined while signed out', () => {
+        expect(svc.isAuthenticated()).toBe(false)
+        expect(svc.token()).toBeUndefined()
     })
 })
 
@@ -326,9 +369,15 @@ describe('BoxService delegation', () => {
         svc.handleClick(f)
         expect(ctrl.handleClick).toHaveBeenCalledWith(f)
     })
-    it('exposes boxFiles, isAuthenticated signals', () => {
-        expect(svc.boxFiles).toBeDefined()
-        expect(svc.isAuthenticated).toBeDefined()
+    it('selector signals mirror the controller snapshot', () => {
+        expectSelectorsMirrorSnapshot(svc, ctrl, 'boxFiles', [
+            'isAuthenticated',
+            'isLoading',
+        ])
+    })
+    it('token is undefined while signed out', () => {
+        expect(svc.isAuthenticated()).toBe(false)
+        expect(svc.token()).toBeUndefined()
     })
 })
 
