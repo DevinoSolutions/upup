@@ -124,7 +124,6 @@
             "mdast-util-to-hast@^13.0.0": "^13.2.1",
             "nanoid@^3.0.0": "^3.3.18",
             "node-forge@^1.0.0": "^1.4.0",
-            "pacote@^20.0.0": "^21.5.1",
             "path-to-regexp@~0.1.0": "^0.1.13",
             "piscina@^4.0.0": "^4.9.4",
             "postcss-selector-parser@^6.0.0": "^6.1.3",
@@ -143,14 +142,13 @@
             "webpack-dev-server@^5.0.0": "^5.2.6",
             "websocket-driver@~0.7.0": "^0.7.5",
             "ws@^8.0.0": "^8.21.0",
-            "@angular/build>vite": "^6.4.3",
             "@angular/build>esbuild": "^0.28.1",
             "@angular-devkit/build-angular>esbuild": "^0.28.1",
             "tsup>esbuild": "^0.28.1",
             "vite@^7.0.0>esbuild": "^0.28.1"
         },
         "patchedDependencies": {
-            "@storybook/angular@9.1.20": "patches/@storybook__angular@9.1.20.patch"
+            "@storybook/angular@10.6.1": "patches/@storybook__angular@10.6.1.patch"
         }
     }
 }

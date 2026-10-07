@@ -50,14 +50,19 @@ export default meta
 type Story = StoryObj<any>
 
 export const HeicConversion: Story = {
-    args: workerHeicArgs.heicConversion,
+    // Storybook 10 derives a stricter args type from StoryObj<any> than the
+    // shared fixture's Record<string, unknown>; the cast keeps the loose typing.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: workerHeicArgs.heicConversion as any,
     play: workerHeicPlays.heicConversion,
 }
 export const WebWorkerOffload: Story = {
-    args: workerHeicArgs.webWorkerOffload,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: workerHeicArgs.webWorkerOffload as any,
     play: workerHeicPlays.webWorkerOffload,
 }
 export const MainThreadFallback: Story = {
-    args: workerHeicArgs.mainThreadFallback,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    args: workerHeicArgs.mainThreadFallback as any,
     play: workerHeicPlays.mainThreadFallback,
 }
