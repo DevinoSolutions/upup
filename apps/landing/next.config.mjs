@@ -30,6 +30,27 @@ const WWW_HOST = `www.${SITE_HOST}`
 // a byte-identical copy of the site, so they get a noindex header.
 const IS_PRODUCTION_SITE = SITE_HOST === 'useupup.com'
 
+// First-party PostHog path: a build-time mirror of
+// src/lib/analytics/telemetry-proxy.ts (see the rationale there). The browser
+// requests `${TELEMETRY_PATH}<opaque>`; these rewrites forward it to the
+// PostHog instance of the dataset this build captures to, which mirrors
+// credentialsFor() in src/lib/analytics/dataset.ts. src/__tests__/
+// telemetry-proxy.test.ts replays posthog-js URLs through both copies.
+const TELEMETRY_PATH = '/_t/9lc5'
+const TELEMETRY_ROUTES = [
+    ['/i/v0/e/', '/b/'],
+    ['/e/', '/c/'],
+    ['/s/', '/r/'],
+    ['/flags/', '/f/'],
+    ['/static/', '/a/'],
+    ['/array/', '/k/'],
+]
+const POSTHOG_PROXY_TARGET = (
+    (process.env.NEXT_PUBLIC_POSTHOG_DATASET === 'e2e'
+        ? process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST
+        : process.env.NEXT_PUBLIC_POSTHOG_HOST) || 'https://posthog.devino.ca'
+).replace(/\/+$/, '')
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -75,6 +96,34 @@ const nextConfig = {
                 destination: '/docs-md/:slug/',
             },
             { source: '/docs.md', destination: '/docs-md/' },
+            // PostHog. Each opaque segment maps back to its PostHog path, and
+            // the query string is forwarded as is. Two rules per segment: the
+            // bare endpoint (`/e/`, `/flags/`, …) gets a literal destination,
+            // because an empty `:path*` renders without PostHog's trailing
+            // slash; files under /static/ and /array/ take the `:path+` rule.
+            // Every posthog-js path either ends in a slash or has a file
+            // extension, so trailingSlash never 308s one of these (a 308 would
+            // turn a capture POST into a dropped event). Unrenamed paths take
+            // the catch-alls last; PostHog's REST paths all end in a slash,
+            // so the `/api/` one restores it.
+            ...TELEMETRY_ROUTES.flatMap(([posthogPrefix, opaquePrefix]) => [
+                {
+                    source: `${TELEMETRY_PATH}${opaquePrefix.slice(0, -1)}`,
+                    destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}`,
+                },
+                {
+                    source: `${TELEMETRY_PATH}${opaquePrefix}:path+`,
+                    destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}:path+`,
+                },
+            ]),
+            {
+                source: `${TELEMETRY_PATH}/api/:path+`,
+                destination: `${POSTHOG_PROXY_TARGET}/api/:path+/`,
+            },
+            {
+                source: `${TELEMETRY_PATH}/:path+`,
+                destination: `${POSTHOG_PROXY_TARGET}/:path+`,
+            },
         ]
     },
     // The legacy Docusaurus app (apps/docs) that used to serve /documentation
