@@ -20,6 +20,7 @@
         "zod": "^3.23.8"
     },
     "devDependencies": {
+        "@hono/node-server": "^1.19.15",
         "@types/node": "^20.11.0",
         "@useupup/core": "workspace:*",
         "mastra": "^1.18.1",
