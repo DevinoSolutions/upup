@@ -15,10 +15,12 @@ export function getDir(
     return meta?.dir ?? 'ltr'
 }
 
-export function normalizeSource(source: string): FileSource | undefined {
+function isFileSource(source: string): source is FileSource {
     return (Object.values(FileSource) as string[]).includes(source)
-        ? (source as FileSource)
-        : undefined
+}
+
+export function normalizeSource(source: string): FileSource | undefined {
+    return isFileSource(source) ? source : undefined
 }
 
 export const DEFAULT_SOURCES = [
