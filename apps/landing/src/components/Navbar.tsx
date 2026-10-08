@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { Menu, X, Github } from 'lucide-react'
+import { FaDiscord } from 'react-icons/fa'
+import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { ThemeContext } from '@/lib/contexts'
 import ThemeToggler from '@/components/ThemeToggler'
 
@@ -141,6 +143,23 @@ export default function Navbar() {
                                 Get Started
                             </Link>
 
+                            {/* Discord - Desktop Only (the mobile menu carries
+                            a labelled row instead). 44px hit area like the
+                            menu toggle. */}
+                            <a
+                                href={DISCORD_INVITE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Join our Discord"
+                                title="Join our Discord"
+                                className="hidden lg:inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                                <FaDiscord
+                                    aria-hidden="true"
+                                    className="w-5 h-5"
+                                />
+                            </a>
+
                             {/* Theme Toggle */}
                             {mounted && (
                                 <ThemeToggler isDarkMode={isDarkMode} />
@@ -173,7 +192,24 @@ export default function Navbar() {
                         className="lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-200/20 dark:border-gray-800/50"
                     >
                         <div className="px-6 py-6 space-y-4">
-                            <ul className="space-y-4">{navLinks}</ul>
+                            <ul className="space-y-4">
+                                {navLinks}
+                                <li>
+                                    <a
+                                        href={DISCORD_INVITE_URL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors duration-200 rounded-xl hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
+                                        onClick={() => setNavbarOpen(false)}
+                                    >
+                                        <FaDiscord
+                                            aria-hidden="true"
+                                            className="w-4 h-4"
+                                        />
+                                        Join our Discord
+                                    </a>
+                                </li>
+                            </ul>
 
                             {/* Mobile CTA */}
                             <div className="pt-4 border-t border-gray-200/50 dark:border-gray-800/50">

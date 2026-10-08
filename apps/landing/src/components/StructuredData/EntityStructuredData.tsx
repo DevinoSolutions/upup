@@ -17,6 +17,7 @@
 // Review here: we have no first-party review corpus, and inventing one is both
 // a policy violation and a manual-action risk.
 
+import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { canonicalUrl, siteUrl } from '@/lib/site-url'
 
 /** The one Organization node every other node references. */
@@ -31,7 +32,6 @@ const SOURCE_CODE_ID = `${siteUrl()}/#source`
 // Verified 2026-09-12: GitHub repo 200; the Discord invite 301s to
 // discord.com/invite/… and the invite API returns a live, non-expiring guild.
 const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
-const DISCORD_URL = 'https://discord.gg/ny5WUE9ayc'
 
 // The nine published `@useupup/*` packages. Verified 2026-09-26: every one
 // resolves on registry.npmjs.org with a live, non-deprecated `latest`
@@ -65,7 +65,7 @@ const organization = {
         '@type': 'ImageObject',
         url: `${siteUrl()}/img/logo.png`,
     },
-    sameAs: [GITHUB_URL, ...NPM_PACKAGE_URLS, DISCORD_URL],
+    sameAs: [GITHUB_URL, ...NPM_PACKAGE_URLS, DISCORD_INVITE_URL],
     parentOrganization: {
         '@type': 'Organization',
         name: 'Devino',

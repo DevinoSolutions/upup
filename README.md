@@ -133,6 +133,12 @@ the same codebase, published before the rename to `@useupup/*`.
 - **uNotes** — AI doc uploads for past exams → [unotes.net](https://unotes.net)
 - **Shorty** — media uploads for transcripts → [aishorty.com](https://aishorty.com)
 
+## Community
+
+Questions, ideas, or something you built with upup? Join us on
+[Discord](https://discord.gg/ny5WUE9ayc). Bugs and feature requests go to
+[GitHub issues](https://github.com/DevinoSolutions/upup/issues).
+
 ## Contributing
 
 PRs welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and our
