@@ -1,5 +1,13 @@
 # @useupup/storybook-preact
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies []:
+    - @useupup/core@3.3.5
+    - @useupup/preact@3.3.5
+
 ## 0.1.8
 
 ### Patch Changes

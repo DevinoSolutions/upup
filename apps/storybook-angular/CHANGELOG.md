@@ -1,5 +1,13 @@
 # @useupup/storybook-angular
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [[`b9bcaff`](https://github.com/DevinoSolutions/upup/commit/b9bcafff2ef4a6df6bc8877093c061c02f69d4e8)]:
+    - @useupup/angular@3.3.5
+    - @useupup/core@3.3.5
+
 ## 0.1.8
 
 ### Patch Changes
