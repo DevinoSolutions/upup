@@ -72,7 +72,12 @@ export function getMDXComponents(): MDXComponents {
         ),
         a: ({ href = '', ...props }) =>
             EXTERNAL_HREF.test(href) || href.startsWith('mailto:') ? (
-                <a href={href} target="_blank" rel="noreferrer" {...props} />
+                <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                />
             ) : (
                 <Link href={href} {...props} />
             ),

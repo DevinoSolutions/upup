@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { FaGithub, FaNpm } from 'react-icons/fa'
+import { FaDiscord, FaGithub, FaNpm } from 'react-icons/fa'
+import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { FRAMEWORK_LIST } from '@/lib/frameworks'
 
 const GITHUB_URL = 'https://github.com/DevinoSolutions/upup'
@@ -49,6 +50,16 @@ export default function Footer() {
                                 className={FOOTER_ICON_LINK}
                             >
                                 <FaNpm className="w-6 h-6" />
+                            </a>
+                            <a
+                                href={DISCORD_INVITE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Join our Discord"
+                                title="Join our Discord"
+                                className={FOOTER_ICON_LINK}
+                            >
+                                <FaDiscord className="w-5 h-5" />
                             </a>
                         </div>
                     </div>
