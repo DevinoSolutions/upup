@@ -1,12 +1,7 @@
 import React from 'react'
-import {
-    Mail,
-    MessageCircle,
-    Github,
-    ArrowRight,
-    ExternalLink,
-    LifeBuoy,
-} from 'lucide-react'
+import { Mail, Github, ArrowRight, ExternalLink, LifeBuoy } from 'lucide-react'
+import { FaDiscord } from 'react-icons/fa'
+import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
 import SectionHeading, { GRADIENT_TEXT } from '@/components/ui/SectionHeading'
@@ -54,11 +49,11 @@ export default function FeedbackSection() {
             ],
         },
         {
-            icon: <MessageCircle className="w-5 h-5" />,
+            icon: <FaDiscord className="w-5 h-5" />,
             title: 'Discord Community',
             description: 'Join discussions and get support',
-            action: 'https://discord.com/invite/ny5WUE9ayc',
-            buttonText: 'Join Discord',
+            action: DISCORD_INVITE_URL,
+            buttonText: 'Join our Discord',
         },
     ]
 

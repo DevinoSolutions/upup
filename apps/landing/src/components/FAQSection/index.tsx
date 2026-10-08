@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { m, AnimatePresence } from 'framer-motion'
-import { FaChevronDown } from 'react-icons/fa'
+import { FaChevronDown, FaDiscord } from 'react-icons/fa'
+import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { faqs as homeFaqs, type Faq } from '@/lib/faqs'
 import Section from '@/components/ui/Section'
 import Card from '@/components/ui/Card'
@@ -96,6 +98,30 @@ export default function FAQSection({
                         )
                     })}
                 </div>
+
+                <p className="mt-8 text-center text-gray-600 dark:text-gray-300">
+                    Still have questions?{' '}
+                    <a
+                        href={DISCORD_INVITE_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-gray-900 underline-offset-4 hover:underline dark:text-white"
+                    >
+                        <FaDiscord
+                            aria-hidden="true"
+                            className="mr-1.5 inline h-4 w-4 align-[-0.125em]"
+                        />
+                        Ask on our Discord
+                    </a>{' '}
+                    or{' '}
+                    <Link
+                        href="/support/"
+                        className="font-semibold text-gray-900 underline-offset-4 hover:underline dark:text-white"
+                    >
+                        contact support
+                    </Link>
+                    .
+                </p>
             </div>
         </Section>
     )
