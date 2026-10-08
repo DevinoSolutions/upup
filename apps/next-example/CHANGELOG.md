@@ -1,5 +1,12 @@
 # @useupup/next-example
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies []:
+    - @useupup/next@3.3.5
+
 ## 0.0.8
 
 ### Patch Changes

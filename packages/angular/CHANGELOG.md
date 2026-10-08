@@ -1,5 +1,15 @@
 # @useupup/angular
 
+## 3.3.5
+
+### Patch Changes
+
+- [#514](https://github.com/DevinoSolutions/upup/pull/514) [`b9bcaff`](https://github.com/DevinoSolutions/upup/commit/b9bcafff2ef4a6df6bc8877093c061c02f69d4e8) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Build the Angular package with the Angular 20 toolchain (ng-packagr 20). The
+  published peer range is unchanged (Angular 19 through 22); the compiled output
+  was verified in production builds of Angular 19 and Angular 22 apps.
+- Updated dependencies []:
+    - @useupup/core@3.3.5
+
 ## 3.3.4
 
 ### Patch Changes
