@@ -19,7 +19,7 @@
         "@mastra/client-js": "^1.31.0",
         "@useupup/core": "workspace:*",
         "@useupup/react": "workspace:*",
-        "lucide-react": "^0.503.0",
+        "lucide-react": "^0.577.0",
         "pako": "^2.1.0"
     },
     "peerDependencies": {
