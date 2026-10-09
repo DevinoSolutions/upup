@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { AgentIcon } from '@/components/AgentIcon'
 import {
     AGENTS,
     AGENT_IDS,
@@ -185,17 +188,41 @@ describe('agent-setup discovery surfaces', () => {
         expect(raw).toContain(agentContextBlock())
     })
 
-    it('every agent icon referenced by the manifest exists in public/', () => {
+    it('every agent renders its own brand mark, inline in currentColor', () => {
+        // Owner request 2026-10-09: the pill and the /agent-setup/ cards draw
+        // each agent's real logo (Lobe Icons), not a generic glyph. The first
+        // commands of each path tell one mark from another or from a glyph.
+        const markPrefix: Record<string, string> = {
+            'claude-code': 'M20.998 10.949H24v3.102',
+            codex: 'M8.086.457a6.105 6.105',
+            cursor: 'M22.106 5.68L12.5.135',
+            opencode: 'M16 6H8v12h8V6zm4 16H4V2h16v20z',
+        }
         for (const agent of AGENTS) {
-            for (const icon of [agent.icon.light, agent.icon.dark]) {
-                const file = fileURLToPath(
-                    new URL(`../../public${icon}`, import.meta.url),
-                )
-                expect(
-                    readFileSync(file, 'utf8').startsWith('<svg'),
-                    `${icon} is not an SVG`,
-                ).toBe(true)
-            }
+            const html = renderToStaticMarkup(
+                createElement(AgentIcon, { id: agent.id }),
+            )
+            expect(html).toContain('viewBox="0 0 24 24"')
+            expect(html).toContain('fill="currentColor"')
+            expect(html).toContain('aria-hidden="true"')
+            expect(html).toContain(`data-agent-icon="${agent.id}"`)
+            expect(markPrefix[agent.id], agent.id).toBeDefined()
+            expect(html).toContain(` d="${markPrefix[agent.id]}`)
+        }
+    })
+
+    it('the pill and the index page draw the marks, not image files', () => {
+        for (const file of [
+            '../components/AgentSetupPill.tsx',
+            '../app/agent-setup/page.tsx',
+        ]) {
+            const src = readFileSync(
+                fileURLToPath(new URL(file, import.meta.url)),
+                'utf8',
+            )
+            expect(src, file).toContain('<AgentIcon')
+            expect(src, file).not.toContain('/img/agents/')
+            expect(src, file).not.toContain('agent.icon')
         }
     })
 })
