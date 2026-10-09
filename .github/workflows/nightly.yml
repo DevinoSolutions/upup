@@ -214,6 +214,10 @@ jobs:
               if: steps.creds.outputs.present == 'true'
               env:
                   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+                  # Unset repo variables keep the OpenRouter defaults; set to the Devino proxy
+                  # (https://proxyai.devino.ca/v1 + a proxy pin) together with a proxy key.
+                  OPENROUTER_API_URL: ${{ vars.OPENROUTER_API_URL }}
+                  OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
               run: |
                   pnpm --filter @useupup/mastra dev &
                   MASTRA_PID=$!
@@ -510,6 +514,8 @@ jobs:
                   POSTHOG_E2E_TEST_PROJECT_ID: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_ID }}
                   POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY: ${{ secrets.POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY }}
                   OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+                  OPENROUTER_API_URL: ${{ vars.OPENROUTER_API_URL }}
+                  OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
                   # The demo project's storage: LocalStack's public test creds.
                   S3_ENDPOINT: http://localhost:4566
                   S3_BUCKET: upup-e2e
