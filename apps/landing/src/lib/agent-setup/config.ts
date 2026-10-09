@@ -35,8 +35,6 @@ export interface AgentMeta {
     contextPath: string
     /** Anything that has to precede the context block in that file. */
     contextHeader?: string
-    /** Light / dark icon variants under /img/agents/. */
-    icon: { light: string; dark: string }
 }
 
 export const AGENTS: readonly AgentMeta[] = [
@@ -44,19 +42,11 @@ export const AGENTS: readonly AgentMeta[] = [
         id: 'claude-code',
         name: 'Claude Code',
         contextPath: 'CLAUDE.md',
-        icon: {
-            light: '/img/agents/claude-code.svg',
-            dark: '/img/agents/claude-code-dark.svg',
-        },
     },
     {
         id: 'codex',
         name: 'Codex',
         contextPath: 'AGENTS.md',
-        icon: {
-            light: '/img/agents/codex.svg',
-            dark: '/img/agents/codex-dark.svg',
-        },
     },
     {
         id: 'cursor',
@@ -70,19 +60,11 @@ export const AGENTS: readonly AgentMeta[] = [
             '---',
             '',
         ].join('\n'),
-        icon: {
-            light: '/img/agents/cursor.svg',
-            dark: '/img/agents/cursor-dark.svg',
-        },
     },
     {
         id: 'opencode',
         name: 'OpenCode',
         contextPath: 'AGENTS.md',
-        icon: {
-            light: '/img/agents/opencode.svg',
-            dark: '/img/agents/opencode-dark.svg',
-        },
     },
 ]
 

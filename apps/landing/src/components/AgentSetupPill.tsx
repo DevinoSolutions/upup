@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Check, Copy } from 'lucide-react'
+import { AgentIcon } from '@/components/AgentIcon'
 import {
     AGENTS,
     AGENT_SETUP_TOAST,
@@ -97,7 +98,7 @@ export function AgentSetupPill({
                                 title={`${agent.name} setup guide`}
                                 aria-label={`${agent.name} setup guide`}
                                 data-testid={`agent-setup-icon-${agent.id}`}
-                                className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                                className="flex h-7 w-7 items-center justify-center rounded-full text-gray-900 transition-colors hover:bg-black/5 dark:text-gray-100 dark:hover:bg-white/10"
                                 onClick={() =>
                                     captureClientEvent('agent_setup_opened', {
                                         app: APP_NAME,
@@ -106,22 +107,7 @@ export function AgentSetupPill({
                                     })
                                 }
                             >
-                                {/* Light/dark variants swap via CSS so no
-                                    theme context is needed on every surface. */}
-                                <img
-                                    src={agent.icon.light}
-                                    alt=""
-                                    width={16}
-                                    height={16}
-                                    className="h-4 w-4 dark:hidden"
-                                />
-                                <img
-                                    src={agent.icon.dark}
-                                    alt=""
-                                    width={16}
-                                    height={16}
-                                    className="hidden h-4 w-4 dark:block"
-                                />
+                                <AgentIcon id={agent.id} />
                             </Link>
                         </li>
                     ))}
