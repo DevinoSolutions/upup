@@ -1,6 +1,6 @@
 ---
-title: File upload server with Hono and S3
-description: Wire @useupup/server into Hono with createUpupRoutes — the web-native mount, no body parsing, edge-runtime bindings, and CORS.
+title: Hono file upload server with S3
+description: Hono file upload with @useupup/server — mount createUpupRoutes on the web-native Hono app, with no body parsing, edge-runtime bindings and CORS.
 ---
 
 Hono is web-native: its request and response objects _are_ the platform
@@ -134,8 +134,8 @@ a non-S3 `storage.type`) and throwing that per request would turn a
 config mistake into a stream of 500s instead of one loud boot failure.
 
 <Callout type="warning">
-    `@useupup/server` signs and completes uploads through `@aws-sdk/client-s3`. A
-    non-Node runtime therefore needs its Node-compatibility layer enabled — on
+    `@useupup/server` signs and completes uploads through `@aws-sdk/client-s3`.
+    A non-Node runtime therefore needs its Node-compatibility layer enabled — on
     Cloudflare Workers that is the `nodejs_compat` flag in `wrangler.toml`.
     Confirm it against your runtime before your first deploy.
 </Callout>

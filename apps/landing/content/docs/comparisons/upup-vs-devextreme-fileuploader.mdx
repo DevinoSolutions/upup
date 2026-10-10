@@ -1,0 +1,226 @@
+---
+title: upup vs DevExtreme FileUploader
+description: Compare DevExtreme's dx-file-uploader with upup's Angular uploader on upload modes, chunk upload, S3, cloud drives and licensing, with a migration snippet.
+faq:
+    - q: Is dx-file-uploader free?
+      a: No. DevExtreme is commercial software licensed per developer, with a 30-day trial. The devextreme-angular wrapper package is MIT, but it requires the devextreme package, which needs the paid license. upup's @useupup/angular is MIT-licensed.
+    - q: Can dx-file-uploader upload directly to S3?
+      a: Not out of the box. It sends files to the uploadUrl you set. You can replace the built-in requests with your own uploadFile or uploadChunk function, and DevExpress publishes example projects for S3 and Azure Blob. upup signs presigned URLs and the browser uploads straight to your bucket.
+    - q: How do I replace dx-file-uploader with upup in Angular?
+      a: Install @useupup/angular, import the standalone UpupUploaderComponent, and pass one config object. Map uploadMode to autoUpload, accept to allowedFileTypes, multiple to maxFiles, and maxFileSize to a size and unit object. Point uploadEndpoint at an endpoint that returns a presigned URL instead of one that receives the file.
+    - q: Does upup have the same upload modes as dx-file-uploader?
+      a: Two of three. upup's default is the useButtons behavior, where the user presses upload, and setting autoUpload to true matches instantly. There is no equivalent of useForm, which submits files with an HTML form.
+    - q: When should I keep dx-file-uploader?
+      a: When your app already uses DevExtreme, your server already handles its upload requests, and you do not need S3, cloud drives or resumable uploads. Switching buys little in that case.
+---
+
+**The short answer:** `dx-file-uploader` is a good choice when your Angular app
+already uses the DevExtreme suite and your server already accepts its upload
+requests. Its documentation covers chunked uploads and S3 and Azure example
+projects, but we found no built-in cloud-drive sources or resumable uploads,
+and it needs a paid DevExtreme license. upup's `@useupup/angular` is an
+MIT-licensed standalone component that uploads straight to an S3-compatible
+bucket with presigned URLs and adds cloud-drive sources and resumable uploads.
+
+**Try it first:** the [live Angular demo](/angular/#demo) uploads a real
+file from your browser, and the
+[Angular quickstart](/docs/quickstarts/angular/) gets it running in your app.
+
+This page compares the two on upload modes, chunking, storage, licensing and
+effort to switch, then shows a migration. For other Angular options, see the
+[Angular file upload libraries roundup](/docs/comparisons/best-angular-file-upload-libraries/).
+
+## Comparison table
+
+| Feature                | DevExtreme FileUploader                                                   | upup (`@useupup/angular`)                                    |
+| ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| What it is             | One component in the DevExtreme suite                                     | Standalone uploader component on a headless core             |
+| Frameworks             | Angular, React, Vue and jQuery components                                 | Angular, React, Vue, Svelte, Preact, vanilla JS              |
+| Upload modes           | `instantly`, `useButtons`, `useForm` (HTML form)                          | Upload button by default; `autoUpload` for instant           |
+| Where files go         | Your `uploadUrl` (POST by default; `uploadMethod`, `uploadHeaders` apply) | Your S3-compatible bucket, via presigned URLs                |
+| Custom upload code     | `uploadFile` and `uploadChunk` functions                                  | Your own endpoint issues the signed URLs                     |
+| Chunked uploads        | `chunkSize`; your server must handle chunks                               | Optional `resumable`: S3 multipart (server mode) or tus      |
+| Resume after a reload  | Not documented                                                            | Yes, with multipart or tus                                   |
+| Cloud-drive sources    | Not documented                                                            | Google Drive, OneDrive, Dropbox, Box                         |
+| Camera, screen capture | Not documented                                                            | Yes                                                          |
+| Image editing          | Not documented                                                            | No in Angular (the editor is React/Preact only)              |
+| Validation             | `accept`, `allowedFileExtensions`, `maxFileSize`, `minFileSize`           | `allowedFileTypes`, `maxFileSize`, `minFileSize`, `maxFiles` |
+| License                | Commercial, per developer, 30-day trial                                   | MIT                                                          |
+
+DevExtreme's documentation says its `accept` option filters the file dialog,
+and that `allowedFileExtensions` prevents prohibited types from uploading but
+does not restrict the dialog, so you set both to get both effects. upup's `allowedFileTypes` does both: it sets the
+file input's accept filter and rejects other files as they are added.
+
+## What dx-file-uploader gives you
+
+`dx-file-uploader` (in `devextreme-angular`) shows a select button, a drop area
+and a file list. In `instantly` mode (the default) it uploads as soon as files
+are chosen; `useButtons` waits for the Upload button; `useForm` leaves the
+upload to an HTML form submit. The first two send Ajax requests to `uploadUrl`.
+Setting `chunkSize` splits files into chunks, which your server has to
+reassemble, and `uploadFile` and `uploadChunk` replace the built-in requests
+with your own code. It fits naturally next to DevExtreme's grids and forms.
+
+What it does not include is a storage story. To reach S3 you write the signing
+and upload code in `uploadChunk` or `uploadFile` (DevExpress publishes example
+projects for S3 and Azure Blob). Its documentation lists no cloud-drive
+sources, camera or screen capture, and does not document resuming an
+interrupted upload.
+
+## What upup gives you in Angular
+
+`@useupup/angular` exports a standalone `UpupUploaderComponent` (selector
+`upup-uploader`) that takes a single `config` input and emits `filesAdded`,
+`fileRemoved`, `uploadProgress`, `uploadAllComplete` and `error`. It works with
+Angular 19 to 22. In client mode your server only issues short-lived presigned
+URLs, and the browser uploads straight to the bucket. Users can pick files from
+the device, Google Drive, OneDrive, Dropbox, Box, a camera, a screen capture or
+a link. Large files can use S3 multipart (through `@useupup/server`) or tus, and
+both resume after a reload. The image editor is the one feature Angular does
+not get; it ships in the React and Preact packages only.
+
+## Licensing
+
+DevExtreme is licensed per developer. DevExpress states that building
+commercial applications requires a 12-month subscription, that a 30-day trial
+is available, and that a valid license key is used to avoid a verification
+message in the browser console. The `devextreme-angular` wrapper package is
+MIT-licensed, but it requires the `devextreme` package, which needs the paid
+license. DevExpress's
+current terms are on its [licensing page](https://js.devexpress.com/Licensing/);
+check them against your team size and renewal plans.
+
+upup is MIT-licensed end to end: the Angular package, the core and
+`@useupup/server`.
+
+## Migrate from dx-file-uploader to upup
+
+Take a typical DevExtreme setup:
+
+```html
+<dx-file-uploader
+    accept="image/*"
+    [multiple]="true"
+    [maxFileSize]="33554432"
+    uploadMode="useButtons"
+    uploadUrl="/api/upload"
+    (onUploaded)="onUploaded($event)"
+></dx-file-uploader>
+```
+
+The upup version replaces the component, the options and the callback. Install
+the package first:
+
+```sh
+npm i @useupup/angular
+```
+
+```ts
+import { Component } from '@angular/core'
+import { UpupUploaderComponent } from '@useupup/angular'
+import type { UploadFile, UploaderProps } from '@useupup/angular'
+
+@Component({
+    selector: 'app-uploader',
+    standalone: true,
+    imports: [UpupUploaderComponent],
+    template: `<upup-uploader
+        [config]="config"
+        (uploadAllComplete)="onAllUploaded($event)"
+    />`,
+})
+export class UploaderComponent {
+    config: UploaderProps = {
+        provider: 'aws',
+        uploadEndpoint: '/api/upload-token',
+        allowedFileTypes: 'image/*',
+        maxFiles: 10,
+        maxFileSize: { size: 32, unit: 'MB' },
+    }
+
+    onAllUploaded(files: UploadFile[]) {
+        console.log('uploaded', files.length)
+    }
+}
+```
+
+Load the stylesheet once globally, as described in the
+[Angular quickstart](/docs/quickstarts/angular/).
+
+How the options map:
+
+| DevExtreme                                   | upup                                                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `uploadMode="instantly"`                     | `autoUpload: true`                                                                                                                                     |
+| `uploadMode="useButtons"`                    | The default; the user presses upload                                                                                                                   |
+| `uploadMode="useForm"`                       | No equivalent                                                                                                                                          |
+| `accept`, `allowedFileExtensions`            | `allowedFileTypes`: MIME patterns, extensions or preset names such as `images`                                                                         |
+| `multiple` (default `false`)                 | `maxFiles` (default 10); set `maxFiles: 1` for a single file                                                                                           |
+| `maxFileSize`, `minFileSize` (bytes)         | `maxFileSize`, `minFileSize` as `{ size, unit }`                                                                                                       |
+| `uploadUrl`, `uploadMethod`, `uploadHeaders` | `uploadEndpoint` (see the note below)                                                                                                                  |
+| `chunkSize`                                  | `resumable` with `protocol: 'tus'` (needs a tus endpoint), or `protocol: 'multipart'` (needs `serverUrl` from `@useupup/server`, not `uploadEndpoint`) |
+| `onUploaded`, `onUploadError`                | `(uploadAllComplete)`, `(error)` outputs                                                                                                               |
+| `onValueChanged`                             | `(filesAdded)` and `(fileRemoved)` outputs                                                                                                             |
+| `labelText`, `selectButtonText`              | `i18n` overrides; see [Localization](/docs/localization/)                                                                                              |
+
+The one change that is not a rename: `uploadUrl` receives the file, while
+`uploadEndpoint` does not. Your endpoint returns a presigned URL for the
+bucket and the browser uploads the file there. The
+[Angular quickstart](/docs/quickstarts/angular/) and
+[Code Examples](/docs/code-examples/) include a presign handler to copy. If you
+used `uploadFile` or `uploadChunk` to reach S3 yourself, that code can go: the
+signing now lives in that endpoint or in `@useupup/server`. For multipart
+uploads, see [Resumable uploads](/docs/resumable-uploads/).
+
+## When to keep dx-file-uploader
+
+Keep it if your app is built on DevExtreme, your server already handles its
+upload requests, and you do not need S3, cloud drives or resumable uploads.
+Moving buys little there. Move to upup when files should land in your own
+bucket without passing through an application server, when users pick files
+from Google Drive or Dropbox, when large uploads must survive a dropped
+connection, or when you do not want a per-developer license for an upload box.
+
+## FAQ
+
+### Is dx-file-uploader free?
+
+No. DevExtreme is commercial software licensed per developer, with a 30-day
+trial. The `devextreme-angular` wrapper package is MIT, but it requires the
+`devextreme` package, which needs the paid license. upup's `@useupup/angular` is
+MIT-licensed.
+
+### Can dx-file-uploader upload directly to S3?
+
+Not out of the box. It sends files to the `uploadUrl` you set. You can replace
+the built-in requests with your own `uploadFile` or `uploadChunk` function, and
+DevExpress publishes example projects for S3 and Azure Blob. upup signs
+presigned URLs and the browser uploads straight to your bucket.
+
+### How do I replace dx-file-uploader with upup in Angular?
+
+Install `@useupup/angular`, import the standalone `UpupUploaderComponent`, and
+pass one `config` object. Map `uploadMode` to `autoUpload`, `accept` to
+`allowedFileTypes`, `multiple` to `maxFiles`, and `maxFileSize` to a size and
+unit object. Point `uploadEndpoint` at an endpoint that returns a presigned URL
+instead of one that receives the file.
+
+### Does upup have the same upload modes as dx-file-uploader?
+
+Two of three. upup's default is the `useButtons` behavior, where the user
+presses upload, and setting `autoUpload` to true matches `instantly`. There is no
+equivalent of `useForm`, which submits files with an HTML form.
+
+### When should I keep dx-file-uploader?
+
+When your app already uses DevExtreme, your server already handles its upload
+requests, and you do not need S3, cloud drives or resumable uploads. Switching
+buys little in that case.
+
+## Related comparisons
+
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/)
+- [JavaScript file upload libraries compared](/docs/comparisons/)
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)

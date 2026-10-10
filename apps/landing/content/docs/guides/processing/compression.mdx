@@ -1,6 +1,6 @@
 ---
 title: Client-side image compression before upload
-description: Compress and resize images in the browser before they upload — quality, maxWidthOrHeight and maxSizeMB options, the size-target backoff, and output formats.
+description: Client side image compression with upup — resize and re-encode images in the browser before upload with quality, maxWidthOrHeight and maxSizeMB options.
 ---
 
 Large phone photos are the single biggest cause of slow uploads. `imageCompression`
@@ -160,5 +160,8 @@ isn't `image/*` — fires no `pipeline-step` at all.
 - [Optional props](/docs/api-reference/upupuploader/optional-props/) — every
   `<UpupUploader>` prop, including `maxFileSize` and the other processing
   toggles.
+- [Best JavaScript image upload libraries](/docs/comparisons/best-javascript-image-upload-libraries/)
+  — how upup's compression compares with Uppy, FilePond and standalone
+  compression libraries.
 - [Events](/docs/api-reference/events/) — `pipeline-start`, `pipeline-step`,
   `pipeline-complete`, and `pipeline-error` payloads.
