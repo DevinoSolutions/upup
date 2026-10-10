@@ -17,7 +17,7 @@ describe('llms corpus', () => {
         expect(full.length).toBeGreaterThan(20_000)
     })
 
-    it('index lists 74 pages and full contains all 74 page bodies', () => {
+    it('index lists 76 pages and full contains all 76 page bodies', () => {
         // Pinned to the docs page inventory (same count as docs-source.test.ts) —
         // bump deliberately when pages are added/removed. 36 + 9 (2026-08
         // coverage sprint) + 19 (2026-08 SEO split: 7 storage + 4 auth +
@@ -25,14 +25,15 @@ describe('llms corpus', () => {
         // (2026-09 FAQ) = 65, + 4 (2026-09 comparisons hub + React/Vue/Angular
         // roundups) = 69, + 3 (2026-09 folder hubs: guides/, guides/storage/,
         // quickstarts/) = 72, + 1 (2026-09 S3 presigned-URL React tutorial)
-        // = 73, + 1 (2026-10 vanilla JS roundup) = 74. The "## Start here" links above the page list are plain
+        // = 73, + 1 (2026-10 vanilla JS roundup) = 74, + 2 (2026-10 JS image
+        // upload roundup + DevExtreme FileUploader) = 76. The "## Start here" links above the page list are plain
         // lines, not `- [` bullets, so they do not count here.
         const index = buildLlmsIndex()
         const linkCount = (index.match(/^- \[/gm) ?? []).length
-        expect(linkCount).toBe(74)
+        expect(linkCount).toBe(76)
 
         const full = buildLlmsFull()
         const pageCount = (full.match(/\n---\n/g)?.length ?? 0) + 1
-        expect(pageCount).toBe(74)
+        expect(pageCount).toBe(76)
     })
 })
