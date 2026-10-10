@@ -7,18 +7,19 @@ faq:
     - q: How do I compress images in the browser before upload?
       a: Re-encode them through a canvas before the request starts. upup does this with the imageCompression option, Uppy with its Compressor plugin, FilePond with the image transform plugin, and Dropzone.js with resizeWidth and resizeHeight. browser-image-compression and Compressor.js do only this step and leave the uploader to you.
     - q: Which libraries convert HEIC photos to JPEG in the browser?
-      a: upup converts HEIC and HEIF to JPEG with the heicConversion option, using the optional libheif-js package. None of the other libraries here document a built-in HEIC converter. Uppy has a community plugin, uppy-heic, and Uploadcare's docs pages we checked do not mention HEIC, so test your own files.
+      a: upup converts HEIC and HEIF to JPEG with the heicConversion option, using the optional libheif-js package. None of the other libraries here document a built-in in-browser HEIC converter. Uppy has a community plugin, uppy-heic, and Uploadcare accepts HEIC and converts it on its CDN after upload, not in the browser.
     - q: Which image upload libraries include an image editor?
       a: Uppy (Image Editor plugin, crop, rotate, zoom and flip) and Uploadcare (a built-in cloud image editor) include one. FilePond connects to editors through its image edit plugin, and the full editor it pairs with, Pintura, is a paid product. upup's editor covers crop, rotate, flip, annotation, filters and watermarks, but ships in the React and Preact packages only.
     - q: Are these image upload libraries free?
-      a: upup, Uppy, FilePond (including its image plugins), Dropzone.js, browser-image-compression and Compressor.js are MIT-licensed. Pintura is a separate paid product. Uploadcare's File Uploader library is open source, but the hosted service behind it is paid and has a free plan.
+      a: upup, Uppy, FilePond (including its image plugins), Dropzone.js, browser-image-compression and Compressor.js are MIT-licensed. Pintura is a separate paid product. Uploadcare's File Uploader library is open source, but the hosted service behind it is paid, with a free plan limited to personal use.
 ---
 
 **The short answer:** most JavaScript image upload work is four jobs: show a
 preview, shrink the file before it leaves the browser, fix or edit the image,
-and send it somewhere. upup and Uppy cover all four in one package and upload
-straight to your own S3-compatible bucket. FilePond covers them with plugins
-and posts to your own server. Uploadcare does it as a hosted service.
+and send it somewhere. upup and Uppy cover previews, in-browser shrinking and
+upload straight to your own S3-compatible bucket: Uppy as separate plugins,
+upup as pipeline options, with upup's editor in its React and Preact packages
+only. FilePond covers the four jobs with plugins and posts to your own server. Uploadcare does it as a hosted service.
 browser-image-compression and Compressor.js do only the shrinking.
 
 **Try it first:** the [live vanilla JS demo](/vanilla/#demo) uploads a real
@@ -34,15 +35,15 @@ decide the choice, then shows how to pick. For the general upload features
 
 ## Comparison table
 
-| Library                   | Previews / thumbnails                        | Resize and compress in the browser        | HEIC to JPEG                                  | Crop and edit                              | Direct-to-S3               | License                             |
-| ------------------------- | -------------------------------------------- | ----------------------------------------- | --------------------------------------------- | ------------------------------------------ | -------------------------- | ----------------------------------- |
-| upup                      | Yes (`thumbnailGenerator`, expanded preview) | Yes (`imageCompression`, on a Web Worker) | Yes (`heicConversion`, optional `libheif-js`) | Yes, React/Preact only                     | Yes (presigned URLs)       | MIT                                 |
-| Uppy                      | Yes (Thumbnail Generator, in Dashboard)      | Yes (Compressor plugin)                   | Not built in; community plugin                | Yes (Image Editor plugin)                  | Yes (AWS S3 plugin)        | MIT                                 |
-| FilePond                  | Yes (image preview plugin)                   | Yes (image resize and transform plugins)  | Not documented                                | Crop plugin; full editor is Pintura (paid) | Not built in               | MIT                                 |
-| Dropzone.js               | Yes (thumbnails on by default)               | Yes (`resizeWidth`, `resizeHeight`)       | Not documented                                | No                                         | Not built in               | MIT                                 |
-| Uploadcare File Uploader  | Yes                                          | Yes (`image-shrink`)                      | Not documented on pages we checked            | Yes (built-in cloud image editor)          | No, files go to Uploadcare | MIT library; hosted service is paid |
-| browser-image-compression | No UI                                        | Yes (compression only)                    | No                                            | No                                         | No upload code             | MIT                                 |
-| Compressor.js             | No UI                                        | Yes (compression only)                    | No                                            | No                                         | No upload code             | MIT                                 |
+| Library                   | Previews / thumbnails                        | Resize and compress in the browser        | HEIC to JPEG                                                   | Crop and edit                              | Direct-to-S3               | License                             |
+| ------------------------- | -------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------- | ------------------------------------------ | -------------------------- | ----------------------------------- |
+| upup                      | Yes (`thumbnailGenerator`, expanded preview) | Yes (`imageCompression`, on a Web Worker) | Yes (`heicConversion`, optional `libheif-js`)                  | Yes, React/Preact only                     | Yes (presigned URLs)       | MIT                                 |
+| Uppy                      | Yes (Thumbnail Generator, in Dashboard)      | Yes (Compressor plugin)                   | Not built in; community plugin (last released 2022)            | Yes (Image Editor plugin)                  | Yes (AWS S3 plugin)        | MIT                                 |
+| FilePond                  | Yes (image preview plugin)                   | Yes (image resize and transform plugins)  | Not documented                                                 | Crop plugin; full editor is Pintura (paid) | Not built in               | MIT                                 |
+| Dropzone.js               | Yes (thumbnails on by default)               | Yes (`resizeWidth`, `resizeHeight`)       | Not documented                                                 | No                                         | Not built in               | MIT                                 |
+| Uploadcare File Uploader  | Yes                                          | Yes (`image-shrink`)                      | Server-side (accepted as input, converted on Uploadcare's CDN) | Yes (built-in cloud image editor)          | No, files go to Uploadcare | MIT library; hosted service is paid |
+| browser-image-compression | No UI                                        | Yes (compression only)                    | Not documented                                                 | No                                         | No upload code             | MIT                                 |
+| Compressor.js             | No UI                                        | Yes (compression only)                    | Not documented                                                 | No                                         | No upload code             | MIT                                 |
 
 "Not documented" means the library's official docs we read do not mention the
 feature, not that it can never be done. Test with your own files.
@@ -67,7 +68,8 @@ starts, on a Web Worker when one is available:
   [HEIC to JPEG](/docs/guides/processing/heic-conversion/).
 - **EXIF:** `stripExifData` removes EXIF metadata, including GPS location, by
   re-encoding the image. Compression's own re-encode also drops it when it
-  replaces the file.
+  replaces the file. Animated GIF, WebP and APNG are skipped, so any EXIF in
+  them stays; check `metadata.metadataStripSkipped` if that matters.
 - **Crop and edit:** the image editor (crop, rotate, flip, annotate, filters,
   watermark) ships in `@useupup/react` and `@useupup/preact` only. The vanilla,
   Vue, Svelte and Angular packages stub it.
@@ -80,8 +82,9 @@ Uppy splits image features into plugins. The Dashboard includes the Thumbnail
 Generator (200 px wide by default). `@uppy/compressor` wraps Compressor.js; its
 default quality is 0.6, which applies to JPEG and WebP images. `@uppy/image-editor`
 lets users crop, rotate, zoom and flip, and is built on Cropper.js. The pages
-we read do not mention HEIC; a community plugin, `uppy-heic`, converts it.
-Uploads reach S3 through the AWS S3 plugin. See
+we read do not mention HEIC; a community plugin, `uppy-heic` (last released
+in 2022), converts it. Uploads reach S3 through the AWS S3 plugin, which needs a
+signing endpoint or Companion, just as upup needs a presign endpoint. See
 [upup vs Uppy](/docs/comparisons/upup-vs-uppy/).
 
 ### FilePond
@@ -111,8 +114,8 @@ value such as `1600x1600 95%`. It runs on a canvas, so it only handles formats
 the browser supports natively, skips images from URL or social sources, and
 copies EXIF data over unchanged, including orientation and geolocation. Files
 are stored by Uploadcare, which also transforms images on the fly through its
-CDN. The service is paid with a free plan; see their pricing page for current
-terms.
+CDN. The service is paid, with a free plan limited to personal use; see their
+pricing page for current terms.
 
 ### browser-image-compression and Compressor.js
 
@@ -148,8 +151,8 @@ want an open-source editor instead:
 
 ## How to choose
 
-- **You want previews, resizing and an upload to your own bucket in one
-  install:** upup or Uppy.
+- **You want previews, resizing and an upload to your own bucket from one
+  library:** upup or Uppy.
 - **You need HEIC photos from iPhones to arrive as JPEG:** upup. With the
   others, add a separate converter and test it with your own files.
 - **You need users to crop or edit before upload in plain JavaScript:** Uppy
@@ -162,7 +165,8 @@ want an open-source editor instead:
   or Compressor.js.
 - **Privacy matters:** decide where EXIF data is removed. upup's
   `stripExifData`, Compressor.js's default and FilePond's transform plugin
-  strip it; Uploadcare's `image-shrink` keeps it.
+  strip it; Uploadcare's `image-shrink` keeps it. upup skips animated GIF,
+  WebP and APNG, so EXIF in those stays.
 
 ## Minimal upup example
 
@@ -216,8 +220,9 @@ and leave the uploader to you.
 
 upup converts HEIC and HEIF to JPEG with the `heicConversion` option, using the
 optional `libheif-js` package. None of the other libraries here document a
-built-in HEIC converter. Uppy has a community plugin, `uppy-heic`, and
-Uploadcare's docs pages we checked do not mention HEIC, so test your own files.
+built-in in-browser HEIC converter. Uppy has a community plugin, `uppy-heic`,
+and Uploadcare accepts HEIC and converts it on its CDN after upload, not in the
+browser.
 
 ### Which image upload libraries include an image editor?
 
@@ -232,7 +237,8 @@ watermarks, but ships in the React and Preact packages only.
 upup, Uppy, FilePond (including its image plugins), Dropzone.js,
 browser-image-compression and Compressor.js are MIT-licensed. Pintura is a
 separate paid product. Uploadcare's File Uploader library is open source, but
-the hosted service behind it is paid and has a free plan.
+the hosted service behind it is paid, with a free plan limited to personal
+use.
 
 ## Related comparisons
 

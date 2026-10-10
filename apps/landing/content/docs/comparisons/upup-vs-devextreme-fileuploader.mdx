@@ -3,7 +3,7 @@ title: upup vs DevExtreme FileUploader
 description: Compare DevExtreme's dx-file-uploader with upup's Angular uploader on upload modes, chunk upload, S3, cloud drives and licensing, with a migration snippet.
 faq:
     - q: Is dx-file-uploader free?
-      a: No. DevExtreme is commercial software licensed per developer, with a 30-day trial. The devextreme-angular wrapper repository is MIT, but it wraps the devextreme package, which needs the paid license. upup's @useupup/angular is MIT-licensed.
+      a: No. DevExtreme is commercial software licensed per developer, with a 30-day trial. The devextreme-angular wrapper package is MIT, but it requires the devextreme package, which needs the paid license. upup's @useupup/angular is MIT-licensed.
     - q: Can dx-file-uploader upload directly to S3?
       a: Not out of the box. It sends files to the uploadUrl you set. You can replace the built-in requests with your own uploadFile or uploadChunk function, and DevExpress publishes example projects for S3 and Azure Blob. upup signs presigned URLs and the browser uploads straight to your bucket.
     - q: How do I replace dx-file-uploader with upup in Angular?
@@ -65,7 +65,8 @@ with your own code. It fits naturally next to DevExtreme's grids and forms.
 What it does not include is a storage story. To reach S3 you write the signing
 and upload code in `uploadChunk` or `uploadFile` (DevExpress publishes example
 projects for S3 and Azure Blob). Its documentation lists no cloud-drive
-sources, camera or screen capture, and no way to resume an interrupted upload.
+sources, camera or screen capture, and does not document resuming an
+interrupted upload.
 
 ## What upup gives you in Angular
 
@@ -84,8 +85,9 @@ not get; it ships in the React and Preact packages only.
 DevExtreme is licensed per developer. DevExpress states that building
 commercial applications requires a 12-month subscription, that a 30-day trial
 is available, and that a valid license key is used to avoid a verification
-message in the browser console. The `devextreme-angular` repository is
-MIT-licensed, but it is a wrapper over the `devextreme` package. DevExpress's
+message in the browser console. The `devextreme-angular` wrapper package is
+MIT-licensed, but it requires the `devextreme` package, which needs the paid
+license. DevExpress's
 current terms are on its [licensing page](https://js.devexpress.com/Licensing/);
 check them against your team size and renewal plans.
 
@@ -100,7 +102,7 @@ Take a typical DevExtreme setup:
 <dx-file-uploader
     accept="image/*"
     [multiple]="true"
-    [maxFileSize]="32000000"
+    [maxFileSize]="33554432"
     uploadMode="useButtons"
     uploadUrl="/api/upload"
     (onUploaded)="onUploaded($event)"
@@ -148,19 +150,19 @@ Load the stylesheet once globally, as described in the
 
 How the options map:
 
-| DevExtreme                                   | upup                                                                           |
-| -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `uploadMode="instantly"`                     | `autoUpload: true`                                                             |
-| `uploadMode="useButtons"`                    | The default; the user presses upload                                           |
-| `uploadMode="useForm"`                       | No equivalent                                                                  |
-| `accept`, `allowedFileExtensions`            | `allowedFileTypes`: MIME patterns, extensions or preset names such as `images` |
-| `multiple` (default `false`)                 | `maxFiles` (default 10); set `maxFiles: 1` for a single file                   |
-| `maxFileSize`, `minFileSize` (bytes)         | `maxFileSize`, `minFileSize` as `{ size, unit }`                               |
-| `uploadUrl`, `uploadMethod`, `uploadHeaders` | `uploadEndpoint` (see the note below)                                          |
-| `chunkSize`                                  | `resumable` with `protocol: 'multipart'` or `'tus'`                            |
-| `onUploaded`, `onUploadError`                | `(uploadAllComplete)`, `(error)` outputs                                       |
-| `onValueChanged`                             | `(filesAdded)` and `(fileRemoved)` outputs                                     |
-| `labelText`, `selectButtonText`              | `i18n` overrides; see [Localization](/docs/localization/)                      |
+| DevExtreme                                   | upup                                                                                                                                                   |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `uploadMode="instantly"`                     | `autoUpload: true`                                                                                                                                     |
+| `uploadMode="useButtons"`                    | The default; the user presses upload                                                                                                                   |
+| `uploadMode="useForm"`                       | No equivalent                                                                                                                                          |
+| `accept`, `allowedFileExtensions`            | `allowedFileTypes`: MIME patterns, extensions or preset names such as `images`                                                                         |
+| `multiple` (default `false`)                 | `maxFiles` (default 10); set `maxFiles: 1` for a single file                                                                                           |
+| `maxFileSize`, `minFileSize` (bytes)         | `maxFileSize`, `minFileSize` as `{ size, unit }`                                                                                                       |
+| `uploadUrl`, `uploadMethod`, `uploadHeaders` | `uploadEndpoint` (see the note below)                                                                                                                  |
+| `chunkSize`                                  | `resumable` with `protocol: 'tus'` (needs a tus endpoint), or `protocol: 'multipart'` (needs `serverUrl` from `@useupup/server`, not `uploadEndpoint`) |
+| `onUploaded`, `onUploadError`                | `(uploadAllComplete)`, `(error)` outputs                                                                                                               |
+| `onValueChanged`                             | `(filesAdded)` and `(fileRemoved)` outputs                                                                                                             |
+| `labelText`, `selectButtonText`              | `i18n` overrides; see [Localization](/docs/localization/)                                                                                              |
 
 The one change that is not a rename: `uploadUrl` receives the file, while
 `uploadEndpoint` does not. Your endpoint returns a presigned URL for the
@@ -185,7 +187,7 @@ connection, or when you do not want a per-developer license for an upload box.
 ### Is dx-file-uploader free?
 
 No. DevExtreme is commercial software licensed per developer, with a 30-day
-trial. The `devextreme-angular` wrapper repository is MIT, but it wraps the
+trial. The `devextreme-angular` wrapper package is MIT, but it requires the
 `devextreme` package, which needs the paid license. upup's `@useupup/angular` is
 MIT-licensed.
 
