@@ -61,6 +61,16 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'best-javascript-image-upload-libraries'],
+        file: 'comparisons/best-javascript-image-upload-libraries.mdx',
+        questions: 5,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-devextreme-fileuploader'],
+        file: 'comparisons/upup-vs-devextreme-fileuploader.mdx',
+        questions: 5,
+    },
+    {
         slug: ['comparisons', 'uploadthing-pricing'],
         file: 'comparisons/uploadthing-pricing.mdx',
         questions: 6,
