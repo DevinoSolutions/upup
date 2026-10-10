@@ -10,6 +10,8 @@
         "upup-vs-filepond",
         "upup-vs-react-dropzone",
         "upup-vs-devextreme-fileuploader",
-        "upup-vs-uploadthing"
+        "upup-vs-uploadthing",
+        "uploadthing-pricing",
+        "primevue-primereact-fileupload-alternatives"
     ]
 }

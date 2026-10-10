@@ -71,6 +71,16 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'uploadthing-pricing'],
+        file: 'comparisons/uploadthing-pricing.mdx',
+        questions: 6,
+    },
+    {
+        slug: ['comparisons', 'primevue-primereact-fileupload-alternatives'],
+        file: 'comparisons/primevue-primereact-fileupload-alternatives.mdx',
+        questions: 5,
+    },
+    {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
         questions: 7,
