@@ -5,7 +5,7 @@ faq:
     - q: Is UploadThing just S3?
       a: 'No. UploadThing is a service: storage, request signing, per-route upload rules and file URLs, all run for you. An S3 bucket is only the storage. Everything else is yours to build, or to take from a library such as upup.'
     - q: Is UploadThing free?
-      a: "It has a free tier. As of September 2026, UploadThing's pricing page lists: Free: $0 a month for 2 GB of storage, shared across all your apps, with unlimited uploads and downloads. $10 a month: 100 GB of storage, plus regions and private files. Usage-based: from $25 a month with 250 GB included, then $0.08 per GB over 250 GB. Plans change, so check uploadthing.com/pricing before you decide. upup itself costs nothing: you pay only your storage provider, at that provider's rates."
+      a: "It has a free tier with 2 GB of storage. See UploadThing pricing and self-hosted costs for the current plans and prices. upup itself costs nothing: you pay only your storage provider, at that provider's rates."
     - q: Is upup a drop-in replacement for UploadThing?
       a: No. The component, the server config and the completion hooks have different shapes.
     - q: Does upup work with Cloudflare R2 or MinIO instead of AWS S3?
@@ -319,17 +319,10 @@ else is yours to build, or to take from a library such as upup.
 
 ### Is UploadThing free?
 
-It has a free tier. As of September 2026, UploadThing's pricing page lists:
-
-- **Free:** $0 a month for 2 GB of storage, shared across all your apps, with
-  unlimited uploads and downloads.
-- **$10 a month:** 100 GB of storage, plus regions and private files.
-- **Usage-based:** from $25 a month with 250 GB included, then $0.08 per GB
-  over 250 GB.
-
-Plans change, so check [uploadthing.com/pricing](https://uploadthing.com/pricing)
-before you decide. upup itself costs nothing: you pay only your storage
-provider, at that provider's rates.
+It has a free tier with 2 GB of storage. See
+[UploadThing pricing and self-hosted costs](/docs/comparisons/uploadthing-pricing/)
+for the current plans and prices. upup itself costs nothing: you pay only your
+storage provider, at that provider's rates.
 
 ### Is upup a drop-in replacement for UploadThing?
 

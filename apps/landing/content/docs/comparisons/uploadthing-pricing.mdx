@@ -7,7 +7,7 @@ faq:
     - q: Is UploadThing free?
       a: 'Partly. The free plan costs $0 a month, with 2 GB of storage shared across all your apps and unlimited uploads and downloads. The pricing page does not say what happens when you pass 2 GB, so check with UploadThing before you rely on it. Beyond 2 GB, the paid plans are the options the page lists.'
     - q: Is it cheaper to use your own S3 bucket than UploadThing?
-      a: "It depends on how much you store and how much your users download. At small volumes a plan can be cheaper than a bucket you maintain. At larger volumes, S3-compatible providers with free or low egress, such as Cloudflare R2 and Backblaze B2, cost less per GB than UploadThing's overage rate. AWS S3 can cost more once downloads grow, because it charges for data transferred out."
+      a: "It depends on how much you store and how much your users download. At small volumes the dollar difference is tiny, so setup time often matters more than price. At larger volumes, S3-compatible providers with free or low egress, such as Cloudflare R2 and Backblaze B2, cost less per GB than UploadThing's overage rate. AWS S3 can cost more once downloads grow, because it charges for data transferred out."
     - q: Which S3-compatible storage has the cheapest egress?
       a: 'Cloudflare R2 charges nothing for egress. Backblaze B2 includes free egress up to three times your stored data each month, then charges $0.01 per GB. DigitalOcean Spaces includes 1,024 GiB of outbound transfer, then charges $0.01 per GiB. AWS S3 includes 100 GB a month, then charges $0.09 per GB for the first 10 TB.'
     - q: Does upup charge anything?
@@ -35,11 +35,11 @@ money only.
 These are the plans on [uploadthing.com/pricing](https://uploadthing.com/pricing),
 checked on 10 October 2026. Prices are in US dollars.
 
-| Plan        | Price            | Storage                                        | Also listed                                 |
-| ----------- | ---------------- | ---------------------------------------------- | ------------------------------------------- |
-| Free        | $0 a month       | 2 GB, shared across all your apps              | Unlimited uploads and downloads; 7-day logs |
-| 100 GB      | $10 a month      | 100 GB                                         | Regions, private files; 30-day logs         |
-| Usage based | From $25 a month | 250 GB included, then $0.08 per GB over 250 GB | Regions, private files; 30-day logs         |
+| Plan        | Price            | Storage                                        | Also listed                                                |
+| ----------- | ---------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| Free        | $0 a month       | 2 GB, shared across all your apps              | Unlimited uploads and downloads; 7-day audit-log retention |
+| 100 GB      | $10 a month      | 100 GB                                         | Regions, private files; 30-day audit-log retention         |
+| Usage based | From $25 a month | 250 GB included, then $0.08 per GB over 250 GB | Regions, private files; 30-day audit-log retention         |
 
 The page does not publish a separate bandwidth or egress rate for the paid
 plans, an overage rate for the 100 GB plan, or file-count and file-size limits
@@ -78,7 +78,7 @@ Rates below are the providers' published prices, checked on 10 October 2026.
 
 | Provider (guide)                                                 | Storage                                         | Egress (data out)                                                 | Requests                                                                            |
 | ---------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| [AWS S3](/docs/guides/storage/aws-s3/) (S3 Standard, US East)    | $0.023 per GB-month, first 50 TB                | First 100 GB a month free, then $0.09 per GB for the next 10 TB   | $0.005 per 1,000 PUT, COPY, POST or LIST; $0.0004 per 1,000 GET                     |
+| [AWS S3](/docs/guides/storage/aws-s3/) (S3 Standard, US East)    | $0.023 per GB-month, first 50 TB                | First 100 GB a month free, then $0.09 per GB for the first 10 TB  | $0.005 per 1,000 PUT, COPY, POST or LIST; $0.0004 per 1,000 GET                     |
 | [Cloudflare R2](/docs/guides/storage/cloudflare-r2/) (Standard)  | $0.015 per GB-month; first 10 GB-month free     | None for direct S3 API, Workers and r2.dev access                 | $4.50 per million Class A; $0.36 per million Class B; first 1M and 10M a month free |
 | [Backblaze B2](/docs/guides/storage/backblaze-b2/)               | $6.95 per TB-month; first 10 GB free            | Free up to 3x your monthly average stored data, then $0.01 per GB | Class A, B and C calls free on pay-as-you-go                                        |
 | [DigitalOcean Spaces](/docs/guides/storage/digitalocean-spaces/) | $5 a month includes 250 GiB, then $0.02 per GiB | 1,024 GiB a month included, then $0.01 per GiB                    | No request charges listed                                                           |
@@ -133,8 +133,10 @@ UploadThing = 10 (up to 100 GB), then 25 + max(0, storage_GB - 250) x 0.08
 ## What the table leaves out
 
 - **Requests.** Upload-heavy apps pay per operation on S3 and R2. A million
-  small uploads is about $5 of PUT requests on S3 and $4.50 of Class A
-  operations on R2. B2's pay-as-you-go plan lists those calls as free.
+  small uploads is about $5 of PUT requests on S3. On R2, Class A operations
+  cost $4.50 per million after the first free million a month. A multipart
+  upload uses several operations per file. B2's pay-as-you-go plan lists those
+  calls as free.
 - **Your time.** UploadThing runs the storage, signing and file URLs. With a
   bucket you create it, set its credentials and CORS rule, and run one signing
   route. `@useupup/server` is that route, and the storage guides above give you
@@ -145,11 +147,15 @@ UploadThing = 10 (up to 100 GB), then 25 + max(0, storage_GB - 250) x 0.08
 - **Hosted features.** The table prices bytes. It does not price UploadThing's
   file router, its dashboard or having someone else run the infrastructure.
 
-## When UploadThing is still the cheaper choice
+## When UploadThing is still the better choice
 
-A hosted plan wins when the numbers are small and your time is not:
+In the table above, R2, B2 and Spaces cost less than UploadThing at every
+volume, and only AWS S3 costs more, once downloads grow. Against a low-egress
+provider, UploadThing's case is your time, not your bill. A hosted plan wins
+when the numbers are small and your time is not:
 
-- Your total storage is under a few GB, so the free plan covers you.
+- Your total storage is under a few GB. The free plan costs $0, and so do the
+  first 10 GB on R2 and B2, but with UploadThing there is no bucket to set up.
 - You would otherwise spend hours on a bucket, credentials and CORS for a
   weekend project.
 - You want one invoice and one vendor, with no cloud account to read.
@@ -186,7 +192,8 @@ it. Beyond 2 GB, the paid plans are the options the page lists.
 ### Is it cheaper to use your own S3 bucket than UploadThing?
 
 It depends on how much you store and how much your users download. At small
-volumes a plan can be cheaper than a bucket you maintain. At larger volumes,
+volumes the dollar difference is tiny, so setup time often matters more than
+price. At larger volumes,
 S3-compatible providers with free or low egress, such as Cloudflare R2 and
 Backblaze B2, cost less per GB than UploadThing's overage rate. AWS S3 can cost
 more once downloads grow, because it charges for data transferred out.
