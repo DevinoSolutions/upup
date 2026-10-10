@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { AgentIcon } from '@/components/AgentIcon'
 import { AgentSetupPill } from '@/components/AgentSetupPill'
 import Card from '@/components/ui/Card'
 import Section from '@/components/ui/Section'
@@ -76,19 +77,9 @@ export default function AgentSetupPage() {
                                 className="group flex h-full flex-col gap-3"
                             >
                                 <div className="flex items-center gap-3">
-                                    <img
-                                        src={agent.icon.light}
-                                        alt=""
-                                        width={20}
-                                        height={20}
-                                        className="h-5 w-5 dark:hidden"
-                                    />
-                                    <img
-                                        src={agent.icon.dark}
-                                        alt=""
-                                        width={20}
-                                        height={20}
-                                        className="hidden h-5 w-5 dark:block"
+                                    <AgentIcon
+                                        id={agent.id}
+                                        className="h-5 w-5 text-gray-900 dark:text-white"
                                     />
                                     <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                                         {agent.name}

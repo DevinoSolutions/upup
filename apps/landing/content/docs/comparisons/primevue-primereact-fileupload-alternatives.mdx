@@ -1,0 +1,312 @@
+---
+title: PrimeVue and PrimeReact FileUpload Alternatives
+description: PrimeVue 5 and PrimeReact 11 moved to the PrimeUI License. What FileUpload does, what to use instead, and how to migrate to upup, Uppy or FilePond.
+faq:
+    - q: Is PrimeVue FileUpload free?
+      a: 'It depends on the version. PrimeVue 4 and earlier are MIT-licensed. PrimeVue 5 uses the PrimeUI License, which has a free Community License for individuals and eligible small organizations and a paid Commercial License for everyone else. Either way, version 5 needs a license key.'
+    - q: Is PrimeReact FileUpload free?
+      a: 'It depends on the version. PrimeReact 10 and earlier are MIT-licensed. PrimeReact 11 uses the PrimeUI License, which has a free Community License for individuals and eligible small organizations and a paid Commercial License for everyone else. Either way, version 11 needs a license key.'
+    - q: What is the best alternative to PrimeVue or PrimeReact FileUpload?
+      a: For a finished uploader that sends files to your own S3-compatible bucket, upup or Uppy. For one polished component that posts to your own server, FilePond. For a bare React drop target you style yourself, react-dropzone. For a Vue component with no UI of its own, vue-upload-component.
+    - q: Can PrimeVue or PrimeReact FileUpload upload straight to S3?
+      a: Not out of the box. It posts the files to the url you give it, or, with customUpload, hands them to your own function, where you write the S3 signing and upload code.
+    - q: Do I have to leave PrimeVue or PrimeReact to use upup?
+      a: No. upup replaces only the upload component. The rest of your PrimeVue or PrimeReact UI can stay as it is.
+---
+
+**The short answer:** PrimeVue 5 and PrimeReact 11 are no longer MIT-licensed.
+They use PrimeTek's PrimeUI License, with a free Community License for
+individuals and eligible small organizations, a paid Commercial License for
+everyone else, and a license key in both cases. PrimeVue 4 and PrimeReact 10
+and earlier stay MIT. If you want a FileUpload replacement that sends files to
+your own S3-compatible bucket, use upup or Uppy. For one component that posts
+to your own server, use FilePond.
+
+**Try it first:** the [live Vue demo](/vue/#demo) and the
+[live React demo](/react/#demo) upload a real file from your browser, and the
+[Vue quickstart](/docs/quickstarts/vue/) and
+[React quickstart](/docs/quickstarts/react/) get them running in your app.
+
+This page covers what changed in the licenses, what FileUpload does, which
+libraries can replace it in Vue and React, and how to move the code. For the
+full roundups, see
+[best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)
+and
+[best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/).
+
+## What changed in the license
+
+PrimeTek published PrimeVue 5.0.0, PrimeReact 11.0.0 and PrimeNG 22.0.0 to npm
+on 15 July 2026 under the PrimeUI License. Earlier major versions kept their MIT
+license. The split, by version:
+
+| Library    | MIT-licensed versions | PrimeUI License versions |
+| ---------- | --------------------- | ------------------------ |
+| PrimeVue   | 4 and earlier         | 5 and later              |
+| PrimeReact | 10 and earlier        | 11 and later             |
+| PrimeNG    | 21 and earlier        | 22 and later             |
+
+The PrimeUI License lets you choose one of two terms:
+
+- **Community License (free).** For individuals and for organizations that
+  meet all of these limits: under $1,000,000 in annual gross revenue, fewer than
+  5 developers, fewer than 10 employees, and under $3,000,000 in venture capital
+  or outside funding. It covers up to 4 developers and renews each year by
+  confirming you still qualify. PrimeTek's community-license page also excludes
+  public-sector bodies and educational institutions.
+- **Commercial License (paid).** For organizations that do not qualify. It is
+  licensed per developer, is perpetual, and includes one year of updates.
+
+Both need a license key. Verification runs offline with no telemetry, and a
+missing, invalid or expired key may show a license notice. The package's
+`LICENSE.md` and [primeui.dev](https://primeui.dev/licenses/community) set the
+exact terms, including how they treat non-profits and public-sector bodies, so
+read them against your own situation. This page is not legal advice.
+
+Staying on PrimeVue 4 or PrimeReact 10 keeps you on MIT. Ask PrimeTek how long
+each older line will be maintained before you plan around one.
+
+## What FileUpload does
+
+Both libraries ship a component named FileUpload. Neither is an S3 uploader: it
+is a form control that selects files and sends them where you tell it.
+
+**PrimeVue FileUpload** (versions 4 and 5 share this API) has two modes. In
+`basic` mode it is a button that opens the file dialog. In `advanced` mode, the
+default, it adds a drop zone, a file list and a progress bar. Its main props:
+
+- `url` and `name`: where to post the files and under which field name.
+- `accept`, `multiple`, `maxFileSize` (in bytes) and `fileLimit`: validation.
+- `auto`: upload as soon as files are chosen.
+- `customUpload`: skip the built-in request and handle the files yourself.
+
+With `customUpload`, the component fires an `uploader` event whose `files`
+property holds the selected files. It also emits `select`, `progress`, `upload`
+and `error`.
+
+**PrimeReact FileUpload** in version 10 is one component with the same `mode`,
+`url`, `name`, `accept`, `multiple`, `maxFileSize` and `auto` props. With
+`customUpload`, it calls your `uploadHandler` with an event whose `files`
+property holds the selected files. Callbacks include `onSelect`, `onProgress`,
+`onUpload` and `onError`. Version 11 splits the component into composable parts
+such as `FileUpload.Root` and `FileUpload.Trigger`, plus a headless
+`useFileUpload` hook, and keeps the `url`, `customUpload` and `uploadHandler`
+options.
+
+## When to replace it
+
+Keep FileUpload if you already use the PrimeVue or PrimeReact suite, your files
+post to your own server, and the license fits you. Replace it when:
+
+- **The license no longer fits.** You are on version 5 or 11 and do not want a
+  license key or a paid tier, or you want to stay current without the suite.
+- **You want files in your own S3-compatible bucket.** FileUpload leaves the
+  signing, the upload request and retries to you.
+- **You need more than a file picker.** Cloud drives, camera, screen capture,
+  resumable uploads or an image editor are not part of FileUpload.
+- **You use one uploader across frameworks.** upup has native ports for React,
+  Vue, Svelte, Angular, Preact and vanilla JS.
+
+## Alternatives compared
+
+| Library                  | Framework fit                           | Where files go                          | Cloud drives                         | Resumable                      | License                                                  |
+| ------------------------ | --------------------------------------- | --------------------------------------- | ------------------------------------ | ------------------------------ | -------------------------------------------------------- |
+| upup                     | React, Vue, Svelte, Angular, Preact, JS | Your S3-compatible bucket (presigned)   | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | MIT                                                      |
+| Uppy                     | Vanilla JS, React, Vue, Svelte, Angular | Your server, a tus server or S3         | Many, via Companion                  | Yes (tus or S3 multipart)      | MIT                                                      |
+| FilePond                 | Vanilla JS core with framework adapters | Your server endpoint                    | No                                   | Chunked uploads to your server | MIT (the Pintura image editor is commercial)             |
+| vue-upload-component     | Vue                                     | Your endpoint                           | No                                   | Chunked uploads                | Apache-2.0                                               |
+| react-dropzone           | React                                   | Wherever your own code sends them       | No                                   | No                             | MIT                                                      |
+| Uploadcare File Uploader | Web components for any framework        | Uploadcare's hosted storage             | Yes, several                         | Multipart to Uploadcare        | MIT library; the hosted service is paid with a free tier |
+| PrimeVue FileUpload      | Vue                                     | The `url` you set, or your own function | No                                   | No                             | v5: PrimeUI License; v4 and earlier: MIT                 |
+| PrimeReact FileUpload    | React                                   | The `url` you set, or your own function | No                                   | No                             | v11: PrimeUI License; v10 and earlier: MIT               |
+
+- **upup** is the closest like-for-like swap if you want a ready-made UI and
+  your own bucket. `@useupup/vue` and `@useupup/react` render a drag-and-drop
+  panel with previews, progress, retries and validation. The image editor is in
+  the React and Preact packages only.
+- **Uppy** is a modular toolkit with Vue and React components. Remote sources
+  such as Google Drive go through Companion, a server you run. See
+  [upup vs Uppy](/docs/comparisons/upup-vs-uppy/).
+- **FilePond** is the nearest thing to FileUpload: one polished component that
+  posts to your server. See
+  [upup vs FilePond](/docs/comparisons/upup-vs-filepond/).
+- **vue-upload-component** handles selection, drag and drop and chunked uploads
+  but leaves the file list and progress UI to you. Its `latest` npm tag is the
+  Vue 2 line; install the 3.x line (the `next` tag) for Vue 3.
+- **react-dropzone** gives you a drop target and `File` objects, and nothing
+  else. See [upup vs react-dropzone](/docs/comparisons/upup-vs-react-dropzone/).
+- **Uploadcare** is a hosted service. You get its storage and CDN and give up
+  the bucket.
+
+## Migrate from PrimeVue FileUpload to upup
+
+A typical PrimeVue setup uses `customUpload` and an `uploader` handler that
+sends each file to your own code:
+
+```vue
+<script setup lang="ts">
+import FileUpload from 'primevue/fileupload'
+
+async function onUploader(event: { files: File | File[] }) {
+    for (const file of [event.files].flat()) {
+        // your upload code: a FormData POST, or a presigned PUT
+    }
+}
+</script>
+
+<template>
+    <FileUpload
+        mode="advanced"
+        name="files"
+        accept="image/*"
+        :multiple="true"
+        :max-file-size="5000000"
+        custom-upload
+        @uploader="onUploader"
+    />
+</template>
+```
+
+With `@useupup/vue`, the component does the upload, so the handler goes away.
+Install it with `npm i @useupup/vue`. It needs Vue 3.4 or later.
+
+```vue
+<script setup lang="ts">
+import { UpupUploader } from '@useupup/vue'
+import '@useupup/vue/styles'
+</script>
+
+<template>
+    <UpupUploader
+        provider="aws"
+        upload-endpoint="/api/upload-token"
+        allowed-file-types="image/*"
+        :max-file-size="{ size: 5, unit: 'MB' }"
+        :max-files="10"
+        auto-upload
+        :on-file-upload-complete="(file, key) => console.log(file.name, key)"
+    />
+</template>
+```
+
+`upload-endpoint` is a route in your app that returns a presigned upload URL for
+each file. The [Vue quickstart](/docs/quickstarts/vue/) and
+[Code Examples](/docs/code-examples/) have a ready-to-copy handler.
+
+## Migrate from PrimeReact FileUpload to upup
+
+A typical PrimeReact 10 setup uses `customUpload` and an `uploadHandler`:
+
+```tsx
+import { FileUpload, type FileUploadHandlerEvent } from 'primereact/fileupload'
+
+async function uploadHandler(event: FileUploadHandlerEvent) {
+    for (const file of event.files) {
+        // your upload code: a FormData POST, or a presigned PUT
+    }
+}
+
+export default function Uploader() {
+    return (
+        <FileUpload
+            mode="advanced"
+            name="files"
+            accept="image/*"
+            multiple
+            maxFileSize={5000000}
+            customUpload
+            uploadHandler={uploadHandler}
+        />
+    )
+}
+```
+
+With `@useupup/react`, again the handler goes away. Install it with
+`npm i @useupup/react`. It needs React 19.
+
+```tsx
+'use client'
+
+import { UpupUploader } from '@useupup/react'
+import '@useupup/react/styles'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            provider="aws"
+            uploadEndpoint="/api/upload-token"
+            allowedFileTypes="image/*"
+            maxFileSize={{ size: 5, unit: 'MB' }}
+            maxFiles={10}
+            autoUpload
+            onFileUploadComplete={(file, key) => console.log(file.name, key)}
+        />
+    )
+}
+```
+
+The [React quickstart](/docs/quickstarts/react/) covers the signing route.
+
+## What changes when you switch
+
+- **How bytes travel.** FileUpload posts a form to your `url`. upup asks your
+  endpoint, or `@useupup/server`, for a presigned URL, and the browser sends
+  each file straight to the bucket. If your server must receive the file itself,
+  keep FileUpload or write that route. See
+  [Client mode vs server mode](/docs/guides/modes/) and the
+  [storage guides](/docs/guides/storage-providers/).
+- **Validation.** PrimeVue and PrimeReact take `maxFileSize` in bytes. upup
+  takes `{ size, unit }`, plus `maxFiles` and `allowedFileTypes`.
+- **Events.** PrimeReact's `onSelect` maps to `onFilesSelected`, `onProgress` to
+  `onFileUploadProgress` or `onFilesUploadProgress`, and `onUpload` to
+  `onFileUploadComplete` (one file) or `onUploadComplete` (all files). In Vue,
+  PrimeVue's `@select` maps to the `onFilesSelected` prop. `onError` receives a
+  message string. See [Events & callbacks](/docs/api-reference/events/).
+- **Appearance.** PrimeVue and PrimeReact theme through their own presets. upup
+  uses design tokens and slots; see [Theming](/docs/guides/theming/). Its panel
+  has a fixed height, and the `mini` prop gives a compact square for tight
+  layouts.
+- **The rest of your UI.** upup replaces only the upload component. Dialogs,
+  tables and forms from PrimeVue or PrimeReact keep working next to it.
+
+## FAQ
+
+### Is PrimeVue FileUpload free?
+
+It depends on the version. PrimeVue 4 and earlier are MIT-licensed. PrimeVue 5
+uses the PrimeUI License, which has a free Community License for individuals and
+eligible small organizations and a paid Commercial License for everyone else.
+Either way, version 5 needs a license key.
+
+### Is PrimeReact FileUpload free?
+
+It depends on the version. PrimeReact 10 and earlier are MIT-licensed.
+PrimeReact 11 uses the PrimeUI License, which has a free Community License for
+individuals and eligible small organizations and a paid Commercial License for
+everyone else. Either way, version 11 needs a license key.
+
+### What is the best alternative to PrimeVue or PrimeReact FileUpload?
+
+For a finished uploader that sends files to your own S3-compatible bucket, upup
+or Uppy. For one polished component that posts to your own server, FilePond. For
+a bare React drop target you style yourself, react-dropzone. For a Vue component
+with no UI of its own, vue-upload-component.
+
+### Can PrimeVue or PrimeReact FileUpload upload straight to S3?
+
+Not out of the box. It posts the files to the url you give it, or, with
+`customUpload`, hands them to your own function, where you write the S3 signing
+and upload code.
+
+### Do I have to leave PrimeVue or PrimeReact to use upup?
+
+No. upup replaces only the upload component. The rest of your PrimeVue or
+PrimeReact UI can stay as it is.
+
+## Related comparisons
+
+- [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)
+- [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/)
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/)
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
