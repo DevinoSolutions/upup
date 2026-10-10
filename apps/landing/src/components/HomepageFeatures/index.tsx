@@ -15,9 +15,6 @@ import {
     FaPinterest,
     FaTiktok,
     FaGoogle,
-    FaServer,
-    FaDatabase,
-    FaCube,
     FaPhotoVideo,
     FaImage,
     FaVideo,
@@ -45,6 +42,7 @@ import {
 import { GrOnedrive } from 'react-icons/gr'
 import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
+import { IbmLogo, IDriveLogo, LinodeLogo } from './ProviderLogos'
 import * as gtag from '@/lib/gtag'
 import FeatureShowcase from '@/components/FeatureShowcase'
 import Section from '@/components/ui/Section'
@@ -282,7 +280,7 @@ const developerStorageProviders: Integration[] = [
     {
         id: 'linode',
         name: 'Linode Object Storage',
-        icon: FaServer,
+        icon: LinodeLogo,
         status: 'supported',
         description: 'Linode object storage',
         category: 'Developer Storage',
@@ -290,7 +288,7 @@ const developerStorageProviders: Integration[] = [
     {
         id: 'idrive',
         name: 'IDrive e2',
-        icon: FaDatabase,
+        icon: IDriveLogo,
         status: 'supported',
         description: 'IDrive object storage',
         category: 'Developer Storage',
@@ -362,7 +360,7 @@ const developerStorageProviders: Integration[] = [
     {
         id: 'ibm',
         name: 'IBM Cloud Object Storage',
-        icon: FaCube,
+        icon: IbmLogo,
         status: 'planned',
         description: 'IBM cloud storage',
         category: 'Developer Storage',
