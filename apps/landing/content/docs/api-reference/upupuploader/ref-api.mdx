@@ -1,6 +1,6 @@
 ---
 title: Ref API
-description: The UploaderRef imperative surface — a useUpload() accessor exposing files, progress, and the upload, uploadFiles, setFiles, and replaceFiles commands.
+description: The UploaderRef imperative surface — a useUpload() accessor exposing files, progress, and the upload, retryUpload, uploadFiles, setFiles, and replaceFiles commands.
 ---
 
 `UpupUploader` exposes the same behavior surface as `useUpupUpload`.
@@ -19,6 +19,7 @@ type UploaderRef = {
         loading: boolean
         progress: number
         upload(): Promise<UploadFile[] | undefined>
+        retryUpload(fileId?: string): Promise<UploadFile[] | undefined>
         resetState(): void
         uploadFiles(
             files: File[] | UploadFile[],
@@ -31,3 +32,5 @@ type UploaderRef = {
 
 `UploaderRef` is exported from `@useupup/react`; `UploadFile` is exported from
 `@useupup/core/contracts`.
+
+`retryUpload(fileId?)` retries one failed file by ID. Omit the ID to retry all failed files.
