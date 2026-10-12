@@ -30,15 +30,15 @@ usually decide the choice, then explains how to pick.
 
 ## Comparison table
 
-| Library                 | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3                           | Image editing                                            | License                                                                        | Bundle approach                                    |
-| ----------------------- | ------------- | ------------------------------------ | ------------------------------ | -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
-| upup                    | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs)                   | No (the editor is React/Preact only)                     | MIT                                                                            | Headless core + native standalone component        |
-| ngx-file-drop           | Yes           | No                                   | No                             | You build it                           | No                                                       | MIT                                                                            | One drop-zone component; no upload code            |
-| ng2-file-upload         | Yes           | No                                   | No                             | Not built in                           | No                                                       | MIT                                                                            | Two directives + an upload queue; you build the UI |
-| PrimeNG FileUpload      | Yes           | No                                   | No                             | Not built in (custom upload handler)   | No                                                       | v22+: PrimeUI License (paid, with a free community tier); v21 and earlier: MIT | Part of the PrimeNG component suite                |
-| DevExtreme FileUploader | Yes           | No                                   | Chunked uploads to your server | Not built in (custom upload functions) | No                                                       | Commercial, per developer (30-day trial)                                       | Part of the DevExtreme component suite             |
-| FilePond                | Yes           | No                                   | Chunked uploads to your server | Not built in                           | Crop/resize plugins; full editor is Pintura (commercial) | MIT                                                                            | Vanilla JS core + Angular adapter + plugins        |
-| Uppy                    | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)                    | Yes (Image Editor plugin)                                | MIT                                                                            | Modular plugins; install only what you use         |
+| Library                 | Drag and drop | Cloud drives                         | Resumable                             | Direct-to-S3                           | Image editing                                            | License                                                                        | Bundle approach                                    |
+| ----------------------- | ------------- | ------------------------------------ | ------------------------------------- | -------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------- |
+| upup                    | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)             | Yes (presigned URLs)                   | No (the editor is React/Preact only)                     | MIT                                                                            | Headless core + native standalone component        |
+| ngx-file-drop           | Yes           | No                                   | No                                    | You build it                           | No                                                       | MIT                                                                            | One drop-zone component; no upload code            |
+| ng2-file-upload         | Yes           | No                                   | Chunked uploads to your server (v12+) | Not built in                           | No                                                       | MIT                                                                            | Two directives + an upload queue; you build the UI |
+| PrimeNG FileUpload      | Yes           | No                                   | No                                    | Not built in (custom upload handler)   | No                                                       | v22+: PrimeUI License (paid, with a free community tier); v21 and earlier: MIT | Part of the PrimeNG component suite                |
+| DevExtreme FileUploader | Yes           | No                                   | Chunked uploads to your server        | Not built in (custom upload functions) | No                                                       | Commercial, per developer (30-day trial)                                       | Part of the DevExtreme component suite             |
+| FilePond                | Yes           | No                                   | Chunked uploads to your server        | Not built in                           | Crop/resize plugins; full editor is Pintura (commercial) | MIT                                                                            | Vanilla JS core + Angular adapter + plugins        |
+| Uppy                    | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)             | Yes (AWS S3 plugin)                    | Yes (Image Editor plugin)                                | MIT                                                                            | Modular plugins; install only what you use         |
 
 ## The libraries
 
@@ -69,10 +69,14 @@ filters such as a maximum size or allowed MIME types, and sends each file with
 directives connect it to a file input and a drop area; the file list, progress
 bars and buttons are your own markup. It can send the raw file instead of a
 multipart form (`disableMultipart`), which is what an S3 presigned PUT expects,
-but it does not sign URLs, split files into chunks or resume uploads. Since
-3.0.0, each major version declares a single Angular major as its peer
-dependency (9.x for Angular 20; 10.x, on npm's `next` tag, for Angular 21), so
-match the version to your Angular release.
+but it does not sign URLs. Version 12.0.0 added a `ChunkedFileUploader` that
+sends a file in chunks for your server to reassemble and can resume a failed
+item from the chunk that did not complete, though nothing survives a page
+reload. Each major version declares a single Angular major as its peer
+dependency (8.x for Angular 19, 9.x for 20, 10.x for 21, and 11.x and 12.x for
+22), so match the version to your Angular release. For a side-by-side and a
+migration snippet, see
+[upup vs ng2-file-upload](/docs/comparisons/upup-vs-ng2-file-upload/).
 
 ### PrimeNG FileUpload
 
@@ -213,5 +217,7 @@ FilePond's full image editor, Pintura, is a separate commercial product.
 - [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
 - [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
 - [upup vs DevExtreme FileUploader](/docs/comparisons/upup-vs-devextreme-fileuploader/)
+- [upup vs ng2-file-upload](/docs/comparisons/upup-vs-ng2-file-upload/)
 - [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/)
 - [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)
+- [Best Svelte file upload libraries](/docs/comparisons/best-svelte-file-upload-libraries/)

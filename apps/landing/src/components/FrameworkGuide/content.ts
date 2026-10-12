@@ -263,7 +263,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             { ...FILEPOND, what: 'Upload widget with a Svelte adapter' },
             UPPY,
         ],
-        comparisonLink: COMPARISONS_HUB,
+        comparisonLink: roundup('svelte', 'Svelte'),
         links: [
             quickstart('svelte', 'Svelte'),
             PROPS_REFERENCE,
@@ -305,6 +305,12 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             {
                 name: 'ngx-file-drop',
                 what: 'File and folder drop zone; you handle the upload',
+                cloudDrives: NO,
+                license: 'MIT',
+            },
+            {
+                name: 'ng2-file-upload',
+                what: 'Upload queue and directives; you build the interface',
                 cloudDrives: NO,
                 license: 'MIT',
             },

@@ -1,0 +1,289 @@
+---
+title: upup vs Better Upload
+description: Compare Better Upload with upup on UI, frameworks, S3 multipart, cloud drives and resumable uploads, with a migration snippet from Better Upload to upup.
+faq:
+    - q: What is Better Upload?
+      a: An MIT-licensed library for uploading files from React directly to an S3-compatible bucket. A server route signs presigned URLs, React hooks upload the files, and shadcn/ui components are copied into your project for the interface.
+    - q: Which npm package is Better Upload?
+      a: Install @better-upload/client and @better-upload/server. The older unscoped better-upload package is deprecated on npm in favor of those two.
+    - q: Does Better Upload work outside React?
+      a: Its server runs in Next.js, Remix, TanStack Start, Hono, Elysia, Express and Fastify. The client hooks and components are React only. upup has native components for React, Vue, Svelte, Angular, Preact and vanilla JavaScript.
+    - q: Does Better Upload support multipart and resumable uploads?
+      a: It supports S3 multipart uploads with one route option, and uploads the parts in parallel. Its documentation does not describe resuming an interrupted upload after a page reload. upup offers S3 multipart through @useupup/server and tus, and both resume after a reload.
+    - q: How do I migrate from Better Upload to upup?
+      a: Replace the route with a createUpupNextHandler or createUpupHandler handler, and the hook and components with one UpupUploader. Set the server limits with maxFileSize and allowedTypes, and move your onBeforeUpload auth check to getUserId.
+    - q: When should I keep Better Upload?
+      a: When you use React, want to own and restyle the upload components, and only need uploads to your bucket. Switching buys little in that case.
+---
+
+**The short answer:** Better Upload is a small, well-focused library for React
+apps that upload to their own S3-compatible bucket: a typed server route signs
+the URLs, hooks do the upload, and you copy shadcn/ui components into your
+project. Keep it if that is all you need. upup is a ready-made uploader with the
+interface built in, native components for React, Vue, Svelte, Angular, Preact and
+vanilla JavaScript, cloud-drive sources, camera and screen capture, and resumable
+uploads that survive a page reload.
+
+**Try it first:** the [live React demo](/react/#demo) uploads a real
+file from your browser, and the
+[React quickstart](/docs/quickstarts/react/) gets it running in your app.
+
+"Better Upload" is also written "better-upload" and "betterupload". This page
+compares it with upup on the interface, frameworks, large files and
+server model, then shows a migration. For other React options, see the
+[React file upload libraries roundup](/docs/comparisons/best-react-file-upload-libraries/).
+
+## Which package is Better Upload
+
+The current packages are `@better-upload/client` and `@better-upload/server`, at
+version 3.0.19 (May 2026). The unscoped `better-upload` package on npm, whose
+last version was 2.0.3 in October 2025, is deprecated in favor of them. Both
+scoped packages are MIT-licensed. The client declares React as a peer
+dependency; the server uses `aws4fetch` rather than the AWS SDK.
+
+## Comparison table
+
+| Feature                | Better Upload                                                                                    | upup                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| What it is             | React hooks plus a server route that signs presigned URLs                                        | Ready-made uploader component, with an optional server package                                              |
+| Frameworks             | React client; server adapters for Next.js, Remix, TanStack Start, Hono, Elysia, Express, Fastify | React, Next.js, Vue, Svelte, Angular, Preact, vanilla JS                                                    |
+| Interface              | shadcn/ui components you copy into your project (button, dropzone, paste area, progress)         | Built-in panel with drop zone, file list, previews and source tabs; headless hooks for a custom UI          |
+| Where files go         | Your S3-compatible bucket, via presigned URLs                                                    | Your S3-compatible bucket, via presigned URLs                                                               |
+| Server                 | Required: a router with named routes                                                             | Client mode: your own presign endpoint. Server mode: `@useupup/server`                                      |
+| Server-side file rules | Per route: `fileTypes`, `maxFileSize`, `maxFiles`, client metadata schema                        | `@useupup/server`: `maxFileSize`, `allowedTypes`, `hooks.onBeforeUpload`; in client mode, your own endpoint |
+| Large files            | `multipart: true` on the route; parts upload in parallel                                         | `resumable`: S3 multipart needs server mode; tus needs a tus endpoint                                       |
+| Resume after a reload  | Not in its documentation                                                                         | Yes, with multipart or tus                                                                                  |
+| Retries                | `retry` and `retryDelay` options on the hooks                                                    | `maxRetries` (default 3) plus per-part retries                                                              |
+| Cloud-drive sources    | No                                                                                               | Google Drive, OneDrive, Dropbox, Box                                                                        |
+| Camera, screen capture | No                                                                                               | Yes                                                                                                         |
+| Image processing       | Your code in the client `onBeforeUpload` hook                                                    | Optional compression, HEIC to JPEG, EXIF stripping; editor in React and Preact                              |
+| License                | MIT                                                                                              | MIT                                                                                                         |
+
+## What Better Upload gives you
+
+Better Upload splits the job in two. On the server you define a router of named
+routes with `route()`, for example an `images` route with `fileTypes`,
+`maxFileSize` and `maxFiles`. The route handler checks the request, signs
+presigned URLs and returns them. In React, `useUploadFiles` (or
+`useUploadFile` for a single file) takes the files, uploads them to the bucket
+and exposes progress, results and errors. The server side has callbacks for auth
+(`onBeforeUpload`, rejecting with `RejectUpload`), object keys and metadata, and a
+`clientMetadataSchema` that validates metadata from the client. Setting
+`multipart: true` on a route enables S3 multipart uploads for files over 5 GB, or
+to speed up smaller ones, with no change on the client.
+
+The interface is a set of shadcn/ui components, Upload Button, Upload Dropzone,
+Paste Upload Area and Upload Progress, that you install with the shadcn CLI and
+then own and edit. There are built-in S3 clients for AWS S3, Cloudflare R2,
+Tigris, Backblaze B2, DigitalOcean Spaces, Wasabi, MinIO and Linode, plus a
+custom one, and server helpers for objects such as presigning downloads and
+listing, copying and deleting.
+
+It is the more widely used of the two, with around 58,000 weekly npm downloads
+for `@better-upload/client` in October 2026. Its documentation does not describe
+cloud-drive sources, camera or screen capture, an image editor, or resuming an
+interrupted upload after a reload.
+
+## What upup gives you
+
+upup ships the interface: a drop zone, file list with previews, progress and
+source tabs, built from one headless core and ported natively to
+React, Vue, Svelte, Angular, Preact and vanilla JavaScript. Users can pick files
+from the device, Google Drive, OneDrive, Dropbox, Box, a camera, a screen
+capture or a link. In client mode your own endpoint returns presigned URLs; in
+server mode `@useupup/server` signs them, enforces size and type limits, and
+handles cloud-drive OAuth and transfers. Large files can use S3 multipart
+through `@useupup/server`, or tus, and both resume after a reload. In React and
+Preact there is also an image editor.
+
+The trade-offs run the other way too. upup is the younger and smaller project.
+Its S3 multipart needs server mode and its upload-token secret, where Better
+Upload turns multipart on with one route option. And you theme upup's panel
+rather than editing its components, while Better Upload hands you the component
+source.
+
+## Migrate from Better Upload to upup
+
+Take a Next.js App Router setup with Better Upload. The route:
+
+```ts
+// app/api/upload/route.ts
+import { RejectUpload, route, type Router } from '@better-upload/server'
+import { toRouteHandler } from '@better-upload/server/adapters/next'
+import { aws } from '@better-upload/server/clients'
+
+const router: Router = {
+    client: aws(),
+    bucketName: 'my-bucket',
+    routes: {
+        images: route({
+            fileTypes: ['image/*'],
+            multipleFiles: true,
+            maxFiles: 4,
+            maxFileSize: 1024 * 1024 * 4,
+            onBeforeUpload: async ({ req }) => {
+                const user = await getSessionUser(req)
+                if (!user) throw new RejectUpload('Not logged in!')
+            },
+        }),
+    },
+}
+
+export const { POST } = toRouteHandler(router)
+```
+
+and the client component:
+
+```tsx
+'use client'
+
+import { useUploadFiles } from '@better-upload/client'
+import { UploadDropzone } from '@/components/ui/upload-dropzone'
+
+export function Uploader() {
+    const { control } = useUploadFiles({ route: 'images' })
+
+    return <UploadDropzone control={control} accept="image/*" />
+}
+```
+
+The upup version uses `@useupup/next`, which bundles the component and the
+server handlers. Install it first:
+
+```sh
+npm i @useupup/next
+```
+
+The server handler holds the file rules and the auth check:
+
+```ts
+// app/api/upup/[...path]/route.ts
+import { createUpupNextHandler, defineUpupConfig } from '@useupup/next/server'
+
+export const dynamic = 'force-dynamic'
+
+export const { GET, POST, PUT, DELETE } = createUpupNextHandler(
+    defineUpupConfig({
+        storage: {
+            type: 'aws',
+            bucket: process.env.S3_BUCKET!,
+            region: process.env.S3_REGION!,
+        },
+        // Required: at least 16 characters, the same on every instance.
+        uploadTokenSecret: process.env.UPUP_UPLOAD_TOKEN_SECRET,
+        maxFileSize: 4 * 1024 * 1024,
+        allowedTypes: ['image/*'],
+        getUserId: async req => {
+            const user = await getSessionUser(req) // your session lookup
+            return user?.id ?? null
+        },
+    }),
+)
+```
+
+and the client replaces the hook and the copied components:
+
+```tsx
+'use client'
+
+import { UpupUploader } from '@useupup/next'
+import '@useupup/next/styles'
+
+export default function Uploader() {
+    return (
+        <UpupUploader
+            mode="server"
+            serverUrl="/api/upup"
+            allowedFileTypes="image/*"
+            maxFiles={4}
+            maxFileSize={{ size: 4, unit: 'MB' }}
+            onUploadComplete={files => console.log(files.map(f => f.key))}
+        />
+    )
+}
+```
+
+Add `serverExternalPackages: ['@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner']`
+to your `next.config`, as the [Next.js quickstart](/docs/quickstarts/next/)
+describes.
+
+How the options map:
+
+| Better Upload                                 | upup                                                                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `fileTypes` on the route                      | `allowedTypes` on the handler (415 otherwise); `allowedFileTypes` on the component for the client-side check |
+| `maxFileSize` on the route (bytes)            | `maxFileSize` on the handler in bytes (413 otherwise); `maxFileSize` as `{ size, unit }` on the component    |
+| `maxFiles` on the route                       | `maxFiles` on the component (client side, default 10)                                                        |
+| `onBeforeUpload` with `RejectUpload`          | `getUserId` or `auth` on the handler; `hooks.onBeforeUpload` returns `false` to reject with 403              |
+| `generateObjectInfo` returning a `key`        | `keyStrategy` on the handler                                                                                 |
+| `multipart: true`, `partSize`                 | `resumable` with `protocol: 'multipart'` and `chunkSizeBytes`, in server mode (needs `serverUrl`)            |
+| `onUploadComplete`                            | `onUploadComplete` prop                                                                                      |
+| `retry`                                       | `maxRetries`                                                                                                 |
+| `uploadBatchSize`                             | `maxConcurrentUploads` (default 3)                                                                           |
+| `upload(files, { metadata })`                 | `metadata` prop                                                                                              |
+| `api`                                         | `serverUrl`                                                                                                  |
+| `UploadDropzone`, `UploadProgress` components | Built into `UpupUploader`                                                                                    |
+
+Two differences to plan for. The `<UpupUploader>` limits are client-side
+convenience only; the handler's `maxFileSize` and `allowedTypes` are what hold
+on the server, so set both. And in client mode, where your own endpoint returns
+presigned URLs and no `@useupup/server` is involved, multipart is not available;
+use server mode, or tus. See [Server auth](/docs/guides/server-auth/) for the
+`getUserId` and `auth` options and [Resumable uploads](/docs/resumable-uploads/)
+for multipart.
+
+## When to keep Better Upload
+
+Keep it if you build in React, want to own and restyle the upload components,
+and only need files to land in your bucket. Its route model keeps the server
+rules next to the route they belong to, and multipart is one option away. Move to
+upup when you need the same uploader in Vue, Svelte or Angular, when users pick
+files from Google Drive or Dropbox, when uploads must survive a dropped
+connection and a page reload, or when you would rather have a finished interface
+than assemble one.
+
+## FAQ
+
+### What is Better Upload?
+
+An MIT-licensed library for uploading files from React directly to an
+S3-compatible bucket. A server route signs presigned URLs, React hooks upload the
+files, and shadcn/ui components are copied into your project for the interface.
+
+### Which npm package is Better Upload?
+
+Install `@better-upload/client` and `@better-upload/server`. The older unscoped
+`better-upload` package is deprecated on npm in favor of those two.
+
+### Does Better Upload work outside React?
+
+Its server runs in Next.js, Remix, TanStack Start, Hono, Elysia, Express and
+Fastify. The client hooks and components are React only. upup has native components for React,
+Vue, Svelte, Angular, Preact and vanilla JavaScript.
+
+### Does Better Upload support multipart and resumable uploads?
+
+It supports S3 multipart uploads with one route option, and uploads the parts in
+parallel. Its documentation does not describe resuming an interrupted upload
+after a page reload. upup offers S3 multipart through `@useupup/server` and tus,
+and both resume after a reload.
+
+### How do I migrate from Better Upload to upup?
+
+Replace the route with a `createUpupNextHandler` or `createUpupHandler` handler,
+and the hook and components with one `UpupUploader`. Set the server limits with
+`maxFileSize` and `allowedTypes`, and move your `onBeforeUpload` auth check to
+`getUserId`.
+
+### When should I keep Better Upload?
+
+When you use React, want to own and restyle the upload components, and only need
+uploads to your bucket. Switching buys little in that case.
+
+## Related comparisons
+
+- [Best React file upload libraries](/docs/comparisons/best-react-file-upload-libraries/)
+- [UploadThing vs S3: a self-hosted alternative](/docs/comparisons/upup-vs-uploadthing/)
+- [JavaScript file upload libraries compared](/docs/comparisons/)
+- [upup vs react-dropzone](/docs/comparisons/upup-vs-react-dropzone/)
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)

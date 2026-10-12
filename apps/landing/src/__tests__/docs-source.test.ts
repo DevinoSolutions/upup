@@ -32,8 +32,9 @@ describe('docs source', () => {
         // (2026-09 S3 presigned-URL React tutorial) = 73, + 1
         // (2026-10 vanilla JS roundup) = 74, + 2 (2026-10 UploadThing pricing +
         // PrimeVue/PrimeReact alternatives) = 76, + 2 (2026-10 JS image upload
-        // roundup + DevExtreme FileUploader) = 78.
-        expect(pages.length).toBe(78)
+        // roundup + DevExtreme FileUploader) = 78, + 3 (2026-10 Svelte roundup, upup
+        // vs ng2-file-upload, upup vs Better Upload) = 81.
+        expect(pages.length).toBe(81)
         const indexPage = source.getPage([]) // index.mdx
         expect(indexPage).toBeDefined()
         expect(indexPage?.data.body).toBeDefined()
