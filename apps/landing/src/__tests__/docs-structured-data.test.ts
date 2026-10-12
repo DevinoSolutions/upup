@@ -56,6 +56,11 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'best-svelte-file-upload-libraries'],
+        file: 'comparisons/best-svelte-file-upload-libraries.mdx',
+        questions: 6,
+    },
+    {
         slug: ['comparisons', 'best-vanilla-js-file-upload-libraries'],
         file: 'comparisons/best-vanilla-js-file-upload-libraries.mdx',
         questions: 5,
@@ -69,6 +74,16 @@ const FAQ_PAGES = [
         slug: ['comparisons', 'upup-vs-devextreme-fileuploader'],
         file: 'comparisons/upup-vs-devextreme-fileuploader.mdx',
         questions: 5,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-ng2-file-upload'],
+        file: 'comparisons/upup-vs-ng2-file-upload.mdx',
+        questions: 6,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-better-upload'],
+        file: 'comparisons/upup-vs-better-upload.mdx',
+        questions: 6,
     },
     {
         slug: ['comparisons', 'uploadthing-pricing'],

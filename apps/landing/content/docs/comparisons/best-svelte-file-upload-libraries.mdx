@@ -1,0 +1,194 @@
+---
+title: Best Svelte File Upload Libraries Compared
+description: Svelte file upload libraries compared - upup, Uppy, FilePond, svelte-file-dropzone and UI-kit drop zones on S3, resumable uploads and Svelte 5 support.
+faq:
+    - q: What is the best file upload library for Svelte?
+      a: For a complete uploader against your own storage, upup or Uppy. For only a drop zone, svelte-file-dropzone or the one in your UI kit. For one polished component that posts to your server, FilePond through svelte-filepond.
+    - q: Which Svelte upload libraries upload directly to S3?
+      a: upup, with presigned URLs from your endpoint or @useupup/server, and Uppy, with its AWS S3 plugin. With the others you write the S3 signing and upload code yourself.
+    - q: Does upup's Svelte package include the image editor?
+      a: No. The image editor ships in @useupup/react and @useupup/preact only. Everything else, including cloud drives, camera, screen capture and resumable uploads, works the same in Svelte.
+    - q: Do these libraries work with Svelte 5?
+      a: upup requires Svelte 5. @uppy/svelte accepts Svelte 4 or 5, and its headless components and hooks are Svelte 5 only. svelte-file-dropzone accepts Svelte 3.54, 4 or 5. Skeleton and Flowbite Svelte need Svelte 5.40 or later. svelte-filepond declares no Svelte range and was last released in December 2023, so test it on Svelte 5 first.
+    - q: Is there a Svelte file manager component?
+      a: None of these is a file manager. They select and upload files, and do not browse, rename or delete files already in storage. upup can browse a user's Google Drive, OneDrive, Dropbox or Box to pick files for upload.
+    - q: Are these libraries free?
+      a: Yes. upup, Uppy, FilePond, svelte-file-dropzone, Skeleton, Flowbite Svelte and shadcn-svelte extras are MIT-licensed. FilePond's full image editor, Pintura, is a separate commercial product.
+---
+
+**The short answer:** for a Svelte 5 uploader that sends files straight to your
+own S3-compatible bucket, with cloud drives and resumable uploads, use upup or
+Uppy. If you only need the drop zone, svelte-file-dropzone or the one in your UI
+kit (Skeleton, Flowbite Svelte, shadcn-svelte) is the lightest start, and
+FilePond gives you one polished component that posts to your server.
+
+**Try it first:** the [live Svelte demo](/svelte/#demo) uploads a real
+file from your browser, and the
+[Svelte quickstart](/docs/quickstarts/svelte/) gets it running in your app.
+
+This roundup compares the Svelte file upload libraries and drop zones that
+usually come up, on the features that decide the choice, then explains how to
+pick.
+
+## Comparison table
+
+| Library                                                    | Drag and drop | Cloud drives                         | Resumable                      | Direct-to-S3         | Image editing                                            | License | Bundle approach                                              |
+| ---------------------------------------------------------- | ------------- | ------------------------------------ | ------------------------------ | -------------------- | -------------------------------------------------------- | ------- | ------------------------------------------------------------ |
+| upup                                                       | Yes           | Google Drive, OneDrive, Dropbox, Box | Yes (tus or S3 multipart)      | Yes (presigned URLs) | No (the editor is React/Preact only)                     | MIT     | Headless core + native Svelte 5 component                    |
+| Uppy (`@uppy/svelte`)                                      | Yes           | Many, via Companion                  | Yes (tus or S3 multipart)      | Yes (AWS S3 plugin)  | Yes (Image Editor plugin)                                | MIT     | Svelte components over modular plugins; install what you use |
+| FilePond (`svelte-filepond`)                               | Yes           | No                                   | Chunked uploads to your server | Not built in         | Crop/resize plugins; full editor is Pintura (commercial) | MIT     | Vanilla JS core + Svelte adapter + plugins                   |
+| svelte-file-dropzone                                       | Yes           | No                                   | No                             | You build it         | No                                                       | MIT     | One drop-zone component; no upload code                      |
+| Skeleton, Flowbite Svelte, shadcn-svelte extras drop zones | Yes           | No                                   | No                             | You build it         | No                                                       | MIT     | Part of a UI kit, or copied into your project                |
+
+## The libraries
+
+### upup
+
+upup's `@useupup/svelte` is a native Svelte 5 port of its uploader, not a
+wrapper around another framework, built on the same headless core as every
+other upup package. It uploads directly to S3-compatible storage with
+presigned URLs, either from your own signing endpoint or through
+`@useupup/server`, and lets users pick files from the device, Google Drive,
+OneDrive, Dropbox, Box, a camera, a screen capture or a link. It requires
+Svelte 5. The built-in image editor is available in the React and Preact
+packages only; in Svelte the editor is stubbed. See the
+[Svelte file uploader](/svelte/) page for a three-step setup.
+
+### Uppy
+
+Uppy is a modular uploader. `@uppy/svelte` provides Svelte components for its UI
+plugins: the pre-composed `<Dashboard />`, `<DashboardModal />` and
+`<StatusBar />`, plus headless components and hooks for building your own UI on
+Svelte 5. You install `@uppy/core` and each plugin you use. Plugins cover sources
+(webcam, screen capture, remote drives through Companion, a server you host) and
+destinations such as tus and S3. See [upup vs Uppy](/docs/comparisons/upup-vs-uppy/).
+
+### FilePond
+
+FilePond is a single animated upload component, and `svelte-filepond` is its
+Svelte adapter. It posts files to your own server endpoint, supports chunked
+uploads, and extends through plugins for previews, validation and image
+transforms. FilePond itself is still released regularly, but the adapter's last
+release, 0.2.2, was in December 2023. It was developed against Svelte 3 and
+declares no Svelte version range, so test it on Svelte 5 before you commit. See
+[upup vs FilePond](/docs/comparisons/upup-vs-filepond/).
+
+### svelte-file-dropzone
+
+svelte-file-dropzone describes itself as a Svelte implementation of
+react-dropzone. It turns an area into a drop target, filters files by `accept`,
+`maxSize` and `minSize`, and hands the accepted and rejected files to your
+`drop` handler. It does not upload anything, so progress, retries and storage
+are yours to write. It is MIT-licensed, its peer range covers Svelte 3.54, 4 and
+5, and its last release, 2.0.9, was in October 2024. For the same idea in React,
+see [upup vs react-dropzone](/docs/comparisons/upup-vs-react-dropzone/).
+
+### Drop zones in UI kits
+
+Three Svelte UI toolkits ship a drop zone you can start from. Skeleton's
+`FileUpload` (in `@skeletonlabs/skeleton-svelte`) provides a dropzone, a trigger
+button and a file list. Flowbite Svelte has `Dropzone` and `Fileupload`
+components. shadcn-svelte extras, a community set of shadcn-svelte components,
+has a `File Drop Zone` that calls your `onUpload` function with the files and
+checks `maxFiles`, `maxFileSize` and `accept`. All of them select
+files and stop there: the upload request, progress and storage are your code.
+Skeleton and Flowbite Svelte need Svelte 5.40 or later.
+
+### Older packages with similar names
+
+`svelte-dropzone` has had no release since December 2019, and its GitHub
+repository is archived. It is not compared above.
+
+### A note on "Svelte file manager"
+
+A file manager browses, renames, moves and deletes files that are already in
+storage. None of the libraries above is one. upup's cloud-drive sources let a
+user browse their own Google Drive, OneDrive, Dropbox or Box inside the
+uploader to pick files, but they do not manage the contents of your bucket.
+
+## How to choose
+
+- **You want a finished uploader on your own bucket:** upup or Uppy.
+- **Your users pick files from Google Drive, OneDrive, Dropbox or Box:** upup
+  or Uppy. Uppy routes remote files through Companion; upup does it in the
+  browser (client mode) or in `@useupup/server` (server mode).
+- **You are on Svelte 4:** upup needs Svelte 5. `@uppy/svelte` and
+  svelte-file-dropzone accept Svelte 4.
+- **You only need a drop target:** svelte-file-dropzone, or the drop zone from
+  Skeleton, Flowbite Svelte or shadcn-svelte, then write the upload code.
+- **You already use FilePond elsewhere:** `svelte-filepond`, after checking it on
+  your Svelte version.
+- **You need image editing in Svelte:** Uppy's Image Editor plugin, or
+  FilePond's plugins. upup's editor is not available in Svelte.
+- **You upload very large files:** use resumable uploads, with upup or Uppy.
+
+## Minimal upup example
+
+Install the package:
+
+```sh
+npm i @useupup/svelte
+```
+
+Render the uploader and point it at an endpoint that returns a presigned URL:
+
+```svelte
+<script lang="ts">
+    import { UpupUploader } from '@useupup/svelte'
+    import '@useupup/svelte/styles'
+</script>
+
+<UpupUploader provider="aws" uploadEndpoint="/api/upload-token" />
+```
+
+upup requires Svelte 5. The [Svelte quickstart](/docs/quickstarts/svelte/)
+covers the endpoint, and [Code Examples](/docs/code-examples/) has a
+ready-to-copy presign handler.
+
+## FAQ
+
+### What is the best file upload library for Svelte?
+
+For a complete uploader against your own storage, upup or Uppy. For only a drop
+zone, svelte-file-dropzone or the one in your UI kit. For one polished component
+that posts to your server, FilePond through `svelte-filepond`.
+
+### Which Svelte upload libraries upload directly to S3?
+
+upup, with presigned URLs from your endpoint or `@useupup/server`, and Uppy,
+with its AWS S3 plugin. With the others you write the S3 signing and upload
+code yourself.
+
+### Does upup's Svelte package include the image editor?
+
+No. The image editor ships in `@useupup/react` and `@useupup/preact` only.
+Everything else, including cloud drives, camera, screen capture and resumable
+uploads, works the same in Svelte.
+
+### Do these libraries work with Svelte 5?
+
+upup requires Svelte 5. `@uppy/svelte` accepts Svelte 4 or 5, and its headless
+components and hooks are Svelte 5 only. svelte-file-dropzone accepts Svelte
+3.54, 4 or 5. Skeleton and Flowbite Svelte need Svelte 5.40 or later.
+`svelte-filepond` declares no Svelte range and was last released in December
+2023, so test it on Svelte 5 first.
+
+### Is there a Svelte file manager component?
+
+None of these is a file manager. They select and upload files, and do not
+browse, rename or delete files already in storage. upup can browse a user's
+Google Drive, OneDrive, Dropbox or Box to pick files for upload.
+
+### Are these libraries free?
+
+Yes. upup, Uppy, FilePond, svelte-file-dropzone, Skeleton, Flowbite Svelte and
+shadcn-svelte extras are MIT-licensed. FilePond's full image editor, Pintura, is
+a separate commercial product.
+
+## Related comparisons
+
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
+- [Best Vue file upload libraries](/docs/comparisons/best-vue-file-upload-libraries/)
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/)
+- [Best vanilla JavaScript file upload libraries](/docs/comparisons/best-vanilla-js-file-upload-libraries/)
