@@ -1,0 +1,275 @@
+---
+title: upup vs ng2-file-upload
+description: Compare ng2-file-upload with upup's Angular uploader on the upload queue, chunked uploads, S3, cloud drives and Angular versions, with a migration snippet.
+faq:
+    - q: Is ng2-file-upload still maintained?
+      a: Yes. Version 12.0.0 was published on 7 October 2026, and its GitHub repository is not archived. It is MIT-licensed. Each major version targets one Angular major.
+    - q: Which Angular versions does ng2-file-upload support?
+      a: One Angular major per package major. Version 8 declares Angular 19, 9 declares Angular 20, 10 declares Angular 21, and 11 and 12 declare Angular 22. upup's @useupup/angular covers Angular 19 to 22 in one release line.
+    - q: Can ng2-file-upload upload directly to S3?
+      a: Only if you do the S3 work. With disableMultipart it sends the raw file as the request body, which an S3 presigned PUT expects, but it does not sign URLs. Your code fetches the presigned URL and sets it on the item. upup signs presigned URLs through your endpoint or @useupup/server.
+    - q: Does ng2-file-upload support chunked or resumable uploads?
+      a: Version 12.0.0 added ChunkedFileUploader, which sends a file in chunks and can resume a failed or cancelled item from the chunk that did not complete. Your server must reassemble the chunks, and nothing survives a page reload. upup offers S3 multipart and tus, and both can resume after a reload when the user selects the same file again, or crashRecovery restores it and they click Resume.
+    - q: How do I replace ng2-file-upload with upup?
+      a: Install @useupup/angular, import the standalone UpupUploaderComponent, and pass one config object. Map autoUpload to autoUpload, queueLimit to maxFiles, maxFileSize to a size and unit object, and the MIME and file type options to allowedFileTypes. Point uploadEndpoint at an endpoint that returns a presigned URL instead of one that receives the file.
+    - q: Is ng-file-upload the same as ng2-file-upload?
+      a: No. ng-file-upload, whose module is named ngFileUpload, is a directive for AngularJS 1.x, and its last release was in November 2016. ng2-file-upload is for current Angular.
+---
+
+**The short answer:** `ng2-file-upload` is a good choice when you want a small
+upload queue and your own markup, and your server already accepts its requests.
+It is MIT-licensed and actively released, with chunked uploads added in
+version 12. It has no UI, no S3 signing, no cloud-drive sources and no resume
+after a page reload. upup's `@useupup/angular` is a standalone component with
+the interface built in. It uploads straight to an S3-compatible bucket with
+presigned URLs and adds cloud-drive sources and resumable uploads.
+
+**Try it first:** the [live Angular demo](/angular/#demo) uploads a real
+file from your browser, and the
+[Angular quickstart](/docs/quickstarts/angular/) gets it running in your app.
+
+People searching for "ng2 file upload", "ng2-file-upload", "ng file upload" or
+"ngfileupload" are usually after the same job: an Angular file input and drop
+zone that uploads to a server. This page compares the two on the queue, chunking,
+storage, Angular versions and effort to switch, then shows a migration. For other
+Angular options, see the
+[Angular file upload libraries roundup](/docs/comparisons/best-angular-file-upload-libraries/).
+
+## Comparison table
+
+| Feature                | ng2-file-upload                                                                   | upup (`@useupup/angular`)                                                               |
+| ---------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| What it is             | Two directives and a `FileUploader` queue class                                   | Standalone uploader component on a headless core                                        |
+| Built-in UI            | None; you write the file list, progress bars and buttons                          | Drop zone, file list, previews, progress and source tabs                                |
+| Angular versions       | One Angular major per package major (8 to 12 cover Angular 19 to 22)              | Angular 19 to 22 in one release line                                                    |
+| Where files go         | Your URL, sent with `XMLHttpRequest` (multipart form, or the raw file)            | Your S3-compatible bucket, via presigned URLs                                           |
+| S3 presigned URLs      | Not built in; you fetch and set each URL                                          | Built in, from your endpoint or `@useupup/server`                                       |
+| Chunked uploads        | `ChunkedFileUploader` (12.0.0 and later); your server reassembles the chunks      | Optional `resumable`: S3 multipart (server mode) or tus                                 |
+| Resume                 | `resumeItem` and `resumeAll` after a failure; nothing survives a page reload      | Yes, with multipart or tus, once the file is re-selected or restored by `crashRecovery` |
+| Validation             | `maxFileSize`, `allowedMimeType`, `allowedFileType`, `queueLimit`, custom filters | `allowedFileTypes`, `maxFileSize`, `minFileSize`, `maxFiles`                            |
+| Cloud-drive sources    | No                                                                                | Google Drive, OneDrive, Dropbox, Box                                                    |
+| Camera, screen capture | No                                                                                | Yes                                                                                     |
+| Image editing          | No                                                                                | No in Angular (the editor is React/Preact only)                                         |
+| License                | MIT                                                                               | MIT                                                                                     |
+
+## What ng2-file-upload gives you
+
+`ng2-file-upload`, from Valor Software, pairs an upload queue with two
+directives. The `FileUploader` class holds the queue, per-file progress and
+filters such as a maximum size or allowed MIME types, and sends each file with
+`XMLHttpRequest` to the `url` you set, one file at a time. The `ng2FileSelect`
+and `ng2FileDrop` directives connect it to a file input and a drop area. Both
+directives are standalone, and `FileUploadModule` is still exported for
+NgModule apps. The file list, progress bars and buttons are your own markup.
+
+It is flexible about the request: you can add headers, an auth token and extra
+form fields, change the URL and method per item in `onBeforeUploadItem`, and
+set `disableMultipart` to send the raw file as the body instead of a multipart
+form, which is what an S3 presigned PUT expects. It does not sign URLs. Its
+README also notes that requests are sent with `withCredentials` on, which you
+turn off per item for storage services, and that apps without zone.js (zoneless
+change detection) need `provideZoneChangeDetection()` or `markForCheck()`
+calls for upload callbacks to update the view.
+
+Version 12.0.0, published in October 2026, added `ChunkedFileUploader`. With a
+`chunkSize`, it sends each file in several requests (as a multipart form with
+`chunkIndex` and `totalChunks` fields, or as raw chunks with a `Content-Range`
+header), and `resumeItem` or `resumeAll` continue a failed or cancelled item from
+the chunk that did not complete. Your server has to reassemble the chunks. The
+README also shows how to drive S3 multipart uploads with presigned part URLs,
+but you write the calls that start the upload, sign each part and complete it.
+State is kept in memory, so a page reload starts over.
+
+It is widely used, at around 114,000 weekly npm downloads in October 2026.
+
+## What upup gives you in Angular
+
+`@useupup/angular` exports a standalone `UpupUploaderComponent` (selector
+`upup-uploader`) that takes a single `config` input and emits `filesAdded`,
+`fileRemoved`, `uploadProgress`, `uploadAllComplete` and `error`. In client
+mode your server only issues short-lived presigned URLs, and the browser uploads
+straight to the bucket. Users can pick files from the device, Google Drive,
+OneDrive, Dropbox, Box, a camera, a screen capture or a link. Large files can
+use S3 multipart (through `@useupup/server`) or tus, and both can resume after
+a reload: the user selects the same file again, or `crashRecovery` restores it and they click Resume. A file that
+compression or HEIC conversion rewrote does not match the old session and
+starts over. The image editor is the one feature Angular does not get; it ships in
+the React and Preact packages only.
+
+upup is also the younger and smaller project. If all you need is an upload
+queue behind markup you already wrote, its built-in interface is more than you
+need.
+
+## Angular versions
+
+`ng2-file-upload` publishes one package major per Angular major, and each
+declares that Angular as its peer dependency: version 8 for Angular 19, 9 for
+Angular 20, 10 for Angular 21, and versions 11 and 12 for Angular 22. When you
+upgrade Angular you upgrade this package with it. `@useupup/angular` declares
+`^19.0.0 || ^20.0.0 || ^21.0.0 || ^22.0.0` for `@angular/core` and
+`@angular/common`, so one version covers all four.
+
+## Not to be confused with ng-file-upload
+
+`ng-file-upload`, whose module is named `ngFileUpload`, is a directive for
+AngularJS 1.x, not for current Angular. Its last release, 12.2.13, was in
+November 2016, and AngularJS support has officially ended. If a tutorial
+imports `ngFileUpload` or uses `ngf-select` attributes, it is for that
+package, and `ng2-file-upload` is the Angular one.
+
+## Migrate from ng2-file-upload to upup
+
+Take a typical `ng2-file-upload` setup:
+
+```ts
+import { Component } from '@angular/core'
+import {
+    FileDropDirective,
+    FileSelectDirective,
+    FileUploader,
+} from 'ng2-file-upload'
+
+@Component({
+    selector: 'app-upload',
+    standalone: true,
+    imports: [FileSelectDirective, FileDropDirective],
+    template: `
+        <div ng2FileDrop [uploader]="uploader" (fileOver)="over = $event">
+            Drop files here
+        </div>
+        <input type="file" ng2FileSelect [uploader]="uploader" multiple />
+        <button (click)="uploader.uploadAll()">Upload all</button>
+    `,
+})
+export class UploadComponent {
+    over = false
+    uploader = new FileUploader({
+        url: '/api/upload',
+        queueLimit: 10,
+        maxFileSize: 32 * 1024 * 1024,
+        allowedMimeType: ['image/png', 'image/jpeg'],
+    })
+}
+```
+
+The upup version replaces the directives, the queue and your own markup with one
+component. Install the package first:
+
+```sh
+npm i @useupup/angular
+```
+
+```ts
+import { Component } from '@angular/core'
+import { UpupUploaderComponent } from '@useupup/angular'
+import type { UploadFile, UploaderProps } from '@useupup/angular'
+
+@Component({
+    selector: 'app-upload',
+    standalone: true,
+    imports: [UpupUploaderComponent],
+    template: `<upup-uploader
+        [config]="config"
+        (uploadAllComplete)="onAllUploaded($event)"
+    />`,
+})
+export class UploadComponent {
+    config: UploaderProps = {
+        provider: 'aws',
+        uploadEndpoint: '/api/upload-token',
+        allowedFileTypes: ['image/png', 'image/jpeg'],
+        maxFiles: 10,
+        maxFileSize: { size: 32, unit: 'MB' },
+    }
+
+    onAllUploaded(files: UploadFile[]) {
+        console.log('uploaded', files.length)
+    }
+}
+```
+
+Load the stylesheet once globally, as described in the
+[Angular quickstart](/docs/quickstarts/angular/).
+
+How the options map:
+
+| ng2-file-upload                               | upup                                                                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `url`                                         | `uploadEndpoint` (see the note below)                                                                                                                                                                                          |
+| `autoUpload`                                  | `autoUpload`                                                                                                                                                                                                                   |
+| `queueLimit`                                  | `maxFiles` (default 10)                                                                                                                                                                                                        |
+| `maxFileSize` (bytes)                         | `maxFileSize` as `{ size, unit }`                                                                                                                                                                                              |
+| `allowedMimeType`, `allowedFileType`          | `allowedFileTypes`: MIME patterns, extensions or preset names such as `images`                                                                                                                                                 |
+| `filters`                                     | `onBeforeFileAdded`: return `false` to reject a file                                                                                                                                                                           |
+| `disableMultipart`                            | Not needed; the browser PUTs the raw file to the presigned URL                                                                                                                                                                 |
+| `headers`, `authToken`, `additionalParameter` | Your endpoint authenticates the request, for example with the session cookie on a same-origin route; the `metadata` option sends extra fields with it                                                                          |
+| `ChunkedFileUploader`, `chunkSize`            | `resumable` with `protocol: 'tus'` and a tus `endpoint`, used instead of `uploadEndpoint` (setting both throws `UpupConfigError`), or `protocol: 'multipart'` (needs `serverUrl` from `@useupup/server`, not `uploadEndpoint`) |
+| `onAfterAddingFile`                           | `(filesAdded)` output                                                                                                                                                                                                          |
+| `onProgressItem`, `onProgressAll`             | `(uploadProgress)` output: per-file `{ fileId, loaded, total }`; sum the values for a total                                                                                                                                    |
+| `onCompleteAll`, `onErrorItem`                | `(uploadAllComplete)`, `(error)` outputs                                                                                                                                                                                       |
+
+The one change that is not a rename: `url` receives the file, while
+`uploadEndpoint` does not. Your endpoint returns a presigned URL for the bucket
+and the browser uploads the file there, so any `withCredentials` handling for
+storage goes away. The [Angular quickstart](/docs/quickstarts/angular/) and
+[Code Examples](/docs/code-examples/) include a presign handler to copy. For
+multipart uploads, see [Resumable uploads](/docs/resumable-uploads/).
+
+## When to keep ng2-file-upload
+
+Keep it if you want the upload queue and nothing else, your server already
+handles its requests, and you are happy writing the file list and progress
+markup. Moving buys little there. Move to upup when files should land in your own
+bucket without passing through an application server, when users pick files from
+Google Drive or Dropbox, when large uploads must resume after a page reload, or when
+you would rather not build and maintain the upload interface yourself.
+
+## FAQ
+
+### Is ng2-file-upload still maintained?
+
+Yes. Version 12.0.0 was published on 7 October 2026, and its GitHub repository
+is not archived. It is MIT-licensed. Each major version targets one Angular
+major.
+
+### Which Angular versions does ng2-file-upload support?
+
+One Angular major per package major. Version 8 declares Angular 19, 9 declares
+Angular 20, 10 declares Angular 21, and 11 and 12 declare Angular 22. upup's
+`@useupup/angular` covers Angular 19 to 22 in one release line.
+
+### Can ng2-file-upload upload directly to S3?
+
+Only if you do the S3 work. With `disableMultipart` it sends the raw file as the
+request body, which an S3 presigned PUT expects, but it does not sign URLs. Your
+code fetches the presigned URL and sets it on the item. upup signs presigned
+URLs through your endpoint or `@useupup/server`.
+
+### Does ng2-file-upload support chunked or resumable uploads?
+
+Version 12.0.0 added `ChunkedFileUploader`, which sends a file in chunks and can
+resume a failed or cancelled item from the chunk that did not complete. Your
+server must reassemble the chunks, and nothing survives a page reload. upup
+offers S3 multipart and tus, and both can resume after a reload when the user selects the same file again, or `crashRecovery` restores it and they click Resume.
+
+### How do I replace ng2-file-upload with upup?
+
+Install `@useupup/angular`, import the standalone `UpupUploaderComponent`, and
+pass one `config` object. Map `autoUpload` to `autoUpload`, `queueLimit` to
+`maxFiles`, `maxFileSize` to a size and unit object, and the MIME and file type
+options to `allowedFileTypes`. Point `uploadEndpoint` at an endpoint that
+returns a presigned URL instead of one that receives the file.
+
+### Is ng-file-upload the same as ng2-file-upload?
+
+No. `ng-file-upload`, whose module is named `ngFileUpload`, is a directive for
+AngularJS 1.x, and its last release was in November 2016. `ng2-file-upload` is
+for current Angular.
+
+## Related comparisons
+
+- [Best Angular file upload libraries](/docs/comparisons/best-angular-file-upload-libraries/)
+- [upup vs DevExtreme FileUploader](/docs/comparisons/upup-vs-devextreme-fileuploader/)
+- [JavaScript file upload libraries compared](/docs/comparisons/)
+- [upup vs Uppy](/docs/comparisons/upup-vs-uppy/)
+- [upup vs FilePond](/docs/comparisons/upup-vs-filepond/)
