@@ -9,11 +9,11 @@ faq:
     - q: Does Better Upload work outside React?
       a: Its server runs in Next.js, Remix, TanStack Start, Hono, Elysia, Express and Fastify. The client hooks and components are React only. upup has native components for React, Vue, Svelte, Angular, Preact and vanilla JavaScript.
     - q: Does Better Upload support multipart and resumable uploads?
-      a: It supports S3 multipart uploads with one route option, and uploads the parts in parallel. Its documentation does not describe resuming an interrupted upload after a page reload. upup offers S3 multipart through @useupup/server and tus, and both resume after a reload.
+      a: It supports S3 multipart uploads with one route option, and uploads the parts in parallel. Its documentation does not describe resuming an interrupted upload after a page reload. upup offers S3 multipart through @useupup/server and tus, and both can resume after a reload when the user selects the same file again, or crashRecovery restores it and they click Resume.
     - q: How do I migrate from Better Upload to upup?
       a: Replace the route with a createUpupNextHandler or createUpupHandler handler, and the hook and components with one UpupUploader. Set the server limits with maxFileSize and allowedTypes, and move your onBeforeUpload auth check to getUserId.
     - q: When should I keep Better Upload?
-      a: When you use React, want to own and restyle the upload components, and only need uploads to your bucket. Switching buys little in that case.
+      a: When you use React, want to own and restyle the upload components, and only need uploads to your bucket. Switching buys little in that case. Also keep it if you are on React 18 or earlier or Next.js 14 or earlier, which upup does not support.
 ---
 
 **The short answer:** Better Upload is a small, well-focused library for React
@@ -22,7 +22,7 @@ the URLs, hooks do the upload, and you copy shadcn/ui components into your
 project. Keep it if that is all you need. upup is a ready-made uploader with the
 interface built in, native components for React, Vue, Svelte, Angular, Preact and
 vanilla JavaScript, cloud-drive sources, camera and screen capture, and resumable
-uploads that survive a page reload.
+uploads that can continue after a page reload once the file is selected again.
 
 **Try it first:** the [live React demo](/react/#demo) uploads a real
 file from your browser, and the
@@ -33,7 +33,7 @@ compares it with upup on the interface, frameworks, large files and
 server model, then shows a migration. For other React options, see the
 [React file upload libraries roundup](/docs/comparisons/best-react-file-upload-libraries/).
 
-## Which package is Better Upload
+## Which package is Better Upload?
 
 The current packages are `@better-upload/client` and `@better-upload/server`, at
 version 3.0.19 (May 2026). The unscoped `better-upload` package on npm, whose
@@ -52,7 +52,7 @@ dependency; the server uses `aws4fetch` rather than the AWS SDK.
 | Server                 | Required: a router with named routes                                                             | Client mode: your own presign endpoint. Server mode: `@useupup/server`                                      |
 | Server-side file rules | Per route: `fileTypes`, `maxFileSize`, `maxFiles`, client metadata schema                        | `@useupup/server`: `maxFileSize`, `allowedTypes`, `hooks.onBeforeUpload`; in client mode, your own endpoint |
 | Large files            | `multipart: true` on the route; parts upload in parallel                                         | `resumable`: S3 multipart needs server mode; tus needs a tus endpoint                                       |
-| Resume after a reload  | Not in its documentation                                                                         | Yes, with multipart or tus                                                                                  |
+| Resume after a reload  | Not in its documentation                                                                         | Yes, with multipart or tus, once the file is re-selected or restored by `crashRecovery`                     |
 | Retries                | `retry` and `retryDelay` options on the hooks                                                    | `maxRetries` (default 3) plus per-part retries                                                              |
 | Cloud-drive sources    | No                                                                                               | Google Drive, OneDrive, Dropbox, Box                                                                        |
 | Camera, screen capture | No                                                                                               | Yes                                                                                                         |
@@ -93,7 +93,9 @@ from the device, Google Drive, OneDrive, Dropbox, Box, a camera, a screen
 capture or a link. In client mode your own endpoint returns presigned URLs; in
 server mode `@useupup/server` signs them, enforces size and type limits, and
 handles cloud-drive OAuth and transfers. Large files can use S3 multipart
-through `@useupup/server`, or tus, and both resume after a reload. In React and
+through `@useupup/server`, or tus, and both can resume after a reload when
+the user selects the same file again, or `crashRecovery` restores it and they click Resume. A file that compression or HEIC
+conversion rewrote does not match the old session and starts over. In React and
 Preact there is also an image editor.
 
 The trade-offs run the other way too. upup is the younger and smaller project.
@@ -154,7 +156,7 @@ server handlers. Install it first:
 npm i @useupup/next
 ```
 
-The server handler holds the file rules and the auth check:
+Check your versions first: `@useupup/react` needs React ^19.0.0, and `@useupup/next` needs Next.js >=15.0.0 and React ^19.0.0, while Better Upload's client declares only a `react` peer with no version range. The server handler holds the file rules and the auth check:
 
 ```ts
 // app/api/upup/[...path]/route.ts
@@ -239,8 +241,10 @@ and only need files to land in your bucket. Its route model keeps the server
 rules next to the route they belong to, and multipart is one option away. Move to
 upup when you need the same uploader in Vue, Svelte or Angular, when users pick
 files from Google Drive or Dropbox, when uploads must survive a dropped
-connection and a page reload, or when you would rather have a finished interface
-than assemble one.
+connection and resume after a page reload, or when you would rather have a
+finished interface than assemble one. Keep Better Upload, too, if you are on
+React 18 or earlier or Next.js 14 or earlier: `@useupup/react` needs React
+^19.0.0, and `@useupup/next` needs Next.js >=15.0.0 and React ^19.0.0.
 
 ## FAQ
 
@@ -258,15 +262,15 @@ Install `@better-upload/client` and `@better-upload/server`. The older unscoped
 ### Does Better Upload work outside React?
 
 Its server runs in Next.js, Remix, TanStack Start, Hono, Elysia, Express and
-Fastify. The client hooks and components are React only. upup has native components for React,
-Vue, Svelte, Angular, Preact and vanilla JavaScript.
+Fastify. The client hooks and components are React only. upup has native
+components for React, Vue, Svelte, Angular, Preact and vanilla JavaScript.
 
 ### Does Better Upload support multipart and resumable uploads?
 
 It supports S3 multipart uploads with one route option, and uploads the parts in
 parallel. Its documentation does not describe resuming an interrupted upload
 after a page reload. upup offers S3 multipart through `@useupup/server` and tus,
-and both resume after a reload.
+and both can resume after a reload when the user selects the same file again, or `crashRecovery` restores it and they click Resume.
 
 ### How do I migrate from Better Upload to upup?
 
@@ -278,7 +282,8 @@ and the hook and components with one `UpupUploader`. Set the server limits with
 ### When should I keep Better Upload?
 
 When you use React, want to own and restyle the upload components, and only need
-uploads to your bucket. Switching buys little in that case.
+uploads to your bucket. Switching buys little in that case. Also keep it if you
+are on React 18 or earlier or Next.js 14 or earlier, which upup does not support.
 
 ## Related comparisons
 
