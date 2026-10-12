@@ -1,11 +1,17 @@
 import { test as base, expect, type Page, type Request } from '@playwright/test'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import {
-    TELEMETRY_PATH,
-    rewriteTelemetryPath,
-} from '../../landing/src/lib/analytics/telemetry-proxy'
+import { createRequire } from 'node:module'
 import { ARTIFACTS_FILE, RUN_CONTEXT_FILE } from './run-context'
+
+// The landing app has no `"type"` field, so Node loads its .ts files as
+// CommonJS while this package is ESM. On Node 20 (CI) an ESM named import of
+// that file dies at load with "Named export not found" (Node 24 copes).
+// Requiring it keeps ONE source of truth for the first-party telemetry path;
+// the type-only import keeps the bindings typed.
+const { TELEMETRY_PATH, rewriteTelemetryPath } = createRequire(import.meta.url)(
+    '../../landing/src/lib/analytics/telemetry-proxy',
+) as typeof import('../../landing/src/lib/analytics/telemetry-proxy')
 
 // Shared landing-e2e fixtures: the run's correlation id, the localStorage
 // context injector, the synthetic-identity convention, and a tiny cross-spec
