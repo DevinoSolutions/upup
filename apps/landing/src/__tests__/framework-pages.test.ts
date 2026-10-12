@@ -266,6 +266,21 @@ describe('framework guide section', () => {
         },
     )
 
+    it.each([
+        ['react', '/docs/comparisons/upup-vs-better-upload'],
+        ['angular', '/docs/comparisons/upup-vs-ng2-file-upload'],
+        ['angular', '/docs/comparisons/upup-vs-devextreme-fileuploader'],
+    ] as [FrameworkId, string][])(
+        'links /%s/ to the head-to-head page %s',
+        (id, href) => {
+            const markup = renderToStaticMarkup(
+                createElement(FrameworkGuide, { framework: id }),
+            )
+            expect(docsHrefs(markup)).toContain(href)
+            expect(docsPageUrls().has(href)).toBe(true)
+        },
+    )
+
     it.each(Object.keys(ROUNDUPS) as FrameworkId[])(
         'links the %s docs roundup back to its framework page',
         id => {
