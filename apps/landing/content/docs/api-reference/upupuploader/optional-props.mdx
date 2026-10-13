@@ -170,7 +170,7 @@ Re-encodes images before upload. Defaults are quality `0.82` and a longest-edge 
 <UpupUploader imageCompression />
 ```
 
-The prop is typed as a boolean. To tune `quality`, `maxWidthOrHeight`, or `maxSizeMB`, pass the object form to the engine directly through the headless API — see [Headless Usage](/docs/guides/headless/).
+The prop is typed as a boolean. To tune `quality`, `maxWidthOrHeight`, or `maxSizeMB`, pass the object form to the engine directly through the headless API — see [Headless file uploader](/docs/guides/headless/).
 
 ```ts
 const core = new UpupCore({
@@ -322,7 +322,7 @@ Persists upload state to IndexedDB so an interrupted session can resume after a 
 
 Pair it with `resumable` — recovering the file list is only useful if the transfer itself can pick up where it stopped.
 
-The prop is a boolean. Supplying your own persistence layer instead of IndexedDB is a headless-only option: the engine's `crashRecovery` also accepts an object carrying a custom storage implementation, reachable through `new UpupCore(...)` or `useUpupUpload` — see [Headless Usage](/docs/guides/headless/).
+The prop is a boolean. Supplying your own persistence layer instead of IndexedDB is a headless-only option: the engine's `crashRecovery` also accepts an object carrying a custom storage implementation, reachable through `new UpupCore(...)` or `useUpupUpload` — see [Headless file uploader](/docs/guides/headless/).
 
 ### `networkAware`
 
@@ -516,7 +516,7 @@ The full key list and RTL notes are in [Localization](/docs/localization/).
 
 ## Headless-only options (UpupCore / useUpupUpload)
 
-These four options are accepted by `UpupCore` but are **not** props on `<UpupUploader>` — the component's props-to-engine bridge does not forward them, so passing them to the component has no effect. Reach them by constructing the engine yourself with `new UpupCore(...)` or `useUpupUpload` — see [Headless Usage](/docs/guides/headless/).
+These four options are accepted by `UpupCore` but are **not** props on `<UpupUploader>` — the component's props-to-engine bridge does not forward them, so passing them to the component has no effect. Reach them by constructing the engine yourself with `new UpupCore(...)` or `useUpupUpload` — see [Headless file uploader](/docs/guides/headless/).
 
 ### `plugins`
 
@@ -554,4 +554,4 @@ A custom success predicate for the storage response. Use it when a `2xx` is not 
 - [Required Props](/docs/api-reference/upupuploader/required-props/) — `uploadEndpoint`, `serverUrl`, `resumable.endpoint`, and `provider`.
 - [Events & Callbacks](/docs/api-reference/events/) — all 34 `on*` props.
 - [Ref API](/docs/api-reference/upupuploader/ref-api/) — imperative control from the host.
-- [Headless Usage](/docs/guides/headless/) — the engine behind the component.
+- [Headless file uploader](/docs/guides/headless/) — the engine behind the component.
