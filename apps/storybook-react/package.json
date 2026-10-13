@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "storybook": "storybook dev -p 53050 --no-open",
+        "storybook": "storybook dev -p 53050 --exact-port --no-open",
         "build-storybook": "storybook build -o storybook-static && node scripts/compose-vue.mjs",
         "test": "vitest run --passWithNoTests",
         "typecheck": "tsc --noEmit"
