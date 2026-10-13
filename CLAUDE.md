@@ -295,6 +295,11 @@ pnpm run e2e:minio:down  # NOTE: uses -v — wipes the bucket volume
   900 s (raised from 420 s after a cold 2-core CI runner blew the budget and
   a loaded dev box blew 660 s, 2026-07-13). First boot is legitimately slow —
   don't kill it.
+- Harness ports 53050-53060 (six storybooks + presign harness) are reserved from the Linux
+  ephemeral pool by a sysctl step in nightly.yml and e2e.yml: an outbound socket took 53050 on
+  2026-10-13, storybook moved to 53051, and the webServer timed out at 900 s. The storybook dev
+  scripts pass --exact-port so a collision fails fast (the angular builder has no exactPort and
+  relies on the reservation alone). Any new harness port in 32768-60999 must join the range.
 - Cloud-drive OAuth (Google/OneDrive/Dropbox/Box) is interactive: a human
   performs the login during live checks. Never automate or type credentials.
 - Secrets live in `local-dev/.env.minio` and `.env.local` files — never commit
