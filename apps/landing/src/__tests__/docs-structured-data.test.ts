@@ -98,7 +98,7 @@ const FAQ_PAGES = [
     {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
-        questions: 7,
+        questions: 8,
     },
     {
         slug: ['guides', 'storage', 'digitalocean-spaces'],

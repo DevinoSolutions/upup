@@ -184,7 +184,7 @@ describe('agent-setup discovery surfaces', () => {
                 ),
             ),
             'utf8',
-        )
+        ).replace(/\r\n/g, '\n')
         expect(raw).toContain(agentContextBlock())
     })
 

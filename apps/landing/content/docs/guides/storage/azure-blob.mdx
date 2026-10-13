@@ -8,6 +8,8 @@ faq:
       a: "x-ms-blob-type: BlockBlob is required. Content-Type is optional but sets the blob's content type, so send the file's real type. The SAS itself travels in the URL's query string, so no Authorization header is needed."
     - q: Does the container need to be public?
       a: No. Keep it private. The SAS grants write access per request. For downloads, issue read SAS URLs the same way, or put a CDN in front of the account.
+    - q: Does Azure Blob Storage have an S3-compatible API?
+      a: "No. Azure Blob Storage has its own REST API (Put Blob, Put Block) rather than the S3 API. upup's server mode speaks only S3, so createUpupHandler rejects storage.type: 'azure'. Use client mode instead: your endpoint returns a SAS URL and the browser uploads to it with a single PUT."
     - q: Does upup server mode support Azure Blob Storage?
       a: "No. createUpupHandler throws at construction for storage.type: 'azure', because server mode speaks only the S3 API. Use client mode with a SAS endpoint, as in this tutorial."
     - q: How large a file can I upload this way?
@@ -99,10 +101,10 @@ blob name into the URL path before the `?`.
 Portal-generated tokens are for testing. In production your server creates a
 fresh one per file, as in step 5.
 
-## 3. Test the SAS URL from the command line
+## 3. Upload a file with the Azure CLI (az storage blob upload)
 
-Before you write any backend code, check the storage side with the
-[Azure CLI](https://learn.microsoft.com/cli/azure/) and `curl`. If an upload
+Before you write any backend code, upload a test file with `az storage blob upload`
+(from the [Azure CLI](https://learn.microsoft.com/cli/azure/)) or `curl`. If an upload
 works here, anything that still fails in the browser is CORS or your endpoint,
 not the SAS.
 
@@ -444,6 +446,13 @@ the URL's query string, so no `Authorization` header is needed.
 No. Keep it private. The SAS grants write access per request. For downloads,
 issue read SAS URLs the same way, or put a CDN in front of the account.
 
+### Does Azure Blob Storage have an S3-compatible API?
+
+No. Azure Blob Storage has its own REST API (Put Blob, Put Block) rather than the
+S3 API. upup's server mode speaks only S3, so `createUpupHandler` rejects
+`storage.type: 'azure'`. Use client mode instead: your endpoint returns a SAS URL
+and the browser uploads to it with a single `PUT`.
+
 ### Does upup server mode support Azure Blob Storage?
 
 No. `createUpupHandler` throws at construction for `storage.type: 'azure'`,
@@ -470,7 +479,7 @@ sign-in. That sign-in needs a data role such as Storage Blob Data Contributor
 on the account. To use a SAS instead, pass `--sas-token` in place of
 `--auth-mode login`. The CLI suits scripts and CI; users uploading from a web
 page need a SAS URL from your server. The full commands are in
-[step 3](#3-test-the-sas-url-from-the-command-line).
+[step 3](#3-upload-a-file-with-the-azure-cli-az-storage-blob-upload).
 
 ## Next steps
 
