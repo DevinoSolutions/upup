@@ -8,6 +8,7 @@ import { getPathMatch } from 'next/dist/shared/lib/router/utils/path-match'
 import { prepareDestination } from 'next/dist/shared/lib/router/utils/prepare-destination'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
+    REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
     REPLAY_ON_ERROR_SAMPLE_RATE,
     REPLAY_SESSION_SAMPLE_RATE,
@@ -121,8 +122,12 @@ describe('first-party Sentry tunnel', () => {
             'https://key@example.com:9000/7/',
             'https://example.com:9000/api/7/envelope/',
         ],
-    ])('maps the DSN %s to %s', (dsn, envelope) => {
+    ])('maps the DSN %s to %s in both copies', async (dsn, envelope) => {
         expect(sentryEnvelopeUrl(dsn)).toBe(envelope)
+        const rewrites = await loadRewrites({ NEXT_PUBLIC_SENTRY_DSN: dsn })
+        expect(
+            rewriteTarget(rewrites, new URL(SENTRY_TUNNEL_PATH, ORIGIN)),
+        ).toBe(envelope)
     })
 
     it.each([
@@ -165,14 +170,19 @@ describe('bootSentry', () => {
             maskAllInputs: true,
             blockAllMedia: true,
             mask: REPLAY_MASK_SELECTORS,
+            block: REPLAY_BLOCK_SELECTORS,
         })
     })
 
-    it('never loads Sentry without a DSN', async () => {
-        // bootSentry returns before the dynamic import when the DSN is empty.
-        await boot({ NEXT_PUBLIC_SENTRY_DSN: '' })
-        expect(sentry.init).not.toHaveBeenCalled()
-    })
+    it.each(['', 'not-a-dsn'])(
+        'never loads Sentry for the DSN %j',
+        async dsn => {
+            await boot({ NEXT_PUBLIC_SENTRY_DSN: dsn })
+            // Let any dynamic import bootSentry started finish before checking.
+            await vi.dynamicImportSettled()
+            expect(sentry.init).not.toHaveBeenCalled()
+        },
+    )
 })
 
 describe('session replay settings', () => {
@@ -181,10 +191,19 @@ describe('session replay settings', () => {
         expect(REPLAY_ON_ERROR_SAMPLE_RATE).toBe(1)
     })
 
-    it('masks the ph-sensitive class and the site mask attribute', () => {
+    it('masks ph-sensitive, the site mask attribute and all uploader text', () => {
         expect(REPLAY_MASK_SELECTORS).toEqual([
             '.ph-sensitive',
             '[data-ph-mask]',
+            '.upup-scope',
+        ])
+    })
+
+    it("leaves the uploader's previews, camera feeds and editor canvas out", () => {
+        expect(REPLAY_BLOCK_SELECTORS).toEqual([
+            '.upup-scope img',
+            '.upup-scope video',
+            '.upup-scope canvas',
         ])
     })
 })

@@ -1,6 +1,7 @@
 import { clientEnv } from '@/lib/client/env'
 import { isProductionSite } from '@/lib/site-url'
 import {
+    REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
     REPLAY_ON_ERROR_SAMPLE_RATE,
     REPLAY_SESSION_SAMPLE_RATE,
@@ -43,6 +44,7 @@ export function bootSentry(): void {
                         maskAllInputs: true,
                         blockAllMedia: true,
                         mask: REPLAY_MASK_SELECTORS,
+                        block: REPLAY_BLOCK_SELECTORS,
                     }),
                 ],
             })

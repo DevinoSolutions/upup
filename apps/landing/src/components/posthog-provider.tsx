@@ -13,6 +13,7 @@ import {
 } from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
 import {
+    REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
     REPLAY_SESSION_SAMPLE_RATE,
 } from '@/lib/analytics/replay'
@@ -66,14 +67,16 @@ function bootPostHog(): void {
                 // are ever added.
                 disable_surveys: true,
                 // Session replay. Recording is switched on in the project
-                // settings (production domain only); this caps it at the
-                // shared 1-in-10 sample whatever the dashboard says, masks
-                // every input, and hides the text of the shared mask
-                // selectors (see lib/analytics/replay.ts).
+                // settings (production domain only); this sets the shared
+                // 1-in-10 sample (overriding the dashboard's rate), masks
+                // every input, hides the text of the shared mask selectors
+                // and leaves the uploader's media out entirely (see
+                // lib/analytics/replay.ts).
                 session_recording: {
                     sampleRate: REPLAY_SESSION_SAMPLE_RATE,
                     maskAllInputs: true,
                     maskTextSelector: REPLAY_MASK_SELECTORS.join(', '),
+                    blockSelector: REPLAY_BLOCK_SELECTORS.join(', '),
                 },
                 // e2e ONLY: posthog-js drops events from likely bots
                 // (automation user-agents like Playwright's HeadlessChrome, and
