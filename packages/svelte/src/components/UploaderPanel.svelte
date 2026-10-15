@@ -353,9 +353,9 @@
           {tr.builtBy}
         </span>
         {#if $dark}
-          <img src={devinoDark} width={61} height={13} alt="logo-dark" />
+          <img src={devinoDark} width={43} height={13} alt="logo-dark" />
         {:else}
-          <img src={devinoLight} width={61} height={13} alt="logo-light" />
+          <img src={devinoLight} width={43} height={13} alt="logo-light" />
         {/if}
       </a>
     </div>
