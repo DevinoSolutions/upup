@@ -61,13 +61,15 @@ export async function submitProviderInterest(
 /**
  * The modal's post-submit flow: call the route, and only on a confirmed
  * server success record the sign-up (with its browser-side source) in
- * PostHog. Returns whether the server accepted the request.
+ * PostHog. A filled honeypot also gets `ok` back (the route drops it
+ * silently), so it is never recorded as a sign-up. Returns whether the server
+ * accepted the request.
  */
 export async function submitAndRecordProviderInterest(
     input: ProviderInterestInput,
 ): Promise<boolean> {
     const ok = await submitProviderInterest(input)
-    if (ok) {
+    if (ok && !input.website) {
         recordProviderNotifySignup({
             providerName: input.providerName,
             isCustom: input.isCustom,

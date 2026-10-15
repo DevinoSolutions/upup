@@ -99,6 +99,19 @@ describe('submitAndRecordProviderInterest', () => {
         expect(posthog.capture).not.toHaveBeenCalled()
     })
 
+    it('never records a filled honeypot as a sign-up, though the route says ok', async () => {
+        const posthog = fakePostHog()
+        setPostHogClient(posthog as unknown as PostHog)
+        mockFetch(json({ ok: true }))
+
+        await expect(
+            submitAndRecordProviderInterest({ ...INPUT, website: 'spam-bot' }),
+        ).resolves.toBe(true)
+
+        expect(posthog.identify).not.toHaveBeenCalled()
+        expect(posthog.capture).not.toHaveBeenCalled()
+    })
+
     it('sends no PostHog ids when analytics is not running', async () => {
         const fetchMock = mockFetch(json({ ok: true }))
 
