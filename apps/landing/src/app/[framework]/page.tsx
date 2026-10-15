@@ -35,7 +35,7 @@ export async function generateMetadata({
 
     // "<Framework> File Uploader" leads because that is the phrase the
     // impressions arrive on ("vue file uploader", "react uploader",
-    // "angular file uploader"); the brand trails. Widest case is
+    // "angular file uploader"); the brand trails.
     // Vanilla overrides the lead phrase via FrameworkMeta.metaTitle ("javascript
     // file uploader" is what it ranks on). The ≤60 title and ≤155 description
     // budgets are pinned by src/__tests__/seo-copy-budgets.test.ts.
