@@ -1,6 +1,6 @@
 ---
-title: Upload Files to S3 from React with Presigned URLs
-description: Upload files to S3 from React with presigned URLs. Sign a PUT with the AWS SDK v3, show upload progress, set bucket CORS and fix 403 errors.
+title: Upload to S3 from React with Presigned URLs
+description: Upload files to S3 from React with presigned URLs: sign a PUT with AWS SDK v3, show progress, set bucket CORS and fix 403 SignatureDoesNotMatch.
 faq:
     - q: Do I need a backend to upload files to S3 from React?
       a: Yes, a small one. Long-lived AWS access keys must never reach the browser, so a server route signs each upload and the browser sends the file straight to S3 with the signed URL.
