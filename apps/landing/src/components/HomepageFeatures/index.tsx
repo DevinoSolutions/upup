@@ -44,6 +44,8 @@ import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
 import { IbmLogo, IDriveLogo, LinodeLogo } from './ProviderLogos'
 import * as gtag from '@/lib/gtag'
+import { getPostHogClient } from '@/lib/analytics/posthog-client'
+import { recordProviderNotifySignup } from '@/lib/analytics/signup'
 import FeatureShowcase from '@/components/FeatureShowcase'
 import Section from '@/components/ui/Section'
 import SectionHeading, {
@@ -82,6 +84,9 @@ interface EmailModalProps {
  *
  * The address is NEVER passed to Google Analytics — the gtag event carries only
  * the provider name. `website` is the honeypot the route reads to drop bots.
+ * The visitor's PostHog ids ride along (as on the support form) so the
+ * server-side event joins the visitor's own session instead of an anonymous
+ * one-off id.
  */
 async function submitProviderInterest(input: {
     email: string
@@ -93,6 +98,7 @@ async function submitProviderInterest(input: {
     const message = input.isCustom
         ? `Custom storage provider requested from the homepage: ${input.providerName}.`
         : `Notify-me request from the homepage for the ${input.providerName} integration.`
+    const posthog = getPostHogClient()
     try {
         // next.config sets trailingSlash:true, so the bare path would 308 the
         // POST — hit the canonical URL (same rule as SupportForm).
@@ -110,6 +116,8 @@ async function submitProviderInterest(input: {
                         ? window.location.pathname
                         : undefined,
                 website: input.website,
+                posthogSessionId: posthog?.get_session_id() || undefined,
+                posthogDistinctId: posthog?.get_distinct_id() || undefined,
             }),
         })
         const body = (await res.json().catch(() => null)) as {
@@ -434,7 +442,9 @@ const EmailModal: React.FC<EmailModalProps> = ({
         setFailed(false)
         if (!feedbackIdRef.current) feedbackIdRef.current = crypto.randomUUID()
 
-        // Analytics records WHICH provider was asked for — never who asked.
+        // Google Analytics records WHICH provider was asked for, never who
+        // asked. PostHog (after a confirmed sign-up, below) gets a one-way
+        // hash of the address as the person id, never the address.
         gtag.event({
             action: 'provider_email_submit',
             event_category: 'providers',
@@ -456,6 +466,14 @@ const EmailModal: React.FC<EmailModalProps> = ({
             return
         }
 
+        // The sign-up and its source (UTM, referrer, landing page), recorded
+        // in the browser where that context lives.
+        void recordProviderNotifySignup({
+            email,
+            providerName,
+            isCustom,
+            feedbackId: feedbackIdRef.current,
+        })
         setIsSubmitted(true)
         feedbackIdRef.current = ''
         closeTimer.current = setTimeout(() => {

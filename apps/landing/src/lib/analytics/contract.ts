@@ -25,6 +25,16 @@ export const DEMO_UPLOAD_STARTED = 'demo_upload_started'
 export const DEMO_UPLOAD_SUCCEEDED = 'demo_upload_succeeded'
 export const DEMO_UPLOAD_FAILED = 'demo_upload_failed'
 
+/**
+ * The site's one sign-up: a visitor left their address on the homepage
+ * "Notify me" form to hear when a storage provider integration ships. The
+ * support route already records the request server-side, but a server event
+ * carries no browser context, so this browser-side event is the one that
+ * holds the sign-up's source: PostHog stamps it with the session's entry UTM
+ * parameters, referrer and landing page.
+ */
+export const PROVIDER_NOTIFY_SIGNUP = 'provider_notify_signup'
+
 export interface FeedbackPropertyInput {
     feedbackId: string
     feedbackSource: string
