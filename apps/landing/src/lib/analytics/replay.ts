@@ -10,12 +10,11 @@
 export const POSTHOG_REPLAY_SAMPLE_RATE = 0.1
 
 /**
- * Sentry records 1 session in 20. Its self-hosted ingest still rate-limits
- * envelopes at 5/s, and above 5% whole bursts get rejected, taking the error
- * reports in them along. Raise this to match PostHog once that limit is
- * lifted.
+ * Sentry records 1 session in 10, like PostHog. It ran at 5% while the
+ * self-hosted relay rejected envelope bursts above 5/s; that quota is now
+ * raised. Kept separate so either rate can move on its own.
  */
-export const SENTRY_REPLAY_SAMPLE_RATE = 0.05
+export const SENTRY_REPLAY_SAMPLE_RATE = 0.1
 
 /** Sentry only: share of sessions with an error that keep their replay. */
 export const REPLAY_ON_ERROR_SAMPLE_RATE = 1
