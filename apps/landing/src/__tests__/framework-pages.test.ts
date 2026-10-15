@@ -268,6 +268,17 @@ describe('framework guide section', () => {
 
     it.each([
         ['react', '/docs/comparisons/upup-vs-better-upload'],
+        ['react', '/docs/comparisons/uploadthing-pricing'],
+        [
+            'react',
+            '/docs/comparisons/primevue-primereact-fileupload-alternatives',
+        ],
+        [
+            'vue',
+            '/docs/comparisons/primevue-primereact-fileupload-alternatives',
+        ],
+        ['vue', '/docs/comparisons/upup-vs-devextreme-fileuploader'],
+        ['vanilla', '/docs/comparisons/best-javascript-image-upload-libraries'],
         ['angular', '/docs/comparisons/upup-vs-ng2-file-upload'],
         ['angular', '/docs/comparisons/upup-vs-devextreme-fileuploader'],
     ] as [FrameworkId, string][])(

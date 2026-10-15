@@ -209,8 +209,16 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
                 label: 'upup vs UploadThing',
             },
             {
+                href: '/docs/comparisons/uploadthing-pricing/',
+                label: 'UploadThing pricing and S3 costs',
+            },
+            {
                 href: '/docs/comparisons/upup-vs-better-upload/',
                 label: 'upup vs Better Upload',
+            },
+            {
+                href: '/docs/comparisons/primevue-primereact-fileupload-alternatives/',
+                label: 'PrimeReact FileUpload alternatives',
             },
         ],
     },
@@ -248,7 +256,19 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             },
         ],
         comparisonLink: roundup('vue', 'Vue'),
-        links: [quickstart('vue', 'Vue'), PROPS_REFERENCE, ...SHARED_LINKS],
+        links: [
+            quickstart('vue', 'Vue'),
+            PROPS_REFERENCE,
+            {
+                href: '/docs/comparisons/primevue-primereact-fileupload-alternatives/',
+                label: 'PrimeVue FileUpload alternatives',
+            },
+            {
+                href: '/docs/comparisons/upup-vs-devextreme-fileuploader/',
+                label: 'upup vs DevExtreme FileUploader',
+            },
+            ...SHARED_LINKS,
+        ],
     },
     svelte: {
         drivesFile: 'Uploader.svelte',
@@ -364,7 +384,14 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             UPPY,
         ],
         comparisonLink: roundup('vanilla-js', 'Vanilla JavaScript'),
-        links: [quickstart('vanilla', 'Vanilla JS'), ...SHARED_LINKS],
+        links: [
+            quickstart('vanilla', 'Vanilla JS'),
+            {
+                href: '/docs/comparisons/best-javascript-image-upload-libraries/',
+                label: 'JavaScript image upload libraries compared',
+            },
+            ...SHARED_LINKS,
+        ],
     },
     preact: {
         drivesFile: 'App.tsx',
