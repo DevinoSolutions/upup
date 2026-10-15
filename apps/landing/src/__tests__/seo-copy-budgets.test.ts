@@ -75,8 +75,11 @@ describe('framework page search-result copy', () => {
             })
             // "vue file uploader", "react uploader", "angular file uploader" —
             // the query language has to be in front of the brand, not behind it.
+            // A framework may override the lead phrase (metaTitle) when its
+            // impressions arrive on a different name ("javascript file uploader").
             expect(textOf(meta.title)).toContain(
-                `${FRAMEWORKS[id].name} File Uploader`,
+                FRAMEWORKS[id].metaTitle ??
+                    `${FRAMEWORKS[id].name} File Uploader`,
             )
         },
     )
