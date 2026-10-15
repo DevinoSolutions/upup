@@ -36,7 +36,8 @@ let deferredEntry: { href: string; pathname: string; at: Date } | null = null
 const IDLE_TIMEOUT_MS = 2000
 const FIRST_INPUT_EVENTS = ['pointerdown', 'keydown'] as const
 
-function bootPostHog(): void {
+/** Exported for tests only; the provider below is the one caller. */
+export function bootPostHog(): void {
     if (bootStarted) return
     // Dataset drives which project (if any) receives events. `disabled`
     // skips init entirely; `e2e` targets the separate test project.
