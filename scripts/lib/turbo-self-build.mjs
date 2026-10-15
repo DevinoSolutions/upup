@@ -1,14 +1,17 @@
-// Ordering check for packages whose tests rebuild their own dist (#402).
+// Ordering check for packages whose tests read their own dist (#402).
 //
 // A `pretest: pnpm run build` hook runs inside the package's turbo `test` task,
 // outside turbo's graph. The default `test` task depends only on `^build`, so
 // when anything else pulls the same package's `build` into a `turbo run test`
 // (any dependent's `^build` does), turbo runs that build and the pretest
 // rebuild side by side, and their clean-dist/copy-styles steps race over one
-// dist folder. A per-package `test` (and `test:coverage`) override that also
-// depends on the package's own `build` puts the two in order.
+// dist folder. `test:coverage` has no pretest, but it reads the same dist and
+// would read it while that turbo-scheduled build wipes it. A per-package
+// `test` and `test:coverage` override that also depends on the package's own
+// `build` puts them in order.
 
-const PRETEST_BUILD = /\bpnpm\s+(run\s+)?build\b/
+// `build` as a whole script name: not `build:css` or `build-storybook`.
+const PRETEST_BUILD = /\bpnpm\s+(run\s+)?build(?![\w:-])/
 
 /**
  * @param {object} turbo parsed turbo.json
@@ -26,7 +29,7 @@ export function findSelfBuildRaces(turbo, packages) {
             const dependsOn = turbo?.tasks?.[id]?.dependsOn ?? []
             if (!dependsOn.includes('build')) {
                 problems.push(
-                    `${id} must depend on "build": ${pkg.name}'s pretest rebuilds its dist, so without that edge it races a turbo-scheduled ${pkg.name}#build`,
+                    `${id} must depend on "build": ${pkg.name}'s pretest rebuilds its dist, so without that edge it runs alongside a turbo-scheduled ${pkg.name}#build`,
                 )
             }
         }

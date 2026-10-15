@@ -42,6 +42,10 @@ test('ignores packages without a pretest build', () => {
             name: '@useupup/x',
             scripts: { pretest: 'node lint.mjs', test: 'x' },
         },
+        {
+            name: '@useupup/css-only',
+            scripts: { pretest: 'pnpm run build:css', test: 'x' },
+        },
     ]
     assert.deepEqual(findSelfBuildRaces(turbo, packages), [])
 })
