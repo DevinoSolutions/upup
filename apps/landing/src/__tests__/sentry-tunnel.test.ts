@@ -163,7 +163,7 @@ describe('bootSentry', () => {
             dsn: DSN,
             tunnel: SENTRY_TUNNEL_PATH,
             tracesSampleRate: 0,
-            replaysSessionSampleRate: 0.05,
+            replaysSessionSampleRate: 0.1,
             replaysOnErrorSampleRate: 1,
         })
         expect(sentry.replayIntegration).toHaveBeenCalledWith({
@@ -187,11 +187,9 @@ describe('bootSentry', () => {
 })
 
 describe('session replay settings', () => {
-    it('records one session in ten in PostHog and one in twenty in Sentry', () => {
+    it('records one session in ten in both PostHog and Sentry', () => {
         expect(POSTHOG_REPLAY_SAMPLE_RATE).toBe(0.1)
-        // Self-hosted Sentry still rate-limits envelopes at 5/s; above 5%
-        // whole bursts, error reports included, are rejected.
-        expect(SENTRY_REPLAY_SAMPLE_RATE).toBe(0.05)
+        expect(SENTRY_REPLAY_SAMPLE_RATE).toBe(0.1)
     })
 
     it('keeps the replay of every Sentry session that hits an error', () => {
