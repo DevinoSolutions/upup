@@ -13,6 +13,11 @@ import {
 } from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
 import {
+    REPLAY_MASK_SELECTORS,
+    REPLAY_SESSION_SAMPLE_RATE,
+} from '@/lib/analytics/replay'
+import { bootSentry } from '@/lib/analytics/sentry'
+import {
     TELEMETRY_PATH,
     rewriteTelemetryPath,
 } from '@/lib/analytics/telemetry-proxy'
@@ -60,13 +65,15 @@ function bootPostHog(): void {
                 // CORS error in every visitor's console. Re-enable if surveys
                 // are ever added.
                 disable_surveys: true,
-                // Session-replay privacy defaults. Replay itself stays
-                // dashboard-controlled (not force-enabled here); when a session
-                // IS recorded, inputs are masked and any [data-ph-mask] text is
-                // hidden.
+                // Session replay. Recording is switched on in the project
+                // settings (production domain only); this caps it at the
+                // shared 1-in-10 sample whatever the dashboard says, masks
+                // every input, and hides the text of the shared mask
+                // selectors (see lib/analytics/replay.ts).
                 session_recording: {
+                    sampleRate: REPLAY_SESSION_SAMPLE_RATE,
                     maskAllInputs: true,
-                    maskTextSelector: '[data-ph-mask]',
+                    maskTextSelector: REPLAY_MASK_SELECTORS.join(', '),
                 },
                 // e2e ONLY: posthog-js drops events from likely bots
                 // (automation user-agents like Playwright's HeadlessChrome, and
@@ -138,6 +145,7 @@ function bootAfterLoad(): () => void {
     function boot() {
         cleanup()
         bootPostHog()
+        bootSentry()
     }
     function onLoad() {
         if (w.requestIdleCallback)
@@ -163,9 +171,11 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
         // URL; it must never reach a $pageview.
         if (isOAuthRedirectPath(pathname)) return
         // Every route other than the marketing landing pages (docs, support,
-        // agent-setup, …) initialises at mount, exactly as before.
+        // agent-setup, …) initialises at mount, exactly as before. Sentry
+        // boots at the same moment as PostHog on every route.
         if (!isMarketingLandingPath(pathname)) {
             bootPostHog()
+            bootSentry()
             return
         }
         if (!deferredEntry)

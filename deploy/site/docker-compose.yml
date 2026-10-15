@@ -33,6 +33,7 @@ services:
                 NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:-}
                 NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:-}
                 NEXT_PUBLIC_MASTRA_BASE_URL: ${NEXT_PUBLIC_MASTRA_BASE_URL:-}
+                NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
         # Bare passthrough (unset -> absent). S3_* are min(1).optional() — an
         # empty string would crash boot; server-mode is disabled until set. The
         # POSTHOG_DATASET / SMTP_* / SUPPORT_* vars are likewise min(1).optional()
