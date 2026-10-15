@@ -4,7 +4,7 @@ import {
     REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
     REPLAY_ON_ERROR_SAMPLE_RATE,
-    REPLAY_SESSION_SAMPLE_RATE,
+    SENTRY_REPLAY_SAMPLE_RATE,
 } from './replay'
 import { SENTRY_TUNNEL_PATH, sentryEnvelopeUrl } from './sentry-tunnel'
 
@@ -33,7 +33,7 @@ export function bootSentry(): void {
                 environment: isProductionSite() ? 'production' : 'preview',
                 // Errors and replays only. Performance tracing is not used.
                 tracesSampleRate: 0,
-                replaysSessionSampleRate: REPLAY_SESSION_SAMPLE_RATE,
+                replaysSessionSampleRate: SENTRY_REPLAY_SAMPLE_RATE,
                 replaysOnErrorSampleRate: REPLAY_ON_ERROR_SAMPLE_RATE,
                 integrations: [
                     Sentry.replayIntegration({
