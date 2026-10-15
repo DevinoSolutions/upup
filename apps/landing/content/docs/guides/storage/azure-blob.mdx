@@ -19,7 +19,7 @@ faq:
     - q: How do I upload a file to Azure Blob Storage with the Azure CLI?
       a: Run az storage blob upload with --account-name, --container-name, --name and --file, plus --auth-mode login to use your Microsoft Entra ID sign-in. That sign-in needs a data role such as Storage Blob Data Contributor on the account. To use a SAS instead, pass --sas-token in place of --auth-mode login, or pass a full SAS blob URL with --blob-url. The CLI suits scripts and CI; users uploading from a web page need a SAS URL from your server.
     - q: What permissions does a SAS need to upload a blob?
-      a: 'Create (c) or Write (w) lets a SAS put a new block blob. Overwriting an existing blob needs Write (w). Use sp=cw for a single-use upload URL, with sr=b when the SAS is scoped to one blob. Add nothing else: read, list and delete are not needed to upload.'
+      a: 'Create (c) or Write (w) lets a SAS put a new block blob. Overwriting an existing blob needs Write (w). Use sp=cw for a narrowly scoped upload URL (one blob, sr=b, a few minutes), and add nothing else: read, list and delete are not needed. Anyone holding the URL can overwrite that blob until it expires; use sp=c alone to forbid overwrites.'
     - q: Do I need the x-ms-version header when uploading with a SAS URL?
       a: No. The sv parameter inside the SAS selects the service version, so a browser PUT to a SAS URL only needs x-ms-blob-type, plus Content-Type if you want the blob to carry a real content type. Content-Length is set by the browser.
     - q: What is the difference between az storage blob upload and a PUT to a SAS URL?
@@ -62,9 +62,10 @@ browser ──PUT file bytes + x-ms-blob-type: BlockBlob──> <account>.blob.c
 
 ## What the browser sends: Put Blob with a SAS URL
 
-An upload to a SAS URL is one HTTP request: the
+An upload to a SAS URL is one
 [Put Blob](https://learn.microsoft.com/rest/api/storageservices/put-blob)
-operation. This is what goes over the wire (the SAS is shortened):
+request, preceded in a browser by a CORS preflight `OPTIONS`. This is the `PUT`
+on the wire (the SAS is shortened):
 
 ```http
 PUT /uploads/9f1c2e-photo.jpg?sv=2025-01-05&spr=https&st=2026-10-15T09%3A55%3A00Z&se=2026-10-15T10%3A10%3A00Z&sr=b&sp=cw&sig=... HTTP/1.1
@@ -629,9 +630,10 @@ server. The full commands are in
 ### What permissions does a SAS need to upload a blob?
 
 Create (`c`) or Write (`w`) lets a SAS put a new block blob. Overwriting an
-existing blob needs Write (`w`). Use `sp=cw` for a single-use upload URL, with
-`sr=b` when the SAS is scoped to one blob. Add nothing else: read, list and
-delete are not needed to upload.
+existing blob needs Write (`w`). Use `sp=cw` for a narrowly scoped upload URL (one blob, `sr=b`, a few
+minutes), and add nothing else: read, list and delete are not needed. Anyone
+holding the URL can overwrite that blob until it expires; use `sp=c` alone to
+forbid overwrites.
 
 ### Do I need the x-ms-version header when uploading with a SAS URL?
 
