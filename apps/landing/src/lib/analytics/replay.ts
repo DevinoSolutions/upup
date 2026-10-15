@@ -1,15 +1,21 @@
 /**
- * Session-replay settings shared by PostHog and Sentry, so the two recorders
- * sample and mask the same way.
+ * Session-replay settings for PostHog and Sentry, so the two recorders mask
+ * the same way. Both tools store replays on our self-hosted servers, so the
+ * session rates are kept low.
  *
- * Both tools store replays on our self-hosted servers, so the session rate is
- * kept low (1 in 10). Sentry also keeps every session that hits an error,
- * which is the replay that actually explains a bug. PostHog's project settings
- * hold the same 10% (and limit recording to the production domain); the
- * client value below overrides the project's, so this file is where the rate
- * is changed.
+ * PostHog records 1 session in 10. Its project settings hold the same 10%
+ * (and limit recording to the production domain); the client value below
+ * overrides the project's, so this file is where the rate is changed.
  */
-export const REPLAY_SESSION_SAMPLE_RATE = 0.1
+export const POSTHOG_REPLAY_SAMPLE_RATE = 0.1
+
+/**
+ * Sentry records 1 session in 20. Its self-hosted ingest still rate-limits
+ * envelopes at 5/s, and above 5% whole bursts get rejected, taking the error
+ * reports in them along. Raise this to match PostHog once that limit is
+ * lifted.
+ */
+export const SENTRY_REPLAY_SAMPLE_RATE = 0.05
 
 /** Sentry only: share of sessions with an error that keep their replay. */
 export const REPLAY_ON_ERROR_SAMPLE_RATE = 1

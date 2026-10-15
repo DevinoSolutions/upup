@@ -13,9 +13,9 @@ import {
 } from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
 import {
+    POSTHOG_REPLAY_SAMPLE_RATE,
     REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
-    REPLAY_SESSION_SAMPLE_RATE,
 } from '@/lib/analytics/replay'
 import { bootSentry } from '@/lib/analytics/sentry'
 import {
@@ -67,13 +67,13 @@ function bootPostHog(): void {
                 // are ever added.
                 disable_surveys: true,
                 // Session replay. Recording is switched on in the project
-                // settings (production domain only); this sets the shared
-                // 1-in-10 sample (overriding the dashboard's rate), masks
+                // settings (production domain only); this sets the 1-in-10
+                // sample (overriding the dashboard's rate), masks
                 // every input, hides the text of the shared mask selectors
                 // and leaves the uploader's media out entirely (see
                 // lib/analytics/replay.ts).
                 session_recording: {
-                    sampleRate: REPLAY_SESSION_SAMPLE_RATE,
+                    sampleRate: POSTHOG_REPLAY_SAMPLE_RATE,
                     maskAllInputs: true,
                     maskTextSelector: REPLAY_MASK_SELECTORS.join(', '),
                     blockSelector: REPLAY_BLOCK_SELECTORS.join(', '),
