@@ -38,7 +38,9 @@ export async function generateMetadata({
     // "angular file uploader"); the brand trails. Widest case is
     // "Vanilla JS" at 57 chars — the ≤60 title and ≤155 description budgets
     // are pinned by src/__tests__/seo-copy-budgets.test.ts.
-    const title = `${fw.name} File Uploader – Open-Source Drag & Drop | upup`
+    const title = fw.metaTitle
+        ? `${fw.metaTitle} | upup`
+        : `${fw.name} File Uploader – Open-Source Drag & Drop | upup`
     const description = fw.tagline
     const url = canonicalUrl(fw.id)
     const image = `${siteUrl()}/img/social-card.png`
