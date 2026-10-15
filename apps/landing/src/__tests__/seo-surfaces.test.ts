@@ -271,6 +271,11 @@ describe('entity JSON-LD ties the brand to one referenced organization', () => {
         expect(app.author).toEqual({
             '@id': `${PRODUCTION_ORIGIN}/#organization`,
         })
+        expect(app.alternateName).toEqual([
+            'useupup',
+            '@useupup',
+            'upup file uploader',
+        ])
     })
 
     it('emits no AggregateRating or Review anywhere in the rendered markup', () => {
