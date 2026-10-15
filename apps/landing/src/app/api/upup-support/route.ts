@@ -64,7 +64,11 @@ export async function POST(req: Request): Promise<Response> {
     const properties = {
         ...buildFeedbackProperties({
             feedbackId,
-            feedbackSource: 'support_page',
+            // The homepage "Notify me" modal posts here too.
+            feedbackSource:
+                data.type === 'provider_notify'
+                    ? 'homepage_provider_notify'
+                    : 'support_page',
             feedbackType: data.type,
             environment: dataset,
             platform,
