@@ -459,7 +459,10 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                 </div>
                             </div>
                         ) : (
-                            <ul className="space-y-4">
+                            // data-ph-mask: the transcript holds what the
+                            // visitor typed (and answers that quote it), so
+                            // session replays record it masked.
+                            <ul className="space-y-4" data-ph-mask>
                                 {messages.map((m, index) =>
                                     m.role === 'user' ? (
                                         <li
