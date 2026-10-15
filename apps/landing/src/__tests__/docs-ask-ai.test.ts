@@ -132,8 +132,8 @@ describe('DocsAskAi transcript in session replays', () => {
 
     // clientEnv is read once at module load, so the drawer is imported after
     // the Ask-AI base URL is stubbed (an unconfigured drawer has no transcript).
-    // React and the renderer are imported after the reset too, so they share
-    // the drawer's fresh React instance.
+    // The drawer uses hooks, so it is rendered through createElement rather
+    // than called directly like MessageBody above.
     async function renderDrawer(messages: DocsChatMessage[]): Promise<string> {
         vi.resetModules()
         vi.stubEnv('NEXT_PUBLIC_MASTRA_BASE_URL', 'https://mastra.test')
@@ -156,10 +156,17 @@ describe('DocsAskAi transcript in session replays', () => {
         )
     }
 
-    it("renders the visitor's question and the answer inside a data-ph-mask element", async () => {
+    it("renders the visitor's question, the answer and a failed turn inside a data-ph-mask element", async () => {
         const html = await renderDrawer([
             { id: 'q', role: 'user', content: 'my private question' },
             { id: 'a', role: 'assistant', content: 'an answer quoting it' },
+            { id: 'q2', role: 'user', content: 'a second question' },
+            {
+                id: 'e',
+                role: 'assistant',
+                content: 'an error quoting it',
+                error: true,
+            },
         ])
         const transcript = /<ul[^>]*data-ph-mask[^>]*>([\s\S]*)<\/ul>/.exec(
             html,
@@ -167,5 +174,7 @@ describe('DocsAskAi transcript in session replays', () => {
         expect(transcript).not.toBeNull()
         expect(transcript![1]).toContain('my private question')
         expect(transcript![1]).toContain('an answer quoting it')
+        expect(transcript![1]).toContain('an error quoting it')
+        expect(transcript![1]).toContain('Retry')
     })
 })
