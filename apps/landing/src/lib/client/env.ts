@@ -34,6 +34,9 @@ export interface ClientEnv {
     // Base URL of the deployed Mastra AI server that powers the Ask-AI panel.
     // Unset → the interactive example falls back to http://localhost:4111.
     NEXT_PUBLIC_MASTRA_BASE_URL?: string
+    // Browser DSN of the self-hosted Sentry project (errors + session
+    // replay). Unset → Sentry never loads.
+    NEXT_PUBLIC_SENTRY_DSN?: string
 }
 
 export const DEFAULT_POSTHOG_HOST = 'https://posthog.devino.ca'
@@ -60,4 +63,5 @@ export const clientEnv: ClientEnv = {
     NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN:
         process.env.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN,
     NEXT_PUBLIC_MASTRA_BASE_URL: process.env.NEXT_PUBLIC_MASTRA_BASE_URL,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
 }
