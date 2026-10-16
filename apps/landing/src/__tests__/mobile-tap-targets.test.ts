@@ -7,6 +7,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/docs/' }))
 
 import FrameworkStrip from '@/components/FrameworkStrip'
 import ThemeToggler from '@/components/ThemeToggler'
+import { CodeCardControls } from '@/components/docs/CodeCardControls'
 import { DocsSearchTrigger } from '@/components/docs/DocsSearch'
 import { DocsSidebar } from '@/components/docs/DocsSidebar'
 
@@ -163,5 +164,79 @@ describe('mobile legibility floor', () => {
             expect.arrayContaining(['text-[10px]', 'max-lg:text-xs']),
         )
         expect(cls).not.toContain('text-xs')
+    })
+})
+
+describe('docs copy-code button on touch (T-2944)', () => {
+    // The overlay reveals on card hover, so on a device with no hover it was
+    // invisible AND 28x28. Visibility is keyed to the input capability
+    // (`hover:none`), not a width breakpoint: a large touch tablet is >= lg and
+    // still has no hover. The 44px size is mobile-scoped like the rest of the
+    // file; the icon (h-3.5) and the desktop hover reveal are untouched.
+    const html = renderToStaticMarkup(
+        createElement(CodeCardControls, { language: 'tsx', getText: () => '' }),
+    )
+    const [button] = classLists(html, 'button')
+
+    it('shows the button without hover on hover:none devices', () => {
+        expect(button).toContain('[@media(hover:none)]:opacity-100')
+    })
+
+    it('keeps the desktop hover and keyboard reveal', () => {
+        expect(button).toEqual(
+            expect.arrayContaining([
+                'opacity-0',
+                'group-hover:opacity-100',
+                'focus-visible:opacity-100',
+            ]),
+        )
+    })
+
+    it('gives it a 44px mobile hit area that lg undoes', () => {
+        expect(button).toEqual(
+            expect.arrayContaining([
+                'min-h-11',
+                'min-w-11',
+                'lg:min-h-0',
+                'lg:min-w-0',
+            ]),
+        )
+    })
+
+    it('insets the overlay on mobile so the 44px button fits a one-line card', () => {
+        const [overlay] = classLists(html, 'div')
+        expect(overlay).toEqual(
+            expect.arrayContaining([
+                'top-2.5',
+                'right-2.5',
+                'max-lg:top-1',
+                'max-lg:right-1',
+            ]),
+        )
+    })
+
+    it('reserves right padding for the button on mobile only, in the .upup-code pre rule', () => {
+        const css = readFileSync(
+            new URL('../app/globals.css', import.meta.url),
+            'utf8',
+        )
+        // Same breakpoint as Tailwind's max-lg (below 1024px).
+        const rule = css.match(
+            /@media not all and \(min-width: 1024px\)\s*\{\s*\.upup-code > pre\s*\{([^}]*)\}/,
+        )
+        expect(rule, 'mobile .upup-code > pre rule missing').not.toBeNull()
+        expect((rule as RegExpMatchArray)[1]).toMatch(
+            /padding-right:\s*3\.5rem/,
+        )
+        // The desktop base rule must not carry the padding.
+        const base = css.match(
+            /\.upup-code > pre \{\s*overflow-x: auto;([^}]*)\}/,
+        )
+        expect(base, 'base .upup-code > pre rule missing').not.toBeNull()
+        expect((base as RegExpMatchArray)[1]).not.toMatch(/padding/)
+    })
+
+    it('keeps the visible icon size', () => {
+        expect(html).toMatch(/<svg[^>]*class="[^"]*\bh-3\.5 w-3\.5\b/)
     })
 })

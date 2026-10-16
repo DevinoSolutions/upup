@@ -23,7 +23,7 @@ export function CodeCardControls({
     const { copied, copy } = useCopyToClipboard(1600)
 
     return (
-        <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2">
+        <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2 max-lg:right-1 max-lg:top-1">
             {language ? (
                 <span className="select-none rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase max-lg:text-xs tracking-wider text-white/40">
                     {language}
@@ -33,7 +33,7 @@ export function CodeCardControls({
                 type="button"
                 onClick={() => copy(getText())}
                 aria-label={copied ? 'Copied' : 'Copy code'}
-                className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100"
+                className="pointer-events-auto inline-flex h-7 w-7 min-h-11 min-w-11 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100 lg:min-h-0 lg:min-w-0 [@media(hover:none)]:opacity-100"
             >
                 {copied ? (
                     <Check className="h-3.5 w-3.5 text-emerald-400" />
