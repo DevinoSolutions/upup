@@ -7,9 +7,10 @@ vi.mock('@/lib/analytics/capture.client', () => ({
 }))
 
 import {
-    MAX_FAILURE_REASON_LENGTH,
+    FAILURE_REASON_PHRASES,
+    UNCLASSIFIED_FAILURE_REASON,
+    failureReasonFor,
     observeDemoUploads,
-    sanitizeFailureReason,
 } from '@/lib/analytics/demo-upload-tracking'
 
 // The funnel is read off the uploader root's `data-state`. These tests drive
@@ -70,8 +71,7 @@ describe('demo upload failure details', () => {
             surface: 'interactive-demo',
             route: '/',
             failure_code: 'PRESIGN_FAILED',
-            failure_reason:
-                'Upload failed with error code PRESIGN_FAILED: Failed to fetch',
+            failure_reason: 'network request failed',
         })
     })
 
@@ -109,10 +109,10 @@ describe('demo upload failure details', () => {
 
         const props = capture.mock.lastCall![1] as Record<string, unknown>
         expect(props).not.toHaveProperty('failure_code')
-        expect(props.failure_reason).toBe('Upload failed: nope')
+        expect(props.failure_reason).toBe(UNCLASSIFIED_FAILURE_REASON)
     })
 
-    it('never sends a file name, a URL or a signature', async () => {
+    it('never sends the uploader text itself, only an allow-listed phrase', async () => {
         await setState(root, 'uploading')
         showError(
             root,
@@ -123,11 +123,9 @@ describe('demo upload failure details', () => {
 
         const props = capture.mock.lastCall![1] as Record<string, unknown>
         expect(JSON.stringify(props)).not.toMatch(
-            /holiday|amazonaws|s3\.example|Signature|abc123/,
+            /holiday|amazonaws|s3.example|abc123/,
         )
-        expect(props.failure_reason).toBe(
-            'Upload failed: PUT [url] failed for [redacted]',
-        )
+        expect(FAILURE_REASON_PHRASES).toContain(props.failure_reason)
     })
 
     it('stops capturing once disconnected', async () => {
@@ -137,34 +135,62 @@ describe('demo upload failure details', () => {
     })
 })
 
-describe('sanitizeFailureReason', () => {
-    it('replaces file names, quoted text, URLs and long tokens', () => {
-        expect(
-            sanitizeFailureReason(
-                'Could not read photo.final.HEIC from "My Trip" at http://x.test/a?b=1',
-            ),
-        ).toBe('Could not read [file] from [redacted] at [url]')
-        expect(
-            sanitizeFailureReason(`Bad token ${'A1b2'.repeat(10)} rejected`),
-        ).toBe('Bad token [token] rejected')
+describe('failureReasonFor', () => {
+    it.each([
+        ['Upload failed: Failed to fetch', 'network request failed'],
+        [
+            'NetworkError when attempting to fetch resource.',
+            'network request failed',
+        ],
+        [
+            'Blocked by CORS policy: No Access-Control-Allow-Origin',
+            'blocked by browser cross-origin (CORS) policy',
+        ],
+        ['The request timed out', 'request timed out'],
+        [
+            'EntityTooLarge: Your proposed upload exceeds the maximum',
+            'file larger than the allowed size',
+        ],
+        ['File type not allowed', 'file type not allowed'],
+        [
+            'AccessDenied: Request has expired',
+            'upload permission or signed URL rejected',
+        ],
+        ['NoSuchBucket', 'storage or server error'],
+    ])('classifies %j as %j', (text, reason) => {
+        expect(failureReasonFor(text)).toBe(reason)
     })
 
-    it('keeps an apostrophe in prose', () => {
-        expect(sanitizeFailureReason("Can't reach storage, it isn't up")).toBe(
-            "Can't reach storage, it isn't up",
+    // Strings that carry a name, address, path or credential in prose the
+    // keyword list does not recognise: none of it may come out.
+    it.each([
+        'The file My Holiday Photo 2024 is not what we expected',
+        'File IMG_1234 could not be read',
+        'Failed to upload john.doe@gmail.com resume',
+        '/home/amin/tax return.pdf not readable',
+        'C:\Users\amin\Desktop\tax return.pdf not readable',
+        'fichier „été.jpg“ trop gros — vacances été',
+        'signature=abc123def&expires=1 AKIAIOSFODNN7EXAMPLE',
+    ])('sends only a fixed phrase for %j', text => {
+        const reason = failureReasonFor(text)
+        expect(FAILURE_REASON_PHRASES).toContain(reason)
+        expect(reason).not.toMatch(
+            /holiday|IMG_|john|gmail|amin|tax|été|abc123|AKIA/i,
         )
     })
 
-    it('collapses whitespace and caps the length', () => {
-        const long = sanitizeFailureReason(
-            `Upload   failed ${'word '.repeat(60)}`,
+    it('falls back to the unclassified phrase', () => {
+        expect(failureReasonFor('something odd happened')).toBe(
+            UNCLASSIFIED_FAILURE_REASON,
         )
-        expect(long.length).toBe(MAX_FAILURE_REASON_LENGTH)
-        expect(long.endsWith('…')).toBe(true)
-        expect(long).not.toMatch(/\s{2,}/)
     })
 
-    it('returns an empty string for empty text', () => {
-        expect(sanitizeFailureReason('  \n ')).toBe('')
+    it('keeps every phrase short and scans a huge message quickly', () => {
+        for (const phrase of FAILURE_REASON_PHRASES) {
+            expect(phrase.length).toBeLessThanOrEqual(120)
+        }
+        const started = performance.now()
+        failureReasonFor('a.'.repeat(1e6))
+        expect(performance.now() - started).toBeLessThan(500)
     })
 })
