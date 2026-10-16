@@ -99,7 +99,7 @@ export function DocsSearchTrigger({ onClick }: { onClick: () => void }) {
         >
             <Search className="h-4 w-4" />
             <span>Search…</span>
-            <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-xs leading-none text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+            <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none max-lg:text-xs text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
                 ⌘K
             </kbd>
         </button>

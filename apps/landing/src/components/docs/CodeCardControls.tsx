@@ -25,7 +25,7 @@ export function CodeCardControls({
     return (
         <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2">
             {language ? (
-                <span className="select-none rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-xs font-medium uppercase tracking-wider text-white/40">
+                <span className="select-none rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase max-lg:text-xs tracking-wider text-white/40">
                     {language}
                 </span>
             ) : null}
