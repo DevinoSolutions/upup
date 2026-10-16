@@ -38,7 +38,7 @@ const FAQ_PAGES = [
     {
         slug: ['comparisons', 'upup-vs-uploadthing'],
         file: 'comparisons/upup-vs-uploadthing.mdx',
-        questions: 7,
+        questions: 9,
     },
     {
         slug: ['comparisons', 'best-react-file-upload-libraries'],
