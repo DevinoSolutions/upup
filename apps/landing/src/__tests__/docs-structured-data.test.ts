@@ -71,6 +71,21 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'upup-vs-uppy'],
+        file: 'comparisons/upup-vs-uppy.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-filepond'],
+        file: 'comparisons/upup-vs-filepond.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-react-dropzone'],
+        file: 'comparisons/upup-vs-react-dropzone.mdx',
+        questions: 3,
+    },
+    {
         slug: ['comparisons', 'upup-vs-devextreme-fileuploader'],
         file: 'comparisons/upup-vs-devextreme-fileuploader.mdx',
         questions: 5,
