@@ -263,10 +263,14 @@ function TextWithCode({ text }: { text: string }) {
 // A fenced code block: horizontal scroll is contained INSIDE the <pre> (the
 // bubble/drawer itself never scrolls sideways) and a small copy control lifts
 // the raw fence text — the exact string we already hold — onto the clipboard.
+// Below lg the copy control is always visible and 44px (no hover on touch), so
+// the pre gets a 48px floor (a one-line fence is ~42px) and 56px of right
+// padding so the button fits inside the card and the end of a long line can be
+// scrolled clear of it.
 function CodeBlock({ code }: { code: string }) {
     return (
         <div className="group relative my-2 first:mt-0 last:mb-0">
-            <pre className="max-w-full overflow-x-auto rounded-md border border-black/10 p-3 pr-9 text-xs dark:border-white/10">
+            <pre className="max-w-full overflow-x-auto rounded-md border border-black/10 p-3 pr-9 text-xs max-lg:min-h-12 max-lg:pr-14 dark:border-white/10">
                 <code>{code}</code>
             </pre>
             <CopyButton text={code} />
@@ -281,7 +285,7 @@ function CopyButton({ text }: { text: string }) {
             type="button"
             aria-label={copied ? 'Copied' : 'Copy code'}
             onClick={() => copy(text)}
-            className="absolute right-1.5 top-1.5 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100"
+            className="absolute right-1.5 top-1.5 min-h-11 min-w-11 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 max-lg:right-0.5 max-lg:top-0.5 max-lg:flex max-lg:items-center max-lg:justify-center lg:min-h-0 lg:min-w-0 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100 [@media(hover:none)]:opacity-100"
         >
             {copied ? (
                 <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
