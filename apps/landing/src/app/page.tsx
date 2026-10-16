@@ -15,9 +15,9 @@ import { canonicalUrl } from '@/lib/site-url'
 // the old 77-char title truncated in SERPs); description is ≤155 so it renders
 // whole. Both budgets are pinned by src/__tests__/seo-copy-budgets.test.ts.
 export const metadata = {
-    title: 'upup – Open-Source File Uploader for Every Framework',
+    title: 'upup – Open-Source File Uploader | npm @useupup',
     description:
-        'upup is a free, open-source drag and drop file uploader with native UI for React, Vue, Svelte, Angular, Vanilla JS and Preact. MIT-licensed.',
+        'upup is a free, MIT-licensed file uploader on npm as @useupup. Drag and drop UI for React, Vue, Svelte, Angular, Vanilla JS and Preact, with S3 uploads.',
     alternates: {
         canonical: canonicalUrl(),
     },
