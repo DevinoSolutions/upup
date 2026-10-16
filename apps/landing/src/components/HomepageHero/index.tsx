@@ -300,7 +300,10 @@ export default function HeroSection({
                                             hydration, which meant the install
                                             command itself was invisible in the
                                             server HTML. */}
-                                        <code className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate">
+                                        <code
+                                            title={currentCommand}
+                                            className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
+                                        >
                                             {currentCommand}
                                         </code>
 
