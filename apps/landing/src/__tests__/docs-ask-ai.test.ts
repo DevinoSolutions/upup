@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MessageBody, parseBlocks } from '@/components/docs/DocsAskAi'
+import type { DocsChatMessage } from '@/lib/docs/use-docs-chat'
 
 // The Ask-AI answer renderer is a hand-rolled SAFE markdown-ish pipeline: every
 // token becomes a React text node (NO innerHTML anywhere), so these tests render
@@ -121,5 +122,59 @@ describe('parseBlocks', () => {
     it('returns an empty array for blank input', () => {
         expect(parseBlocks('')).toEqual([])
         expect(parseBlocks('\n\n')).toEqual([])
+    })
+})
+
+describe('DocsAskAi transcript in session replays', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs()
+    })
+
+    // clientEnv is read once at module load, so the drawer is imported after
+    // the Ask-AI base URL is stubbed (an unconfigured drawer has no transcript).
+    // The drawer uses hooks, so it is rendered through createElement rather
+    // than called directly like MessageBody above.
+    async function renderDrawer(messages: DocsChatMessage[]): Promise<string> {
+        vi.resetModules()
+        vi.stubEnv('NEXT_PUBLIC_MASTRA_BASE_URL', 'https://mastra.test')
+        const [{ createElement }, server, { DocsAskAi }] = await Promise.all([
+            import('react'),
+            import('react-dom/server'),
+            import('@/components/docs/DocsAskAi'),
+        ])
+        return server.renderToStaticMarkup(
+            createElement(DocsAskAi, {
+                open: true,
+                onClose: () => {},
+                chat: {
+                    messages,
+                    pending: false,
+                    send: async () => {},
+                    clear: () => {},
+                },
+            }),
+        )
+    }
+
+    it("renders the visitor's question, the answer and a failed turn inside a data-ph-mask element", async () => {
+        const html = await renderDrawer([
+            { id: 'q', role: 'user', content: 'my private question' },
+            { id: 'a', role: 'assistant', content: 'an answer quoting it' },
+            { id: 'q2', role: 'user', content: 'a second question' },
+            {
+                id: 'e',
+                role: 'assistant',
+                content: 'an error quoting it',
+                error: true,
+            },
+        ])
+        const transcript = /<ul[^>]*data-ph-mask[^>]*>([\s\S]*)<\/ul>/.exec(
+            html,
+        )
+        expect(transcript).not.toBeNull()
+        expect(transcript![1]).toContain('my private question')
+        expect(transcript![1]).toContain('an answer quoting it')
+        expect(transcript![1]).toContain('an error quoting it')
+        expect(transcript![1]).toContain('Retry')
     })
 })

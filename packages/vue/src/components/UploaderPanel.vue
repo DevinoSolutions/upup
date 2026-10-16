@@ -448,14 +448,14 @@ function onOverlayKeydown(e: KeyboardEvent) {
                     <img
                         v-if="dark"
                         :src="devinoDark"
-                        :width="61"
+                        :width="43"
                         :height="13"
                         alt="logo-dark"
                     />
                     <img
                         v-else
                         :src="devinoLight"
-                        :width="61"
+                        :width="43"
                         :height="13"
                         alt="logo-light"
                     />
