@@ -689,7 +689,7 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                                 {provider.name}
                             </span>
                             {provider.qualifier ? (
-                                <span className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
+                                <span className="text-[10px] leading-tight text-gray-500 max-lg:text-xs dark:text-gray-400">
                                     {provider.qualifier}
                                 </span>
                             ) : null}
