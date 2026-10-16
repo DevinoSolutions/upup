@@ -23,7 +23,7 @@ export function CodeCardControls({
     const { copied, copy } = useCopyToClipboard(1600)
 
     return (
-        <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2">
+        <div className="pointer-events-none absolute right-2.5 top-2.5 z-10 flex items-center gap-2 max-lg:right-1 max-lg:top-1">
             {language ? (
                 <span className="select-none rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase max-lg:text-xs tracking-wider text-white/40">
                     {language}
