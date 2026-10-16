@@ -33,7 +33,7 @@ export function CodeCardControls({
                 type="button"
                 onClick={() => copy(getText())}
                 aria-label={copied ? 'Copied' : 'Copy code'}
-                className="pointer-events-auto inline-flex h-7 w-7 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100"
+                className="pointer-events-auto inline-flex h-7 w-7 min-h-11 min-w-11 items-center justify-center rounded border border-white/10 bg-white/[0.04] text-white/50 opacity-0 transition-[opacity,color,background-color] duration-150 hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80 focus-visible:opacity-100 group-hover:opacity-100 lg:min-h-0 lg:min-w-0 [@media(hover:none)]:opacity-100"
             >
                 {copied ? (
                     <Check className="h-3.5 w-3.5 text-emerald-400" />
