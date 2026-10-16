@@ -164,8 +164,15 @@ describe('safeFailureCode', () => {
         )
         const body = /export enum UpupErrorCode \{([\s\S]*?)\n\}/.exec(source)
         expect(body).not.toBeNull()
-        const codes = [...body![1]!.matchAll(/^\s*([A-Z_]+) = '([A-Z_]+)'/gm)]
+        const members = body![1]!
+        const codes = [
+            ...members.matchAll(/^\s*([A-Z0-9_]+) = '([A-Z0-9_]+)'/gm),
+        ]
+        // Every member line (`NAME =` of any shape) must have parsed, so a
+        // member the pattern cannot read fails here instead of being skipped.
+        const memberLines = members.match(/^\s*[A-Za-z0-9_]+\s*=/gm) ?? []
         expect(codes.length).toBeGreaterThan(20)
+        expect(codes).toHaveLength(memberLines.length)
         for (const [, name, value] of codes) {
             expect(name).toBe(value)
             expect(safeFailureCode(value!)).toBe(value)
