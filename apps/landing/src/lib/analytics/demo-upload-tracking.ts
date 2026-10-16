@@ -94,6 +94,9 @@ function statusCode(digits: string): string {
     )
 }
 
+/** A size with its unit ("10MB", "10 MB", "MB"), matched as a whole word. */
+const SIZE_UNIT = String.raw`\b(?:\d+\s*)?[kmgt]i?b\b`
+
 /**
  * Why a run failed, as one of a fixed set of phrases. The uploader's message
  * can quote third-party error text (S3 XML, browser fetch errors, a custom
@@ -109,7 +112,7 @@ const FAILURE_REASONS: ReadonlyArray<readonly [RegExp, string]> = [
     [/quota/i, 'storage quota exceeded'],
     [
         new RegExp(
-            String.raw`too large|too big|entitytoolarge|file size|payload too large|(?:size|bytes?|[kmgt]b)\W+(?:\w+\W+){0,4}exceed|exceed\w*\W+(?:\w+\W+){0,4}(?:size|bytes?|[kmgt]b)\b|${statusCode('413')}`,
+            String.raw`too large|too big|entitytoolarge|file size|payload too large|(?:\bsize|\bbytes?|${SIZE_UNIT})\W+(?:\w+\W+){0,4}exceed|exceed\w*\W+(?:\w+\W+){0,4}(?:\bsize|\bbytes?|${SIZE_UNIT})|${statusCode('413')}`,
             'i',
         ),
         'file larger than the allowed size',

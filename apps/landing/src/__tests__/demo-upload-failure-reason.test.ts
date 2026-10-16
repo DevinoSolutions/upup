@@ -237,6 +237,12 @@ describe('failureReasonFor', () => {
         ['File size exceeded the limit', 'file larger than the allowed size'],
         ['Upload exceeds 10 MB', 'file larger than the allowed size'],
         ['Total size exceeded', 'file larger than the allowed size'],
+        [
+            'The file exceeds the 10MB limit',
+            'file larger than the allowed size',
+        ],
+        ['exceeds 10MB', 'file larger than the allowed size'],
+        ['10 MB exceeded', 'file larger than the allowed size'],
     ])('classifies %j as %j', (text, reason) => {
         expect(failureReasonFor(text)).toBe(reason)
     })
@@ -287,6 +293,7 @@ describe('failureReasonFor', () => {
         'Error 512 bytes',
         'Maximum of 5 files exceeded',
         'Limit exceeded',
+        'The lamb exceeded expectations',
     ])('leaves %j unclassified', text => {
         expect(failureReasonFor(text)).toBe(UNCLASSIFIED_FAILURE_REASON)
     })
