@@ -98,7 +98,7 @@ const FAQ_PAGES = [
     {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
-        questions: 8,
+        questions: 11,
     },
     {
         slug: ['guides', 'storage', 'digitalocean-spaces'],
@@ -352,7 +352,7 @@ describe('docs folder hub pages', () => {
                 ['Guides', '/docs/guides/'],
                 ['Storage', '/docs/guides/storage/'],
                 [
-                    'Upload Files to Azure Blob Storage from the Browser',
+                    'Upload Files to Azure Blob Storage with a SAS URL',
                     '/docs/guides/storage/azure-blob/',
                 ],
             ],
