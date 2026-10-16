@@ -17,7 +17,14 @@ import { DocsHome } from '@/components/docs/DocsHome'
 
 describe('docs home hero paint', () => {
     const html = renderToStaticMarkup(createElement(DocsHome))
-    const hero = html.slice(0, html.indexOf('data-testid="docs-section-cards"'))
+    const heroEnd = html.indexOf('data-testid="docs-section-cards"')
+    const hero = html.slice(0, heroEnd)
+
+    it('finds the section-cards marker that bounds the hero', () => {
+        // indexOf returns -1 when the marker is gone, which would silently
+        // slice the wrong range and let the assertions below pass vacuously.
+        expect(heroEnd).toBeGreaterThanOrEqual(0)
+    })
 
     it('renders the hero headline and intro before the section cards', () => {
         expect(hero).toContain('Everything you need to')
@@ -29,6 +36,9 @@ describe('docs home hero paint', () => {
     })
 
     it('slides the hero columns in with the CSS hero-lift class', () => {
-        expect(hero.match(/class="hero-lift"/g)).toHaveLength(2)
+        const liftColumns = [...hero.matchAll(/class="([^"]*)"/g)].filter(m =>
+            m[1].split(/\s+/).includes('hero-lift'),
+        )
+        expect(liftColumns).toHaveLength(2)
     })
 })
