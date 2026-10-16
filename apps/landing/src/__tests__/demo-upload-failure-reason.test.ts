@@ -11,6 +11,7 @@ import {
     UNCLASSIFIED_FAILURE_REASON,
     failureReasonFor,
     observeDemoUploads,
+    safeFailureCode,
 } from '@/lib/analytics/demo-upload-tracking'
 
 // The funnel is read off the uploader root's `data-state`. These tests drive
@@ -102,9 +103,9 @@ describe('demo upload failure details', () => {
         })
     })
 
-    it('drops a title that is not a machine code', async () => {
+    it('drops a title that is not an allow-listed machine code', async () => {
         await setState(root, 'uploading')
-        showError(root, 'Upload failed: nope', 'my photo (1).png')
+        showError(root, 'Upload failed: nope', 'AKIAIOSFODNN7EXAMPLE')
         await setState(root, 'failed')
 
         const props = capture.mock.lastCall![1] as Record<string, unknown>
@@ -135,6 +136,37 @@ describe('demo upload failure details', () => {
     })
 })
 
+const BASE64URL_59 =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9_abcDEF-ghiJKL0123456789xyz'.slice(
+        0,
+        59,
+    )
+
+describe('safeFailureCode', () => {
+    it.each(['PRESIGN_FAILED', 'FILE_TOO_LARGE', 'EntityTooLarge', 'SlowDown'])(
+        'keeps the machine code %j',
+        code => {
+            expect(safeFailureCode(code)).toBe(code)
+        },
+    )
+
+    it.each([
+        'holiday.jpg',
+        'john.doe',
+        'AKIAIOSFODNN7EXAMPLE',
+        'ACCESSDENIED',
+        'my photo (1).png',
+        'lower_case_code',
+        'A'.repeat(41),
+        // 59 characters of base64url, as a token or key would be.
+        BASE64URL_59,
+        '',
+        null,
+    ])('drops %j', code => {
+        expect(safeFailureCode(code)).toBeUndefined()
+    })
+})
+
 describe('failureReasonFor', () => {
     it.each([
         ['Upload failed: Failed to fetch', 'network request failed'],
@@ -142,6 +174,9 @@ describe('failureReasonFor', () => {
             'NetworkError when attempting to fetch resource.',
             'network request failed',
         ],
+        ['Load failed', 'network request failed'],
+        ['net::ERR_CONNECTION_RESET', 'network request failed'],
+        ['ERR_CONNECTION_RESET', 'network request failed'],
         [
             'Blocked by CORS policy: No Access-Control-Allow-Origin',
             'blocked by browser cross-origin (CORS) policy',
@@ -151,38 +186,58 @@ describe('failureReasonFor', () => {
             'EntityTooLarge: Your proposed upload exceeds the maximum',
             'file larger than the allowed size',
         ],
+        ['413 Payload Too Large', 'file larger than the allowed size'],
+        ['Server responded with status 413', 'file larger than the allowed size'],
         ['File type not allowed', 'file type not allowed'],
         [
             'AccessDenied: Request has expired',
             'upload permission or signed URL rejected',
         ],
+        ['HTTP 403', 'upload permission or signed URL rejected'],
+        ['503 Service Unavailable', 'storage or server error'],
+        ['Server responded with status 502', 'storage or server error'],
         ['NoSuchBucket', 'storage or server error'],
+        ['Storage quota exceeded', 'storage quota exceeded'],
     ])('classifies %j as %j', (text, reason) => {
         expect(failureReasonFor(text)).toBe(reason)
     })
 
+    it.each([
+        ['FILE_TOO_LARGE', 'file larger than the allowed size'],
+        ['TOTAL_SIZE_EXCEEDED', 'file larger than the allowed size'],
+        ['NETWORK_ERROR', 'network request failed'],
+        ['AUTH_DENIED', 'upload permission or signed URL rejected'],
+    ])('classifies by the machine code %s when the text has no keyword', (code, reason) => {
+        expect(failureReasonFor('Upload failed: something', code)).toBe(reason)
+    })
+
+    // Plain words and bare numbers that an earlier, looser keyword list took
+    // for a cause.
+    it.each([
+        'Upload failed',
+        'Upload failed: nope',
+        'No records found',
+        'Missing payload',
+        'IMG 503.jpg could not be read',
+        'The extension host crashed',
+        'mime',
+        'Entry 413 of 600 was skipped',
+    ])('leaves %j unclassified', text => {
+        expect(failureReasonFor(text)).toBe(UNCLASSIFIED_FAILURE_REASON)
+    })
+
     // Strings that carry a name, address, path or credential in prose the
-    // keyword list does not recognise: none of it may come out.
+    // keyword list does not recognise: only a fixed phrase may come out.
     it.each([
         'The file My Holiday Photo 2024 is not what we expected',
         'File IMG_1234 could not be read',
         'Failed to upload john.doe@gmail.com resume',
         '/home/amin/tax return.pdf not readable',
-        'C:\Users\amin\Desktop\tax return.pdf not readable',
-        'fichier „été.jpg“ trop gros — vacances été',
+        String.raw`C:\Users\amin\Desktop\tax return.pdf not readable`,
+        'fichier „été.jpg“ trop gros — vacances été',
         'signature=abc123def&expires=1 AKIAIOSFODNN7EXAMPLE',
     ])('sends only a fixed phrase for %j', text => {
-        const reason = failureReasonFor(text)
-        expect(FAILURE_REASON_PHRASES).toContain(reason)
-        expect(reason).not.toMatch(
-            /holiday|IMG_|john|gmail|amin|tax|été|abc123|AKIA/i,
-        )
-    })
-
-    it('falls back to the unclassified phrase', () => {
-        expect(failureReasonFor('something odd happened')).toBe(
-            UNCLASSIFIED_FAILURE_REASON,
-        )
+        expect(FAILURE_REASON_PHRASES).toContain(failureReasonFor(text))
     })
 
     it('keeps every phrase short and scans a huge message quickly', () => {

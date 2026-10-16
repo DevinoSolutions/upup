@@ -30,8 +30,41 @@ export function demoUploadEventFor(
     return null
 }
 
-/** Machine codes (`PRESIGN_FAILED`, `EntityTooLarge`, ...) are short tokens. */
-const FAILURE_CODE = /^[A-Za-z0-9_.:-]{1,60}$/
+/** Codes S3 and S3-compatible stores return that name the failure and no user. */
+const KNOWN_S3_CODES: ReadonlySet<string> = new Set([
+    'EntityTooLarge',
+    'AccessDenied',
+    'SignatureDoesNotMatch',
+    'RequestTimeTooSkewed',
+    'SlowDown',
+    'NoSuchBucket',
+])
+
+/**
+ * The upload library's own machine codes are SCREAMING_SNAKE with at least one
+ * underscore (`PRESIGN_FAILED`, `FILE_TOO_LARGE`). Requiring the underscore
+ * keeps a bare upper-case token, such as an access key id, out.
+ */
+const UPUP_CODE = /^[A-Z][A-Z0-9]{1,15}(_[A-Z0-9]{1,15}){1,4}$/
+
+/** The code worth sending, or undefined for anything not on the allow-list. */
+export function safeFailureCode(code: string | null): string | undefined {
+    if (!code || code.length > 40) return undefined
+    return KNOWN_S3_CODES.has(code) || UPUP_CODE.test(code) ? code : undefined
+}
+
+/**
+ * A pattern for an HTTP status that reads as one: next to a word like status /
+ * server / gateway, at the start of the text ("503 Service Unavailable"), or
+ * followed by its reason word. A bare three-digit number is not enough, since
+ * a file name or a size can contain one.
+ */
+function statusCode(digits: string): string {
+    return (
+        String.raw`(?:\b(?:status|http|code|error|server|service|gateway)\W{0,3}|^\W*)(?:${digits})\b` +
+        String.raw`|\b(?:${digits})\s+(?:payload|request|content|entity|forbidden|unauthori[sz]ed|internal|service|bad|gateway|server)`
+    )
+}
 
 /**
  * Why a run failed, as one of a fixed set of phrases. The uploader's message
@@ -42,28 +75,37 @@ const FAILURE_CODE = /^[A-Za-z0-9_.:-]{1,60}$/
  * the text is not. First match wins; order puts the specific causes first.
  */
 const FAILURE_REASONS: ReadonlyArray<readonly [RegExp, string]> = [
-    [/cors|cross-origin/i, 'blocked by browser cross-origin (CORS) policy'],
+    [/\bcors\b|cross-origin/i, 'blocked by browser cross-origin (CORS) policy'],
     [/timed? ?out|timeout/i, 'request timed out'],
-    [/abort|cancel/i, 'upload was cancelled or aborted'],
+    [/\babort|\bcancel/i, 'upload was cancelled or aborted'],
+    [/quota/i, 'storage quota exceeded'],
     [
-        /too large|too big|exceeds|entitytoolarge|file size|payload/i,
+        new RegExp(
+            String.raw`too large|too big|exceed|entitytoolarge|file size|payload too large|${statusCode('413')}`,
+            'i',
+        ),
         'file larger than the allowed size',
     ],
     [
-        /not allowed|unsupported|invalid (file )?type|mime|extension/i,
+        /\b(file|mime|content)[ -]?type|unsupported (file|format|type)|extension\W.{0,30}not (allowed|supported)|not (allowed|supported)\W.{0,30}(file|extension|type)/i,
         'file type not allowed',
     ],
     [
-        /failed to fetch|networkerror|network error|(^|[^a-z])load failed|net::|err_|offline/i,
+        /failed to fetch|networkerror|network error|network request failed|(^|[^a-z])load failed|net::|(^|[^a-z])err_|offline/i,
         'network request failed',
     ],
     [
-        /presign|signed url|signature|credential|unauthori[sz]ed|forbidden|access ?denied|expired|\b40[13]\b/i,
+        new RegExp(
+            String.raw`presign|signed url|signature|credential|unauthori[sz]ed|forbidden|access ?denied|expired|auth[ _]?(denied|expired|required|failed)|requesttimetooskewed|${statusCode('40[13]')}`,
+            'i',
+        ),
         'upload permission or signed URL rejected',
     ],
-    [/quota/i, 'storage quota exceeded'],
     [
-        /bucket|storage|\bs3\b|server error|\b5\d\d\b/i,
+        new RegExp(
+            String.raw`bucket|storage|\bs3\b|server error|service unavailable|bad gateway|slowdown|${statusCode(String.raw`5\d\d`)}`,
+            'i',
+        ),
         'storage or server error',
     ],
 ]
@@ -74,13 +116,25 @@ export const UNCLASSIFIED_FAILURE_REASON = 'unclassified upload error'
 /** The most text matched, so a huge message cannot make the scan slow. */
 const MAX_MATCHED_LENGTH = 2000
 
-/** The allow-listed phrase for the uploader's failure message. */
-export function failureReasonFor(text: string): string {
+function classify(text: string): string | undefined {
     const haystack = text.slice(0, MAX_MATCHED_LENGTH)
     for (const [pattern, reason] of FAILURE_REASONS) {
         if (pattern.test(haystack)) return reason
     }
-    return UNCLASSIFIED_FAILURE_REASON
+    return undefined
+}
+
+/**
+ * The allow-listed phrase for the uploader's failure message. When the message
+ * itself matches nothing, the (already validated) machine code is tried, with
+ * its underscores read as spaces, so `FILE_TOO_LARGE` still classifies.
+ */
+export function failureReasonFor(text: string, code?: string): string {
+    return (
+        classify(text) ??
+        (code ? classify(`${code} ${code.replace(/_/g, ' ')}`) : undefined) ??
+        UNCLASSIFIED_FAILURE_REASON
+    )
 }
 
 /** Every phrase `failure_reason` can take. */
@@ -104,10 +158,10 @@ export function failureDetails(root: HTMLElement): {
     const line = root.querySelector('[data-testid="upup-upload-error"]')
     if (!line) return {}
     const details: { failure_code?: string; failure_reason?: string } = {}
-    const code = line.getAttribute('title')
-    if (code && FAILURE_CODE.test(code)) details.failure_code = code
+    const code = safeFailureCode(line.getAttribute('title'))
+    if (code) details.failure_code = code
     if (line.textContent?.trim()) {
-        details.failure_reason = failureReasonFor(line.textContent)
+        details.failure_reason = failureReasonFor(line.textContent, code)
     }
     return details
 }
