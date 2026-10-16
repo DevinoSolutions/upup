@@ -16,7 +16,7 @@ import {
     Sparkles,
     type LucideIcon,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { GRADIENT_TEXT, H3_HEADING } from '@/components/ui/SectionHeading'
 import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
@@ -191,7 +191,7 @@ export function DocsHome() {
                 <h2 className={H3_HEADING}>Browse the docs</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {SECTION_CARDS.map((c, i) => (
-                        <motion.div
+                        <m.div
                             key={c.href}
                             variants={card}
                             custom={i}
@@ -213,7 +213,7 @@ export function DocsHome() {
                                     {c.desc}
                                 </span>
                             </Link>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
                 {/* The machine-readable entry point, as a real anchor. The

@@ -69,12 +69,8 @@ describe('landing first-load guards', () => {
             expect(valueImportsOf(read(rel), 'posthog-js'), rel).toEqual([])
     })
 
-    it('landing components use framer-motion m.* (never motion.*) under MotionProvider', () => {
+    it('landing components use framer-motion m.* (never motion.*) under MotionProvider, docs included', () => {
         const offenders = walk(join(SRC, 'components'))
-            .filter(
-                file =>
-                    !relative(SRC, file).startsWith(join('components', 'docs')),
-            )
             .filter(file => {
                 const source = readFileSync(file, 'utf8')
                 const imports = source.match(
