@@ -170,8 +170,9 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsFile: 'angular.ts',
         docsLang: 'ts',
         hasImageEditor: false,
+        metaTitle: 'Angular File Uploader – Drag & Drop Upload Component',
         tagline:
-            'Free, open-source Angular file uploader with drag and drop, cloud drives and resumable uploads to any S3 storage — npm install @useupup/angular.',
+            'Free, open-source Angular file upload library and ng2-file-upload alternative with drag and drop, cloud drives and S3 uploads. npm install @useupup/angular.',
         Icon: SiAngular,
         brand: '#DD0031',
     },
