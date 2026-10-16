@@ -85,7 +85,7 @@ function PageLink({
         <Link
             href={node.url as string}
             aria-current={active ? 'page' : undefined}
-            className={`block rounded-md px-2 py-1.5 transition-colors ${
+            className={`block rounded-md px-2 py-3 transition-colors lg:py-1.5 ${
                 active
                     ? 'bg-black/[0.04] font-medium text-gray-900 dark:bg-white/[0.06] dark:text-white'
                     : `text-gray-600 hover:bg-black/[0.03] hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/[0.04] dark:hover:text-white ${

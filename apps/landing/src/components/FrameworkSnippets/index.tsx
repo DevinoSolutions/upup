@@ -199,7 +199,7 @@ export default function FrameworkSnippets({
                                 setActiveId(next.id)
                                 tabRefs.current[next.id]?.focus()
                             }}
-                            className={`relative px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                            className={`relative min-h-11 px-3.5 py-1.5 md:min-h-0 rounded-lg text-sm font-medium transition-colors ${
                                 isActive
                                     ? 'text-primary dark:text-primary-dark'
                                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-gray-800/60'

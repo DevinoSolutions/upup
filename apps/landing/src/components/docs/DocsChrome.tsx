@@ -42,7 +42,7 @@ export function DocsChrome({
             {/* Mobile: the sidebar collapses behind a native disclosure above the
                 content — no animation lib, keyboard-accessible by default. */}
             <details className="mb-8 border-b border-black/5 pb-4 lg:hidden dark:border-white/10">
-                <summary className="cursor-pointer list-none py-2 text-sm font-medium text-gray-900 dark:text-white">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center text-sm font-medium text-gray-900 dark:text-white">
                     Documentation menu
                 </summary>
                 <div className="space-y-3 pt-3">
@@ -88,7 +88,7 @@ export function DocsChrome({
                 type="button"
                 data-testid="docs-ask-ai-trigger-mobile"
                 onClick={openAi}
-                className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-black/5 bg-[var(--bg-base)] px-4 py-2 text-sm font-medium text-gray-700 shadow-none lg:hidden dark:border-white/10 dark:text-gray-200"
+                className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-black/5 bg-[var(--bg-base)] min-h-11 px-4 py-2 text-sm font-medium text-gray-700 shadow-none lg:hidden dark:border-white/10 dark:text-gray-200"
             >
                 <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 Ask AI
@@ -119,7 +119,7 @@ function AskAiTrigger({
             type="button"
             data-testid={testId}
             onClick={onClick}
-            className="flex w-full items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/[0.16]"
+            className="flex min-h-11 w-full items-center gap-2 rounded-md border border-blue-200 lg:min-h-0 bg-blue-50 px-3 py-2.5 text-sm font-medium text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 dark:border-blue-500/25 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:border-blue-500/40 dark:hover:bg-blue-500/[0.16]"
         >
             <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span>Ask AI</span>
