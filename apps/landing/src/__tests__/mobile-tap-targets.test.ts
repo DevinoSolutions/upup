@@ -8,6 +8,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => '/docs/' }))
 import FrameworkStrip from '@/components/FrameworkStrip'
 import ThemeToggler from '@/components/ThemeToggler'
 import { CodeCardControls } from '@/components/docs/CodeCardControls'
+import { MessageBody } from '@/components/docs/DocsAskAi'
 import { DocsSearchTrigger } from '@/components/docs/DocsSearch'
 import { DocsSidebar } from '@/components/docs/DocsSidebar'
 
@@ -238,5 +239,73 @@ describe('docs copy-code button on touch (T-2944)', () => {
 
     it('keeps the visible icon size', () => {
         expect(html).toMatch(/<svg[^>]*class="[^"]*\bh-3\.5 w-3\.5\b/)
+    })
+})
+
+describe('Ask AI chat copy-code button on touch (T-3023)', () => {
+    // Same fix as the docs code cards, on the chat's own fence renderer. The
+    // answer is a fixture string rendered through MessageBody: no agent request
+    // is made. The pre also gets mobile room so the 44px button fits a one-line
+    // fence (~42px) and the end of a long line can be scrolled clear of it.
+    const html = renderToStaticMarkup(
+        createElement(MessageBody, {
+            content: '```bash\nnpm i @useupup/react\n```',
+        }),
+    )
+    const [button] = classLists(html, 'button')
+    const [pre] = classLists(html, 'pre')
+
+    it('shows the button without hover on hover:none devices', () => {
+        expect(button).toContain('[@media(hover:none)]:opacity-100')
+    })
+
+    it('keeps the desktop hover and keyboard reveal', () => {
+        expect(button).toEqual(
+            expect.arrayContaining([
+                'opacity-0',
+                'group-hover:opacity-100',
+                'focus-visible:opacity-100',
+            ]),
+        )
+    })
+
+    it('gives it a 44px mobile hit area that lg undoes, centred on mobile only', () => {
+        expect(button).toEqual(
+            expect.arrayContaining([
+                'min-h-11',
+                'min-w-11',
+                'lg:min-h-0',
+                'lg:min-w-0',
+                'max-lg:flex',
+                'max-lg:items-center',
+                'max-lg:justify-center',
+            ]),
+        )
+        // Unscoped flex would change the desktop 28x28 box.
+        expect(button).not.toContain('flex')
+        expect(button).not.toContain('items-center')
+    })
+
+    it('insets the button on mobile and keeps the visible icon size', () => {
+        expect(button).toEqual(
+            expect.arrayContaining([
+                'right-1.5',
+                'top-1.5',
+                'max-lg:right-0.5',
+                'max-lg:top-0.5',
+            ]),
+        )
+        expect(html).toMatch(/<svg[^>]*class="[^"]*\bh-3\.5 w-3\.5\b/)
+    })
+
+    it('gives the pre mobile room for the button and leaves desktop padding alone', () => {
+        expect(pre).toEqual(
+            expect.arrayContaining([
+                'p-3',
+                'pr-9',
+                'max-lg:min-h-12',
+                'max-lg:pr-14',
+            ]),
+        )
     })
 })
