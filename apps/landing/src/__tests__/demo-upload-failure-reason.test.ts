@@ -225,6 +225,11 @@ describe('failureReasonFor', () => {
         ['Server responded with status 502', 'storage or server error'],
         ['NoSuchBucket', 'storage or server error'],
         ['Storage quota exceeded', 'storage quota exceeded'],
+        ['The server returned 504', 'storage or server error'],
+        ['Server responded with 503', 'storage or server error'],
+        ['File size exceeded the limit', 'file larger than the allowed size'],
+        ['Upload exceeds 10 MB', 'file larger than the allowed size'],
+        ['Total size exceeded', 'file larger than the allowed size'],
     ])('classifies %j as %j', (text, reason) => {
         expect(failureReasonFor(text)).toBe(reason)
     })
@@ -243,6 +248,23 @@ describe('failureReasonFor', () => {
         },
     )
 
+    it('lets the machine code win only when the text matches nothing', () => {
+        expect(failureReasonFor('Upload failed: something', 'CORS_ERROR')).toBe(
+            'blocked by browser cross-origin (CORS) policy',
+        )
+        expect(failureReasonFor('Upload failed: something', 'TIMEOUT')).toBe(
+            'request timed out',
+        )
+        // The text names a cause, so the code is not consulted.
+        expect(failureReasonFor('Failed to fetch', 'FILE_TOO_LARGE')).toBe(
+            'network request failed',
+        )
+        // Neither names a cause.
+        expect(failureReasonFor('Upload failed', 'LIMIT_EXCEEDED')).toBe(
+            UNCLASSIFIED_FAILURE_REASON,
+        )
+    })
+
     // Plain words and bare numbers that an earlier, looser keyword list took
     // for a cause.
     it.each([
@@ -254,6 +276,10 @@ describe('failureReasonFor', () => {
         'The extension host crashed',
         'mime',
         'Entry 413 of 600 was skipped',
+        'error: 512 MB limit',
+        'Error 512 bytes',
+        'Maximum of 5 files exceeded',
+        'Limit exceeded',
     ])('leaves %j unclassified', text => {
         expect(failureReasonFor(text)).toBe(UNCLASSIFIED_FAILURE_REASON)
     })

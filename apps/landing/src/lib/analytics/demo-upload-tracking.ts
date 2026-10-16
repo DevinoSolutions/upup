@@ -84,11 +84,12 @@ export function safeFailureCode(code: string | null): string | undefined {
  * A pattern for an HTTP status that reads as one: next to a word like status /
  * server / gateway, at the start of the text ("503 Service Unavailable"), or
  * followed by its reason word. A bare three-digit number is not enough, since
- * a file name or a size can contain one.
+ * a file name or a size can contain one. A status followed by a size unit
+ * ("error: 512 MB limit") is a size, not a status.
  */
 function statusCode(digits: string): string {
     return (
-        String.raw`(?:\b(?:status|http|code|error|server|service|gateway)\W{0,3}|^\W*)(?:${digits})\b` +
+        String.raw`(?:\b(?:status|http|code|error|server|service|gateway|returned|responded(?: with)?)\W{0,3}|^\W*)(?:${digits})\b(?!\s*(?:[kmgt]i?b|bytes?)\b)` +
         String.raw`|\b(?:${digits})\s+(?:payload|request|content|entity|forbidden|unauthori[sz]ed|internal|service|bad|gateway|server)`
     )
 }
@@ -108,7 +109,7 @@ const FAILURE_REASONS: ReadonlyArray<readonly [RegExp, string]> = [
     [/quota/i, 'storage quota exceeded'],
     [
         new RegExp(
-            String.raw`too large|too big|exceed|entitytoolarge|file size|payload too large|${statusCode('413')}`,
+            String.raw`too large|too big|entitytoolarge|file size|payload too large|(?:size|bytes?|[kmgt]b)\W+(?:\w+\W+){0,4}exceed|exceed\w*\W+(?:\w+\W+){0,4}(?:size|bytes?|[kmgt]b)\b|${statusCode('413')}`,
             'i',
         ),
         'file larger than the allowed size',
