@@ -30,8 +30,43 @@ export function demoUploadEventFor(
     return null
 }
 
-/** Codes S3 and S3-compatible stores return that name the failure and no user. */
-const KNOWN_S3_CODES: ReadonlySet<string> = new Set([
+/**
+ * Every code the uploader can show as `failure_code`, and nothing else: the
+ * `UpupErrorCode` enum in packages/core/src/errors.ts (copied, not imported, so
+ * core stays out of this bundle) plus the S3 / S3-compatible codes the storage
+ * layer can return. An exact list rather than a pattern, because a pattern
+ * cannot tell `PRESIGN_FAILED` from a code that happens to spell a name.
+ * demo-upload-failure-reason.test.ts reads errors.ts and fails when a core code
+ * is missing here, so add new core codes to this list.
+ */
+const KNOWN_FAILURE_CODES: ReadonlySet<string> = new Set([
+    // packages/core/src/errors.ts: UpupErrorCode
+    'AUTH_EXPIRED',
+    'AUTH_DENIED',
+    'AUTH_PROVIDER_ERROR',
+    'AUTH_POPUP_BLOCKED',
+    'FILE_TOO_LARGE',
+    'FILE_TOO_SMALL',
+    'TYPE_MISMATCH',
+    'LIMIT_EXCEEDED',
+    'TOTAL_SIZE_EXCEEDED',
+    'DUPLICATE',
+    'MIN_FILES_NOT_MET',
+    'UPLOAD_FAILED',
+    'UPLOAD_ABORTED',
+    'PRESIGN_FAILED',
+    'CORS_ERROR',
+    'PIPELINE_STEP_FAILED',
+    'HEIC_CONVERSION_FAILED',
+    'NETWORK_ERROR',
+    'TIMEOUT',
+    'STORAGE_ERROR',
+    'QUOTA_EXCEEDED',
+    'NO_UPLOAD_TARGET',
+    'BAD_REQUEST',
+    'AUTH_REQUIRED',
+    'NOT_FOUND',
+    // S3 and S3-compatible stores
     'EntityTooLarge',
     'AccessDenied',
     'SignatureDoesNotMatch',
@@ -40,17 +75,9 @@ const KNOWN_S3_CODES: ReadonlySet<string> = new Set([
     'NoSuchBucket',
 ])
 
-/**
- * The upload library's own machine codes are SCREAMING_SNAKE with at least one
- * underscore (`PRESIGN_FAILED`, `FILE_TOO_LARGE`). Requiring the underscore
- * keeps a bare upper-case token, such as an access key id, out.
- */
-const UPUP_CODE = /^[A-Z][A-Z0-9]{1,15}(_[A-Z0-9]{1,15}){1,4}$/
-
-/** The code worth sending, or undefined for anything not on the allow-list. */
+/** The code worth sending, or undefined for anything not on the list. */
 export function safeFailureCode(code: string | null): string | undefined {
-    if (!code || code.length > 40) return undefined
-    return KNOWN_S3_CODES.has(code) || UPUP_CODE.test(code) ? code : undefined
+    return code && KNOWN_FAILURE_CODES.has(code) ? code : undefined
 }
 
 /**

@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const capture = vi.hoisted(() => vi.fn())
@@ -150,8 +153,29 @@ describe('safeFailureCode', () => {
         },
     )
 
+    // The core enum is the source of the list; a code added there and not to
+    // KNOWN_FAILURE_CODES would silently never reach analytics.
+    it('keeps every UpupErrorCode of packages/core/src/errors.ts', () => {
+        // fileURLToPath on the string: jsdom replaces the global URL class.
+        const here = dirname(fileURLToPath(import.meta.url))
+        const source = readFileSync(
+            resolve(here, '../../../../packages/core/src/errors.ts'),
+            'utf8',
+        )
+        const body = /export enum UpupErrorCode \{([\s\S]*?)\n\}/.exec(source)
+        expect(body).not.toBeNull()
+        const codes = [...body![1]!.matchAll(/^\s*([A-Z_]+) = '([A-Z_]+)'/gm)]
+        expect(codes.length).toBeGreaterThan(20)
+        for (const [, name, value] of codes) {
+            expect(name).toBe(value)
+            expect(safeFailureCode(value!)).toBe(value)
+        }
+    })
+
     it.each([
         'holiday.jpg',
+        'JOHN_DOE_RESUME_PDF',
+        'AKIA_IOSFODNN7_EXAMPLE',
         'john.doe',
         'AKIAIOSFODNN7EXAMPLE',
         'ACCESSDENIED',
@@ -187,7 +211,10 @@ describe('failureReasonFor', () => {
             'file larger than the allowed size',
         ],
         ['413 Payload Too Large', 'file larger than the allowed size'],
-        ['Server responded with status 413', 'file larger than the allowed size'],
+        [
+            'Server responded with status 413',
+            'file larger than the allowed size',
+        ],
         ['File type not allowed', 'file type not allowed'],
         [
             'AccessDenied: Request has expired',
@@ -207,9 +234,14 @@ describe('failureReasonFor', () => {
         ['TOTAL_SIZE_EXCEEDED', 'file larger than the allowed size'],
         ['NETWORK_ERROR', 'network request failed'],
         ['AUTH_DENIED', 'upload permission or signed URL rejected'],
-    ])('classifies by the machine code %s when the text has no keyword', (code, reason) => {
-        expect(failureReasonFor('Upload failed: something', code)).toBe(reason)
-    })
+    ])(
+        'classifies by the machine code %s when the text has no keyword',
+        (code, reason) => {
+            expect(failureReasonFor('Upload failed: something', code)).toBe(
+                reason,
+            )
+        },
+    )
 
     // Plain words and bare numbers that an earlier, looser keyword list took
     // for a cause.
