@@ -67,6 +67,7 @@ const STOPWORDS = new Set([
     'you',
     'your',
     'get',
+    'getting',
     'make',
     'work',
 ])
@@ -76,20 +77,33 @@ const STOPWORDS = new Set([
 const INSTALL_INTENT = new Set(['install', 'quickstart', 'started'])
 const INSTALL_PATHS = ['/quickstarts/', '/getting-started']
 
+// Words that appear in the title and path of dozens of pages (every
+// comparison page is "...file upload..."), so boosting them there buries the
+// page that actually names the topic. They still count in the body.
+const GENERIC_TERMS = new Set([
+    'upload',
+    'uploads',
+    'uploader',
+    'file',
+    'files',
+])
+
 /**
  * Crude, deterministic stemmer so `theme` matches `theming` and `drives`
- * matches `drive`: strip one common suffix, then a trailing `e`. Used for
+ * matches `drive`: strip one common suffix (`es` only after a sibilant, so
+ * `files` -> `file`, `boxes` -> `box`), then a trailing `e` from longer words
+ * only, so a short word like `file` is not over-stripped to `fil`. Used for
  * title and URL-path matching, which stays substring-based.
  */
-function stem(word: string): string {
+export function stem(word: string): string {
     let w = word
     for (const suffix of ['ing', 'es', 'ed', 's']) {
-        if (w.endsWith(suffix) && w.length - suffix.length >= 3) {
-            w = w.slice(0, -suffix.length)
-            break
-        }
+        if (!w.endsWith(suffix) || w.length - suffix.length < 3) continue
+        if (suffix === 'es' && !/(s|x|z|ch|sh)es$/.test(w)) continue
+        w = w.slice(0, -suffix.length)
+        break
     }
-    return w.length > 3 && w.endsWith('e') ? w.slice(0, -1) : w
+    return w.length > 4 && w.endsWith('e') ? w.slice(0, -1) : w
 }
 
 export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
@@ -103,6 +117,14 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
     const onlyFiller = meaningful.length === 0
     const terms = onlyFiller ? tokens : meaningful
     if (terms.length === 0) return []
+    // "upload files to backblaze": generic terms must not drive title/path
+    // boosts. A query made only of them ("file upload") keeps the boost.
+    const hasSpecific = terms.some(t => !GENERIC_TERMS.has(t))
+    const boostsTitlePath = (t: string) => !hasSpecific || !GENERIC_TERMS.has(t)
+    // Terms beyond install intent: they say what the user is actually after.
+    const topicTerms = onlyFiller
+        ? []
+        : terms.filter(t => !INSTALL_INTENT.has(t) && boostsTitlePath(t))
     return chunks
         .map(chunk => {
             const title = chunk.title.toLowerCase()
@@ -113,16 +135,29 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
             const lengthNorm = Math.sqrt(Math.max(body.length, 1))
             const segments = path.split('/')
             const installPage = INSTALL_PATHS.some(p => path.includes(p))
+            // "getting started with server mode" is about server mode, not
+            // install: scale the intent boost by the share of topic terms
+            // this page's title/path covers, so "React install" keeps the
+            // react quickstart's full boost while server-mode drops it.
+            const topicCoverage =
+                topicTerms.length === 0
+                    ? 1
+                    : topicTerms.filter(t => {
+                          const root = stem(t)
+                          return title.includes(root) || path.includes(root)
+                      }).length / topicTerms.length
             let score = 0
             for (const term of terms) {
                 // Stem for title/path (theme -> theming); body counts stay
                 // literal so a short stem like "mod" cannot hit "module".
-                const root = stem(term)
-                if (title.includes(root)) score += TITLE_BOOST
-                if (path.includes(root)) score += PATH_BOOST
-                if (segments.includes(term)) score += SEGMENT_BOOST
+                if (boostsTitlePath(term)) {
+                    const root = stem(term)
+                    if (title.includes(root)) score += TITLE_BOOST
+                    if (path.includes(root)) score += PATH_BOOST
+                    if (segments.includes(term)) score += SEGMENT_BOOST
+                }
                 if (installPage && (onlyFiller || INSTALL_INTENT.has(term)))
-                    score += INTENT_BOOST
+                    score += INTENT_BOOST * topicCoverage
                 score += (body.split(term).length - 1) / lengthNorm
             }
             return { chunk, score }
