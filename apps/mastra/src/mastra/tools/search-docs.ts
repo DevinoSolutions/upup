@@ -27,21 +27,81 @@ export function parseLlmsFull(text: string): DocsChunk[] {
 }
 
 const TITLE_BOOST = 5
+const PATH_BOOST = 5
+const SEGMENT_BOOST = 5
+const INTENT_BOOST = 8
+
+// Generic question filler. These words appear on nearly every page, so
+// counting them just rewards the longest pages instead of the relevant one.
+const STOPWORDS = new Set([
+    'the',
+    'and',
+    'for',
+    'with',
+    'from',
+    'that',
+    'this',
+    'what',
+    'how',
+    'can',
+    'does',
+    'show',
+    'tell',
+    'give',
+    'please',
+    'minimal',
+    'simple',
+    'basic',
+    'usage',
+    'use',
+    'using',
+    'code',
+    'example',
+    'examples',
+    'snippet',
+    'upup',
+    'need',
+    'want',
+    'about',
+    'are',
+    'you',
+    'your',
+    'get',
+    'make',
+    'work',
+])
+
+// Install-style questions belong on the quickstart / getting-started pages,
+// whose bodies are short and so lose a pure keyword count to long reference pages.
+const INSTALL_INTENT = new Set(['install', 'setup', 'quickstart', 'started'])
+const INSTALL_PATHS = ['/quickstarts/', '/getting-started']
 
 export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
     const terms = query
         .toLowerCase()
         .split(/\W+/)
-        .filter(t => t.length > 2)
+        .filter(t => t.length > 2 && !STOPWORDS.has(t))
     if (terms.length === 0) return []
     return chunks
         .map(chunk => {
             const title = chunk.title.toLowerCase()
+            const path = urlPath(chunk.url)
             const body = chunk.body.toLowerCase()
+            // Raw counts grow with page length; sqrt-normalise so a long page
+            // full of generic words cannot outrank a short, on-topic one.
+            const lengthNorm = Math.sqrt(Math.max(body.length, 1))
+            const segments = path.split('/')
             let score = 0
             for (const term of terms) {
                 if (title.includes(term)) score += TITLE_BOOST
-                score += body.split(term).length - 1
+                if (path.includes(term)) score += PATH_BOOST
+                if (segments.includes(term)) score += SEGMENT_BOOST
+                if (
+                    INSTALL_INTENT.has(term) &&
+                    INSTALL_PATHS.some(p => path.includes(p))
+                )
+                    score += INTENT_BOOST
+                score += (body.split(term).length - 1) / lengthNorm
             }
             return { chunk, score }
         })
@@ -50,9 +110,18 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
         .map(entry => entry.chunk)
 }
 
+/** URL path only (e.g. `/docs/quickstarts/react/`), so the host never matches. */
+function urlPath(url: string): string {
+    try {
+        return new URL(url).pathname.toLowerCase()
+    } catch {
+        return ''
+    }
+}
+
 const CACHE_TTL_MS = 60 * 60 * 1000
 const EXCERPT_MAX = 1500
-const TOP_K = 4
+const TOP_K = 5
 
 let cache: { chunks: DocsChunk[]; fetchedAt: number } | null = null
 
