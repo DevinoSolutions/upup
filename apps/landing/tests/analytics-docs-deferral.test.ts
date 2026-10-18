@@ -206,6 +206,16 @@ describe('deferred PostHog boot keeps first-pageview attribution', () => {
         expect(posthog.capture).not.toHaveBeenCalled()
     })
 
+    it('adds no second $pageview when the visitor is still on the entry page at boot', async () => {
+        const { remember, boot } = await bootAt(DOCS_URL)
+        remember()
+        boot()
+        await vi.waitFor(() => expect(posthog.init).toHaveBeenCalledTimes(1))
+        // Let the post-init() continuation run before asserting the absence.
+        await vi.dynamicImportSettled()
+        expect(posthog.capture).not.toHaveBeenCalled()
+    })
+
     it('records the entry page view with its UTMs and original time when the visitor left before boot', async () => {
         vi.useFakeTimers()
         vi.setSystemTime(new Date('2026-10-17T12:00:00.000Z'))

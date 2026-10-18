@@ -1,3 +1,4 @@
+import 'server-only'
 import pkg from '../../../package.json'
 import { APP_ID } from './contract'
 
