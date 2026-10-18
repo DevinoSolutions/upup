@@ -77,7 +77,36 @@ describe('scoreChunks on a real-shaped corpus', () => {
         expect(ranked[0].url).toContain('server-mode-setup')
     })
 
-    it('drops stopword-only queries', () => {
-        expect(scoreChunks(chunks, 'show me the how to')).toHaveLength(0)
+    it('falls back to the raw words when a query is all filler', () => {
+        expect(scoreChunks(chunks, 'what is upup').length).toBeGreaterThan(0)
+    })
+
+    it('does not treat "setup" as install intent for storage questions', () => {
+        const quickstart = (fw: string) =>
+            `# Framework quickstarts\nhttps://useupup.com/docs/quickstarts/${fw}/\n\n${fw} quickstart setup: install @useupup/${fw} and render the uploader.`
+        const withStorage = parseLlmsFull(
+            [
+                REAL_SHAPED,
+                '# Storage providers\nhttps://useupup.com/docs/guides/storage/aws-s3/\n\nS3 setup: create a bucket, set CORS, and add the credentials to the server handler.',
+                ...['vue', 'svelte', 'next', 'angular'].map(quickstart),
+            ].join('\n---\n'),
+        )
+        const top3 = scoreChunks(withStorage, 'S3 setup')
+            .slice(0, 3)
+            .map(c => c.url)
+        expect(top3.some(u => u.includes('/storage/aws-s3/'))).toBe(true)
+        expect(top3.every(u => u.includes('/quickstarts/'))).toBe(false)
+    })
+
+    it('matches theme to theming via light stemming', () => {
+        const themed = parseLlmsFull(
+            [
+                REAL_SHAPED,
+                '# Theming\nhttps://useupup.com/docs/guides/theming/\n\nCustomize colors and dark mode.',
+            ].join('\n---\n'),
+        )
+        expect(scoreChunks(themed, 'theme dark mode')[0].url).toContain(
+            '/theming/',
+        )
     })
 })

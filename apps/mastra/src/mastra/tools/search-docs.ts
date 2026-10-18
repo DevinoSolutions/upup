@@ -73,14 +73,35 @@ const STOPWORDS = new Set([
 
 // Install-style questions belong on the quickstart / getting-started pages,
 // whose bodies are short and so lose a pure keyword count to long reference pages.
-const INSTALL_INTENT = new Set(['install', 'setup', 'quickstart', 'started'])
+const INSTALL_INTENT = new Set(['install', 'quickstart', 'started'])
 const INSTALL_PATHS = ['/quickstarts/', '/getting-started']
 
+/**
+ * Crude, deterministic stemmer so `theme` matches `theming` and `drives`
+ * matches `drive`: strip one common suffix, then a trailing `e`. Used for
+ * title and URL-path matching, which stays substring-based.
+ */
+function stem(word: string): string {
+    let w = word
+    for (const suffix of ['ing', 'es', 'ed', 's']) {
+        if (w.endsWith(suffix) && w.length - suffix.length >= 3) {
+            w = w.slice(0, -suffix.length)
+            break
+        }
+    }
+    return w.length > 3 && w.endsWith('e') ? w.slice(0, -1) : w
+}
+
 export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
-    const terms = query
+    // Keep 3+ letter words, plus short tokens with a digit (`s3`, `v2`).
+    const tokens = query
         .toLowerCase()
         .split(/\W+/)
-        .filter(t => t.length > 2 && !STOPWORDS.has(t))
+        .filter(t => t.length > 2 || (t.length === 2 && /\d/.test(t)))
+    const meaningful = tokens.filter(t => !STOPWORDS.has(t))
+    // A query that is all filler ("what is upup") still has to find something.
+    const onlyFiller = meaningful.length === 0
+    const terms = onlyFiller ? tokens : meaningful
     if (terms.length === 0) return []
     return chunks
         .map(chunk => {
@@ -91,15 +112,16 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
             // full of generic words cannot outrank a short, on-topic one.
             const lengthNorm = Math.sqrt(Math.max(body.length, 1))
             const segments = path.split('/')
+            const installPage = INSTALL_PATHS.some(p => path.includes(p))
             let score = 0
             for (const term of terms) {
-                if (title.includes(term)) score += TITLE_BOOST
-                if (path.includes(term)) score += PATH_BOOST
+                // Stem for title/path (theme -> theming); body counts stay
+                // literal so a short stem like "mod" cannot hit "module".
+                const root = stem(term)
+                if (title.includes(root)) score += TITLE_BOOST
+                if (path.includes(root)) score += PATH_BOOST
                 if (segments.includes(term)) score += SEGMENT_BOOST
-                if (
-                    INSTALL_INTENT.has(term) &&
-                    INSTALL_PATHS.some(p => path.includes(p))
-                )
+                if (installPage && (onlyFiller || INSTALL_INTENT.has(term)))
                     score += INTENT_BOOST
                 score += (body.split(term).length - 1) / lengthNorm
             }
