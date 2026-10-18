@@ -1,10 +1,9 @@
 import { captureServerEvent } from '@/lib/analytics/capture.server'
+import { APP_ID, SUPPORT_REQUEST_SUBMITTED } from '@/lib/analytics/contract'
 import {
-    APP_ID,
     APP_VERSION,
-    SUPPORT_REQUEST_SUBMITTED,
     buildFeedbackProperties,
-} from '@/lib/analytics/contract'
+} from '@/lib/analytics/contract.server'
 import { serverDatasetCredentials } from '@/lib/analytics/dataset.server'
 import { sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
