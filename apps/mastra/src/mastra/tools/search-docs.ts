@@ -75,6 +75,18 @@ const STOPWORDS = new Set([
 // Install-style questions belong on the quickstart / getting-started pages,
 // whose bodies are short and so lose a pure keyword count to long reference pages.
 const INSTALL_INTENT = new Set(['install', 'quickstart', 'started'])
+// Package-manager words describe HOW to install, never WHAT is being
+// installed, and they never appear in titles or paths. Counting them as topic
+// terms would zero the coverage of every install page.
+const INSTALL_FILLER = new Set([
+    'npm',
+    'pnpm',
+    'yarn',
+    'bun',
+    'npx',
+    'add',
+    'package',
+])
 const INSTALL_PATHS = ['/quickstarts/', '/getting-started']
 
 // Words that appear in the title and path of dozens of pages (every
@@ -124,7 +136,12 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
     // Terms beyond install intent: they say what the user is actually after.
     const topicTerms = onlyFiller
         ? []
-        : terms.filter(t => !INSTALL_INTENT.has(t) && boostsTitlePath(t))
+        : terms.filter(
+              t =>
+                  !INSTALL_INTENT.has(t) &&
+                  !INSTALL_FILLER.has(t) &&
+                  boostsTitlePath(t),
+          )
     return chunks
         .map(chunk => {
             const title = chunk.title.toLowerCase()

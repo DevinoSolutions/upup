@@ -124,6 +124,12 @@ const LIVE_SHAPED = [
     ),
     `# Best React File Upload Libraries\nhttps://useupup.com/docs/comparisons/best-react-file-upload-libraries/\n\n${pad('upload files upload file uploader', 80)}`,
     `# UPUP vs ng2-file-upload\nhttps://useupup.com/docs/comparisons/upup-vs-ng2-file-upload/\n\n${pad('upload files file uploader', 80)}`,
+    `# HEIC Conversion\nhttps://useupup.com/docs/guides/heic-conversion/\n\n${pad('pnpm add libheif-js npm install pnpm install', 12)}`,
+    `# Express Adapter\nhttps://useupup.com/docs/guides/server-adapters/express/\n\n${pad('pnpm add express npm install pnpm', 12)}`,
+    ...['Hono', 'Fastify', 'Resumable Uploads'].map(
+        name =>
+            `# ${name}\nhttps://useupup.com/docs/guides/${name.toLowerCase().replace(/\W/g, '-')}/\n\n${pad('pnpm add npm install pnpm install', 12)}`,
+    ),
     '# Backblaze B2\nhttps://useupup.com/docs/guides/storage/backblaze-b2/\n\nUse Backblaze B2 as S3-compatible storage: create a bucket and an application key.',
 ].join('\n---\n')
 
@@ -154,6 +160,19 @@ describe('scoreChunks ranking follow-ups (T-3644)', () => {
         ).toBe(true)
     })
 
+    it.each(['how do I install upup with pnpm', 'npm install upup'])(
+        'keeps an install page in the top 3 for "%s"',
+        query => {
+            expect(
+                top(query, 3).some(
+                    u =>
+                        u.includes('/quickstarts/') ||
+                        u.includes('/getting-started/'),
+                ),
+            ).toBe(true)
+        },
+    )
+
     it('does not title/path-boost generic terms, so a named provider wins', () => {
         expect(top('upload files to backblaze', 1)[0]).toContain(
             '/storage/backblaze-b2/',
@@ -167,6 +186,12 @@ describe('stem', () => {
     })
     it('still maps theme and theming to one root', () => {
         expect(stem('theme')).toBe(stem('theming'))
+    })
+    it('pins the edge stems', () => {
+        expect(stem('uses')).toBe('use')
+        expect(stem('axes')).toBe('axe')
+        expect(stem('images')).toBe('imag')
+        expect(stem('images')).toBe(stem('image'))
     })
     it('strips "es" only after sibilants', () => {
         expect(stem('boxes')).toBe('box')
