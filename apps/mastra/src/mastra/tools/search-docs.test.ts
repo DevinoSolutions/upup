@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseLlmsFull, scoreChunks } from './search-docs.js'
+import { parseLlmsFull, scoreChunks, stem } from './search-docs.js'
 
 const CORPUS = [
     '# Getting Started\nhttps://useupup.com/docs/getting-started/\n\nInstall upup with pnpm add @useupup/react. Then render the uploader.',
@@ -108,5 +108,93 @@ describe('scoreChunks on a real-shaped corpus', () => {
         expect(scoreChunks(themed, 'theme dark mode')[0].url).toContain(
             '/theming/',
         )
+    })
+})
+
+// Titles and paths mirror the live corpus: server-mode-setup's title carries
+// only "Server", quickstart titles all contain "Quickstart", and the
+// comparison pages have "File Upload" in both title and path.
+const LIVE_SHAPED = [
+    `# Secure S3 File Upload Server for Node.js and Next.js\nhttps://useupup.com/docs/guides/server-mode-setup/\n\nSet up server mode: ${pad('server handler presign route', 40)} Configure the HMAC secret.`,
+    '# Getting Started\nhttps://useupup.com/docs/getting-started/\n\nInstall upup with pnpm add @useupup/react, then render the uploader.',
+    '# Framework quickstarts\nhttps://useupup.com/docs/quickstarts/\n\nPick a framework quickstart.',
+    ...['React', 'Next.js', 'Vue', 'Svelte', 'Vanilla JS', 'Angular'].map(
+        fw =>
+            `# ${fw} Quickstart\nhttps://useupup.com/docs/quickstarts/${fw.toLowerCase().replace(/\W/g, '')}/\n\nInstall @useupup and render the uploader in ${fw}.`,
+    ),
+    `# Best React File Upload Libraries\nhttps://useupup.com/docs/comparisons/best-react-file-upload-libraries/\n\n${pad('upload files upload file uploader', 80)}`,
+    `# UPUP vs ng2-file-upload\nhttps://useupup.com/docs/comparisons/upup-vs-ng2-file-upload/\n\n${pad('upload files file uploader', 80)}`,
+    `# HEIC Conversion\nhttps://useupup.com/docs/guides/heic-conversion/\n\n${pad('pnpm add libheif-js npm install pnpm install', 12)}`,
+    `# Express Adapter\nhttps://useupup.com/docs/guides/server-adapters/express/\n\n${pad('pnpm add express npm install pnpm', 12)}`,
+    ...['Hono', 'Fastify', 'Resumable Uploads'].map(
+        name =>
+            `# ${name}\nhttps://useupup.com/docs/guides/${name.toLowerCase().replace(/\W/g, '-')}/\n\n${pad('pnpm add npm install pnpm install', 12)}`,
+    ),
+    '# Backblaze B2\nhttps://useupup.com/docs/guides/storage/backblaze-b2/\n\nUse Backblaze B2 as S3-compatible storage: create a bucket and an application key.',
+].join('\n---\n')
+
+describe('scoreChunks ranking follow-ups (T-3644)', () => {
+    const chunks = parseLlmsFull(LIVE_SHAPED)
+    const top = (query: string, n: number) =>
+        scoreChunks(chunks, query)
+            .slice(0, n)
+            .map(c => c.url)
+
+    it('keeps server-mode-setup in the top 3 for "getting started with server mode"', () => {
+        expect(
+            top('getting started with server mode', 3).some(u =>
+                u.includes('server-mode-setup'),
+            ),
+        ).toBe(true)
+    })
+
+    it('still boosts quickstarts when the other terms match them', () => {
+        expect(top('React install', 1)[0]).toContain('/quickstarts/react/')
+    })
+
+    it('keeps install pages ahead of "upup vs" pages for an all-filler query', () => {
+        const first = top('what is upup', 1)[0]
+        expect(
+            first.includes('/quickstarts/') ||
+                first.includes('/getting-started/'),
+        ).toBe(true)
+    })
+
+    it.each(['how do I install upup with pnpm', 'npm install upup'])(
+        'keeps an install page in the top 3 for "%s"',
+        query => {
+            expect(
+                top(query, 3).some(
+                    u =>
+                        u.includes('/quickstarts/') ||
+                        u.includes('/getting-started/'),
+                ),
+            ).toBe(true)
+        },
+    )
+
+    it('does not title/path-boost generic terms, so a named provider wins', () => {
+        expect(top('upload files to backblaze', 1)[0]).toContain(
+            '/storage/backblaze-b2/',
+        )
+    })
+})
+
+describe('stem', () => {
+    it('keeps "files" as "file" instead of the over-stripped "fil"', () => {
+        expect(stem('files')).toBe('file')
+    })
+    it('still maps theme and theming to one root', () => {
+        expect(stem('theme')).toBe(stem('theming'))
+    })
+    it('pins the edge stems', () => {
+        expect(stem('uses')).toBe('use')
+        expect(stem('axes')).toBe('axe')
+        expect(stem('images')).toBe('imag')
+        expect(stem('images')).toBe(stem('image'))
+    })
+    it('strips "es" only after sibilants', () => {
+        expect(stem('boxes')).toBe('box')
+        expect(stem('matches')).toBe('match')
     })
 })
