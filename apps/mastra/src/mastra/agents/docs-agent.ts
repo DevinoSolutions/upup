@@ -4,6 +4,15 @@ import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
 import { searchDocs } from '../tools/search-docs.js'
 
 /**
+ * Mastra's default step budget is 5; the agent used to burn all of it on
+ * back-to-back searches and end on `tool-calls` with no answer text. 8 leaves
+ * room for the (at most 2) searches plus the answer step.
+ */
+const DOCS_AGENT_MAX_STEPS = 8
+
+const modelDefaults = agentDefaultOptions(env)
+
+/**
  * The docs assistant agent.
  *
  * Answers questions about upup grounded ONLY in the deployed docs corpus,
@@ -22,10 +31,18 @@ Rules:
 - ALWAYS call the search-docs tool before answering. Answer ONLY from the retrieved content.
 - Cite your sources: link the pages you used as markdown links to their /docs/... URLs (strip the origin, keep the path, keep the trailing slash).
 - If search-docs returns nothing relevant (or an error), say you could not find it in the docs and point the user to the closest section instead. Never invent props, options, or APIs.
+- Do not narrate before calling a tool; call search-docs straight away.
+- Search at most 2 times. After that, answer from the best results you have, and include code when the user asked for it. Never keep searching for a perfect match.
 - Be concise. Prefer a short answer plus a code example in a fenced code block over prose.
 - Only answer questions about upup and its documentation. For anything else, say you only cover the upup docs.
     `.trim(),
     model: agentModel(env),
-    ...agentDefaultOptions(env),
+    // Merge into the model-specific defaults (providerOptions), never replace them.
+    defaultOptions: {
+        ...('defaultOptions' in modelDefaults
+            ? modelDefaults.defaultOptions
+            : {}),
+        maxSteps: DOCS_AGENT_MAX_STEPS,
+    },
     tools: { searchDocs },
 })

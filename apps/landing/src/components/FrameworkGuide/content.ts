@@ -176,6 +176,12 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
                 license: 'MIT',
             },
             {
+                name: 'Better Upload',
+                what: 'Presigned S3 upload hooks and shadcn/ui components; React client only',
+                cloudDrives: NO,
+                license: 'MIT',
+            },
+            {
                 name: 'react-uploady',
                 what: 'Upload hooks and components, with chunked and tus add-ons',
                 cloudDrives: NO,
@@ -201,6 +207,18 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             {
                 href: '/docs/comparisons/upup-vs-uploadthing/',
                 label: 'upup vs UploadThing',
+            },
+            {
+                href: '/docs/comparisons/uploadthing-pricing/',
+                label: 'UploadThing pricing and S3 costs',
+            },
+            {
+                href: '/docs/comparisons/upup-vs-better-upload/',
+                label: 'upup vs Better Upload',
+            },
+            {
+                href: '/docs/comparisons/primevue-primereact-fileupload-alternatives/',
+                label: 'PrimeReact FileUpload alternatives',
             },
         ],
     },
@@ -238,7 +256,19 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             },
         ],
         comparisonLink: roundup('vue', 'Vue'),
-        links: [quickstart('vue', 'Vue'), PROPS_REFERENCE, ...SHARED_LINKS],
+        links: [
+            quickstart('vue', 'Vue'),
+            PROPS_REFERENCE,
+            {
+                href: '/docs/comparisons/primevue-primereact-fileupload-alternatives/',
+                label: 'PrimeVue FileUpload alternatives',
+            },
+            {
+                href: '/docs/comparisons/upup-vs-devextreme-fileuploader/',
+                label: 'upup vs DevExtreme FileUploader',
+            },
+            ...SHARED_LINKS,
+        ],
     },
     svelte: {
         drivesFile: 'Uploader.svelte',
@@ -263,7 +293,7 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             { ...FILEPOND, what: 'Upload widget with a Svelte adapter' },
             UPPY,
         ],
-        comparisonLink: COMPARISONS_HUB,
+        comparisonLink: roundup('svelte', 'Svelte'),
         links: [
             quickstart('svelte', 'Svelte'),
             PROPS_REFERENCE,
@@ -308,11 +338,25 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
                 cloudDrives: NO,
                 license: 'MIT',
             },
+            {
+                name: 'ng2-file-upload',
+                what: 'Upload queue and directives; you build the interface',
+                cloudDrives: NO,
+                license: 'MIT',
+            },
         ],
         comparisonLink: roundup('angular', 'Angular'),
         links: [
             quickstart('angular', 'Angular'),
             PROPS_REFERENCE,
+            {
+                href: '/docs/comparisons/upup-vs-ng2-file-upload/',
+                label: 'upup vs ng2-file-upload',
+            },
+            {
+                href: '/docs/comparisons/upup-vs-devextreme-fileuploader/',
+                label: 'upup vs DevExtreme FileUploader',
+            },
             ...SHARED_LINKS,
         ],
     },
@@ -340,7 +384,14 @@ export const FRAMEWORK_GUIDES: Record<FrameworkId, FrameworkGuideContent> = {
             UPPY,
         ],
         comparisonLink: roundup('vanilla-js', 'Vanilla JavaScript'),
-        links: [quickstart('vanilla', 'Vanilla JS'), ...SHARED_LINKS],
+        links: [
+            quickstart('vanilla', 'Vanilla JS'),
+            {
+                href: '/docs/comparisons/best-javascript-image-upload-libraries/',
+                label: 'JavaScript image upload libraries compared',
+            },
+            ...SHARED_LINKS,
+        ],
     },
     preact: {
         drivesFile: 'App.tsx',

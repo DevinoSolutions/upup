@@ -2,10 +2,16 @@ import { clientEnv } from '@/lib/client/env'
 
 export const GA_TRACKING_ID = clientEnv.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
 
+// gtag.js only exists when a GA ID is configured, and it loads lazily, so a
+// call can come before it (or with none at all). Never let analytics throw
+// into the caller: the homepage Notify-me modal opens after event().
+const gtagLoaded = () => typeof window.gtag === 'function'
+
 export const pageView = (url: string) => {
     if (
         process.env.NODE_ENV === 'production' &&
-        typeof window !== 'undefined'
+        typeof window !== 'undefined' &&
+        gtagLoaded()
     ) {
         window.gtag('config', GA_TRACKING_ID || '', {
             page_path: url,
@@ -31,7 +37,8 @@ export const event = ({
 }: Params) => {
     if (
         process.env.NODE_ENV === 'production' &&
-        typeof window !== 'undefined'
+        typeof window !== 'undefined' &&
+        gtagLoaded()
     ) {
         window.gtag('event', action, {
             event_category,

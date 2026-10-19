@@ -461,6 +461,16 @@ body {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
+/* Below lg the copy button (CodeCardControls) is always visible and 44px, and
+   the card reserves no space for it, so it would sit over the end of a long
+   first line. Reserve its width (44px + 4px inset + gap) so the line is not
+   covered and the user can still scroll to its end. Same breakpoint as the
+   button's `lg:` size undo / Tailwind's `max-lg`; desktop is untouched. */
+@media not all and (min-width: 1024px) {
+    .upup-code > pre {
+        padding-right: 3.5rem;
+    }
+}
 .upup-code > pre::-webkit-scrollbar {
     height: 8px;
 }

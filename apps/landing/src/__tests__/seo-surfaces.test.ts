@@ -64,12 +64,12 @@ function nodeOfType(
 describe('sitemap enumerates only canonical, indexable page URLs', () => {
     const entries = sitemap()
 
-    it('lists the homepage, six framework pages, support and privacy, the agent-setup pages, and all 78 docs pages', () => {
+    it('lists the homepage, six framework pages, support and privacy, the agent-setup pages, and all 81 docs pages', () => {
         // 1 home + 6 frameworks + support + privacy + agent-setup index + 4
-        // per-agent guides + 78 fumadocs pages. The docs count is
+        // per-agent guides + 81 fumadocs pages. The docs count is
         // independently pinned by docs-source.test.ts, so a page added to
         // content/docs updates both or neither.
-        expect(entries).toHaveLength(1 + 6 + 2 + 1 + 4 + 78)
+        expect(entries).toHaveLength(1 + 6 + 2 + 1 + 4 + 81)
     })
 
     it('lists the docs folder hubs the breadcrumb middle crumbs link to', () => {
@@ -271,6 +271,11 @@ describe('entity JSON-LD ties the brand to one referenced organization', () => {
         expect(app.author).toEqual({
             '@id': `${PRODUCTION_ORIGIN}/#organization`,
         })
+        expect(app.alternateName).toEqual([
+            'useupup',
+            '@useupup',
+            'upup file uploader',
+        ])
     })
 
     it('emits no AggregateRating or Review anywhere in the rendered markup', () => {

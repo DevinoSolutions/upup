@@ -65,6 +65,7 @@ Passed as `build.args`; changing one requires a landing **rebuild**.
 | `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST`          | e2e PostHog host (used only when the dataset is `e2e`).                             |
 | `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` | e2e PostHog capture token (used only when the dataset is `e2e`).                    |
 | `NEXT_PUBLIC_MASTRA_BASE_URL`                        | Deployed Mastra base URL for the Ask-AI panel.                                      |
+| `NEXT_PUBLIC_SENTRY_DSN`                             | Browser DSN of the Sentry project (errors + 5% session replay). Unset → no Sentry.  |
 
 ### Build-time — playground `NEXT_PUBLIC_*` (inlined into the client bundle)
 

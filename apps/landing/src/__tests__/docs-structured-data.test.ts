@@ -38,7 +38,7 @@ const FAQ_PAGES = [
     {
         slug: ['comparisons', 'upup-vs-uploadthing'],
         file: 'comparisons/upup-vs-uploadthing.mdx',
-        questions: 7,
+        questions: 9,
     },
     {
         slug: ['comparisons', 'best-react-file-upload-libraries'],
@@ -56,6 +56,11 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'best-svelte-file-upload-libraries'],
+        file: 'comparisons/best-svelte-file-upload-libraries.mdx',
+        questions: 6,
+    },
+    {
         slug: ['comparisons', 'best-vanilla-js-file-upload-libraries'],
         file: 'comparisons/best-vanilla-js-file-upload-libraries.mdx',
         questions: 5,
@@ -66,9 +71,34 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'upup-vs-uppy'],
+        file: 'comparisons/upup-vs-uppy.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-filepond'],
+        file: 'comparisons/upup-vs-filepond.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-react-dropzone'],
+        file: 'comparisons/upup-vs-react-dropzone.mdx',
+        questions: 3,
+    },
+    {
         slug: ['comparisons', 'upup-vs-devextreme-fileuploader'],
         file: 'comparisons/upup-vs-devextreme-fileuploader.mdx',
         questions: 5,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-ng2-file-upload'],
+        file: 'comparisons/upup-vs-ng2-file-upload.mdx',
+        questions: 6,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-better-upload'],
+        file: 'comparisons/upup-vs-better-upload.mdx',
+        questions: 6,
     },
     {
         slug: ['comparisons', 'uploadthing-pricing'],
@@ -83,7 +113,7 @@ const FAQ_PAGES = [
     {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
-        questions: 7,
+        questions: 11,
     },
     {
         slug: ['guides', 'storage', 'digitalocean-spaces'],
@@ -337,7 +367,7 @@ describe('docs folder hub pages', () => {
                 ['Guides', '/docs/guides/'],
                 ['Storage', '/docs/guides/storage/'],
                 [
-                    'Upload Files to Azure Blob Storage from the Browser',
+                    'Upload Files to Azure Blob Storage with a SAS URL',
                     '/docs/guides/storage/azure-blob/',
                 ],
             ],

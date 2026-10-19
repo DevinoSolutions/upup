@@ -149,8 +149,12 @@ export default function HeroSection({
             <div className="relative mx-auto max-w-6xl">
                 {/* Two-column split ≥lg: copy + CTAs + install left, the live
                     uploader animation right. Stacks on mobile with the animation
-                    right under the fold copy. */}
-                <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+                    right under the fold copy. `grid-cols-1` (not the implicit
+                    auto track) so the column is `minmax(0, 1fr)`: the install
+                    box's nowrap command made the auto track ~388px wide, which
+                    pushed the hero past a 390px viewport and got clipped by
+                    the section's `overflow-hidden`. */}
+                <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
                     {/* LEFT — copy, CTAs, install box */}
                     <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
                         {/* Badge — hairline pill (the one border recipe). */}
@@ -296,7 +300,10 @@ export default function HeroSection({
                                             hydration, which meant the install
                                             command itself was invisible in the
                                             server HTML. */}
-                                        <code className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate">
+                                        <code
+                                            title={currentCommand}
+                                            className="text-sm font-mono text-gray-700 dark:text-gray-300 select-all flex-1 mr-4 truncate"
+                                        >
                                             {currentCommand}
                                         </code>
 

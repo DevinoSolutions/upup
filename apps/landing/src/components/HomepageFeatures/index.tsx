@@ -44,6 +44,7 @@ import { VscAzure } from 'react-icons/vsc'
 import { ImFileZip } from 'react-icons/im'
 import { IbmLogo, IDriveLogo, LinodeLogo } from './ProviderLogos'
 import * as gtag from '@/lib/gtag'
+import { submitAndRecordProviderInterest } from './notify-signup'
 import FeatureShowcase from '@/components/FeatureShowcase'
 import Section from '@/components/ui/Section'
 import SectionHeading, {
@@ -72,53 +73,6 @@ interface EmailModalProps {
     onClose: () => void
     integrationName: string
     isCustom?: boolean
-}
-
-/**
- * Record provider interest through the SAME sink the support page uses: the
- * validated /api/upup-support route, which captures an analytics event and
- * emails the request. This modal has no free-text field, so it composes the
- * message itself and sends the visitor's address as the reply-to.
- *
- * The address is NEVER passed to Google Analytics — the gtag event carries only
- * the provider name. `website` is the honeypot the route reads to drop bots.
- */
-async function submitProviderInterest(input: {
-    email: string
-    providerName: string
-    isCustom: boolean
-    feedbackId: string
-    website: string
-}): Promise<boolean> {
-    const message = input.isCustom
-        ? `Custom storage provider requested from the homepage: ${input.providerName}.`
-        : `Notify-me request from the homepage for the ${input.providerName} integration.`
-    try {
-        // next.config sets trailingSlash:true, so the bare path would 308 the
-        // POST — hit the canonical URL (same rule as SupportForm).
-        const res = await fetch('/api/upup-support/', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-                type: 'provider_notify',
-                message,
-                wantsReply: true,
-                email: input.email,
-                feedbackId: input.feedbackId,
-                route:
-                    typeof window !== 'undefined'
-                        ? window.location.pathname
-                        : undefined,
-                website: input.website,
-            }),
-        })
-        const body = (await res.json().catch(() => null)) as {
-            ok?: boolean
-        } | null
-        return res.ok && body?.ok === true
-    } catch {
-        return false
-    }
 }
 
 // User Storage Providers - for end users to connect their personal cloud storage
@@ -434,14 +388,18 @@ const EmailModal: React.FC<EmailModalProps> = ({
         setFailed(false)
         if (!feedbackIdRef.current) feedbackIdRef.current = crypto.randomUUID()
 
-        // Analytics records WHICH provider was asked for — never who asked.
+        // Google Analytics records WHICH provider was asked for, never who
+        // asked. PostHog (after a confirmed sign-up) gets the submission id as
+        // the person id; no email or derivative of one ever reaches it.
         gtag.event({
             action: 'provider_email_submit',
             event_category: 'providers',
             event_label: isCustom ? `Custom: ${customToolName}` : providerName,
         })
 
-        const ok = await submitProviderInterest({
+        // Calls the route, then records the sign-up and its source (UTM, referrer,
+        // landing page) in the browser only on a confirmed server success.
+        const ok = await submitAndRecordProviderInterest({
             email,
             providerName,
             isCustom,
@@ -731,7 +689,7 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
                                 {provider.name}
                             </span>
                             {provider.qualifier ? (
-                                <span className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
+                                <span className="text-[10px] leading-tight text-gray-500 max-lg:text-xs dark:text-gray-400">
                                     {provider.qualifier}
                                 </span>
                             ) : null}

@@ -51,6 +51,29 @@ const POSTHOG_PROXY_TARGET = (
         : process.env.NEXT_PUBLIC_POSTHOG_HOST) || 'https://posthog.devino.ca'
 ).replace(/\/+$/, '')
 
+// First-party Sentry tunnel: a build-time mirror of
+// src/lib/analytics/sentry-tunnel.ts (see the rationale there). The browser
+// posts envelopes to `${TELEMETRY_PATH}/x/`; this forwards them to the
+// envelope endpoint of the DSN the build was given. No DSN, no rule.
+// src/__tests__/sentry-tunnel.test.ts runs the tunnel URL through both copies.
+function sentryEnvelopeUrl(dsn) {
+    if (!dsn) return null
+    let url
+    try {
+        url = new URL(dsn)
+    } catch {
+        return null
+    }
+    const segments = url.pathname.split('/').filter(Boolean)
+    const projectId = segments.pop()
+    if (!url.username || !projectId || !/^\d+$/.test(projectId)) return null
+    const prefix = segments.map(segment => `/${segment}`).join('')
+    return `${url.protocol}//${url.host}${prefix}/api/${projectId}/envelope/`
+}
+const SENTRY_ENVELOPE_URL = sentryEnvelopeUrl(
+    process.env.NEXT_PUBLIC_SENTRY_DSN,
+)
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -116,6 +139,16 @@ const nextConfig = {
                     destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}:path+`,
                 },
             ]),
+            // Sentry envelopes. Before the catch-alls, which would otherwise
+            // send them to PostHog.
+            ...(SENTRY_ENVELOPE_URL
+                ? [
+                      {
+                          source: `${TELEMETRY_PATH}/x`,
+                          destination: SENTRY_ENVELOPE_URL,
+                      },
+                  ]
+                : []),
             {
                 source: `${TELEMETRY_PATH}/api/:path+`,
                 destination: `${POSTHOG_PROXY_TARGET}/api/:path+/`,

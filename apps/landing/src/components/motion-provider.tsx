@@ -13,10 +13,9 @@ const loadFeatures = () =>
  * feature set into the first load of every page (the Navbar's theme toggle
  * alone put it on all 70+ routes).
  *
- * Not `strict`: the docs components still use `motion.*`, which keeps working
- * inside LazyMotion and simply bundles its own features on those routes.
- * `tests/landing-first-load-guards.test.ts` keeps `motion.*` out of the landing
- * components so the saving cannot quietly regress.
+ * `tests/landing-first-load-guards.test.ts` keeps `motion.*` out of every landing
+ * component, docs included (a `motion.*` bundles its own ~90 KB of features into
+ * the route's first load), so the saving cannot quietly regress.
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
     return <LazyMotion features={loadFeatures}>{children}</LazyMotion>

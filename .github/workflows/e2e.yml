@@ -38,7 +38,7 @@ jobs:
                   fetch-depth: 0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
 
@@ -63,11 +63,26 @@ jobs:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+            # The harness listens on fixed ports 53050-53055 (six storybooks) and
+            # 53060 (presign harness). Linux draws OUTBOUND source ports from the
+            # ephemeral range 32768-60999, which contains all of them, so a
+            # loopback client socket (MinIO/S3 traffic from the preceding suite)
+            # can be holding one at the instant a storybook tries to bind it
+            # (nightly run 38384244892: :53050 busy, Storybook silently moved to
+            # :53051, Playwright then waited 900 s on :53050). Reserving them
+            # keeps the kernel from handing them out; explicit bind() is
+            # unaffected. The storybook scripts also pass --exact-port so a
+            # collision of any other origin fails in seconds, not 15 minutes.
+            - name: Reserve the harness ports from the ephemeral pool
+              run: |
+                  sudo sysctl -w net.ipv4.ip_local_reserved_ports=53050-53060
+                  sysctl net.ipv4.ip_local_reserved_ports
+
             - name: Setup pnpm
               uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
                   cache: pnpm
@@ -155,7 +170,7 @@ jobs:
             # nothing, which means the capture layer itself broke.
             - name: Upload visual product-state screenshots
               if: always()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -164,7 +179,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: e2e-playwright-artifacts
                   path: |
@@ -195,7 +210,7 @@ jobs:
               uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
                   cache: pnpm
@@ -252,7 +267,7 @@ jobs:
               uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
                   cache: pnpm
@@ -286,7 +301,7 @@ jobs:
               uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
                   cache: pnpm
@@ -354,7 +369,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure()
-              uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: docs-e2e-playwright-artifacts
                   path: |
@@ -383,7 +398,7 @@ jobs:
               uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
             - name: Setup Node.js
-              uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
               with:
                   node-version-file: '.nvmrc'
                   cache: pnpm

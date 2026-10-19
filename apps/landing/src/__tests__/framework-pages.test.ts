@@ -117,11 +117,12 @@ function docsHrefs(markup: string): string[] {
 // Search Console shows the framework pages collecting "best/most popular
 // <framework> file upload" impressions at positions 43-60, while the docs
 // roundups that answer those queries had no link from them. React, Vue,
-// Angular and vanilla link their own roundup; the others have none and link
-// the hub.
+// Svelte, Angular and vanilla link their own roundup; Preact has none and
+// links the hub.
 const ROUNDUPS: Partial<Record<FrameworkId, string>> = {
     react: '/docs/comparisons/best-react-file-upload-libraries',
     vue: '/docs/comparisons/best-vue-file-upload-libraries',
+    svelte: '/docs/comparisons/best-svelte-file-upload-libraries',
     angular: '/docs/comparisons/best-angular-file-upload-libraries',
     vanilla: '/docs/comparisons/best-vanilla-js-file-upload-libraries',
 }
@@ -262,6 +263,32 @@ describe('framework guide section', () => {
                 docsPageUrls().has(expected),
                 `${expected} is a real docs page`,
             ).toBe(true)
+        },
+    )
+
+    it.each([
+        ['react', '/docs/comparisons/upup-vs-better-upload'],
+        ['react', '/docs/comparisons/uploadthing-pricing'],
+        [
+            'react',
+            '/docs/comparisons/primevue-primereact-fileupload-alternatives',
+        ],
+        [
+            'vue',
+            '/docs/comparisons/primevue-primereact-fileupload-alternatives',
+        ],
+        ['vue', '/docs/comparisons/upup-vs-devextreme-fileuploader'],
+        ['vanilla', '/docs/comparisons/best-javascript-image-upload-libraries'],
+        ['angular', '/docs/comparisons/upup-vs-ng2-file-upload'],
+        ['angular', '/docs/comparisons/upup-vs-devextreme-fileuploader'],
+    ] as [FrameworkId, string][])(
+        'links /%s/ to the head-to-head page %s',
+        (id, href) => {
+            const markup = renderToStaticMarkup(
+                createElement(FrameworkGuide, { framework: id }),
+            )
+            expect(docsHrefs(markup)).toContain(href)
+            expect(docsPageUrls().has(href)).toBe(true)
         },
     )
 

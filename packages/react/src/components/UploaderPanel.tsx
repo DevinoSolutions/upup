@@ -426,14 +426,14 @@ export default function UploaderPanel(): React.ReactElement | null {
                         {dark ? (
                             <img
                                 src={devinoDark}
-                                width={61}
+                                width={43}
                                 height={13}
                                 alt="logo-dark"
                             />
                         ) : (
                             <img
                                 src={devinoLight}
-                                width={61}
+                                width={43}
                                 height={13}
                                 alt="logo-light"
                             />

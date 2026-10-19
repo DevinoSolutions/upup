@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import Link from 'next/link'
 import {
     ArrowRight,
@@ -15,7 +16,7 @@ import {
     Sparkles,
     type LucideIcon,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { GRADIENT_TEXT, H3_HEADING } from '@/components/ui/SectionHeading'
 import { DOCS_FRAMEWORK_LIST } from '@/lib/frameworks'
 import { DocsUploaderDemo } from './DocsUploaderDemo'
@@ -96,20 +97,12 @@ const SECTION_CARDS: {
 export function DocsHome() {
     const reduce = useReducedMotion()
 
-    // Hero: the two columns fade+rise on mount with a small stagger. Reduced
-    // motion renders the final state with no movement (initial={false}).
-    const heroContainer = {
-        hidden: {},
-        visible: { transition: { staggerChildren: 0.1 } },
-    }
-    const column = {
-        hidden: { opacity: 0, y: 16 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.5, ease: 'easeOut' as const },
-        },
-    }
+    // Hero: the two columns rise into place with a small stagger. They use the
+    // CSS `hero-lift` class (globals.css), not framer-motion: a motion
+    // `initial` of opacity 0 is in the server HTML as an inline style, so the
+    // headline and intro stayed invisible until React hydrated (LCP 6.4 s on
+    // mobile against a 1.8 s FCP). `hero-lift` paints at full opacity from the
+    // first frame and only slides, and stops under prefers-reduced-motion.
     const card = {
         hidden: { opacity: 0, y: 12 },
         visible: (i: number) => ({
@@ -126,13 +119,8 @@ export function DocsHome() {
     return (
         <div>
             {/* HERO */}
-            <motion.div
-                className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12"
-                variants={heroContainer}
-                initial={reduce ? false : 'hidden'}
-                animate="visible"
-            >
-                <motion.div variants={column}>
+            <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
+                <div className="hero-lift">
                     <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                         Documentation
                     </p>
@@ -189,18 +177,21 @@ export function DocsHome() {
                             ))}
                         </div>
                     </div>
-                </motion.div>
-                <motion.div variants={column}>
+                </div>
+                <div
+                    className="hero-lift"
+                    style={{ '--hero-delay': '0.1s' } as CSSProperties}
+                >
                     <DocsUploaderDemo />
-                </motion.div>
-            </motion.div>
+                </div>
+            </div>
 
             {/* SECTION CARDS */}
             <div data-testid="docs-section-cards" className="mt-14">
                 <h2 className={H3_HEADING}>Browse the docs</h2>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {SECTION_CARDS.map((c, i) => (
-                        <motion.div
+                        <m.div
                             key={c.href}
                             variants={card}
                             custom={i}
@@ -222,7 +213,7 @@ export function DocsHome() {
                                     {c.desc}
                                 </span>
                             </Link>
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
                 {/* The machine-readable entry point, as a real anchor. The

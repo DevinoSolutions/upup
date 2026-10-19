@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useId, type ReactNode } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 
 // Shared building blocks for the hand-crafted architecture diagrams. Every
 // diagram wraps its nodes/flows in <DiagramFrame>, which owns the <svg>, the
@@ -273,7 +273,7 @@ export function Flow({
     return (
         <g>
             {dashed ? (
-                <motion.path
+                <m.path
                     d={d}
                     fill="none"
                     stroke={stroke}
@@ -297,7 +297,7 @@ export function Flow({
                     }
                 />
             ) : (
-                <motion.path
+                <m.path
                     d={d}
                     fill="none"
                     stroke={stroke}
@@ -346,7 +346,7 @@ export function CheckCircle({
                 stroke={`url(#${gradientId})`}
                 strokeWidth={1.5}
             />
-            <motion.path
+            <m.path
                 d={`M${cx - r * 0.42} ${cy} l${r * 0.32} ${r * 0.4} l${r * 0.6} -${r * 0.72}`}
                 fill="none"
                 stroke={`url(#${gradientId})`}

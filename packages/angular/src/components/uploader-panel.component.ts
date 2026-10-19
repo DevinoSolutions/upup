@@ -233,14 +233,14 @@ import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
                         @if (store.isDark()) {
                             <img
                                 [src]="devinoDark"
-                                width="61"
+                                width="43"
                                 height="13"
                                 alt="logo-dark"
                             />
                         } @else {
                             <img
                                 [src]="devinoLight"
-                                width="61"
+                                width="43"
                                 height="13"
                                 alt="logo-light"
                             />

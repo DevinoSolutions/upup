@@ -1,6 +1,6 @@
 ---
-title: Upload Files to Azure Blob Storage from the Browser
-description: Upload files and images to Azure Blob Storage from the browser with JavaScript and a SAS URL. Test the SAS with the Azure CLI, set CORS, fix 403s.
+title: Upload Files to Azure Blob Storage with a SAS URL
+description: Upload files to Azure Blob Storage from the browser with a SAS URL. The exact Put Blob request and x-ms-blob-type header, az CLI upload, CORS, 403 fixes.
 faq:
     - q: Can the browser upload to Azure Blob Storage without exposing the account key?
       a: Yes, and it should. Your server signs a SAS for one blob with the account key or a user delegation key and returns only the finished URL. The browser never sees the key, and the SAS can do nothing beyond writing that one blob until it expires.
@@ -8,21 +8,30 @@ faq:
       a: "x-ms-blob-type: BlockBlob is required. Content-Type is optional but sets the blob's content type, so send the file's real type. The SAS itself travels in the URL's query string, so no Authorization header is needed."
     - q: Does the container need to be public?
       a: No. Keep it private. The SAS grants write access per request. For downloads, issue read SAS URLs the same way, or put a CDN in front of the account.
+    - q: Does Azure Blob Storage have an S3-compatible API?
+      a: "No. Azure Blob Storage has its own REST API (Put Blob, Put Block) rather than the S3 API. upup's server mode speaks only S3, so createUpupHandler rejects storage.type: 'azure'. Use client mode instead: your endpoint returns a SAS URL and the browser uploads to it with a single PUT."
     - q: Does upup server mode support Azure Blob Storage?
       a: "No. createUpupHandler throws at construction for storage.type: 'azure', because server mode speaks only the S3 API. Use client mode with a SAS endpoint, as in this tutorial."
     - q: How large a file can I upload this way?
-      a: As large as one Put Blob request allows for your account's service version, since upup sends each file in a single PUT. Set maxFileSize below that limit. Resumable multipart in upup targets S3, not Azure.
+      a: upup sends each file in a single PUT, so the limit is Put Blob's. That is 5,000 MiB for service version 2019-12-12 and later, 256 MiB for 2016-05-31 through 2019-07-07, and 64 MiB before that; larger requests get a 413. Set maxFileSize below the limit. Resumable multipart in upup targets S3, not Azure.
     - q: Why does the upload work with curl but fail in the browser?
       a: curl doesn't do CORS. If the same SAS URL and headers succeed from curl but fail in the browser, the storage account's CORS rule is missing or doesn't match your origin, method or headers.
     - q: How do I upload a file to Azure Blob Storage with the Azure CLI?
-      a: Run az storage blob upload with --account-name, --container-name, --name and --file, plus --auth-mode login to use your Microsoft Entra ID sign-in. That sign-in needs a data role such as Storage Blob Data Contributor on the account. To use a SAS instead, pass --sas-token in place of --auth-mode login. The CLI suits scripts and CI; users uploading from a web page need a SAS URL from your server.
+      a: Run az storage blob upload with --account-name, --container-name, --name and --file, plus --auth-mode login to use your Microsoft Entra ID sign-in. That sign-in needs a data role such as Storage Blob Data Contributor on the account. To use a SAS instead, pass --sas-token in place of --auth-mode login, or pass a full SAS blob URL with --blob-url. The CLI suits scripts and CI; users uploading from a web page need a SAS URL from your server.
+    - q: What permissions does a SAS need to upload a blob?
+      a: 'Create (c) or Write (w) lets a SAS put a new block blob. Overwriting an existing blob needs Write (w). Use sp=cw for a narrowly scoped upload URL (one blob, sr=b, a few minutes), and add nothing else: read, list and delete are not needed. Anyone holding the URL can overwrite that blob until it expires; use sp=c alone to forbid overwrites.'
+    - q: Do I need the x-ms-version header when uploading with a SAS URL?
+      a: No. The sv parameter inside the SAS selects the service version, so a browser PUT to a SAS URL only needs x-ms-blob-type, plus Content-Type if you want the blob to carry a real content type. Content-Length is set by the browser.
+    - q: What is the difference between az storage blob upload and a PUT to a SAS URL?
+      a: Both create a blob, but the CLI sets the blob type for you, splits large files into blocks automatically, and refuses to replace an existing blob unless you pass --overwrite. A raw Put Blob sends the whole file in one request, needs the x-ms-blob-type header you add yourself, and silently replaces a blob that already has the name when the SAS has Write permission.
 ---
 
 **The short answer:** to upload a file to Azure Blob Storage from the browser,
 have your server create a short-lived SAS URL for one blob, then `PUT` the file
 to that URL with the header `x-ms-blob-type: BlockBlob`. The storage account
 needs a CORS rule that allows your origin. The account key never reaches the
-browser.
+browser. The exact request is in
+[What the browser sends](#what-the-browser-sends-put-blob-with-a-sas-url).
 
 This tutorial walks through every step: the container, the SAS (from the
 portal and Node), a command-line test with the Azure CLI and `curl`, CORS, the
@@ -50,6 +59,93 @@ browser ──PUT file bytes + x-ms-blob-type: BlockBlob──> <account>.blob.c
    SAS that allows writing that one blob for a few minutes.
 3. The browser sends the file in a single `PUT` (Azure's Put Blob operation)
    with the headers your endpoint told it to send. Azure answers `201 Created`.
+
+## What the browser sends: Put Blob with a SAS URL
+
+An upload to a SAS URL is one
+[Put Blob](https://learn.microsoft.com/rest/api/storageservices/put-blob)
+request, preceded in a browser by a CORS preflight `OPTIONS`. This is the `PUT`
+on the wire (the SAS is shortened):
+
+```http
+PUT /uploads/9f1c2e-photo.jpg?sv=2025-01-05&spr=https&st=2026-10-15T09%3A55%3A00Z&se=2026-10-15T10%3A10%3A00Z&sr=b&sp=cw&sig=... HTTP/1.1
+Host: mystorageacct.blob.core.windows.net
+Origin: https://app.example.com
+x-ms-blob-type: BlockBlob
+Content-Type: image/jpeg
+Content-Length: 482113
+
+<file bytes>
+```
+
+```http
+HTTP/1.1 201 Created
+ETag: "0x8DC..."
+Last-Modified: Thu, 15 Oct 2026 10:00:03 GMT
+Content-MD5: ...
+x-ms-request-id: ...
+Access-Control-Allow-Origin: https://app.example.com
+```
+
+The success status is `201 Created` with an empty body. The
+`Access-Control-Allow-Origin` header appears only when the request carries an
+`Origin` header and a CORS rule matches ([step 4](#4-configure-cors-on-the-storage-account)).
+
+### Headers
+
+| Header                      | Needed? | What it does                                                                          |
+| --------------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `x-ms-blob-type: BlockBlob` | Yes     | Tells Azure which blob type to create. `BlockBlob` is right for ordinary files.       |
+| `Content-Length`            | Yes     | The browser sets it from the body. You never set it yourself.                         |
+| `Content-Type`              | No      | Stored as the blob's content type. Defaults to `application/octet-stream`.            |
+| `x-ms-meta-<name>`          | No      | Custom metadata. Every extra header must also be in your CORS rule's allowed headers. |
+| `x-ms-version`              | No      | Not needed with a SAS: the `sv` parameter in the token selects the service version.   |
+| `Authorization`             | No      | Leave it off. The SAS in the query string is the authorization.                       |
+
+### What is in the SAS
+
+| Parameter  | Meaning                                                           |
+| ---------- | ----------------------------------------------------------------- |
+| `sv`       | Storage service version used to authorize and handle the request. |
+| `sr`       | Signed resource: `b` for one blob, `c` for a whole container.     |
+| `sp`       | Permissions. `cw` is create plus write.                           |
+| `st`, `se` | Start and expiry time (UTC). Omit `st` to be valid immediately.   |
+| `spr`      | Allowed protocol. `https` rejects plain HTTP.                     |
+| `sig`      | The HMAC-SHA256 signature over all of the above.                  |
+
+A user delegation SAS (signed with Entra ID instead of the account key) carries
+extra key fields such as `skoid` and `sktid`. Permissions must be written in
+the order `racwd` for a blob, so `cw` is valid and `wc` is not.
+
+Put Blob needs **Create (`c`) or Write (`w`)** to make a new blob, and
+**Write (`w`)** to overwrite an existing one. Put Blob replaces the whole
+existing blob, with its metadata, without warning. That is why the route in
+[step 5](#5-issue-the-sas-from-your-backend) picks a unique blob name on the
+server.
+
+### The same upload without upup
+
+Any HTTP client that can send those headers works. In plain browser JavaScript:
+
+```ts
+const { uploadUrl, uploadHeaders } = await fetch('/api/upload-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: file.name, size: file.size, type: file.type }),
+}).then(r => r.json())
+
+const res = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: uploadHeaders, // { 'x-ms-blob-type': 'BlockBlob', 'Content-Type': ... }
+    body: file,
+})
+if (res.status !== 201) {
+    throw new Error(`Azure ${res.status}: ${await res.text()}`)
+}
+```
+
+`fetch` cannot report upload progress, which is why upup sends the `PUT` with
+`XMLHttpRequest` instead.
 
 ## 1. Create the storage account and container
 
@@ -99,10 +195,10 @@ blob name into the URL path before the `?`.
 Portal-generated tokens are for testing. In production your server creates a
 fresh one per file, as in step 5.
 
-## 3. Test the SAS URL from the command line
+## 3. Upload a file with the Azure CLI (az storage blob upload)
 
-Before you write any backend code, check the storage side with the
-[Azure CLI](https://learn.microsoft.com/cli/azure/) and `curl`. If an upload
+Before you write any backend code, upload a test file with `az storage blob upload`
+(from the [Azure CLI](https://learn.microsoft.com/cli/azure/)) or `curl`. If an upload
 works here, anything that still fails in the browser is CORS or your endpoint,
 not the SAS.
 
@@ -173,6 +269,45 @@ The command fails if the blob already exists; add `--overwrite` to replace it.
 To test the SAS itself with the CLI, replace `--auth-mode login` with
 `--sas-token "$SAS"`. The CLI is the right tool for scripts and CI, not for end
 users uploading from a web page. Those need the SAS flow in this tutorial.
+
+### Upload to a SAS blob URL with --blob-url
+
+`az storage blob upload` can also take a complete blob URL with the SAS
+attached, which is the closest CLI match to what the browser does:
+
+```sh
+URL=$(az storage blob generate-sas \
+  --account-name mystorageacct \
+  --container-name uploads \
+  --name photo.jpg \
+  --permissions racw \
+  --expiry "$(date -u -d '30 minutes' '+%Y-%m-%dT%H:%MZ')" \
+  --https-only \
+  --auth-mode login --as-user \
+  --full-uri \
+  --output tsv)
+
+az storage blob upload --file ./photo.jpg --blob-url "$URL"
+```
+
+Microsoft's own example for `--blob-url` uses `sp=racw`, so this test SAS
+does too. The SAS your server issues to a browser only needs `cw`.
+
+### Azure CLI, curl or the browser?
+
+| Method                                               | Authorization               | Best for                                                                       |
+| ---------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| `az storage blob upload --auth-mode login`           | Your Entra ID role          | Scripts, CI and one-off uploads. Splits large files into blocks automatically. |
+| `az storage blob upload --sas-token` or `--blob-url` | A SAS                       | Checking that a SAS works.                                                     |
+| `curl -X PUT` with `x-ms-blob-type`                  | A SAS                       | Reproducing the exact request the browser sends.                               |
+| `PUT` from the browser (upup or `fetch`)             | A SAS issued by your server | End users uploading from a web page. One Put Blob per file.                    |
+
+Three behaviours differ between the CLI and a raw `PUT`. The CLI picks the blob
+type for you (`--type` defaults to `block`, or `page` for `.vhd` files) and a
+raw `PUT` needs `x-ms-blob-type`. The CLI fails if the blob exists unless you
+pass `--overwrite`, while a raw `PUT` with Write permission replaces it. And
+the CLI chunks big files, while one `PUT` sends everything in a single request.
+Set the blob's content type from the CLI with `--content-type`.
 
 ## 4. Configure CORS on the storage account
 
@@ -332,12 +467,22 @@ route.
 ### File size: one Put Blob per file
 
 upup's client-mode contract is one signed `PUT` per file, so every upload must
-fit in a single Azure Put Blob request. Larger files need Azure's staged block
-flow (Put Block plus Put Block List), which the presign contract does not
-model, and `resumable: { protocol: 'multipart' }` speaks S3 multipart, not
-Azure blocks, so don't enable it here. Cap the size with `maxFileSize`, and
-check the Put Blob limit for your account's service version before choosing the
-number.
+fit in a single Azure Put Blob request. The ceiling depends on the service
+version:
+
+| Service version               | Largest single Put Blob |
+| ----------------------------- | ----------------------- |
+| 2019-12-12 and later          | 5,000 MiB               |
+| 2016-05-31 through 2019-07-07 | 256 MiB                 |
+| Before 2016-05-31             | 64 MiB                  |
+
+A larger request is refused with `413 Request Entity Too Large`. SAS tokens
+signed by current SDKs use a recent `sv`, but check the `sv` your signer
+writes. Larger files need Azure's staged block flow (Put Block plus Put Block
+List), which the presign contract does not model, and
+`resumable: { protocol: 'multipart' }` speaks S3 multipart, not Azure blocks,
+so don't enable it here. Cap the size with `maxFileSize` below the limit that
+applies to you.
 
 ## Troubleshooting
 
@@ -444,6 +589,13 @@ the URL's query string, so no `Authorization` header is needed.
 No. Keep it private. The SAS grants write access per request. For downloads,
 issue read SAS URLs the same way, or put a CDN in front of the account.
 
+### Does Azure Blob Storage have an S3-compatible API?
+
+No. Azure Blob Storage has its own REST API (Put Blob, Put Block) rather than the
+S3 API. upup's server mode speaks only S3, so `createUpupHandler` rejects
+`storage.type: 'azure'`. Use client mode instead: your endpoint returns a SAS URL
+and the browser uploads to it with a single `PUT`.
+
 ### Does upup server mode support Azure Blob Storage?
 
 No. `createUpupHandler` throws at construction for `storage.type: 'azure'`,
@@ -452,9 +604,11 @@ as in this tutorial.
 
 ### How large a file can I upload this way?
 
-As large as one Put Blob request allows for your account's service version,
-since upup sends each file in a single `PUT`. Set `maxFileSize` below that
-limit. Resumable multipart in upup targets S3, not Azure.
+upup sends each file in a single `PUT`, so the limit is Put Blob's. That is
+5,000 MiB for service version 2019-12-12 and later, 256 MiB for 2016-05-31
+through 2019-07-07, and 64 MiB before that; larger requests get a `413`. Set
+`maxFileSize` below the limit. Resumable multipart in upup targets S3, not
+Azure.
 
 ### Why does the upload work with curl but fail in the browser?
 
@@ -468,9 +622,34 @@ Run `az storage blob upload` with `--account-name`, `--container-name`,
 `--name` and `--file`, plus `--auth-mode login` to use your Microsoft Entra ID
 sign-in. That sign-in needs a data role such as Storage Blob Data Contributor
 on the account. To use a SAS instead, pass `--sas-token` in place of
-`--auth-mode login`. The CLI suits scripts and CI; users uploading from a web
-page need a SAS URL from your server. The full commands are in
-[step 3](#3-test-the-sas-url-from-the-command-line).
+`--auth-mode login`, or pass a full SAS blob URL with `--blob-url`. The CLI
+suits scripts and CI; users uploading from a web page need a SAS URL from your
+server. The full commands are in
+[step 3](#3-upload-a-file-with-the-azure-cli-az-storage-blob-upload).
+
+### What permissions does a SAS need to upload a blob?
+
+Create (`c`) or Write (`w`) lets a SAS put a new block blob. Overwriting an
+existing blob needs Write (`w`). Use `sp=cw` for a narrowly scoped upload URL (one blob, `sr=b`, a few
+minutes), and add nothing else: read, list and delete are not needed. Anyone
+holding the URL can overwrite that blob until it expires; use `sp=c` alone to
+forbid overwrites.
+
+### Do I need the x-ms-version header when uploading with a SAS URL?
+
+No. The `sv` parameter inside the SAS selects the service version, so a browser
+`PUT` to a SAS URL only needs `x-ms-blob-type`, plus `Content-Type` if you want
+the blob to carry a real content type. `Content-Length` is set by the browser.
+The full request is in
+[What the browser sends](#what-the-browser-sends-put-blob-with-a-sas-url).
+
+### What is the difference between az storage blob upload and a PUT to a SAS URL?
+
+Both create a blob, but the CLI sets the blob type for you, splits large files
+into blocks automatically, and refuses to replace an existing blob unless you
+pass `--overwrite`. A raw Put Blob sends the whole file in one request, needs
+the `x-ms-blob-type` header you add yourself, and silently replaces a blob that
+already has the name when the SAS has Write permission.
 
 ## Next steps
 

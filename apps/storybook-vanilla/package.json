@@ -4,7 +4,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "storybook": "storybook dev -p 53053 --no-open",
+        "storybook": "storybook dev -p 53053 --exact-port --no-open",
         "build-storybook": "storybook build -o storybook-static",
         "test": "vitest run --passWithNoTests",
         "typecheck": "tsc --noEmit"

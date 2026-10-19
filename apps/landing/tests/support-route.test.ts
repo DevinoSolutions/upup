@@ -259,6 +259,10 @@ describe('POST /api/upup-support', () => {
         // analytics and identifiable in the inbox.
         const captureArg = h.captureMock.mock.calls[0][0]
         expect(captureArg.properties.feedback_type).toBe('provider_notify')
+        // ...and the event names the form it came from, not the support page.
+        expect(captureArg.properties.feedback_source).toBe(
+            'homepage_provider_notify',
+        )
         const mailArg = h.sendMailMock.mock.calls[0][0]
         expect(mailArg.subject).toContain('provider_notify')
         expect(mailArg.text).toContain('Vercel Blob')

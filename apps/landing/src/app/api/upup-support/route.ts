@@ -1,10 +1,9 @@
 import { captureServerEvent } from '@/lib/analytics/capture.server'
+import { APP_ID, SUPPORT_REQUEST_SUBMITTED } from '@/lib/analytics/contract'
 import {
-    APP_ID,
     APP_VERSION,
-    SUPPORT_REQUEST_SUBMITTED,
     buildFeedbackProperties,
-} from '@/lib/analytics/contract'
+} from '@/lib/analytics/contract.server'
 import { serverDatasetCredentials } from '@/lib/analytics/dataset.server'
 import { sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
@@ -64,7 +63,11 @@ export async function POST(req: Request): Promise<Response> {
     const properties = {
         ...buildFeedbackProperties({
             feedbackId,
-            feedbackSource: 'support_page',
+            // The homepage "Notify me" modal posts here too.
+            feedbackSource:
+                data.type === 'provider_notify'
+                    ? 'homepage_provider_notify'
+                    : 'support_page',
             feedbackType: data.type,
             environment: dataset,
             platform,
