@@ -8,30 +8,45 @@ const NOTICE_BASE = 'rounded-2xl border px-4 py-3 text-sm font-medium'
 const NOTICE_MOTION =
     'motion-safe:animate-motion-enter-down motion-reduce:animate-motion-fade'
 
+// Each region is a flex item of the form's `gap-6` column. While it is empty it
+// has zero height but flex gap still applies on both sides, so `empty:-mt-6`
+// cancels the extra gap and the idle form keeps its original spacing.
+const REGION_IDLE_GAP = 'empty:-mt-6'
+
 /**
- * The result notice under the form. The `role="status"` wrapper stays mounted
- * so a screen reader registers the region before its text changes (a live
- * region inserted together with its content is often not announced); an error
- * keeps its own `role="alert"` inside. The inner <p> mounts fresh for each
- * submit (the notice is cleared when one starts), which replays the enter.
+ * The result notice under the form. Two always-mounted sibling live regions,
+ * a polite `status` for success and an assertive `alert` for warning/error:
+ * a screen reader registers a region before its text changes (one inserted
+ * together with its content is often not announced), and the two are never
+ * nested (nested live regions can double-announce). The <p> mounts fresh for
+ * each submit (the notice is cleared when one starts), which replays the enter.
  */
 export function SupportNoticeRegion({ notice }: { notice?: SupportNotice }) {
+    const success = notice?.kind === 'success' ? notice : undefined
+    const problem = notice && notice.kind !== 'success' ? notice : undefined
     return (
-        <div role="status" aria-live="polite">
-            {!!notice && (
-                <p
-                    role={notice.kind === 'success' ? undefined : 'alert'}
-                    data-testid="support-notice"
-                    className={`${NOTICE_BASE} ${NOTICE_MOTION} ${
-                        notice.kind === 'success'
-                            ? 'border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400'
-                            : 'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400'
-                    }`}
-                >
-                    {notice.text}
-                </p>
-            )}
-        </div>
+        <>
+            <div role="status" className={REGION_IDLE_GAP}>
+                {success && (
+                    <p
+                        data-testid="support-notice"
+                        className={`${NOTICE_BASE} ${NOTICE_MOTION} border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400`}
+                    >
+                        {success.text}
+                    </p>
+                )}
+            </div>
+            <div role="alert" className={REGION_IDLE_GAP}>
+                {problem && (
+                    <p
+                        data-testid="support-notice"
+                        className={`${NOTICE_BASE} ${NOTICE_MOTION} border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400`}
+                    >
+                        {problem.text}
+                    </p>
+                )}
+            </div>
+        </>
     )
 }
 

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -15,32 +16,59 @@ import { CopyIconSwap } from '@/components/copy-icon-swap'
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) =>
     renderToStaticMarkup(el)
 
+const regions = (
+    notice?: Parameters<typeof SupportNoticeRegion>[0]['notice'],
+) => {
+    const root = document.createElement('div')
+    root.innerHTML = html(createElement(SupportNoticeRegion, { notice }))
+    return {
+        status: root.querySelector<HTMLElement>(':scope > [role="status"]')!,
+        alert: root.querySelector<HTMLElement>(':scope > [role="alert"]')!,
+        root,
+    }
+}
+
 describe('SupportNoticeRegion', () => {
-    it('keeps an always-mounted role=status region when there is no notice', () => {
-        const out = html(createElement(SupportNoticeRegion, {}))
-        expect(out).toContain('role="status"')
-        expect(out).toContain('aria-live="polite"')
-        expect(out).not.toContain('data-testid="support-notice"')
+    it('keeps both live regions mounted and empty when there is no notice', () => {
+        const { status, alert } = regions()
+        expect(status).not.toBeNull()
+        expect(alert).not.toBeNull()
+        expect(status.childElementCount).toBe(0)
+        expect(alert.childElementCount).toBe(0)
     })
 
-    it('renders a success notice inside the status region without its own role', () => {
-        const out = html(
-            createElement(SupportNoticeRegion, {
-                notice: { kind: 'success', text: 'Thanks' },
-            }),
-        )
-        expect(out).toContain('data-testid="support-notice"')
-        expect(out).toContain('Thanks')
-        expect(out).not.toContain('role="alert"')
+    it('never nests one live region inside the other', () => {
+        for (const kind of ['success', 'warning', 'error'] as const) {
+            const { root } = regions({ kind, text: 'x' })
+            expect(root.querySelectorAll('[role] [role]')).toHaveLength(0)
+        }
     })
 
-    it('keeps role=alert on an error notice', () => {
-        const out = html(
-            createElement(SupportNoticeRegion, {
-                notice: { kind: 'error', text: 'Nope' },
-            }),
-        )
-        expect(out).toContain('role="alert"')
+    it('cancels the flex gap of each region while it is empty', () => {
+        // The form is a `gap-6` column: a zero-height empty region would still
+        // add a 24px gap and push the submit row down in the idle state.
+        const { status, alert } = regions()
+        expect(status.className).toContain('empty:-mt-6')
+        expect(alert.className).toContain('empty:-mt-6')
+    })
+
+    it('puts a success notice in the polite status region', () => {
+        const { status, alert } = regions({ kind: 'success', text: 'Thanks' })
+        expect(
+            status.querySelector('[data-testid="support-notice"]')?.textContent,
+        ).toBe('Thanks')
+        expect(alert.childElementCount).toBe(0)
+    })
+
+    it('puts warning and error notices in the alert region', () => {
+        for (const kind of ['warning', 'error'] as const) {
+            const { status, alert } = regions({ kind, text: 'Nope' })
+            expect(
+                alert.querySelector('[data-testid="support-notice"]')
+                    ?.textContent,
+            ).toBe('Nope')
+            expect(status.childElementCount).toBe(0)
+        }
     })
 
     it('gives the notice a motion-safe enter and an opacity-only reduced fallback', () => {
