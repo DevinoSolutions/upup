@@ -477,7 +477,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                                 )
                                             }
                                             placeholder="Provider name (e.g., MinIO, Wasabi, IBM Cloud)"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-fast mb-4"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-fast mb-4"
                                             required
                                         />
                                     )}
@@ -487,7 +487,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
                                         placeholder="Enter your email address"
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-fast mb-4"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-fast mb-4"
                                         required
                                     />
 

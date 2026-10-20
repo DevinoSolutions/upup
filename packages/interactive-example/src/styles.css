@@ -307,7 +307,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     border: 0.8px solid var(--ie-card-border);
     border-radius: var(--ie-radius-card);
     box-shadow: var(--ie-card-shadow);
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease;
     overflow: hidden;
 }
 
@@ -524,7 +524,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     font-family: inherit;
     font-size: 13px;
     line-height: 1.4;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
 .upup-ie-field input[type="text"]:hover,
@@ -989,7 +989,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 .upup-ie-expand-wrap {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.35s ease;
+    transition: grid-template-rows 0.25s ease;
 }
 
 .upup-ie-expand-wrap[data-expanded] {
@@ -1074,7 +1074,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     position: relative;
     flex-shrink: 0;
     margin: 0;
-    transition: all 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .upup-ie-multiselect-item input[type="checkbox"]:checked {
@@ -1126,7 +1129,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     font-size: 13px;
     font-weight: 500;
     color: var(--ie-fg-muted);
-    transition: all 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .upup-ie-tabs button:hover {
@@ -1281,7 +1287,7 @@ html.dark .upup-ie-preview-placeholder,
     font-family: var(--ie-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     font-size: 12.5px;
     line-height: 1.4;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
 .upup-ie-combo-input:focus {
@@ -1944,5 +1950,13 @@ html.dark .upup-ie-ai-panel,
     .upup-ie-ai-ease,
     .upup-ie-ai-ease-block {
         animation: none;
+    }
+
+    .upup-ie-category-chevron,
+    .upup-ie-toggle input[type="checkbox"]::before,
+    .upup-ie-source-tile,
+    .upup-ie-expand-wrap,
+    .upup-ie-code-header button {
+        transition: none;
     }
 }

@@ -247,7 +247,8 @@ export default function FrameworkSnippets({
 
                 {/* Code body */}
                 <div className="overflow-x-auto p-4">
-                    <AnimatePresence mode="wait">
+                    {/* initial={false}: first paint (and SSR) shows the code; only tab switches animate */}
+                    <AnimatePresence mode="wait" initial={false}>
                         <m.div
                             key={active.id}
                             initial={{ opacity: 0, y: 8 }}
