@@ -209,6 +209,10 @@ test.describe('docs', () => {
             await trigger.click()
             await expect(drawer).toBeVisible({ timeout: 2000 })
         }).toPass()
+        // Opening moves focus into the composer. jsdom cannot see this: a
+        // transitioned hidden -> visible on open keeps the drawer `hidden`
+        // for a frame and the focus() silently fails.
+        await expect(drawer.getByTestId('docs-ask-ai-input')).toBeFocused()
         await drawer.getByTestId('docs-ask-ai-input').fill('resumable uploads?')
         await drawer.getByTestId('docs-ask-ai-send').click()
         const citation = drawer.getByRole('link', {

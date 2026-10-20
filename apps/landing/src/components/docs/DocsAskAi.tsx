@@ -23,6 +23,14 @@ const EXAMPLE_QUESTIONS = [
     'How do I theme the uploader?',
 ]
 
+// Arrival of a NEW transcript item: opacity + 6px rise, once. Each message `li`
+// is keyed by its stable id, so React mounts it exactly once and the CSS
+// animation never replays on drawer reopen, navigation or streaming text growth
+// (growth re-renders children of the same `li`; it is not re-mounted). Reduced
+// motion: opacity only.
+const ARRIVE =
+    'motion-safe:animate-motion-enter motion-reduce:animate-motion-fade'
+
 const LINK_CLASS =
     'text-blue-600 underline underline-offset-2 dark:text-blue-400'
 
@@ -281,18 +289,34 @@ function CodeBlock({ code }: { code: string }) {
 function CopyButton({ text }: { text: string }) {
     const { copied, copy } = useCopyToClipboard(1500)
     return (
-        <button
-            type="button"
-            aria-label={copied ? 'Copied' : 'Copy code'}
-            onClick={() => copy(text)}
-            className="absolute right-1.5 top-1.5 min-h-11 min-w-11 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 max-lg:right-0.5 max-lg:top-0.5 max-lg:flex max-lg:items-center max-lg:justify-center lg:min-h-0 lg:min-w-0 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100 [@media(hover:none)]:opacity-100"
-        >
-            {copied ? (
-                <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-            ) : (
-                <Copy className="h-3.5 w-3.5" />
-            )}
-        </button>
+        <>
+            <button
+                type="button"
+                aria-label={copied ? 'Copied' : 'Copy code'}
+                onClick={() => copy(text)}
+                className="absolute right-1.5 top-1.5 min-h-11 min-w-11 rounded-md border border-black/5 bg-[var(--bg-base)] p-1.5 text-gray-500 opacity-0 transition-opacity hover:text-gray-800 focus-visible:opacity-100 group-hover:opacity-100 max-lg:right-0.5 max-lg:top-0.5 max-lg:flex max-lg:items-center max-lg:justify-center lg:min-h-0 lg:min-w-0 dark:border-white/10 dark:text-gray-400 dark:hover:text-gray-100 [@media(hover:none)]:opacity-100"
+            >
+                {/* Both icons stay mounted in a fixed 14px box and cross-fade on
+                    opacity alone — no scale or rotate. */}
+                <span className="relative block h-3.5 w-3.5">
+                    <Copy
+                        className={`absolute inset-0 h-3.5 w-3.5 motion-safe:transition-opacity motion-safe:duration-fast ${
+                            copied ? 'opacity-0' : 'opacity-100'
+                        }`}
+                    />
+                    <Check
+                        className={`absolute inset-0 h-3.5 w-3.5 text-green-600 motion-safe:transition-opacity motion-safe:duration-fast dark:text-green-400 ${
+                            copied ? 'opacity-100' : 'opacity-0'
+                        }`}
+                    />
+                </span>
+            </button>
+            {/* Persistent so the change is announced: a live region only speaks
+                for text that changes inside an already-mounted container. */}
+            <span role="status" className="sr-only">
+                {copied ? 'Copied' : ''}
+            </span>
+        </>
     )
 }
 
@@ -387,15 +411,26 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
             data-testid="docs-ask-ai-drawer"
             role="complementary"
             aria-label="Ask AI"
-            aria-hidden={!open}
+            inert={!open}
             onKeyDown={e => {
                 if (e.key === 'Escape') {
                     e.stopPropagation()
                     onClose()
                 }
             }}
-            className={`fixed right-0 top-24 bottom-0 z-40 flex w-[380px] max-w-full flex-col border-l border-black/5 bg-[var(--bg-base)] motion-safe:transition-transform motion-safe:duration-300 dark:border-white/10 ${
-                open ? 'translate-x-0' : 'invisible translate-x-full'
+            className={`fixed right-0 top-24 bottom-0 z-40 flex w-[380px] max-w-full flex-col border-l border-black/5 bg-[var(--bg-base)] dark:border-white/10 ${
+                // Docked panel, so travel is a 16px nudge plus opacity, not the
+                // full 380px. `visibility` is transitioned on the CLOSED state
+                // only, so the close stays painted until it finishes (visible ->
+                // hidden flips at the END of the duration). The open state
+                // leaves it out: a transitioned hidden -> visible would hold
+                // `hidden` for the first frame and the composer focus() in the
+                // open effect would silently fail. `inert` pulls the closed
+                // drawer out of focus and the a11y tree immediately. Reduced
+                // motion: no transition at all.
+                open
+                    ? 'visible translate-x-0 opacity-100 motion-safe:transition-[transform,opacity] motion-safe:duration-base motion-safe:ease-motion-out'
+                    : 'invisible translate-x-4 opacity-0 motion-safe:transition-[transform,opacity,visibility] motion-safe:duration-fast motion-safe:ease-motion-in'
             }`}
         >
             {/* Header */}
@@ -471,7 +506,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                     m.role === 'user' ? (
                                         <li
                                             key={m.id}
-                                            className="flex justify-end"
+                                            className={`flex justify-end ${ARRIVE}`}
                                         >
                                             <div className="rounded-lg border border-black/5 px-3 py-2 text-sm text-gray-900 dark:border-white/10 dark:text-white">
                                                 {m.content}
@@ -484,7 +519,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                         (question => (
                                             <li
                                                 key={m.id}
-                                                className="space-y-1.5"
+                                                className={`space-y-1.5 ${ARRIVE}`}
                                             >
                                                 {m.error ? (
                                                     <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
@@ -574,7 +609,10 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                     ),
                                 )}
                                 {pending && !messages.some(m => m.streaming) ? (
-                                    <li aria-label="Assistant is typing">
+                                    <li
+                                        aria-label="Assistant is typing"
+                                        className={ARRIVE}
+                                    >
                                         <TypingIndicator />
                                     </li>
                                 ) : null}

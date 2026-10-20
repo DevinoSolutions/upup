@@ -202,7 +202,7 @@ export function DocsSearchDialog({
         <>
             {open ? (
                 <div
-                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh]"
+                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh] motion-safe:animate-motion-fade"
                     onClick={close}
                 >
                     <div
@@ -210,7 +210,7 @@ export function DocsSearchDialog({
                         aria-modal="true"
                         aria-label="Search documentation"
                         onClick={e => e.stopPropagation()}
-                        className="w-full max-w-lg overflow-hidden rounded-lg border border-black/5 bg-white shadow-xl dark:border-white/10 dark:bg-gray-950"
+                        className="w-full max-w-lg overflow-hidden rounded-lg border border-black/5 bg-white shadow-xl motion-safe:animate-motion-panel motion-reduce:animate-motion-fade dark:border-white/10 dark:bg-gray-950"
                     >
                         <div className="flex items-center gap-2 border-b border-black/5 px-4 py-3 dark:border-white/10">
                             <Search className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
