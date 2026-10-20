@@ -1591,6 +1591,125 @@ html.dark .upup-ie-ai-panel,
     50% { opacity: 0; }
 }
 
+/* Assistant markdown (MarkdownMessage). While streaming only whole units are
+   rendered, and each unit is its own element, so the mount animation below
+   eases every word, link, row, item and code block in exactly once. */
+.upup-ie-ai-msg-assistant .upup-ie-ai-md {
+    white-space: normal;
+}
+
+.upup-ie-ai-md > * + * {
+    margin-top: 8px;
+}
+
+.upup-ie-ai-md p,
+.upup-ie-ai-md ul,
+.upup-ie-ai-md ol,
+.upup-ie-ai-md pre,
+.upup-ie-ai-md h3,
+.upup-ie-ai-md h4,
+.upup-ie-ai-md h5,
+.upup-ie-ai-md h6 {
+    margin: 0;
+}
+
+.upup-ie-ai-md p {
+    white-space: pre-line;
+}
+
+.upup-ie-ai-md h3,
+.upup-ie-ai-md h4,
+.upup-ie-ai-md h5,
+.upup-ie-ai-md h6 {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.upup-ie-ai-md ul,
+.upup-ie-ai-md ol {
+    padding-left: 18px;
+}
+
+/* Tailwind's preflight strips list markers; numbered steps need their numbers. */
+.upup-ie-ai-md ul {
+    list-style-type: disc;
+}
+
+.upup-ie-ai-md ol {
+    list-style-type: decimal;
+}
+
+.upup-ie-ai-md li > ul,
+.upup-ie-ai-md li > ol {
+    margin-top: 2px;
+}
+
+.upup-ie-ai-md code {
+    font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: 4px;
+    padding: 0 4px;
+}
+
+.upup-ie-ai-md pre {
+    padding: 8px 10px;
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-input);
+}
+
+.upup-ie-ai-md pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.upup-ie-ai-md-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.upup-ie-ai-md-scroll:focus-visible,
+.upup-ie-ai-md a:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-ai-md table {
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.upup-ie-ai-md th,
+.upup-ie-ai-md td {
+    border: 1px solid var(--ie-card-border);
+    padding: 4px 8px;
+    text-align: left;
+}
+
+.upup-ie-ai-md a {
+    color: var(--ie-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.upup-ie-ai-ease {
+    animation: upup-ie-ai-ease-in 180ms ease-out both;
+}
+
+.upup-ie-ai-ease-block {
+    animation: upup-ie-ai-ease-in-block 200ms ease-out both;
+}
+
+@keyframes upup-ie-ai-ease-in {
+    from { opacity: 0; }
+}
+
+@keyframes upup-ie-ai-ease-in-block {
+    from { opacity: 0; transform: translateY(4px); }
+}
+
 .upup-ie-ai-patch {
     align-self: flex-start;
     background: var(--ie-accent-soft);
@@ -1778,7 +1897,7 @@ html.dark .upup-ie-ai-panel,
     cursor: pointer;
 }
 
-.upup-ie-ai-input button[type="submit"]:disabled {
+.upup-ie-ai-input button[type="submit"][aria-disabled="true"] {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -1821,7 +1940,9 @@ html.dark .upup-ie-ai-panel,
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .upup-ie-ai-cursor {
+    .upup-ie-ai-cursor,
+    .upup-ie-ai-ease,
+    .upup-ie-ai-ease-block {
         animation: none;
     }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
 import type { UpupConfig } from '../types'
 
@@ -78,22 +78,31 @@ const newTraceId = () =>
         ? crypto.randomUUID().replace(/-/g, '')
         : randomHex(16)
 
+const isPatchTool = (name: unknown) =>
+    name === 'apply-config-patch' || name === 'applyConfigPatch'
+
+function errorText(error: unknown): string {
+    if (error instanceof Error) return error.message
+    if (typeof error === 'string' && error) return error
+    const message = (error as { message?: unknown } | null)?.message
+    return typeof message === 'string' && message ? message : 'Stream error.'
+}
+
 /**
  * Minimal chat hook talking directly to a Mastra agent through the client SDK's
- * `generate()` — a whole turn per request, NOT token streaming. The panel shows
- * a pending cursor while the request is in flight, then renders the answer in
- * one go.
+ * `stream()` + `processDataStream`. `text-delta` chunks grow the assistant
+ * turn as they arrive (the panel's MarkdownMessage only shows the whole units
+ * of it), and each config patch is applied the moment its tool result streams
+ * in, so the preview updates before the closing sentence lands.
  *
  * Why not @ai-sdk/react useChat or CopilotKit? Mastra's client SDK already
  * speaks the protocol our agent emits; either of those adds another runtime in
  * the middle for no gain here.
  *
- * There is deliberately no cancel: `@mastra/client-js` builds `generate()`'s
- * options by Omit-ing `abortSignal` (see StreamParamsBase in its types), so a
- * request cannot be aborted through the SDK. Rather than expose a cancel that
- * silently does nothing, an in-flight turn is superseded by run id — after
- * `reset()` a late response is discarded instead of landing in a cleared
- * transcript.
+ * An in-flight turn is superseded by run id: every chunk checks it, so after
+ * `reset()` nothing from the old turn (text or patch) lands in the cleared
+ * transcript. `reset()` and unmount also abort the request, which stops the
+ * agent spending tokens on an answer nobody will see.
  */
 export function useMastraChat({
     baseUrl,
@@ -113,8 +122,20 @@ export function useMastraChat({
     // response only touches state while it is still the current turn, so a
     // reset() (which bumps the id) discards whatever is already in flight.
     const runIdRef = useRef(0)
+    const abortRef = useRef<AbortController | null>(null)
 
     const client = useMemo(() => new MastraClient({ baseUrl }), [baseUrl])
+
+    useEffect(
+        () => () => {
+            // Supersede the in-flight turn before aborting it, so neither the
+            // abort rejection nor a chunk already read off the wire touches
+            // state (or applies a patch) after unmount.
+            runIdRef.current++
+            abortRef.current?.abort()
+        },
+        [],
+    )
 
     const send = useCallback(
         async (input: string) => {
@@ -145,12 +166,15 @@ export function useMastraChat({
             setMessages(prev => [...prev, userMsg, asstMsg])
             setIsPending(true)
 
+            const updateTurn = (fields: Partial<ChatMessage>) =>
+                setMessages(prev =>
+                    prev.map(m => (m.id === asstId ? { ...m, ...fields } : m)),
+                )
+
+            const abort = new AbortController()
+            abortRef.current = abort
+
             try {
-                // .generate() returns the whole turn at once. We trade
-                // token-streaming for fewer moving parts and a simpler
-                // tool-result hand-off. The Mastra response shape we rely on
-                // here was verified end-to-end during Phase 1 smoke tests.
-                //
                 // tracingOptions carries the request-scoped correlation the
                 // PostHog exporter reads: metadata.userId -> distinct id,
                 // metadata.sessionId -> $ai_session_id; the rest is spread onto
@@ -158,7 +182,7 @@ export function useMastraChat({
                 // client-known id (1-32 hex) so a rating can reference it.
                 const agent = client.getAgent(agentId)
                 const distinct = distinctId || 'anonymous'
-                const response: any = await agent.generate(trimmed, {
+                const response = await agent.stream(trimmed, {
                     tracingOptions: {
                         traceId,
                         metadata: {
@@ -170,67 +194,65 @@ export function useMastraChat({
                             agent_id: agentId,
                         },
                     },
-                } as Parameters<typeof agent.generate>[1])
+                    abortSignal: abort.signal,
+                } as Parameters<typeof agent.stream>[1])
 
-                const text: string = response?.text ?? ''
-                // Prefer the trace id the server reports; fall back to the one
-                // we assigned via tracingOptions.traceId (the trace is recorded
-                // under it either way — never a fabricated value).
-                const resolvedTraceId: string =
-                    typeof response?.traceId === 'string' && response.traceId
-                        ? response.traceId
-                        : traceId
-                const patches: AssistantPatchEvent[] = []
-
-                // Mastra reports the same tool result in two places —
-                // response.toolResults (top-level) AND response.steps[i].toolResults.
-                // Dedupe by toolCallId so a single agent call doesn't produce
-                // two "Applied" chips. If the agent genuinely called the tool
-                // more than once in a turn, distinct toolCallIds preserve each.
+                let text = ''
+                // Prefer the trace id the server stamps on its chunks; fall
+                // back to the one we assigned via tracingOptions.traceId (the
+                // trace is recorded under it either way — never a fabricated
+                // value).
+                let resolvedTraceId = traceId
+                let patches: AssistantPatchEvent[] = []
+                // The same tool call can be reported more than once. Dedupe
+                // by toolCallId so it doesn't produce two "Applied" chips; a
+                // genuine second call has its own id and is kept. A result
+                // with no id is keyed by its content instead: an identical
+                // id-less patch later in the same turn is taken to be the same
+                // call reported again (there is nothing else to tell them
+                // apart by), while a different patch is always applied.
                 const seen = new Set<string>()
-                const collect = (results: any[] | undefined) => {
-                    if (!Array.isArray(results)) return
-                    for (const r of results) {
-                        const id: string | undefined =
-                            r?.toolCallId ?? r?.payload?.toolCallId
-                        if (id && seen.has(id)) continue
-                        const name = r?.toolName ?? r?.payload?.toolName
-                        if (
-                            name !== 'apply-config-patch' &&
-                            name !== 'applyConfigPatch'
-                        )
-                            continue
-                        const data = r?.result ?? r?.payload?.result
-                        if (!data?.patch) continue
-                        if (id) seen.add(id)
-                        patches.push(data as AssistantPatchEvent)
-                    }
-                }
-                collect(response?.toolResults)
-                if (Array.isArray(response?.steps)) {
-                    for (const step of response.steps)
-                        collect(step?.toolResults)
-                }
+                let streamError: string | null = null
 
-                // Superseded turn: the transcript it belongs to is gone, so
-                // neither its patches nor its text may be applied.
+                await response.processDataStream({
+                    onChunk: chunk => {
+                        // Superseded turn: the transcript it belongs to is
+                        // gone, so neither its patches nor its text may land.
+                        if (!isCurrent() || streamError !== null) return
+                        if (typeof chunk.traceId === 'string' && chunk.traceId)
+                            resolvedTraceId = chunk.traceId
+                        if (chunk.type === 'text-delta') {
+                            text += chunk.payload.text
+                            updateTurn({ text })
+                        } else if (chunk.type === 'tool-result') {
+                            const { toolCallId, toolName, result, isError } =
+                                chunk.payload
+                            if (isError || !isPatchTool(toolName)) return
+                            const data = result as AssistantPatchEvent | null
+                            if (!data?.patch) return
+                            const key = toolCallId
+                                ? `id:${toolCallId}`
+                                : `result:${JSON.stringify(data)}`
+                            if (seen.has(key)) return
+                            seen.add(key)
+                            onPatch(data)
+                            patches = [...patches, data]
+                            updateTurn({ patches })
+                        } else if (chunk.type === 'error') {
+                            streamError = errorText(chunk.payload.error)
+                        }
+                    },
+                })
+
                 if (!isCurrent()) return
+                if (streamError !== null) throw new Error(streamError)
 
-                for (const p of patches) onPatch(p)
-
-                setMessages(prev =>
-                    prev.map(m =>
-                        m.id === asstId
-                            ? {
-                                  ...m,
-                                  text,
-                                  patches,
-                                  pending: false,
-                                  traceId: resolvedTraceId,
-                              }
-                            : m,
-                    ),
-                )
+                updateTurn({
+                    text,
+                    patches,
+                    pending: false,
+                    traceId: resolvedTraceId,
+                })
             } catch (e: unknown) {
                 if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
@@ -238,24 +260,15 @@ export function useMastraChat({
                 setError(friendly)
                 // Render the honest error AS the assistant turn — never a canned
                 // patch (round-8 item 2). Flag it so no thumbs attach to a
-                // non-answer.
-                setMessages(prev =>
-                    prev.map(m =>
-                        m.id === asstId
-                            ? {
-                                  ...m,
-                                  text: friendly,
-                                  pending: false,
-                                  error: true,
-                              }
-                            : m,
-                    ),
-                )
+                // non-answer. Patches that already streamed in stay listed:
+                // they were applied.
+                updateTurn({ text: friendly, pending: false, error: true })
             } finally {
                 // Only the turn that owns the flight may release the gate; a
                 // superseded one must not re-enable the composer under a newer
                 // request.
                 if (isCurrent()) setIsPending(false)
+                if (abortRef.current === abort) abortRef.current = null
             }
         },
         [
@@ -270,11 +283,13 @@ export function useMastraChat({
     )
 
     const reset = useCallback(() => {
-        // Bumping the run id supersedes any in-flight turn: its response finds
-        // isCurrent() false and is dropped rather than repopulating the cleared
-        // transcript. The request itself keeps running — the SDK gives us no
-        // way to abort it — but it can no longer affect the UI.
+        // Bumping the run id supersedes any in-flight turn: its remaining
+        // chunks find isCurrent() false and are dropped rather than
+        // repopulating the cleared transcript. The abort stops the request
+        // itself.
         runIdRef.current++
+        abortRef.current?.abort()
+        abortRef.current = null
         setMessages([])
         setError(null)
         setIsPending(false)

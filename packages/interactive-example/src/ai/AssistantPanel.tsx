@@ -3,6 +3,7 @@ import { ThumbsUp, ThumbsDown, X } from 'lucide-react'
 import { ConfigContext } from '../state/ConfigContext'
 import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
+import { MarkdownMessage } from './MarkdownMessage'
 import type { AiFeedbackEvent } from '../types'
 
 type AssistantPanelProps = {
@@ -198,15 +199,19 @@ export function AssistantPanel({
         if (el) el.scrollTop = el.scrollHeight
     }, [messages])
 
+    // While a turn streams the composer stays focusable (readOnly, not
+    // disabled: disabling the focused textarea drops focus to <body>), so
+    // every send path refuses here instead, keeping the draft.
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         const value = input.trim()
-        if (!value) return
+        if (!value || isPending) return
         setInput('')
         void send(value)
     }
 
     function handleSeed(seed: string) {
+        if (isPending) return
         setInput('')
         void send(seed)
     }
@@ -261,9 +266,21 @@ export function AssistantPanel({
                             className={`upup-ie-ai-msg upup-ie-ai-msg-${m.role}`}
                         >
                             <div className="upup-ie-ai-msg-text">
-                                {m.text}
+                                {m.role === 'assistant' ? (
+                                    <MarkdownMessage
+                                        text={m.text}
+                                        streaming={!!m.pending}
+                                    />
+                                ) : (
+                                    m.text
+                                )}
                                 {m.pending && (
-                                    <span className="upup-ie-ai-cursor">▍</span>
+                                    <span
+                                        className="upup-ie-ai-cursor"
+                                        aria-hidden="true"
+                                    >
+                                        ▍
+                                    </span>
                                 )}
                             </div>
                             {m.patches?.map((p, i) => (
@@ -307,12 +324,15 @@ export function AssistantPanel({
                     placeholder={
                         isPending ? 'Working…' : 'Describe your upload setup'
                     }
-                    disabled={isPending}
+                    readOnly={isPending}
+                    aria-disabled={isPending}
                     aria-label="Message"
                 />
+                {/* aria-disabled, not disabled, for the same focus reason;
+                    handleSubmit refuses an empty or mid-stream send. */}
                 <button
                     type="submit"
-                    disabled={isPending || !input.trim()}
+                    aria-disabled={isPending || !input.trim()}
                     aria-label="Send"
                 >
                     ▶
