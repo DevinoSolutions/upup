@@ -1630,6 +1630,15 @@ html.dark .upup-ie-ai-panel,
     padding-left: 18px;
 }
 
+/* Tailwind's preflight strips list markers; numbered steps need their numbers. */
+.upup-ie-ai-md ul {
+    list-style-type: disc;
+}
+
+.upup-ie-ai-md ol {
+    list-style-type: decimal;
+}
+
 .upup-ie-ai-md li > ul,
 .upup-ie-ai-md li > ol {
     margin-top: 2px;
