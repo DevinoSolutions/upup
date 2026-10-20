@@ -46,7 +46,7 @@ export function createTransientUiState({
     motion,
     reallyRemove,
     exitMs = 200,
-    overlayMs = 350,
+    overlayMs = 250,
     toastMs = 3000,
 }: TransientUiParams): TransientUiState {
     const listeners = new Set<() => void>()
