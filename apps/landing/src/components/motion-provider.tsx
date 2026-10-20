@@ -1,6 +1,6 @@
 'use client'
 
-import { LazyMotion } from 'framer-motion'
+import { LazyMotion, MotionConfig } from 'framer-motion'
 import type { ReactNode } from 'react'
 
 const loadFeatures = () =>
@@ -16,7 +16,17 @@ const loadFeatures = () =>
  * `tests/landing-first-load-guards.test.ts` keeps `motion.*` out of every landing
  * component, docs included (a `motion.*` bundles its own ~90 KB of features into
  * the route's first load), so the saving cannot quietly regress.
+ *
+ * `MotionConfig reducedMotion="user"` is the JS half of the reduced-motion
+ * contract (the CSS half is the net at the bottom of app/globals.css): under
+ * `prefers-reduced-motion` every `m.*` drops transform and layout animation
+ * and keeps opacity. It is a context provider only, so it adds no feature
+ * code to the first load.
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
-    return <LazyMotion features={loadFeatures}>{children}</LazyMotion>
+    return (
+        <LazyMotion features={loadFeatures}>
+            <MotionConfig reducedMotion="user">{children}</MotionConfig>
+        </LazyMotion>
+    )
 }

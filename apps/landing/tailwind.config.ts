@@ -20,30 +20,54 @@ module.exports = {
                     ...defaultTheme.fontFamily.mono,
                 ],
             },
+            // Motion tokens live as --motion-* custom properties on :root
+            // (app/globals.css). Use them via duration-fast/base/slow and
+            // ease-motion-out/in; the animate-motion-* utilities below bake in
+            // the same tokens. Gate every use with `motion-safe:` and pair it
+            // with `motion-reduce:animate-motion-fade` where an opacity-only
+            // fallback is wanted (reduced mode = no translate/scale).
+            transitionDuration: {
+                fast: 'var(--motion-dur-fast)',
+                base: 'var(--motion-dur-base)',
+                slow: 'var(--motion-dur-slow)',
+            },
+            transitionTimingFunction: {
+                'motion-out': 'var(--motion-ease-out)',
+                'motion-in': 'var(--motion-ease-in)',
+            },
             keyframes: {
-                bounceSlow: {
-                    '0%, 100%': {
-                        transform: 'translateY(-15%)',
-                        animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
-                    },
-                    '50%': {
-                        transform: 'translateY(0)',
-                        animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
-                    },
+                'motion-enter': {
+                    '0%': { opacity: '0', transform: 'translateY(6px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
                 },
-                fadeIn: {
+                'motion-enter-down': {
+                    '0%': { opacity: '0', transform: 'translateY(-8px)' },
+                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+                'motion-fade': {
                     '0%': { opacity: '0' },
                     '100%': { opacity: '1' },
                 },
-                fadeInUp: {
-                    '0%': { opacity: '0', transform: 'translateY(20px)' },
-                    '100%': { opacity: '1', transform: 'translateY(0)' },
+                'motion-panel': {
+                    '0%': {
+                        opacity: '0',
+                        transform: 'translateY(8px) scale(0.98)',
+                    },
+                    '100%': {
+                        opacity: '1',
+                        transform: 'translateY(0) scale(1)',
+                    },
                 },
             },
             animation: {
-                fadeIn: 'fadeIn 0.5s ease-out forwards',
-                fadeInUp: 'fadeInUp 0.5s ease-out forwards',
-                'bounce-slow': 'bounceSlow 2s infinite',
+                'motion-enter':
+                    'motion-enter var(--motion-dur-base) var(--motion-ease-out) backwards',
+                'motion-enter-down':
+                    'motion-enter-down var(--motion-dur-base) var(--motion-ease-out) backwards',
+                'motion-fade':
+                    'motion-fade var(--motion-dur-fast) var(--motion-ease-out) backwards',
+                'motion-panel':
+                    'motion-panel 150ms var(--motion-ease-out) backwards',
             },
             colors: {
                 primary: {
