@@ -490,8 +490,11 @@ the suites actually drive):
   carries it (in all five ported packages); no other markup may, and the
   safelist must not rely on that one carrier. All hover motion
   (`fx-hover-lift`, `fx-icon-nudge`, `fx-sheen-sweep`, `fx-remove`) sits under
-  `@media (hover: hover)`; `fx-hover-lift` transitions `transform` only (its
-  shadow changes instantly — box-shadow is never tweened); `fx-pop` has no
+  `@media (hover: hover)`; `fx-hover-lift` transitions `transform` +
+  `background-color` only (its shadow changes instantly — box-shadow is never
+  tweened); core's overlay close timer (`transient-ui-state.ts` `overlayMs`)
+  defaults to the same 250ms as `--upup-fx-overlay` — change them together;
+  `fx-pop` has no
   overshoot (opacity + scale 0.96 -> 1); `fx-rec-pulse` is opacity-only. Recorded
   motion-audit exceptions: the overlay sheet's full-height `translateY(100%)`
   travel, the progress fill tweening `width` (inline-width driven, contained in

@@ -175,11 +175,12 @@ function createPostcssConfig({ content }) {
                                 '--upup-fx-ease':
                                     'cubic-bezier(0.22, 1, 0.36, 1)',
                             },
-                            // Transform-only transition: the hover shadow lands
-                            // instantly (box-shadow is never tweened).
+                            // Transform + background-color only: the hover shadow
+                            // lands instantly (box-shadow is never tweened), while
+                            // hover bg fades (drive items, nav buttons) keep theirs.
                             '.fx-hover-lift': {
                                 transition:
-                                    'transform var(--upup-fx-fast) var(--upup-fx-ease)',
+                                    'transform var(--upup-fx-fast) var(--upup-fx-ease), background-color var(--upup-fx-fast) var(--upup-fx-ease)',
                             },
                             '.fx-press:active': {
                                 transform: 'scale(0.97)',

@@ -108,6 +108,33 @@ describe('@useupup/vanilla CSS artifact', () => {
             /@keyframes upup-fx-pop\s*\{\s*0%\s*\{\s*opacity: 0;\s*transform: scale\(0\.96\);/,
         )
         expect(css).not.toContain('scale(1.12)')
+        const pop = atRuleBodies(css, '@keyframes upup-fx-pop')
+        expect(pop).toHaveLength(1)
+        const [popBody = ''] = pop
+        expect(popBody).toMatch(
+            /100%\s*\{\s*opacity: 1;\s*transform: scale\(1\);\s*\}\s*$/,
+        )
+        // No overshoot anywhere in the pop: every scale stays at or below 1.
+        const popScales = [...popBody.matchAll(/scale\(([\d.]+)\)/g)].map(m =>
+            Number(m[1]),
+        )
+        expect(popScales.length).toBeGreaterThan(0)
+        expect(Math.max(...popScales)).toBeLessThanOrEqual(1)
+        // Hover lift tweens exactly transform + background-color (hover bg
+        // fades stay), never box-shadow:
+        const liftDecl = css.match(
+            /\.upup-scope \.upup-fx-hover-lift\s*\{([^}]*)\}/,
+        )
+        expect(liftDecl?.[1]?.trim()).toBe(
+            'transition: transform var(--upup-fx-fast) var(--upup-fx-ease), background-color var(--upup-fx-fast) var(--upup-fx-ease);',
+        )
+        // The sheen-sweep hover travel runs on the fast token:
+        const sweepDecl = css.match(
+            /\.upup-scope \.upup-fx-sheen-sweep::after\s*\{([^}]*)\}/,
+        )
+        expect(sweepDecl?.[1]).toContain(
+            'transition: transform var(--upup-fx-fast) var(--upup-fx-ease);',
+        )
         expect(css).toMatch(
             /@keyframes upup-fx-rec-pulse\s*\{\s*0%, 100%\s*\{\s*opacity: 1;\s*\}\s*50%\s*\{\s*opacity: 0\.55;\s*\}\s*\}/,
         )
