@@ -15,6 +15,17 @@
     color-scheme: light;
     --bg-base: #f8fafc;
     --fg-base: #171717;
+
+    /* Motion tokens. Landing-only: the uploader ships its own --upup-fx-*
+       tokens on .upup-scope, and the --motion- prefix keeps the two apart.
+       Wired into Tailwind (duration-fast/base/slow/panel, ease-motion-out/in and the
+       animate-motion-* utilities) in tailwind.config.ts. */
+    --motion-dur-fast: 120ms;
+    --motion-dur-base: 180ms;
+    --motion-dur-slow: 240ms;
+    --motion-dur-panel: 150ms;
+    --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
 
 .dark {
@@ -104,22 +115,6 @@ body {
         Helvetica,
         Arial,
         sans-serif;
-}
-
-@layer utilities {
-    .animate-scale-in {
-        animation: scale-in 0.15s ease-out forwards;
-    }
-    @keyframes scale-in {
-        0% {
-            transform: scaleY(0);
-            opacity: 0;
-        }
-        100% {
-            transform: scaleY(1);
-            opacity: 1;
-        }
-    }
 }
 
 @layer components {
@@ -480,4 +475,30 @@ body {
 .upup-code > pre::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.22);
     border-radius: 9999px;
+}
+
+/* ── Global reduced-motion net ────────────────────────────────────
+   Deliberately OUTSIDE @layer so its !important beats any utility. Collapses
+   CSS animation/transition timing for every landing element, including
+   react-toastify, Tailwind animate-* utilities and third-party CSS. Does NOT
+   touch framer-motion (JS-driven) — <MotionConfig reducedMotion="user"> in
+   components/motion-provider.tsx covers that.
+   Two exclusions: spinners (an indeterminate-state indicator may keep
+   spinning) and the embedded uploader subtree (.upup-scope), which owns a
+   data-motion gate and deliberately keeps its progress tween and spinner.
+   Pseudo-elements cannot sit inside :where()/:is(), so ::before/::after are
+   spelled out as their own selectors. Delays are zeroed too: the
+   animate-motion-* utilities use `backwards` fill, so a delay would otherwise
+   hold an element at its 0% keyframe (opacity 0) under reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *),
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::before,
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
 }
