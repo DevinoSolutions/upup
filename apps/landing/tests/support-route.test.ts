@@ -1,21 +1,17 @@
 import { randomUUID } from 'node:crypto'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Mock the two external boundaries (unit layer — the route logic is what we
-// exercise, not the real PostHog/SMTP services). Hoisted fns stay stable across
+// exercise, not the real PostHog/Sendly services). Hoisted fns stay stable across
 // vi.resetModules() so each test can inspect and re-program them.
 const h = vi.hoisted(() => ({
     captureMock: vi.fn(),
     shutdownMock: vi.fn(),
     postHogCtor: vi.fn(),
-    sendMailMock: vi.fn(),
-    createTransport: vi.fn(),
+    fetchMock: vi.fn(),
 }))
 
 vi.mock('posthog-node', () => ({ PostHog: h.postHogCtor }))
-vi.mock('nodemailer', () => ({
-    default: { createTransport: h.createTransport },
-}))
 
 const MANAGED_ENV = [
     'POSTHOG_DATASET',
@@ -25,7 +21,7 @@ const MANAGED_ENV = [
     'NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST',
     'NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN',
     'POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY',
-    'SMTP_URL',
+    'SENDLY_API_KEY',
     'SUPPORT_EMAIL_TO',
     'SUPPORT_EMAIL_FROM',
 ]
@@ -35,7 +31,7 @@ const ENABLED_ENV: Record<string, string> = {
     POSTHOG_DATASET: 'e2e',
     NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: 'https://e2e.posthog.test',
     NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: 'phc_e2e_token',
-    SMTP_URL: 'smtp://user:pass@localhost:2525',
+    SENDLY_API_KEY: 'pk_test_not_a_real_key',
 }
 
 type PostHandler = (req: Request) => Promise<Response>
@@ -83,11 +79,36 @@ beforeEach(() => {
     h.postHogCtor.mockReset().mockImplementation(function PostHog() {
         return { capture: h.captureMock, shutdown: h.shutdownMock }
     })
-    h.sendMailMock.mockReset().mockResolvedValue({ messageId: 'test' })
-    h.createTransport.mockReset().mockImplementation(() => ({
-        sendMail: h.sendMailMock,
-    }))
+    // Sendly accepts a send with 202 and a receipt.
+    h.fetchMock.mockReset().mockResolvedValue(
+        new Response(
+            JSON.stringify({
+                id: 'em_1',
+                status: 'PENDING',
+                to: 'hello@devino.ca',
+                from: 'upup-support@useupup.com',
+            }),
+            { status: 202 },
+        ),
+    )
+    vi.stubGlobal('fetch', h.fetchMock)
 })
+
+afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+})
+
+/** The Sendly request the email leg made: url, headers and parsed JSON body. */
+function sentMail(index = 0) {
+    const [url, init] = h.fetchMock.mock.calls[index] as [string, RequestInit]
+    return {
+        url,
+        init,
+        headers: init.headers as Record<string, string>,
+        body: JSON.parse(init.body as string) as Record<string, string>,
+    }
+}
 
 describe('POST /api/upup-support', () => {
     it('silently accepts a honeypot-filled submission without capturing or sending', async () => {
@@ -98,7 +119,7 @@ describe('POST /api/upup-support', () => {
         expect(res.status).toBe(200)
         expect(body.ok).toBe(true)
         expect(h.postHogCtor).not.toHaveBeenCalled()
-        expect(h.sendMailMock).not.toHaveBeenCalled()
+        expect(h.fetchMock).not.toHaveBeenCalled()
     })
 
     it('rejects an invalid payload with 400', async () => {
@@ -116,9 +137,9 @@ describe('POST /api/upup-support', () => {
         const captureArg = h.captureMock.mock.calls[0][0]
         expect(captureArg.properties.feedback_id).toBe(id)
 
-        const mailArg = h.sendMailMock.mock.calls[0][0]
-        expect(mailArg.subject).toContain(id)
-        expect(mailArg.text).toContain(id)
+        const mail = sentMail()
+        expect(mail.body.subject).toContain(id)
+        expect(mail.body.body).toContain(id)
     })
 
     it('still sends the email when the PostHog leg throws', async () => {
@@ -132,11 +153,11 @@ describe('POST /api/upup-support', () => {
         expect(res.status).toBe(200)
         expect(body.posthog).toBe('failed')
         expect(body.email).toBe('ok')
-        expect(h.sendMailMock).toHaveBeenCalledTimes(1)
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
     })
 
     it('still captures the event when the email leg throws', async () => {
-        h.sendMailMock.mockRejectedValue(new Error('smtp down'))
+        h.fetchMock.mockRejectedValue(new Error('network down'))
         const POST = await loadRoute(ENABLED_ENV)
         const res = await POST(makeRequest(payload()))
         const body = await res.json()
@@ -150,7 +171,7 @@ describe('POST /api/upup-support', () => {
         h.captureMock.mockImplementation(() => {
             throw new Error('posthog down')
         })
-        h.sendMailMock.mockRejectedValue(new Error('smtp down'))
+        h.fetchMock.mockRejectedValue(new Error('network down'))
         const POST = await loadRoute(ENABLED_ENV)
         const res = await POST(makeRequest(payload()))
         const body = await res.json()
@@ -169,14 +190,14 @@ describe('POST /api/upup-support', () => {
         const firstBody = await first.json()
         expect(first.status).toBe(200)
         expect(h.captureMock).toHaveBeenCalledTimes(1)
-        expect(h.sendMailMock).toHaveBeenCalledTimes(1)
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
 
         const second = await POST(makeRequest(req))
         const secondBody = await second.json()
         expect(second.status).toBe(200)
         expect(secondBody).toEqual(firstBody)
         expect(h.captureMock).toHaveBeenCalledTimes(1)
-        expect(h.sendMailMock).toHaveBeenCalledTimes(1)
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
     })
 
     it('returns 429 once the per-IP rate limit is exhausted', async () => {
@@ -263,11 +284,12 @@ describe('POST /api/upup-support', () => {
         expect(captureArg.properties.feedback_source).toBe(
             'homepage_provider_notify',
         )
-        const mailArg = h.sendMailMock.mock.calls[0][0]
-        expect(mailArg.subject).toContain('provider_notify')
-        expect(mailArg.text).toContain('Vercel Blob')
+        const mail = sentMail()
+        expect(mail.body.subject).toContain('provider_notify')
+        expect(mail.body.body).toContain('Vercel Blob')
         // The address is the reply-to only — never the sender.
-        expect(mailArg.replyTo).toBe('dev@example.com')
+        expect(mail.body.reply).toBe('dev@example.com')
+        expect(mail.body.from).not.toBe('dev@example.com')
     })
 
     it('drops a honeypot-filled provider_notify submission silently', async () => {
@@ -285,7 +307,7 @@ describe('POST /api/upup-support', () => {
 
         expect(res.status).toBe(200)
         expect(h.postHogCtor).not.toHaveBeenCalled()
-        expect(h.sendMailMock).not.toHaveBeenCalled()
+        expect(h.fetchMock).not.toHaveBeenCalled()
     })
 
     it('never puts the submitter email into the captured event properties', async () => {
@@ -301,5 +323,105 @@ describe('POST /api/upup-support', () => {
         const serialized = JSON.stringify(captureArg.properties)
         expect(serialized).not.toContain('secret@example.com')
         expect(captureArg.properties.has_email).toBe(true)
+    })
+})
+
+describe('support email leg via Sendly', () => {
+    it('POSTs one transactional email to the Sendly v1 endpoint with a Bearer key', async () => {
+        const POST = await loadRoute({
+            ...ENABLED_ENV,
+            SUPPORT_EMAIL_FROM: 'upup-support@useupup.com',
+            SUPPORT_EMAIL_TO: 'hello@devino.ca',
+        })
+        const id = randomUUID()
+        const res = await POST(
+            makeRequest(
+                payload({ feedbackId: id, wantsReply: true, email: 'a@b.co' }),
+            ),
+        )
+        const body = await res.json()
+
+        expect(body.email).toBe('ok')
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+        const mail = sentMail()
+        expect(mail.url).toBe('https://api.sendly.now/api/v1/emails')
+        expect(mail.init.method).toBe('POST')
+        expect(mail.headers.authorization).toBe('Bearer pk_test_not_a_real_key')
+        expect(mail.headers['content-type']).toBe('application/json')
+        expect(mail.headers['idempotency-key']).toBe(id)
+        expect(mail.body.from).toBe('upup-support@useupup.com')
+        expect(mail.body.to).toBe('hello@devino.ca')
+        expect(mail.body.reply).toBe('a@b.co')
+        expect(mail.body.subject).toBe(`[upup support] problem — ${id}`)
+    })
+
+    it('omits reply when the submitter gave no email', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        await POST(makeRequest(payload()))
+        expect(sentMail().body).not.toHaveProperty('reply')
+    })
+
+    it('escapes the submission so it cannot inject HTML or template markup', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(
+                payload({
+                    message: '<script>x</script> {{#if a}} line1\nline2',
+                }),
+            ),
+        )
+        expect((await res.json()).email).toBe('ok')
+
+        const html = sentMail().body.body
+        expect(html).not.toContain('<script>')
+        expect(html).toContain('&lt;script&gt;x&lt;/script&gt;')
+        expect(html).not.toContain('{{')
+        expect(html).toContain('&#123;&#123;#if a&#125;&#125;')
+        expect(html).toContain('line1<br>')
+    })
+
+    it('reports failed (and logs status, never the key) on a non-2xx Sendly response', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        h.fetchMock.mockResolvedValue(
+            new Response('{"code":"forbidden"}', { status: 403 }),
+        )
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(payload()))
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.email).toBe('failed')
+        expect(body.posthog).toBe('ok')
+        const logged = JSON.stringify(errorSpy.mock.calls)
+        expect(logged).toContain('403')
+        expect(logged).not.toContain('pk_test_not_a_real_key')
+    })
+
+    it('reports failed (and never logs the key) on a network error', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        h.fetchMock.mockRejectedValue(new Error('ECONNRESET'))
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(payload()))
+        const body = await res.json()
+
+        expect(body.email).toBe('failed')
+        expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
+            'pk_test_not_a_real_key',
+        )
+    })
+
+    it('reports not_configured without calling Sendly when SENDLY_API_KEY is absent', async () => {
+        const POST = await loadRoute({
+            POSTHOG_DATASET: 'e2e',
+            NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:
+                'https://e2e.posthog.test',
+            NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: 'phc_e2e_token',
+        })
+        const res = await POST(makeRequest(payload()))
+        const body = await res.json()
+
+        expect(body.email).toBe('not_configured')
+        expect(body.posthog).toBe('ok')
+        expect(h.fetchMock).not.toHaveBeenCalled()
     })
 })

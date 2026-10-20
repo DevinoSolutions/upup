@@ -43,7 +43,7 @@ records site/QA quirks that don't fit there.
 
 - `/mobile-demo` is a chromeless uploader embed canvas: no nav, no h1 — intentional.
   Exclude it from heading/landmark a11y sweeps.
-- `/support` sends real email (UseSend). Don't spam it from automated tests.
+- `/support` sends real email (Sendly). Don't spam it from automated tests.
 
 ## Deployed environments
 
