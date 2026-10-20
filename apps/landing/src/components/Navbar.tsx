@@ -175,11 +175,21 @@ export default function Navbar() {
                                 className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                                 onClick={() => setNavbarOpen(!navbarOpen)}
                             >
-                                {navbarOpen ? (
-                                    <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                ) : (
-                                    <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                )}
+                                {/* Fixed 20px box: the incoming icon fades in
+                                place (motion-fade, fast token) and can never resize the target. */}
+                                <span className="relative inline-flex h-5 w-5 items-center justify-center">
+                                    {navbarOpen ? (
+                                        <X
+                                            key="close"
+                                            className="w-5 h-5 text-gray-700 dark:text-gray-300 motion-safe:animate-motion-fade"
+                                        />
+                                    ) : (
+                                        <Menu
+                                            key="open"
+                                            className="w-5 h-5 text-gray-700 dark:text-gray-300 motion-safe:animate-motion-fade"
+                                        />
+                                    )}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -191,7 +201,11 @@ export default function Navbar() {
                         id={MOBILE_MENU_ID}
                         className="lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-200/20 dark:border-gray-800/50"
                     >
-                        <div className="px-6 py-6 space-y-4">
+                        {/* Animate this inner div, never the backdrop-blur
+                        container above (fading a backdrop-filter repaints the
+                        blur every frame). Enter only; exit is instant. Reduced
+                        motion keeps opacity and drops the translate. */}
+                        <div className="px-6 py-6 space-y-4 motion-safe:animate-motion-enter-down motion-reduce:animate-motion-fade">
                             <ul className="space-y-4">
                                 {navLinks}
                                 <li>
