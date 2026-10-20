@@ -15,6 +15,10 @@ const MOBILE_MENU_ID = 'navbar-mobile-menu'
 
 export default function Navbar() {
     const [navbarOpen, setNavbarOpen] = useState(false)
+    // The icon fade is feedback for a toggle, so it stays off until the
+    // first one: the hamburger must not fade in on every page load.
+    const [menuToggled, setMenuToggled] = useState(false)
+    const iconMotion = menuToggled ? ' motion-safe:animate-motion-fade' : ''
     const [mounted, setMounted] = useState(false)
     const { isDarkMode } = useContext(ThemeContext)
     const pathname = usePathname()
@@ -173,20 +177,25 @@ export default function Navbar() {
                                 aria-expanded={navbarOpen}
                                 aria-controls={MOBILE_MENU_ID}
                                 className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-                                onClick={() => setNavbarOpen(!navbarOpen)}
+                                onClick={() => {
+                                    setMenuToggled(true)
+                                    setNavbarOpen(!navbarOpen)
+                                }}
                             >
                                 {/* Fixed 20px box: the incoming icon fades in
-                                place (motion-fade, fast token) and can never resize the target. */}
-                                <span className="relative inline-flex h-5 w-5 items-center justify-center">
+                                place (motion-fade, fast token, after the first toggle only) and
+                                can never resize the target. */}
+                                <span
+                                    data-testid="navbar-toggle-icon"
+                                    className="inline-flex h-5 w-5 items-center justify-center"
+                                >
                                     {navbarOpen ? (
                                         <X
-                                            key="close"
-                                            className="w-5 h-5 text-gray-700 dark:text-gray-300 motion-safe:animate-motion-fade"
+                                            className={`w-5 h-5 text-gray-700 dark:text-gray-300${iconMotion}`}
                                         />
                                     ) : (
                                         <Menu
-                                            key="open"
-                                            className="w-5 h-5 text-gray-700 dark:text-gray-300 motion-safe:animate-motion-fade"
+                                            className={`w-5 h-5 text-gray-700 dark:text-gray-300${iconMotion}`}
                                         />
                                     )}
                                 </span>
