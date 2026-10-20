@@ -6,6 +6,26 @@ import { expect, test } from '@playwright/test'
 // search) renders real content, and the llms.txt convention path is served.
 
 test.describe('docs', () => {
+    test.describe('reduced motion', () => {
+        test.use({ reducedMotion: 'reduce' })
+
+        test('opening Ask AI moves focus into the composer', async ({
+            page,
+        }) => {
+            await page.goto('/docs/getting-started/')
+            const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
+            const drawer = page.getByTestId('docs-ask-ai-drawer')
+            await expect(async () => {
+                await trigger.click()
+                await expect(drawer).toBeVisible({ timeout: 2000 })
+            }).toPass()
+            // The global reduced-motion net must not turn the drawer's
+            // implicit `transition-property: all` into a visibility
+            // transition, or the open-time focus() hits a hidden element.
+            await expect(drawer.getByTestId('docs-ask-ai-input')).toBeFocused()
+        })
+    })
+
     test('legacy documentation URL permanently redirects to docs', async ({
         request,
     }) => {

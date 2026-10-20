@@ -489,14 +489,22 @@ body {
    Pseudo-elements cannot sit inside :where()/:is(), so ::before/::after are
    spelled out as their own selectors. Delays are zeroed too: the
    animate-motion-* utilities use `backwards` fill, so a delay would otherwise
-   hold an element at its 0% keyframe (opacity 0) under reduced motion. */
+   hold an element at its 0% keyframe (opacity 0) under reduced motion.
+   Transitions get 0s, not 0.01ms: an element with no transition classes has
+   the initial `transition-property: all`, so any non-zero duration makes
+   EVERY property transition, `visibility` included. A hidden -> visible
+   transition stays `hidden` for its first frame, so a focus() in the same
+   tick fails (the Ask AI drawer lost composer focus this way). A 0s
+   transition never starts, so state flips instantly. Nothing on the landing
+   listens for transitionend. Animations keep 0.01ms so the backwards fill
+   resolves. */
 @media (prefers-reduced-motion: reduce) {
     *:not([class*='animate-spin'], .upup-scope, .upup-scope *),
     *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::before,
     *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: 0s !important;
         animation-delay: 0s !important;
         transition-delay: 0s !important;
         scroll-behavior: auto !important;

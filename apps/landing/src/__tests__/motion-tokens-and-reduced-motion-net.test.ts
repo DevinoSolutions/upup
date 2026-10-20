@@ -59,7 +59,11 @@ describe('global reduced-motion net', () => {
     it('forces animation and transition timing under prefers-reduced-motion', () => {
         expect(net).toMatch(/animation-duration:\s*0?\.01ms\s*!important/)
         expect(net).toMatch(/animation-iteration-count:\s*1\s*!important/)
-        expect(net).toMatch(/transition-duration:\s*0?\.01ms\s*!important/)
+        // 0s, not 0.01ms: a non-zero duration turns the initial
+        // `transition-property: all` into a real visibility transition, which
+        // holds a just-opened drawer `hidden` for a frame and breaks focus().
+        expect(net).toMatch(/transition-duration:\s*0s\s*!important/)
+        expect(net).not.toMatch(/transition-duration:\s*0?\.01ms/)
         // animate-motion-* use `backwards` fill, so any delay would hold the
         // element at its 0% keyframe (opacity 0) under reduced motion.
         expect(net).toMatch(/animation-delay:\s*0s\s*!important/)
