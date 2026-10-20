@@ -166,6 +166,79 @@ describe('MarkdownMessage', () => {
         )
     })
 
+    it('renders a thematic break as an <hr> between its neighbours', () => {
+        const { container } = render(
+            <MarkdownMessage
+                text={'Above.\n\n---\n\nMiddle.\n***\nBelow.\n___\n'}
+                streaming={false}
+            />,
+        )
+        expect(
+            [...container.querySelector('.upup-ie-ai-md')!.children].map(
+                el => el.tagName,
+            ),
+        ).toEqual(['P', 'HR', 'P', 'HR', 'P', 'HR'])
+        expect(container.textContent).not.toMatch(/-{3}|\*{3}|_{3}/)
+        // Decorative: nothing for a screen reader to announce but the separator.
+        expect(container.querySelector('hr')?.textContent).toBe('')
+    })
+
+    it('keeps a rule and its neighbours as the same DOM nodes while more text streams in', () => {
+        const RULES =
+            'Intro **one**.\n\n---\n\nMiddle text.\n***\nOutro [x](https://x.dev) end.\n\n- - -\n\nLast.'
+        const { container, rerender } = render(
+            <MarkdownMessage text="" streaming />,
+        )
+        const selectors = [
+            'hr',
+            'hr:nth-of-type(2)',
+            'hr:nth-of-type(3)',
+            'p strong',
+            'p a',
+            'p span.upup-ie-ai-ease',
+            'p:nth-of-type(2)',
+        ]
+        const held = new Map<string, Element>()
+        const check = () => {
+            for (const sel of selectors) {
+                const node = container.querySelector(sel)
+                const first = held.get(sel)
+                if (first) expect(node).toBe(first)
+                else if (node) held.set(sel, node)
+            }
+        }
+        for (let i = 1; i <= RULES.length; i++) {
+            rerender(<MarkdownMessage text={RULES.slice(0, i)} streaming />)
+            check()
+            // A rule never shows up half-typed: never a stray dash or star.
+            expect(container.textContent).not.toMatch(/(^|\s)[-*_]{1,3}(\s|$)/)
+        }
+        rerender(<MarkdownMessage text={RULES} streaming={false} />)
+        check()
+        expect([...held.keys()].sort()).toEqual([...selectors].sort())
+        expect(container.querySelectorAll('hr')).toHaveLength(3)
+    })
+
+    it('ends byte-identical to the unchunked render with rules in the answer', () => {
+        const text =
+            'One.\n\n---\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n---\n- a\n- - -\n- b\n'
+        const expected = unchunkedHtml(text)
+        expect(expected).toContain('<hr')
+        for (const chunks of chunkings(text, 25)) {
+            let received = ''
+            const { container, rerender, unmount } = render(
+                <MarkdownMessage text="" streaming />,
+            )
+            for (const chunk of chunks) {
+                received += chunk
+                rerender(<MarkdownMessage text={received} streaming />)
+            }
+            rerender(<MarkdownMessage text={received} streaming={false} />)
+            expect(container.innerHTML).toBe(expected)
+            unmount()
+        }
+    })
+
     it('renders CRLF text the same as LF text', () => {
         const lf = '## Title\nBody **bold**\n\n- a\n- b\n'
         const crlfText = lf.replace(/\n/g, '\r\n')

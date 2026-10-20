@@ -1694,6 +1694,13 @@ html.dark .upup-ie-ai-panel,
     text-align: left;
 }
 
+.upup-ie-ai-md hr {
+    height: 0;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--ie-card-border);
+}
+
 .upup-ie-ai-md a {
     color: var(--ie-accent);
     text-decoration: underline;
@@ -1714,6 +1721,85 @@ html.dark .upup-ie-ai-panel,
 
 @keyframes upup-ie-ai-ease-in-block {
     from { opacity: 0; transform: translateY(4px); }
+}
+
+/* Step trail: a collapsed disclosure of what the agent did this turn. */
+.upup-ie-ai-steps {
+    position: relative;
+    align-self: flex-start;
+    max-width: 95%;
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-ai-steps-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 2px 6px 2px 2px;
+    background: transparent;
+    border: none;
+    border-radius: var(--ie-radius-input);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.upup-ie-ai-steps-toggle:hover {
+    color: var(--ie-fg);
+}
+
+.upup-ie-ai-steps-toggle:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-ai-steps-chevron {
+    flex: none;
+    transition: transform 150ms ease-out;
+}
+
+.upup-ie-ai-steps[data-open] .upup-ie-ai-steps-chevron {
+    transform: rotate(90deg);
+}
+
+.upup-ie-ai-steps-list {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0 0 0 8px;
+    border-left: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-ai-steps-list[hidden] {
+    display: none;
+}
+
+.upup-ie-ai-steps-list li {
+    padding: 1px 0;
+    word-break: break-word;
+}
+
+.upup-ie-ai-steps-list li[data-status="error"] {
+    color: #b91c1c;
+}
+
+html.dark .upup-ie-ai-steps-list li[data-status="error"],
+[data-theme="dark"] .upup-ie-ai-steps-list li[data-status="error"] {
+    color: #fca5a5;
+}
+
+.upup-ie-ai-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .upup-ie-ai-patch {
@@ -1956,7 +2042,8 @@ html.dark .upup-ie-ai-panel,
     .upup-ie-toggle input[type="checkbox"]::before,
     .upup-ie-source-tile,
     .upup-ie-expand-wrap,
-    .upup-ie-code-header button {
+    .upup-ie-code-header button,
+    .upup-ie-ai-steps-chevron {
         transition: none;
     }
 }

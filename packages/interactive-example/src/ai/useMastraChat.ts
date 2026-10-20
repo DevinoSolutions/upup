@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
 import type { UpupConfig } from '../types'
+import { applyStepChunk, settleSteps, type ChatStep } from './chatSteps'
 
 /**
  * Shown inline (as the assistant turn) when the real Mastra agent can't be
@@ -25,6 +26,11 @@ export type ChatMessage = {
     text: string
     /** Patches the assistant emitted in this turn. Each one was already applied. */
     patches?: AssistantPatchEvent[]
+    /**
+     * Plain-word trail of what the agent did this turn (one step per tool
+     * call, keyed by toolCallId). Absent until the first tool call.
+     */
+    steps?: ChatStep[]
     /** True while the assistant is still streaming this turn. */
     pending?: boolean
     /**
@@ -173,6 +179,8 @@ export function useMastraChat({
 
             const abort = new AbortController()
             abortRef.current = abort
+            // Outside the try so the failure path can settle what was running.
+            let steps: ChatStep[] = []
 
             try {
                 // tracingOptions carries the request-scoped correlation the
@@ -221,6 +229,20 @@ export function useMastraChat({
                         if (!isCurrent() || streamError !== null) return
                         if (typeof chunk.traceId === 'string' && chunk.traceId)
                             resolvedTraceId = chunk.traceId
+                        // The trail follows the tool chunks; a repeat of one
+                        // already folded in returns the same array, so it
+                        // costs no render.
+                        if (
+                            chunk.type === 'tool-call' ||
+                            chunk.type === 'tool-result' ||
+                            chunk.type === 'tool-error'
+                        ) {
+                            const next = applyStepChunk(steps, chunk)
+                            if (next !== steps) {
+                                steps = next
+                                updateTurn({ steps })
+                            }
+                        }
                         if (chunk.type === 'text-delta') {
                             text += chunk.payload.text
                             updateTurn({ text })
@@ -250,6 +272,7 @@ export function useMastraChat({
                 updateTurn({
                     text,
                     patches,
+                    ...(steps.length > 0 && { steps: settleSteps(steps) }),
                     pending: false,
                     traceId: resolvedTraceId,
                 })
@@ -262,7 +285,12 @@ export function useMastraChat({
                 // patch (round-8 item 2). Flag it so no thumbs attach to a
                 // non-answer. Patches that already streamed in stay listed:
                 // they were applied.
-                updateTurn({ text: friendly, pending: false, error: true })
+                updateTurn({
+                    text: friendly,
+                    ...(steps.length > 0 && { steps: settleSteps(steps) }),
+                    pending: false,
+                    error: true,
+                })
             } finally {
                 // Only the turn that owns the flight may release the gate; a
                 // superseded one must not re-enable the composer under a newer

@@ -325,3 +325,153 @@ describe('useMastraChat streaming', () => {
         expect(result.current.messages[1]?.traceId).toBe(assigned)
     })
 })
+
+const toolCall = (toolCallId: string, extra: Record<string, unknown> = {}) => ({
+    type: 'tool-call',
+    payload: {
+        toolCallId,
+        toolName: 'apply-config-patch',
+        args: { patch: PATCH.patch, explanation: PATCH.explanation },
+        ...extra,
+    },
+})
+
+describe('useMastraChat step trail', () => {
+    it('shows the running step live, then settles it when the result lands', async () => {
+        let release!: () => void
+        sdk.gate = new Promise<void>(r => (release = r))
+        sdk.chunks = [
+            toolCall('call-1'),
+            toolResult('call-1', { toolName: 'apply-config-patch' }),
+            delta('Done.'),
+        ]
+        sdk.pauseAfter = 0
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+
+        await waitFor(() =>
+            expect(result.current.messages[1]?.steps).toEqual([
+                {
+                    id: 'call-1',
+                    tool: 'apply-config-patch',
+                    status: 'running',
+                    label: 'Updating the uploader config: allowedFileTypes',
+                },
+            ]),
+        )
+        expect(result.current.messages[1]?.pending).toBe(true)
+
+        await act(async () => release())
+        await waitFor(() =>
+            expect(result.current.messages[1]?.pending).toBe(false),
+        )
+        expect(result.current.messages[1]?.steps).toEqual([
+            {
+                id: 'call-1',
+                tool: 'apply-config-patch',
+                status: 'done',
+                label: 'Updated the uploader config',
+            },
+        ])
+        // The trail does not replace the Applied chip's patch.
+        expect(result.current.messages[1]?.patches).toEqual([PATCH])
+    })
+
+    it('keeps one step per toolCallId when chunks repeat', async () => {
+        sdk.chunks = [
+            toolCall('call-1'),
+            toolCall('call-1'),
+            toolResult('call-1', { toolName: 'apply-config-patch' }),
+            toolResult('call-1', { toolName: 'apply-config-patch' }),
+            toolCall('call-2'),
+            toolResult('call-2', { toolName: 'apply-config-patch' }),
+            delta('Done.'),
+        ]
+        const { result, onPatch } = setup()
+
+        await act(async () => result.current.send('photos only'))
+
+        const steps = result.current.messages[1]?.steps
+        expect(steps?.map(s => [s.id, s.status])).toEqual([
+            ['call-1', 'done'],
+            ['call-2', 'done'],
+        ])
+        expect(onPatch).toHaveBeenCalledTimes(2)
+    })
+
+    it('records a tool-error as a failed step in plain words', async () => {
+        sdk.chunks = [
+            toolCall('call-1'),
+            {
+                type: 'tool-error',
+                payload: {
+                    toolCallId: 'call-1',
+                    toolName: 'apply-config-patch',
+                    error: new Error('maxFiles must be positive'),
+                },
+            },
+            delta('That did not work.'),
+        ]
+        const { result, onPatch } = setup()
+
+        await act(async () => result.current.send('photos only'))
+
+        expect(result.current.messages[1]?.steps).toEqual([
+            {
+                id: 'call-1',
+                tool: 'apply-config-patch',
+                status: 'error',
+                label: 'That change failed: maxFiles must be positive',
+            },
+        ])
+        expect(onPatch).not.toHaveBeenCalled()
+        expect(result.current.messages[1]?.error).toBeUndefined()
+    })
+
+    it('gives a turn with no tool calls no trail', async () => {
+        sdk.chunks = [delta('Hello.')]
+        const { result } = setup()
+
+        await act(async () => result.current.send('hi'))
+
+        expect(result.current.messages[1]?.steps).toBeUndefined()
+    })
+
+    it('settles a step left running when the stream errors', async () => {
+        sdk.chunks = [
+            toolCall('call-1'),
+            { type: 'error', payload: { error: { message: 'model down' } } },
+        ]
+        const { result } = setup()
+
+        await act(async () => result.current.send('photos only'))
+
+        const turn = result.current.messages[1]
+        expect(turn?.error).toBe(true)
+        expect(turn?.steps?.[0]).toMatchObject({
+            status: 'error',
+            label: 'Stopped before it finished: Updating the uploader config: allowedFileTypes',
+        })
+    })
+
+    it('drops tool chunks from a turn superseded by reset()', async () => {
+        let release!: () => void
+        sdk.gate = new Promise<void>(r => (release = r))
+        sdk.chunks = [delta('First '), toolCall('call-9')]
+        sdk.pauseAfter = 0
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+        await waitFor(() =>
+            expect(result.current.messages[1]?.text).toBe('First '),
+        )
+        act(() => result.current.reset())
+        await act(async () => {
+            release()
+            await new Promise(r => setTimeout(r, 0))
+        })
+
+        expect(result.current.messages).toEqual([])
+    })
+})
