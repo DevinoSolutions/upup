@@ -464,7 +464,13 @@ export function stableMarkdownPrefix(source: string): string {
             if (opensBlock(line.text)) return text.slice(0, line.start)
             if (couldOpenBlock(line.text)) return hold(line.start)
             inPara = true
-            return hold(text.length)
+            const shown = hold(text.length)
+            // The released part of this line must not read as a rule on its
+            // own: `___ x` cut after its space is `___ `, which would flash
+            // an <hr> that the finished line takes back as text.
+            if (THEMATIC_BREAK.test(shown.slice(line.start)))
+                return hold(line.start)
+            return shown
         }
         if (isBlank(line.text)) {
             inPara = false

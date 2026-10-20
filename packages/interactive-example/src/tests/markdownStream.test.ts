@@ -113,6 +113,9 @@ const FIXTURES: Record<string, string> = {
         '**',
         '__init__ stays text',
         '- - a',
+        '--- a note',
+        'text',
+        '___ x',
         '',
         '*** tail',
     ].join('\n'),
@@ -508,6 +511,21 @@ describe('thematic breaks', () => {
         }
         expect(stableMarkdownPrefix('a\n__init__ ')).toBe('a\n__init__ ')
         expect(stableMarkdownPrefix('a\n-- b ')).toBe('a\n-- b ')
+    })
+
+    it('never shows the start of a text line as a rule', () => {
+        // Cut after its space, `___ x` would be `___ `: a rule on its own.
+        for (const line of ['___ x', '--- a', '* * * b', '- - - c']) {
+            expect(stableMarkdownPrefix(line)).toBe('')
+            expect(stableMarkdownPrefix(`a\n\n${line}`)).toBe('a\n\n')
+            for (let i = 0; i <= line.length; i++) {
+                const shown = stableMarkdownPrefix(`a\n${line.slice(0, i)}`)
+                expect(parseMarkdown(shown).some(b => b.type === 'hr')).toBe(
+                    false,
+                )
+            }
+            expect(stableMarkdownPrefix(`${line}\n`)).toBe(`${line}\n`)
+        }
     })
 
     it('shows a rule only once its line has ended', () => {
