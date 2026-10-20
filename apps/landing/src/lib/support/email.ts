@@ -1,10 +1,14 @@
-import nodemailer from 'nodemailer'
 import { env } from '@/lib/env'
 import type { EmailLegStatus, SupportType } from './schema'
 
 // Placeholder defaults — a real deploy sets SUPPORT_EMAIL_FROM / _TO.
 const DEFAULT_FROM = 'upup-support@useupup.com'
 const DEFAULT_TO = 'hello@devino.ca'
+
+// Sendly's REST API origin. `POST /api/v1/emails` sends ONE transactional email
+// and answers 202 `{ id, status, to, from }`. Not env-configurable on purpose:
+// there is a single hosted API, and tests mock `fetch`.
+const SENDLY_ENDPOINT = 'https://api.sendly.now/api/v1/emails'
 
 export interface SupportEmailInput {
     feedbackId: string
@@ -24,102 +28,53 @@ export interface SupportEmailInput {
 }
 
 /**
- * Deliver a support request by email. Two transports are supported, tried in
- * order: the UseSend REST API (USESEND_API_URL + USESEND_API_KEY) — preferred,
- * because a self-hosted UseSend is HTTP-only behind a CDN with no reachable
- * SMTP endpoint — then a generic SMTP_URL. Returns `not_configured` (distinct
- * from `failed`) when NEITHER is set, so the route can tell "we chose not to
- * email" from "the send broke". Never throws.
+ * Deliver a support request by email through Sendly (the one transport — every
+ * Devino app mails through Sendly). Returns `not_configured` (distinct from
+ * `failed`) when SENDLY_API_KEY is unset, so the route can tell "we chose not
+ * to email" from "the send broke". Never throws, and never logs the key.
  */
 export async function sendSupportEmail(
     input: SupportEmailInput,
 ): Promise<EmailLegStatus> {
+    const apiKey = env.SENDLY_API_KEY
+    if (!apiKey) return 'not_configured'
+
     const from = env.SUPPORT_EMAIL_FROM || DEFAULT_FROM
     const to = env.SUPPORT_EMAIL_TO || DEFAULT_TO
     const subject = `[upup support] ${input.type} — ${input.feedbackId}`
-    const text = buildBody(input)
 
-    if (env.USESEND_API_URL && env.USESEND_API_KEY) {
-        return sendViaUseSend({
-            apiUrl: env.USESEND_API_URL,
-            apiKey: env.USESEND_API_KEY,
-            from,
-            to,
-            subject,
-            text,
-            replyTo: input.email,
-            feedbackId: input.feedbackId,
-        })
-    }
-
-    const smtpUrl = env.SMTP_URL
-    if (!smtpUrl) return 'not_configured'
-
-    try {
-        const transport = nodemailer.createTransport(smtpUrl)
-        await transport.sendMail({
-            from,
-            to,
-            ...(input.email ? { replyTo: input.email } : {}),
-            subject,
-            text,
-        })
-        return 'ok'
-    } catch (error) {
-        console.error(
-            `[support] email send failed for ${input.feedbackId}:`,
-            error instanceof Error ? error.message : error,
-        )
-        return 'failed'
-    }
-}
-
-/**
- * Send through the UseSend REST API (Resend-compatible `POST /api/v1/emails`).
- * A self-hosted UseSend validates the Bearer key against its own DB, so this is
- * the correct transport for a CDN-fronted, HTTP-only deployment where the SMTP
- * proxy is not routable. Never throws — maps every outcome to a leg status.
- */
-async function sendViaUseSend(msg: {
-    apiUrl: string
-    apiKey: string
-    from: string
-    to: string
-    subject: string
-    text: string
-    replyTo?: string
-    feedbackId: string
-}): Promise<EmailLegStatus> {
-    const endpoint = `${msg.apiUrl.replace(/\/+$/, '')}/api/v1/emails`
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 15000)
     try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(SENDLY_ENDPOINT, {
             method: 'POST',
             headers: {
-                authorization: `Bearer ${msg.apiKey}`,
+                authorization: `Bearer ${apiKey}`,
                 'content-type': 'application/json',
+                // A retry of the same submission replays the first receipt
+                // instead of mailing twice (Sendly keeps keys for 24h).
+                'idempotency-key': input.feedbackId,
             },
             body: JSON.stringify({
-                from: msg.from,
-                to: msg.to,
-                subject: msg.subject,
-                text: msg.text,
-                ...(msg.replyTo ? { replyTo: msg.replyTo } : {}),
+                from,
+                to,
+                subject,
+                body: toHtml(buildBody(input)),
+                ...(input.email ? { reply: input.email } : {}),
             }),
             signal: controller.signal,
         })
         if (!res.ok) {
             const detail = await res.text().catch(() => '')
             console.error(
-                `[support] usesend send failed for ${msg.feedbackId}: ${res.status} ${detail.slice(0, 300)}`,
+                `[support] sendly send failed for ${input.feedbackId}: ${res.status} ${detail.slice(0, 300)}`,
             )
             return 'failed'
         }
         return 'ok'
     } catch (error) {
         console.error(
-            `[support] usesend send errored for ${msg.feedbackId}:`,
+            `[support] sendly send errored for ${input.feedbackId}:`,
             error instanceof Error ? error.message : error,
         )
         return 'failed'
@@ -148,4 +103,24 @@ function buildBody(input: SupportEmailInput): string {
         '',
         `Investigate in PostHog: ${input.posthogHost || '(host not configured)'} — filter events by the feedback_id above. No keys are included in this message.`,
     ].join('\n')
+}
+
+/**
+ * Sendly's `body` is an HTML template, not plain text: it is rendered through
+ * Sendly's template engine, where `{{...}}` is markup (a malformed block fails
+ * the whole send). The submission is untrusted, so escape HTML and encode `{`/`}`
+ * as entities (they still display as braces) so user text can never be parsed as
+ * template syntax or injected as markup; newlines become `<br>`.
+ */
+function toHtml(text: string): string {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\{/g, '&#123;')
+        .replace(/\}/g, '&#125;')
+        .replace(/\r?\n/g, '<br>\n')
+    return `<div style="font-family:system-ui,sans-serif;font-size:14px;line-height:1.5">${escaped}</div>`
 }

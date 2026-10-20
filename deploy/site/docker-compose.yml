@@ -36,7 +36,7 @@ services:
                 NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
         # Bare passthrough (unset -> absent). S3_* are min(1).optional() — an
         # empty string would crash boot; server-mode is disabled until set. The
-        # POSTHOG_DATASET / SMTP_* / SUPPORT_* vars are likewise min(1).optional()
+        # POSTHOG_DATASET / SENDLY_* / SUPPORT_* vars are likewise min(1).optional()
         # (support flow: src/lib/env.ts) — bare passthrough keeps unset as absent.
         environment:
             - NODE_ENV=production
@@ -56,12 +56,10 @@ services:
             - BOX_CLIENT_SECRET
             - UPUP_UPLOAD_TOKEN_SECRET
             # Support/feedback flow + analytics dataset (all optional). Email
-            # leg prefers the UseSend REST API (USESEND_*) over SMTP_URL.
+            # leg sends through Sendly (SENDLY_API_KEY).
             - POSTHOG_DATASET
             - POSTHOG_E2E_TEST_PROJECT_ID
-            - USESEND_API_URL
-            - USESEND_API_KEY
-            - SMTP_URL
+            - SENDLY_API_KEY
             - SUPPORT_EMAIL_TO
             - SUPPORT_EMAIL_FROM
         expose:
