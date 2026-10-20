@@ -3,6 +3,11 @@
 import { useRef, useState } from 'react'
 import posthog from 'posthog-js'
 import { readE2ETestContext } from '@/lib/analytics/dataset'
+import {
+    SubmitLabel,
+    SupportNoticeRegion,
+    type SupportNotice,
+} from './support-feedback'
 import { SUPPORT_FORM_TYPES, type SupportFormType } from '@/lib/support/schema'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
@@ -11,8 +16,7 @@ type FormStatus = 'idle' | 'submitting' | 'error'
 // toasts: react-toastify v11 under the Turbopack dev server silently drops
 // toast() calls into a mounted container, and a support form's outcome should
 // persist on screen anyway rather than auto-dismiss.
-type Notice =
-    { kind: 'success' | 'warning' | 'error'; text: string } | undefined
+type Notice = SupportNotice
 
 interface SupportResponseBody {
     ok: boolean
@@ -257,19 +261,7 @@ export default function SupportForm() {
                 className="pointer-events-none absolute -left-[9999px] h-0 w-0 opacity-0"
             />
 
-            {!!notice && (
-                <p
-                    role={notice.kind === 'success' ? 'status' : 'alert'}
-                    data-testid="support-notice"
-                    className={
-                        notice.kind === 'success'
-                            ? 'rounded-2xl border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm font-medium text-green-700 dark:text-green-400'
-                            : 'rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400'
-                    }
-                >
-                    {notice.text}
-                </p>
-            )}
+            <SupportNoticeRegion notice={notice} />
             {!!warning && (
                 <p
                     role="status"
@@ -284,9 +276,9 @@ export default function SupportForm() {
                 <button
                     type="submit"
                     disabled={submitting}
-                    className="inline-flex items-center justify-center rounded-2xl bg-gray-900 px-6 py-3 font-medium text-white transition-all duration-200 hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
+                    className="relative inline-flex items-center justify-center rounded-2xl bg-gray-900 px-6 py-3 font-medium text-white transition-[background-color,transform] duration-fast ease-motion-out hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60 motion-safe:active:scale-[0.98] dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
                 >
-                    {submitting ? 'Sending…' : 'Send request'}
+                    <SubmitLabel submitting={submitting} />
                 </button>
                 {status === 'error' && (
                     <button
