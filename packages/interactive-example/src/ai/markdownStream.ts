@@ -451,11 +451,17 @@ export function stableMarkdownPrefix(source: string): string {
     let inPara = false
     // Show whole blocks, plus the whole-unit part of the open paragraph up
     // to `end`.
-    const hold = (end: number) =>
-        text.slice(
-            0,
-            inPara ? cut + scanInline(text.slice(cut, end), cut, true) : cut,
-        )
+    const hold = (end: number) => {
+        let shown = inPara
+            ? cut + scanInline(text.slice(cut, end), cut, true)
+            : cut
+        // The released text must not end in a line that reads as a rule on
+        // its own: `___ x` or `___ **b` cut after the space is `___ `, which
+        // would flash an <hr> that the finished line takes back as text.
+        const lineStart = Math.max(cut, text.lastIndexOf('\n', shown - 1) + 1)
+        if (THEMATIC_BREAK.test(text.slice(lineStart, shown))) shown = lineStart
+        return text.slice(0, shown)
+    }
     let i = 0
     while (i < lines.length) {
         const line = lines[i]!
@@ -464,13 +470,7 @@ export function stableMarkdownPrefix(source: string): string {
             if (opensBlock(line.text)) return text.slice(0, line.start)
             if (couldOpenBlock(line.text)) return hold(line.start)
             inPara = true
-            const shown = hold(text.length)
-            // The released part of this line must not read as a rule on its
-            // own: `___ x` cut after its space is `___ `, which would flash
-            // an <hr> that the finished line takes back as text.
-            if (THEMATIC_BREAK.test(shown.slice(line.start)))
-                return hold(line.start)
-            return shown
+            return hold(text.length)
         }
         if (isBlank(line.text)) {
             inPara = false

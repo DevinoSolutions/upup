@@ -528,6 +528,22 @@ describe('thematic breaks', () => {
         }
     })
 
+    it('never shows a rule-like line start held by an open inline unit', () => {
+        // The line has ended, but its opener keeps the paragraph open.
+        for (const [text, shown] of [
+            ['___ **bold\n', ''],
+            ['--- `code\n', ''],
+            ['text\n--- **b\n', 'text\n'],
+        ] as const) {
+            expect(stableMarkdownPrefix(text)).toBe(shown)
+            expect(
+                parseMarkdown(stableMarkdownPrefix(text)).some(
+                    b => b.type === 'hr',
+                ),
+            ).toBe(false)
+        }
+    })
+
     it('shows a rule only once its line has ended', () => {
         expect(stableMarkdownPrefix('before\n\n---')).toBe('before\n\n')
         expect(stableMarkdownPrefix('before\n\n---\n')).toBe('before\n\n---\n')
