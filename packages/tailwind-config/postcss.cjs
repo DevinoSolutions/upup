@@ -32,8 +32,9 @@ function createPostcssConfig({ content }) {
                 // once Phase-3 markup references them, but 'upup-fx-essential'
                 // must STAY safelisted forever — it's the candidate that forces
                 // the kill-switch + reduced-motion selectors (which reference it
-                // only inside :not()) to emit, and no real markup may ever carry
-                // it, so nothing else keeps those rules alive.
+                // only inside :not()) to emit. The progress fill is the one
+                // element that carries it; the safelist must not depend on
+                // that markup staying put.
                 safelist: [
                     'upup-scope',
                     'upup-fx-hover-lift',
@@ -100,10 +101,17 @@ function createPostcssConfig({ content }) {
                                     transform: 'translateY(0)',
                                 },
                             },
+                            // No overshoot: product UI scales 0.96 -> 1 with a
+                            // fade (motion audit §4).
                             'fx-pop': {
-                                '0%': { transform: 'scale(0.6)' },
-                                '60%': { transform: 'scale(1.12)' },
-                                '100%': { transform: 'scale(1)' },
+                                '0%': {
+                                    opacity: '0',
+                                    transform: 'scale(0.96)',
+                                },
+                                '100%': {
+                                    opacity: '1',
+                                    transform: 'scale(1)',
+                                },
                             },
                             'fx-draw': {
                                 '0%': { strokeDashoffset: '24' },
@@ -117,15 +125,10 @@ function createPostcssConfig({ content }) {
                                 '0%': { strokeDashoffset: '0' },
                                 '100%': { strokeDashoffset: '-24' },
                             },
+                            // Opacity-only: looping pulses never scale.
                             'fx-rec-pulse': {
-                                '0%, 100%': {
-                                    opacity: '1',
-                                    transform: 'scale(1)',
-                                },
-                                '50%': {
-                                    opacity: '0.55',
-                                    transform: 'scale(0.82)',
-                                },
+                                '0%, 100%': { opacity: '1' },
+                                '50%': { opacity: '0.55' },
                             },
                         },
                         animation: {
@@ -138,7 +141,7 @@ function createPostcssConfig({ content }) {
                                 'fx-view var(--upup-fx-base) var(--upup-fx-ease) both',
                             'fx-pop':
                                 'fx-pop var(--upup-fx-base) var(--upup-fx-ease) both',
-                            'fx-draw': 'fx-draw 400ms var(--upup-fx-ease) both',
+                            'fx-draw': 'fx-draw 300ms var(--upup-fx-ease) both',
                             'fx-sheen': 'fx-sheen 1.6s linear infinite',
                             'fx-dash-march': 'fx-dash-march 8s linear infinite',
                             'fx-rec-pulse':
@@ -168,18 +171,15 @@ function createPostcssConfig({ content }) {
                             '.scope': {
                                 '--upup-fx-fast': '150ms',
                                 '--upup-fx-base': '200ms',
-                                '--upup-fx-overlay': '350ms',
+                                '--upup-fx-overlay': '250ms',
                                 '--upup-fx-ease':
                                     'cubic-bezier(0.22, 1, 0.36, 1)',
                             },
+                            // Transform-only transition: the hover shadow lands
+                            // instantly (box-shadow is never tweened).
                             '.fx-hover-lift': {
                                 transition:
-                                    'transform var(--upup-fx-fast) var(--upup-fx-ease), box-shadow var(--upup-fx-fast) var(--upup-fx-ease), background-color var(--upup-fx-fast) var(--upup-fx-ease)',
-                            },
-                            '.fx-hover-lift:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow:
-                                    '0 4px 16px rgba(14, 165, 233, 0.15)',
+                                    'transform var(--upup-fx-fast) var(--upup-fx-ease)',
                             },
                             '.fx-press:active': {
                                 transform: 'scale(0.97)',
@@ -188,8 +188,33 @@ function createPostcssConfig({ content }) {
                                 transition:
                                     'transform var(--upup-fx-fast) var(--upup-fx-ease)',
                             },
+                            // Hover motion only on devices that really hover, so a
+                            // tap never leaves a stuck lift/sweep/tint behind. Each
+                            // hover rule nests its own media query: tailwind
+                            // re-emits a shared at-rule block's children once per
+                            // candidate class, so one combined block would ship
+                            // every hover rule four times.
+                            '.fx-hover-lift:hover': {
+                                '@media (hover: hover)': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow:
+                                        '0 4px 16px rgba(14, 165, 233, 0.15)',
+                                },
+                            },
                             '.fx-icon-nudge:hover svg': {
-                                transform: 'translateY(-2px) scale(1.08)',
+                                '@media (hover: hover)': {
+                                    transform: 'translateY(-2px) scale(1.08)',
+                                },
+                            },
+                            '.fx-sheen-sweep:hover::after': {
+                                '@media (hover: hover)': {
+                                    transform: 'translateX(300%)',
+                                },
+                            },
+                            '.fx-remove:hover': {
+                                '@media (hover: hover)': {
+                                    color: '#f87171',
+                                },
                             },
                             '.fx-sheen-sweep': {
                                 position: 'relative',
@@ -204,32 +229,37 @@ function createPostcssConfig({ content }) {
                                 background:
                                     'linear-gradient(105deg, transparent, rgba(255,255,255,0.18), transparent)',
                                 transition:
-                                    'transform 600ms var(--upup-fx-ease)',
+                                    'transform var(--upup-fx-fast) var(--upup-fx-ease)',
                                 pointerEvents: 'none',
-                            },
-                            '.fx-sheen-sweep:hover::after': {
-                                transform: 'translateX(300%)',
                             },
                             '.fx-remove': {
                                 transition:
-                                    'color var(--upup-fx-fast) var(--upup-fx-ease), transform var(--upup-fx-fast) var(--upup-fx-ease)',
+                                    'color var(--upup-fx-fast) var(--upup-fx-ease)',
                             },
-                            '.fx-remove:hover': {
-                                color: '#f87171',
-                                transform: 'rotate(90deg)',
-                            },
-                            // The progress fill's width tween — the ONE essential
-                            // motion (spinner/progress/focus survive motion-off).
-                            // The element also carries `.fx-essential`, so the
-                            // kill-switch `:not(.fx-essential)` excludes it and
-                            // this transition plays under `data-motion="off"` too.
+                            // The progress fill's width tween. `width` (not
+                            // scaleX) because the bar is driven by an inline
+                            // width style in every framework; the tween stays
+                            // inside the track, so nothing outside the bar shifts.
+                            // The element also carries `.fx-essential` (so the
+                            // generic kill switch skips it); the dedicated
+                            // motion-off rule below and this media query drop the
+                            // tween instead, and the width then jumps to its value.
+                            // (Nested here rather than in the shared reduced-motion
+                            // block: that block is keyed on `.fx-essential`, and a
+                            // second candidate would make tailwind emit it twice.)
                             '.fx-progress-fill': {
                                 transition:
                                     'width var(--upup-fx-base) var(--upup-fx-ease)',
+                                '@media (prefers-reduced-motion: reduce)': {
+                                    transition: 'none !important',
+                                },
                             },
                             // Add-more source overlay: the source surface slides
                             // up over the still-mounted, dimmed file list. Timing
-                            // is the dedicated `--upup-fx-overlay` token (350ms).
+                            // is the dedicated `--upup-fx-overlay` token (250ms).
+                            // The full-height translateY(100%) travel is deliberate:
+                            // it is a sheet covering the fixed-height panel, so the
+                            // travel IS the motion (accepted motion-audit exception).
                             // The keyframe lives here (not theme.animation) so the
                             // whole rule ships from the ONE fx plugin; the class
                             // key stays UNPREFIXED (tailwind's prefix makes it
@@ -291,8 +321,9 @@ function createPostcssConfig({ content }) {
                             },
                             // The kill switch: data-motion="off" (written by core
                             // onto the uploader-panel element) disables every fx
-                            // rule EXCEPT the essential carve-out (spinner,
-                            // progress width, focus rings). It gates BOTH fx class
+                            // rule EXCEPT the `.fx-essential` carve-out (only the
+                            // progress fill carries it; its width tween is dropped
+                            // by its own rule below). It gates BOTH fx class
                             // families: the `.upup-fx-*` component rules AND the
                             // `.upup-animate-fx-*` keyframe utilities — the latter
                             // has no `upup-fx-` substring, so a single
@@ -308,6 +339,25 @@ function createPostcssConfig({ content }) {
                                     animation: 'none !important',
                                     transition: 'none !important',
                                 },
+                            // The same gate for the non-fx motion components carry
+                            // (`upup-transition-*` utilities, the `animate-pulse`
+                            // pulses) and for the progress-fill width tween: the
+                            // bar still renders, its width just jumps. Spinners
+                            // (`upup-animate-spin`) match none of these and keep
+                            // spinning. Transitions and animations are separate
+                            // rules so a spinner that also carries a transition
+                            // utility only loses its transition.
+                            "[data-motion='off'] [class*='upup-transition']:not(.fx-essential)":
+                                {
+                                    transition: 'none !important',
+                                },
+                            "[data-motion='off'] [class*='animate-pulse']:not(.fx-essential)":
+                                {
+                                    animation: 'none !important',
+                                },
+                            "[data-motion='off'] .fx-progress-fill": {
+                                transition: 'none !important',
+                            },
                             // Defense-in-depth for SSR'd markup before hydration
                             // writes data-motion:
                             '@media (prefers-reduced-motion: reduce)': {
@@ -316,6 +366,13 @@ function createPostcssConfig({ content }) {
                                         animation: 'none !important',
                                         transition: 'none !important',
                                     },
+                                "[class*='upup-transition']:not(.fx-essential)":
+                                    {
+                                        transition: 'none !important',
+                                    },
+                                "[class*='animate-pulse']:not(.fx-essential)": {
+                                    animation: 'none !important',
+                                },
                             },
                         })
                     },
