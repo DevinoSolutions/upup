@@ -142,7 +142,7 @@ export default function Navbar() {
                             {/* CTA Button - Desktop Only */}
                             <Link
                                 href="/#demo"
-                                className="hidden lg:flex items-center px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                className="hidden lg:flex items-center px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                             >
                                 Get Started
                             </Link>
@@ -238,7 +238,7 @@ export default function Navbar() {
                             <div className="pt-4 border-t border-gray-200/50 dark:border-gray-800/50">
                                 <Link
                                     href="/#demo"
-                                    className="flex items-center justify-center w-full px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                    className="flex items-center justify-center w-full px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                                     onClick={() => setNavbarOpen(false)}
                                 >
                                     Get Started

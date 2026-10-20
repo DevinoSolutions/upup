@@ -46,16 +46,14 @@ html {
    "render delay" — the text was in the HTML the whole time, just painted
    transparent. A CSS animation runs off the server HTML instead, so the
    first paint already carries the copy.
-   Stagger with an inline `--hero-delay`; keep every delay short, because
-   the element is invisible until its delay elapses (fill-mode `both`) and
-   the subtitle is the LCP element. */
+   Stagger with an inline `--hero-delay`. Both keyframes are transform-only:
+   an element is never at opacity 0, so nothing is invisible while its delay
+   elapses (fill-mode `both` only holds the translated start position). */
 @keyframes hero-rise {
     from {
-        opacity: 0;
         transform: translate3d(0, 18px, 0);
     }
     to {
-        opacity: 1;
         transform: none;
     }
 }

@@ -432,7 +432,8 @@ const EmailModal: React.FC<EmailModalProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    transition={{ duration: 0.15 }}
+                    className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
                     onClick={onClose}
                 >
                     <m.div
@@ -445,44 +446,29 @@ const EmailModal: React.FC<EmailModalProps> = ({
                     >
                         {!isSubmitted ? (
                             <>
-                                <m.div
-                                    className="flex items-center justify-between mb-6"
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                >
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                                         {isCustom
                                             ? 'Request Custom Provider'
                                             : `Get notified for ${integrationName}`}
                                     </h3>
-                                    <m.button
+                                    <button
                                         onClick={onClose}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     >
                                         <FaTimes className="w-4 h-4 text-gray-500" />
-                                    </m.button>
-                                </m.div>
+                                    </button>
+                                </div>
 
-                                <m.p
-                                    className="text-gray-600 dark:text-gray-400 mb-6"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                >
+                                <p className="text-gray-600 dark:text-gray-400 mb-6">
                                     {isCustom
                                         ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
                                         : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
-                                </m.p>
+                                </p>
 
-                                <m.form
-                                    onSubmit={handleSubmit}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                >
+                                <form onSubmit={handleSubmit}>
                                     {isCustom && (
-                                        <m.input
+                                        <input
                                             type="text"
                                             value={customToolName}
                                             onChange={e =>
@@ -491,26 +477,18 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                                 )
                                             }
                                             placeholder="Provider name (e.g., MinIO, Wasabi, IBM Cloud)"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-fast mb-4"
                                             required
-                                            initial={{ x: -10, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: 0.4 }}
                                         />
                                     )}
 
-                                    <m.input
+                                    <input
                                         type="email"
                                         value={email}
                                         onChange={e => setEmail(e.target.value)}
                                         placeholder="Enter your email address"
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow duration-fast mb-4"
                                         required
-                                        initial={{ x: -10, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{
-                                            delay: isCustom ? 0.5 : 0.4,
-                                        }}
                                     />
 
                                     {/* Honeypot: hidden from users + assistive tech;
@@ -540,25 +518,18 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         </p>
                                     )}
 
-                                    <m.div
-                                        className="flex gap-3"
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{
-                                            delay: isCustom ? 0.6 : 0.5,
-                                        }}
-                                    >
-                                        <m.button
+                                    <div className="flex gap-3">
+                                        <button
                                             type="button"
                                             onClick={onClose}
                                             className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
                                         >
                                             Cancel
-                                        </m.button>
-                                        <m.button
+                                        </button>
+                                        <button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                                            className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-opacity duration-fast disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
                                             {isSubmitting ? (
                                                 <>
@@ -572,43 +543,19 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             ) : (
                                                 'Notify me'
                                             )}
-                                        </m.button>
-                                    </m.div>
-                                </m.form>
+                                        </button>
+                                    </div>
+                                </form>
                             </>
                         ) : (
                             <m.div
                                 className="text-center"
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{
-                                    type: 'spring',
-                                    damping: 20,
-                                    stiffness: 300,
-                                }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.15 }}
                             >
-                                <m.div
-                                    className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{
-                                        delay: 0.2,
-                                        type: 'spring',
-                                        damping: 15,
-                                        stiffness: 400,
-                                    }}
-                                >
-                                    <m.div
-                                        className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{
-                                            delay: 0.4,
-                                            type: 'spring',
-                                            damping: 15,
-                                            stiffness: 400,
-                                        }}
-                                    >
+                                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
                                         <m.svg
                                             className="w-4 h-4 text-white"
                                             fill="none"
@@ -616,10 +563,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                             viewBox="0 0 24 24"
                                             initial={{ pathLength: 0 }}
                                             animate={{ pathLength: 1 }}
-                                            transition={{
-                                                delay: 0.6,
-                                                duration: 0.3,
-                                            }}
+                                            transition={{ duration: 0.25 }}
                                         >
                                             <path
                                                 strokeLinecap="round"
@@ -628,24 +572,14 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                                 d="M5 13l4 4L19 7"
                                             />
                                         </m.svg>
-                                    </m.div>
-                                </m.div>
-                                <m.h3
-                                    className="text-xl font-bold text-gray-900 dark:text-white mb-2"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                >
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                                     You&apos;re all set!
-                                </m.h3>
-                                <m.p
-                                    className="text-gray-600 dark:text-gray-400"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                >
+                                </h3>
+                                <p className="text-gray-600 dark:text-gray-400">
                                     {`We’ll email you when ${providerName} integration is ready.`}
-                                </m.p>
+                                </p>
                             </m.div>
                         )}
                     </m.div>
@@ -807,20 +741,21 @@ export default function HomepageFeatures() {
 
     return (
         <Section id="features">
-            {/* Marquee keyframes + reduced-motion stop for the file-type strip */}
+            {/* Marquee keyframes for the file-type strip. The loop only exists
+                under no-preference (the motion-safe equivalent): reduced motion
+                renders the row static, never a started-then-stopped animation. */}
             <style>{`
                 @keyframes marquee {
                     0% { transform: translateX(0) }
                     100% { transform: translateX(-50%) }
                 }
-                .animate-marquee {
-                    animation: marquee 25s linear infinite;
-                }
-                .animate-marquee:hover {
-                    animation-play-state: paused;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    .animate-marquee { animation: none; }
+                @media (prefers-reduced-motion: no-preference) {
+                    .animate-marquee {
+                        animation: marquee 25s linear infinite;
+                    }
+                    .animate-marquee:hover {
+                        animation-play-state: paused;
+                    }
                 }
             `}</style>
 
