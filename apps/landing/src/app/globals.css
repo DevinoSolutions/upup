@@ -18,11 +18,12 @@
 
     /* Motion tokens. Landing-only: the uploader ships its own --upup-fx-*
        tokens on .upup-scope, and the --motion- prefix keeps the two apart.
-       Wired into Tailwind (duration-fast/base/slow, ease-motion-out/in and the
+       Wired into Tailwind (duration-fast/base/slow/panel, ease-motion-out/in and the
        animate-motion-* utilities) in tailwind.config.ts. */
     --motion-dur-fast: 120ms;
     --motion-dur-base: 180ms;
     --motion-dur-slow: 240ms;
+    --motion-dur-panel: 150ms;
     --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
@@ -486,7 +487,9 @@ body {
    spinning) and the embedded uploader subtree (.upup-scope), which owns a
    data-motion gate and deliberately keeps its progress tween and spinner.
    Pseudo-elements cannot sit inside :where()/:is(), so ::before/::after are
-   spelled out as their own selectors. */
+   spelled out as their own selectors. Delays are zeroed too: the
+   animate-motion-* utilities use `backwards` fill, so a delay would otherwise
+   hold an element at its 0% keyframe (opacity 0) under reduced motion. */
 @media (prefers-reduced-motion: reduce) {
     *:not([class*='animate-spin'], .upup-scope, .upup-scope *),
     *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::before,
@@ -494,6 +497,8 @@ body {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        animation-delay: 0s !important;
+        transition-delay: 0s !important;
         scroll-behavior: auto !important;
     }
 }

@@ -30,6 +30,7 @@ module.exports = {
                 fast: 'var(--motion-dur-fast)',
                 base: 'var(--motion-dur-base)',
                 slow: 'var(--motion-dur-slow)',
+                panel: 'var(--motion-dur-panel)',
             },
             transitionTimingFunction: {
                 'motion-out': 'var(--motion-ease-out)',
@@ -67,7 +68,7 @@ module.exports = {
                 'motion-fade':
                     'motion-fade var(--motion-dur-fast) var(--motion-ease-out) backwards',
                 'motion-panel':
-                    'motion-panel 150ms var(--motion-ease-out) backwards',
+                    'motion-panel var(--motion-dur-panel) var(--motion-ease-out) backwards',
             },
             colors: {
                 primary: {

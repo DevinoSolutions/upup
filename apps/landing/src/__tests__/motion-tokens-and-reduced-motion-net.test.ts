@@ -20,6 +20,7 @@ describe('landing motion tokens', () => {
         expect(root).toMatch(/--motion-dur-fast:\s*120ms/)
         expect(root).toMatch(/--motion-dur-base:\s*180ms/)
         expect(root).toMatch(/--motion-dur-slow:\s*240ms/)
+        expect(root).toMatch(/--motion-dur-panel:\s*150ms/)
         expect(root).toMatch(
             /--motion-ease-out:\s*cubic-bezier\(0?\.16,\s*1,\s*0?\.3,\s*1\)/,
         )
@@ -29,7 +30,7 @@ describe('landing motion tokens', () => {
     })
 
     it('exposes the tokens and the four motion keyframes through tailwind', () => {
-        for (const name of ['fast', 'base', 'slow'])
+        for (const name of ['fast', 'base', 'slow', 'panel'])
             expect(tailwindConfig).toContain(
                 `${name}: 'var(--motion-dur-${name})'`,
             )
@@ -59,6 +60,10 @@ describe('global reduced-motion net', () => {
         expect(net).toMatch(/animation-duration:\s*0?\.01ms\s*!important/)
         expect(net).toMatch(/animation-iteration-count:\s*1\s*!important/)
         expect(net).toMatch(/transition-duration:\s*0?\.01ms\s*!important/)
+        // animate-motion-* use `backwards` fill, so any delay would hold the
+        // element at its 0% keyframe (opacity 0) under reduced motion.
+        expect(net).toMatch(/animation-delay:\s*0s\s*!important/)
+        expect(net).toMatch(/transition-delay:\s*0s\s*!important/)
     })
 
     it('covers pseudo-elements without placing them inside :where()/:is()', () => {
