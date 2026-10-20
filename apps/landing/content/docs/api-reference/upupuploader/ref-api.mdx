@@ -33,4 +33,4 @@ type UploaderRef = {
 `UploaderRef` is exported from `@useupup/react`; `UploadFile` is exported from
 `@useupup/core/contracts`.
 
-`retryUpload(fileId?)` retries one failed file by ID. Omit the ID to retry all failed files.
+`retryUpload(fileId?)` re-attempts the file with that ID. Omit the ID to re-attempt every file that failed or has not uploaded yet. A call made while an upload is running joins that run, and the call rejects after the uploader is destroyed.
