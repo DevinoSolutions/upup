@@ -4,6 +4,7 @@ import { ConfigContext } from '../state/ConfigContext'
 import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
 import { MarkdownMessage } from './MarkdownMessage'
+import { StepTrail } from './StepTrail'
 import type { AiFeedbackEvent } from '../types'
 
 type AssistantPanelProps = {
@@ -265,6 +266,12 @@ export function AssistantPanel({
                             key={m.id}
                             className={`upup-ie-ai-msg upup-ie-ai-msg-${m.role}`}
                         >
+                            {m.role === 'assistant' && !!m.steps?.length && (
+                                <StepTrail
+                                    steps={m.steps}
+                                    pending={!!m.pending}
+                                />
+                            )}
                             <div className="upup-ie-ai-msg-text">
                                 {m.role === 'assistant' ? (
                                     <MarkdownMessage

@@ -299,3 +299,52 @@ describe('AssistantPanel thumbs feedback', () => {
         expect(screen.getAllByLabelText('Good response')).toHaveLength(1)
     })
 })
+
+describe('AssistantPanel step trail', () => {
+    const steps: ChatMessage['steps'] = [
+        {
+            id: 'c1',
+            tool: 'apply-config-patch',
+            status: 'done',
+            label: 'Updated the uploader config',
+        },
+    ]
+    const patches: ChatMessage['patches'] = [
+        {
+            patch: { allowedFileTypes: 'images' },
+            explanation: 'Only images are accepted now.',
+        },
+    ]
+
+    it('renders a collapsed trail above the answer and keeps the Applied chip', async () => {
+        const user = userEvent.setup()
+        renderPanel([asstMsg({ steps, patches })])
+        const container = document.body
+
+        const toggle = screen.getByRole('button', { name: 'Show steps (1)' })
+        expect(toggle.getAttribute('aria-expanded')).toBe('false')
+        const trail = container.querySelector('.upup-ie-ai-steps')!
+        const text = container.querySelector('.upup-ie-ai-msg-text')!
+        expect(
+            trail.compareDocumentPosition(text) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy()
+        // The chip is unchanged, and the trail does not repeat its text.
+        expect(screen.getAllByText('Applied:')).toHaveLength(1)
+        expect(container.querySelector('.upup-ie-ai-patch')?.textContent).toBe(
+            'Applied: Only images are accepted now.',
+        )
+        expect(trail.textContent).not.toContain('Applied')
+
+        await user.click(toggle)
+        expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    })
+
+    it('shows no trail for a user turn or a turn without steps', () => {
+        renderPanel([
+            { id: 'u-1', role: 'user', text: 'make it dark' },
+            asstMsg({ id: 'm-2' }),
+        ])
+        expect(document.querySelector('.upup-ie-ai-steps')).toBeNull()
+    })
+})

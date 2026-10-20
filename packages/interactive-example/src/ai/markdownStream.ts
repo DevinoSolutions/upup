@@ -12,7 +12,7 @@
  *   blocks: fenced code (``` or ~~~), tables (a `|` header row plus a
  *           delimiter row), list items (- * + 1. 1)) nested by indent,
  *           blank lines between items keeping one list, # headings,
- *           paragraphs
+ *           thematic breaks (--- *** ___), paragraphs
  *   inline: `code`, **bold**, [label](url), bare http(s) URLs
  * Everything else is plain text. Both functions share one inline scanner, so
  * the buffer can never disagree with the renderer about where a unit ends.
@@ -41,12 +41,20 @@ export type Block =
           start: number
       }
     | { type: 'table'; header: Inline[][]; rows: TableRow[]; start: number }
+    | { type: 'hr'; start: number }
 
 type Line = { text: string; start: number; complete: boolean }
 
 const FENCE = /^\s*(`{3,}|~{3,})(.*)$/
 const HEADING = /^(#{1,6})\s+(.*)$/
 const LIST_ITEM = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/
+// A thematic break: three or more of one of - * _ on a line of their own
+// (spaces between them allowed, indent under four). It is checked before the
+// list rule, so `- - -` and `* * *` are rules, not nested items. A table
+// delimiter row always starts with `|`, so the two never overlap.
+const THEMATIC_BREAK = /^ {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$/
+// A partial line that more of the same characters could still turn into one.
+const THEMATIC_PENDING = /^ {0,3}([-*_])(?:[ \t]*\1)*[ \t]*$/
 // URLs may hold one level of balanced parens (Foo_(bar)); an unbalanced `)`
 // ends them.
 const LINK = /^\[([^\]\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/
@@ -273,6 +281,7 @@ function buildList(
 }
 
 function listEntry(line: Line): ListEntry | null {
+    if (THEMATIC_BREAK.test(line.text)) return null
     const m = LIST_ITEM.exec(line.text)
     if (!m) return null
     const content = m[3]!
@@ -348,6 +357,14 @@ export function parseMarkdown(source: string): Block[] {
             i++
             continue
         }
+        // Setext headings are not in the grammar, so `---` under a text line
+        // is a rule between two paragraphs, never a heading.
+        if (THEMATIC_BREAK.test(line.text)) {
+            flushPara()
+            blocks.push({ type: 'hr', start: line.start })
+            i++
+            continue
+        }
         const next = lines[i + 1]
         if (isTableRow(line.text) && next && isDelimiterRow(next.text)) {
             flushPara()
@@ -400,8 +417,9 @@ export function parseMarkdown(source: string): Block[] {
 }
 
 // A partial last line that more text could still turn into a blank line, a
-// fence, a heading, a list item or a table row. Releasing it as paragraph
-// text could be taken back, so it is held.
+// fence, a heading, a list item, a thematic break or a table row. Releasing
+// it as paragraph text could be taken back, so it is held (`-` and `--` could
+// each become a list item or a rule; `_` and `__` a rule).
 const BLOCK_PENDING = /^\s*(?:`{1,2}|~{1,2}|[-*+]|\d+[.)]?)$|^#{1,6}$/
 // A partial line that could still complete as a table delimiter row.
 const DELIMITER_PENDING = /^\s*(?:\|[\s:|-]*)?$/
@@ -409,7 +427,10 @@ const DELIMITER_PENDING = /^\s*(?:\|[\s:|-]*)?$/
 const opensBlock = (s: string) =>
     FENCE.test(s) || HEADING.test(s) || LIST_ITEM.test(s)
 const couldOpenBlock = (s: string) =>
-    isBlank(s) || isTableRow(s) || BLOCK_PENDING.test(s)
+    isBlank(s) ||
+    isTableRow(s) ||
+    BLOCK_PENDING.test(s) ||
+    THEMATIC_PENDING.test(s)
 /** Offset just past a complete line's newline. */
 const endOf = (l: Line) => l.start + l.text.length + 1
 
@@ -462,7 +483,11 @@ export function stableMarkdownPrefix(source: string): string {
             i = j + 1
             continue
         }
-        if (HEADING.test(line.text) || listEntry(line)) {
+        if (
+            HEADING.test(line.text) ||
+            THEMATIC_BREAK.test(line.text) ||
+            listEntry(line)
+        ) {
             inPara = false
             cut = endOf(line)
             i++
