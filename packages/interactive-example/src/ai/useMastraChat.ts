@@ -126,7 +126,16 @@ export function useMastraChat({
 
     const client = useMemo(() => new MastraClient({ baseUrl }), [baseUrl])
 
-    useEffect(() => () => abortRef.current?.abort(), [])
+    useEffect(
+        () => () => {
+            // Supersede the in-flight turn before aborting it, so neither the
+            // abort rejection nor a chunk already read off the wire touches
+            // state (or applies a patch) after unmount.
+            runIdRef.current++
+            abortRef.current?.abort()
+        },
+        [],
+    )
 
     const send = useCallback(
         async (input: string) => {
@@ -197,7 +206,11 @@ export function useMastraChat({
                 let patches: AssistantPatchEvent[] = []
                 // The same tool call can be reported more than once. Dedupe
                 // by toolCallId so it doesn't produce two "Applied" chips; a
-                // genuine second call has its own id and is kept.
+                // genuine second call has its own id and is kept. A result
+                // with no id is keyed by its content instead: an identical
+                // id-less patch later in the same turn is taken to be the same
+                // call reported again (there is nothing else to tell them
+                // apart by), while a different patch is always applied.
                 const seen = new Set<string>()
                 let streamError: string | null = null
 
@@ -215,10 +228,13 @@ export function useMastraChat({
                             const { toolCallId, toolName, result, isError } =
                                 chunk.payload
                             if (isError || !isPatchTool(toolName)) return
-                            if (toolCallId && seen.has(toolCallId)) return
                             const data = result as AssistantPatchEvent | null
                             if (!data?.patch) return
-                            if (toolCallId) seen.add(toolCallId)
+                            const key = toolCallId
+                                ? `id:${toolCallId}`
+                                : `result:${JSON.stringify(data)}`
+                            if (seen.has(key)) return
+                            seen.add(key)
                             onPatch(data)
                             patches = [...patches, data]
                             updateTurn({ patches })

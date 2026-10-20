@@ -77,6 +77,105 @@ describe('MarkdownMessage', () => {
         }
     })
 
+    it('keeps every shown unit as the same DOM node while more text streams in', () => {
+        const LOOSE = '1. Install\n\n2. Configure\n\n3. Deploy\n\nDone.'
+        for (const text of [ANSWER, LOOSE]) {
+            const { container, rerender, unmount } = render(
+                <MarkdownMessage text="" streaming />,
+            )
+            // Each tracked unit: the first node seen is the node for good.
+            const selectors = [
+                'p span.upup-ie-ai-ease',
+                'p strong',
+                'p a',
+                'pre',
+                'tbody tr',
+                'ul > li',
+                'ol',
+                'ol > li',
+                'ol > li:nth-child(2)',
+                'li li',
+            ]
+            const held = new Map<string, Element>()
+            const check = () => {
+                for (const sel of selectors) {
+                    const node = container.querySelector(sel)
+                    const first = held.get(sel)
+                    if (first) expect(node).toBe(first)
+                    else if (node) held.set(sel, node)
+                }
+            }
+            for (let i = 1; i <= text.length; i++) {
+                rerender(<MarkdownMessage text={text.slice(0, i)} streaming />)
+                check()
+            }
+            rerender(<MarkdownMessage text={text} streaming={false} />)
+            check()
+            const expected =
+                text === ANSWER
+                    ? [
+                          'p span.upup-ie-ai-ease',
+                          'p strong',
+                          'p a',
+                          'pre',
+                          'tbody tr',
+                          'ul > li',
+                          'li li',
+                      ]
+                    : [
+                          'p span.upup-ie-ai-ease',
+                          'ol',
+                          'ol > li',
+                          'ol > li:nth-child(2)',
+                      ]
+            expect([...held.keys()].sort()).toEqual(expected.sort())
+            unmount()
+        }
+    })
+
+    it('renders a loose ordered list as one <ol> numbered from its source', () => {
+        const { container } = render(
+            <MarkdownMessage
+                text={'1. a\n\n2. b\n\n3. c\n\ntext\n\n4. d\n5. e'}
+                streaming={false}
+            />,
+        )
+        const lists = container.querySelectorAll('ol')
+        expect(lists).toHaveLength(2)
+        expect(lists[0]?.querySelectorAll('li')).toHaveLength(3)
+        expect(lists[0]?.getAttribute('start')).toBe('1')
+        expect(lists[1]?.querySelectorAll('li')).toHaveLength(2)
+        expect(lists[1]?.getAttribute('start')).toBe('4')
+    })
+
+    it('releases held openers and an unclosed fence once streaming ends', () => {
+        const { container, rerender } = render(
+            <MarkdownMessage text="a **b c" streaming />,
+        )
+        expect(container.textContent).toBe('a ')
+        rerender(<MarkdownMessage text="a **b c" streaming={false} />)
+        expect(container.textContent).toBe('a **b c')
+
+        const fence = 'Code:\n\n```js\nconst a = 1\n'
+        rerender(<MarkdownMessage text={fence} streaming />)
+        expect(container.querySelector('pre')).toBe(null)
+        expect(container.textContent).toBe('Code:')
+        rerender(<MarkdownMessage text={fence} streaming={false} />)
+        expect(container.querySelector('pre code')?.textContent).toBe(
+            'const a = 1',
+        )
+    })
+
+    it('renders CRLF text the same as LF text', () => {
+        const lf = '## Title\nBody **bold**\n\n- a\n- b\n'
+        const crlfText = lf.replace(/\n/g, '\r\n')
+        expect(unchunkedHtml(crlfText)).toBe(unchunkedHtml(lf))
+        const { container } = render(
+            <MarkdownMessage text={crlfText} streaming />,
+        )
+        expect(container.querySelector('h4')?.textContent).toBe('Title')
+    })
+
     it('renders an unsafe link scheme as inert text', () => {
         const { container } = render(
             <MarkdownMessage

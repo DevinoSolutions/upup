@@ -11,7 +11,8 @@
  * The grammar is deliberately small, covering what the agents emit:
  *   blocks: fenced code (``` or ~~~), tables (a `|` header row plus a
  *           delimiter row), list items (- * + 1. 1)) nested by indent,
- *           # headings, paragraphs
+ *           blank lines between items keeping one list, # headings,
+ *           paragraphs
  *   inline: `code`, **bold**, [label](url), bare http(s) URLs
  * Everything else is plain text. Both functions share one inline scanner, so
  * the buffer can never disagree with the renderer about where a unit ends.
@@ -31,7 +32,14 @@ export type Block =
     | { type: 'paragraph'; inline: Inline[]; start: number }
     | { type: 'heading'; level: number; inline: Inline[]; start: number }
     | { type: 'code'; lang: string; code: string; start: number }
-    | { type: 'list'; ordered: boolean; items: ListItem[]; start: number }
+    | {
+          type: 'list'
+          ordered: boolean
+          /** The first item's source number (ordered lists; 1 otherwise). */
+          firstNumber: number
+          items: ListItem[]
+          start: number
+      }
     | { type: 'table'; header: Inline[][]; rows: TableRow[]; start: number }
 
 type Line = { text: string; start: number; complete: boolean }
@@ -39,12 +47,25 @@ type Line = { text: string; start: number; complete: boolean }
 const FENCE = /^\s*(`{3,}|~{3,})(.*)$/
 const HEADING = /^(#{1,6})\s+(.*)$/
 const LIST_ITEM = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/
-const LINK = /^\[([^\]\n]+)\]\(([^)\s]+)\)/
+// URLs may hold one level of balanced parens (Foo_(bar)); an unbalanced `)`
+// ends them.
+const LINK = /^\[([^\]\n]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/
 // A link that could still complete: label in progress, `]` waiting for `(`,
-// or URL in progress.
-const LINK_PENDING = /^\[(?:[^\]\n]*|[^\]\n]+\]|[^\]\n]+\]\([^)\s]*)$/
-const URL = /^https?:\/\/[^\s<>()[\]`*]+/
+// or URL in progress (possibly inside an open paren group).
+const LINK_PENDING =
+    /^\[(?:[^\]\n]*|[^\]\n]+\]|[^\]\n]+\]\((?:[^()\s]|\([^()\s]*\))*(?:\([^()\s]*)?)$/
+const URL_CHAR = '[^\\s<>()[\\]`*]'
+const URL = new RegExp(`^https?:\\/\\/(?:${URL_CHAR}|\\(${URL_CHAR}*\\))+`)
+// A paren group that more text could still close onto the URL before it.
+const URL_GROUP_PENDING = new RegExp(`^\\(${URL_CHAR}*$`)
 const URL_TRAILING_PUNCT = /[.,;:!?'"]+$/
+
+/**
+ * CRLF and lone CR become LF. Both entry points apply it, so the buffer and
+ * the parser always see the same text (and the same offsets). It is
+ * prefix-stable: a trailing `\r` maps to the `\n` its `\r\n` would.
+ */
+export const normalizeNewlines = (text: string) => text.replace(/\r\n?/g, '\n')
 
 function splitLines(text: string): Line[] {
     const lines: Line[] = []
@@ -160,7 +181,12 @@ function scanInline(
         if (c === 'h' && (i === 0 || /[\s(]/.test(s[i - 1]!))) {
             const m = URL.exec(s.slice(i))
             if (m) {
-                if (stream && i + m[0].length === s.length) return safe
+                const end = i + m[0].length
+                if (
+                    stream &&
+                    (end === s.length || URL_GROUP_PENDING.test(s.slice(end)))
+                )
+                    return safe
                 const url = m[0].replace(URL_TRAILING_PUNCT, '')
                 flush(i)
                 tokens.push({
@@ -203,6 +229,7 @@ function tableCells(line: Line): Inline[][] {
 type ListEntry = {
     indent: number
     ordered: boolean
+    number: number
     content: string
     contentStart: number
     start: number
@@ -237,6 +264,7 @@ function buildList(
         list: {
             type: 'list',
             ordered: first.ordered,
+            firstNumber: first.ordered ? first.number : 1,
             items,
             start: first.start,
         },
@@ -248,9 +276,11 @@ function listEntry(line: Line): ListEntry | null {
     const m = LIST_ITEM.exec(line.text)
     if (!m) return null
     const content = m[3]!
+    const ordered = /\d/.test(m[2]!)
     return {
         indent: m[1]!.length,
-        ordered: /\d/.test(m[2]!),
+        ordered,
+        number: ordered ? parseInt(m[2]!, 10) : 1,
         content,
         contentStart: line.start + line.text.length - content.length,
         start: line.start,
@@ -258,7 +288,8 @@ function listEntry(line: Line): ListEntry | null {
 }
 
 /** Parse a finished (or already-stable) markdown string into blocks. */
-export function parseMarkdown(text: string): Block[] {
+export function parseMarkdown(source: string): Block[] {
+    const text = normalizeNewlines(source)
     const lines = splitLines(text)
     const blocks: Block[] = []
     let para: Line[] = []
@@ -340,12 +371,18 @@ export function parseMarkdown(text: string): Block[] {
         }
         if (listEntry(line)) {
             flushPara()
+            // Blank lines between items keep the list going (a loose list),
+            // so `1. a\n\n2. b` is one list, not two that both start at 1.
+            // Only the lines between two items decide that, so text that
+            // arrives later can never split or re-key a list already shown.
             const entries: ListEntry[] = []
             while (i < lines.length) {
-                const e = listEntry(lines[i]!)
+                let j = i
+                while (j < lines.length && isBlank(lines[j]!.text)) j++
+                const e = j < lines.length ? listEntry(lines[j]!) : null
                 if (!e) break
                 entries.push(e)
-                i++
+                i = j + 1
             }
             let k = 0
             while (k < entries.length) {
@@ -380,12 +417,14 @@ const endOf = (l: Line) => l.start + l.text.length + 1
  * The longest prefix of a still-streaming answer that renders as whole units
  * only. Feed it everything received so far; once the stream has finished,
  * render the full text instead (unclosed openers then become literal text).
+ * The result is a prefix of the newline-normalized text.
  *
  * It walks the same line grammar as `parseMarkdown`. Everything before `cut`
  * is whole blocks. Lines from `cut` on, while `inPara`, are a paragraph whose
  * end is not known yet; that is released through the streaming inline scan.
  */
-export function stableMarkdownPrefix(text: string): string {
+export function stableMarkdownPrefix(source: string): string {
+    const text = normalizeNewlines(source)
     const lines = splitLines(text)
     let cut = 0
     let inPara = false

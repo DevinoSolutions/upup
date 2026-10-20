@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { ConfigProvider } from '../state/ConfigContext'
 import { AssistantPanel } from '../ai/AssistantPanel'
+import { PROMPT_SEEDS } from '../ai/promptSeeds'
 import type { ChatMessage } from '../ai/useMastraChat'
 import type { AiFeedbackEvent } from '../types'
 
@@ -11,15 +12,22 @@ import type { AiFeedbackEvent } from '../types'
 const hook = vi.hoisted(() => ({
     messages: [] as ChatMessage[],
     conversationId: 'conv-1' as string | null,
+    isPending: false,
+    sent: [] as string[],
 }))
 
 vi.mock('../ai/useMastraChat', () => ({
     useMastraChat: () => ({
         messages: hook.messages,
-        isPending: false,
+        isPending: hook.isPending,
         error: null,
         conversationId: hook.conversationId,
-        send: () => {},
+        // Like the real hook, a send starts a turn that is pending until
+        // the stream ends; the panel's own re-render picks the flag up.
+        send: (text: string) => {
+            hook.sent.push(text)
+            hook.isPending = true
+        },
         reset: () => {},
     }),
 }))
@@ -63,22 +71,67 @@ function eventAt(
 function renderPanel(messages: ChatMessage[]) {
     hook.messages = messages
     const onAiFeedback = vi.fn<(event: AiFeedbackEvent) => void>()
-    render(
+    const panel = () => (
         <ConfigProvider>
             <AssistantPanel
                 agentId="playground-agent"
                 appId="upup-landing"
                 onAiFeedback={onAiFeedback}
             />
-        </ConfigProvider>,
+        </ConfigProvider>
     )
-    return { onAiFeedback }
+    const { rerender } = render(panel())
+    return { onAiFeedback, rerenderPanel: () => rerender(panel()) }
 }
 
 beforeEach(() => {
     hook.messages = []
     hook.conversationId = 'conv-1'
+    hook.isPending = false
+    hook.sent = []
     vi.clearAllMocks()
+})
+
+describe('AssistantPanel composer', () => {
+    it('keeps keyboard focus in the composer while the answer streams', async () => {
+        const user = userEvent.setup()
+        renderPanel([])
+        const box = screen.getByLabelText('Message') as HTMLTextAreaElement
+
+        await user.click(box)
+        await user.keyboard('make it dark{Enter}')
+
+        expect(hook.sent).toEqual(['make it dark'])
+        expect(hook.isPending).toBe(true)
+        // Disabling the focused textarea would drop focus to <body>.
+        expect(box.disabled).toBe(false)
+        expect(box.readOnly).toBe(true)
+        expect(box.getAttribute('aria-disabled')).toBe('true')
+        expect(document.activeElement).toBe(box)
+        expect(
+            (screen.getByLabelText('Send') as HTMLButtonElement).disabled,
+        ).toBe(true)
+    })
+
+    it('sends nothing from Enter, submit or a seed while a turn is pending', async () => {
+        const user = userEvent.setup()
+        const [seed] = PROMPT_SEEDS
+        if (!seed) throw new Error('expected a prompt seed')
+        const { rerenderPanel } = renderPanel([])
+        const box = screen.getByLabelText('Message') as HTMLTextAreaElement
+        await user.click(box)
+        await user.keyboard('again')
+
+        hook.isPending = true
+        rerenderPanel()
+        await user.keyboard('{Enter}')
+        fireEvent.submit(box.form!)
+        await user.click(screen.getByRole('button', { name: seed }))
+
+        expect(hook.sent).toEqual([])
+        // The draft survives the refused send.
+        expect(box.value).toBe('again')
+    })
 })
 
 describe('AssistantPanel thumbs feedback', () => {

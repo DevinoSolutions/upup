@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+    normalizeNewlines,
     parseMarkdown,
     stableMarkdownPrefix,
     type Block,
@@ -61,6 +62,25 @@ const FIXTURES: Record<string, string> = {
         '',
         'After.',
     ].join('\n'),
+    // A loose list: items separated by blank lines are still one list.
+    looseList: [
+        '1. Install',
+        '',
+        '2. Configure **mode**',
+        '',
+        '',
+        '3. Deploy',
+        '',
+        'Then:',
+        '',
+        '- a',
+        '',
+        '  - nested',
+        '',
+        '1. other kind',
+    ].join('\n'),
+    parenUrls:
+        'See https://en.wikipedia.org/wiki/Foo_(bar) and [a](https://en.wikipedia.org/wiki/Foo_(bar)) (or https://x.dev/a). Also https://x.dev/b, then https://x.dev/c((d)) ok.',
 }
 
 const fixtureEntries = Object.entries(FIXTURES)
@@ -193,6 +213,79 @@ describe('stableMarkdownPrefix', () => {
             'Go to https://useupup.com/docs ',
         )
     })
+
+    it('holds a URL while a balanced paren group in it is still open', () => {
+        const wiki = 'https://en.wikipedia.org/wiki/Foo_(bar'
+        expect(stableMarkdownPrefix(`Go to ${wiki}`)).toBe('Go to ')
+        expect(stableMarkdownPrefix(`Go to ${wiki}) `)).toBe(`Go to ${wiki}) `)
+        expect(stableMarkdownPrefix(`See [a](${wiki})`)).toBe('See ')
+        expect(stableMarkdownPrefix(`See [a](${wiki})) `)).toBe(
+            `See [a](${wiki})) `,
+        )
+    })
+
+    it('holds an unmatched ** ` or [ only until the paragraph ends', () => {
+        for (const opener of ['**', '`', '[']) {
+            const open = `a ${opener}b c`
+            expect(stableMarkdownPrefix(open)).toBe('a ')
+            // Bold and code may close on a later line of the same paragraph;
+            // a link label cannot span lines, so its line end releases it.
+            expect(stableMarkdownPrefix(`${open}\nmore words `)).toBe(
+                opener === '[' ? `${open}\nmore words ` : 'a ',
+            )
+            // A blank line ends the paragraph: the opener is literal text.
+            expect(stableMarkdownPrefix(`${open}\n\nNext `)).toBe(
+                `${open}\n\nNext `,
+            )
+            // So does a block that cannot continue a paragraph.
+            expect(stableMarkdownPrefix(`${open}\n- item\n`)).toBe(
+                `${open}\n- item\n`,
+            )
+        }
+    })
+
+    it('holds a possible next item of a loose list', () => {
+        expect(stableMarkdownPrefix('1. a\n\n2')).toBe('1. a\n\n')
+        expect(stableMarkdownPrefix('1. a\n\n2. b')).toBe('1. a\n\n')
+        expect(stableMarkdownPrefix('1. a\n\n2. b\n')).toBe('1. a\n\n2. b\n')
+    })
+})
+
+const crlf = (s: string) => s.replace(/\n/g, '\r\n')
+
+describe('CRLF input', () => {
+    it.each(fixtureEntries)(
+        '%s: parses and streams exactly like its LF twin',
+        (_name, lf) => {
+            const text = crlf(lf)
+            const full = parseMarkdown(text)
+            expect(full).toEqual(parseMarkdown(lf))
+            let previous = ''
+            for (let i = 0; i <= text.length; i++) {
+                const received = text.slice(0, i)
+                const shown = stableMarkdownPrefix(received)
+                expect(normalizeNewlines(received).startsWith(shown)).toBe(true)
+                expect(shown.startsWith(previous)).toBe(true)
+                previous = shown
+                if (!structuralPrefix(parseMarkdown(shown), full))
+                    throw new Error(
+                        `partial unit at split ${i}: ${JSON.stringify(shown)}`,
+                    )
+            }
+        },
+    )
+
+    it('reads \\r\\n and a lone \\r as line ends', () => {
+        const [heading, para] = parseMarkdown('## Title\r\nBody\rmore')
+        expect(heading?.type).toBe('heading')
+        if (heading?.type !== 'heading') return
+        expect(heading.inline).toEqual([
+            { type: 'text', text: 'Title', start: 3 },
+        ])
+        expect(para?.type).toBe('paragraph')
+        expect(stableMarkdownPrefix('## Title\r\n')).toBe('## Title\n')
+        expect(normalizeNewlines('a\r\nb\rc\n')).toBe('a\nb\nc\n')
+    })
 })
 
 describe('parseMarkdown', () => {
@@ -213,6 +306,54 @@ describe('parseMarkdown', () => {
         if (list?.type !== 'list') return
         expect(list.items).toHaveLength(2)
         expect(list.items[0]?.children[0]?.type).toBe('list')
+    })
+
+    it('keeps blank-line-separated items of one kind in one list', () => {
+        const blocks = parseMarkdown('1. a\n\n2. b\n\n\n3. c')
+        expect(blocks).toHaveLength(1)
+        const [list] = blocks
+        if (list?.type !== 'list') throw new Error('expected a list')
+        expect(list.ordered).toBe(true)
+        expect(list.firstNumber).toBe(1)
+        expect(list.items.map(item => item.start)).toEqual([0, 6, 13])
+    })
+
+    it('starts a new list on a kind change or an intervening paragraph', () => {
+        const blocks = parseMarkdown('- a\n\n1. b\n\ntext\n\n7. c\n8. d')
+        expect(blocks.map(b => b.type)).toEqual([
+            'list',
+            'list',
+            'paragraph',
+            'list',
+        ])
+        const last = blocks[3]
+        if (last?.type !== 'list') throw new Error('expected a list')
+        expect(last.firstNumber).toBe(7)
+        expect(last.items).toHaveLength(2)
+    })
+
+    it('keeps balanced parens in a URL and drops an unbalanced closer', () => {
+        const wiki = 'https://en.wikipedia.org/wiki/Foo_(bar)'
+        const links = (s: string) => {
+            const [p] = parseMarkdown(s)
+            if (p?.type !== 'paragraph') throw new Error('expected a paragraph')
+            return p.inline.flatMap(t =>
+                t.type === 'link' ? [{ label: t.label, href: t.href }] : [],
+            )
+        }
+        expect(links(`See ${wiki} now`)).toEqual([{ label: wiki, href: wiki }])
+        expect(links(`See [a](${wiki}) now`)).toEqual([
+            { label: 'a', href: wiki },
+        ])
+        expect(links(`(see ${wiki})`)).toEqual([{ label: wiki, href: wiki }])
+        expect(links('(see https://x.dev/a)')).toEqual([
+            { label: 'https://x.dev/a', href: 'https://x.dev/a' },
+        ])
+        for (const punct of ['.', ',', ';', ':', '!', '?', ').', '.)'])
+            expect(links(`At https://x.dev/a${punct}`)).toEqual([
+                { label: 'https://x.dev/a', href: 'https://x.dev/a' },
+            ])
+        expect(links(`At ${wiki}.`)).toEqual([{ label: wiki, href: wiki }])
     })
 
     it('trims trailing sentence punctuation off a bare URL', () => {

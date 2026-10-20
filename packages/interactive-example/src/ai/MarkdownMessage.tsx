@@ -153,7 +153,11 @@ function BlockNode({ block }: { block: Block }) {
                     ))}
                 </li>
             ))
-            return block.ordered ? <ol>{items}</ol> : <ul>{items}</ul>
+            return block.ordered ? (
+                <ol start={block.firstNumber}>{items}</ol>
+            ) : (
+                <ul>{items}</ul>
+            )
         }
         case 'table':
             return (

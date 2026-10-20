@@ -199,15 +199,19 @@ export function AssistantPanel({
         if (el) el.scrollTop = el.scrollHeight
     }, [messages])
 
+    // While a turn streams the composer stays focusable (readOnly, not
+    // disabled: disabling the focused textarea drops focus to <body>), so
+    // every send path refuses here instead, keeping the draft.
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         const value = input.trim()
-        if (!value) return
+        if (!value || isPending) return
         setInput('')
         void send(value)
     }
 
     function handleSeed(seed: string) {
+        if (isPending) return
         setInput('')
         void send(seed)
     }
@@ -320,7 +324,8 @@ export function AssistantPanel({
                     placeholder={
                         isPending ? 'Working…' : 'Describe your upload setup'
                     }
-                    disabled={isPending}
+                    readOnly={isPending}
+                    aria-disabled={isPending}
                     aria-label="Message"
                 />
                 <button
