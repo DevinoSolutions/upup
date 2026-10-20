@@ -81,6 +81,46 @@ const FIXTURES: Record<string, string> = {
     ].join('\n'),
     parenUrls:
         'See https://en.wikipedia.org/wiki/Foo_(bar) and [a](https://en.wikipedia.org/wiki/Foo_(bar)) (or https://x.dev/a). Also https://x.dev/b, then https://x.dev/c((d)) ok.',
+    // Thematic breaks: all three characters, spaced runs, one straight after a
+    // paragraph line and one between list items, plus a rule that ends a table.
+    rules: [
+        'Intro paragraph.',
+        '',
+        '---',
+        '',
+        'Middle **bold** text.',
+        '***',
+        'After.',
+        '___',
+        '',
+        '- a',
+        '- - -',
+        '- b',
+        '',
+        '| A | B |',
+        '| --- | --- |',
+        '| 1 | 2 |',
+        '---',
+        'End.',
+    ].join('\n'),
+    // Lines that look a little like a rule but are not one.
+    notRules: [
+        'Value is -5 -- roughly',
+        '-- not a rule',
+        '-',
+        '--',
+        '---x',
+        '**',
+        '__init__ stays text',
+        '- - a',
+        '--- a note',
+        'text',
+        '___ x',
+        '',
+        '*** tail',
+    ].join('\n'),
+    // No setext headings: a rule under a text line is a rule, not an <h2>.
+    setext: 'Title\n---\nBody\n===\nMore\n\nLast\n-----\n',
 }
 
 const fixtureEntries = Object.entries(FIXTURES)
@@ -368,5 +408,168 @@ describe('parseMarkdown', () => {
             href: 'https://useupup.com/docs',
             start: 4,
         })
+    })
+})
+
+const kinds = (s: string) => parseMarkdown(s).map(b => b.type)
+
+describe('thematic breaks', () => {
+    it.each([
+        '---',
+        '***',
+        '___',
+        '-----',
+        '- - -',
+        '* * *',
+        '_ __ _',
+        '   ---',
+        '---  ',
+    ])('reads %j on its own line as a rule', line => {
+        expect(parseMarkdown(`before\n\n${line}\n\nafter`)).toEqual([
+            expect.objectContaining({ type: 'paragraph' }),
+            { type: 'hr', start: 8 },
+            expect.objectContaining({ type: 'paragraph' }),
+        ])
+    })
+
+    it.each([
+        '-',
+        '--',
+        '- -',
+        '---x',
+        '--- a',
+        '-*-',
+        '    ---',
+        '- - a',
+        '**',
+        '__',
+    ])('does not read %j as a rule', line => {
+        expect(kinds(`before\n\n${line}\n\nafter`)).not.toContain('hr')
+    })
+
+    it('keeps a table delimiter row a delimiter row', () => {
+        for (const table of [
+            '| a | b |\n| --- | --- |\n| 1 | 2 |',
+            '| a |\n|---|\n| 1 |',
+            '| a |\n| :-: |',
+        ])
+            expect(kinds(table)).toEqual(['table'])
+    })
+
+    it('ends a table with a rule that follows its last row', () => {
+        expect(kinds('| a |\n| --- |\n| 1 |\n---\nend')).toEqual([
+            'table',
+            'hr',
+            'paragraph',
+        ])
+    })
+
+    it('is a rule, not a setext heading, under a line of text', () => {
+        const blocks = parseMarkdown('Title\n---\nBody')
+        expect(blocks.map(b => b.type)).toEqual([
+            'paragraph',
+            'hr',
+            'paragraph',
+        ])
+        expect(kinds('Title\n===')).toEqual(['paragraph'])
+    })
+
+    it('interrupts a paragraph and a list, and starts a new list after', () => {
+        expect(kinds('text\n***\nmore')).toEqual([
+            'paragraph',
+            'hr',
+            'paragraph',
+        ])
+        expect(kinds('- a\n- b\n---\n- c')).toEqual(['list', 'hr', 'list'])
+        expect(kinds('1. a\n* * *\n2. b')).toEqual(['list', 'hr', 'list'])
+    })
+
+    it('reads a bare ** or __ as literal text', () => {
+        const [p] = parseMarkdown('**')
+        if (p?.type !== 'paragraph') throw new Error('expected a paragraph')
+        expect(p.inline).toEqual([{ type: 'text', text: '**', start: 0 }])
+    })
+
+    it('holds a bare - or -- (a list item or a rule) at the end of the buffer', () => {
+        expect(stableMarkdownPrefix('-')).toBe('')
+        expect(stableMarkdownPrefix('--')).toBe('')
+        expect(stableMarkdownPrefix('a\n-')).toBe('a\n')
+        expect(stableMarkdownPrefix('a\n--')).toBe('a\n')
+        expect(stableMarkdownPrefix('a\n- ')).toBe('a\n')
+        expect(stableMarkdownPrefix('a\n--- ')).toBe('a\n')
+        expect(stableMarkdownPrefix('a\n- -')).toBe('a\n')
+    })
+
+    it('holds a possible * or _ rule, then releases the text if it is not one', () => {
+        for (const mark of ['*', '**', '***', '_', '__', '___']) {
+            expect(stableMarkdownPrefix(`a\n${mark}`)).toBe('a\n')
+            // Once the line has ended it is a rule (3+) or plain text; only
+            // a lone ** is an unclosed bold opener and stays held.
+            expect(stableMarkdownPrefix(`a\n${mark}\n`)).toBe(
+                mark === '**' ? 'a\n' : `a\n${mark}\n`,
+            )
+        }
+        expect(stableMarkdownPrefix('a\n__init__ ')).toBe('a\n__init__ ')
+        expect(stableMarkdownPrefix('a\n-- b ')).toBe('a\n-- b ')
+    })
+
+    it('never shows the start of a text line as a rule', () => {
+        // Cut after its space, `___ x` would be `___ `: a rule on its own.
+        for (const line of ['___ x', '--- a', '* * * b', '- - - c']) {
+            expect(stableMarkdownPrefix(line)).toBe('')
+            expect(stableMarkdownPrefix(`a\n\n${line}`)).toBe('a\n\n')
+            for (let i = 0; i <= line.length; i++) {
+                const shown = stableMarkdownPrefix(`a\n${line.slice(0, i)}`)
+                expect(parseMarkdown(shown).some(b => b.type === 'hr')).toBe(
+                    false,
+                )
+            }
+            expect(stableMarkdownPrefix(`${line}\n`)).toBe(`${line}\n`)
+        }
+    })
+
+    it('never shows a rule-like line start held by an open inline unit', () => {
+        // The line has ended, but its opener keeps the paragraph open.
+        for (const [text, shown] of [
+            ['___ **bold\n', ''],
+            ['--- `code\n', ''],
+            ['text\n--- **b\n', 'text\n'],
+        ] as const) {
+            expect(stableMarkdownPrefix(text)).toBe(shown)
+            expect(
+                parseMarkdown(stableMarkdownPrefix(text)).some(
+                    b => b.type === 'hr',
+                ),
+            ).toBe(false)
+        }
+    })
+
+    it('shows a rule only once its line has ended', () => {
+        expect(stableMarkdownPrefix('before\n\n---')).toBe('before\n\n')
+        expect(stableMarkdownPrefix('before\n\n---\n')).toBe('before\n\n---\n')
+        expect(stableMarkdownPrefix('before\n\n----')).toBe('before\n\n')
+        expect(stableMarkdownPrefix('before\n\n---\nafter ')).toBe(
+            'before\n\n---\nafter ',
+        )
+    })
+
+    it('shows the paragraph above a rule whole, even with an opener left open', () => {
+        expect(stableMarkdownPrefix('a **b\n---\n')).toBe('a **b\n---\n')
+        // The rule is not settled until its line ends, so the opener holds.
+        expect(stableMarkdownPrefix('a **b\n---')).toBe('a ')
+    })
+
+    it('never takes back a rule while its line is typed out', () => {
+        const text = 'Intro.\n\n- - -\n\nOutro.\n'
+        let previous = ''
+        for (let i = 0; i <= text.length; i++) {
+            const shown = stableMarkdownPrefix(text.slice(0, i))
+            expect(shown.startsWith(previous)).toBe(true)
+            const rules = parseMarkdown(shown).filter(b => b.type === 'hr')
+            expect(rules.length).toBeLessThanOrEqual(1)
+            // A rule only appears with its whole line, newline included.
+            if (rules.length) expect(shown).toContain('- - -\n')
+            previous = shown
+        }
     })
 })

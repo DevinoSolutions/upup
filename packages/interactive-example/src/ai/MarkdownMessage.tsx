@@ -132,6 +132,8 @@ function BlockNode({ block }: { block: Block }) {
                 </Tag>
             )
         }
+        case 'hr':
+            return <hr className={EASE_BLOCK} />
         case 'code':
             return (
                 <pre
