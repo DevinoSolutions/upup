@@ -478,16 +478,38 @@ the suites actually drive):
   OR `(prefers-reduced-motion: reduce)`, else `on`); the emitted gate is
   `[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.upup-fx-essential)`
   (plus its `::after` twin and a `prefers-reduced-motion` defense-in-depth copy).
-  `upup-fx-essential` must stay safelisted forever — it is referenced ONLY inside
-  `:not()`, no markup may ever carry it, and it is the candidate that forces the
-  kill-switch + reduced-motion rules to emit. Timing lives ONLY in the
+  The same gate (both the `[data-motion='off']` and the media-query forms) also
+  drops non-fx motion that components carry (motion audit T-5010, 2026-10-20):
+  `transition: none` on any `[class*='upup-transition']` element,
+  `animation: none` on any `[class*='animate-pulse']` element, and no width tween on
+  `upup-fx-progress-fill` (the bar still renders; its width jumps). Spinners
+  (`upup-animate-spin`) are deliberately untouched and keep spinning.
+  `upup-fx-essential` must stay safelisted forever — in the CSS it is referenced
+  ONLY inside `:not()`, and it is the candidate that forces the kill-switch +
+  reduced-motion rules to emit. The progress fill is the one element that
+  carries it (in all five ported packages); no other markup may, and the
+  safelist must not rely on that one carrier. All hover motion
+  (`fx-hover-lift`, `fx-icon-nudge`, `fx-sheen-sweep`, `fx-remove`) sits under
+  `@media (hover: hover)`; `fx-hover-lift` transitions `transform` +
+  `background-color` only (its shadow changes instantly — box-shadow is never
+  tweened); core's overlay close timer (`transient-ui-state.ts` `overlayMs`)
+  defaults to the same 250ms as `--upup-fx-overlay` — change them together;
+  `fx-pop` has no
+  overshoot (opacity + scale 0.96 -> 1); `fx-rec-pulse` is opacity-only. Recorded
+  motion-audit exceptions: the overlay sheet's full-height `translateY(100%)`
+  travel, the progress fill tweening `width` (inline-width driven, contained in
+  its track), and the `upup-transition-all` utilities in component markup
+  (renaming them is a six-framework DOM sweep). Timing lives ONLY in the
   `--upup-fx-*` tokens on `.upup-scope` (`--upup-fx-fast` 150ms /
-  `--upup-fx-base` 200ms / `--upup-fx-overlay` 350ms /
+  `--upup-fx-base` 200ms / `--upup-fx-overlay` 250ms /
   `--upup-fx-ease` cubic-bezier(0.22, 1, 0.36, 1)) — a hardcoded duration inside
   an fx rule is a defect. The token rule governs interaction/transition timings;
   the sanctioned literal-duration carve-out is the infinite ambient loops plus
   the one-shot draw (`fx-sheen` 1.6s, `fx-dash-march` 8s, `fx-rec-pulse` 1.4s,
-  `fx-draw` 400ms). Two-phase transitions are owned by core `later()` timers; DOM
+  `fx-draw` 300ms). `fx-sheen` and `fx-dash-march` are live-state indicators,
+  not idle decoration: the sheen renders only while an upload is active and the
+  dashes march only during a drag over the panel. Two-phase transitions are
+  owned by core `later()` timers; DOM
   `animationend`/`transitionend` listeners are banned. `animations?: boolean` is
   the ONE public prop (default true), identical across all six frameworks;
   `prefers-reduced-motion` also forces motion off regardless of the prop. Pinned
