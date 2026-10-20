@@ -149,127 +149,127 @@ body {
 
     /* Uploader Component Buttons */
     .uploader-btn-blue {
-        @apply !bg-blue-500 hover:!bg-blue-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-blue-500 hover:!bg-blue-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-emerald {
-        @apply !bg-emerald-500 hover:!bg-emerald-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-emerald-500 hover:!bg-emerald-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-purple {
-        @apply !bg-purple-500 hover:!bg-purple-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-purple-500 hover:!bg-purple-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-rose {
-        @apply !bg-rose-500 hover:!bg-rose-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-rose-500 hover:!bg-rose-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-orange {
-        @apply !bg-orange-500 hover:!bg-orange-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-orange-500 hover:!bg-orange-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-indigo {
-        @apply !bg-indigo-500 hover:!bg-indigo-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-indigo-500 hover:!bg-indigo-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     /* Progress bars */
     .uploader-progress-blue {
-        @apply !bg-blue-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-blue-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-emerald {
-        @apply !bg-emerald-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-emerald-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-purple {
-        @apply !bg-purple-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-purple-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-rose {
-        @apply !bg-rose-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-rose-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-orange {
-        @apply !bg-orange-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-orange-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-indigo {
-        @apply !bg-indigo-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-indigo-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     /* Adapter buttons */
     .uploader-source-blue {
-        @apply !border-2 !border-blue-500/20 hover:!border-blue-500/40 hover:!bg-blue-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-blue-500/20 hover:!border-blue-500/40 hover:!bg-blue-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-emerald {
-        @apply !border-2 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-purple {
-        @apply !border-2 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-rose {
-        @apply !border-2 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-orange {
-        @apply !border-2 !border-orange-500/20 hover:!border-orange-500/40 hover:!bg-orange-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-orange-500/20 hover:!border-orange-500/40 hover:!bg-orange-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-indigo {
-        @apply !border-2 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     /* Preview buttons */
     .uploader-preview-blue {
-        @apply !text-blue-500 hover:!text-blue-600 !transition-all !duration-200;
+        @apply !text-blue-500 hover:!text-blue-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-emerald {
-        @apply !text-emerald-500 hover:!text-emerald-600 !transition-all !duration-200;
+        @apply !text-emerald-500 hover:!text-emerald-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-purple {
-        @apply !text-purple-500 hover:!text-purple-600 !transition-all !duration-200;
+        @apply !text-purple-500 hover:!text-purple-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-rose {
-        @apply !text-rose-500 hover:!text-rose-600 !transition-all !duration-200;
+        @apply !text-rose-500 hover:!text-rose-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-orange {
-        @apply !text-orange-500 hover:!text-orange-600 !transition-all !duration-200;
+        @apply !text-orange-500 hover:!text-orange-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-indigo {
-        @apply !text-indigo-500 hover:!text-indigo-600 !transition-all !duration-200;
+        @apply !text-indigo-500 hover:!text-indigo-600 !transition-colors !duration-200;
     }
 
     /* Add more buttons */
     .uploader-add-blue {
-        @apply !border-2 !border-dashed !border-blue-500/30 hover:!border-blue-500/50 hover:!bg-blue-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-blue-500/30 hover:!border-blue-500/50 hover:!bg-blue-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-emerald {
-        @apply !border-2 !border-dashed !border-emerald-500/30 hover:!border-emerald-500/50 hover:!bg-emerald-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-emerald-500/30 hover:!border-emerald-500/50 hover:!bg-emerald-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-purple {
-        @apply !border-2 !border-dashed !border-purple-500/30 hover:!border-purple-500/50 hover:!bg-purple-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-purple-500/30 hover:!border-purple-500/50 hover:!bg-purple-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-rose {
-        @apply !border-2 !border-dashed !border-rose-500/30 hover:!border-rose-500/50 hover:!bg-rose-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-rose-500/30 hover:!border-rose-500/50 hover:!bg-rose-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-orange {
-        @apply !border-2 !border-dashed !border-orange-500/30 hover:!border-orange-500/50 hover:!bg-orange-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-orange-500/30 hover:!border-orange-500/50 hover:!bg-orange-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-indigo {
-        @apply !border-2 !border-dashed !border-indigo-500/30 hover:!border-indigo-500/50 hover:!bg-indigo-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-indigo-500/30 hover:!border-indigo-500/50 hover:!bg-indigo-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     /* Container backgrounds - soft pastels with dark mode support */
