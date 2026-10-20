@@ -100,17 +100,23 @@ describe('Ask AI drawer open/close', () => {
         expect(cls).toContain('translate-x-0')
     })
 
-    it('transitions visibility with transform+opacity so the close is seen', () => {
-        const closed = renderAskAi(false)
-        // `visibility` must be in the transition list or it flips instantly and
-        // the exit is never painted (the original defect).
-        expect(closed.className).toContain(
+    it('transitions visibility on close only so the exit is seen and the open can focus', () => {
+        // Snapshot each state's classes: renderAskAi re-renders the same node.
+        const closed = renderAskAi(false).className
+        // Closing: `visibility` must be in the transition list or it flips
+        // instantly and the exit is never painted (the original defect).
+        expect(closed).toContain(
             'motion-safe:transition-[transform,opacity,visibility]',
         )
+        // Opening: the browser uses the open state's transition list, and a
+        // transitioned hidden -> visible stays `hidden` for the first frame,
+        // which makes the composer focus() in the open effect fail.
+        const open = renderAskAi(true).className
+        expect(open).toContain('motion-safe:transition-[transform,opacity]')
+        expect(open).not.toMatch(/transition-\[[^\]]*visibility/)
         // Exit is faster than enter and both come from the motion tokens.
-        expect(closed.className).toContain('motion-safe:duration-fast')
-        const open = renderAskAi(true)
-        expect(open.className).toContain('motion-safe:duration-base')
+        expect(closed).toContain('motion-safe:duration-fast')
+        expect(open).toContain('motion-safe:duration-base')
     })
 
     it('no longer animates layout properties on the docs content column', () => {
@@ -262,7 +268,7 @@ describe('docs search dialog enter', () => {
         renderSearch(true)
         const dialog = container.querySelector<HTMLElement>('[role="dialog"]')!
         const overlay = dialog.parentElement!
-        expect(overlay.className).toContain('animate-motion-fade')
+        expect(overlay.className).toContain('motion-safe:animate-motion-fade')
         expect(dialog.className).toContain('motion-safe:animate-motion-panel')
         // Reduced motion: opacity only, no scale/translate.
         expect(dialog.className).toContain('motion-reduce:animate-motion-fade')

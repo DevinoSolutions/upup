@@ -418,15 +418,19 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                     onClose()
                 }
             }}
-            className={`fixed right-0 top-24 bottom-0 z-40 flex w-[380px] max-w-full flex-col border-l border-black/5 bg-[var(--bg-base)] motion-safe:transition-[transform,opacity,visibility] dark:border-white/10 ${
+            className={`fixed right-0 top-24 bottom-0 z-40 flex w-[380px] max-w-full flex-col border-l border-black/5 bg-[var(--bg-base)] dark:border-white/10 ${
                 // Docked panel, so travel is a 16px nudge plus opacity, not the
-                // full 380px. `visibility` is in the transition list so the close
-                // stays painted until it finishes (visible -> hidden flips at the
-                // END of the duration); `inert` pulls it out of focus and the
-                // a11y tree immediately. Reduced motion: no transition at all.
+                // full 380px. `visibility` is transitioned on the CLOSED state
+                // only, so the close stays painted until it finishes (visible ->
+                // hidden flips at the END of the duration). The open state
+                // leaves it out: a transitioned hidden -> visible would hold
+                // `hidden` for the first frame and the composer focus() in the
+                // open effect would silently fail. `inert` pulls the closed
+                // drawer out of focus and the a11y tree immediately. Reduced
+                // motion: no transition at all.
                 open
-                    ? 'visible translate-x-0 opacity-100 motion-safe:duration-base motion-safe:ease-motion-out'
-                    : 'invisible translate-x-4 opacity-0 motion-safe:duration-fast motion-safe:ease-motion-in'
+                    ? 'visible translate-x-0 opacity-100 motion-safe:transition-[transform,opacity] motion-safe:duration-base motion-safe:ease-motion-out'
+                    : 'invisible translate-x-4 opacity-0 motion-safe:transition-[transform,opacity,visibility] motion-safe:duration-fast motion-safe:ease-motion-in'
             }`}
         >
             {/* Header */}

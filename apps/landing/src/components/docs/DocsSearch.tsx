@@ -202,7 +202,7 @@ export function DocsSearchDialog({
         <>
             {open ? (
                 <div
-                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh] animate-motion-fade"
+                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh] motion-safe:animate-motion-fade"
                     onClick={close}
                 >
                     <div
