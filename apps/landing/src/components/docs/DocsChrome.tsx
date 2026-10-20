@@ -35,7 +35,7 @@ export function DocsChrome({
 
     return (
         <div
-            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 transition-[padding,max-width] duration-300 xl:max-w-[1400px] xl:px-10 ${
+            className={`mx-auto w-full min-w-0 max-w-6xl px-6 pb-16 pt-28 xl:max-w-[1400px] xl:px-10 ${
                 aiOpen ? '2xl:max-w-[1804px] 2xl:pr-[404px]' : ''
             }`}
         >
