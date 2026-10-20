@@ -109,8 +109,50 @@ describe('AssistantPanel composer', () => {
         expect(box.getAttribute('aria-disabled')).toBe('true')
         expect(document.activeElement).toBe(box)
         expect(
-            (screen.getByLabelText('Send') as HTMLButtonElement).disabled,
-        ).toBe(true)
+            screen.getByLabelText('Send').getAttribute('aria-disabled'),
+        ).toBe('true')
+    })
+
+    it('keeps keyboard focus on Send while the answer streams', async () => {
+        const user = userEvent.setup()
+        renderPanel([])
+        const box = screen.getByLabelText('Message') as HTMLTextAreaElement
+        const sendBtn = screen.getByLabelText('Send') as HTMLButtonElement
+
+        await user.click(box)
+        await user.keyboard('make it dark')
+        await user.tab()
+        expect(document.activeElement).toBe(sendBtn)
+        await user.keyboard('{Enter}')
+
+        expect(hook.sent).toEqual(['make it dark'])
+        expect(hook.isPending).toBe(true)
+        // Disabling the focused button would drop focus to <body>.
+        expect(sendBtn.disabled).toBe(false)
+        expect(sendBtn.getAttribute('aria-disabled')).toBe('true')
+        expect(document.activeElement).toBe(sendBtn)
+
+        // Activating it again mid-stream sends nothing.
+        await user.keyboard('{Enter}')
+        await user.keyboard(' ')
+        await user.click(sendBtn)
+        expect(hook.sent).toEqual(['make it dark'])
+        expect(document.activeElement).toBe(sendBtn)
+    })
+
+    it('keeps focus on an inert Send while the composer is empty', async () => {
+        const user = userEvent.setup()
+        renderPanel([])
+        const sendBtn = screen.getByLabelText('Send') as HTMLButtonElement
+
+        expect(sendBtn.disabled).toBe(false)
+        expect(sendBtn.getAttribute('aria-disabled')).toBe('true')
+        sendBtn.focus()
+        await user.keyboard('{Enter}')
+        await user.click(sendBtn)
+
+        expect(hook.sent).toEqual([])
+        expect(document.activeElement).toBe(sendBtn)
     })
 
     it('sends nothing from Enter, submit or a seed while a turn is pending', async () => {

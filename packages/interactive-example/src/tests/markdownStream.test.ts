@@ -219,6 +219,9 @@ describe('stableMarkdownPrefix', () => {
         expect(stableMarkdownPrefix(`Go to ${wiki}`)).toBe('Go to ')
         expect(stableMarkdownPrefix(`Go to ${wiki}) `)).toBe(`Go to ${wiki}) `)
         expect(stableMarkdownPrefix(`See [a](${wiki})`)).toBe('See ')
+        // A closed token inside the URL must not release a link whose open
+        // paren group may still close.
+        expect(stableMarkdownPrefix('See [w](a`b`(c')).toBe('See ')
         expect(stableMarkdownPrefix(`See [a](${wiki})) `)).toBe(
             `See [a](${wiki})) `,
         )

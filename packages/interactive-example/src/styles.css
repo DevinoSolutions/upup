@@ -1888,7 +1888,7 @@ html.dark .upup-ie-ai-panel,
     cursor: pointer;
 }
 
-.upup-ie-ai-input button[type="submit"]:disabled {
+.upup-ie-ai-input button[type="submit"][aria-disabled="true"] {
     opacity: 0.5;
     cursor: not-allowed;
 }

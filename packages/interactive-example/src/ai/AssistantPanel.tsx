@@ -328,9 +328,11 @@ export function AssistantPanel({
                     aria-disabled={isPending}
                     aria-label="Message"
                 />
+                {/* aria-disabled, not disabled, for the same focus reason;
+                    handleSubmit refuses an empty or mid-stream send. */}
                 <button
                     type="submit"
-                    disabled={isPending || !input.trim()}
+                    aria-disabled={isPending || !input.trim()}
                     aria-label="Send"
                 >
                     ▶
