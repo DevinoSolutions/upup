@@ -3,6 +3,7 @@ import { ThumbsUp, ThumbsDown, X } from 'lucide-react'
 import { ConfigContext } from '../state/ConfigContext'
 import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
+import { MarkdownMessage } from './MarkdownMessage'
 import type { AiFeedbackEvent } from '../types'
 
 type AssistantPanelProps = {
@@ -261,9 +262,21 @@ export function AssistantPanel({
                             className={`upup-ie-ai-msg upup-ie-ai-msg-${m.role}`}
                         >
                             <div className="upup-ie-ai-msg-text">
-                                {m.text}
+                                {m.role === 'assistant' ? (
+                                    <MarkdownMessage
+                                        text={m.text}
+                                        streaming={!!m.pending}
+                                    />
+                                ) : (
+                                    m.text
+                                )}
                                 {m.pending && (
-                                    <span className="upup-ie-ai-cursor">▍</span>
+                                    <span
+                                        className="upup-ie-ai-cursor"
+                                        aria-hidden="true"
+                                    >
+                                        ▍
+                                    </span>
                                 )}
                             </div>
                             {m.patches?.map((p, i) => (
