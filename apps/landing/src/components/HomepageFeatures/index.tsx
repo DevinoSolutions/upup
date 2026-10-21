@@ -418,6 +418,10 @@ const EmailModal: React.FC<EmailModalProps> = ({
 
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
+                if (e.defaultPrevented) return
+                // Consume the key so a layer underneath (the navbar's mobile
+                // menu) stays open.
+                e.preventDefault()
                 onCloseRef.current()
                 return
             }
@@ -451,9 +455,11 @@ const EmailModal: React.FC<EmailModalProps> = ({
                 first.focus()
             }
         }
-        document.addEventListener('keydown', onKeyDown)
+        // Capture phase: a bubble listener registered earlier (the navbar's
+        // mobile-menu Escape) would otherwise run first and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
         return () => {
-            document.removeEventListener('keydown', onKeyDown)
+            document.removeEventListener('keydown', onKeyDown, true)
             closeGenRef.current += 1
             // Detach from any in-flight submit so a reopen starts enabled.
             setIsSubmitting(false)

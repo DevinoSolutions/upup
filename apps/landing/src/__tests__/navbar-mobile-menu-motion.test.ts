@@ -6,6 +6,12 @@ import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+vi.mock('@/lib/client/env', () => ({
+    clientEnv: { NEXT_PUBLIC_MASTRA_BASE_URL: 'http://mastra.test' },
+}))
+vi.mock('@/lib/analytics/capture.client', () => ({
+    captureClientEvent: vi.fn(),
+}))
 vi.mock('next/navigation', () => ({ usePathname: () => '/' }))
 vi.mock('next/image', () => ({
     default: (props: { alt: string }) =>
@@ -13,6 +19,8 @@ vi.mock('next/image', () => ({
 }))
 
 import Navbar from '@/components/Navbar'
+import { DocsAskAi } from '@/components/docs/DocsAskAi'
+import type { useDocsChat } from '@/lib/docs/use-docs-chat'
 
 // Motion audit spot 6: the mobile menu eases in and the hamburger/X icon
 // cross-fades. The animation sits on the INNER div.px-6 (never the
@@ -151,5 +159,44 @@ describe('Navbar mobile menu Escape', () => {
         pressEscape()
         document.body.removeEventListener('keydown', consumer)
         expect(toggle().getAttribute('aria-expanded')).toBe('true')
+    })
+
+    // Next hydrates React on `document`, so the drawer's synthetic
+    // stopPropagation does not stop this document listener (found in a real
+    // browser, where one Escape closed the drawer AND the menu). The drawer
+    // must preventDefault, which the navbar's guard honours.
+    it('stays open when the Ask AI drawer handles the Escape', () => {
+        act(() => toggle().click())
+        const drawerHost = document.createElement('div')
+        document.body.append(drawerHost)
+        const drawerRoot = createRoot(drawerHost)
+        const onClose = vi.fn()
+        act(() =>
+            drawerRoot.render(
+                createElement(DocsAskAi, {
+                    open: true,
+                    onClose,
+                    chat: {
+                        messages: [],
+                        pending: false,
+                        send: vi.fn(),
+                        clear: vi.fn(),
+                    } as unknown as ReturnType<typeof useDocsChat>,
+                }),
+            ),
+        )
+        const input = drawerHost.querySelector<HTMLElement>(
+            '[data-testid="docs-ask-ai-input"]',
+        )!
+        act(() => input.focus())
+
+        const event = pressEscape(input)
+
+        expect(onClose).toHaveBeenCalledTimes(1)
+        expect(event.defaultPrevented).toBe(true)
+        expect(toggle().getAttribute('aria-expanded')).toBe('true')
+
+        act(() => drawerRoot.unmount())
+        drawerHost.remove()
     })
 })

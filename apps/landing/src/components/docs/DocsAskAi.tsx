@@ -495,6 +495,13 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
             inert={!open}
             onKeyDown={e => {
                 if (e.key === 'Escape') {
+                    // preventDefault is what protects the navbar's open mobile
+                    // menu: Next hydrates React ON `document`, so this
+                    // synthetic stopPropagation cannot stop other `document`
+                    // listeners (the navbar's), only `window` ones. The navbar
+                    // skips defaultPrevented keys, and React's own listener
+                    // runs before it.
+                    e.preventDefault()
                     e.stopPropagation()
                     onClose()
                 }
