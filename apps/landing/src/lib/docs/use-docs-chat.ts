@@ -186,20 +186,47 @@ export function useDocsChat() {
             try {
                 let streamed = ''
                 let opened = false
+                // Text parts are separate: the agent writes some text, calls a
+                // tool, then writes more. Each part gets its own id and the
+                // parts carry no separator, so the next part's first token is
+                // joined to the previous part's last (`…validation:Perfect!`).
+                // A new id, or a tool/end marker since the last delta, starts a
+                // new part; it opens a paragraph unless one is already open.
+                let textId: string | null = null
+                let partEnded = false
                 // Fold one whole SSE event into the answer text and the trail,
                 // writing to state once per event.
                 const consume = (eventBlock: string) => {
                     let changed = false
                     for (const chunk of parseStreamChunks(eventBlock)) {
                         if (chunk.type === 'text-delta') {
-                            const text = (chunk.payload as { text?: unknown })
-                                ?.text
+                            const { id, text } = (chunk.payload ?? {}) as {
+                                id?: unknown
+                                text?: unknown
+                            }
                             if (typeof text === 'string' && text) {
+                                const newId = typeof id === 'string' ? id : null
+                                if (
+                                    streamed &&
+                                    !streamed.endsWith('\n') &&
+                                    (partEnded ||
+                                        (newId !== null && newId !== textId))
+                                )
+                                    streamed += '\n\n'
+                                if (newId !== null) textId = newId
+                                partEnded = false
                                 streamed += text
                                 changed = true
                             }
                             continue
                         }
+                        if (
+                            chunk.type === 'text-end' ||
+                            chunk.type === 'tool-call' ||
+                            chunk.type === 'tool-result' ||
+                            chunk.type === 'tool-error'
+                        )
+                            partEnded = true
                         const next = applyStepChunk(steps, chunk)
                         if (next !== steps) {
                             steps = next

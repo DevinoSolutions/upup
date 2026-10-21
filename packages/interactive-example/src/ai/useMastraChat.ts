@@ -206,6 +206,14 @@ export function useMastraChat({
                 } as Parameters<typeof agent.stream>[1])
 
                 let text = ''
+                // The agent can write text, call a tool, then write more. Each
+                // text part has its own id and the parts carry no separator, so
+                // the next part would be glued onto the last word of the
+                // previous one. A new id, or a tool/end chunk since the last
+                // delta, starts a new part; it opens a paragraph unless one is
+                // already open.
+                let textId: string | null = null
+                let partEnded = false
                 // Prefer the trace id the server stamps on its chunks; fall
                 // back to the one we assigned via tracingOptions.traceId (the
                 // trace is recorded under it either way — never a fabricated
@@ -243,9 +251,29 @@ export function useMastraChat({
                                 updateTurn({ steps })
                             }
                         }
+                        if (
+                            chunk.type === 'text-end' ||
+                            chunk.type === 'tool-call' ||
+                            chunk.type === 'tool-result' ||
+                            chunk.type === 'tool-error'
+                        )
+                            partEnded = true
                         if (chunk.type === 'text-delta') {
-                            text += chunk.payload.text
-                            updateTurn({ text })
+                            const { id, text: part } = chunk.payload
+                            if (part) {
+                                const newId = typeof id === 'string' ? id : null
+                                if (
+                                    text &&
+                                    !text.endsWith('\n') &&
+                                    (partEnded ||
+                                        (newId !== null && newId !== textId))
+                                )
+                                    text += '\n\n'
+                                if (newId !== null) textId = newId
+                                partEnded = false
+                                text += part
+                                updateTurn({ text })
+                            }
                         } else if (chunk.type === 'tool-result') {
                             const { toolCallId, toolName, result, isError } =
                                 chunk.payload
