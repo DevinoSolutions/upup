@@ -12,7 +12,7 @@ on:
 # rollups: cancelling the workflow cancels Status-Check too, and Status-Check
 # (if: always()) fails on any need whose result is not 'success' -- a cancelled
 # or skipped need can never read as green. The new head's run supplies the
-# check. workflow_dispatch runs group by ref.
+# check. workflow_dispatch runs group by ref. (Verified on PR #612.)
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
     cancel-in-progress: true
