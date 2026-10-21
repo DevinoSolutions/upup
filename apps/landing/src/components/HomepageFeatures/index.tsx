@@ -380,6 +380,13 @@ const EmailModal: React.FC<EmailModalProps> = ({
     const dialogRef = useRef<HTMLDivElement>(null)
     const onCloseRef = useRef(onClose)
     onCloseRef.current = onClose
+    // Bumped on every close. A submit captures it before awaiting; if it has
+    // moved by the time the request settles, the dialog that started the
+    // submit is gone (closed, possibly reopened) and the result must not
+    // touch the UI. The request itself is never aborted: the sign-up is real.
+    const closeGenRef = useRef(0)
+    const isOpenRef = useRef(isOpen)
+    isOpenRef.current = isOpen
     const headingId = React.useId()
 
     useEffect(
@@ -447,6 +454,9 @@ const EmailModal: React.FC<EmailModalProps> = ({
         document.addEventListener('keydown', onKeyDown)
         return () => {
             document.removeEventListener('keydown', onKeyDown)
+            closeGenRef.current += 1
+            // Detach from any in-flight submit so a reopen starts enabled.
+            setIsSubmitting(false)
             // A pending success timer must not outlive the dialog it belongs
             // to; apply its reset now so a reopen starts from the form.
             if (closeTimer.current) {
@@ -479,6 +489,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
 
         // Calls the route, then records the sign-up and its source (UTM, referrer,
         // landing page) in the browser only on a confirmed server success.
+        const closeGen = closeGenRef.current
         const ok = await submitAndRecordProviderInterest({
             email,
             providerName,
@@ -486,6 +497,17 @@ const EmailModal: React.FC<EmailModalProps> = ({
             feedbackId: feedbackIdRef.current,
             website,
         })
+
+        if (closeGen !== closeGenRef.current) {
+            // Settled after the dialog was dismissed: no success panel, no
+            // close timer, no failure UI. A recorded sign-up still leaves the
+            // next open fresh (unless it is already open on new input).
+            if (ok) {
+                feedbackIdRef.current = ''
+                if (!isOpenRef.current) resetAfterSuccess()
+            }
+            return
+        }
         setIsSubmitting(false)
 
         if (!ok) {
