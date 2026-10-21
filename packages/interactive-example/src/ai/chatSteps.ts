@@ -80,20 +80,25 @@ const CONFIG_PATCH_LABELS: StepLabels = {
     failed: 'That change failed',
 }
 
+const DOCS_SEARCH_LABELS: StepLabels = {
+    running: args => {
+        const q = docsQuery(args)
+        return q ? `Searching the docs for '${q}'` : 'Searching the docs'
+    },
+    done: args => {
+        const q = docsQuery(args)
+        return q ? `Searched the docs for '${q}'` : 'Searched the docs'
+    },
+    failed: 'Docs search failed',
+}
+
 const STEP_LABELS: Record<string, StepLabels> = {
     'apply-config-patch': CONFIG_PATCH_LABELS,
     applyConfigPatch: CONFIG_PATCH_LABELS,
-    'search-docs': {
-        running: args => {
-            const q = docsQuery(args)
-            return q ? `Searching the docs for '${q}'` : 'Searching the docs'
-        },
-        done: args => {
-            const q = docsQuery(args)
-            return q ? `Searched the docs for '${q}'` : 'Searched the docs'
-        },
-        failed: 'Docs search failed',
-    },
+    'search-docs': DOCS_SEARCH_LABELS,
+    // The docs agent registers the tool under this key, and the stream reports
+    // the key rather than the tool id.
+    searchDocs: DOCS_SEARCH_LABELS,
 }
 
 /** A tool id safe to print: identifier-ish characters only, capped. */
@@ -194,7 +199,11 @@ export function applyStepChunk(
                 status: 'error',
                 label: failedLabel(labels, p.result),
             }
-        } else if (tool === 'search-docs' && result && result.error) {
+        } else if (
+            (tool === 'search-docs' || tool === 'searchDocs') &&
+            result &&
+            result.error
+        ) {
             next = { status: 'error', label: 'Docs search is unavailable' }
         } else {
             next = {

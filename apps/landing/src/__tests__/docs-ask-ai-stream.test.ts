@@ -209,7 +209,7 @@ const TOOL_CALL = {
     type: 'tool-call',
     payload: {
         toolCallId: 'c1',
-        toolName: 'search-docs',
+        toolName: 'searchDocs',
         args: { query: 'presign' },
     },
 }
@@ -217,7 +217,7 @@ const TOOL_RESULT = {
     type: 'tool-result',
     payload: {
         toolCallId: 'c1',
-        toolName: 'search-docs',
+        toolName: 'searchDocs',
         result: { hits: [{ url: '/docs/server', title: 'Server' }] },
     },
 }
@@ -278,6 +278,7 @@ describe('step trail', () => {
         const text = drawerText()
         expect(text).toContain("Searched the docs for 'presign'")
         for (const leak of [
+            'searchDocs',
             'search-docs',
             'toolCallId',
             'toolName',

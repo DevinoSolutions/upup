@@ -246,6 +246,14 @@ describe('applyStepChunk', () => {
         })
     })
 
+    it('words the searchDocs key the same way, never as a raw tool name', () => {
+        const [running] = fold([call('c1', 'searchDocs', { query: 'presign' })])
+        expect(running?.label).toBe("Searching the docs for 'presign'")
+        expect(
+            applyStepChunk([running!], result('c1', 'searchDocs'))[0]?.label,
+        ).toBe("Searched the docs for 'presign'")
+    })
+
     it('attaches an id-less result to the latest running step of its tool', () => {
         const steps = fold([
             call(undefined, 'apply-config-patch'),
