@@ -320,9 +320,10 @@ describe.skipIf(!RUN)('multipart resume — real MinIO', () => {
         })
         expect(refused.ok).toBe(false)
 
-        // Land the same oversized part through a URL minted the pre-T-5492 way
-        // (no signed length) so the complete-time envelope check stays proven
-        // through a resumed token on its own.
+        // Land the same oversized part through a provider-minted URL with no
+        // signed length (standing in for a legacy pre-cutoff token, which is the
+        // only kind sign-part still serves without a length) so the complete-time
+        // envelope check stays proven through a resumed token on its own.
         const unsigned = await generatePresignedPartUrl(
             storage,
             init.key,

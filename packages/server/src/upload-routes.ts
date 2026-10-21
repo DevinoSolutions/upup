@@ -34,6 +34,7 @@ import {
     verifyUploadToken,
     UploadTokenError,
     DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
+    PART_LENGTH_BINDING_CUTOFF_SECONDS,
     type UploadTokenPayload,
 } from './uploadToken'
 import { resolveUserId, DEFAULT_USER_ID } from './tokenStore'
@@ -423,6 +424,9 @@ export async function handlePresign(
     }
 }
 
+/** S3's per-part ceiling (5 GiB); a client-chosen chunk size may not exceed it. */
+const MAX_PART_SIZE = 5 * 1024 * 1024 * 1024
+
 export async function handleMultipartInit(
     req: Request,
     config: UpupServerConfig,
@@ -448,6 +452,31 @@ export async function handleMultipartInit(
             res,
         )
         if (validationError) return validationError
+
+        // `chunkSizeBytes` is client input and decides the part size the token
+        // binds. Anything that is not a finite positive integer within S3's
+        // part range is refused outright: a fractional or absurd value used to
+        // yield a non-integer part size, which minted a token with no `ps` and
+        // so switched per-part length signing off (T-5492 review). Integers
+        // below the 5 MiB floor are still silently floored by computePartSize
+        // (documented behaviour); null/absent means the server default.
+        const chunk = body.chunkSizeBytes
+        if (
+            chunk !== undefined &&
+            chunk !== null &&
+            (typeof chunk !== 'number' ||
+                !Number.isInteger(chunk) ||
+                chunk <= 0 ||
+                chunk > MAX_PART_SIZE)
+        ) {
+            return res.json(
+                {
+                    error: 'Invalid chunkSizeBytes',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
+            )
+        }
 
         const userId = await resolveUserId(config, req)
         if (userId === null) return res.json({ error: 'Unauthenticated' }, 401)
@@ -487,8 +516,16 @@ export async function handleMultipartInit(
             body.type,
             body.size,
             undefined,
-            body.chunkSizeBytes,
+            chunk ?? undefined,
         )
+        // Every token carries the part size, no exceptions: sign-part derives
+        // each part's signed length from it. A provider that cannot report a
+        // usable one is a server fault, never a reason to mint a token without.
+        if (!Number.isInteger(result.partSize) || result.partSize <= 0) {
+            throw new Error(
+                `multipart init produced an unusable part size: ${String(result.partSize)}`,
+            )
+        }
         assertUploadTokenSecret(config.uploadTokenSecret)
         // Bind the resolved destination into the SIGNED token so every
         // continuation provably lands in this bucket (#337). Omitted entirely
@@ -509,9 +546,7 @@ export async function handleMultipartInit(
             smax: body.size,
             // The server-chosen part size, so sign-part can derive each part's
             // exact length from signed values only (T-5492).
-            ...(Number.isInteger(result.partSize) && result.partSize > 0
-                ? { ps: result.partSize }
-                : {}),
+            ps: result.partSize,
             ...(sid !== undefined ? { sid } : {}),
             exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
             iat: issuedAt,
@@ -758,7 +793,22 @@ export async function handleMultipartSignPart(
         // storage rejects any other body. Without this the envelope was only
         // checked at complete, which an upload that never completes escapes.
         let partLength: number | undefined
-        if (payload.ps !== undefined) {
+        if (payload.ps === undefined) {
+            // Only tokens minted before part sizes were bound may lack `ps`
+            // (see PART_LENGTH_BINDING_CUTOFF_SECONDS); they keep the
+            // complete-time check alone. Any later one is refused.
+            const issuedAt =
+                payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
+            if (issuedAt >= PART_LENGTH_BINDING_CUTOFF_SECONDS) {
+                return res.json(
+                    {
+                        error: 'Upload token carries no part size; restart the upload',
+                        code: UpupErrorCode.AUTH_DENIED,
+                    },
+                    403,
+                )
+            }
+        } else {
             const length = expectedPartLength(
                 payload.smax,
                 payload.ps,

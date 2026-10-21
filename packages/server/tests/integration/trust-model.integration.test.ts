@@ -118,11 +118,12 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     // well under that and upload one real 5 MiB part.
     //
     // Since T-5492 /multipart/sign-part signs the part length, so the handler's
-    // own part URL refuses this body at storage (next test). This test keeps the
-    // complete-time guard honest by minting the part URL the PRE-fix way, with no
-    // signed length (what a token minted before part sizes were bound still
-    // gets), so the oversized part lands and only the envelope check stands
-    // between it and a finalized object.
+    // own part URL refuses this body at storage (next test), and a handler that
+    // mints a no-length URL no longer exists for any token issued after
+    // PART_LENGTH_BINDING_CUTOFF_SECONDS. This test therefore mints the part URL
+    // straight from the provider with no signed length, standing in for a
+    // legacy (pre-cutoff, no `ps`) token, so the oversized part lands and ONLY
+    // the complete-time envelope check stands between it and a finalized object.
     it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
         const handler = createUpupHandler(config)
         const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes

@@ -9,6 +9,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
 import {
+    PART_LENGTH_BINDING_CUTOFF_SECONDS,
     signUploadToken,
     verifyUploadToken,
     type UploadTokenPayload,
@@ -16,12 +17,28 @@ import {
 
 vi.mock('../src/providers/aws', () => ({
     generatePresignedUrl: vi.fn(),
-    initiateMultipartUpload: vi.fn().mockResolvedValue({
-        key: 'uuid-big.zip',
-        uploadId: 'mp-123',
-        partSize: 5 * 1024 * 1024,
-        expiresIn: 3600,
-    }),
+    // Real part-size maths, so a hostile chunkSizeBytes reaches the handler
+    // exactly as it would reach S3 (T-5492 review: it used to slip past `ps`).
+    initiateMultipartUpload: vi.fn(
+        async (
+            _storage: unknown,
+            _key: string,
+            _type: string,
+            size: number,
+            _expires?: number,
+            chunk?: number,
+        ) => {
+            const { computePartSize } = await vi.importActual<
+                typeof import('../src/providers/aws')
+            >('../src/providers/aws')
+            return {
+                key: 'uuid-big.zip',
+                uploadId: 'mp-123',
+                partSize: computePartSize(size, chunk),
+                expiresIn: 3600,
+            }
+        },
+    ),
     generatePresignedPartUrl: vi.fn().mockResolvedValue({
         uploadUrl: 'https://bucket.s3.amazonaws.com/part?presigned',
         expiresIn: 3600,
@@ -148,8 +165,7 @@ describe('POST /multipart/sign-part: signed part length (T-5492)', () => {
         expect(payload.ps).toBe(5 * MiB)
     })
 
-    it('a token minted before part sizes were bound still signs (no length; complete-time check still applies)', async () => {
-        const handler = createUpupHandler(config)
+    const legacyToken = (iat: number) => {
         const legacy: UploadTokenPayload = {
             k: 'uuid-big.zip',
             u: 'mp-123',
@@ -157,13 +173,98 @@ describe('POST /multipart/sign-part: signed part length (T-5492)', () => {
             smin: 0,
             smax: 12 * MiB,
             exp: Math.floor(Date.now() / 1000) + 600,
+            iat,
         }
-        const token = await signUploadToken(SECRET, legacy)
+        return signUploadToken(SECRET, legacy)
+    }
+
+    it('a token minted BEFORE the cutoff without a part size still signs (no length; complete-time check still applies)', async () => {
+        const handler = createUpupHandler(config)
+        const token = await legacyToken(PART_LENGTH_BINDING_CUTOFF_SECONDS - 1)
         const res = await post(handler, '/multipart/sign-part', {
             token,
             partNumber: 2,
         })
         expect(res.status).toBe(200)
         expect(signedLength()).toBeUndefined()
+    })
+
+    it('a token minted AFTER the cutoff without a part size is refused, nothing signed', async () => {
+        const handler = createUpupHandler(config)
+        const token = await legacyToken(PART_LENGTH_BINDING_CUTOFF_SECONDS + 1)
+        const res = await post(handler, '/multipart/sign-part', {
+            token,
+            partNumber: 2,
+        })
+        expect(res.status).toBe(403)
+        expect(partUrl).not.toHaveBeenCalled()
+    })
+})
+
+// The review finding: `chunkSizeBytes` is client input. A value that made
+// computePartSize return a non-integer used to mint a token with NO `ps`, and
+// sign-part then signed part URLs with no length at all.
+describe('POST /multipart/init: hostile chunkSizeBytes cannot switch off length signing (T-5492)', () => {
+    beforeEach(() => {
+        partUrl.mockClear()
+    })
+
+    const initWith = (
+        handler: (r: Request) => Promise<Response>,
+        chunkSizeBytes: unknown,
+    ) =>
+        post(handler, '/multipart/init', {
+            name: 'big.zip',
+            size: 12 * MiB,
+            type: 'application/zip',
+            chunkSizeBytes,
+        })
+
+    it.each([
+        5242880.5,
+        '9e9',
+        '5242880',
+        -5 * MiB,
+        0,
+        Number.MAX_SAFE_INTEGER,
+        6 * 1024 * MiB,
+        true,
+        {},
+    ])('rejects chunkSizeBytes=%j with 400 and mints nothing', async value => {
+        const handler = createUpupHandler(config)
+        const res = await initWith(handler, value)
+        expect(res.status).toBe(400)
+        expect(((await res.json()) as { token?: string }).token).toBeUndefined()
+    })
+
+    it('treats null / absent chunkSizeBytes as "use the server default" (and still binds ps)', async () => {
+        const handler = createUpupHandler(config)
+        for (const value of [undefined, null]) {
+            const res = await initWith(handler, value)
+            expect(res.status).toBe(200)
+            const { token } = (await res.json()) as { token: string }
+            const payload = await verifyUploadToken(SECRET, token, Date.now())
+            expect(payload.ps).toBe(5 * MiB)
+        }
+    })
+
+    it('a valid integer chunk size is honoured, bound into the token and length-signed', async () => {
+        const handler = createUpupHandler(config)
+        const res = await initWith(handler, 8 * MiB)
+        expect(res.status).toBe(200)
+        const { token } = (await res.json()) as { token: string }
+        const payload = await verifyUploadToken(SECRET, token, Date.now())
+        expect(payload.ps).toBe(8 * MiB)
+        await post(handler, '/multipart/sign-part', { token, partNumber: 2 })
+        expect(signedLength()).toBe(4 * MiB)
+    })
+
+    it('an integer chunk below the 5 MiB floor is floored (documented), never left unbound', async () => {
+        const handler = createUpupHandler(config)
+        const res = await initWith(handler, 1024)
+        expect(res.status).toBe(200)
+        const { token } = (await res.json()) as { token: string }
+        const payload = await verifyUploadToken(SECRET, token, Date.now())
+        expect(payload.ps).toBe(5 * MiB)
     })
 })
