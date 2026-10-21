@@ -108,15 +108,25 @@ export async function POST(req: Request): Promise<Response> {
         }),
     ])
 
+    // A disabled dataset is a deliberate no-op, not a failure: report it as its
+    // own outcome so a skipped leg is never mistaken for a broken one.
     const posthog: SupportResponse['posthog'] =
-        phSettled.status === 'fulfilled' && phSettled.value.ok ? 'ok' : 'failed'
-    if (posthog === 'failed') {
+        phSettled.status === 'rejected'
+            ? 'failed'
+            : phSettled.value.ok
+              ? 'ok'
+              : phSettled.value.skipped
+                ? 'skipped'
+                : 'failed'
+    if (posthog === 'skipped') {
+        console.info(
+            `[support] posthog leg skipped for ${feedbackId}: analytics disabled`,
+        )
+    } else if (posthog === 'failed') {
         const reason =
             phSettled.status === 'rejected'
                 ? String(phSettled.reason)
-                : phSettled.value.skipped
-                  ? 'analytics disabled'
-                  : (phSettled.value.error ?? 'unknown error')
+                : (phSettled.value.error ?? 'unknown error')
         // No Sentry exists in this repo — this console.error is the documented
         // gap where an error tracker would capture the failure.
         console.error(
