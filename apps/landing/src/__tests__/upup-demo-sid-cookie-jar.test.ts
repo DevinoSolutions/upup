@@ -215,5 +215,34 @@ describe(
                 ((await res.json()) as { key: string }).key.split('/')[0],
             ).toBe(goodId)
         })
+
+        it('an API request carrying ONLY a legacy Path=/api/upup cookie migrates to one stable Path=/ sid', async () => {
+            const route = await loadRoute()
+            const legacyId = '11111111-2222-4333-8444-555555555555'
+            const jar = new CookieJar()
+            jar.entries.push({
+                name: COOKIE,
+                value: `${legacyId}.${sign(legacyId)}`,
+                path: '/api/upup',
+            })
+
+            // The legacy cookie IS sent on /api/upup (path match), so this is a
+            // valid identity: the proxy keeps it and does not re-mint.
+            const res = navigate(jar, '/api/upup/presign')
+            expect(res.headers.getSetCookie()).toHaveLength(0)
+            expect(await presignOwner(route, jar)).toBe(legacyId)
+
+            // A later page load carries no cookie (path scoping), so it mints a
+            // Path=/ sid and expires the legacy one; from then on there is one sid.
+            navigate(jar, '/')
+            expect(
+                jar.entries.filter(e => e.path === '/api/upup'),
+            ).toHaveLength(0)
+            const [stable] = sids(jar)
+            expect(stable).toBeTruthy()
+            navigate(jar, '/docs')
+            expect(await presignOwner(route, jar)).toBe(stable!.split('.')[0])
+            expect(sids(jar)).toEqual([stable])
+        })
     },
 )

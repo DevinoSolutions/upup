@@ -92,6 +92,57 @@ describe('demo visitor proxy', () => {
     })
 })
 
+describe('demo visitor proxy on the /_t telemetry rewrites', () => {
+    const sid = `${COOKIE}=11111111-2222-4333-8444-555555555555.${sign('11111111-2222-4333-8444-555555555555')}`
+
+    it.each(['/_t/9lc5/i/v0/e/', '/_t/9lc5/x/'])(
+        'strips only the sid from the cookie forwarded to the rewrite (%s)',
+        path => {
+            const res = proxy(page(`ph_phc=abc; ${sid}; other=2`, path))
+            expect(res.headers.get('x-middleware-request-cookie')).toBe(
+                'ph_phc=abc; other=2',
+            )
+            expect(res.headers.get('x-middleware-override-headers')).toContain(
+                'cookie',
+            )
+            expect(res.headers.getSetCookie()).toHaveLength(0)
+        },
+    )
+
+    it('drops the cookie header entirely when the sid was the only cookie', () => {
+        const res = proxy(page(sid, '/_t/9lc5/e/'))
+        expect(res.headers.get('x-middleware-request-cookie')).toBeNull()
+        const overridden = (
+            res.headers.get('x-middleware-override-headers') ?? ''
+        )
+            .split(',')
+            .map(h => h.trim())
+        // Absent from the override list => Next deletes it from the forwarded request.
+        expect(overridden).not.toContain('cookie')
+        expect(res.headers.getSetCookie()).toHaveLength(0)
+    })
+
+    it('strips a legacy/duplicate sid too and never mints', () => {
+        const res = proxy(
+            page(`${COOKIE}=forged; ${sid}; keep=1`, '/_t/9lc5/s/'),
+        )
+        expect(res.headers.get('x-middleware-request-cookie')).toBe('keep=1')
+        expect(res.headers.getSetCookie()).toHaveLength(0)
+    })
+
+    it('does not mint on /_t when there is no cookie, and works without a secret', () => {
+        for (const secret of [SECRET, '']) {
+            vi.stubEnv('UPUP_UPLOAD_TOKEN_SECRET', secret)
+            const bare = proxy(page(undefined, '/_t/9lc5/flags/'))
+            expect(bare.headers.getSetCookie()).toHaveLength(0)
+            const withSid = proxy(page(`a=1; ${sid}`, '/_t/9lc5/flags/'))
+            expect(withSid.headers.get('x-middleware-request-cookie')).toBe(
+                'a=1',
+            )
+        }
+    })
+})
+
 describe('demo visitor proxy matcher', () => {
     const matcher = config.matcher as string[]
 
@@ -112,15 +163,13 @@ describe('demo visitor proxy matcher', () => {
         )
     })
 
+    it('matches the telemetry rewrites only to strip the sid from them', () => {
+        expect(matcher).toContain('/_t/:path*')
+    })
+
     it('never matches assets, telemetry or SEO files', () => {
         const joined = matcher.join(' ')
-        for (const excluded of [
-            '_next',
-            '_t',
-            'favicon',
-            'robots',
-            'sitemap',
-        ]) {
+        for (const excluded of ['_next', 'favicon', 'robots', 'sitemap']) {
             expect(joined).not.toContain(excluded)
         }
         // No catch-all that would sweep in every asset.

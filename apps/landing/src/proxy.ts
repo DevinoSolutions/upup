@@ -3,6 +3,7 @@ import {
     cookieHeaderWithVisitor,
     resolveVisitor,
     visitorCookies,
+    withoutVisitorCookie,
 } from '@/lib/demo-visitor'
 import { requireServerEnv } from '@/lib/env'
 
@@ -15,9 +16,20 @@ import { requireServerEnv } from '@/lib/env'
  * for /api/upup/* the route sees the same identity the response hands out
  * instead of minting a second one.
  *
- * Matcher scope: only paths that can host an uploader or call the demo API,
- * so static assets, `_next/*`, images, the first-party `/_t/` telemetry tunnel
- * and the SEO files never pass through here and keep their CDN caching
+ * HTML responses that carry this Set-Cookie must stay UNCACHED at Cloudflare: a
+ * cached copy would hand every visitor the same sid (T-5781).
+ *
+ * `/_t/*` is the one matched path that never mints: next.config.mjs rewrites it
+ * to PostHog / Sentry, and Next forwards the request's headers (Cookie
+ * included) upstream. The sid is a bearer for a visitor's upload namespace, so
+ * it is stripped from the forwarded Cookie header (other cookies are kept).
+ * Verified in Next 16 source: resolve-routes.js runs the proxy first and applies
+ * its `x-middleware-override-headers` to `req.headers`, then the external
+ * rewrite is served by proxyRequest(req, ...) on that same `req`.
+ *
+ * Matcher scope: only paths that can host an uploader or call the demo API
+ * (plus `/_t/*`, for the strip above), so static assets, `_next/*`, images and
+ * the SEO files never pass through here and keep their CDN caching
  * (Set-Cookie would otherwise make every asset response per-visitor):
  *   /                      homepage demo
  *   /<framework>           framework landing pages (kept in sync with
@@ -25,8 +37,11 @@ import { requireServerEnv } from '@/lib/env'
  *   /docs/*                docs pages with the live demo
  *   /mobile-demo           the embeddable demo page
  *   /api/upup/*            the demo API itself
+ *   /_t/*                  PostHog / Sentry rewrites (strip only, never mint)
  */
 export function proxy(req: NextRequest) {
+    if (req.nextUrl.pathname.startsWith('/_t/')) return stripVisitorCookie(req)
+
     let secret = ''
     try {
         secret = requireServerEnv([
@@ -54,6 +69,20 @@ export function proxy(req: NextRequest) {
     return res
 }
 
+function stripVisitorCookie(req: NextRequest) {
+    const header = req.headers.get('cookie')
+    const kept = withoutVisitorCookie(header)
+    if (
+        kept.length === (header ?? '').split(';').filter(p => p.trim()).length
+    ) {
+        return NextResponse.next()
+    }
+    const headers = new Headers(req.headers)
+    if (kept.length) headers.set('cookie', kept.join('; '))
+    else headers.delete('cookie')
+    return NextResponse.next({ request: { headers } })
+}
+
 export const config = {
     matcher: [
         '/',
@@ -61,5 +90,6 @@ export const config = {
         '/docs/:path*',
         '/mobile-demo',
         '/api/upup/:path*',
+        '/_t/:path*',
     ],
 }

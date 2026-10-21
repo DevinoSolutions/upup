@@ -125,12 +125,18 @@ export function cookieHeaderWithVisitor(
     header: string | null,
     id: string,
 ): string {
-    const kept = (header ?? '')
+    const kept = withoutVisitorCookie(header)
+    kept.push(`${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`)
+    return kept.join('; ')
+}
+
+/** The cookies of a Cookie header MINUS every demo sid (any Path variant),
+ *  each as a `name=value` pair. Empty when the sid was the only cookie. */
+export function withoutVisitorCookie(header: string | null): string[] {
+    return (header ?? '')
         .split(';')
         .map(p => p.trim())
         .filter(p => p && p.split('=')[0]!.trim() !== DEMO_SID_COOKIE)
-    kept.push(`${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`)
-    return kept.join('; ')
 }
 
 /** The handler's `getUserId`. Never null: a request that somehow reaches the
