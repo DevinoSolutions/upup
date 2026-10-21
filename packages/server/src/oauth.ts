@@ -252,19 +252,29 @@ export async function handleOAuthRedirect(
     })
 }
 
-/** The callback, plus: EVERY exit for a known provider clears the nonce cookie
- *  (success already does), so a failed or rejected attempt does not leave a live
- *  nonce in the browser for the rest of its 10 minutes. */
+/** The callback, plus: every exit AFTER the request's state resolved to a real
+ *  pending flow for this provider clears the nonce cookie (success already
+ *  does), so a failed or rejected attempt does not leave a live nonce in the
+ *  browser for the rest of its 10 minutes. A /cb with a missing, unknown or
+ *  other-provider state proves nothing about THIS browser's flow and leaves the
+ *  cookie alone: clearing there would let a cross-site navigation to
+ *  /auth/<p>/cb wipe a victim's in-flight login. */
 export async function handleOAuthCallback(
     req: Request,
     config: UpupServerConfig,
     provider: string,
     res: Responder,
 ): Promise<Response> {
-    const response = await runOAuthCallback(req, config, provider, res)
-    // An unknown provider name is attacker-chosen: never mint a cookie name
-    // from it. The success page already carries its own clearing cookie.
-    if (isValidProvider(provider) && !response.headers.has('Set-Cookie')) {
+    let stateResolved = false
+    const response = await runOAuthCallback(req, config, provider, res, () => {
+        stateResolved = true
+    })
+    // The success page already carries its own clearing cookie.
+    if (
+        stateResolved &&
+        isValidProvider(provider) &&
+        !response.headers.has('Set-Cookie')
+    ) {
         response.headers.append(
             'Set-Cookie',
             nonceSetCookie(req, provider, '', 0),
@@ -278,6 +288,7 @@ async function runOAuthCallback(
     config: UpupServerConfig,
     provider: string,
     res: Responder,
+    onStateResolved: () => void,
 ): Promise<Response> {
     if (!isValidProvider(provider)) {
         return res.json({ error: `Unknown provider: ${provider}` }, 400)
@@ -299,6 +310,7 @@ async function runOAuthCallback(
     if (!stateData || stateData.provider !== provider) {
         return res.json({ error: 'Invalid or expired state' }, 400)
     }
+    onStateResolved()
 
     // Bind the callback to the browser that started the flow. The state is
     // already consumed, so a forged attempt only burns the attacker's own state.
@@ -530,17 +542,35 @@ export async function refreshAccessToken(
     if (!tokens.refreshToken || !config.tokenStore) return null
     const meta = getProviderMeta(config, provider)
     if ('error' in meta) return null
-    const res = await fetch(meta.tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            grant_type: 'refresh_token',
-            refresh_token: tokens.refreshToken,
-            client_id: meta.clientId,
-            client_secret: meta.clientSecret,
-        }),
-        signal: AbortSignal.timeout(TOKEN_ENDPOINT_TIMEOUT_MS),
-    })
+    let res: Response
+    try {
+        res = await fetch(meta.tokenUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: tokens.refreshToken,
+                client_id: meta.clientId,
+                client_secret: meta.clientSecret,
+            }),
+            signal: AbortSignal.timeout(TOKEN_ENDPOINT_TIMEOUT_MS),
+        })
+    } catch (error) {
+        // upup-catch: a stalled or unreachable provider is reported through
+        // onError and answered like any failed refresh (null -> the drive
+        // routes' 401 reauth) instead of escaping as the router's generic 500.
+        // The stored grant is KEPT: a transient stall is not a revoked token,
+        // so the next request can simply try again.
+        reportServerError(config.onError, {
+            route: `auth/${provider}/refresh`,
+            method: 'POST',
+            status: 502,
+            code: UpupErrorCode.AUTH_PROVIDER_ERROR,
+            message: 'Drive token refresh request failed',
+            error: toSafeError(error),
+        })
+        return null
+    }
     if (!res.ok) {
         // Refresh token is dead/revoked -> force a clean re-auth.
         const body = await res.text().catch(() => '')

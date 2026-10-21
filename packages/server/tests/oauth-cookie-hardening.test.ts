@@ -199,7 +199,7 @@ describe('duplicate cookie names (T-5698)', () => {
     })
 })
 
-describe('the nonce cookie is cleared on every /cb exit (T-5698)', () => {
+describe('the nonce cookie is cleared on every /cb exit that carried a real pending state (T-5698)', () => {
     let fetchSpy: ReturnType<typeof vi.spyOn>
     afterEach(() => {
         fetchSpy?.mockRestore()
@@ -245,31 +245,40 @@ describe('the nonce cookie is cleared on every /cb exit (T-5698)', () => {
             expectCleared(res, origin)
         })
 
-        it(`${origin}: 400 invalid state clears it`, async () => {
+        // A /cb with no resolvable state proves nothing about THIS browser's
+        // flow, so it must not touch the cookie: a cross-site navigation to
+        // /auth/<p>/cb would otherwise wipe a victim's in-flight login.
+        it(`${origin}: an unknown or missing state does NOT clear it`, async () => {
             const handler = createUpupHandler(
                 configFor(new InMemoryTokenStore()),
             )
-            const res = await handler(cb(origin, 'not-a-real-state'))
-            expect(res.status).toBe(400)
-            expectCleared(res, origin)
-        })
-
-        it(`${origin}: 400 provider error / missing code clears it`, async () => {
-            const handler = createUpupHandler(
-                configFor(new InMemoryTokenStore()),
-            )
+            const unknown = await handler(cb(origin, 'not-a-real-state'))
+            expect(unknown.status).toBe(400)
+            expect(unknown.headers.get('Set-Cookie')).toBeNull()
             const denied = await handler(
                 new Request(
                     `${origin}/auth/google-drive/cb?error=access_denied`,
                 ),
             )
             expect(denied.status).toBe(400)
-            expectCleared(denied, origin)
+            expect(denied.headers.get('Set-Cookie')).toBeNull()
             const missing = await handler(
                 new Request(`${origin}/auth/google-drive/cb`),
             )
             expect(missing.status).toBe(400)
-            expectCleared(missing, origin)
+            expect(missing.headers.get('Set-Cookie')).toBeNull()
+        })
+
+        it(`${origin}: a state belonging to ANOTHER provider does NOT clear it`, async () => {
+            const handler = createUpupHandler(
+                configFor(new InMemoryTokenStore()),
+            )
+            const { state } = await startFlow(handler, origin)
+            const res = await handler(
+                new Request(`${origin}/auth/dropbox/cb?code=x&state=${state}`),
+            )
+            expect(res.status).toBe(400)
+            expect(res.headers.get('Set-Cookie')).toBeNull()
         })
     }
 
