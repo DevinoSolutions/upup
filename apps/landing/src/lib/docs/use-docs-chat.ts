@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { clientEnv } from '@/lib/client/env'
+import {
+    applyStepChunk,
+    settleSteps,
+    type ChatStep,
+} from '@useupup/interactive-example/ai/chatSteps'
 
 export interface DocsChatMessage {
     id: string
@@ -10,6 +15,11 @@ export interface DocsChatMessage {
     error?: boolean
     /** True while an assistant turn is still receiving streamed tokens. */
     streaming?: boolean
+    /**
+     * Plain-word trail of what the agent did this turn (see chatSteps in
+     * @useupup/interactive-example; never raw tool names, args or results).
+     */
+    steps?: ChatStep[]
 }
 
 // Deliberate slim duplicate of the interactive-example transport: that hook
@@ -30,27 +40,31 @@ export interface DocsChatMessage {
 //   data: {"type":"step-start", ...}
 //   data: {"type":"tool-call-input-streaming-start", ...}
 //   data: {"type":"tool-call-delta", "payload":{"argsTextDelta":"…"}}
-//   data: {"type":"tool-call", ...}
-//   data: {"type":"tool-result", "payload":{"result":{…}}}
+//   data: {"type":"tool-call", "payload":{"toolCallId":"…","toolName":"…","args":{…}}}
+//   data: {"type":"tool-result", "payload":{"toolCallId":"…","toolName":"…","result":{…}}}
 //   data: {"type":"text-start", "payload":{"id":"…"}}
 //   data: {"type":"text-delta", "payload":{"id":"…","text":" enable"}}   ← answer tokens
 //   data: {"type":"text-end", ...}   /   data: {"type":"finish", ...}
-// Only `text-delta` events carry answer text (in `payload.text`); everything
-// else — tool calls, step/lifecycle markers — is ignored. A single network read
-// may contain several events or a partial one, so we buffer and split on the
-// blank-line SSE delimiter.
-function extractTextDeltas(eventBlock: string): string {
-    let out = ''
+// `text-delta` events carry answer text (in `payload.text`); the `tool-*` events
+// feed the step trail (chatSteps words them; nothing raw is kept for display);
+// step/lifecycle markers are ignored. A single network read may contain several
+// events or a partial one, so we buffer and split on the blank-line SSE
+// delimiter.
+interface StreamChunk {
+    type: string
+    payload?: unknown
+}
+
+function parseStreamChunks(eventBlock: string): StreamChunk[] {
+    const out: StreamChunk[] = []
     for (const line of eventBlock.split('\n')) {
         if (!line.startsWith('data:')) continue
         const data = line.slice(5).trim()
         if (!data || data === '[DONE]') continue
         try {
             const evt = JSON.parse(data)
-            if (evt?.type === 'text-delta') {
-                const text = evt?.payload?.text
-                if (typeof text === 'string') out += text
-            }
+            if (typeof evt?.type === 'string')
+                out.push({ type: evt.type, payload: evt.payload })
         } catch {
             // Partial/malformed JSON — the buffering split guarantees we only
             // hand whole `data:` events here, so this is a genuinely bad line;
@@ -101,6 +115,8 @@ export function useDocsChat() {
             }
             const assistantId = `m${++counter.current}`
             const history = [...messages, userMsg]
+            // The turn's step trail, folded from tool chunks as they stream.
+            let steps: ChatStep[] = []
             // Insert the user turn plus an empty streaming assistant placeholder
             // so the panel can render the answer bubble (with its pulsing cursor)
             // the instant tokens start arriving.
@@ -137,6 +153,7 @@ export function useDocsChat() {
                     content: 'Something went wrong answering that. Try again.',
                     error: true,
                     streaming: false,
+                    steps: settleSteps(steps),
                 })
 
             // Non-streaming fallback: the original `/generate` round-trip.
@@ -155,7 +172,11 @@ export function useDocsChat() {
                     const data = await res.json()
                     const text = typeof data.text === 'string' ? data.text : ''
                     if (!text) return false
-                    setAssistant({ content: text, streaming: false })
+                    setAssistant({
+                        content: text,
+                        streaming: false,
+                        steps: settleSteps(steps),
+                    })
                     return true
                 } catch {
                     return false
@@ -165,6 +186,28 @@ export function useDocsChat() {
             try {
                 let streamed = ''
                 let opened = false
+                // Fold one whole SSE event into the answer text and the trail,
+                // writing to state once per event.
+                const consume = (eventBlock: string) => {
+                    let changed = false
+                    for (const chunk of parseStreamChunks(eventBlock)) {
+                        if (chunk.type === 'text-delta') {
+                            const text = (chunk.payload as { text?: unknown })
+                                ?.text
+                            if (typeof text === 'string' && text) {
+                                streamed += text
+                                changed = true
+                            }
+                            continue
+                        }
+                        const next = applyStepChunk(steps, chunk)
+                        if (next !== steps) {
+                            steps = next
+                            changed = true
+                        }
+                    }
+                    if (changed) setAssistant({ content: streamed, steps })
+                }
                 try {
                     const res = await fetch(
                         `${base}/api/agents/docs-agent/stream`,
@@ -200,19 +243,11 @@ export function useDocsChat() {
                             while ((sep = buffer.indexOf('\n\n')) !== -1) {
                                 const evt = buffer.slice(0, sep)
                                 buffer = buffer.slice(sep + 2)
-                                const delta = extractTextDeltas(evt)
-                                if (delta) {
-                                    streamed += delta
-                                    setAssistant({ content: streamed })
-                                }
+                                consume(evt)
                             }
                         }
                         // Flush any trailing event without a closing blank line.
-                        const tail = extractTextDeltas(buffer)
-                        if (tail) {
-                            streamed += tail
-                            setAssistant({ content: streamed })
-                        }
+                        consume(buffer)
                     }
                 } catch {
                     // Fall through to the fallback decision below.
@@ -221,7 +256,11 @@ export function useDocsChat() {
                 if (streamed) {
                     // Got real tokens — finalize with what streamed, even if the
                     // stream later hiccuped; the answer is already useful.
-                    setAssistant({ content: streamed, streaming: false })
+                    setAssistant({
+                        content: streamed,
+                        streaming: false,
+                        steps: settleSteps(steps),
+                    })
                 } else if (!opened) {
                     // Stream never opened (non-200 / network) — try /generate.
                     if (!(await runGenerate())) finishError()

@@ -231,7 +231,10 @@ describe('applyStepChunk', () => {
         expect(running?.label).toBe("Searching the docs for 'presigned URLs'")
         expect(
             applyStepChunk([running!], result('c1', 'search-docs'))[0]?.label,
-        ).toBe('Searched the docs')
+        ).toBe("Searched the docs for 'presigned URLs'")
+        expect(applyStepChunk([], result('c2', 'search-docs'))[0]?.label).toBe(
+            'Searched the docs',
+        )
         expect(
             applyStepChunk(
                 [running!],
@@ -241,6 +244,14 @@ describe('applyStepChunk', () => {
             status: 'error',
             label: 'Docs search is unavailable',
         })
+    })
+
+    it('words the searchDocs key the same way, never as a raw tool name', () => {
+        const [running] = fold([call('c1', 'searchDocs', { query: 'presign' })])
+        expect(running?.label).toBe("Searching the docs for 'presign'")
+        expect(
+            applyStepChunk([running!], result('c1', 'searchDocs'))[0]?.label,
+        ).toBe("Searched the docs for 'presign'")
     })
 
     it('attaches an id-less result to the latest running step of its tool', () => {

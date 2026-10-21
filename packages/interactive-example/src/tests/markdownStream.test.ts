@@ -79,6 +79,32 @@ const FIXTURES: Record<string, string> = {
         '',
         '1. other kind',
     ].join('\n'),
+    // Cells take the same inline markup as paragraphs: code spans, bold, links
+    // (whose label may itself be code), an escaped pipe, and a pipe inside a
+    // code span.
+    tableInline: [
+        'Options:',
+        '',
+        '| Option | Type | Notes |',
+        '| --- | --- | --- |',
+        '| `maxFileSize` | number | See [`limits`](/docs/limits) and **`accept`** |',
+        "| `mode` | `'client' \\| 'server'` | [Read](https://useupup.com/docs/server-mode/) \\| more |",
+        '| `a | b` | x | y |',
+        '',
+        'Done.',
+    ].join('\n'),
+    // The shape a model actually emits for an options table, plus the
+    // double-backtick and spaced forms it sometimes uses.
+    tableCode: [
+        '| Option | Purpose |',
+        '|---|---|',
+        '| `maxFileSize` | Maximum file size in bytes |',
+        '| `allowedFileTypes` | Restrict to specific MIME types or extensions |',
+        '| ``accept`` | Holds a `` `tick` `` too |',
+        '| `maxFiles`  |  Count |',
+        '',
+        'See [Optional Props](/docs/x) for details and examples.',
+    ].join('\n'),
     parenUrls:
         'See https://en.wikipedia.org/wiki/Foo_(bar) and [a](https://en.wikipedia.org/wiki/Foo_(bar)) (or https://x.dev/a). Also https://x.dev/b, then https://x.dev/c((d)) ok.',
     // Thematic breaks: all three characters, spaced runs, one straight after a
@@ -405,9 +431,117 @@ describe('parseMarkdown', () => {
         expect(p.inline[1]).toEqual({
             type: 'link',
             label: 'https://useupup.com/docs',
+            children: [
+                { type: 'text', text: 'https://useupup.com/docs', start: 4 },
+            ],
             href: 'https://useupup.com/docs',
             start: 4,
         })
+    })
+})
+
+describe('inline markup in table cells and link labels', () => {
+    const table = (s: string) => {
+        const block = parseMarkdown(s).find(b => b.type === 'table')
+        if (block?.type !== 'table') throw new Error('expected a table')
+        return block
+    }
+    const types = (cell: Inline[] | undefined) => cell?.map(t => t.type)
+
+    it('parses code, bold and links inside a cell like a paragraph', () => {
+        const { rows } = table(FIXTURES.tableInline!)
+        const [first] = rows
+        expect(types(first?.cells[0])).toEqual(['code'])
+        const notes = first?.cells[2]
+        expect(types(notes)).toEqual(['text', 'link', 'text', 'bold'])
+        const link = notes?.[1]
+        if (link?.type !== 'link') throw new Error('expected a link')
+        expect(link.href).toBe('/docs/limits')
+        expect(types(link.children)).toEqual(['code'])
+        const bold = notes?.[3]
+        if (bold?.type !== 'bold') throw new Error('expected bold')
+        expect(types(bold.children)).toEqual(['code'])
+    })
+
+    it('keeps an escaped pipe in a cell and drops the backslash', () => {
+        const { rows } = table(FIXTURES.tableInline!)
+        const row = rows[1]
+        expect(row?.cells).toHaveLength(3)
+        const code = row?.cells[1]?.[0]
+        expect(code).toMatchObject({
+            type: 'code',
+            text: "'client' | 'server'",
+        })
+        expect(
+            row?.cells[2]?.map(t => (t.type === 'text' ? t.text : '')),
+        ).toEqual(['', ' | more'])
+    })
+
+    it('keeps non-ASCII backtick lookalikes as literal text, and a no-break space beside a real span', () => {
+        const { rows } = table(
+            '| A | B |\n| - | - |\n| ｀maxFileSize｀ | ´x´ |\n| `ok` | y |\n',
+        )
+        expect(types(rows[0]?.cells[0])).toEqual(['text'])
+        expect(types(rows[0]?.cells[1])).toEqual(['text'])
+        expect(types(rows[1]?.cells[0])).toEqual(['code'])
+    })
+
+    it('renders the exact model-shaped options table as code cells', () => {
+        const { header, rows } = table(FIXTURES.tableCode!)
+        expect(header).toHaveLength(2)
+        expect(rows.map(r => r.cells.map(c => types(c)))).toEqual([
+            [['code'], ['text']],
+            [['code'], ['text']],
+            [['code'], ['text', 'code', 'text']],
+            [['code'], ['text']],
+        ])
+        expect(rows[2]?.cells[0]?.[0]).toMatchObject({ text: 'accept' })
+        expect(rows[2]?.cells[1]?.[1]).toMatchObject({ text: ' `tick` ' })
+    })
+
+    it('does not split a cell at a pipe inside a code span', () => {
+        const { rows } = table(FIXTURES.tableInline!)
+        const row = rows[2]
+        expect(row?.cells).toHaveLength(3)
+        expect(row?.cells[0]).toEqual([
+            expect.objectContaining({ type: 'code', text: 'a | b' }),
+        ])
+    })
+
+    it('treats a lone backtick as text, so the pipes after it still split', () => {
+        const { rows } = table('| a | b |\n| - | - |\n| it`s | y |\n')
+        expect(rows[0]?.cells).toHaveLength(2)
+    })
+
+    it('parses the label of an inline link', () => {
+        const [p] = parseMarkdown('See [`maxFileSize` and **more**](/docs/a).')
+        if (p?.type !== 'paragraph') throw new Error('expected a paragraph')
+        const link = p.inline[1]
+        if (link?.type !== 'link') throw new Error('expected a link')
+        expect(link.label).toBe('`maxFileSize` and **more**')
+        expect(types(link.children)).toEqual(['code', 'text', 'bold'])
+    })
+
+    it('never nests a link inside a link label', () => {
+        const [p] = parseMarkdown('[see https://x.dev/a now](https://x.dev/b)')
+        if (p?.type !== 'paragraph') throw new Error('expected a paragraph')
+        const link = p.inline[0]
+        if (link?.type !== 'link') throw new Error('expected a link')
+        expect(types(link.children)).toEqual(['text'])
+    })
+
+    it('shows a table row only once its line is complete, cells and all', () => {
+        const full = FIXTURES.tableInline!
+        const row =
+            '| `maxFileSize` | number | See [`limits`](/docs/limits) and **`accept`** |\n'
+        const at = full.indexOf(row)
+        for (let i = 1; i < row.length; i++) {
+            const shown = stableMarkdownPrefix(full.slice(0, at + i))
+            expect(shown).toBe(full.slice(0, at))
+        }
+        expect(stableMarkdownPrefix(full.slice(0, at + row.length))).toBe(
+            full.slice(0, at + row.length),
+        )
     })
 })
 

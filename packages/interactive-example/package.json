@@ -8,6 +8,14 @@
             "types": "./src/index.ts",
             "default": "./src/index.ts"
         },
+        "./ai/markdownStream": {
+            "types": "./src/ai/markdownStream.ts",
+            "default": "./src/ai/markdownStream.ts"
+        },
+        "./ai/chatSteps": {
+            "types": "./src/ai/chatSteps.ts",
+            "default": "./src/ai/chatSteps.ts"
+        },
         "./styles": "./src/styles.css"
     },
     "scripts": {

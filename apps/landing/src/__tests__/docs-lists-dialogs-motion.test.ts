@@ -186,7 +186,7 @@ describe('Ask AI transcript arrival', () => {
     const a1: DocsChatMessage = {
         id: 'a1',
         role: 'assistant',
-        content: 'Use',
+        content: 'Use the ',
         streaming: true,
     }
 
@@ -210,14 +210,21 @@ describe('Ask AI transcript arrival', () => {
     it('mounts each li once per stable id: no replay on stream growth, a new message, or drawer reopen', () => {
         renderAskAi(true, [u1, a1])
         const [userLi, assistantLi] = transcriptItems()
+        const firstWord = assistantLi.querySelector('p span')
+        expect(firstWord).not.toBeNull()
 
         // Streaming growth: same id, longer text.
-        renderAskAi(true, [u1, { ...a1, content: 'Use the tus strategy.' }])
+        renderAskAi(true, [
+            u1,
+            { ...a1, content: 'Use the tus strategy. Then' },
+        ])
         let items = transcriptItems()
         expect(items[0]).toBe(userLi)
         expect(items[1]).toBe(assistantLi)
         expect(items[1].textContent).toContain('Use the tus strategy.')
-        // The growing text is not itself an animated element.
+        // Growth never replays: only the new words are fresh nodes, the word
+        // that was already shown keeps its element.
+        expect(items[1].querySelector('p span')).toBe(firstWord)
         expect(
             items[1].querySelectorAll('.motion-safe\\:animate-motion-enter'),
         ).toHaveLength(0)

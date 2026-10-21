@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import {
+    Fragment,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ReactNode,
+} from 'react'
 import Link from 'next/link'
 import {
     ArrowUp,
@@ -15,7 +22,14 @@ import {
 import { clientEnv } from '@/lib/client/env'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
+import {
+    parseMarkdown,
+    stableMarkdownPrefix,
+    type Block,
+    type Inline,
+} from '@useupup/interactive-example/ai/markdownStream'
 import type { useDocsChat, DocsChatMessage } from '@/lib/docs/use-docs-chat'
+import { DocsAskAiStepTrail, stepSummary } from './DocsAskAiStepTrail'
 
 const EXAMPLE_QUESTIONS = [
     'How do I enable resumable uploads?',
@@ -43,154 +57,113 @@ function questionForIndex(messages: DocsChatMessage[], index: number): string {
     return ''
 }
 
+// Ease-in for streamed text. While a turn streams, only WHOLE units reach the
+// DOM (stableMarkdownPrefix from the shared parser holds back a half-written
+// link, URL, fence, table or list item), and every word / inline unit / list
+// item / table row / code block is its own element keyed by its source offset.
+// Each therefore mounts exactly once, already complete, and its CSS mount
+// animation eases it in; units already on screen keep their element and never
+// replay. Words and inline units fade (fast); block units fade and rise 6px
+// (base). Both are `motion-safe:` only, so under prefers-reduced-motion the
+// text simply appears.
+const EASE = 'motion-safe:animate-motion-fade'
+const EASE_BLOCK = 'motion-safe:animate-motion-enter'
+
+// Keyboard users must be able to scroll an overflowing code block or table, so
+// both scroll containers are focusable regions with a visible focus ring.
+const SCROLL_FOCUS =
+    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400'
+
 // Assistant rendering: NO innerHTML anywhere — everything is React text nodes,
-// same XSS posture as DocsSearch. Parse order is: fenced code (whole blocks) →
-// block-level (paragraphs / ordered / unordered lists) → inline (bold → links →
-// inline code → plain text).
-export function MessageBody({ content }: { content: string }) {
-    const segments = content.split(/(```[\s\S]*?```)/g)
+// same XSS posture as DocsSearch. Parsing is the playground's small markdown
+// grammar (@useupup/interactive-example/ai/markdownStream): fenced code,
+// tables, nested lists, headings and rules at block level; `code`, **bold**,
+// [label](url) and bare URLs inline. `streaming` renders only the stable prefix
+// of a still-growing answer; a finished answer renders in full.
+export function MessageBody({
+    content,
+    streaming = false,
+}: {
+    content: string
+    streaming?: boolean
+}) {
+    const shown = streaming ? stableMarkdownPrefix(content) : content
+    const blocks = useMemo(() => parseMarkdown(shown), [shown])
     return (
         <>
-            {segments.map((seg, i) => {
-                const fence = /^```([\s\S]*?)```$/.exec(seg)
-                if (fence) {
-                    let code = fence[1]
-                    const nl = code.indexOf('\n')
-                    if (nl !== -1) {
-                        const firstLine = code.slice(0, nl).trim()
-                        // Drop a bare language tag (e.g. `ts`, `bash`) line.
-                        if (/^[a-zA-Z0-9+#-]+$/.test(firstLine))
-                            code = code.slice(nl + 1)
-                    }
-                    return (
-                        <CodeBlock
-                            key={i}
-                            code={code.replace(/^\n+|\n+$/g, '')}
-                        />
-                    )
+            {blocks.map(block => (
+                <BlockNode key={block.start} block={block} />
+            ))}
+        </>
+    )
+}
+
+/** Plain text split into word pieces (word + trailing space), keyed by offset. */
+function Words({ text, start }: { text: string; start: number }) {
+    const pieces: ReactNode[] = []
+    const re = /\S+\s*|\s+/g
+    let m: RegExpExecArray | null
+    while ((m = re.exec(text))) {
+        pieces.push(
+            <span key={start + m.index} className={EASE}>
+                {m[0]}
+            </span>,
+        )
+    }
+    return <>{pieces}</>
+}
+
+function InlineNodes({
+    tokens,
+    ease = true,
+}: {
+    tokens: Inline[]
+    ease?: boolean
+}) {
+    const cls = ease ? EASE : ''
+    return (
+        <>
+            {tokens.map(tok => {
+                switch (tok.type) {
+                    case 'text':
+                        return ease ? (
+                            <Words
+                                key={tok.start}
+                                text={tok.text}
+                                start={tok.start}
+                            />
+                        ) : (
+                            <Fragment key={tok.start}>{tok.text}</Fragment>
+                        )
+                    case 'code':
+                        return (
+                            <code
+                                key={tok.start}
+                                className={`rounded bg-black/[0.06] px-1 py-0.5 text-xs dark:bg-white/10 ${cls}`}
+                            >
+                                {tok.text}
+                            </code>
+                        )
+                    case 'bold':
+                        return (
+                            <strong
+                                key={tok.start}
+                                className={`font-semibold ${cls}`}
+                            >
+                                <InlineNodes
+                                    tokens={tok.children}
+                                    ease={false}
+                                />
+                            </strong>
+                        )
+                    case 'link':
+                        return renderLink(
+                            tok.href,
+                            <InlineNodes tokens={tok.children} ease={false} />,
+                            tok.start,
+                            cls,
+                        )
                 }
-                return <BlockText key={i} text={seg} />
-            })}
-        </>
-    )
-}
-
-type Block =
-    | { type: 'ol'; items: string[] }
-    | { type: 'ul'; items: string[] }
-    | { type: 'p'; text: string }
-
-// Group a non-fence text segment into block-level nodes. Consecutive lines with
-// an ordered (`1. ` / `1) `) or unordered (`- ` / `* `) marker form a single
-// list; a blank line ends a paragraph run; every other run of lines is a
-// paragraph (soft-wrapped into one line — HTML collapses the single newlines
-// anyway). List markers are stripped; each item's remaining text still flows
-// through the inline pipeline.
-export function parseBlocks(text: string): Block[] {
-    const blocks: Block[] = []
-    let para: string[] = []
-    const flushPara = () => {
-        if (para.length) {
-            blocks.push({ type: 'p', text: para.join(' ') })
-            para = []
-        }
-    }
-    for (const line of text.split('\n')) {
-        const ol = /^\s*\d+[.)]\s+(.*)$/.exec(line)
-        const ul = /^\s*[-*]\s+(.*)$/.exec(line)
-        if (ol) {
-            flushPara()
-            const last = blocks[blocks.length - 1]
-            if (last && last.type === 'ol') last.items.push(ol[1])
-            else blocks.push({ type: 'ol', items: [ol[1]] })
-        } else if (ul) {
-            flushPara()
-            const last = blocks[blocks.length - 1]
-            if (last && last.type === 'ul') last.items.push(ul[1])
-            else blocks.push({ type: 'ul', items: [ul[1]] })
-        } else if (line.trim() === '') {
-            flushPara()
-        } else {
-            para.push(line.trim())
-        }
-    }
-    flushPara()
-    return blocks
-}
-
-function BlockText({ text }: { text: string }) {
-    const blocks = parseBlocks(text)
-    if (blocks.length === 0) return null
-    return (
-        <>
-            {blocks.map((block, i) => {
-                if (block.type === 'ol')
-                    return (
-                        <ol
-                            key={i}
-                            className="my-2 list-decimal space-y-1 pl-5 first:mt-0 last:mb-0"
-                        >
-                            {block.items.map((item, j) => (
-                                <li key={j}>
-                                    <TextInline text={item} />
-                                </li>
-                            ))}
-                        </ol>
-                    )
-                if (block.type === 'ul')
-                    return (
-                        <ul
-                            key={i}
-                            className="my-2 list-disc space-y-1 pl-5 first:mt-0 last:mb-0"
-                        >
-                            {block.items.map((item, j) => (
-                                <li key={j}>
-                                    <TextInline text={item} />
-                                </li>
-                            ))}
-                        </ul>
-                    )
-                return (
-                    <p key={i} className="my-2 first:mt-0 last:mb-0">
-                        <TextInline text={block.text} />
-                    </p>
-                )
-            })}
-        </>
-    )
-}
-
-// Inline pipeline entry: bold is the outermost split so `**text**` (including
-// bold that wraps inline code or a link) becomes a <strong> whose children run
-// through the rest of the inline chain (links → inline code → text).
-function TextInline({ text }: { text: string }) {
-    const parts = text.split(/(\*\*[\s\S]+?\*\*)/g)
-    return (
-        <>
-            {parts.map((part, i) => {
-                const bold = /^\*\*([\s\S]+?)\*\*$/.exec(part)
-                if (bold)
-                    return (
-                        <strong key={i} className="font-semibold">
-                            <TextWithLinks text={bold[1]} />
-                        </strong>
-                    )
-                return <TextWithLinks key={i} text={part} />
-            })}
-        </>
-    )
-}
-
-function TextWithLinks({ text }: { text: string }) {
-    const parts = text.split(/(\[[^\]]+\]\([^)]+\)|https?:\/\/\S+)/g)
-    return (
-        <>
-            {parts.map((part, i) => {
-                const md = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
-                if (md) return renderLink(md[2], md[1], i)
-                if (/^https?:\/\/\S+$/.test(part))
-                    return renderLink(part, part, i)
-                return <TextWithCode key={i} text={part} />
             })}
         </>
     )
@@ -198,7 +171,7 @@ function TextWithLinks({ text }: { text: string }) {
 
 // A /docs/... path or a useupup.com docs URL routes through next/link (origin
 // stripped so client navigation stays in-app); anything else opens externally.
-function renderLink(url: string, label: string, key: number) {
+function renderLink(url: string, label: ReactNode, key: number, ease: string) {
     let internalPath: string | null = null
     if (url === '/docs' || url.startsWith('/docs/')) internalPath = url
     else {
@@ -216,7 +189,11 @@ function renderLink(url: string, label: string, key: number) {
     }
     if (internalPath) {
         return (
-            <Link key={key} href={internalPath} className={LINK_CLASS}>
+            <Link
+                key={key}
+                href={internalPath}
+                className={`${LINK_CLASS} ${ease}`}
+            >
                 {label}
             </Link>
         )
@@ -230,9 +207,17 @@ function renderLink(url: string, label: string, key: number) {
             protocol !== 'https:' &&
             protocol !== 'mailto:'
         )
-            return <span key={key}>{label}</span>
+            return (
+                <span key={key} className={ease}>
+                    {label}
+                </span>
+            )
     } catch {
-        return <span key={key}>{label}</span>
+        return (
+            <span key={key} className={ease}>
+                {label}
+            </span>
+        )
     }
     return (
         <a
@@ -240,32 +225,107 @@ function renderLink(url: string, label: string, key: number) {
             href={url}
             target="_blank"
             rel="noreferrer"
-            className={LINK_CLASS}
+            className={`${LINK_CLASS} ${ease}`}
         >
             {label}
         </a>
     )
 }
 
-function TextWithCode({ text }: { text: string }) {
-    const parts = text.split(/(`[^`]+`)/g)
-    return (
-        <>
-            {parts.map((part, i) => {
-                const code = /^`([^`]+)`$/.exec(part)
-                if (code)
-                    return (
-                        <code
-                            key={i}
-                            className="rounded bg-black/[0.06] px-1 py-0.5 text-xs dark:bg-white/10"
-                        >
-                            {code[1]}
-                        </code>
-                    )
-                return <span key={i}>{part}</span>
-            })}
-        </>
-    )
+function BlockNode({ block }: { block: Block }) {
+    switch (block.type) {
+        case 'paragraph':
+            return (
+                <p className="my-2 first:mt-0 last:mb-0">
+                    <InlineNodes tokens={block.inline} />
+                </p>
+            )
+        case 'heading': {
+            // Turn headings sit under the drawer's own heading levels.
+            const Tag = `h${Math.min(block.level + 2, 6)}` as 'h3'
+            return (
+                <Tag
+                    className={`my-2 text-sm font-semibold first:mt-0 last:mb-0 ${EASE_BLOCK}`}
+                >
+                    <InlineNodes tokens={block.inline} ease={false} />
+                </Tag>
+            )
+        }
+        case 'hr':
+            return (
+                <hr
+                    className={`my-2 border-0 border-t border-black/10 dark:border-white/10 ${EASE_BLOCK}`}
+                />
+            )
+        case 'code':
+            return <CodeBlock code={block.code} lang={block.lang} />
+        case 'list': {
+            const items = block.items.map(item => (
+                <li key={item.start} className={EASE_BLOCK}>
+                    <InlineNodes tokens={item.inline} ease={false} />
+                    {item.children.map(child => (
+                        <BlockNode key={child.start} block={child} />
+                    ))}
+                </li>
+            ))
+            return block.ordered ? (
+                <ol
+                    start={block.firstNumber}
+                    className="my-2 list-decimal space-y-1 pl-5 first:mt-0 last:mb-0"
+                >
+                    {items}
+                </ol>
+            ) : (
+                <ul className="my-2 list-disc space-y-1 pl-5 first:mt-0 last:mb-0">
+                    {items}
+                </ul>
+            )
+        }
+        case 'table':
+            return (
+                <div
+                    className={`my-2 max-w-full overflow-x-auto first:mt-0 last:mb-0 ${SCROLL_FOCUS} ${EASE_BLOCK}`}
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Table"
+                >
+                    <table className="border-collapse text-xs">
+                        <thead>
+                            <tr>
+                                {block.header.map((cell, i) => (
+                                    <th
+                                        key={i}
+                                        className="border border-black/10 px-2 py-1 text-left font-semibold dark:border-white/10"
+                                    >
+                                        <InlineNodes
+                                            tokens={cell}
+                                            ease={false}
+                                        />
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {block.rows.map(row => (
+                                <tr key={row.start} className={EASE_BLOCK}>
+                                    {row.cells.map((cell, i) => (
+                                        <td
+                                            key={i}
+                                            className="border border-black/10 px-2 py-1 text-left dark:border-white/10"
+                                        >
+                                            <InlineNodes
+                                                tokens={cell}
+                                                ease={false}
+                                            />
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )
+    }
 }
 
 // A fenced code block: horizontal scroll is contained INSIDE the <pre> (the
@@ -275,10 +335,17 @@ function TextWithCode({ text }: { text: string }) {
 // the pre gets a 48px floor (a one-line fence is ~42px) and 56px of right
 // padding so the button fits inside the card and the end of a long line can be
 // scrolled clear of it.
-function CodeBlock({ code }: { code: string }) {
+function CodeBlock({ code, lang }: { code: string; lang: string }) {
     return (
-        <div className="group relative my-2 first:mt-0 last:mb-0">
-            <pre className="max-w-full overflow-x-auto rounded-md border border-black/10 p-3 pr-9 text-xs max-lg:min-h-12 max-lg:pr-14 dark:border-white/10">
+        <div
+            className={`group relative my-2 first:mt-0 last:mb-0 ${EASE_BLOCK}`}
+        >
+            <pre
+                tabIndex={0}
+                role="region"
+                aria-label={lang ? `${lang} code` : 'Code'}
+                className={`max-w-full overflow-x-auto rounded-md border border-black/10 p-3 pr-9 text-xs max-lg:min-h-12 max-lg:pr-14 dark:border-white/10 ${SCROLL_FOCUS}`}
+            >
                 <code>{code}</code>
             </pre>
             <CopyButton text={code} />
@@ -377,6 +444,20 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
         el.style.height = 'auto'
         el.style.height = `${Math.min(el.scrollHeight, 96)}px`
     }, [input])
+
+    // Announced politely, once per turn: empty while the answer is in flight
+    // (so the region's text changes when it finishes), then a short sentence.
+    const last = messages[messages.length - 1]
+    const announcement =
+        !pending && last && last.role === 'assistant' && !last.streaming
+            ? last.error
+                ? 'The answer failed.'
+                : `Answer ready${
+                      last.steps?.length
+                          ? ` after ${stepSummary(last.steps)}`
+                          : ''
+                  }.`
+            : ''
 
     function ask(question: string) {
         if (!question.trim() || pending) return
@@ -522,28 +603,51 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                                 className={`space-y-1.5 ${ARRIVE}`}
                                             >
                                                 {m.error ? (
-                                                    <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
-                                                        {m.content}{' '}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                ask(question)
+                                                    <>
+                                                        <DocsAskAiStepTrail
+                                                            steps={
+                                                                m.steps ?? []
                                                             }
-                                                            className="underline underline-offset-2"
-                                                        >
-                                                            Retry
-                                                        </button>
-                                                    </p>
+                                                            pending={false}
+                                                        />
+                                                        <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
+                                                            {m.content}{' '}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    ask(
+                                                                        question,
+                                                                    )
+                                                                }
+                                                                className="underline underline-offset-2"
+                                                            >
+                                                                Retry
+                                                            </button>
+                                                        </p>
+                                                    </>
                                                 ) : (
                                                     <>
+                                                        <DocsAskAiStepTrail
+                                                            steps={
+                                                                m.steps ?? []
+                                                            }
+                                                            pending={
+                                                                !!m.streaming
+                                                            }
+                                                        />
                                                         <div className="min-w-0 text-sm leading-relaxed text-gray-700 dark:text-gray-200">
                                                             <MessageBody
                                                                 content={
                                                                     m.content
                                                                 }
+                                                                streaming={
+                                                                    m.streaming
+                                                                }
                                                             />
                                                             {m.streaming ? (
-                                                                m.content ? (
+                                                                stableMarkdownPrefix(
+                                                                    m.content,
+                                                                ) ? (
                                                                     <StreamingCursor />
                                                                 ) : (
                                                                     <TypingIndicator />
@@ -619,6 +723,15 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                             </ul>
                         )}
                     </div>
+
+                    <span
+                        role="status"
+                        aria-live="polite"
+                        data-testid="docs-ask-ai-announcement"
+                        className="sr-only"
+                    >
+                        {announcement}
+                    </span>
 
                     {/* Footer */}
                     <div className="border-t border-black/5 px-4 py-3 dark:border-white/10">

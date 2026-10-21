@@ -94,7 +94,10 @@ function InlineNodes({
                         if (!href)
                             return (
                                 <span key={tok.start} className={cls}>
-                                    {tok.label}
+                                    <InlineNodes
+                                        tokens={tok.children}
+                                        ease={false}
+                                    />
                                 </span>
                             )
                         return (
@@ -105,7 +108,10 @@ function InlineNodes({
                                 target="_blank"
                                 rel="noreferrer noopener"
                             >
-                                {tok.label}
+                                <InlineNodes
+                                    tokens={tok.children}
+                                    ease={false}
+                                />
                             </a>
                         )
                     }
