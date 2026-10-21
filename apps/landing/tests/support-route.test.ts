@@ -209,13 +209,13 @@ describe('POST /api/upup-support', () => {
         expect(last?.status).toBe(429)
     })
 
-    it('no-ops the PostHog client entirely on the disabled dataset', async () => {
+    it('reports the PostHog leg as skipped (not failed) on the disabled dataset', async () => {
         const POST = await loadRoute()
         const res = await POST(makeRequest(payload()))
         const body = await res.json()
 
         expect(h.postHogCtor).not.toHaveBeenCalled()
-        expect(body.posthog).toBe('failed')
+        expect(body.posthog).toBe('skipped')
         expect(body.email).toBe('not_configured')
     })
 

@@ -21,7 +21,7 @@ type Notice = SupportNotice
 interface SupportResponseBody {
     ok: boolean
     feedbackId: string
-    posthog: 'ok' | 'failed'
+    posthog: 'ok' | 'failed' | 'skipped'
     email: 'ok' | 'failed' | 'not_configured'
 }
 
