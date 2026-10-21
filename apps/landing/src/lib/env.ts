@@ -107,10 +107,10 @@ const serverSchema = z.object({
     SENDLY_API_KEY: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),
     SUPPORT_EMAIL_FROM: z.string().min(1).optional(),
-    // '1' / 'true' = Cloudflare is the front door, so the support rate limit may
-    // key on cf-connecting-ip (see lib/support/rate-limit.ts). Anything else,
-    // or unset, ignores that header. Free-form string: a typo must fail closed,
-    // not crash boot.
+    // Explicit override for trusting cf-connecting-ip in the support rate limit
+    // (see lib/support/rate-limit.ts). Unset = trust it only when the immediate
+    // peer is a Cloudflare edge; '1'/'true' = always; '0'/'false' = never.
+    // Free-form string: a typo must fall back to the safe default, not crash boot.
     TRUST_CF_CONNECTING_IP: z.string().optional(),
 })
 

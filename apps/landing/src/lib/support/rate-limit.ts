@@ -4,6 +4,7 @@
 // Fine for a single-region deploy; swap the Map for a shared store to scale out.
 
 import { env } from '@/lib/env'
+import { isCloudflareIp } from '@/lib/support/cloudflare-ips'
 
 type Bucket = { tokens: number; updatedAt: number }
 
@@ -67,10 +68,15 @@ export function bucketCountForTests(): number {
     return buckets.size
 }
 
-/** Cloudflare is the front door only when the deploy says so. */
-function trustsCfConnectingIp(): boolean {
+/** `TRUST_CF_CONNECTING_IP`: `1`/`true` forces trust in the header (an explicit
+ *  operator override, e.g. a tunnel whose peer is not a Cloudflare edge);
+ *  `0`/`false` never trusts it; anything else or unset decides per request from
+ *  the peer address. */
+function cfOverride(): 'force' | 'never' | 'auto' {
     const flag = env.TRUST_CF_CONNECTING_IP
-    return flag === '1' || flag === 'true'
+    if (flag === '1' || flag === 'true') return 'force'
+    if (flag === '0' || flag === 'false') return 'never'
+    return 'auto'
 }
 
 function bounded(ip: string): string {
@@ -79,29 +85,29 @@ function bounded(ip: string): string {
 
 /**
  * Client IP for the rate-limit key. Trust model: the site sits behind
- * Cloudflare and then ONE trusted reverse proxy (Dokploy's Traefik). A request
- * header is only as trustworthy as the hop that wrote it:
+ * Cloudflare and then ONE trusted reverse proxy (Dokploy's Traefik), which
+ * APPENDS the address of the peer it actually saw as the LAST `x-forwarded-for`
+ * entry. That peer is the only address here a client cannot choose. Earlier
+ * entries and `x-real-ip` are client-settable and never trusted.
  *
- * - `cf-connecting-ip` is written (overwritten) by Cloudflare, so it is the
- *   real client address ONLY when Cloudflare is the front door and the origin
- *   is not reachable around it. Anywhere else it is a plain client-settable
- *   header — a forged value would mint a fresh bucket per request and defeat
- *   the limit — so it is honoured ONLY when `TRUST_CF_CONNECTING_IP=1`.
- * - Otherwise the LAST `x-forwarded-for` entry is used: Traefik APPENDS the peer
- *   address it actually saw. Earlier entries (and `x-real-ip`) are
- *   client-settable and never trusted. Behind Cloudflare without the flag this
- *   is a Cloudflare edge address (coarser, shared buckets), which fails
- *   closed rather than open.
+ * `cf-connecting-ip` is written by Cloudflare and nobody else, so it is the real
+ * client address only when the request really came through Cloudflare. A direct
+ * hit on the origin can carry any value in it, so it is honoured ONLY when that
+ * last hop (the immediate peer) is inside Cloudflare's published ranges (see
+ * cloudflare-ips.ts), or when `TRUST_CF_CONNECTING_IP=1` overrides that check.
+ * Otherwise the peer address itself is the key, which fails closed: a forged
+ * header cannot mint buckets.
  */
 export function clientIpFromHeaders(headers: Headers): string {
-    if (trustsCfConnectingIp()) {
-        const cf = headers.get('cf-connecting-ip')?.trim()
-        if (cf) return bounded(cf)
-    }
     const xff = headers.get('x-forwarded-for')
-    if (xff) {
-        const hops = xff.split(',')
-        return bounded(hops[hops.length - 1]?.trim() ?? '')
+    const peer = xff ? (xff.split(',').pop()?.trim() ?? '') : ''
+
+    const override = cfOverride()
+    if (override !== 'never') {
+        const cf = headers.get('cf-connecting-ip')?.trim()
+        if (cf && (override === 'force' || (peer && isCloudflareIp(peer)))) {
+            return bounded(cf)
+        }
     }
-    return 'unknown'
+    return peer ? bounded(peer) : 'unknown'
 }
