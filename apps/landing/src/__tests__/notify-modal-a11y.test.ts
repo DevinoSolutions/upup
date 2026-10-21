@@ -13,6 +13,7 @@ vi.mock('next/link', () => ({
 }))
 
 import HomepageFeatures from '@/components/HomepageFeatures'
+import { submitAndRecordProviderInterest } from '@/components/HomepageFeatures/notify-signup'
 
 ;(
     globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -62,17 +63,31 @@ function isOpen(): boolean {
     return document.querySelector('input[type="email"]') !== null
 }
 
-function press(key: string, shiftKey = false) {
+function press(key: string, shiftKey = false): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+        key,
+        shiftKey,
+        bubbles: true,
+        cancelable: true,
+    })
     act(() => {
         const target = document.activeElement ?? document.body
-        target.dispatchEvent(
-            new KeyboardEvent('keydown', {
-                key,
-                shiftKey,
-                bubbles: true,
-                cancelable: true,
-            }),
-        )
+        target.dispatchEvent(event)
+    })
+    return event
+}
+
+function fillEmail() {
+    const email = dialog().querySelector<HTMLInputElement>(
+        'input[type="email"]',
+    )!
+    const setValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+    )!.set!
+    act(() => {
+        setValue.call(email, 'a@b.co')
+        email.dispatchEvent(new Event('input', { bubbles: true }))
     })
 }
 
@@ -131,31 +146,88 @@ describe('notify modal accessibility', () => {
         expect(document.activeElement).toBe(last)
     })
 
-    it('keeps the honeypot out of the tab cycle', () => {
+    it('marks the honeypot as untabbable and hidden, and the trap skips it', () => {
         openFrom('Instagram')
         const honeypot = dialog().querySelector<HTMLInputElement>(
             'input[name="website"]',
         )!
-        const email = dialog().querySelector<HTMLInputElement>(
-            'input[type="email"]',
-        )!
-        const cancel = [...dialog().querySelectorAll('button')].find(
-            b => b.textContent === 'Cancel',
-        )!
-        const submit = dialog().querySelector<HTMLElement>(
+        expect(honeypot.tabIndex).toBe(-1)
+        expect(honeypot.getAttribute('aria-hidden')).toBe('true')
+
+        // Focus can still land on it programmatically; the trap must treat it
+        // as outside the stop list and send Tab to a real control.
+        const first = dialog().querySelector<HTMLElement>('button')!
+        act(() => honeypot.focus())
+        expect(document.activeElement).toBe(honeypot)
+        const event = press('Tab')
+        expect(event.defaultPrevented).toBe(true)
+        expect(document.activeElement).toBe(first)
+    })
+
+    it('keeps Tab inside while a submit is in flight and the submit button is disabled', () => {
+        vi.mocked(submitAndRecordProviderInterest).mockImplementationOnce(
+            () => new Promise(() => {}),
+        )
+        openFrom('Instagram')
+        fillEmail()
+        const submit = dialog().querySelector<HTMLButtonElement>(
             'button[type="submit"]',
         )!
+        act(() => submit.focus())
+        act(() => submit.click())
+        expect(submit.disabled).toBe(true)
+        expect(document.activeElement).toBe(submit)
 
-        const visited: Element[] = []
-        act(() => email.focus())
-        for (let i = 0; i < 6; i += 1) {
-            press('Tab')
-            visited.push(document.activeElement!)
+        const controls = [...dialog().querySelectorAll<HTMLElement>('button')]
+        const first = controls[0]
+        const enabled = controls.filter(b => !(b as HTMLButtonElement).disabled)
+
+        const forward = press('Tab')
+        expect(forward.defaultPrevented).toBe(true)
+        expect(document.activeElement).toBe(first)
+
+        act(() => submit.focus())
+        const backward = press('Tab', true)
+        expect(backward.defaultPrevented).toBe(true)
+        expect(document.activeElement).toBe(enabled[enabled.length - 1])
+    })
+
+    it('returns focus to the trigger even when the click never focused it', () => {
+        const trigger = plannedTile('Instagram')
+        // Safari and Firefox on macOS do not focus a button on click.
+        act(() => trigger.click())
+        expect(document.activeElement).not.toBe(trigger)
+        press('Escape')
+        expect(document.activeElement).toBe(trigger)
+    })
+
+    it('announces success and drops the success timer when closed early', async () => {
+        vi.useFakeTimers()
+        try {
+            openFrom('Instagram')
+            fillEmail()
+            await act(async () => {
+                dialog()
+                    .querySelector<HTMLButtonElement>('button[type="submit"]')!
+                    .click()
+            })
+            const status = document.querySelector('[role="status"]')
+            expect(status?.textContent).toContain("You're all set!")
+
+            press('Escape')
+            expect(isOpen()).toBe(false)
+
+            // Reopen before the 2 s success timer would have fired: the stale
+            // timer must not close it.
+            openFrom('Instagram')
+            expect(isOpen()).toBe(true)
+            act(() => {
+                vi.advanceTimersByTime(2500)
+            })
+            expect(isOpen()).toBe(true)
+            expect(document.querySelector('[role="status"]')).toBeNull()
+        } finally {
+            vi.useRealTimers()
         }
-        expect(visited).not.toContain(honeypot)
-        // Native tab order between controls is the browser's job; the trap only
-        // has to wrap, so the wrap target is always a real control, not the
-        // honeypot.
-        expect([email, cancel, submit]).toContain(visited[visited.length - 1])
     })
 })
