@@ -83,12 +83,14 @@ describe('landing demo route visitor identity', { timeout: 30_000 }, () => {
         expect(res.status).toBe(200)
 
         const cookies = setCookies(res)
-        expect(cookies).toHaveLength(1)
+        // New Path=/ cookie, then the expiry for the legacy Path=/api/upup one.
+        expect(cookies).toHaveLength(2)
         const cookie = cookies[0]!
         expect(cookie).toMatch(new RegExp(`^${COOKIE}=`))
         expect(cookie).toContain('HttpOnly')
         expect(cookie).toContain('SameSite=Lax')
-        expect(cookie).toContain('Path=/api/upup')
+        expect(cookie).toContain('Path=/;')
+        expect(cookies[1]).toMatch(/Path=\/api\/upup.*Max-Age=0/)
         expect(cookie).toContain('Max-Age=604800')
         expect(cookie).toContain('Secure')
 

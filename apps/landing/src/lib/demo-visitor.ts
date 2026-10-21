@@ -25,7 +25,14 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 const DEMO_SID_COOKIE = 'upup_demo_sid'
 const VISITOR_HEADER = 'x-upup-visitor'
 
-const COOKIE_PATH = '/api/upup'
+// Path=/ is load-bearing: the proxy mints on PAGE requests, and a browser only
+// sends a cookie whose Path prefix-matches the request path. A narrower
+// `/api/upup` path was never sent on page / RSC requests, so the proxy saw no
+// cookie and re-minted a new identity on every navigation.
+const COOKIE_PATH = '/'
+// The pre-fix cookie lived here; it is cleared whenever a new one is minted so a
+// browser never holds (and sends) two cookies with the same name.
+const LEGACY_COOKIE_PATH = '/api/upup'
 const COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 const SID_DOMAIN = 'upup-demo-sid:'
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
@@ -35,14 +42,18 @@ const sign = (secret: string, id: string) =>
         .update(`${SID_DOMAIN}${id}`)
         .digest('base64url')
 
-function readCookie(header: string | null, name: string): string | undefined {
-    if (!header) return undefined
+/** Every value of `name` in a Cookie header, in order. A browser may send
+ *  duplicates (different Paths), so callers must not assume the first is good. */
+function readCookies(header: string | null, name: string): string[] {
+    if (!header) return []
+    const values: string[] = []
     for (const part of header.split(';')) {
         const eq = part.indexOf('=')
         if (eq === -1) continue
-        if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim()
+        if (part.slice(0, eq).trim() === name)
+            values.push(part.slice(eq + 1).trim())
     }
-    return undefined
+    return values
 }
 
 function macMatches(expected: string, actual: string): boolean {
@@ -55,8 +66,7 @@ export function resolveVisitor(
     secret: string,
     req: Request,
 ): { id: string; fresh: boolean } {
-    const raw = readCookie(req.headers.get('cookie'), DEMO_SID_COOKIE)
-    if (raw) {
+    for (const raw of readCookies(req.headers.get('cookie'), DEMO_SID_COOKIE)) {
         const dot = raw.indexOf('.')
         const id = dot === -1 ? '' : raw.slice(0, dot)
         const mac = dot === -1 ? '' : raw.slice(dot + 1)
@@ -79,20 +89,32 @@ function isHttps(req: Request): boolean {
     return new URL(req.url).protocol === 'https:'
 }
 
-/** The Set-Cookie value that hands `id` to the browser. */
-export function visitorCookie(
+/** The Set-Cookie headers that hand `id` to the browser: the new cookie, then
+ *  an expiry for the legacy `Path=/api/upup` one (harmless if absent). */
+export function visitorCookies(
     secret: string,
     id: string,
     req: Request,
-): string {
+): string[] {
+    const secure = isHttps(req) ? ['Secure'] : []
     return [
-        `${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`,
-        `Path=${COOKIE_PATH}`,
-        'HttpOnly',
-        'SameSite=Lax',
-        `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
-        ...(isHttps(req) ? ['Secure'] : []),
-    ].join('; ')
+        [
+            `${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`,
+            `Path=${COOKIE_PATH}`,
+            'HttpOnly',
+            'SameSite=Lax',
+            `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
+            ...secure,
+        ].join('; '),
+        [
+            `${DEMO_SID_COOKIE}=`,
+            `Path=${LEGACY_COOKIE_PATH}`,
+            'HttpOnly',
+            'SameSite=Lax',
+            'Max-Age=0',
+            ...secure,
+        ].join('; '),
+    ]
 }
 
 /** A Cookie request header with the demo sid set to a freshly minted, signed
@@ -103,12 +125,18 @@ export function cookieHeaderWithVisitor(
     header: string | null,
     id: string,
 ): string {
-    const kept = (header ?? '')
+    const kept = withoutVisitorCookie(header)
+    kept.push(`${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`)
+    return kept.join('; ')
+}
+
+/** The cookies of a Cookie header MINUS every demo sid (any Path variant),
+ *  each as a `name=value` pair. Empty when the sid was the only cookie. */
+export function withoutVisitorCookie(header: string | null): string[] {
+    return (header ?? '')
         .split(';')
         .map(p => p.trim())
         .filter(p => p && p.split('=')[0]!.trim() !== DEMO_SID_COOKIE)
-    kept.push(`${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`)
-    return kept.join('; ')
 }
 
 /** The handler's `getUserId`. Never null: a request that somehow reaches the
@@ -137,7 +165,9 @@ export function withDemoVisitor(
         if (!visitor.fresh) return res
 
         const out = new Response(res.body, res)
-        out.headers.append('Set-Cookie', visitorCookie(secret, visitor.id, req))
+        for (const cookie of visitorCookies(secret, visitor.id, req)) {
+            out.headers.append('Set-Cookie', cookie)
+        }
         return out
     }
 }
