@@ -57,8 +57,14 @@ export type Responder = {
      *  x-upup-request-id header on every response. */
     requestId: string
     json(data: unknown, status?: number): Response
-    html(body: string, status?: number): Response
-    redirect(location: string, status?: number): Response
+    /** `extra` headers (e.g. a Set-Cookie) are layered on after the baked-in
+     *  CORS + request-id headers; they cannot remove those. */
+    html(body: string, status?: number, extra?: ResponseHeaders): Response
+    redirect(
+        location: string,
+        status?: number,
+        extra?: ResponseHeaders,
+    ): Response
     noContent(status?: number): Response
     /** One home for every logged failure: reports via the onError seam (redacted),
      *  then returns the uniform `{ error, code }` body. The real cause goes to the
@@ -90,18 +96,19 @@ export function createResponder(
     return {
         requestId,
         json,
-        html: (body, status = 200) =>
+        html: (body, status = 200, extra) =>
             new Response(body, {
                 status,
                 headers: {
                     'Content-Type': 'text/html; charset=utf-8',
                     ...headers,
+                    ...extra,
                 },
             }),
-        redirect: (location, status = 302) =>
+        redirect: (location, status = 302, extra) =>
             new Response(null, {
                 status,
-                headers: { ...headers, Location: location },
+                headers: { ...headers, ...extra, Location: location },
             }),
         noContent: (status = 204) => new Response(null, { status, headers }),
         fail: (route, method, status, code, message, error) => {

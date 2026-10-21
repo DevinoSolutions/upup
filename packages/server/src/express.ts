@@ -14,6 +14,8 @@ interface ExpressReq {
 interface ExpressRes {
     status(code: number): ExpressRes
     setHeader(name: string, value: string): ExpressRes
+    /** Real Express always has it; kept optional so minimal fakes still satisfy the shape. */
+    append?(name: string, value: string): unknown
     send(body: string | Buffer): void
 }
 
@@ -42,6 +44,8 @@ export function createUpupMiddleware(config: UpupServerConfig) {
             {
                 status: c => res.status(c),
                 setHeader: (k, v) => res.setHeader(k, v),
+                appendHeader: (k, v) =>
+                    res.append ? res.append(k, v) : res.setHeader(k, v),
                 send: b => {
                     res.send(b)
                 },

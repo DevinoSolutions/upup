@@ -46,6 +46,10 @@ export function toWebRequest(input: {
 export interface NodeResponseSink {
     status(code: number): void
     setHeader(name: string, value: string): void
+    /** Adds a value without replacing an existing one. Optional; when present,
+     *  every Set-Cookie is emitted through it, so a response with several
+     *  cookies is not collapsed to the last (`Headers.forEach` merges them). */
+    appendHeader?(name: string, value: string): void
     send(body: Buffer): void
 }
 
@@ -57,7 +61,13 @@ export async function writeWebResponse(
     webRes.headers.forEach((value, key) => {
         // Node recomputes content-length from the payload; copying it risks a mismatch.
         if (key.toLowerCase() === 'content-length') return
+        // Set-Cookie cannot be comma-joined; it is written one value at a time below.
+        if (key.toLowerCase() === 'set-cookie') return
         sink.setHeader(key, value)
     })
+    for (const cookie of webRes.headers.getSetCookie()) {
+        if (sink.appendHeader) sink.appendHeader('set-cookie', cookie)
+        else sink.setHeader('set-cookie', cookie)
+    }
     sink.send(Buffer.from(await webRes.arrayBuffer()))
 }
