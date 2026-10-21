@@ -21,7 +21,7 @@ export const SUPPORT_TYPES = [...SUPPORT_FORM_TYPES, 'provider_notify'] as const
 export type SupportType = (typeof SUPPORT_TYPES)[number]
 
 /**
- * Drop C0/C1 control characters while KEEPING tab (0x09), newline (0x0A) and
+ * Drop C0 control characters and DEL while KEEPING tab (0x09), newline (0x0A) and
  * carriage return (0x0D), so a multi-line message survives. Implemented by
  * codepoint rather than a control-character regex (which linters flag).
  */
@@ -42,11 +42,17 @@ export function stripControlChars(value: string): string {
 
 /**
  * For fields rendered on ONE line of the support email (route, PostHog ids):
- * strip control characters, then collapse any remaining tab/CR/LF to a space so
+ * strip control characters (including the C1 range 0x80-0x9F, which
+ * `stripControlChars` leaves alone), then collapse any remaining tab/CR/LF to a space so
  * a value cannot start a forged `Key: value` line in the email body.
  */
 export function toSingleLine(value: string): string {
-    return stripControlChars(value).replace(/\s+/g, ' ').trim()
+    let out = ''
+    for (const ch of stripControlChars(value)) {
+        const code = ch.codePointAt(0) ?? 0
+        if (code < 0x80 || code > 0x9f) out += ch
+    }
+    return out.replace(/\s+/g, ' ').trim()
 }
 
 /** posthog-js anonymous ids are UUIDs; the homepage sign-up flow identifies as `signup:<uuid>`. */
