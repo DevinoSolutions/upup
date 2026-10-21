@@ -756,7 +756,16 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                 type="button"
                                 data-testid="docs-ask-ai-send"
                                 aria-label="Send"
-                                onClick={submit}
+                                onClick={() => {
+                                    submit()
+                                    // Submitting flips `pending`, which disables this
+                                    // button; a focused button that disables makes
+                                    // Chrome drop focus to <body>, so the aside's
+                                    // Escape handler would never fire. Hand focus to
+                                    // the composer first so the drawer stays
+                                    // keyboard-closable.
+                                    textareaRef.current?.focus()
+                                }}
                                 disabled={pending || input.trim().length === 0}
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-black/5 text-gray-600 transition-colors hover:border-black/10 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:text-gray-300 dark:hover:border-white/20 dark:hover:text-white"
                             >
