@@ -10,6 +10,7 @@
 import {
     UpupErrorCode,
     UpupError,
+    UpupStorageError,
     type MultipartResumeResponse,
 } from '@useupup/core'
 import type {
@@ -522,8 +523,10 @@ export async function handleMultipartInit(
         // each part's signed length from it. A provider that cannot report a
         // usable one is a server fault, never a reason to mint a token without.
         if (!Number.isInteger(result.partSize) || result.partSize <= 0) {
-            throw new Error(
+            throw new UpupStorageError(
                 `multipart init produced an unusable part size: ${String(result.partSize)}`,
+                storage.type,
+                'multipart-init',
             )
         }
         assertUploadTokenSecret(config.uploadTokenSecret)
