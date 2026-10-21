@@ -9,6 +9,14 @@ on:
         branches: [master, dev]
     workflow_dispatch:
 
+# A newer push to the same PR cancels the superseded run (T-5373). The
+# E2E-Status rollup cannot go falsely green: a cancelled Resolve-Affected or
+# required job reads non-success and fails the check; the new head's run
+# supplies the passing check. workflow_dispatch runs group by ref.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 # Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
 # setup-node cache:pnpm (F-787) — same mechanism as main.yml / publish.yml.
 

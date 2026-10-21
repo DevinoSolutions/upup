@@ -8,6 +8,15 @@ on:
         branches: [master, dev]
     workflow_dispatch:
 
+# A newer push to the same PR cancels the superseded run (T-5373). Safe for the
+# rollups: cancelling the workflow cancels Status-Check too, and Status-Check
+# (if: always()) fails on any need whose result is not 'success' -- a cancelled
+# or skipped need can never read as green. The new head's run supplies the
+# check. workflow_dispatch runs group by ref.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 # Actions are pinned to full commit SHAs (F-792) to match docker-compose's
 # digest-pinning posture; the trailing comment records the human version.
 # Dependabot's github-actions group updates the SHA pins weekly.
@@ -66,11 +75,21 @@ jobs:
             - name: Script self-tests (quality guard, affected resolver, tarball lib)
               run: pnpm run test:scripts
 
-            - name: Run all package unit suites # F-163 / F-502 — every package, not just react
-              run: pnpm run test # after P1 === `turbo run test --continue`
-
-            - name: Coverage floors (all 9 publishable packages) # F-162 / F-503 — per-package anti-regression ratchets in each vitest.config.ts; turbo --continue so one package cannot mask the rest (F-790: routed through turbo so preact/vanilla see fresh dist)
+            # ONE run of every unit suite (T-5373; previously `pnpm run test` then
+            # `pnpm run test:coverage` ran the 9 publishable suites twice).
+            # test:coverage = the 9 publishable packages' suites WITH their v8
+            # ratchets (F-162 / F-503; turbo --continue so one package cannot mask
+            # the rest, F-790: routed through turbo so preact/vanilla see fresh
+            # dist). The second step runs the remaining workspace suites that have a
+            # `test` script but no coverage config (turbo --filter excludes the 9;
+            # their dists are already on disk from the step above). Together
+            # they cover every package `pnpm run test` did, each exactly once.
+            - name: Unit suites + coverage floors (9 publishable packages)
               run: pnpm run test:coverage
+
+            - name: Unit suites (private packages and apps) # F-163 / F-502
+              if: ${{ !cancelled() }}
+              run: pnpm exec turbo run test --continue --filter='!@useupup/core' --filter='!@useupup/server' --filter='!@useupup/react' --filter='!@useupup/vue' --filter='!@useupup/svelte' --filter='!@useupup/vanilla' --filter='!@useupup/angular' --filter='!@useupup/preact' --filter='!@useupup/next'
 
             - name: Env schema drift
               run: pnpm run env:check
@@ -89,7 +108,7 @@ jobs:
         name: Build project
         runs-on: ubuntu-latest
         timeout-minutes: 30
-        needs: [Prettier-check, Test]
+        needs: [Prettier-check]
         steps:
             - name: Checkout repo
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -115,6 +134,19 @@ jobs:
                   UPUP_E2E_BUCKET: upup-e2e
                   UPUP_E2E_REGION: us-east-1
                   UPUP_E2E_ENDPOINT: http://localhost:9100
+
+            # Bundle-Size and Docs-Gate consume this instead of rebuilding.
+            # Tarred so paths/permissions survive upload-artifact exactly.
+            - name: Pack built dist
+              run: tar -cf built-dist.tar packages/*/dist
+
+            - name: Upload built dist
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: built-dist
+                  path: built-dist.tar
+                  if-no-files-found: error
+                  retention-days: 1
 
     Typecheck:
         name: Typecheck project
@@ -161,15 +193,13 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Build
-              run: pnpm run build
-              env:
-                  MINIO_ROOT_USER: upupadmin
-                  MINIO_ROOT_PASSWORD: upupadmin123
-                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
-                  UPUP_E2E_BUCKET: upup-e2e
-                  UPUP_E2E_REGION: us-east-1
-                  UPUP_E2E_ENDPOINT: http://localhost:9100
+            - name: Download built dist
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+              with:
+                  name: built-dist
+
+            - name: Unpack built dist
+              run: tar -xf built-dist.tar
 
             - name: Size limit
               run: pnpm run size
@@ -273,7 +303,7 @@ jobs:
         name: Docs sync gate
         runs-on: ubuntu-latest
         timeout-minutes: 30
-        needs: [Prettier-check]
+        needs: [Prettier-check, Build]
         steps:
             - name: Checkout repo
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -302,16 +332,14 @@ jobs:
               run: pnpm run docs:snippets:coverage
 
             # check-snippets.mjs type-checks every doc snippet against the built
-            # package dist, so the packages must be built first.
-            - name: Build
-              run: pnpm run build
-              env:
-                  MINIO_ROOT_USER: upupadmin
-                  MINIO_ROOT_PASSWORD: upupadmin123
-                  UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
-                  UPUP_E2E_BUCKET: upup-e2e
-                  UPUP_E2E_REGION: us-east-1
-                  UPUP_E2E_ENDPOINT: http://localhost:9100
+            # package dist: reuse the Build job's output rather than rebuilding.
+            - name: Download built dist
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+              with:
+                  name: built-dist
+
+            - name: Unpack built dist
+              run: tar -xf built-dist.tar
 
             - name: Snippet typecheck (needs built dist)
               run: pnpm run docs:snippets:check
