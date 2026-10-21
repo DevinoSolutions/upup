@@ -59,18 +59,14 @@ export function createUpupPlugin(
 
                 const webRes = await handler(webReq)
 
-                // Several Set-Cookie headers must survive: collect them and hand
-                // Fastify the whole list in one call, so none is replaced by a
-                // later one regardless of how `header()` treats repeats.
-                const cookies: string[] = []
+                // Fastify's reply.header() APPENDS a repeated set-cookie, so
+                // one call per cookie (appendHeader) keeps every value exactly
+                // once; setHeader still replaces for everything else.
                 await writeWebResponse(
                     {
                         status: c => reply.code(c),
                         setHeader: (k, v) => reply.header(k, v),
-                        appendHeader: (k, v) => {
-                            cookies.push(v)
-                            reply.header(k, cookies.slice())
-                        },
+                        appendHeader: (k, v) => reply.header(k, v),
                         send: b => reply.send(b),
                     },
                     webRes,
