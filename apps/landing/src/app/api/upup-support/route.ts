@@ -9,8 +9,8 @@ import { sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
 import { clientIpFromHeaders, takeToken } from '@/lib/support/rate-limit'
 import {
-    stripControlChars,
     supportRequestSchema,
+    toSingleLine,
     type SupportResponse,
 } from '@/lib/support/schema'
 
@@ -19,21 +19,24 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-/** Request bodies above this are rejected before JSON parsing (legit max is ~20 KiB). */
+/** Request bodies above this are rejected before JSON parsing (worst legitimate body is ~24 KiB: 5000-char message and 2000-char outcome at 3 bytes each, plus route/website/ids). */
 const MAX_BODY_BYTES = 32 * 1024
 
 /**
  * Read the body as JSON without ever buffering more than MAX_BODY_BYTES: trust
  * neither `content-length` (absent or lying on chunked bodies) nor the parser.
- * Returns 'too-large' / 'invalid' instead of throwing.
+ * Returns a discriminated result instead of throwing.
  */
 async function readBoundedJson(
     req: Request,
-): Promise<unknown | 'too-large' | 'invalid'> {
+): Promise<
+    | { ok: true; value: unknown }
+    | { ok: false; reason: 'too-large' | 'invalid' }
+> {
     const declared = Number(req.headers.get('content-length'))
     if (Number.isFinite(declared) && declared > MAX_BODY_BYTES)
-        return 'too-large'
-    if (!req.body) return 'invalid'
+        return { ok: false, reason: 'too-large' }
+    if (!req.body) return { ok: false, reason: 'invalid' }
     const reader = req.body.getReader()
     const chunks: Uint8Array[] = []
     let total = 0
@@ -43,16 +46,19 @@ async function readBoundedJson(
         total += value.byteLength
         if (total > MAX_BODY_BYTES) {
             await reader.cancel().catch(() => undefined)
-            return 'too-large'
+            return { ok: false, reason: 'too-large' }
         }
         chunks.push(value)
     }
     try {
-        return JSON.parse(
-            Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8'),
-        )
+        return {
+            ok: true,
+            value: JSON.parse(
+                Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8'),
+            ),
+        }
     } catch {
-        return 'invalid'
+        return { ok: false, reason: 'invalid' }
     }
 }
 
@@ -68,9 +74,10 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     // 2 — parse + validate against the shared schema
-    const raw = await readBoundedJson(req)
-    if (raw === 'too-large') return json(rejected(), 413)
-    if (raw === 'invalid') return json(rejected(), 400)
+    const read = await readBoundedJson(req)
+    if (!read.ok)
+        return json(rejected(), read.reason === 'too-large' ? 413 : 400)
+    const raw = read.value
     const parsed = supportRequestSchema.safeParse(raw)
     if (!parsed.success) return json(rejected(), 400)
 
@@ -93,7 +100,9 @@ export async function POST(req: Request): Promise<Response> {
 
     const { dataset, host } = serverDatasetCredentials()
     const userAgent = req.headers.get('user-agent')
-    const platform = userAgent ? stripControlChars(userAgent) : undefined
+    const platform = userAgent
+        ? toSingleLine(userAgent).slice(0, 200)
+        : undefined
     const route = data.route
 
     const properties = {

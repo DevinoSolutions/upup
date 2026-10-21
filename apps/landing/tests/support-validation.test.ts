@@ -134,3 +134,12 @@ describe('supportRequestSchema input hardening (T-5495)', () => {
         }
     })
 })
+
+describe('toSingleLine C1 handling (T-5941)', () => {
+    it('strips C1 control characters such as U+0085 (NEL) from single-line fields', () => {
+        const result = supportRequestSchema.safeParse(
+            valid({ route: `/a${String.fromCharCode(0x85, 0x9f)}b` }),
+        )
+        expect(result.success && result.data.route).toBe('/ab')
+    })
+})

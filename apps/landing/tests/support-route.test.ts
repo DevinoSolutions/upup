@@ -496,3 +496,102 @@ describe('POST /api/upup-support input hardening (T-5495)', () => {
         expect(sentMail().body.body).not.toContain('\u0001')
     })
 })
+
+describe('POST /api/upup-support follow-up hardening (T-5941)', () => {
+    it('collapses CR/LF in the user-agent so it cannot forge email-body lines', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        // Headers rejects CR/LF at construction, so stub the lookup: this pins
+        // the route's own defense for any runtime that lets one through.
+        const req = makeRequest(payload(), {
+            'x-forwarded-for': '203.0.113.21',
+        })
+        const realGet = req.headers.get.bind(req.headers)
+        req.headers.get = (name: string) =>
+            name.toLowerCase() === 'user-agent'
+                ? 'agent/1.0\r\nApp: forged @ 9.9.9'
+                : realGet(name)
+        const res = await POST(req)
+        expect(res.status).toBe(200)
+        const text = sentMail().body.body
+        expect(text).toContain('Platform: agent/1.0 App: forged @ 9.9.9')
+        expect(text).not.toContain('<br>\nApp: forged')
+    })
+
+    it('caps the user-agent at 200 characters', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(payload(), {
+                'x-forwarded-for': '203.0.113.22',
+                'user-agent': 'u'.repeat(500),
+            }),
+        )
+        expect(res.status).toBe(200)
+        expect(sentMail().body.body).toContain(
+            `Platform: ${'u'.repeat(200)}<br>`,
+        )
+    })
+
+    it('answers 400, not 413, for a JSON body that is the literal string "too-large"', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest('too-large', { 'x-forwarded-for': '203.0.113.23' }),
+        )
+        expect(res.status).toBe(400)
+    })
+
+    it('answers 413 for a streamed body with no content-length that exceeds the cap', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const chunk = new TextEncoder().encode('x'.repeat(8 * 1024))
+        const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+                for (let i = 0; i < 5; i++) controller.enqueue(chunk)
+                controller.close()
+            },
+        })
+        const req = new Request('http://localhost/api/upup-support', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-forwarded-for': '203.0.113.24',
+            },
+            body: stream,
+            duplex: 'half',
+        } as RequestInit)
+        expect(req.headers.get('content-length')).toBeNull()
+        const res = await POST(req)
+        expect(res.status).toBe(413)
+    })
+
+    it('answers 400 for invalid JSON under the cap', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const req = new Request('http://localhost/api/upup-support', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-forwarded-for': '203.0.113.25',
+            },
+            body: '{not json',
+        })
+        const res = await POST(req)
+        expect(res.status).toBe(400)
+    })
+
+    it('measures the cap in bytes, not characters: a multi-byte body under 32K chars but over 32 KiB gets 413', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const body =
+            JSON.stringify(payload({ route: 'é'.repeat(100) })) +
+            'é'.repeat(17_000)
+        expect(body.length).toBeLessThan(32 * 1024)
+        const req = new Request('http://localhost/api/upup-support', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-forwarded-for': '203.0.113.26',
+                'content-length': '100',
+            },
+            body,
+        })
+        const res = await POST(req)
+        expect(res.status).toBe(413)
+    })
+})
