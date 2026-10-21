@@ -318,10 +318,16 @@ export default function StackBlitzDemoSection() {
         if (!showFullscreenWarning) return
         cancelButtonRef.current?.focus()
         function onKeyDown(e: KeyboardEvent) {
-            if (e.key === 'Escape') cancelFullscreenChange()
+            if (e.key !== 'Escape' || e.defaultPrevented) return
+            // Consume the key so a layer underneath (the navbar's mobile menu)
+            // stays open.
+            e.preventDefault()
+            cancelFullscreenChange()
         }
-        document.addEventListener('keydown', onKeyDown)
-        return () => document.removeEventListener('keydown', onKeyDown)
+        // Capture phase: a bubble listener registered earlier (the navbar's
+        // mobile-menu Escape) would otherwise run first and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
+        return () => document.removeEventListener('keydown', onKeyDown, true)
     }, [showFullscreenWarning, cancelFullscreenChange])
 
     return (

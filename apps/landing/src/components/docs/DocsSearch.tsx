@@ -137,12 +137,18 @@ export function DocsSearchDialog({
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault()
                 onOpenChange(!open)
-            } else if (e.key === 'Escape') {
+            } else if (e.key === 'Escape' && open && !e.defaultPrevented) {
+                // Consume the key so a layer underneath (the navbar's mobile
+                // menu) sees it was handled and stays open. Only while open: a
+                // closed dialog must leave Escape for those layers.
+                e.preventDefault()
                 onOpenChange(false)
             }
         }
-        window.addEventListener('keydown', onKeyDown)
-        return () => window.removeEventListener('keydown', onKeyDown)
+        // Capture phase on document: a bubble listener the navbar registered
+        // earlier would otherwise run before this one and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
+        return () => document.removeEventListener('keydown', onKeyDown, true)
     }, [open, onOpenChange])
 
     // Scroll lock. The teardown clears the property OUTRIGHT rather than
