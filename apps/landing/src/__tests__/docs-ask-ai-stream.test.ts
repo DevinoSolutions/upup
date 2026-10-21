@@ -228,6 +228,51 @@ describe('inline markup inside table cells', () => {
     })
 })
 
+// The options table as a model writes it, including double backticks.
+const MODEL_TABLE = [
+    '| Option | Purpose |',
+    '|---|---|',
+    '| `maxFileSize` | Maximum file size in bytes |',
+    '| `allowedFileTypes` | Restrict to specific MIME types or extensions |',
+    '| ``accept`` | Wider `` `tick` `` form |',
+    '',
+    'See [Optional Props](/docs/x) for details and examples.',
+].join('\n')
+
+describe('model-shaped options table', () => {
+    const render = (content: string, streaming: boolean) => {
+        const host = document.createElement('div')
+        host.innerHTML = renderToStaticMarkup(
+            createElement(MessageBody, { content, streaming }),
+        )
+        return host
+    }
+
+    it('renders every option cell as code at every split index, no raw backticks', () => {
+        const done = render(MODEL_TABLE, false)
+        expect(
+            [...done.querySelectorAll('td code')].map(c => c.textContent),
+        ).toEqual(['maxFileSize', 'allowedFileTypes', 'accept', ' `tick` '])
+        for (let n = 0; n <= MODEL_TABLE.length; n++) {
+            const host = render(MODEL_TABLE.slice(0, n), true)
+            for (const td of host.querySelectorAll('td')) {
+                if (td.querySelector('code')) continue
+                expect(td.textContent, `at ${n}`).not.toContain('`')
+            }
+            const table = host.querySelector('table')
+            if (table) expect(table.textContent).not.toMatch(/^s*`|`s*$/)
+        }
+        expect(
+            render(
+                `${MODEL_TABLE}
+
+`,
+                true,
+            ).innerHTML,
+        ).toBe(done.innerHTML)
+    })
+})
+
 describe('streamed text eases in only where motion is allowed', () => {
     it('puts every animation class behind motion-safe, so reduced motion is instant', () => {
         const host = renderStreaming(DOC)

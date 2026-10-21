@@ -113,6 +113,34 @@ function closesFence(line: string, marker: string): boolean {
     return !!m && m[1]![0] === marker[0] && m[1]!.length >= marker.length
 }
 
+const backtickRun = (s: string, i: number) => {
+    let n = 0
+    while (s[i + n] === '`') n++
+    return n
+}
+
+/**
+ * The code span opening at `s[i]`: a run of N backticks closed by the next run
+ * of exactly N (CommonMark), so ``a `b` c`` holds a backtick. The content must
+ * be non-empty. `open`/`close` bound the content; `end` is just past the closer.
+ */
+function codeSpan(
+    s: string,
+    i: number,
+): { open: number; close: number; end: number } | null {
+    const n = backtickRun(s, i)
+    let j = i + n
+    while (j < s.length) {
+        const k = s.indexOf('`', j)
+        if (k === -1) return null
+        const m = backtickRun(s, k)
+        if (m === n)
+            return k > i + n ? { open: i + n, close: k, end: k + n } : null
+        j = k + m
+    }
+    return null
+}
+
 /**
  * Scan `s` left to right. With `stream` false every opener without a closer
  * is literal text and the result is the token list. With `stream` true the
@@ -141,20 +169,22 @@ function scanInline(
     while (i < s.length) {
         const c = s[i]
         if (c === '`') {
-            const j = s.indexOf('`', i + 1)
-            if (j === -1 && stream) return safe
-            if (j > i + 1) {
+            const span = codeSpan(s, i)
+            // A closer touching the end of the text may still be the start
+            // of a longer run, so the span is not settled yet.
+            if (stream && (!span || span.end === s.length)) return safe
+            if (span) {
                 flush(i)
                 tokens.push({
                     type: 'code',
-                    text: s.slice(i + 1, j),
+                    text: s.slice(span.open, span.close),
                     start: base + i,
                 })
-                i = safe = textStart = j + 1
+                i = safe = textStart = span.end
                 continue
             }
-            // `` with nothing between, or no closer at all: literal.
-            const run = j === i + 1 ? 2 : 1
+            // No closer of the same length: the whole run is literal.
+            const run = backtickRun(s, i)
             text += s.slice(i, i + run)
             i += run
             continue
@@ -265,9 +295,7 @@ function cellPipes(s: string): number[] {
         if (c === '\\' && s[i + 1] === '|') {
             i += 2
         } else if (c === '`') {
-            const j = s.indexOf('`', i + 1)
-            if (j > i + 1) i = j + 1
-            else i += j === i + 1 ? 2 : 1
+            i = codeSpan(s, i)?.end ?? i + backtickRun(s, i)
         } else {
             if (c === '|') pipes.push(i)
             i++

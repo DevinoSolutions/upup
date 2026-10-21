@@ -93,6 +93,18 @@ const FIXTURES: Record<string, string> = {
         '',
         'Done.',
     ].join('\n'),
+    // The shape a model actually emits for an options table, plus the
+    // double-backtick and spaced forms it sometimes uses.
+    tableCode: [
+        '| Option | Purpose |',
+        '|---|---|',
+        '| `maxFileSize` | Maximum file size in bytes |',
+        '| `allowedFileTypes` | Restrict to specific MIME types or extensions |',
+        '| ``accept`` | Holds a `` `tick` `` too |',
+        '| `maxFiles`  |  Count |',
+        '',
+        'See [Optional Props](/docs/x) for details and examples.',
+    ].join('\n'),
     parenUrls:
         'See https://en.wikipedia.org/wiki/Foo_(bar) and [a](https://en.wikipedia.org/wiki/Foo_(bar)) (or https://x.dev/a). Also https://x.dev/b, then https://x.dev/c((d)) ok.',
     // Thematic breaks: all three characters, spaced runs, one straight after a
@@ -463,6 +475,19 @@ describe('inline markup in table cells and link labels', () => {
         expect(
             row?.cells[2]?.map(t => (t.type === 'text' ? t.text : '')),
         ).toEqual(['', ' | more'])
+    })
+
+    it('renders the exact model-shaped options table as code cells', () => {
+        const { header, rows } = table(FIXTURES.tableCode!)
+        expect(header).toHaveLength(2)
+        expect(rows.map(r => r.cells.map(c => types(c)))).toEqual([
+            [['code'], ['text']],
+            [['code'], ['text']],
+            [['code'], ['text', 'code', 'text']],
+            [['code'], ['text']],
+        ])
+        expect(rows[2]?.cells[0]?.[0]).toMatchObject({ text: 'accept' })
+        expect(rows[2]?.cells[1]?.[1]).toMatchObject({ text: ' `tick` ' })
     })
 
     it('does not split a cell at a pipe inside a code span', () => {
