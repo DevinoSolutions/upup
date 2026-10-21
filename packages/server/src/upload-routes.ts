@@ -507,6 +507,11 @@ export async function handleMultipartInit(
             uid: owner,
             smin: 0,
             smax: body.size,
+            // The server-chosen part size, so sign-part can derive each part's
+            // exact length from signed values only (T-5492).
+            ...(Number.isInteger(result.partSize) && result.partSize > 0
+                ? { ps: result.partSize }
+                : {}),
             ...(sid !== undefined ? { sid } : {}),
             exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
             iat: issuedAt,
@@ -659,6 +664,7 @@ export async function handleMultipartResume(
             uid: payload.uid,
             smin: payload.smin,
             smax: payload.smax,
+            ...(payload.ps !== undefined ? { ps: payload.ps } : {}),
             ...(payload.sid !== undefined ? { sid: payload.sid } : {}),
             // Clamp to the resume window, not a fresh full TTL. The window is
             // the operator's stated cap on how long a leaked token stays
@@ -688,6 +694,24 @@ export async function handleMultipartResume(
             error,
         )
     }
+}
+
+/** Exact byte length of part `partNumber` of a `size`-byte file cut into
+ *  `partSize` parts (every part full except the final remainder), or `null`
+ *  when the part number is not one the file has. */
+function expectedPartLength(
+    size: number,
+    partSize: number,
+    partNumber: unknown,
+): number | null {
+    if (typeof partNumber !== 'number' || !Number.isInteger(partNumber)) {
+        return null
+    }
+    const totalParts = Math.max(1, Math.ceil(size / partSize))
+    if (partNumber < 1 || partNumber > totalParts) return null
+    return partNumber < totalParts
+        ? partSize
+        : size - (totalParts - 1) * partSize
 }
 
 export async function handleMultipartSignPart(
@@ -729,11 +753,35 @@ export async function handleMultipartSignPart(
             payload.sid,
         )
         if (storage instanceof Response) return storage
+        // T-5492: when the token binds a part size, the part number must be one
+        // the file actually has and the URL signs that part's exact length, so
+        // storage rejects any other body. Without this the envelope was only
+        // checked at complete, which an upload that never completes escapes.
+        let partLength: number | undefined
+        if (payload.ps !== undefined) {
+            const length = expectedPartLength(
+                payload.smax,
+                payload.ps,
+                body.partNumber,
+            )
+            if (length === null) {
+                return res.json(
+                    {
+                        error: 'Invalid part number',
+                        code: UpupErrorCode.BAD_REQUEST,
+                    },
+                    400,
+                )
+            }
+            partLength = length
+        }
         const result = await generatePresignedPartUrl(
             storage,
             payload.k,
             payload.u,
             body.partNumber,
+            undefined,
+            partLength,
         )
         const rewritten = await applyPresignResponseHook(config, result, {
             req,

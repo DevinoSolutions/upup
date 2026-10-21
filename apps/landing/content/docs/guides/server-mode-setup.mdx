@@ -219,6 +219,29 @@ shows the happy path; steps 4 and 5 below cover finishing and recovering:
     included. See
     [Cross-reload resume](/docs/resumable-uploads/#cross-reload-resume).
 
+    This is also the backstop for uploads that are started and never
+    completed. The signed part URLs pin every part to its exact expected
+    length, so such an upload cannot hold more than the size declared at
+    `init` (which `maxFileSize` already capped), but the stored parts are only
+    reclaimed by this rule or by an explicit abort.
+
+    ```json
+    {
+        "Rules": [
+            {
+                "ID": "abort-incomplete-multipart-uploads",
+                "Status": "Enabled",
+                "Filter": { "Prefix": "" },
+                "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+            }
+        ]
+    }
+    ```
+
+    Apply it with `aws s3api put-bucket-lifecycle-configuration --bucket
+    <bucket> --lifecycle-configuration file://rule.json` (add `--endpoint-url`
+    for MinIO, R2 and other S3-compatible stores).
+
 </Callout>
 
 Two consequences worth knowing:

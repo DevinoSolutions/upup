@@ -278,6 +278,16 @@ type MultipartSignPartResponse = {
 
 This handler returns `uploadUrl` and `expiresIn: 3600`.
 
+**The part length is signed.** `init` binds the part size into the token, so
+this route knows how long every part must be: `partSize` for each part but the
+last, and the remainder for the final one. That length is signed into the
+returned URL (`content-length` is a signed header), so storage itself rejects a
+`PUT` whose body is any other size. A `partNumber` outside `1..ceil(size /
+partSize)` is refused with `400 Invalid part number` and nothing is signed.
+This enforces the size envelope per part, at upload time, which also covers
+uploads that never reach `/multipart/complete`. Tokens minted before the part
+size was bound keep working but fall back to the complete-time check alone.
+
 **Token failures.** A missing, tampered, or stale token returns `403` with the
 specific reason, so you can tell a bug from an expiry:
 
@@ -344,8 +354,9 @@ This handler returns `key`, a signed `downloadUrl` (three days by default, see
 `downloadUrlExpiresIn`), and `etag` when S3
 supplied one.
 
-**The envelope check.** Because `sign-part` and the browser's direct PUTs never
-re-send a size, the real byte total is only knowable here. The handler sums what
+**The envelope check.** `sign-part` pins each part's length, but the real byte
+total is only confirmed here, and this check stays as defence in depth (and as
+the only guard for tokens minted before part lengths were signed). The handler sums what
 S3 actually received (`ListParts`) and compares it against the `[smin, smax]`
 range signed at `init`. Outside that range, the multipart upload is **aborted**
 — nothing partial is left in the bucket — and the request gets:

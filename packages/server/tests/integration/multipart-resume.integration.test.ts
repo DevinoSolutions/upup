@@ -20,6 +20,7 @@ import {
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createUpupHandler } from '../../src/handler'
+import { generatePresignedPartUrl } from '../../src/providers/aws'
 import type { UpupServerConfig, UpupStorageConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
@@ -304,7 +305,36 @@ describe.skipIf(!RUN)('multipart resume — real MinIO', () => {
         expect(resumed.parts).toEqual([])
 
         const oversized = new Uint8Array(PART_SIZE).fill(3) // 5 MiB >> 1 KiB
-        const eTag = await putPart(handler, resumed.token, 1, oversized)
+
+        // T-5492: the resumed token still carries the part size, so the part URL
+        // it signs is length-bound and storage refuses the oversized body.
+        const signed = (await (
+            await post(handler, '/multipart/sign-part', {
+                token: resumed.token,
+                partNumber: 1,
+            })
+        ).json()) as SignedPartBody
+        const refused = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: oversized,
+        })
+        expect(refused.ok).toBe(false)
+
+        // Land the same oversized part through a URL minted the pre-T-5492 way
+        // (no signed length) so the complete-time envelope check stays proven
+        // through a resumed token on its own.
+        const unsigned = await generatePresignedPartUrl(
+            storage,
+            init.key,
+            init.uploadId,
+            1,
+        )
+        const put = await fetch(unsigned.uploadUrl, {
+            method: 'PUT',
+            body: oversized,
+        })
+        expect(put.status).toBe(200)
+        const eTag = put.headers.get('etag') as string
 
         const done = await post(handler, '/multipart/complete', {
             token: resumed.token,

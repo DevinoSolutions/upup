@@ -21,6 +21,14 @@ export interface UploadTokenPayload {
     /** Maximum allowed total size, bytes. */
     smax: number
     /**
+     * Part size (bytes) the server chose at init. Together with `smax` (the
+     * exact size declared at init) it fixes the length of every part, which
+     * sign-part signs into the part URL so storage refuses any other body
+     * length. Optional: tokens minted before it existed carry none and fall
+     * back to the complete-time envelope check alone.
+     */
+    ps?: number
+    /**
      * Opaque identity of the storage this upload's `init` resolved (#337).
      * Present only when `config.storage` is a resolver; a static config binds
      * nothing because there is only ever one destination. Signed, so the client
@@ -164,7 +172,11 @@ export async function verifyUploadToken(
         typeof payload.exp !== 'number' ||
         typeof payload.smin !== 'number' ||
         typeof payload.smax !== 'number' ||
-        (payload.sid !== undefined && typeof payload.sid !== 'string')
+        (payload.sid !== undefined && typeof payload.sid !== 'string') ||
+        (payload.ps !== undefined &&
+            (typeof payload.ps !== 'number' ||
+                !Number.isInteger(payload.ps) ||
+                payload.ps <= 0))
     ) {
         throw new UploadTokenError(
             'malformed',
