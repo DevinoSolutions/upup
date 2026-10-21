@@ -613,20 +613,30 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 
 - `main.yml` — PRs to master/dev (+ manual dispatch): prettier → test-quality
   guard (`pnpm run test:quality`) + script self-tests (`pnpm run test:scripts`)
-  → all-package unit suites
-  (`pnpm run test`) + per-package v8 coverage **anti-regression ratchets** on all
-  nine publishable packages (`pnpm run test:coverage`) — NOT a uniform bar: each
+  → every unit suite exactly ONCE (T-5373): `pnpm run test:coverage` runs the
+  nine publishable packages' suites with their per-package v8 **anti-regression
+  ratchets**, then a `turbo run test --filter='!…'` step runs the remaining
+  private package/app suites (it excludes the nine by name — a NEW publishable
+  package must be added to both that filter and `test:coverage`). The old
+  separate `pnpm run test` step ran the nine twice. Ratchets — NOT a uniform bar: each
   threshold is hand-tuned ~3 pts below that package's measured coverage and they
   span ~12%–97% (svelte/preact floors are near-vacuous), so the gate's real
   strength is uneven (F-789). `test:coverage` is a turbo task (F-790), so
   preact/vanilla coverage sees fresh dist regardless of invocation order →
-  typecheck → build → size-limit → a prod-scoped
+  typecheck → build (runs in parallel with Test, uploads `packages/*/dist` as
+  the one-day `built-dist` artifact; Bundle-Size and Docs-Gate `needs: Build`
+  and download it instead of rebuilding) → size-limit → a prod-scoped
   dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
   fails on high+ advisories reachable from the 9 publishable packages'
   production trees only (dev-only apps/private-package noise is excluded by
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
+  Both `main.yml` and `e2e.yml` carry a top-level `concurrency` group
+  (`workflow-PR number or ref`, `cancel-in-progress: true`): a newer push
+  cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
+  `if: always()`) fail on any need whose result is not `success` (E2E: not
+  `success`/sanctioned `skipped`), so a cancelled run can never read green.
 - `e2e.yml` — PRs to master/dev: **affected-test routed**. A `Resolve-Affected`
   job classifies the diff via `scripts/ci/resolve-affected-tests.mjs` (impact
   map in code, unit-tested by `test:scripts`; fail-open — an unmatched path
