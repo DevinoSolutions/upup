@@ -85,3 +85,52 @@ describe('stripControlChars', () => {
         )
     })
 })
+
+describe('supportRequestSchema input hardening (T-5495)', () => {
+    it('collapses line breaks and control characters out of the single-line route field so it cannot forge email-body lines', () => {
+        const result = supportRequestSchema.safeParse(
+            valid({ route: '/docs\r\nApp: forged\u0000@9.9.9\u0007' }),
+        )
+        expect(result.success).toBe(true)
+        expect(result.success && result.data.route).toBe(
+            '/docs App: forged@9.9.9',
+        )
+    })
+
+    it('strips control characters from the PostHog session id', () => {
+        const result = supportRequestSchema.safeParse(
+            valid({ posthogSessionId: 'sess\nion\u0000-1' }),
+        )
+        expect(result.success && result.data.posthogSessionId).toBe(
+            'sess ion-1',
+        )
+    })
+
+    it('keeps a posthog-js anonymous UUID distinct id', () => {
+        const id = randomUUID()
+        const result = supportRequestSchema.safeParse(
+            valid({ posthogDistinctId: id }),
+        )
+        expect(result.success && result.data.posthogDistinctId).toBe(id)
+    })
+
+    it('keeps the homepage sign-up person id (signup:<uuid>)', () => {
+        const id = `signup:${randomUUID()}`
+        const result = supportRequestSchema.safeParse(
+            valid({ posthogDistinctId: id }),
+        )
+        expect(result.success && result.data.posthogDistinctId).toBe(id)
+    })
+
+    it('drops a distinct id that is not an anonymous or sign-up id, so a client cannot attribute events to an arbitrary person', () => {
+        for (const forged of ['admin@example.com', 'user_12345', 'signup:x']) {
+            const result = supportRequestSchema.safeParse(
+                valid({ posthogDistinctId: forged }),
+            )
+            expect(result.success).toBe(true)
+            expect(result.success && result.data.posthogDistinctId).toBe(
+                undefined,
+            )
+        }
+    })
+})

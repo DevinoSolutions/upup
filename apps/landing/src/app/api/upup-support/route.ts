@@ -9,6 +9,7 @@ import { sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
 import { clientIpFromHeaders, takeToken } from '@/lib/support/rate-limit'
 import {
+    stripControlChars,
     supportRequestSchema,
     type SupportResponse,
 } from '@/lib/support/schema'
@@ -17,6 +18,43 @@ import {
 // Node runtime and never be statically cached.
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+/** Request bodies above this are rejected before JSON parsing (legit max is ~20 KiB). */
+const MAX_BODY_BYTES = 32 * 1024
+
+/**
+ * Read the body as JSON without ever buffering more than MAX_BODY_BYTES: trust
+ * neither `content-length` (absent or lying on chunked bodies) nor the parser.
+ * Returns 'too-large' / 'invalid' instead of throwing.
+ */
+async function readBoundedJson(
+    req: Request,
+): Promise<unknown | 'too-large' | 'invalid'> {
+    const declared = Number(req.headers.get('content-length'))
+    if (Number.isFinite(declared) && declared > MAX_BODY_BYTES)
+        return 'too-large'
+    if (!req.body) return 'invalid'
+    const reader = req.body.getReader()
+    const chunks: Uint8Array[] = []
+    let total = 0
+    for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        total += value.byteLength
+        if (total > MAX_BODY_BYTES) {
+            await reader.cancel().catch(() => undefined)
+            return 'too-large'
+        }
+        chunks.push(value)
+    }
+    try {
+        return JSON.parse(
+            Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8'),
+        )
+    } catch {
+        return 'invalid'
+    }
+}
 
 export async function POST(req: Request): Promise<Response> {
     // 1 — per-IP rate limit
@@ -30,12 +68,9 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     // 2 — parse + validate against the shared schema
-    let raw: unknown
-    try {
-        raw = await req.json()
-    } catch {
-        return json(rejected(), 400)
-    }
+    const raw = await readBoundedJson(req)
+    if (raw === 'too-large') return json(rejected(), 413)
+    if (raw === 'invalid') return json(rejected(), 400)
     const parsed = supportRequestSchema.safeParse(raw)
     if (!parsed.success) return json(rejected(), 400)
 
@@ -57,7 +92,8 @@ export async function POST(req: Request): Promise<Response> {
     if (prior) return json(prior, 200)
 
     const { dataset, host } = serverDatasetCredentials()
-    const platform = req.headers.get('user-agent') ?? undefined
+    const userAgent = req.headers.get('user-agent')
+    const platform = userAgent ? stripControlChars(userAgent) : undefined
     const route = data.route
 
     const properties = {

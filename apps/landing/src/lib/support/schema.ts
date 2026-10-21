@@ -41,6 +41,19 @@ export function stripControlChars(value: string): string {
 }
 
 /**
+ * For fields rendered on ONE line of the support email (route, PostHog ids):
+ * strip control characters, then collapse any remaining tab/CR/LF to a space so
+ * a value cannot start a forged `Key: value` line in the email body.
+ */
+export function toSingleLine(value: string): string {
+    return stripControlChars(value).replace(/\s+/g, ' ').trim()
+}
+
+/** posthog-js anonymous ids are UUIDs; the homepage sign-up flow identifies as `signup:<uuid>`. */
+const POSTHOG_DISTINCT_ID =
+    /^(?:signup:)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
  * Shared request schema — imported by both the client form and the API route
  * so a single source defines the contract. Trims + strips control characters,
  * enforces the length bounds, and requires an email only when a reply is
@@ -65,9 +78,23 @@ export const supportRequestSchema = z
         wantsReply: z.boolean(),
         email: z.string().max(320).email().optional(),
         feedbackId: z.string().uuid(),
-        posthogSessionId: z.string().max(200).optional(),
-        posthogDistinctId: z.string().max(200).optional(),
-        route: z.string().max(200).optional(),
+        posthogSessionId: z
+            .string()
+            .max(200)
+            .transform(toSingleLine)
+            .optional(),
+        // The server uses this as the captured event's distinct_id, so an
+        // arbitrary client value could attribute events to any person. Only
+        // the two shapes this site's client produces are kept; anything else
+        // is dropped (the event falls back to `anonymous:<feedbackId>`).
+        posthogDistinctId: z
+            .string()
+            .max(200)
+            .transform(value =>
+                POSTHOG_DISTINCT_ID.test(value) ? value : undefined,
+            )
+            .optional(),
+        route: z.string().max(200).transform(toSingleLine).optional(),
         website: z.string().max(500).optional(),
         // E2E correlation channel — honored ONLY on the `e2e` dataset (the route
         // merges them into the captured event's properties there and ignores
