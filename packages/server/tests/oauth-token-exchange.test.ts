@@ -167,6 +167,56 @@ describe('OAuth token exchange validation + timeout (T-5494)', () => {
             expect(next?.accessToken).toBe('NEW')
         })
 
+        it('a stalled/failed refresh (TimeoutError) is reported through onError and answers like any failed refresh: null -> reauth, tokens kept for a retry', async () => {
+            const onError = vi.fn()
+            fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockRejectedValue(
+                    new DOMException('timed out', 'TimeoutError'),
+                )
+            const next = await refreshAccessToken(
+                { ...config, onError },
+                'google-drive',
+                DEFAULT_USER_ID,
+                stale,
+            )
+            expect(next).toBeNull()
+            expect(onError).toHaveBeenCalledTimes(1)
+            expect(onError.mock.calls[0]![0]).toMatchObject({
+                route: 'auth/google-drive/refresh',
+            })
+            // A transient stall is not a revoked token: do not wipe the grant.
+            expect(
+                (
+                    await getTokens(
+                        config.tokenStore!,
+                        DEFAULT_USER_ID,
+                        'google-drive',
+                    )
+                )?.refreshToken,
+            ).toBe('RT')
+        })
+
+        it('through the drive route a refresh stall is the 401 reauth shape, never a router 500', async () => {
+            const store = new InMemoryTokenStore()
+            await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+                accessToken: 'OLD',
+                refreshToken: 'RT',
+                expiresAt: Date.now() - 1000,
+            })
+            fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockRejectedValue(
+                    new DOMException('timed out', 'TimeoutError'),
+                )
+            const handler = createUpupHandler(makeConfig(store))
+            const res = await handler(
+                new Request('http://localhost/files/google-drive'),
+            )
+            expect(res.status).toBe(401)
+            expect(await res.json()).toMatchObject({ reauth: true })
+        })
+
         it('a refresh answering 200 without access_token forces re-auth instead of storing undefined', async () => {
             fetchSpy = vi
                 .spyOn(globalThis, 'fetch')
