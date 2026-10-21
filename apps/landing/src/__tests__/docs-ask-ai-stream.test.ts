@@ -367,7 +367,10 @@ const TOOL_RESULT = {
         },
     },
 }
-const delta = (text: string) => ({ type: 'text-delta', payload: { text } })
+const delta = (text: string, id?: string) => ({
+    type: 'text-delta',
+    payload: id === undefined ? { text } : { id, text },
+})
 
 const drawerText = () =>
     container.querySelector('[data-testid="docs-ask-ai-drawer"]')!.textContent!
@@ -537,5 +540,78 @@ describe('step trail', () => {
 
         expect(trailButton()).toBeNull()
         expect(announcement()).toBe('Answer ready.')
+    })
+})
+
+describe('text parts around a tool step', () => {
+    const answer = () => chat.messages[chat.messages.length - 1]!.content
+
+    it('separates the text before and after a tool call into paragraphs', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            { type: 'text-start', payload: { id: 't1' } },
+            delta('Let me search for more specific information:', 't1'),
+            { type: 'text-end', payload: { id: 't1' } },
+            TOOL_CALL,
+            TOOL_RESULT,
+            { type: 'text-start', payload: { id: 't2' } },
+            delta('Perfect! ', 't2'),
+            delta('Here is how.', 't2'),
+            { type: 'text-end', payload: { id: 't2' } },
+        )
+        await stream.close()
+
+        expect(answer()).toBe(
+            'Let me search for more specific information:\n\nPerfect! Here is how.',
+        )
+        const paragraphs = [
+            ...container.querySelectorAll(
+                '[data-testid="docs-ask-ai-drawer"] p',
+            ),
+        ].map(p => p.textContent)
+        expect(paragraphs).toEqual([
+            'Let me search for more specific information:',
+            'Perfect! Here is how.',
+        ])
+    })
+
+    it('keeps one part whole, adds no break after a trailing newline, and none before the first part', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            TOOL_CALL,
+            TOOL_RESULT,
+            delta('First ', 't1'),
+            delta('part.\n', 't1'),
+            TOOL_CALL,
+            delta('Second part.', 't2'),
+        )
+        await stream.close()
+
+        expect(answer()).toBe('First part.\nSecond part.')
+    })
+
+    it('still separates parts when the stream carries no text ids', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            delta('Before the tool.'),
+            TOOL_CALL,
+            TOOL_RESULT,
+            delta('After the tool.'),
+        )
+        await stream.close()
+
+        expect(answer()).toBe('Before the tool.\n\nAfter the tool.')
     })
 })

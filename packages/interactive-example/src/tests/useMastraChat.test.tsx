@@ -72,9 +72,9 @@ vi.mock('@mastra/client-js', () => ({
     },
 }))
 
-const delta = (text: string) => ({
+const delta = (text: string, id = 't') => ({
     type: 'text-delta',
-    payload: { id: 't', text },
+    payload: { id, text },
 })
 const PATCH = {
     patch: { allowedFileTypes: 'images' },
@@ -334,6 +334,47 @@ const toolCall = (toolCallId: string, extra: Record<string, unknown> = {}) => ({
         args: { patch: PATCH.patch, explanation: PATCH.explanation },
         ...extra,
     },
+})
+
+describe('useMastraChat text parts', () => {
+    it('separates the text before and after a tool call into paragraphs', async () => {
+        sdk.chunks = [
+            delta('Let me check the options:', 't1'),
+            toolCall('c1'),
+            toolResult('c1'),
+            delta('Perfect! ', 't2'),
+            delta('Here is how.', 't2'),
+        ]
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+
+        await waitFor(() =>
+            expect(result.current.messages[1]?.pending).toBe(false),
+        )
+        expect(result.current.messages[1]?.text).toBe(
+            'Let me check the options:\n\nPerfect! Here is how.',
+        )
+    })
+
+    it('adds no break after a trailing newline or before the first part', async () => {
+        sdk.chunks = [
+            toolCall('c1'),
+            delta('First part.\n', 't1'),
+            toolCall('c2'),
+            delta('Second part.', 't2'),
+        ]
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+
+        await waitFor(() =>
+            expect(result.current.messages[1]?.pending).toBe(false),
+        )
+        expect(result.current.messages[1]?.text).toBe(
+            'First part.\nSecond part.',
+        )
+    })
 })
 
 describe('useMastraChat step trail', () => {
