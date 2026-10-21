@@ -107,6 +107,11 @@ const serverSchema = z.object({
     SENDLY_API_KEY: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),
     SUPPORT_EMAIL_FROM: z.string().min(1).optional(),
+    // '1' / 'true' = Cloudflare is the front door, so the support rate limit may
+    // key on cf-connecting-ip (see lib/support/rate-limit.ts). Anything else,
+    // or unset, ignores that header. Free-form string: a typo must fail closed,
+    // not crash boot.
+    TRUST_CF_CONNECTING_IP: z.string().optional(),
 })
 
 export const env: z.infer<typeof serverSchema> = (() => {

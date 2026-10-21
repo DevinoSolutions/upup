@@ -3,6 +3,8 @@
 // Capacity refills linearly over the window; each request costs one token.
 // Fine for a single-region deploy; swap the Map for a shared store to scale out.
 
+import { env } from '@/lib/env'
+
 type Bucket = { tokens: number; updatedAt: number }
 
 const CAPACITY = 5
@@ -67,7 +69,7 @@ export function bucketCountForTests(): number {
 
 /** Cloudflare is the front door only when the deploy says so. */
 function trustsCfConnectingIp(): boolean {
-    const flag = process.env.TRUST_CF_CONNECTING_IP
+    const flag = env.TRUST_CF_CONNECTING_IP
     return flag === '1' || flag === 'true'
 }
 
