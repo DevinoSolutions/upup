@@ -13,7 +13,9 @@
  *           delimiter row), list items (- * + 1. 1)) nested by indent,
  *           blank lines between items keeping one list, # headings,
  *           thematic breaks (--- *** ___), paragraphs
- *   inline: `code`, **bold**, [label](url), bare http(s) URLs
+ *   inline: `code`, **bold**, [label](url) (the label takes the same inline
+ *           markup, so [`maxFileSize`](/docs/a) is a code span in a link), bare
+ *           http(s) URLs
  * Everything else is plain text. Both functions share one inline scanner, so
  * the buffer can never disagree with the renderer about where a unit ends.
  */
@@ -22,7 +24,14 @@ export type Inline =
     | { type: 'text'; text: string; start: number }
     | { type: 'code'; text: string; start: number }
     | { type: 'bold'; children: Inline[]; start: number }
-    | { type: 'link'; label: string; href: string; start: number }
+    | {
+          type: 'link'
+          /** The label as written; `children` is the same label parsed. */
+          label: string
+          children: Inline[]
+          href: string
+          start: number
+      }
 
 export type ListItem = { inline: Inline[]; children: Block[]; start: number }
 
@@ -178,6 +187,9 @@ function scanInline(
                 tokens.push({
                     type: 'link',
                     label: m[1]!,
+                    children: withoutLinks(
+                        scanInline(m[1]!, base + i + 1, false),
+                    ),
                     href: m[2]!,
                     start: base + i,
                 })
@@ -200,6 +212,7 @@ function scanInline(
                 tokens.push({
                     type: 'link',
                     label: url,
+                    children: [{ type: 'text', text: url, start: base + i }],
                     href: url,
                     start: base + i,
                 })
@@ -218,17 +231,73 @@ function scanInline(
 
 const parseInline = (s: string, base: number) => scanInline(s, base, false)
 
+/**
+ * A link label is plain inline markup; a link cannot nest inside a link. A
+ * bare URL in the label stays as its own text, merged into the text around it.
+ */
+function withoutLinks(tokens: Inline[]): Inline[] {
+    const out: Inline[] = []
+    for (const tok of tokens) {
+        const prev = out[out.length - 1]
+        if (tok.type === 'link' || tok.type === 'text') {
+            const text = tok.type === 'link' ? tok.label : tok.text
+            if (prev?.type === 'text') prev.text += text
+            else out.push({ type: 'text', text, start: tok.start })
+        } else if (tok.type === 'bold') {
+            out.push({ ...tok, children: withoutLinks(tok.children) })
+        } else {
+            out.push(tok)
+        }
+    }
+    return out
+}
+
+/**
+ * Positions of the `|` that separate table cells: not escaped as `\|`, and not
+ * inside a code span (the same `...` pairing the inline scanner uses, so a
+ * cell never splits through a span it would render as code).
+ */
+function cellPipes(s: string): number[] {
+    const pipes: number[] = []
+    let i = 0
+    while (i < s.length) {
+        const c = s[i]
+        if (c === '\\' && s[i + 1] === '|') {
+            i += 2
+        } else if (c === '`') {
+            const j = s.indexOf('`', i + 1)
+            if (j > i + 1) i = j + 1
+            else i += j === i + 1 ? 2 : 1
+        } else {
+            if (c === '|') pipes.push(i)
+            i++
+        }
+    }
+    return pipes
+}
+
+/** `\|` is how a cell writes a literal pipe, in text and in code alike. */
+function unescapePipes(tokens: Inline[]): Inline[] {
+    return tokens.map((tok): Inline => {
+        if (tok.type === 'text' || tok.type === 'code')
+            return { ...tok, text: tok.text.replace(/\\\|/g, '|') }
+        return { ...tok, children: unescapePipes(tok.children) }
+    })
+}
+
 function tableCells(line: Line): Inline[][] {
     const cells: Inline[][] = []
     const s = line.text
-    let i = s.indexOf('|') + 1
-    while (i < s.length) {
-        let j = s.indexOf('|', i)
-        if (j === -1) j = s.length
+    const pipes = cellPipes(s)
+    let i = (pipes[0] ?? -1) + 1
+    for (let p = 1; i < s.length; p++) {
+        const j = pipes[p] ?? s.length
         const raw = s.slice(i, j)
         const lead = raw.length - raw.trimStart().length
         if (j < s.length || raw.trim())
-            cells.push(parseInline(raw.trim(), line.start + i + lead))
+            cells.push(
+                unescapePipes(parseInline(raw.trim(), line.start + i + lead)),
+            )
         i = j + 1
     }
     return cells

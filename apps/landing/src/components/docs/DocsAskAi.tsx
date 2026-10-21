@@ -157,7 +157,12 @@ function InlineNodes({
                             </strong>
                         )
                     case 'link':
-                        return renderLink(tok.href, tok.label, tok.start, cls)
+                        return renderLink(
+                            tok.href,
+                            <InlineNodes tokens={tok.children} ease={false} />,
+                            tok.start,
+                            cls,
+                        )
                 }
             })}
         </>
@@ -166,7 +171,7 @@ function InlineNodes({
 
 // A /docs/... path or a useupup.com docs URL routes through next/link (origin
 // stripped so client navigation stays in-app); anything else opens externally.
-function renderLink(url: string, label: string, key: number, ease: string) {
+function renderLink(url: string, label: ReactNode, key: number, ease: string) {
     let internalPath: string | null = null
     if (url === '/docs' || url.startsWith('/docs/')) internalPath = url
     else {

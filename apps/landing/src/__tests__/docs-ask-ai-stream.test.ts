@@ -135,6 +135,99 @@ describe('streamed answer is shown in whole units only', () => {
     })
 })
 
+// Cells render with the same inline markup as paragraphs: a code span, bold,
+// and a link whose label is code; an escaped pipe and a pipe inside a code
+// span stay in their cell as a plain `|`.
+const CELL_DOC = [
+    'Limits:',
+    '',
+    '| option | notes |',
+    '| --- | --- |',
+    '| `maxFileSize` | See [`limits`](/docs/limits) and **`accept`** |',
+    '| `mode` | `client \\| server` or a \\| b |',
+    '| `a | b` | done |',
+    '',
+    'After.',
+].join('\n')
+const WHOLE_INLINE_CELLS = new Set([
+    'option',
+    'notes',
+    'maxFileSize',
+    'See limits and accept',
+    'mode',
+    'client | server or a | b',
+    'a | b',
+    'done',
+])
+
+describe('inline markup inside table cells', () => {
+    const render = (content: string, streaming: boolean) => {
+        const host = document.createElement('div')
+        host.innerHTML = renderToStaticMarkup(
+            createElement(MessageBody, { content, streaming }),
+        )
+        return host
+    }
+
+    it('renders code, bold and links in cells, with no raw backticks or backslashes', () => {
+        const host = render(CELL_DOC, false)
+        const cells = [...host.querySelectorAll('th, td')]
+        expect(cells.map(c => c.textContent)).toEqual([
+            'option',
+            'notes',
+            'maxFileSize',
+            'See limits and accept',
+            'mode',
+            'client | server or a | b',
+            'a | b',
+            'done',
+        ])
+        const table = host.querySelector('table')!
+        expect(table.textContent).not.toMatch(/[`\\]/)
+        const codes = [...table.querySelectorAll('td code')].map(
+            c => c.textContent,
+        )
+        expect(codes).toEqual([
+            'maxFileSize',
+            'limits',
+            'accept',
+            'mode',
+            'client | server',
+            'a | b',
+        ])
+        const link = table.querySelector('a')!
+        expect(link.getAttribute('href')).toBe('/docs/limits')
+        expect(link.querySelector('code')?.textContent).toBe('limits')
+        expect(table.querySelector('strong code')?.textContent).toBe('accept')
+    })
+
+    it('releases a cell only whole at every split index, and ends equal to an unchunked render', () => {
+        let sawTable = false
+        for (let n = 0; n <= CELL_DOC.length; n++) {
+            const host = render(CELL_DOC.slice(0, n), true)
+            const table = host.querySelector('table')
+            if (table) {
+                sawTable = true
+                expect(table.textContent, `at ${n}`).not.toMatch(/[`\\]/)
+                expect(table.querySelectorAll('th')).toHaveLength(2)
+                for (const cell of table.querySelectorAll('th, td')) {
+                    expect(
+                        WHOLE_INLINE_CELLS.has(cell.textContent ?? ''),
+                        `"${cell.textContent}" at ${n}`,
+                    ).toBe(true)
+                }
+                for (const tr of table.querySelectorAll('tbody tr')) {
+                    expect(tr.querySelectorAll('td')).toHaveLength(2)
+                }
+            }
+        }
+        expect(sawTable).toBe(true)
+        expect(render(`${CELL_DOC}\n\n`, true).innerHTML).toBe(
+            render(CELL_DOC, false).innerHTML,
+        )
+    })
+})
+
 describe('streamed text eases in only where motion is allowed', () => {
     it('puts every animation class behind motion-safe, so reduced motion is instant', () => {
         const host = renderStreaming(DOC)
