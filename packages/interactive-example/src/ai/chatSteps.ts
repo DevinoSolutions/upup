@@ -22,6 +22,11 @@ export type ChatStep = {
     tool: string
     status: ChatStepStatus
     label: string
+    /**
+     * The label to settle on once the call succeeds, when it carries detail the
+     * running label has (a docs query). Absent: the tool's generic done label.
+     */
+    doneLabel?: string
 }
 
 /** The slice of a stream chunk this module reads; any chunk type fits. */
@@ -38,7 +43,8 @@ type Payload = {
 
 type StepLabels = {
     running: (args: unknown) => string
-    done: string
+    /** Past-tense label; a function can word it from the call's args. */
+    done: string | ((args: unknown) => string)
     /** Prefix of the failure label; the reason, when there is one, follows. */
     failed: string
 }
@@ -62,6 +68,12 @@ function patchFields(args: unknown): string {
     return keys.length ? `: ${keys.join(', ')}` : ''
 }
 
+/** The docs query of a search call, as one short line ('' when absent). */
+function docsQuery(args: unknown): string {
+    const q = asRecord(args)?.query
+    return typeof q === 'string' && q.trim() ? oneLine(q, 60) : ''
+}
+
 const CONFIG_PATCH_LABELS: StepLabels = {
     running: args => `Updating the uploader config${patchFields(args)}`,
     done: 'Updated the uploader config',
@@ -73,12 +85,13 @@ const STEP_LABELS: Record<string, StepLabels> = {
     applyConfigPatch: CONFIG_PATCH_LABELS,
     'search-docs': {
         running: args => {
-            const q = asRecord(args)?.query
-            return typeof q === 'string' && q.trim()
-                ? `Searching the docs for '${oneLine(q, 60)}'`
-                : 'Searching the docs'
+            const q = docsQuery(args)
+            return q ? `Searching the docs for '${q}'` : 'Searching the docs'
         },
-        done: 'Searched the docs',
+        done: args => {
+            const q = docsQuery(args)
+            return q ? `Searched the docs for '${q}'` : 'Searched the docs'
+        },
         failed: 'Docs search failed',
     },
 }
@@ -157,6 +170,8 @@ export function applyStepChunk(
 
     if (chunk.type === 'tool-call') {
         if (existing) return steps
+        const done = labels.done
+        const doneLabel = typeof done === 'function' ? done(p.args) : undefined
         return [
             ...steps,
             {
@@ -164,6 +179,7 @@ export function applyStepChunk(
                 tool,
                 status: 'running',
                 label: labels.running(p.args),
+                ...(doneLabel ? { doneLabel } : {}),
             },
         ]
     }
@@ -181,7 +197,14 @@ export function applyStepChunk(
         } else if (tool === 'search-docs' && result && result.error) {
             next = { status: 'error', label: 'Docs search is unavailable' }
         } else {
-            next = { status: 'done', label: labels.done }
+            next = {
+                status: 'done',
+                label:
+                    existing?.doneLabel ??
+                    (typeof labels.done === 'function'
+                        ? labels.done(undefined)
+                        : labels.done),
+            }
         }
     }
 

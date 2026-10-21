@@ -231,7 +231,10 @@ describe('applyStepChunk', () => {
         expect(running?.label).toBe("Searching the docs for 'presigned URLs'")
         expect(
             applyStepChunk([running!], result('c1', 'search-docs'))[0]?.label,
-        ).toBe('Searched the docs')
+        ).toBe("Searched the docs for 'presigned URLs'")
+        expect(applyStepChunk([], result('c2', 'search-docs'))[0]?.label).toBe(
+            'Searched the docs',
+        )
         expect(
             applyStepChunk(
                 [running!],
