@@ -3,8 +3,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import {
-    Copy,
-    Check,
     Play,
     Github,
     ExternalLink,
@@ -20,6 +18,7 @@ import FrameworkStrip from '@/components/FrameworkStrip'
 import { FRAMEWORKS, type FrameworkId } from '@/lib/frameworks'
 import { useCopyToClipboard } from '@/lib/use-copy-to-clipboard'
 import { AgentSetupPill } from '@/components/AgentSetupPill'
+import { CopyIconSwap } from '@/components/copy-icon-swap'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
 import { INSTALL_COMMAND_COPIED } from '@/lib/analytics/contract'
 
@@ -237,7 +236,7 @@ export default function HeroSection({
                             >
                                 <Link
                                     href="#demo"
-                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                    className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                                 >
                                     <Play className="w-5 h-5" />
                                     Try Live Demo
@@ -316,51 +315,11 @@ export default function HeroSection({
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
-                                                <AnimatePresence mode="wait">
-                                                    {copied ? (
-                                                        <m.div
-                                                            key="check"
-                                                            initial={{
-                                                                scale: 0,
-                                                                rotate: -180,
-                                                            }}
-                                                            animate={{
-                                                                scale: 1,
-                                                                rotate: 0,
-                                                            }}
-                                                            exit={{
-                                                                scale: 0,
-                                                                rotate: 180,
-                                                            }}
-                                                            transition={{
-                                                                duration: 0.3,
-                                                            }}
-                                                        >
-                                                            <Check className="w-4 h-4 text-green-600" />
-                                                        </m.div>
-                                                    ) : (
-                                                        <m.div
-                                                            key="copy"
-                                                            initial={{
-                                                                scale: 0,
-                                                                rotate: -180,
-                                                            }}
-                                                            animate={{
-                                                                scale: 1,
-                                                                rotate: 0,
-                                                            }}
-                                                            exit={{
-                                                                scale: 0,
-                                                                rotate: 180,
-                                                            }}
-                                                            transition={{
-                                                                duration: 0.3,
-                                                            }}
-                                                        >
-                                                            <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                                        </m.div>
-                                                    )}
-                                                </AnimatePresence>
+                                                <CopyIconSwap
+                                                    copied={copied}
+                                                    copyClassName="text-gray-500 dark:text-gray-400"
+                                                    checkClassName="text-green-600"
+                                                />
                                             </m.button>
 
                                             {/* Package Manager Select */}

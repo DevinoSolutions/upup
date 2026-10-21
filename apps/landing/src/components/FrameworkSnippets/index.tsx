@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
-import { Check, Copy } from 'lucide-react'
+import { CopyIconSwap } from '@/components/copy-icon-swap'
 import {
     FRAMEWORK_LIST,
     type FrameworkId,
@@ -149,16 +149,7 @@ export default function FrameworkSnippets({
     )
 
     return (
-        <m.div
-            className="max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-                duration: 0.7,
-                delay: 1,
-                ease: [0.25, 0.46, 0.45, 0.94],
-            }}
-        >
+        <div className="max-w-3xl mx-auto">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
                 One uploader, the same API in every framework
             </p>
@@ -246,37 +237,18 @@ export default function FrameworkSnippets({
                         aria-label="Copy code"
                         className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/70 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors shrink-0"
                     >
-                        <AnimatePresence mode="wait">
-                            {copiedCode ? (
-                                <m.span
-                                    key="check"
-                                    initial={{ scale: 0, rotate: -180 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    exit={{ scale: 0, rotate: 180 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="block"
-                                >
-                                    <Check className="w-4 h-4 text-green-600" />
-                                </m.span>
-                            ) : (
-                                <m.span
-                                    key="copy"
-                                    initial={{ scale: 0, rotate: -180 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    exit={{ scale: 0, rotate: 180 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="block"
-                                >
-                                    <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                </m.span>
-                            )}
-                        </AnimatePresence>
+                        <CopyIconSwap
+                            copied={copiedCode}
+                            copyClassName="text-gray-500 dark:text-gray-400"
+                            checkClassName="text-green-600"
+                        />
                     </button>
                 </div>
 
                 {/* Code body */}
                 <div className="overflow-x-auto p-4">
-                    <AnimatePresence mode="wait">
+                    {/* initial={false}: first paint (and SSR) shows the code; only tab switches animate */}
+                    <AnimatePresence mode="wait" initial={false}>
                         <m.div
                             key={active.id}
                             initial={{ opacity: 0, y: 8 }}
@@ -289,6 +261,6 @@ export default function FrameworkSnippets({
                     </AnimatePresence>
                 </div>
             </div>
-        </m.div>
+        </div>
     )
 }
