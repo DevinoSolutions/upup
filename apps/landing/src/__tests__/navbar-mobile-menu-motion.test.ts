@@ -107,3 +107,49 @@ describe('Navbar mobile menu motion', () => {
         expect(source).not.toMatch(/motion-reduce:animate-motion-enter/)
     })
 })
+
+describe('Navbar mobile menu Escape', () => {
+    const pressEscape = (target: EventTarget = document.body) => {
+        const event = new KeyboardEvent('keydown', {
+            key: 'Escape',
+            bubbles: true,
+            cancelable: true,
+        })
+        act(() => {
+            target.dispatchEvent(event)
+        })
+        return event
+    }
+
+    it('closes the open menu on Escape and returns focus to the toggle', () => {
+        act(() => toggle().click())
+        expect(toggle().getAttribute('aria-expanded')).toBe('true')
+        const link = container.querySelector<HTMLElement>(
+            '#navbar-mobile-menu a',
+        )!
+        act(() => link.focus())
+        pressEscape(link)
+        expect(toggle().getAttribute('aria-expanded')).toBe('false')
+        expect(container.querySelector('#navbar-mobile-menu')).toBeNull()
+        expect(document.activeElement).toBe(toggle())
+    })
+
+    it('does nothing when the menu is closed', () => {
+        const outside = document.createElement('button')
+        document.body.append(outside)
+        outside.focus()
+        pressEscape(outside)
+        expect(toggle().getAttribute('aria-expanded')).toBe('false')
+        expect(document.activeElement).toBe(outside)
+        outside.remove()
+    })
+
+    it('leaves an Escape another handler already consumed alone', () => {
+        act(() => toggle().click())
+        const consumer = (e: KeyboardEvent) => e.preventDefault()
+        document.body.addEventListener('keydown', consumer)
+        pressEscape()
+        document.body.removeEventListener('keydown', consumer)
+        expect(toggle().getAttribute('aria-expanded')).toBe('true')
+    })
+})

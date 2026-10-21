@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -19,6 +19,7 @@ export default function Navbar() {
     // first one: the hamburger must not fade in on every page load.
     const [menuToggled, setMenuToggled] = useState(false)
     const iconMotion = menuToggled ? ' motion-safe:animate-motion-fade' : ''
+    const toggleRef = useRef<HTMLButtonElement>(null)
     const [mounted, setMounted] = useState(false)
     const { isDarkMode } = useContext(ThemeContext)
     const pathname = usePathname()
@@ -31,6 +32,20 @@ export default function Navbar() {
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    // An open menu closes on Escape and hands focus back to its toggle. Only
+    // while open, and not when another handler (Ask AI drawer, notify modal)
+    // already consumed the key.
+    useEffect(() => {
+        if (!navbarOpen) return
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape' || e.defaultPrevented) return
+            setNavbarOpen(false)
+            toggleRef.current?.focus()
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => document.removeEventListener('keydown', onKeyDown)
+    }, [navbarOpen])
 
     const navLinks = (
         <>
@@ -173,6 +188,7 @@ export default function Navbar() {
                             WCAG 2.5.8 target size against a 20px icon — the
                             hit area grows, the icon does not. */}
                             <button
+                                ref={toggleRef}
                                 aria-label="Toggle navigation"
                                 aria-expanded={navbarOpen}
                                 aria-controls={MOBILE_MENU_ID}
