@@ -115,17 +115,22 @@ export default function HeroSection({
     useEffect(() => {
         if (!isOpen) return
         function onKeyDown(e: KeyboardEvent) {
-            if (e.key !== 'Escape') return
+            if (e.key !== 'Escape' || e.defaultPrevented) return
+            // Consume the key so a layer underneath (the navbar's mobile menu)
+            // stays open.
+            e.preventDefault()
             setIsOpen(false)
             menuButtonRef.current?.focus()
         }
         function onPointerDown(e: MouseEvent) {
             if (!menuRef.current?.contains(e.target as Node)) setIsOpen(false)
         }
-        document.addEventListener('keydown', onKeyDown)
+        // Capture phase: a bubble listener registered earlier (the navbar's
+        // mobile-menu Escape) would otherwise run first and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
         document.addEventListener('mousedown', onPointerDown)
         return () => {
-            document.removeEventListener('keydown', onKeyDown)
+            document.removeEventListener('keydown', onKeyDown, true)
             document.removeEventListener('mousedown', onPointerDown)
         }
     }, [isOpen])
