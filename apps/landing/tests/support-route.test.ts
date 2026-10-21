@@ -425,3 +425,74 @@ describe('support email leg via Sendly', () => {
         expect(h.fetchMock).not.toHaveBeenCalled()
     })
 })
+
+describe('POST /api/upup-support input hardening (T-5495)', () => {
+    it('rejects a body whose content-length exceeds 32 KiB with 413 before parsing it', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const req = makeRequest(payload(), {
+            'content-length': String(32 * 1024 + 1),
+        })
+        const res = await POST(req)
+        expect(res.status).toBe(413)
+        expect(h.captureMock).not.toHaveBeenCalled()
+        expect(h.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('rejects an oversized body that under-reports content-length, by counting the bytes actually read', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const huge =
+            JSON.stringify(payload({ message: 'x' })) + ' '.repeat(40_000)
+        const req = new Request('http://localhost/api/upup-support', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'x-forwarded-for': '203.0.113.11',
+                'content-length': '100',
+            },
+            body: huge,
+        })
+        const res = await POST(req)
+        expect(res.status).toBe(413)
+        expect(h.captureMock).not.toHaveBeenCalled()
+    })
+
+    it('still accepts a maximum-length message well under the cap', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(payload({ message: 'é'.repeat(5000) }), {
+                'x-forwarded-for': '203.0.113.12',
+            }),
+        )
+        expect(res.status).toBe(200)
+    })
+
+    it('keeps a forged distinct id out of the captured event and the email, attributing to the anonymous feedback id instead', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const id = randomUUID()
+        const res = await POST(
+            makeRequest(
+                payload({
+                    feedbackId: id,
+                    posthogDistinctId: 'victim@example.com',
+                }),
+                { 'x-forwarded-for': '203.0.113.13' },
+            ),
+        )
+        expect(res.status).toBe(200)
+        const captureArg = h.captureMock.mock.calls[0][0]
+        expect(captureArg.distinctId).toBe(`anonymous:${id}`)
+        expect(sentMail().body.body).not.toContain('victim@example.com')
+    })
+
+    it('does not let a user-agent header carry control characters into the email', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(
+            makeRequest(payload(), {
+                'x-forwarded-for': '203.0.113.14',
+                'user-agent': 'agent\u0001/1.0',
+            }),
+        )
+        expect(res.status).toBe(200)
+        expect(sentMail().body.body).not.toContain('\u0001')
+    })
+})
