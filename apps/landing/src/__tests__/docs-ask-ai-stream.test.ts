@@ -598,6 +598,35 @@ describe('text parts around a tool step', () => {
         expect(answer()).toBe('First part.\nSecond part.')
     })
 
+    it('separates two parts by id alone, with no tool or end chunk between them', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(delta('A.', 't1'), delta('B.', 't2'))
+        await stream.close()
+
+        expect(answer()).toBe('A.\n\nB.')
+    })
+
+    it('still separates text that resumes after a tool step under the same id', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            delta('Before.', 't1'),
+            TOOL_CALL,
+            TOOL_RESULT,
+            delta('After.', 't1'),
+        )
+        await stream.close()
+
+        expect(answer()).toBe('Before.\n\nAfter.')
+    })
+
     it('still separates parts when the stream carries no text ids', async () => {
         const stream = stubStream()
         await act(async () => {

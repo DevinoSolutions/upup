@@ -223,7 +223,8 @@ export function useDocsChat() {
                         if (
                             chunk.type === 'text-end' ||
                             chunk.type === 'tool-call' ||
-                            chunk.type === 'tool-result'
+                            chunk.type === 'tool-result' ||
+                            chunk.type === 'tool-error'
                         )
                             partEnded = true
                         const next = applyStepChunk(steps, chunk)

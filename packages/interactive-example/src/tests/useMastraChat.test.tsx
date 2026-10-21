@@ -357,6 +357,35 @@ describe('useMastraChat text parts', () => {
         )
     })
 
+    it('separates two parts by id alone, with no tool or end chunk between them', async () => {
+        sdk.chunks = [delta('A.', 't1'), delta('B.', 't2')]
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+
+        await waitFor(() =>
+            expect(result.current.messages[1]?.pending).toBe(false),
+        )
+        expect(result.current.messages[1]?.text).toBe('A.\n\nB.')
+    })
+
+    it('still separates text that resumes after a tool step under the same id', async () => {
+        sdk.chunks = [
+            delta('Before.', 't1'),
+            toolCall('c1'),
+            toolResult('c1'),
+            delta('After.', 't1'),
+        ]
+        const { result } = setup()
+
+        act(() => void result.current.send('photos only'))
+
+        await waitFor(() =>
+            expect(result.current.messages[1]?.pending).toBe(false),
+        )
+        expect(result.current.messages[1]?.text).toBe('Before.\n\nAfter.')
+    })
+
     it('adds no break after a trailing newline or before the first part', async () => {
         sdk.chunks = [
             toolCall('c1'),
