@@ -113,15 +113,14 @@ describe('MessageBody block grouping', () => {
         Array.from(html.matchAll(/<(p|ol|ul)[ >]/g), m => m[1])
 
     it('groups ordered, unordered, and paragraph runs', () => {
-        const html = render('Intro line\n1. one\n2. two\n\n- a\n- b\n\nOutro')
+        const html = render('Intro line\n1. one\n2. two\n\n- a\n- b\nOutro')
         expect(tags(html)).toEqual(['p', 'ol', 'ul', 'p'])
         expect((html.match(/<li/g) ?? []).length).toBe(4)
     })
 
     it('treats `1)` and `*` markers as list items', () => {
-        const html = render('1) first\n\n* bullet')
-        expect(tags(html)).toContain('ol')
-        expect(tags(html)).toContain('ul')
+        const html = render('1) first\n* bullet')
+        expect(tags(html)).toEqual(['ol', 'ul'])
     })
 
     it('renders nothing for blank input', () => {

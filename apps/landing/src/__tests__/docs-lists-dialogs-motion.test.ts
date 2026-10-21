@@ -211,6 +211,7 @@ describe('Ask AI transcript arrival', () => {
         renderAskAi(true, [u1, a1])
         const [userLi, assistantLi] = transcriptItems()
         const firstWord = assistantLi.querySelector('p span')
+        expect(firstWord).not.toBeNull()
 
         // Streaming growth: same id, longer text.
         renderAskAi(true, [

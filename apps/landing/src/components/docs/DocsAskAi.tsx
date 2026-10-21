@@ -603,18 +603,28 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                                 className={`space-y-1.5 ${ARRIVE}`}
                                             >
                                                 {m.error ? (
-                                                    <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
-                                                        {m.content}{' '}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                ask(question)
+                                                    <>
+                                                        <DocsAskAiStepTrail
+                                                            steps={
+                                                                m.steps ?? []
                                                             }
-                                                            className="underline underline-offset-2"
-                                                        >
-                                                            Retry
-                                                        </button>
-                                                    </p>
+                                                            pending={false}
+                                                        />
+                                                        <p className="text-sm leading-relaxed text-amber-700 dark:text-amber-400">
+                                                            {m.content}{' '}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    ask(
+                                                                        question,
+                                                                    )
+                                                                }
+                                                                className="underline underline-offset-2"
+                                                            >
+                                                                Retry
+                                                            </button>
+                                                        </p>
+                                                    </>
                                                 ) : (
                                                     <>
                                                         <DocsAskAiStepTrail
@@ -635,7 +645,9 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                                                 }
                                                             />
                                                             {m.streaming ? (
-                                                                m.content ? (
+                                                                stableMarkdownPrefix(
+                                                                    m.content,
+                                                                ) ? (
                                                                     <StreamingCursor />
                                                                 ) : (
                                                                     <TypingIndicator />

@@ -311,7 +311,15 @@ const TOOL_RESULT = {
     payload: {
         toolCallId: 'c1',
         toolName: 'searchDocs',
-        result: { hits: [{ url: '/docs/server', title: 'Server' }] },
+        result: {
+            results: [
+                {
+                    url: '/docs/server',
+                    title: 'Server',
+                    excerpt: 'Mount the handler',
+                },
+            ],
+        },
     },
 }
 const delta = (text: string) => ({ type: 'text-delta', payload: { text } })
@@ -345,7 +353,7 @@ describe('step trail', () => {
         await stream.push(TOOL_RESULT, delta('Use the presign route. '))
         await stream.close()
 
-        expect(trailButton()!.textContent).toBe('Show steps (1)')
+        expect(trailButton()!.textContent).toBe('Steps (1)')
         expect(announcement()).toBe('Answer ready after 1 step.')
 
         // Collapsed: steps are in the DOM, hidden, and not announced piecemeal.
@@ -377,7 +385,8 @@ describe('step trail', () => {
             'toolName',
             '"query"',
             '{',
-            'hits',
+            'results',
+            'excerpt',
         ]) {
             expect(text, leak).not.toContain(leak)
         }
@@ -404,7 +413,7 @@ describe('step trail', () => {
         act(() => button.focus())
         act(() => button.click())
         expect(button.getAttribute('aria-expanded')).toBe('true')
-        expect(button.textContent).toBe('Hide steps')
+        expect(button.textContent).toBe('Steps (1)')
         expect(list.hidden).toBe(false)
         expect(document.activeElement).toBe(button)
 
@@ -426,6 +435,50 @@ describe('step trail', () => {
         const step = chat.messages[chat.messages.length - 1]!.steps![0]!
         expect(step.status).toBe('error')
         expect(step.label).toContain('Stopped before it finished')
+    })
+
+    it('words a docs search that returned an error as unavailable, without the error text', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            TOOL_CALL,
+            {
+                type: 'tool-result',
+                payload: {
+                    toolCallId: 'c1',
+                    toolName: 'searchDocs',
+                    result: { results: [], error: 'ECONNRESET upstream 502' },
+                },
+            },
+            delta('Answer. '),
+        )
+        await stream.close()
+
+        const step = chat.messages[chat.messages.length - 1]!.steps![0]!
+        expect(step.status).toBe('error')
+        expect(step.label).toBe('Docs search is unavailable')
+        act(() => trailButton()!.click())
+        expect(drawerText()).toContain('Docs search is unavailable')
+        expect(drawerText()).not.toContain('ECONNRESET')
+    })
+
+    it('keeps the trail visible, settled, on a turn that failed', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(TOOL_CALL)
+        await stream.close()
+
+        const last = chat.messages[chat.messages.length - 1]!
+        expect(last.error).toBe(true)
+        expect(trailButton()!.textContent).toBe('Steps (1)')
+        act(() => trailButton()!.click())
+        expect(drawerText()).toContain('Stopped before it finished')
     })
 
     it('has no trail and no step count for a turn that used no tools', async () => {

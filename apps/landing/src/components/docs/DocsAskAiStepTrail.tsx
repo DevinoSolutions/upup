@@ -35,10 +35,13 @@ export function DocsAskAiStepTrail({
 
     if (!latest) return null
 
-    let label: string
-    if (open) label = 'Hide steps'
-    else if (pending && latest.status === 'running') label = `${latest.label}…`
-    else label = `Show steps (${steps.length})`
+    // The name does not flip with the state: aria-expanded alone says open or
+    // closed, so a screen reader never hears it twice. While a step runs the
+    // button names it instead, so progress shows without opening anything.
+    const label =
+        pending && latest.status === 'running'
+            ? `${latest.label}…`
+            : `Steps (${steps.length})`
 
     return (
         <div
