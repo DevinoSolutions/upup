@@ -34,8 +34,12 @@ export default function Navbar() {
     }, [])
 
     // An open menu closes on Escape and hands focus back to its toggle. Only
-    // while open, and not when another handler (Ask AI drawer, notify modal)
-    // already consumed the key.
+    // while open. This is a document bubble listener that skips
+    // `defaultPrevented` keys, so every overlay above the menu must
+    // preventDefault the Escape it handles: the notify modal, docs search and
+    // StackBlitz warning do so from capture-phase document listeners (which run
+    // first), the Ask AI drawer from its React onKeyDown (React is rooted on
+    // `document`, so stopPropagation alone cannot keep the key from here).
     useEffect(() => {
         if (!navbarOpen) return
         const onKeyDown = (e: KeyboardEvent) => {
