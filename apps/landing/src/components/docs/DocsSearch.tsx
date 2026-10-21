@@ -84,7 +84,7 @@ function HighlightedContent({ content }: { content: string }) {
 // for AskAiTrigger + DocsAskAi.
 //
 // This is not cosmetic. When the whole widget was rendered twice, each copy kept
-// its own `open` state, its own ⌘K window listener and its own body-scroll lock,
+// its own `open` state, its own ⌘K document capture-phase listener and its own body-scroll lock,
 // so one ⌘K opened TWO dialogs: the real one plus an invisible 0x0 copy inside
 // the `lg:hidden` disclosure. Choosing a result closed only the copy you clicked;
 // the hidden one stayed mounted with `document.body.style.overflow = 'hidden'`
