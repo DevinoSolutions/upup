@@ -44,7 +44,7 @@ describe('demo visitor proxy', () => {
         expect(cookie).toBeTruthy()
         expect(cookie).toContain('HttpOnly')
         expect(cookie).toContain('SameSite=Lax')
-        expect(cookie).toContain('Path=/api/upup')
+        expect(cookie).toContain('Path=/;')
         expect(cookie).toContain('Max-Age=604800')
         expect(cookie).toContain('Secure')
         const [id, mac] = valueOf(cookie).split('.')

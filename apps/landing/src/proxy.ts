@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import {
     cookieHeaderWithVisitor,
     resolveVisitor,
-    visitorCookie,
+    visitorCookies,
 } from '@/lib/demo-visitor'
 import { requireServerEnv } from '@/lib/env'
 
@@ -48,7 +48,9 @@ export function proxy(req: NextRequest) {
         cookieHeaderWithVisitor(secret, req.headers.get('cookie'), visitor.id),
     )
     const res = NextResponse.next({ request: { headers } })
-    res.headers.append('Set-Cookie', visitorCookie(secret, visitor.id, req))
+    for (const cookie of visitorCookies(secret, visitor.id, req)) {
+        res.headers.append('Set-Cookie', cookie)
+    }
     return res
 }
 
