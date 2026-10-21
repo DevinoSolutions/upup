@@ -262,3 +262,89 @@ describe('drive transfer: onBeforeUpload gate (T-5467)', () => {
         expect(transferMock).not.toHaveBeenCalled()
     })
 })
+
+// T-5467 review: the open drive stream must be released on EVERY failure path
+// after the provider fetch, not just the two deliberate rejections.
+describe('drive transfer: the drive stream is cancelled on every failure path (T-5467)', () => {
+    let store: InMemoryTokenStore
+    let cancelled: ReturnType<typeof vi.fn>
+    beforeEach(async () => {
+        transferMock.mockReset()
+        store = new InMemoryTokenStore()
+        await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+            accessToken: 'AT',
+        })
+        cancelled = vi.fn()
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: unknown) => {
+                if (String(url).includes('alt=media')) {
+                    return new Response(
+                        new ReadableStream({
+                            pull(controller) {
+                                controller.enqueue(new Uint8Array([1]))
+                            },
+                            cancel: () => cancelled(),
+                        }),
+                        { status: 200 },
+                    )
+                }
+                return new Response(
+                    JSON.stringify({
+                        name: 'doc.txt',
+                        size: '1',
+                        mimeType: 'text/plain',
+                    }),
+                    { status: 200 },
+                )
+            }),
+        )
+    })
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    it('a non-UpupError thrown by onBeforeUpload (500) cancels the stream', async () => {
+        const handler = createUpupHandler(
+            makeConfig(store, {
+                hooks: {
+                    onBeforeUpload: async () => {
+                        throw new Error('quota backend down')
+                    },
+                },
+            }),
+        )
+        const res = await handler(
+            transferReq('google-drive', { fileId: 'f1', size: 1 }),
+        )
+        expect(res.status).toBe(500)
+        expect(cancelled).toHaveBeenCalledTimes(1)
+        expect(transferMock).not.toHaveBeenCalled()
+    })
+
+    it('a storage resolver that throws (500) cancels the stream', async () => {
+        const handler = createUpupHandler(
+            makeConfig(store, {
+                storage: async () => {
+                    throw new Error('no bucket for you')
+                },
+            }),
+        )
+        const res = await handler(
+            transferReq('google-drive', { fileId: 'f1', size: 1 }),
+        )
+        expect(res.status).toBe(500)
+        expect(cancelled).toHaveBeenCalledTimes(1)
+    })
+
+    it('a rejection by onBeforeUpload (403) still cancels the stream exactly once', async () => {
+        const handler = createUpupHandler(
+            makeConfig(store, { hooks: { onBeforeUpload: async () => false } }),
+        )
+        const res = await handler(
+            transferReq('google-drive', { fileId: 'f1', size: 1 }),
+        )
+        expect(res.status).toBe(403)
+        expect(cancelled).toHaveBeenCalledTimes(1)
+    })
+})

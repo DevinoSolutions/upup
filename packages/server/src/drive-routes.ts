@@ -82,6 +82,15 @@ export async function handleListFiles(
     }
 }
 
+/** Cancel an open drive stream. Best-effort and idempotent: a stream the
+ *  transfer already consumed (locked or closed) rejects, which is fine. */
+async function releaseStream(
+    stream: ReadableStream<Uint8Array> | undefined,
+): Promise<void> {
+    if (!stream) return
+    await stream.cancel().catch(() => undefined)
+}
+
 export async function handleFileTransfer(
     req: Request,
     config: UpupServerConfig,
@@ -152,10 +161,15 @@ export async function handleFileTransfer(
         return res.json({ error: 'File type not allowed' }, 415)
     }
 
+    // The open drive response body, tracked outside the try so EVERY failure
+    // after the provider fetch (a rejection, a throwing onBeforeUpload, a
+    // throwing storage resolver, a failed transfer) releases the connection.
+    let driveStream: ReadableStream<Uint8Array> | undefined
     try {
         const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
         ).fetchFile(tokens.accessToken, body)
+        driveStream = stream
         // T-5467: `mimeType` is the PROVIDER's type (the client's claim only
         // fills in when the provider reports none), so re-gate it against
         // allowedTypes and run the same onBeforeUpload admission as the upload
@@ -177,7 +191,7 @@ export async function handleFileTransfer(
                   res,
               )
         if (rejected) {
-            await stream.cancel().catch(() => undefined)
+            await releaseStream(driveStream)
             return rejected
         }
         // Resolved AFTER the drive reports the real name/type/size, so a
@@ -222,6 +236,7 @@ export async function handleFileTransfer(
         )
         return res.json({ provider, ...result }, 200)
     } catch (err) {
+        await releaseStream(driveStream)
         if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)
