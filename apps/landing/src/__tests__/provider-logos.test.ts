@@ -63,7 +63,7 @@ describe('storage provider logos', () => {
         const src = readFileSync(
             fileURLToPath(
                 new URL(
-                    '../components/HomepageFeatures/index.tsx',
+                    '../components/HomepageFeatures/providers.ts',
                     import.meta.url,
                 ),
             ),

@@ -154,7 +154,7 @@ describe('mobile legibility floor', () => {
     // `text-xs` (which would grow the desktop card/pill) fails here.
     it.each([
         [
-            'components/HomepageFeatures/index.tsx',
+            'components/HomepageFeatures/SupportedWall.tsx',
             'leading-tight text-gray-500',
         ],
         ['components/docs/DocsSearch.tsx', 'leading-none'],
