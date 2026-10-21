@@ -309,6 +309,7 @@ describe('notify modal accessibility', () => {
             submitForm()
             press('Escape')
             openFrom('Instagram')
+            expect(isOpen()).toBe(true)
 
             await act(async () => {
                 settle(false)
