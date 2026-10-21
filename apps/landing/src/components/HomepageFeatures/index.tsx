@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { m, AnimatePresence } from 'framer-motion'
 import {
@@ -73,6 +73,8 @@ interface EmailModalProps {
     onClose: () => void
     integrationName: string
     isCustom?: boolean
+    /** Element that opened the dialog; focus returns here on close. */
+    triggerRef?: React.RefObject<HTMLElement | null>
 }
 
 // User Storage Providers - for end users to connect their personal cloud storage
@@ -354,11 +356,16 @@ const fileTypes = [
     },
 ]
 
+// Tab stops inside the dialog. The honeypot carries tabIndex -1, so it is
+// never part of the cycle.
+const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]'
+
 const EmailModal: React.FC<EmailModalProps> = ({
     isOpen,
     onClose,
     integrationName,
     isCustom = false,
+    triggerRef,
 }) => {
     const [email, setEmail] = useState('')
     const [customToolName, setCustomToolName] = useState('')
@@ -370,6 +377,10 @@ const EmailModal: React.FC<EmailModalProps> = ({
     // regenerated only after a confirmed success (same rule as SupportForm).
     const feedbackIdRef = useRef<string>('')
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const dialogRef = useRef<HTMLDivElement>(null)
+    const onCloseRef = useRef(onClose)
+    onCloseRef.current = onClose
+    const headingId = React.useId()
 
     useEffect(
         () => () => {
@@ -377,6 +388,75 @@ const EmailModal: React.FC<EmailModalProps> = ({
         },
         [],
     )
+
+    const resetAfterSuccess = useCallback(() => {
+        setEmail('')
+        setCustomToolName('')
+        setWebsite('')
+        setIsSubmitted(false)
+    }, [])
+
+    // Modal behaviour while open: focus the first field (after mount, so it
+    // holds under reduced motion too), keep Tab inside, close on Escape, and
+    // hand focus back to whatever opened the dialog.
+    useEffect(() => {
+        if (!isOpen) return
+        // Not every browser focuses a button on click (Safari, Firefox on
+        // macOS), so prefer the element the click handler recorded.
+        const trigger =
+            triggerRef?.current ??
+            (document.activeElement as HTMLElement | null)
+        const dialog = dialogRef.current
+        dialog?.querySelector<HTMLElement>('input:not([aria-hidden])')?.focus()
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onCloseRef.current()
+                return
+            }
+            if (e.key !== 'Tab' || !dialog) return
+            const stops = [
+                ...dialog.querySelectorAll<HTMLElement>(FOCUSABLE),
+            ].filter(
+                el =>
+                    el.tabIndex >= 0 &&
+                    !(el as HTMLButtonElement | HTMLInputElement).disabled,
+            )
+            const first = stops[0]
+            const last = stops[stops.length - 1]
+            const active = document.activeElement
+            if (!first) {
+                e.preventDefault()
+                dialog.focus()
+            } else if (
+                !dialog.contains(active) ||
+                !stops.includes(active as HTMLElement)
+            ) {
+                // Outside the dialog, or on a control that is not a stop (the
+                // submit button while it is disabled mid-submit, the honeypot).
+                e.preventDefault()
+                ;(e.shiftKey ? last : first).focus()
+            } else if (e.shiftKey && active === first) {
+                e.preventDefault()
+                last.focus()
+            } else if (!e.shiftKey && active === last) {
+                e.preventDefault()
+                first.focus()
+            }
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => {
+            document.removeEventListener('keydown', onKeyDown)
+            // A pending success timer must not outlive the dialog it belongs
+            // to; apply its reset now so a reopen starts from the form.
+            if (closeTimer.current) {
+                clearTimeout(closeTimer.current)
+                closeTimer.current = null
+                resetAfterSuccess()
+            }
+            trigger?.focus()
+        }
+    }, [isOpen, triggerRef, resetAfterSuccess])
 
     const providerName = isCustom ? customToolName : integrationName
 
@@ -417,11 +497,9 @@ const EmailModal: React.FC<EmailModalProps> = ({
         setIsSubmitted(true)
         feedbackIdRef.current = ''
         closeTimer.current = setTimeout(() => {
+            closeTimer.current = null
             onClose()
-            setEmail('')
-            setCustomToolName('')
-            setWebsite('')
-            setIsSubmitted(false)
+            resetAfterSuccess()
         }, 2000)
     }
 
@@ -437,22 +515,32 @@ const EmailModal: React.FC<EmailModalProps> = ({
                     onClick={onClose}
                 >
                     <m.div
+                        ref={dialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={headingId}
+                        tabIndex={-1}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
+                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10 focus:outline-none"
                         onClick={e => e.stopPropagation()}
                     >
                         {!isSubmitted ? (
                             <>
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    <h3
+                                        id={headingId}
+                                        className="text-xl font-bold text-gray-900 dark:text-white"
+                                    >
                                         {isCustom
                                             ? 'Request Custom Provider'
                                             : `Get notified for ${integrationName}`}
                                     </h3>
                                     <button
+                                        type="button"
+                                        aria-label="Close"
                                         onClick={onClose}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     >
@@ -549,6 +637,7 @@ const EmailModal: React.FC<EmailModalProps> = ({
                             </>
                         ) : (
                             <m.div
+                                role="status"
                                 className="text-center"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -574,7 +663,10 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         </m.svg>
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                <h3
+                                    id={headingId}
+                                    className="text-xl font-bold text-gray-900 dark:text-white mb-2"
+                                >
                                     You&apos;re all set!
                                 </h3>
                                 <p className="text-gray-600 dark:text-gray-400">
@@ -657,8 +749,8 @@ const SupportedWall: React.FC<{ providers: Integration[] }> = ({
 
 interface PlannedStripProps {
     planned: Integration[]
-    onProviderClick: (provider: Integration) => void
-    onCustomRequest: () => void
+    onProviderClick: (provider: Integration, trigger: HTMLElement) => void
+    onCustomRequest: (trigger: HTMLElement) => void
 }
 
 const PlannedStrip: React.FC<PlannedStripProps> = ({
@@ -675,7 +767,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
                 <button
                     key={provider.id}
                     type="button"
-                    onClick={() => onProviderClick(provider)}
+                    onClick={e => onProviderClick(provider, e.currentTarget)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     <provider.icon className="w-3.5 h-3.5" aria-hidden />
@@ -684,7 +776,7 @@ const PlannedStrip: React.FC<PlannedStripProps> = ({
             ))}
             <button
                 type="button"
-                onClick={onCustomRequest}
+                onClick={e => onCustomRequest(e.currentTarget)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 <FaPlus className="w-3.5 h-3.5" />
@@ -700,6 +792,7 @@ export default function HomepageFeatures() {
     )
     const [modalOpen, setModalOpen] = useState(false)
     const [isCustomRequest, setIsCustomRequest] = useState(false)
+    const triggerRef = useRef<HTMLElement | null>(null)
 
     const userSupported = userStorageProviders.filter(
         p => p.status !== 'planned',
@@ -712,7 +805,10 @@ export default function HomepageFeatures() {
         p => p.status === 'planned',
     )
 
-    const handleProviderClick = (provider: Integration) => {
+    const handleProviderClick = (
+        provider: Integration,
+        trigger: HTMLElement,
+    ) => {
         if (provider.status === 'supported') return // Don't show modal for supported providers
 
         // Track the interest in analytics. Status rides the label, not `value`
@@ -723,17 +819,19 @@ export default function HomepageFeatures() {
             event_label: `${provider.name} (${provider.status})`,
         })
 
+        triggerRef.current = trigger
         setSelectedProvider(provider.name)
         setIsCustomRequest(false)
         setModalOpen(true)
     }
 
-    const handleCustomRequest = () => {
+    const handleCustomRequest = (trigger: HTMLElement) => {
         gtag.event({
             action: 'request_provider',
             event_category: 'providers',
             event_label: 'custom_request',
         })
+        triggerRef.current = trigger
         setSelectedProvider('Custom Provider')
         setIsCustomRequest(true)
         setModalOpen(true)
@@ -889,6 +987,7 @@ export default function HomepageFeatures() {
                 onClose={() => setModalOpen(false)}
                 integrationName={selectedProvider || ''}
                 isCustom={isCustomRequest}
+                triggerRef={triggerRef}
             />
         </Section>
     )
