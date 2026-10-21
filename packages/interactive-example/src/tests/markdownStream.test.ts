@@ -477,6 +477,15 @@ describe('inline markup in table cells and link labels', () => {
         ).toEqual(['', ' | more'])
     })
 
+    it('keeps non-ASCII backtick lookalikes as literal text, and a no-break space beside a real span', () => {
+        const { rows } = table(
+            '| A | B |\n| - | - |\n| ｀maxFileSize｀ | ´x´ |\n| `ok` | y |\n',
+        )
+        expect(types(rows[0]?.cells[0])).toEqual(['text'])
+        expect(types(rows[0]?.cells[1])).toEqual(['text'])
+        expect(types(rows[1]?.cells[0])).toEqual(['code'])
+    })
+
     it('renders the exact model-shaped options table as code cells', () => {
         const { header, rows } = table(FIXTURES.tableCode!)
         expect(header).toHaveLength(2)
