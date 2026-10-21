@@ -354,6 +354,10 @@ const fileTypes = [
     },
 ]
 
+// Tab stops inside the dialog. The honeypot carries tabIndex -1, so it is
+// never part of the cycle.
+const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]'
+
 const EmailModal: React.FC<EmailModalProps> = ({
     isOpen,
     onClose,
@@ -370,6 +374,10 @@ const EmailModal: React.FC<EmailModalProps> = ({
     // regenerated only after a confirmed success (same rule as SupportForm).
     const feedbackIdRef = useRef<string>('')
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const dialogRef = useRef<HTMLDivElement>(null)
+    const onCloseRef = useRef(onClose)
+    onCloseRef.current = onClose
+    const headingId = React.useId()
 
     useEffect(
         () => () => {
@@ -377,6 +385,52 @@ const EmailModal: React.FC<EmailModalProps> = ({
         },
         [],
     )
+
+    // Modal behaviour while open: focus the first field (after mount, so it
+    // holds under reduced motion too), keep Tab inside, close on Escape, and
+    // hand focus back to whatever opened the dialog.
+    useEffect(() => {
+        if (!isOpen) return
+        const trigger = document.activeElement as HTMLElement | null
+        const dialog = dialogRef.current
+        dialog?.querySelector<HTMLElement>('input:not([aria-hidden])')?.focus()
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onCloseRef.current()
+                return
+            }
+            if (e.key !== 'Tab' || !dialog) return
+            const stops = [
+                ...dialog.querySelectorAll<HTMLElement>(FOCUSABLE),
+            ].filter(
+                el =>
+                    el.tabIndex >= 0 &&
+                    !(el as HTMLButtonElement | HTMLInputElement).disabled,
+            )
+            const first = stops[0]
+            const last = stops[stops.length - 1]
+            const active = document.activeElement
+            if (!first) {
+                e.preventDefault()
+                dialog.focus()
+            } else if (!dialog.contains(active)) {
+                e.preventDefault()
+                ;(e.shiftKey ? last : first).focus()
+            } else if (e.shiftKey && active === first) {
+                e.preventDefault()
+                last.focus()
+            } else if (!e.shiftKey && active === last) {
+                e.preventDefault()
+                first.focus()
+            }
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => {
+            document.removeEventListener('keydown', onKeyDown)
+            trigger?.focus()
+        }
+    }, [isOpen])
 
     const providerName = isCustom ? customToolName : integrationName
 
@@ -437,22 +491,32 @@ const EmailModal: React.FC<EmailModalProps> = ({
                     onClick={onClose}
                 >
                     <m.div
+                        ref={dialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby={headingId}
+                        tabIndex={-1}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
+                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10 focus:outline-none"
                         onClick={e => e.stopPropagation()}
                     >
                         {!isSubmitted ? (
                             <>
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                    <h3
+                                        id={headingId}
+                                        className="text-xl font-bold text-gray-900 dark:text-white"
+                                    >
                                         {isCustom
                                             ? 'Request Custom Provider'
                                             : `Get notified for ${integrationName}`}
                                     </h3>
                                     <button
+                                        type="button"
+                                        aria-label="Close"
                                         onClick={onClose}
                                         className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                     >
@@ -574,7 +638,10 @@ const EmailModal: React.FC<EmailModalProps> = ({
                                         </m.svg>
                                     </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                <h3
+                                    id={headingId}
+                                    className="text-xl font-bold text-gray-900 dark:text-white mb-2"
+                                >
                                     You&apos;re all set!
                                 </h3>
                                 <p className="text-gray-600 dark:text-gray-400">
