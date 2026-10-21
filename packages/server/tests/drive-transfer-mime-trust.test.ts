@@ -6,7 +6,15 @@
 // the client's claim is only a fallback when the provider reports nothing
 // (or only the generic application/octet-stream), and even then it has already
 // been through the allowedTypes gate.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import {
+    describe,
+    it,
+    expect,
+    vi,
+    beforeEach,
+    afterEach,
+    type Mock,
+} from 'vitest'
 import { UpupError, UpupErrorCode } from '@useupup/core'
 import { createUpupHandler } from '../src/handler'
 import {
@@ -267,14 +275,14 @@ describe('drive transfer: onBeforeUpload gate (T-5467)', () => {
 // after the provider fetch, not just the two deliberate rejections.
 describe('drive transfer: the drive stream is cancelled on every failure path (T-5467)', () => {
     let store: InMemoryTokenStore
-    let cancelled: ReturnType<typeof vi.fn>
+    let cancelled: Mock<() => void>
     beforeEach(async () => {
         transferMock.mockReset()
         store = new InMemoryTokenStore()
         await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
             accessToken: 'AT',
         })
-        cancelled = vi.fn()
+        cancelled = vi.fn<() => void>()
         vi.stubGlobal(
             'fetch',
             vi.fn(async (url: unknown) => {
