@@ -658,6 +658,16 @@ the object's `Content-Type`. A client claiming `image/png` for an HTML file
 therefore gets `415` under an `image/*` allowlist, or the file stored as
 `text/html` otherwise; both happen before any bytes reach storage.
 
+**Provider reports only `application/octet-stream`.** Dropbox (always) and
+Box (sometimes) cannot say what a file is, so the type from the request's
+`mimeType` is used for it, after it has passed `allowedTypes`. That value is
+still the client's claim: the file's contents are **not** sniffed. If an
+allowlist is your only defence against a type being served back (for example
+HTML from your own bucket origin), do not rely on it for Dropbox and Box
+transfers; serve downloads from a separate origin or with
+`Content-Disposition: attachment`, or reject in `hooks.onBeforeUpload`, which
+receives the file's name and size as well.
+
 ## Policy and limits
 
 **`maxFileSize`** (bytes) applies to `/presign`, `/multipart/init`, and
