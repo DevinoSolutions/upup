@@ -36,25 +36,27 @@ const CLOUDFLARE_IPV6 = [
     '2c0f:f248::/32',
 ] as const
 
-type ParsedIp = { family: 4 | 6; value: bigint }
+// An address is a list of 16-bit groups (IPv4 = 2 groups, IPv6 = 8). Plain
+// numbers only: the landing tsconfig targets below ES2020, so no BigInt.
+type ParsedIp = { family: 4 | 6; groups: number[] }
 
-function parseIpv4(text: string): bigint | null {
+function parseIpv4(text: string): number[] | null {
     const parts = text.split('.')
     if (parts.length !== 4) return null
-    let value = 0n
+    const octets: number[] = []
     for (const part of parts) {
         if (!/^\d{1,3}$/.test(part)) return null
         const octet = Number(part)
         if (octet > 255) return null
-        value = (value << 8n) | BigInt(octet)
+        octets.push(octet)
     }
-    return value
+    return [(octets[0]! << 8) | octets[1]!, (octets[2]! << 8) | octets[3]!]
 }
 
-function parseIpv6(text: string): bigint | null {
+function parseIpv6(text: string): number[] | null {
     let body = text
-    // A trailing dotted quad (::ffff:1.2.3.4) is the last 32 bits.
-    let tail: bigint | null = null
+    // A trailing dotted quad (::ffff:1.2.3.4) is the last two groups.
+    let tail: number[] | null = null
     const lastColon = body.lastIndexOf(':')
     if (body.slice(lastColon + 1).includes('.')) {
         tail = parseIpv4(body.slice(lastColon + 1))
@@ -69,14 +71,17 @@ function parseIpv6(text: string): bigint | null {
     const rest = halves.length === 2 ? toGroups(halves[1] ?? '') : []
     const missing = 8 - head.length - rest.length
     if (halves.length === 2 ? missing < 1 : missing !== 0) return null
-    const groups = [...head, ...Array(Math.max(missing, 0)).fill('0'), ...rest]
-    let value = 0n
-    for (const group of groups) {
+    const texts = [...head, ...Array(Math.max(missing, 0)).fill('0'), ...rest]
+    const groups: number[] = []
+    for (const group of texts) {
         if (!/^[0-9a-fA-F]{1,4}$/.test(group)) return null
-        value = (value << 16n) | BigInt(parseInt(group, 16))
+        groups.push(parseInt(group, 16))
     }
-    if (tail !== null) value = (value & ~0xffffffffn) | tail
-    return value
+    if (tail !== null) {
+        groups[6] = tail[0]!
+        groups[7] = tail[1]!
+    }
+    return groups
 }
 
 function parseIp(raw: string): ParsedIp | null {
@@ -89,39 +94,49 @@ function parseIp(raw: string): ParsedIp | null {
     ).trim()
     if (!text) return null
     if (text.includes(':')) {
-        const value = parseIpv6(text)
-        if (value === null) return null
+        const groups = parseIpv6(text)
+        if (groups === null) return null
         // IPv4-mapped (::ffff:a.b.c.d) is the IPv4 peer in disguise.
-        if (value >> 32n === 0xffffn) {
-            return { family: 4, value: value & 0xffffffffn }
+        if (groups.slice(0, 5).every(g => g === 0) && groups[5] === 0xffff) {
+            return { family: 4, groups: groups.slice(6) }
         }
-        return { family: 6, value }
+        return { family: 6, groups }
     }
-    const value = parseIpv4(text)
-    return value === null ? null : { family: 4, value }
+    const groups = parseIpv4(text)
+    return groups === null ? null : { family: 4, groups }
 }
 
-type Range = { family: 4 | 6; network: bigint; mask: bigint }
+type Range = { family: 4 | 6; groups: number[]; bits: number }
 
 function toRange(cidr: string): Range {
     const [address = '', bitsText = ''] = cidr.split('/')
     const parsed = parseIp(address)
     if (!parsed) throw new Error(`bad Cloudflare CIDR: ${cidr}`)
-    const total = parsed.family === 4 ? 32n : 128n
-    const bits = BigInt(bitsText)
-    const mask = ((1n << total) - 1n) ^ ((1n << (total - bits)) - 1n)
-    return { family: parsed.family, network: parsed.value & mask, mask }
+    return {
+        family: parsed.family,
+        groups: parsed.groups,
+        bits: Number(bitsText),
+    }
 }
 
 const RANGES: Range[] = [...CLOUDFLARE_IPV4, ...CLOUDFLARE_IPV6].map(toRange)
+
+function inRange(ip: ParsedIp, range: Range): boolean {
+    if (ip.family !== range.family) return false
+    let remaining = range.bits
+    for (let i = 0; i < range.groups.length && remaining > 0; i++) {
+        const take = Math.min(16, remaining)
+        const mask = (0xffff << (16 - take)) & 0xffff
+        if ((ip.groups[i]! & mask) !== (range.groups[i]! & mask)) return false
+        remaining -= take
+    }
+    return true
+}
 
 /** True when `ip` (IPv4, IPv6 or IPv4-mapped IPv6) is inside Cloudflare's
  *  published ranges. Anything unparseable is NOT Cloudflare. */
 export function isCloudflareIp(ip: string): boolean {
     const parsed = parseIp(ip)
     if (!parsed) return false
-    return RANGES.some(
-        r =>
-            r.family === parsed.family && (parsed.value & r.mask) === r.network,
-    )
+    return RANGES.some(range => inRange(parsed, range))
 }
