@@ -1,4 +1,3 @@
-import 'server-only'
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
 /**
@@ -10,6 +9,17 @@ import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
  * HMAC-signed cookie only this server can mint. The id reaches
  * `createUpupNextHandler` as the internal `x-upup-visitor` request header,
  * which the wrapper below ALWAYS overwrites, so a client can never choose it.
+ *
+ * The cookie is minted EARLY by `src/proxy.ts` on the pages that can render an
+ * uploader (and on /api/upup/*), so it is already in the browser before the
+ * uploader's first API call. The mint inside `withDemoVisitor` is only a
+ * fallback for a client that hits the API with no prior page load; without the
+ * early mint, parallel first-visit requests (UploadManager runs files
+ * concurrently) would each mint a different id and the browser would keep only
+ * the last cookie, orphaning the other uploads' multipart tokens.
+ *
+ * Node runtime only (node:crypto): Next 16's `proxy.ts` runs on Node, which is
+ * why this one implementation serves both the proxy and the route.
  */
 
 const DEMO_SID_COOKIE = 'upup_demo_sid'
@@ -41,7 +51,7 @@ function macMatches(expected: string, actual: string): boolean {
     return a.length === b.length && timingSafeEqual(a, b)
 }
 
-function resolveVisitor(
+export function resolveVisitor(
     secret: string,
     req: Request,
 ): { id: string; fresh: boolean } {
@@ -67,6 +77,38 @@ function isHttps(req: Request): boolean {
         ?.trim()
     if (forwarded) return forwarded.toLowerCase() === 'https'
     return new URL(req.url).protocol === 'https:'
+}
+
+/** The Set-Cookie value that hands `id` to the browser. */
+export function visitorCookie(
+    secret: string,
+    id: string,
+    req: Request,
+): string {
+    return [
+        `${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`,
+        `Path=${COOKIE_PATH}`,
+        'HttpOnly',
+        'SameSite=Lax',
+        `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
+        ...(isHttps(req) ? ['Secure'] : []),
+    ].join('; ')
+}
+
+/** A Cookie request header with the demo sid set to a freshly minted, signed
+ *  value (dropping any forged/stale one), so downstream code in the SAME
+ *  request sees the identity the response is about to hand the browser. */
+export function cookieHeaderWithVisitor(
+    secret: string,
+    header: string | null,
+    id: string,
+): string {
+    const kept = (header ?? '')
+        .split(';')
+        .map(p => p.trim())
+        .filter(p => p && p.split('=')[0]!.trim() !== DEMO_SID_COOKIE)
+    kept.push(`${DEMO_SID_COOKIE}=${id}.${sign(secret, id)}`)
+    return kept.join('; ')
 }
 
 /** The handler's `getUserId`. Never null: a request that somehow reaches the
@@ -95,17 +137,7 @@ export function withDemoVisitor(
         if (!visitor.fresh) return res
 
         const out = new Response(res.body, res)
-        out.headers.append(
-            'Set-Cookie',
-            [
-                `${DEMO_SID_COOKIE}=${visitor.id}.${sign(secret, visitor.id)}`,
-                `Path=${COOKIE_PATH}`,
-                'HttpOnly',
-                'SameSite=Lax',
-                `Max-Age=${COOKIE_MAX_AGE_SECONDS}`,
-                ...(isHttps(req) ? ['Secure'] : []),
-            ].join('; '),
-        )
+        out.headers.append('Set-Cookie', visitorCookie(secret, visitor.id, req))
         return out
     }
 }
