@@ -7,6 +7,15 @@ import { renderSchemaForPrompt } from '../schema/upup-config.schema.js'
 const SCHEMA_BLOCK = renderSchemaForPrompt()
 
 /**
+ * Mastra's default step budget, written down so a framework upgrade cannot
+ * raise it unseen: one apply-config-patch call plus the answer fits with room
+ * for a retry of a rejected patch. Every step is one model request.
+ */
+const PLAYGROUND_AGENT_MAX_STEPS = 5
+
+const modelDefaults = agentDefaultOptions(env)
+
+/**
  * The playground agent.
  *
  * Single job: turn a user's natural-language description of an upload setup
@@ -55,6 +64,12 @@ Tone: terse, helpful, no emoji, no marketing language. You are a config tool wit
 a chat interface — not a chatbot.
     `.trim(),
     model: agentModel(env),
-    ...agentDefaultOptions(env),
+    // Merge into the model-specific defaults (providerOptions), never replace them.
+    defaultOptions: {
+        ...('defaultOptions' in modelDefaults
+            ? modelDefaults.defaultOptions
+            : {}),
+        maxSteps: PLAYGROUND_AGENT_MAX_STEPS,
+    },
     tools: { applyConfigPatch },
 })
