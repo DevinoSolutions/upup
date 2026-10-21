@@ -8,24 +8,36 @@
 // drift (a rolling redeploy that didn't share the same uploadTokenSecret)
 // without being reversible to the secret itself.
 
-import type { UpupServerConfig } from './config'
+import type { UpupServerConfig, UpupStorageConfig } from './config'
 import type { Responder } from './respond'
 import { checkStorageReachable } from './providers/aws'
 import { reportServerError, toSafeError } from './observability'
 import { DEFAULT_UPLOAD_TOKEN_TTL_SECONDS } from './uploadToken'
 import { isStorageResolver } from './resolve-storage'
 
-type StorageCheckCache = { ok: true } | { ok: false } | undefined
-let cachedStorageCheck: StorageCheckCache
-let cachedAt = 0
+type StorageCheckEntry = { ok: boolean; at: number }
+// One slot PER DESTINATION. A single module-level slot let two handlers in one
+// process (two buckets, tenants on different endpoints) serve each other's
+// probe result, so a healthy bucket could mask an unreachable one (T-5494).
+const storageChecks = new Map<string, StorageCheckEntry>()
 const STORAGE_CHECK_TTL_MS = 30_000
+
+/** Identity of a storage destination for caching: the connection fields that
+ *  decide which bucket a probe hits. Never includes the secret key. */
+function storageKey(storage: UpupStorageConfig): string {
+    return [
+        storage.endpoint ?? '',
+        storage.region,
+        storage.bucket,
+        storage.accessKeyId ?? '',
+    ].join(' ')
+}
 
 /** Test-only: force the next handleHealth() call to re-probe storage instead
  *  of serving the TTL-cached result. Not exported from the package's public
  *  entry (index.ts) — internal to this module's test suite. */
 export function _resetStorageCheckCacheForTests(): void {
-    cachedStorageCheck = undefined
-    cachedAt = 0
+    storageChecks.clear()
 }
 
 function isConfigComplete(config: UpupServerConfig): boolean {
@@ -60,10 +72,9 @@ export async function handleHealth(
         ? null
         : config.storage
     const now = Date.now()
-    if (
-        staticStorage &&
-        (!cachedStorageCheck || now - cachedAt > STORAGE_CHECK_TTL_MS)
-    ) {
+    const cacheKey = staticStorage ? storageKey(staticStorage) : ''
+    const cached = storageChecks.get(cacheKey)
+    if (staticStorage && (!cached || now - cached.at > STORAGE_CHECK_TTL_MS)) {
         const result = await checkStorageReachable(staticStorage)
         if (!result.ok) {
             reportServerError(config.onError, {
@@ -76,11 +87,12 @@ export async function handleHealth(
                 error: toSafeError(result.error),
             })
         }
-        cachedStorageCheck = result.ok ? { ok: true } : { ok: false }
-        cachedAt = now
+        storageChecks.set(cacheKey, { ok: result.ok, at: now })
     }
 
-    const storageOk = staticStorage ? Boolean(cachedStorageCheck?.ok) : true
+    const storageOk = staticStorage
+        ? Boolean(storageChecks.get(cacheKey)?.ok)
+        : true
     const body: Record<string, unknown> = {
         status: configOk && storageOk ? 'ok' : 'degraded',
         checks: {

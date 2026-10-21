@@ -23,7 +23,7 @@ interface FastifyRequest {
 
 interface FastifyReply {
     code(statusCode: number): FastifyReply
-    header(key: string, value: string): FastifyReply
+    header(key: string, value: string | string[]): FastifyReply
     send(payload: string | Buffer): FastifyReply
 }
 
@@ -59,10 +59,14 @@ export function createUpupPlugin(
 
                 const webRes = await handler(webReq)
 
+                // Fastify's reply.header() APPENDS a repeated set-cookie, so
+                // one call per cookie (appendHeader) keeps every value exactly
+                // once; setHeader still replaces for everything else.
                 await writeWebResponse(
                     {
                         status: c => reply.code(c),
                         setHeader: (k, v) => reply.header(k, v),
+                        appendHeader: (k, v) => reply.header(k, v),
                         send: b => reply.send(b),
                     },
                     webRes,

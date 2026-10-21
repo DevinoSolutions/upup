@@ -16,7 +16,7 @@ import {
     runBeforeUploadHook,
     runPostCompletionHooks,
 } from './upload-routes'
-import { type Responder } from './respond'
+import { isJsonObject, type Responder } from './respond'
 import { resolveStorage } from './resolve-storage'
 import type { UpupClientMetadata } from './config'
 
@@ -133,7 +133,12 @@ export async function handleFileTransfer(
         metadata?: UpupClientMetadata
     }
     try {
-        body = (await req.json()) as typeof body
+        const raw: unknown = await req.json()
+        // null / array / scalar is a client error, not something to dereference.
+        if (!isJsonObject(raw)) {
+            return res.json({ error: 'Invalid JSON body' }, 400)
+        }
+        body = raw as typeof body
     } catch {
         // upup-catch: a malformed JSON body is surfaced to the client as 400 —
         // returned, not swallowed.

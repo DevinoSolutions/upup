@@ -151,3 +151,37 @@ describe('handleHealth', () => {
         })
     })
 })
+
+// T-5494: the storage probe cache used to be one module-level slot, so two
+// handlers in one process (two buckets, or a resolver-less multi-tenant host)
+// served each other's result — a healthy bucket could mask a dead one.
+describe('handleHealth storage-probe cache is per destination (T-5494)', () => {
+    beforeEach(() => {
+        vi.mocked(checkStorageReachable).mockReset()
+        _resetStorageCheckCacheForTests()
+    })
+
+    const configFor = (bucket: string): UpupServerConfig => ({
+        ...baseConfig,
+        storage: { type: 'aws', bucket, region: 'us-east-1' },
+    })
+
+    it('a healthy bucket does not mask an unreachable one', async () => {
+        vi.mocked(checkStorageReachable).mockImplementation(async storage =>
+            storage.bucket === 'good'
+                ? { ok: true }
+                : { ok: false, error: new Error('down') },
+        )
+        const good = await handleHealth(configFor('good'), responder())
+        const bad = await handleHealth(configFor('bad'), responder())
+        expect(((await good.json()) as HealthBody).checks.storage).toBe('ok')
+        expect(((await bad.json()) as HealthBody).checks.storage).toBe('error')
+    })
+
+    it('still serves a destination its own cached result within the TTL', async () => {
+        vi.mocked(checkStorageReachable).mockResolvedValue({ ok: true })
+        await handleHealth(configFor('good'), responder())
+        await handleHealth(configFor('good'), responder())
+        expect(checkStorageReachable).toHaveBeenCalledTimes(1)
+    })
+})
