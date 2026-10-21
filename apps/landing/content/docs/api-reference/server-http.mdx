@@ -602,7 +602,7 @@ list route.
     fileId: string // required
     fileName?: string // overrides the provider's name
     size?: number // client-declared; used only for the fast reject
-    mimeType?: string // checked against allowedTypes
+    mimeType?: string // early-out hint only; the provider's reported type decides
 }
 ```
 
@@ -630,12 +630,22 @@ throw-is-logged-and-swallowed treatment as multipart complete.
 | `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
 | `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
 | `413`  | `{ "error": "File too large" }`                                | declared `size` exceeds `maxFileSize`          |
-| `415`  | `{ "error": "File type not allowed" }`                         | `mimeType` fails `allowedTypes`                |
+| `415`  | `{ "error": "File type not allowed" }`                         | the file's type fails `allowedTypes`           |
+| `403`  | `{ "error": "Upload rejected" }`                               | your `hooks.onBeforeUpload` returned `false` (or threw an `UpupError`, as on the upload routes) |
 | `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
 | `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
 
 The `413` above is only a cheap early-out on the client-declared size. The
 authoritative cap is enforced against the bytes actually streamed — see below.
+
+**The type is the provider's, not the client's.** The request's `mimeType` is
+only a hint: it gives a cheap first reject, and is used as the stored type when
+the provider reports nothing (or only `application/octet-stream`). Otherwise the
+type the provider reports is what is checked against `allowedTypes`, handed to
+`hooks.onBeforeUpload` (alongside the provider's name and size) and stored as
+the object's `Content-Type`. A client claiming `image/png` for an HTML file
+therefore gets `415` under an `image/*` allowlist, or the file stored as
+`text/html` otherwise; both happen before any bytes reach storage.
 
 ## Policy and limits
 

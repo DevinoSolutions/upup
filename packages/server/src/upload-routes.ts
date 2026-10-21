@@ -202,10 +202,22 @@ async function validateUploadMetadata(
         return res.json({ error: 'File type not allowed' }, 415)
     }
 
+    return runBeforeUploadHook(config, body, req, res)
+}
+
+/** The `hooks.onBeforeUpload` admission gate, shared by the upload routes and
+ *  the drive-transfer path (T-5467 — the transfer path used to skip it). `null`
+ *  means admitted; otherwise the 403 to return. */
+export async function runBeforeUploadHook(
+    config: UpupServerConfig,
+    file: FileMetadata,
+    req: Request,
+    res: Responder,
+): Promise<Response | null> {
     if (config.hooks?.onBeforeUpload) {
         let allowed: boolean
         try {
-            allowed = await config.hooks.onBeforeUpload(body, req)
+            allowed = await config.hooks.onBeforeUpload(file, req)
         } catch (error) {
             // upup-catch: an UpupError is the integrator DELIBERATELY speaking to
             // the client — serialize its message + code into the 403 so a quota

@@ -11,7 +11,11 @@ import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'
 import { getDriveClient } from './drive-clients'
-import { matchesAllowedType, runPostCompletionHooks } from './upload-routes'
+import {
+    matchesAllowedType,
+    runBeforeUploadHook,
+    runPostCompletionHooks,
+} from './upload-routes'
 import { type Responder } from './respond'
 import { resolveStorage } from './resolve-storage'
 import type { UpupClientMetadata } from './config'
@@ -141,6 +145,9 @@ export async function handleFileTransfer(
     // One shared allowed-types policy with the upload path (F-743): honour the
     // `image/*` wildcard, and treat an ABSENT mimeType as a non-match against a
     // non-empty allowlist (`?? ''`) rather than silently bypassing the check.
+    // This is only a cheap early-out on the CLIENT's claim (and the gate for the
+    // fallback case where the provider reports no type); the claim is never
+    // what gets stored — the provider-reported type is re-gated below (T-5467).
     if (!matchesAllowedType(body.mimeType ?? '', config.allowedTypes)) {
         return res.json({ error: 'File type not allowed' }, 415)
     }
@@ -149,6 +156,30 @@ export async function handleFileTransfer(
         const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
         ).fetchFile(tokens.accessToken, body)
+        // T-5467: `mimeType` is the PROVIDER's type (the client's claim only
+        // fills in when the provider reports none), so re-gate it against
+        // allowedTypes and run the same onBeforeUpload admission as the upload
+        // routes, on the real name/type/size. Reject BEFORE any bytes are
+        // consumed, and cancel the open drive stream so the connection is freed.
+        const rejected = !matchesAllowedType(mimeType, config.allowedTypes)
+            ? res.json({ error: 'File type not allowed' }, 415)
+            : await runBeforeUploadHook(
+                  config,
+                  {
+                      name: fileName,
+                      size,
+                      type: mimeType,
+                      ...(body.metadata !== undefined
+                          ? { metadata: body.metadata }
+                          : {}),
+                  },
+                  req,
+                  res,
+              )
+        if (rejected) {
+            await stream.cancel().catch(() => undefined)
+            return rejected
+        }
         // Resolved AFTER the drive reports the real name/type/size, so a
         // resolver can route on what is actually being transferred rather than
         // on the client's claim (#337).

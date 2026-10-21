@@ -383,14 +383,17 @@ billing, or webhooks on top of them — the gaps are structural, not bugs:
 | `POST /multipart/init`           | yes              | yes                 | no               | no                 |
 | `POST /multipart/sign-part`      | no               | yes                 | no               | no                 |
 | `POST /multipart/complete`       | no               | no                  | yes              | yes                |
-| `POST /files/:provider/transfer` | no               | no                  | yes              | no                 |
+| `POST /files/:provider/transfer` | yes              | no                  | yes              | no                 |
 
 - **`onBeforeUpload` is an admission gate, not a completion signal.** It runs
   during metadata validation on `/presign` and `/multipart/init`, after the
   `maxFileSize` and `allowedTypes` checks. Returning `false` responds
   `403 Upload rejected` and nothing is presigned. To explain the rejection,
   **throw an `UpupError`** instead — see
-  [Explaining a rejection](#explaining-a-rejection) below.
+  [Explaining a rejection](#explaining-a-rejection) below. It also gates
+  `POST /files/:provider/transfer`, where the file it receives carries the
+  type, name and size the **provider** reported (not the client's claim),
+  and a rejection happens before any bytes are written to storage.
 - **`onPresignResponse` is the only hook that can change a response body.** It
   sees the three presign-side payloads and nothing else — see
   [Rewriting presign responses](#rewriting-presign-responses).

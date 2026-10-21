@@ -45,6 +45,21 @@ export type DriveClient = {
     }>
 }
 
+/** The type a transferred file is gated on and stored as (T-5467). The
+ *  PROVIDER's report wins over the client's `mimeType`: the client only gets a
+ *  say when the provider reports nothing, or only the generic
+ *  `application/octet-stream` (Dropbox/Box download headers), and the route has
+ *  already run that claim through `allowedTypes` before any fetch. Parameters
+ *  (`; charset=...`) are stripped so the allowlist compares bare types. */
+export function resolveMimeType(
+    reported: string | null | undefined,
+    claimed: string | undefined,
+): string {
+    const bare = reported?.split(';')[0]?.trim().toLowerCase()
+    if (bare && bare !== 'application/octet-stream') return bare
+    return claimed || 'application/octet-stream'
+}
+
 const DRIVE_CLIENTS: Record<OAuthProvider, DriveClient> = {
     'google-drive': {
         listFiles: listGoogleDriveFiles,
@@ -192,7 +207,7 @@ async function fetchGoogleDriveFile(
         stream: dlRes.body,
         size: Number(meta.size ?? body.size ?? 0),
         fileName: body.fileName ?? meta.name,
-        mimeType: body.mimeType ?? meta.mimeType ?? 'application/octet-stream',
+        mimeType: resolveMimeType(meta.mimeType, body.mimeType),
     }
 }
 
@@ -259,8 +274,7 @@ async function fetchOneDriveFile(
         stream: dlRes.body,
         size: meta.size ?? body.size ?? 0,
         fileName: body.fileName ?? meta.name,
-        mimeType:
-            body.mimeType ?? meta.file?.mimeType ?? 'application/octet-stream',
+        mimeType: resolveMimeType(meta.file?.mimeType, body.mimeType),
     }
 }
 
@@ -361,10 +375,10 @@ async function fetchDropboxFile(
         stream: dlRes.body,
         size,
         fileName: name,
-        mimeType:
-            body.mimeType ??
-            dlRes.headers.get('Content-Type') ??
-            'application/octet-stream',
+        mimeType: resolveMimeType(
+            dlRes.headers.get('Content-Type'),
+            body.mimeType,
+        ),
     }
 }
 
@@ -447,9 +461,9 @@ async function fetchBoxFile(
         stream: dlRes.body,
         size: meta.size ?? body.size ?? 0,
         fileName: body.fileName ?? meta.name,
-        mimeType:
-            body.mimeType ??
-            dlRes.headers.get('Content-Type') ??
-            'application/octet-stream',
+        mimeType: resolveMimeType(
+            dlRes.headers.get('Content-Type'),
+            body.mimeType,
+        ),
     }
 }
