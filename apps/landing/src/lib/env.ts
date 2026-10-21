@@ -107,6 +107,11 @@ const serverSchema = z.object({
     SENDLY_API_KEY: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),
     SUPPORT_EMAIL_FROM: z.string().min(1).optional(),
+    // Explicit override for trusting cf-connecting-ip in the support rate limit
+    // (see lib/support/rate-limit.ts). Unset = trust it only when the immediate
+    // peer is a Cloudflare edge; '1'/'true' = always; '0'/'false' = never.
+    // Free-form string: a typo must fall back to the safe default, not crash boot.
+    TRUST_CF_CONNECTING_IP: z.string().optional(),
 })
 
 export const env: z.infer<typeof serverSchema> = (() => {

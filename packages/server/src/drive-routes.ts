@@ -11,7 +11,11 @@ import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'
 import { getDriveClient } from './drive-clients'
-import { matchesAllowedType, runPostCompletionHooks } from './upload-routes'
+import {
+    matchesAllowedType,
+    runBeforeUploadHook,
+    runPostCompletionHooks,
+} from './upload-routes'
 import { type Responder } from './respond'
 import { resolveStorage } from './resolve-storage'
 import type { UpupClientMetadata } from './config'
@@ -78,6 +82,15 @@ export async function handleListFiles(
     }
 }
 
+/** Cancel an open drive stream. Best-effort and idempotent: a stream the
+ *  transfer already consumed (locked or closed) rejects, which is fine. */
+async function releaseStream(
+    stream: ReadableStream<Uint8Array> | undefined,
+): Promise<void> {
+    if (!stream) return
+    await stream.cancel().catch(() => undefined)
+}
+
 export async function handleFileTransfer(
     req: Request,
     config: UpupServerConfig,
@@ -141,14 +154,46 @@ export async function handleFileTransfer(
     // One shared allowed-types policy with the upload path (F-743): honour the
     // `image/*` wildcard, and treat an ABSENT mimeType as a non-match against a
     // non-empty allowlist (`?? ''`) rather than silently bypassing the check.
+    // This is only a cheap early-out on the CLIENT's claim (and the gate for the
+    // fallback case where the provider reports no type); the claim is never
+    // what gets stored — the provider-reported type is re-gated below (T-5467).
     if (!matchesAllowedType(body.mimeType ?? '', config.allowedTypes)) {
         return res.json({ error: 'File type not allowed' }, 415)
     }
 
+    // The open drive response body, tracked outside the try so EVERY failure
+    // after the provider fetch (a rejection, a throwing onBeforeUpload, a
+    // throwing storage resolver, a failed transfer) releases the connection.
+    let driveStream: ReadableStream<Uint8Array> | undefined
     try {
         const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
         ).fetchFile(tokens.accessToken, body)
+        driveStream = stream
+        // T-5467: `mimeType` is the PROVIDER's type (the client's claim only
+        // fills in when the provider reports none), so re-gate it against
+        // allowedTypes and run the same onBeforeUpload admission as the upload
+        // routes, on the real name/type/size. Reject BEFORE any bytes are
+        // consumed, and cancel the open drive stream so the connection is freed.
+        const rejected = !matchesAllowedType(mimeType, config.allowedTypes)
+            ? res.json({ error: 'File type not allowed' }, 415)
+            : await runBeforeUploadHook(
+                  config,
+                  {
+                      name: fileName,
+                      size,
+                      type: mimeType,
+                      ...(body.metadata !== undefined
+                          ? { metadata: body.metadata }
+                          : {}),
+                  },
+                  req,
+                  res,
+              )
+        if (rejected) {
+            await releaseStream(driveStream)
+            return rejected
+        }
         // Resolved AFTER the drive reports the real name/type/size, so a
         // resolver can route on what is actually being transferred rather than
         // on the client's claim (#337).
@@ -191,6 +236,7 @@ export async function handleFileTransfer(
         )
         return res.json({ provider, ...result }, 200)
     } catch (err) {
+        await releaseStream(driveStream)
         if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)

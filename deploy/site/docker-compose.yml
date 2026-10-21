@@ -62,6 +62,12 @@ services:
             - SENDLY_API_KEY
             - SUPPORT_EMAIL_TO
             - SUPPORT_EMAIL_FROM
+            # Optional explicit override for the support rate limit. UNSET is
+            # right for the Cloudflare-proxied deploys: the app then trusts
+            # cf-connecting-ip only when the immediate peer is inside
+            # Cloudflare's published ranges. 1 = always trust it (a tunnel whose
+            # peer is not a Cloudflare edge); 0 = never trust it.
+            - TRUST_CF_CONNECTING_IP
         expose:
             - '3000'
         restart: unless-stopped

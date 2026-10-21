@@ -12,6 +12,7 @@ import {
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createUpupHandler } from '../../src/handler'
+import { generatePresignedPartUrl } from '../../src/providers/aws'
 import type { UpupServerConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
@@ -115,6 +116,14 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     // declared size (=> tiny smax) then upload real oversized parts and still
     // complete. MinIO requires >=5 MiB for a non-final part, so declare a size
     // well under that and upload one real 5 MiB part.
+    //
+    // Since T-5492 /multipart/sign-part signs the part length, so the handler's
+    // own part URL refuses this body at storage (next test), and a handler that
+    // mints a no-length URL no longer exists for any token issued after
+    // PART_LENGTH_BINDING_CUTOFF_SECONDS. This test therefore mints the part URL
+    // straight from the provider with no signed length, standing in for a
+    // legacy (pre-cutoff, no `ps`) token, so the oversized part lands and ONLY
+    // the complete-time envelope check stands between it and a finalized object.
     it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
         const handler = createUpupHandler(config)
         const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
@@ -130,13 +139,13 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
 
         // Upload ONE real part far larger than the declared/signed size.
         const oversizedPart = new Uint8Array(5 * 1024 * 1024).fill(3) // 5 MiB >> 1 KiB declared
-        const signed = (await (
-            await post(handler, '/multipart/sign-part', {
-                token: init.token,
-                partNumber: 1,
-            })
-        ).json()) as SignedPartBody
-        const put = await fetch(signed.uploadUrl, {
+        const unsigned = await generatePresignedPartUrl(
+            storage,
+            init.key,
+            init.uploadId,
+            1,
+        )
+        const put = await fetch(unsigned.uploadUrl, {
             method: 'PUT',
             body: oversizedPart,
         })
@@ -170,6 +179,52 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
                 }),
             ),
         ).rejects.toThrow()
+    }, 30_000)
+
+    // T-5492: the size envelope is also enforced PER PART, at storage. The part
+    // URL the handler hands out signs the exact length derived from the signed
+    // token, so an oversized body is refused by S3/MinIO at PUT time (the upload
+    // never reaches complete, so the complete-time check alone never saw it) and
+    // the part is never stored.
+    it('T-5492: refuses an oversized part at storage, and accepts the exact signed length', async () => {
+        const handler = createUpupHandler(config)
+        const declaredSize = 1024 // tiny declared size -> signed part length 1024
+        const init = (await (
+            await post(handler, '/multipart/init', {
+                name: 't5492-oversized-part.bin',
+                size: declaredSize,
+                type: 'application/octet-stream',
+            })
+        ).json()) as MultipartInitBody
+        createdKeys.push(init.key)
+
+        const signed = (await (
+            await post(handler, '/multipart/sign-part', {
+                token: init.token,
+                partNumber: 1,
+            })
+        ).json()) as SignedPartBody
+
+        const oversized = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: new Uint8Array(5 * 1024 * 1024).fill(3),
+        })
+        expect(oversized.ok).toBe(false)
+
+        const parts = await s3.send(
+            new ListPartsCommand({
+                Bucket: storage.bucket,
+                Key: init.key,
+                UploadId: init.uploadId,
+            }),
+        )
+        expect(parts.Parts ?? []).toHaveLength(0)
+
+        const exact = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: new Uint8Array(declaredSize).fill(4),
+        })
+        expect(exact.status).toBe(200)
     }, 30_000)
 
     // S2: a tampered token must be refused; a valid token must succeed.
