@@ -62,6 +62,12 @@ services:
             - SENDLY_API_KEY
             - SUPPORT_EMAIL_TO
             - SUPPORT_EMAIL_FROM
+            # useupup.com and dev.useupup.com are both proxied by Cloudflare,
+            # which overwrites cf-connecting-ip, so the support rate limit may
+            # key on it. Defaults ON here (the shape of these two deploys); the
+            # app itself defaults OFF. Set to 0 for any deploy whose origin is
+            # reachable around Cloudflare.
+            - TRUST_CF_CONNECTING_IP=${TRUST_CF_CONNECTING_IP:-1}
         expose:
             - '3000'
         restart: unless-stopped
