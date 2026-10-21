@@ -84,6 +84,8 @@ jobs:
             # `test` script but no coverage config (turbo --filter excludes the 9;
             # their dists are already on disk from the step above). Together
             # they cover every package `pnpm run test` did, each exactly once.
+            # This relies on turbo.json's `test` task depending only on `^build`:
+            # a `^test` dependency would pull the 9 suites back into this step.
             - name: Unit suites + coverage floors (9 publishable packages)
               run: pnpm run test:coverage
 
