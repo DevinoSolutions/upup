@@ -13,7 +13,19 @@ function render(content: string): string {
     return renderToStaticMarkup(createElement(MessageBody, { content }))
 }
 
-const textOf = (html: string) => html.replace(/<[^>]*>/g, '')
+// Drops every tag by scanning characters instead of a tag regex. The input is
+// React's own escaped static markup, so this is a text extractor for assertions,
+// not a sanitizer (and CodeQL no longer reads it as one).
+function textOf(html: string): string {
+    let out = ''
+    let inTag = false
+    for (const ch of html) {
+        if (ch === '<') inTag = true
+        else if (ch === '>') inTag = false
+        else if (!inTag) out += ch
+    }
+    return out
+}
 
 describe('MessageBody inline rendering', () => {
     it('renders **bold** as <strong> with no literal asterisks left', () => {
