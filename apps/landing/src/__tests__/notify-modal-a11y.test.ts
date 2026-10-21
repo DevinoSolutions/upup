@@ -230,4 +230,91 @@ describe('notify modal accessibility', () => {
             vi.useRealTimers()
         }
     })
+
+    // The request is never aborted (the sign-up is real), so it can resolve
+    // after the user dismissed the dialog. Closing only detaches the UI.
+    describe('a submit still in flight when the dialog closes', () => {
+        function deferSubmit() {
+            let resolve!: (ok: boolean) => void
+            vi.mocked(submitAndRecordProviderInterest).mockImplementationOnce(
+                () =>
+                    new Promise<boolean>(r => {
+                        resolve = r
+                    }),
+            )
+            return (ok: boolean) => resolve(ok)
+        }
+
+        function submitForm() {
+            act(() => {
+                dialog()
+                    .querySelector<HTMLButtonElement>('button[type="submit"]')!
+                    .click()
+            })
+        }
+
+        function emailValue(): string {
+            return document.querySelector<HTMLInputElement>(
+                'input[type="email"]',
+            )!.value
+        }
+
+        it('does not show the success panel or arm the close timer on a reopened dialog', async () => {
+            vi.useFakeTimers()
+            try {
+                const settle = deferSubmit()
+                openFrom('Instagram')
+                fillEmail()
+                submitForm()
+                press('Escape')
+                expect(isOpen()).toBe(false)
+
+                await act(async () => {
+                    settle(true)
+                })
+
+                openFrom('Instagram')
+                expect(isOpen()).toBe(true)
+                expect(document.querySelector('[role="status"]')).toBeNull()
+                expect(emailValue()).toBe('')
+
+                act(() => {
+                    vi.advanceTimersByTime(2500)
+                })
+                expect(isOpen()).toBe(true)
+            } finally {
+                vi.useRealTimers()
+            }
+        })
+
+        it('reopens with an enabled submit button while the stale request is pending', () => {
+            deferSubmit()
+            openFrom('Instagram')
+            fillEmail()
+            submitForm()
+            press('Escape')
+
+            openFrom('Instagram')
+            fillEmail()
+            const submit = dialog().querySelector<HTMLButtonElement>(
+                'button[type="submit"]',
+            )!
+            expect(submit.disabled).toBe(false)
+        })
+
+        it('does not surface a stale failure in a reopened dialog', async () => {
+            const settle = deferSubmit()
+            openFrom('Instagram')
+            fillEmail()
+            submitForm()
+            press('Escape')
+            openFrom('Instagram')
+            expect(isOpen()).toBe(true)
+
+            await act(async () => {
+                settle(false)
+            })
+            expect(document.querySelector('[role="alert"]')).toBeNull()
+        })
+    })
 })
