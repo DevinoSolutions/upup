@@ -24,6 +24,41 @@ test.describe('docs', () => {
             // transition, or the open-time focus() hits a hidden element.
             await expect(drawer.getByTestId('docs-ask-ai-input')).toBeFocused()
         })
+
+        test('keyboard Send keeps focus in the composer so Escape still closes', async ({
+            page,
+        }) => {
+            await page.route('**/api/agents/docs-agent/stream', route =>
+                route.fulfill({ status: 404, body: '' }),
+            )
+            await page.route('**/api/agents/docs-agent/generate', route =>
+                route.fulfill({
+                    contentType: 'application/json',
+                    body: JSON.stringify({ text: 'Use the tus strategy.' }),
+                }),
+            )
+            await page.goto('/docs/getting-started/')
+            const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
+            const drawer = page.getByTestId('docs-ask-ai-drawer')
+            await expect(async () => {
+                await trigger.click()
+                await expect(drawer).toBeVisible({ timeout: 2000 })
+            }).toPass()
+            const input = drawer.getByTestId('docs-ask-ai-input')
+            await expect(input).toBeFocused()
+            await input.fill('resumable uploads?')
+            // Tab from the composer to Send and activate it from the keyboard.
+            // Submitting disables Send; Chrome drops focus from a focused
+            // button that disables, which strands the user outside the aside
+            // so Escape never reaches its handler. Focus must stay in the
+            // composer.
+            await page.keyboard.press('Tab')
+            await expect(drawer.getByTestId('docs-ask-ai-send')).toBeFocused()
+            await page.keyboard.press('Enter')
+            await expect(input).toBeFocused()
+            await page.keyboard.press('Escape')
+            await expect(drawer).toBeHidden()
+        })
     })
 
     test('legacy documentation URL permanently redirects to docs', async ({
