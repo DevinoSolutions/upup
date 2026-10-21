@@ -93,7 +93,7 @@ export type SupportRequest = z.infer<typeof supportRequestSchema>
 
 // ── Response contract (shared client/route shape) ────────────────────────
 
-export type PosthogLegStatus = 'ok' | 'failed'
+export type PosthogLegStatus = 'ok' | 'failed' | 'skipped'
 export type EmailLegStatus = 'ok' | 'failed' | 'not_configured'
 
 export interface SupportResponse {
