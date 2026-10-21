@@ -159,7 +159,13 @@ export async function verifyUploadToken(
             'Upload token is missing or malformed',
         )
     }
-    const [body, sig] = token.split('.')
+    // Exactly `body.sig`. Destructuring only the first two segments used to let
+    // `body.sig.anything` verify; a token is one shape, anything else is junk.
+    const segments = token.split('.')
+    if (segments.length !== 2) {
+        throw new UploadTokenError('malformed', 'Upload token is malformed')
+    }
+    const [body, sig] = segments
     if (!body || !sig) {
         throw new UploadTokenError('malformed', 'Upload token is malformed')
     }

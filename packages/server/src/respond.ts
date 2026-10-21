@@ -126,14 +126,34 @@ export function createResponder(
     }
 }
 
+/** Every route reads named fields off the body, so only a JSON OBJECT is a
+ *  usable body: `null`, an array or a scalar is a client error, not something to
+ *  dereference (it used to surface as a 500). */
+export function isJsonObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
- *  on malformed JSON. Collapses the two divergent body-parse sites. */
+ *  on malformed JSON or a non-object body. Collapses the two divergent
+ *  body-parse sites. */
 export async function parseJsonBody(
     req: Request,
     res: Responder,
 ): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
     try {
         const value: unknown = await req.json()
+        if (!isJsonObject(value)) {
+            return {
+                ok: false,
+                response: res.json(
+                    {
+                        error: 'Request body must be a JSON object',
+                        code: UpupErrorCode.BAD_REQUEST,
+                    },
+                    400,
+                ),
+            }
+        }
         return { ok: true, value }
     } catch {
         // upup-catch: malformed JSON becomes a 400 Result the caller returns —
