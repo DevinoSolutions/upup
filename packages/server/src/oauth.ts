@@ -114,6 +114,69 @@ function callbackUrlFor(req: Request, provider: string): string {
     return `${base}/auth/${provider}/cb`
 }
 
+// ─────────────────────────────────────────────────────────────
+// Browser binding (T-5463). The popup's top-level navigation to /auth/:provider
+// cannot carry an Authorization header, and anonymous mode resolves every caller
+// to the same user, so comparing identities at /cb protects nothing. A nonce
+// cookie set on the server's own origin works for header auth, session-cookie
+// auth and anonymous mode alike: only the browser that was redirected holds it.
+// ─────────────────────────────────────────────────────────────
+
+const NONCE_COOKIE_MAX_AGE_SECONDS = 600
+
+function nonceCookieName(provider: string): string {
+    return `upup_oauth_${provider}`
+}
+
+async function sha256Hex(input: string): Promise<string> {
+    const digest = await crypto.subtle.digest(
+        'SHA-256',
+        new TextEncoder().encode(input),
+    )
+    return Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+}
+
+/** Constant-time compare — never branch on content before lengths match. */
+function timingSafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false
+    let diff = 0
+    for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    return diff === 0
+}
+
+function readCookie(req: Request, name: string): string | undefined {
+    const header = req.headers.get('cookie')
+    if (!header) return undefined
+    for (const part of header.split(';')) {
+        const eq = part.indexOf('=')
+        if (eq === -1) continue
+        if (part.slice(0, eq).trim() === name) return part.slice(eq + 1).trim()
+    }
+    return undefined
+}
+
+/** `Set-Cookie` for the nonce. Path is the /cb path of the callback URL, so the
+ *  cookie is sent to the callback and nowhere else, under any prefix mount.
+ *  Secure follows the callback URL's scheme (already proxy-normalized). */
+function nonceSetCookie(
+    req: Request,
+    provider: string,
+    value: string,
+    maxAge: number,
+): string {
+    const cb = new URL(callbackUrlFor(req, provider))
+    return [
+        `${nonceCookieName(provider)}=${value}`,
+        `Path=${cb.pathname}`,
+        `Max-Age=${maxAge}`,
+        'HttpOnly',
+        'SameSite=Lax',
+        ...(cb.protocol === 'https:' ? ['Secure'] : []),
+    ].join('; ')
+}
+
 export async function handleOAuthRedirect(
     req: Request,
     config: UpupServerConfig,
@@ -138,11 +201,13 @@ export async function handleOAuthRedirect(
     if ('error' in meta) return res.json({ error: meta.error }, meta.status)
 
     const state = generateOAuthState()
+    const nonce = generateOAuthState()
     const returnTo = new URL(req.url).searchParams.get('returnTo') ?? undefined
     await saveOAuthState(config.tokenStore, state, {
         userId,
         provider,
         returnTo,
+        nonceHash: await sha256Hex(nonce),
     })
 
     const params = new URLSearchParams({
@@ -154,7 +219,14 @@ export async function handleOAuthRedirect(
         ...(meta.extra ?? {}),
     })
 
-    return res.redirect(`${meta.authUrl}?${params.toString()}`)
+    return res.redirect(`${meta.authUrl}?${params.toString()}`, 302, {
+        'Set-Cookie': nonceSetCookie(
+            req,
+            provider,
+            nonce,
+            NONCE_COOKIE_MAX_AGE_SECONDS,
+        ),
+    })
 }
 
 export async function handleOAuthCallback(
@@ -182,6 +254,25 @@ export async function handleOAuthCallback(
     const stateData = await consumeOAuthState(config.tokenStore, state)
     if (!stateData || stateData.provider !== provider) {
         return res.json({ error: 'Invalid or expired state' }, 400)
+    }
+
+    // Bind the callback to the browser that started the flow. The state is
+    // already consumed, so a forged attempt only burns the attacker's own state.
+    // A state without a nonceHash (pre-binding, or tampered) fails closed.
+    const nonce = readCookie(req, nonceCookieName(provider))
+    const bound =
+        nonce !== undefined &&
+        stateData.nonceHash !== undefined &&
+        timingSafeEqual(await sha256Hex(nonce), stateData.nonceHash)
+    if (!bound) {
+        return res.fail(
+            `auth/${provider}/cb`,
+            req.method,
+            403,
+            UpupErrorCode.AUTH_DENIED,
+            'OAuth session mismatch',
+            new Error('OAuth callback cookie missing or does not match state'),
+        )
     }
 
     const meta = getProviderMeta(config, provider)
@@ -250,6 +341,8 @@ export async function handleOAuthCallback(
                 ? { returnTo: validatedReturn }
                 : {}),
         }),
+        200,
+        { 'Set-Cookie': nonceSetCookie(req, provider, '', 0) },
     )
 }
 
