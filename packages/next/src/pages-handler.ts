@@ -78,6 +78,19 @@ export function createUpupPagesHandler(
                     setHeader: (k, v) => {
                         res.setHeader(k, v)
                     },
+                    // Node's setHeader REPLACES, so several Set-Cookie values
+                    // (the OAuth nonce plus another) must be appended as a list
+                    // on top of anything an outer layer already set.
+                    appendHeader: (k, v) => {
+                        const prev = res.getHeader(k)
+                        const prior =
+                            prev === undefined
+                                ? []
+                                : Array.isArray(prev)
+                                  ? prev
+                                  : [String(prev)]
+                        res.setHeader(k, [...prior, v])
+                    },
                     send: b => {
                         res.send(b)
                     },
