@@ -361,9 +361,15 @@ export class UpupCore {
      *  unconditionally; per-file removal and setFiles([]) land here. */
     private clearCrashRecoveryIfEmpty(): void {
         if (this.files.size > 0) return
-        this.queueCrashRecoveryClear().catch(
-            this.warnCrashRecoveryFailure('clear'),
-        )
+        const manager = this.crashRecovery
+        if (!manager) return
+        // Re-check when the clear RUNS, not just when it is queued: later state
+        // changes coalesce into a snapshot sync queued ahead of this clear, so
+        // files added in between must not be wiped by a stale "empty" decision.
+        this.enqueueCrashRecoveryOp(async () => {
+            if (this.files.size > 0) return
+            await manager.clear()
+        }).catch(this.warnCrashRecoveryFailure('clear'))
     }
 
     removeFile(id: string): void {

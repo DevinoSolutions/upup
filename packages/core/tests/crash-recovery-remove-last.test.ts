@@ -4,7 +4,7 @@
 // empty file set (nothing to save), so every path that EMPTIES the set has to
 // clear the snapshot itself, exactly as removeAll() does.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { UpupCore } from '../src/core'
 import { FileSource, UploadStatus } from '@useupup/core'
 
@@ -100,4 +100,65 @@ describe('crash-recovery snapshot when the file set empties', () => {
             .toEqual(['crashed-1', 'crashed-0'])
         core.destroy()
     })
+})
+
+// The clear is queued behind in-flight writes, and later state changes coalesce
+// into a snapshot sync queued BEFORE it. A clear decided on "the set is empty"
+// at call time must therefore re-check at execution time, or it wipes the
+// snapshot of files added after the removal.
+describe('crash-recovery clear queued behind a slow save', () => {
+    it.each([
+        ['addFiles', (core: UpupCore, f: File) => core.addFiles([f])],
+        ['setFiles', (core: UpupCore, f: File) => core.setFiles([f])],
+    ])(
+        'does not wipe a snapshot of files added via %s after the last one was removed',
+        async (_name, add) => {
+            const store = new Map<string, unknown>()
+            const pendingSaves: Array<() => void> = []
+            const storage = {
+                get: async (key: string) => store.get(key),
+                set: (key: string, value: unknown) =>
+                    new Promise<void>(resolve => {
+                        pendingSaves.push(() => {
+                            store.set(key, value)
+                            resolve()
+                        })
+                    }),
+                delete: async (key: string) => {
+                    store.delete(key)
+                },
+            }
+            const core = new UpupCore({ crashRecovery: { storage } })
+            await core.addFiles([
+                new File(['a'], 'a.txt', { type: 'text/plain' }),
+                new File(['b'], 'b.txt', { type: 'text/plain' }),
+            ])
+            // S1 is parked mid-write; the reorder queues the coalesced S2 behind it.
+            await vi.waitFor(() => expect(pendingSaves.length).toBe(1))
+            const ids = [...core.files.keys()]
+            core.reorderFiles([...ids].reverse())
+
+            // Empty the set (queues the clear C behind S2), then add a new file.
+            for (const id of ids) core.removeFile(id)
+            expect(core.files.size).toBe(0)
+            await add(core, new File(['c'], 'new.txt', { type: 'text/plain' }))
+
+            // Drain: S1, then S2 (which reads the new file at write time), then C.
+            await vi.waitFor(() => {
+                pendingSaves.shift()?.()
+                const snapshot = store.get(STORAGE_KEY) as
+                    { files: Array<[string, { name: string }]> } | undefined
+                expect(snapshot?.files.map(([, f]) => f.name)).toEqual([
+                    'new.txt',
+                ])
+            })
+            // The write queue is promise-only, so draining microtasks lets the
+            // queued clear run; it must not have removed the snapshot.
+            for (let i = 0; i < 50; i++) await Promise.resolve()
+            const snapshot = store.get(STORAGE_KEY) as
+                { files: Array<[string, { name: string }]> } | undefined
+            expect(snapshot?.files.map(([, f]) => f.name)).toEqual(['new.txt'])
+            core.destroy()
+        },
+    )
 })
