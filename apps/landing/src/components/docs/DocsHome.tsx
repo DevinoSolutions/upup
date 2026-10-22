@@ -232,6 +232,17 @@ export function DocsHome() {
                     </a>
                     .
                 </p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    Want your coding agent to do the install?{' '}
+                    <Link
+                        href="/agent-setup/opencode/"
+                        data-testid="docs-opencode-link"
+                        className="font-medium text-gray-900 underline underline-offset-4 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
+                    >
+                        Set up upup in OpenCode
+                    </Link>
+                    .
+                </p>
             </div>
         </div>
     )
