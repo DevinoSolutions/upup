@@ -91,3 +91,21 @@ describe('withDemoRateLimit (T-6184)', () => {
         expect(res.status).toBe(200)
     })
 })
+
+describe('withDemoRateLimit trailing slashes (T-6184)', () => {
+    // The server handler strips trailing slashes before routing and landing
+    // sets trailingSlash: true, so these reach the handler as /presign etc.
+    it.each(['/presign/', '/presign//', '/multipart/init/'])(
+        'counts %s toward the limit',
+        async path => {
+            const { withDemoRateLimit, DEMO_RATE_LIMIT } = await load()
+            const handle = withDemoRateLimit(ok)
+            for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+                const res = await handle(post(path, '203.0.113.7'))
+                expect(res.status).toBe(200)
+            }
+            const res = await handle(post(path, '203.0.113.7'))
+            expect(res.status).toBe(429)
+        },
+    )
+})

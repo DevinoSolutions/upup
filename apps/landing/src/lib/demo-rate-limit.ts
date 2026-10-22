@@ -11,6 +11,9 @@
 // a session already granted, and a legitimate large upload fires many sign-part
 // calls, so limiting those would break the real demo.
 //
+// /multipart/resume is deliberately unlimited: it only continues an existing
+// session and grants no new capability.
+//
 // Sizing: the homepage/mobile demo offers a handful of files, one presign or
 // multipart/init each. A burst of 15 covers a multi-file batch plus retries, and
 // 15/minute refill keeps a sustained attacker to ~1.5 GB/min of 100 MB sessions
@@ -30,7 +33,8 @@ const bucket = createTokenBucket(
 
 function isSessionCreating(req: Request): boolean {
     if (req.method !== 'POST') return false
-    const path = new URL(req.url).pathname
+    // Normalize exactly as the @useupup/server handler does before routing.
+    const path = new URL(req.url).pathname.replace(/\/+$/, '') || '/'
     return path.endsWith('/presign') || path.endsWith('/multipart/init')
 }
 
