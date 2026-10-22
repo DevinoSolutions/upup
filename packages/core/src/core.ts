@@ -355,11 +355,29 @@ export class UpupCore {
         }
     }
 
+    /** The snapshot write paths skip an empty file set (nothing to save), so
+     *  a path that EMPTIES the set must clear the snapshot itself — otherwise
+     *  the discarded files come back on the next reload. removeAll() clears
+     *  unconditionally; per-file removal and setFiles([]) land here. */
+    private clearCrashRecoveryIfEmpty(): void {
+        if (this.files.size > 0) return
+        const manager = this.crashRecovery
+        if (!manager) return
+        // Re-check when the clear RUNS, not just when it is queued: later state
+        // changes coalesce into a snapshot sync queued ahead of this clear, so
+        // files added in between must not be wiped by a stale "empty" decision.
+        this.enqueueCrashRecoveryOp(async () => {
+            if (this.files.size > 0) return
+            await manager.clear()
+        }).catch(this.warnCrashRecoveryFailure('clear'))
+    }
+
     removeFile(id: string): void {
         const file = this.fileManager.removeFile(id)
         if (file) {
             this.discardPersistedMultipartSessions([file])
             this.fileOverrides.delete(id)
+            this.clearCrashRecoveryIfEmpty()
             this.emitter.emit('file-removed', file)
             this.emitter.emit('state-change', { files: this.files })
         }
@@ -383,6 +401,7 @@ export class UpupCore {
                 UpupErrorCode.BAD_REQUEST,
             )
         await this.fileManager.setFiles(files)
+        this.clearCrashRecoveryIfEmpty()
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-set', { count: this.files.size })
     }
