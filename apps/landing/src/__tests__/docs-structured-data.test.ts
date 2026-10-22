@@ -33,7 +33,7 @@ const HUBS = [
 // count. The FAQ page asks each question as a `## ` heading; every other page
 // asks its questions as `### ` headings under a `## FAQ` section.
 const FAQ_PAGES = [
-    { slug: ['faq'], file: 'faq.mdx', questions: 12 },
+    { slug: ['faq'], file: 'faq.mdx', questions: 13 },
     { slug: ['comparisons'], file: 'comparisons/index.mdx', questions: 4 },
     {
         slug: ['comparisons', 'upup-vs-uploadthing'],
