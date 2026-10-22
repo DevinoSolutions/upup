@@ -31,6 +31,16 @@ let s3: Server
 let endpoint = ''
 let uploadCounter = 0
 
+// The fake echoes the request path back as the object key; escape it so request
+// data is never interpolated into the XML response as markup.
+const escapeXml = (value: string) =>
+    value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+
 beforeAll(async () => {
     s3 = createServer((req, res) => {
         const key = decodeURIComponent(
@@ -38,7 +48,7 @@ beforeAll(async () => {
         )
         res.setHeader('content-type', 'application/xml')
         res.end(
-            `<?xml version="1.0" encoding="UTF-8"?><InitiateMultipartUploadResult><Bucket>demo-bucket</Bucket><Key>${key}</Key><UploadId>mp-${++uploadCounter}</UploadId></InitiateMultipartUploadResult>`,
+            `<?xml version="1.0" encoding="UTF-8"?><InitiateMultipartUploadResult><Bucket>demo-bucket</Bucket><Key>${escapeXml(key)}</Key><UploadId>mp-${++uploadCounter}</UploadId></InitiateMultipartUploadResult>`,
         )
     })
     await new Promise<void>(r => s3.listen(0, '127.0.0.1', r))
