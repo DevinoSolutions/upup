@@ -42,3 +42,12 @@ describe('docs home hero paint', () => {
         expect(liftColumns).toHaveLength(2)
     })
 })
+
+describe('docs home agent-setup link', () => {
+    it('server-renders a crawlable link to the OpenCode setup guide', () => {
+        const html = renderToStaticMarkup(createElement(DocsHome))
+        expect(html).toMatch(
+            /<a [^>]*href="\/agent-setup\/opencode\/?"[^>]*>Set up upup in OpenCode<\/a>/,
+        )
+    })
+})
