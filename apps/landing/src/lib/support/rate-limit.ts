@@ -8,9 +8,6 @@ import { isCloudflareIp } from '@/lib/support/cloudflare-ips'
 
 type Bucket = { tokens: number; updatedAt: number }
 
-const CAPACITY = 5
-const WINDOW_MS = 60_000
-const REFILL_RATE = CAPACITY / WINDOW_MS
 /** Hard ceiling on tracked keys, so a flood of distinct (forged or real)
  *  addresses cannot grow the Map without bound. */
 export const MAX_BUCKETS = 10_000
@@ -19,53 +16,82 @@ const SWEEP_INTERVAL_MS = 10_000
 /** Longest key kept: an IPv6 literal is at most 45 characters. */
 const MAX_KEY_LENGTH = 64
 
-// Insertion order doubles as recency order: a bucket is deleted and re-set on
-// every use, so the first key is always the least recently used.
-const buckets = new Map<string, Bucket>()
-let lastSweepAt = 0
-
-/** Drop every bucket that has refilled to capacity: it is indistinguishable
- *  from a brand-new one, so forgetting it changes no decision. */
-function sweep(now: number): void {
-    lastSweepAt = now
-    for (const [id, bucket] of buckets) {
-        const projected = bucket.tokens + (now - bucket.updatedAt) * REFILL_RATE
-        if (projected >= CAPACITY) buckets.delete(id)
-    }
+export type TokenBucket = {
+    /** Consume one token for `id`. Returns false when the bucket is empty. */
+    take(id: string): boolean
+    /** Test-only: number of tracked buckets. */
+    size(): number
 }
 
-/** Consume one token for `id`. Returns false when the bucket is empty. */
-export function takeToken(id: string): boolean {
-    const now = Date.now()
-    if (now - lastSweepAt >= SWEEP_INTERVAL_MS) sweep(now)
+/** An independent per-key bucket map. Each limiter owns its own state, so one
+ *  route's traffic never drains another's allowance. */
+export function createTokenBucket(
+    capacity: number,
+    windowMs: number,
+): TokenBucket {
+    const refillRate = capacity / windowMs
+    // Insertion order doubles as recency order: a bucket is deleted and re-set on
+    // every use, so the first key is always the least recently used.
+    const buckets = new Map<string, Bucket>()
+    let lastSweepAt = 0
 
-    const existing = buckets.get(id)
-    if (!existing && buckets.size >= MAX_BUCKETS) {
-        sweep(now)
-        // Everything left is still actively limited: evict the least recently
-        // used so memory stays bounded.
-        while (buckets.size >= MAX_BUCKETS) {
-            const oldest = buckets.keys().next().value
-            if (oldest === undefined) break
-            buckets.delete(oldest)
+    /** Drop every bucket that has refilled to capacity: it is indistinguishable
+     *  from a brand-new one, so forgetting it changes no decision. */
+    function sweep(now: number): void {
+        lastSweepAt = now
+        for (const [id, bucket] of buckets) {
+            const projected =
+                bucket.tokens + (now - bucket.updatedAt) * refillRate
+            if (projected >= capacity) buckets.delete(id)
         }
     }
 
-    const bucket = existing ?? { tokens: CAPACITY, updatedAt: now }
-    const elapsed = now - bucket.updatedAt
-    bucket.tokens = Math.min(CAPACITY, bucket.tokens + elapsed * REFILL_RATE)
-    bucket.updatedAt = now
+    return {
+        take(id) {
+            const now = Date.now()
+            if (now - lastSweepAt >= SWEEP_INTERVAL_MS) sweep(now)
 
-    buckets.delete(id)
-    buckets.set(id, bucket)
-    if (bucket.tokens < 1) return false
-    bucket.tokens -= 1
-    return true
+            const existing = buckets.get(id)
+            if (!existing && buckets.size >= MAX_BUCKETS) {
+                sweep(now)
+                // Everything left is still actively limited: evict the least
+                // recently used so memory stays bounded.
+                while (buckets.size >= MAX_BUCKETS) {
+                    const oldest = buckets.keys().next().value
+                    if (oldest === undefined) break
+                    buckets.delete(oldest)
+                }
+            }
+
+            const bucket = existing ?? { tokens: capacity, updatedAt: now }
+            const elapsed = now - bucket.updatedAt
+            bucket.tokens = Math.min(
+                capacity,
+                bucket.tokens + elapsed * refillRate,
+            )
+            bucket.updatedAt = now
+
+            buckets.delete(id)
+            buckets.set(id, bucket)
+            if (bucket.tokens < 1) return false
+            bucket.tokens -= 1
+            return true
+        },
+        size: () => buckets.size,
+    }
+}
+
+// The support form's limiter: 5 requests per minute per IP.
+const supportBucket = createTokenBucket(5, 60_000)
+
+/** Consume one token for `id`. Returns false when the bucket is empty. */
+export function takeToken(id: string): boolean {
+    return supportBucket.take(id)
 }
 
 /** Test-only: number of tracked buckets. */
 export function bucketCountForTests(): number {
-    return buckets.size
+    return supportBucket.size()
 }
 
 /** `TRUST_CF_CONNECTING_IP`: `1`/`true` forces trust in the header (an explicit

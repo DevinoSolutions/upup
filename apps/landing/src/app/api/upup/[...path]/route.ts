@@ -1,5 +1,6 @@
 import { InMemoryTokenStore } from '@useupup/server'
 import { createUpupNextHandler } from '@useupup/server/next'
+import { withDemoRateLimit } from '@/lib/demo-rate-limit'
 import { getVisitorId, withDemoVisitor } from '@/lib/demo-visitor'
 import { env, requireServerEnv } from '@/lib/env'
 
@@ -91,10 +92,10 @@ function handler(): DemoHandlers {
 
     const secret = required.UPUP_UPLOAD_TOKEN_SECRET
     _handler = {
-        GET: withDemoVisitor(secret, inner.GET),
-        POST: withDemoVisitor(secret, inner.POST),
-        PUT: withDemoVisitor(secret, inner.PUT),
-        DELETE: withDemoVisitor(secret, inner.DELETE),
+        GET: withDemoRateLimit(withDemoVisitor(secret, inner.GET)),
+        POST: withDemoRateLimit(withDemoVisitor(secret, inner.POST)),
+        PUT: withDemoRateLimit(withDemoVisitor(secret, inner.PUT)),
+        DELETE: withDemoRateLimit(withDemoVisitor(secret, inner.DELETE)),
     }
     return _handler
 }
