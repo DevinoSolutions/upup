@@ -4,6 +4,7 @@ import { clientEnv } from '@/lib/client/env'
 // sitemap, JSON-LD, and llms.txt all derive from here — a hardcoded
 // 'https://useupup.com' outside this file splits the base URL across surfaces
 // (the deployed dev site would canonicalize half its pages to production).
+// scripts/ci/indexnow-submit.mjs reads this line as text: keep it one literal.
 const DEFAULT_SITE_URL = 'https://useupup.com'
 
 /**

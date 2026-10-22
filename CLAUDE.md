@@ -704,6 +704,16 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   OneDrive's registration still needs a human run. Playwright traces/reports
   upload as artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
+- `indexnow.yml` — 03:47 UTC schedule + manual dispatch (`all` input resubmits
+  everything), no install (T-5788): `scripts/ci/indexnow-submit.mjs` verifies the
+  live key file, reads every same-host `Sitemap:` in useupup.com's robots.txt
+  (≤50 child sitemaps), and POSTs URLs whose `<lastmod>` is within 48 h (or
+  missing) to `api.indexnow.org` in 10,000-URL batches. The key and origin come
+  from the `INDEXNOW_KEY` / `DEFAULT_SITE_URL` lines in `apps/landing/src/lib/`,
+  read as TEXT because CI's Node 20 cannot import TypeScript; the node:test
+  suite in `test:scripts` fails if either line changes shape. Any key, sitemap
+  or non-200/202 problem fails the run. Preview locally with
+  `node scripts/ci/indexnow-submit.mjs --dry-run` (add `--all`).
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which

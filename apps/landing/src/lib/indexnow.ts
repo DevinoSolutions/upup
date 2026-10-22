@@ -10,8 +10,10 @@
 // one place and not the other silently breaks verification, so
 // `src/__tests__/indexnow.test.ts` pins the two together.
 //
-// Submissions are NOT made from this app. Serving the key is the prerequisite;
-// pushing URLs is an operational step run separately, after this deploys.
+// Submissions are NOT made from this app: `.github/workflows/indexnow.yml` runs
+// scripts/ci/indexnow-submit.mjs daily. That script reads the INDEXNOW_KEY line
+// below as text (CI's Node 20 cannot import TypeScript), so keep it a single
+// quoted string literal on one line; its node:test suite fails otherwise.
 export const INDEXNOW_KEY = '5cb30cbda540958e8d033652400e59e3'
 
 export const INDEXNOW_KEY_PATH = `/${INDEXNOW_KEY}.txt`
