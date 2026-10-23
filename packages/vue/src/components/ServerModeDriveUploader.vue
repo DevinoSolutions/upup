@@ -38,7 +38,16 @@ const { translator, translations: tr } = useUploaderI18n()
 const { setActiveSource } = useUploaderSource()
 const headerExtraHostRef = useSourceViewHeaderExtra()
 const headerExtraHost = computed(() => headerExtraHostRef?.value ?? null)
-const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
+const {
+    state,
+    search,
+    setSearch,
+    refresh,
+    transfer,
+    startAuth,
+    signOut,
+    finishTransfers,
+} =
     useServerModeDrive(props.provider)
 
 function onLogout() {
@@ -107,6 +116,7 @@ async function handleTransfer() {
         }
         props.onBack?.()
     } finally {
+        finishTransfers() // report the finished selection once (any exit path)
         transferring.value = false
     }
 }

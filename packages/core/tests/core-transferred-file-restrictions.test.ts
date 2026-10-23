@@ -287,51 +287,130 @@ describe('ServerModeDriveController unknown size/type and post-storage rejection
     })
 })
 
-describe('addTransferredFile completion events', () => {
-    it('emits upload-all-complete once when every row is complete', () => {
+describe('transfer batch completion (finishTransfers)', () => {
+    // Each fetch answers with the requested file's own key, like the server.
+    const stubTransfers = (failIds: string[] = []) =>
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (_url: string, init: { body: string }) => {
+                const { fileId, fileName } = JSON.parse(init.body) as {
+                    fileId: string
+                    fileName: string
+                }
+                if (failIds.includes(fileId))
+                    return { status: 500, ok: false, text: async () => 'boom' }
+                return {
+                    status: 200,
+                    ok: true,
+                    json: async () => ({
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 10,
+                        type: 'application/pdf',
+                    }),
+                }
+            }),
+        )
+    const file = (id: string) => ({
+        id,
+        name: `${id}.pdf`,
+        isFolder: false as const,
+    })
+    const keysOf = (call: unknown[]) =>
+        (call[0] as Array<{ key: string }>).map(f => f.key).sort()
+
+    it('addTransferredFile itself never emits upload-all-complete (per-file upload-success only)', () => {
         const core = new UpupCore({})
         const done = vi.fn()
+        const success = vi.fn()
         core.on('upload-all-complete', done)
+        core.on('upload-success', success)
 
         core.addTransferredFile(info)
 
-        expect(done).toHaveBeenCalledTimes(1)
-        expect(done.mock.calls[0]![0]).toHaveLength(1)
+        expect(success).toHaveBeenCalledTimes(1)
+        expect(done).not.toHaveBeenCalled()
     })
 
-    it('emits upload-all-complete once for a multi-file batch, not once per file', () => {
+    it('3 transfers in one selection -> ONE emission carrying all 3 files', async () => {
+        stubTransfers()
         const core = new UpupCore({})
         const done = vi.fn()
         core.on('upload-all-complete', done)
+        const c = controllerFor(core)
 
-        core.addTransferredFile({ ...info, key: 'uploads/1.pdf' })
-        core.addTransferredFile({ ...info, key: 'uploads/2.pdf' })
-        core.addTransferredFile({ ...info, key: 'uploads/3.pdf' })
+        await c.transfer(file('a'))
+        await c.transfer(file('b'))
+        await c.transfer(file('c'))
+        expect(done).not.toHaveBeenCalled()
+        c.finishTransfers()
 
-        expect(core.files.size).toBe(3)
         expect(done).toHaveBeenCalledTimes(1)
+        expect(keysOf(done.mock.calls[0]!)).toEqual([
+            'uploads/a',
+            'uploads/b',
+            'uploads/c',
+        ])
     })
 
-    it('does not re-emit for files that were already reported complete', () => {
+    it('a later selection emits again, once, with the whole completed set (like a continued normal run)', async () => {
+        stubTransfers()
         const core = new UpupCore({})
-        core.addTransferredFile(info)
         const done = vi.fn()
         core.on('upload-all-complete', done)
+        const c = controllerFor(core)
 
-        core.addTransferredFile({ ...info, key: 'uploads/2.pdf' })
+        await c.transfer(file('a'))
+        c.finishTransfers()
+        c.finishTransfers() // nothing new since the last finish
+        await c.transfer(file('b'))
+        c.finishTransfers()
+
+        expect(done).toHaveBeenCalledTimes(2)
+        expect(keysOf(done.mock.calls[0]!)).toEqual(['uploads/a'])
+        expect(keysOf(done.mock.calls[1]!)).toEqual(['uploads/a', 'uploads/b'])
+    })
+
+    it('no emission when every transfer in the selection failed', async () => {
+        stubTransfers(['a', 'b'])
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const c = controllerFor(core)
+
+        await c.transfer(file('a'))
+        await c.transfer(file('b'))
+        c.finishTransfers()
 
         expect(done).not.toHaveBeenCalled()
     })
 
-    it('does not emit upload-all-complete while a pending local file remains', async () => {
+    it('no emission while a pending local file remains', async () => {
+        stubTransfers()
         const core = new UpupCore({})
         const done = vi.fn()
         core.on('upload-all-complete', done)
         await core.addFiles([new File(['hi'], 'a.txt', { type: 'text/plain' })])
+        const c = controllerFor(core)
 
-        core.addTransferredFile(info)
+        await c.transfer(file('a'))
+        c.finishTransfers()
 
         expect(done).not.toHaveBeenCalled()
+    })
+})
+
+describe('type-less file rejection message', () => {
+    it('names the file instead of printing an empty type', () => {
+        const core = new UpupCore({ allowedFileTypes: '.png' })
+
+        const error = core.checkTransferredFile({
+            name: 'notes.txt',
+            driveId: 'google-drive:n',
+        })
+
+        expect(error?.message).toContain('notes.txt')
+        expect(error?.message).not.toContain('""')
     })
 })
 

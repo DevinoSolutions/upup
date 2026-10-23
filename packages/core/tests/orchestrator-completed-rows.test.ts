@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
 import { UpupCore } from '../src/core'
 import { FileSource } from '../src/types/file-source'
+import { ServerModeDriveController } from '../src/controllers/server-mode-drive-controller'
 
 /**
  * A server-mode drive transfer registers an already-stored (key != null,
@@ -19,6 +20,7 @@ const image = {
 
 afterEach(() => {
     vi.useRealTimers()
+    vi.unstubAllGlobals()
 })
 
 describe('UploaderOrchestrator with completed (transferred) rows', () => {
@@ -58,7 +60,7 @@ describe('UploaderOrchestrator with completed (transferred) rows', () => {
         orch.destroy()
     })
 
-    it('fires onUploadComplete / onFilesUploadComplete once for the transferred batch', () => {
+    it('fires onUploadComplete / onFilesUploadComplete once for the transferred batch', async () => {
         const core = new UpupCore({})
         const onUploadComplete = vi.fn()
         const onFilesUploadComplete = vi.fn()
@@ -68,7 +70,28 @@ describe('UploaderOrchestrator with completed (transferred) rows', () => {
         })
         orch.init()
 
-        core.addTransferredFile(image)
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                status: 200,
+                ok: true,
+                json: async () => ({
+                    key: image.key,
+                    name: image.name,
+                    size: image.size,
+                    type: image.type,
+                }),
+            }),
+        )
+        // The drive view transfers the selection, then reports it once.
+        const drive = new ServerModeDriveController({
+            provider: 'google-drive',
+            serverUrl: () => 'http://localhost:9999',
+            core: () => core,
+        })
+        await drive.transfer({ id: 'p', name: image.name, isFolder: false })
+        expect(onUploadComplete).not.toHaveBeenCalled()
+        drive.finishTransfers()
 
         expect(onUploadComplete).toHaveBeenCalledTimes(1)
         expect(onFilesUploadComplete).toHaveBeenCalledTimes(1)

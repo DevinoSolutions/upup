@@ -64,40 +64,51 @@ const jsonRes = (status: number, body: unknown) => ({
 })
 
 function stubServer(
-    opts: { logoutStatus?: number; transferStatus?: number } = {},
+    opts: {
+        logoutStatus?: number
+        transferStatus?: number
+        // Drive listing; the transfer answers with each file's own key.
+        names?: string[]
+    } = {},
 ) {
+    const names = opts.names ?? ['report.pdf']
     const calls: Array<{ url: string; method: string }> = []
     vi.stubGlobal(
         'fetch',
-        vi.fn(async (url: string, init?: { method?: string }) => {
-            const method = init?.method ?? 'GET'
-            calls.push({ url, method })
-            if (url.endsWith('/files/google-drive/transfer'))
-                return jsonRes(opts.transferStatus ?? 200, {
-                    provider: 'google-drive',
-                    key: 'uploads/report.pdf',
-                    name: 'report.pdf',
-                    size: 2048,
-                    type: 'application/pdf',
-                    url: 'https://cdn.example/report.pdf',
-                })
-            if (url.endsWith('/files/google-drive/logout'))
-                return jsonRes(opts.logoutStatus ?? 200, {
-                    provider: 'google-drive',
-                    ok: true,
-                })
-            return jsonRes(200, {
-                files: [
-                    {
-                        id: 'f1',
-                        name: 'report.pdf',
+        vi.fn(
+            async (url: string, init?: { method?: string; body?: string }) => {
+                const method = init?.method ?? 'GET'
+                calls.push({ url, method })
+                if (url.endsWith('/files/google-drive/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return jsonRes(opts.transferStatus ?? 200, {
+                        provider: 'google-drive',
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 2048,
+                        type: 'application/pdf',
+                        url: `https://cdn.example/${fileName}`,
+                    })
+                }
+                if (url.endsWith('/files/google-drive/logout'))
+                    return jsonRes(opts.logoutStatus ?? 200, {
+                        provider: 'google-drive',
+                        ok: true,
+                    })
+                return jsonRes(200, {
+                    files: names.map((name, i) => ({
+                        id: `f${i + 1}`,
+                        name,
                         isFolder: false,
                         size: 2048,
                         mimeType: 'application/pdf',
-                    },
-                ],
-            })
-        }),
+                    })),
+                })
+            },
+        ),
     )
     return calls
 }
@@ -155,7 +166,7 @@ describe('ServerModeDriveUploader (T-6094, T-6093)', () => {
         expect(rows[0]).toMatchObject({
             name: 'report.pdf',
             size: 2048,
-            key: 'uploads/report.pdf',
+            key: 'uploads/f1',
             status: UploadStatus.SUCCESSFUL,
             source: FileSource.GOOGLE_DRIVE,
         })
@@ -303,5 +314,47 @@ describe('ServerModeDriveUploader (T-6094, T-6093)', () => {
             expect(queryByTestId('loader-icon')).toBeNull()
             expect(queryByTestId('upup-drive-error')).toBeNull()
         })
+    })
+
+    it('reports a 3-file selection ONCE with all 3 files', async () => {
+        stubServer({ names: ['report.pdf', 'b.pdf', 'c.pdf'] })
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const onBack = vi.fn()
+        const { findByText, getByText } = render(
+            <Host core={core} onBack={onBack} />,
+        )
+
+        for (const name of ['report.pdf', 'b.pdf', 'c.pdf'])
+            fireEvent.click(await findByText(name))
+        fireEvent.click(getByText(/Add files/))
+        await waitFor(() => {
+            expect(onBack).toHaveBeenCalledTimes(1)
+        })
+
+        expect(core.files.size).toBe(3)
+        expect(done).toHaveBeenCalledTimes(1)
+        expect(
+            (done.mock.calls[0]![0] as Array<{ key: string }>)
+                .map(f => f.key)
+                .sort(),
+        ).toEqual(['uploads/f1', 'uploads/f2', 'uploads/f3'])
+    })
+
+    it('does not report when every transfer in the selection failed', async () => {
+        stubServer({ transferStatus: 500 })
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const { findByText, getByText, findByTestId } = render(
+            <Host core={core} />,
+        )
+
+        fireEvent.click(await findByText('report.pdf'))
+        fireEvent.click(getByText(/Add files/))
+        await findByTestId('upup-drive-error')
+
+        expect(done).not.toHaveBeenCalled()
     })
 })

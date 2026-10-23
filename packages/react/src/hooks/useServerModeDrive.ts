@@ -20,6 +20,7 @@ export function useServerModeDrive(provider: ServerModeProvider): {
     transfer: (file: ServerDriveFile) => Promise<ServerDriveTransferResult>
     startAuth: () => void
     signOut: () => Promise<boolean>
+    finishTransfers: () => void
 } {
     const { serverUrl, core } = useUploaderRuntime()
     const latest = useRef({ serverUrl, core })
@@ -68,5 +69,8 @@ export function useServerModeDrive(provider: ServerModeProvider): {
             controller.startAuth()
         },
         signOut: () => controller.signOut(),
+        finishTransfers: () => {
+            controller.finishTransfers()
+        },
     }
 }

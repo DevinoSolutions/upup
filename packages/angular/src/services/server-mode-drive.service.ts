@@ -111,6 +111,7 @@ export class ServerModeDriveService {
             }
             return true
         } finally {
+            this.controller.finishTransfers() // report the finished selection once (any exit path)
             this.isTransferring.set(false)
         }
     }

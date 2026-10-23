@@ -19,6 +19,7 @@ export interface UseServerModeDriveReturn {
     transfer: ServerModeDriveController['transfer']
     startAuth: ServerModeDriveController['startAuth']
     signOut: ServerModeDriveController['signOut']
+    finishTransfers: ServerModeDriveController['finishTransfers']
 }
 
 export function useServerModeDrive(
@@ -53,5 +54,8 @@ export function useServerModeDrive(
         transfer: controller.transfer.bind(controller),
         startAuth: controller.startAuth.bind(controller),
         signOut: controller.signOut.bind(controller),
+        finishTransfers: () => {
+            controller.finishTransfers()
+        },
     }
 }

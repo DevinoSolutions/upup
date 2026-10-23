@@ -317,7 +317,6 @@ export class UpupCore {
                 ...(info.url !== undefined ? { downloadUrl: info.url } : {}),
             },
         })
-        const wasComplete = this._status === UploadStatus.SUCCESSFUL
         const allComplete = [...this.files.values()].every(f => f.key != null)
         if (allComplete) {
             this._status = UploadStatus.SUCCESSFUL
@@ -327,8 +326,6 @@ export class UpupCore {
             files: this.files,
             ...(allComplete && { status: this._status }),
         })
-        if (allComplete && !wasComplete)
-            this.emitter.emit('upload-all-complete', [...this.files.values()])
         return file
     }
 

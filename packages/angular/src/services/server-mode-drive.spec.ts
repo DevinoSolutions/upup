@@ -34,6 +34,7 @@ import { ServerModeDriveService } from './server-mode-drive.service'
 import { ServerModeDriveUploaderComponent } from '../components/server-mode-drive-uploader.component'
 import { EmptyIconComponent } from '../components/icons/empty-icon.component'
 import { SourceViewHeaderExtraService } from '../context/source-view-header-extra.service'
+import { UpupCore } from '@useupup/core'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -509,5 +510,64 @@ describe('ServerModeDriveUploaderComponent — Log out', () => {
             el.querySelector('[data-upup-slot="drive-browser-item"]'),
         ).not.toBeNull()
         expect(onBack).not.toHaveBeenCalled()
+    })
+
+    it('reports a 2-file selection ONCE with both files (upload-all-complete)', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { body?: string }) => {
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return json(200, {
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 3,
+                        type: 'text/plain',
+                    })
+                }
+                return json(200, {
+                    files: ['a.txt', 'b.txt'].map((name, i) => ({
+                        id: `f${i + 1}`,
+                        name,
+                        isFolder: false,
+                        size: 3,
+                        mimeType: 'text/plain',
+                    })),
+                })
+            }),
+        )
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const store = Object.assign(makeStoreMock(), { core })
+
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: UpupStore, useValue: store },
+                ServerModeDriveService,
+            ],
+        })
+        const svc = TestBed.inject(ServerModeDriveService)
+        svc.init('google-drive')
+        await waitFor(() => svc.listState().status === 'ready')
+        svc.toggleSelected('f1')
+        svc.toggleSelected('f2')
+
+        expect(await svc.transfer()).toBe(true)
+
+        expect(done).toHaveBeenCalledTimes(1)
+        expect(
+            (done.mock.calls[0]![0] as Array<{ key: string }>)
+                .map(f => f.key)
+                .sort(),
+        ).toEqual(['uploads/f1', 'uploads/f2'])
     })
 })

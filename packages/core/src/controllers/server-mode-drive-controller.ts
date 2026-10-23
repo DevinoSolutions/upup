@@ -41,7 +41,13 @@ export interface ServerModeDriveDeps {
     /** Owning core; a successful transfer registers the stored file on it. */
     core?:
         | (() =>
-              | Pick<UpupCore, 'addTransferredFile' | 'checkTransferredFile'>
+              | Pick<
+                    UpupCore,
+                    | 'addTransferredFile'
+                    | 'checkTransferredFile'
+                    | 'emit'
+                    | 'files'
+                >
               | null
               | undefined)
         | undefined
@@ -232,6 +238,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 // Stored, but the real size/type may break a restriction.
                 const rejected = this.registerTransferred(file, result)
                 if (rejected) return { status: 'error', message: rejected }
+                this.transferred++
             } catch (err) {
                 // upup-catch: stored, but core can't take the row (destroyed
                 // mid-transfer): still ok, reported not swallowed.
@@ -246,6 +253,19 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             // { status: 'error' } result (surfaced in the UI), not swallowed.
             return { status: 'error', message: (err as Error).message }
         }
+    }
+
+    // Files registered since the last finishTransfers().
+    private transferred = 0
+
+    // End of a selection: report the completed set ONCE, like a normal run
+    // (upload-all-complete with every file), not once per transferred file.
+    finishTransfers(): void {
+        const core = this.deps.core?.()
+        if (!core || !this.transferred) return
+        this.transferred = 0
+        const all = [...core.files.values()]
+        if (all.every(f => f.key != null)) core.emit('upload-all-complete', all)
     }
 
     private driveId(file: ServerDriveFile): string {

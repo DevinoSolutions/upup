@@ -7,6 +7,7 @@ import { render, cleanup } from '@testing-library/svelte'
 const ctx = vi.hoisted(() => ({
     setActiveSource: undefined as unknown as ReturnType<typeof vi.fn>,
     headerHost: undefined as unknown as HTMLElement,
+    core: undefined as unknown as import('@useupup/core').UpupCore,
 }))
 
 vi.mock('../src/context/uploader-context', async () => {
@@ -14,7 +15,7 @@ vi.mock('../src/context/uploader-context', async () => {
     return {
         useUploaderRuntime: () => ({
             serverUrl: 'http://localhost:9999',
-            core: undefined,
+            core: ctx.core,
         }),
         useUploaderOptions: () => ({
             icons: { LoaderIcon: () => null },
@@ -48,6 +49,7 @@ vi.mock('../src/context/source-view-header-extra', async () => {
     }
 })
 
+import { UpupCore } from '@useupup/core'
 import ServerModeDriveUploader from '../src/components/ServerModeDriveUploader.svelte'
 
 const jsonRes = (status: number, body: unknown) =>
@@ -162,5 +164,77 @@ describe('ServerModeDriveUploader (svelte) - Log out', () => {
             container.querySelector('[data-upup-slot="drive-browser-item"]'),
         ).not.toBeNull()
         expect(onBack).not.toHaveBeenCalled()
+    })
+
+    it('reports a 2-file selection ONCE with both files (upload-all-complete)', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { body?: string }) => {
+                if (url.endsWith('/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return jsonRes(200, {
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 3,
+                        type: 'text/plain',
+                    })
+                }
+                return jsonRes(200, {
+                    files: ['a.txt', 'b.txt'].map((name, i) => ({
+                        id: `f${i + 1}`,
+                        name,
+                        isFolder: false,
+                        size: 3,
+                        mimeType: 'text/plain',
+                    })),
+                })
+            }),
+        )
+        ctx.setActiveSource = vi.fn()
+        ctx.headerHost = document.createElement('span')
+        ctx.core = new UpupCore({})
+        const done = vi.fn()
+        ctx.core.on('upload-all-complete', done)
+        const onBack = vi.fn()
+        const { container } = render(ServerModeDriveUploader, {
+            provider: 'google-drive',
+            onBack,
+        })
+
+        await vi.waitFor(() => {
+            expect(
+                container.querySelectorAll(
+                    '[data-upup-slot="drive-browser-item"]',
+                ),
+            ).toHaveLength(2)
+        })
+        for (const item of Array.from(
+            container.querySelectorAll<HTMLButtonElement>(
+                '[data-upup-slot="drive-browser-item"]',
+            ),
+        ))
+            item.click()
+        await vi.waitFor(() => {
+            const add = Array.from(container.querySelectorAll('button')).find(
+                b => b.textContent?.includes('Add files'),
+            )
+            expect(add?.disabled).toBe(false)
+        })
+        Array.from(container.querySelectorAll('button'))
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+
+        await vi.waitFor(() => {
+            expect(onBack).toHaveBeenCalledTimes(1)
+        })
+        expect(done).toHaveBeenCalledTimes(1)
+        expect(
+            (done.mock.calls[0]![0] as Array<{ key: string }>)
+                .map(f => f.key)
+                .sort(),
+        ).toEqual(['uploads/f1', 'uploads/f2'])
     })
 })

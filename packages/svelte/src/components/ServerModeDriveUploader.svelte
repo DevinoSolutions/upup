@@ -41,7 +41,16 @@ import { cn } from '@useupup/core/internal'
   // provider and dataUpupSlot are static props (set once at call sites — never changed).
   // untrack() tells Svelte we intentionally read their initial values outside reactive context.
   const resolvedSlot = untrack(() => dataUpupSlot ?? `drive-browser-${provider}`)
-  const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
+  const {
+    state,
+    search,
+    setSearch,
+    refresh,
+    transfer,
+    startAuth,
+    signOut,
+    finishTransfers,
+  } =
     untrack(() => useServerModeDrive(provider))
 
   const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
@@ -121,6 +130,7 @@ import { cn } from '@useupup/core/internal'
       }
       onBack?.()
     } finally {
+      finishTransfers() // report the finished selection once (any exit path)
       transferring.set(false)
     }
   }

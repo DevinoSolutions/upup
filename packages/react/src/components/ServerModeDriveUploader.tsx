@@ -42,8 +42,16 @@ export default function ServerModeDriveUploader({
     const { translator, translations: tr } = useUploaderI18n()
     const { setActiveSource } = useUploaderSource()
     const headerExtraHost = useContext(SourceViewHeaderExtraContext)
-    const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
-        useServerModeDrive(provider)
+    const {
+        state,
+        search,
+        setSearch,
+        refresh,
+        transfer,
+        startAuth,
+        signOut,
+        finishTransfers,
+    } = useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [transferring, setTransferring] = useState(false)
     // A failed transfer stays in this view: its message shows in the same
@@ -98,6 +106,7 @@ export default function ServerModeDriveUploader({
             }
             onBack?.()
         } finally {
+            finishTransfers() // report the finished selection once (any exit path)
             setTransferring(false)
         }
     }

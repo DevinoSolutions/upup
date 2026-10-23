@@ -5,6 +5,7 @@ import {
     destroyServerDrives,
 } from '../src/templates/server-mode-drive-uploader'
 import { setHeaderExtraHost } from '../src/context/source-view-header-extra'
+import { UpupCore } from '@useupup/core'
 
 // Log out (T-6093) and transfer-failure (T-6094 follow-up) behaviour of the
 // vanilla server-mode drive view, driven through the real controller.
@@ -176,6 +177,73 @@ describe('vanilla serverModeDriveUploader', () => {
         expect(
             host.querySelector('[data-testid="upup-drive-error"]'),
         ).toBeNull()
+        destroyServerDrives(ctx)
+    })
+
+    it('reports a 2-file selection ONCE with both files (upload-all-complete)', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { body?: string }) => {
+                if (url.endsWith('/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return json(200, {
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 3,
+                        type: 'text/plain',
+                    })
+                }
+                return json(200, {
+                    files: ['a.txt', 'b.txt'].map((name, i) => ({
+                        id: `f${i + 1}`,
+                        name,
+                        isFolder: false,
+                        size: 3,
+                        mimeType: 'text/plain',
+                    })),
+                })
+            }),
+        )
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const ctx = Object.assign(makeCtx(), { core })
+        const onBack = vi.fn()
+        const host = document.createElement('div')
+        const draw = () =>
+            render(
+                serverModeDriveUploader(ctx, {
+                    provider: 'google-drive',
+                    onBack,
+                }),
+                host,
+            )
+
+        serverModeDriveUploader(ctx, { provider: 'google-drive', onBack })
+        await settle()
+        draw()
+        for (const item of Array.from(
+            host.querySelectorAll<HTMLButtonElement>(
+                '[data-upup-slot="drive-browser-item"]',
+            ),
+        ))
+            item.click()
+        draw()
+        Array.from(host.querySelectorAll('button'))
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+        await settle()
+
+        expect(onBack).toHaveBeenCalledTimes(1)
+        expect(done).toHaveBeenCalledTimes(1)
+        expect(
+            (done.mock.calls[0]![0] as Array<{ key: string }>)
+                .map(f => f.key)
+                .sort(),
+        ).toEqual(['uploads/f1', 'uploads/f2'])
         destroyServerDrives(ctx)
     })
 })

@@ -190,6 +190,7 @@ export function serverModeDriveUploader(
             }
             onBack?.()
         } finally {
+            controller.finishTransfers() // report the finished selection once (any exit path)
             c.transferring = false
             ctx.invalidate()
         }
