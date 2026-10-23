@@ -20,6 +20,7 @@ export {
 export type {
     InteractiveExampleProps,
     AiFeedbackEvent,
+    AssistantErrorInfo,
     CategoryId,
     PropId,
     PrimitiveKind,

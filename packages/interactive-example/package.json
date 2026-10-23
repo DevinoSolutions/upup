@@ -12,6 +12,10 @@
             "types": "./src/ai/markdownStream.ts",
             "default": "./src/ai/markdownStream.ts"
         },
+        "./ai/scrubFailure": {
+            "types": "./src/ai/scrubFailure.ts",
+            "default": "./src/ai/scrubFailure.ts"
+        },
         "./ai/chatSteps": {
             "types": "./src/ai/chatSteps.ts",
             "default": "./src/ai/chatSteps.ts"
