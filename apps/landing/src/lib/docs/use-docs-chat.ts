@@ -2,11 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { clientEnv } from '@/lib/client/env'
+import { reportAiFailure, type AiFailureReport } from '@/lib/analytics/sentry'
 import {
     applyStepChunk,
     settleSteps,
     type ChatStep,
 } from '@useupup/interactive-example/ai/chatSteps'
+
+const DOCS_AGENT_ID = 'docs-agent'
+
+/** Why a `/generate` attempt produced no answer. */
+type GenerateOutcome =
+    | { ok: true }
+    | { ok: false; kind: 'upstream-error' | 'empty-reply'; message?: string }
 
 export interface DocsChatMessage {
     id: string
@@ -156,11 +164,26 @@ export function useDocsChat() {
                     steps: settleSteps(steps),
                 })
 
+            // One Sentry event per failure; a turn the visitor cleared (or that
+            // was aborted by unmount) is not a failure worth reporting.
+            const report = (
+                kind: AiFailureReport['kind'],
+                message?: string,
+            ) => {
+                if (!isCurrent() || controller.signal.aborted) return
+                reportAiFailure({
+                    path: 'docs-ask-ai',
+                    agentId: DOCS_AGENT_ID,
+                    kind,
+                    ...(message ? { message } : {}),
+                })
+            }
+
             // Non-streaming fallback: the original `/generate` round-trip.
-            const runGenerate = async (): Promise<boolean> => {
+            const runGenerate = async (): Promise<GenerateOutcome> => {
                 try {
                     const res = await fetch(
-                        `${base}/api/agents/docs-agent/generate`,
+                        `${base}/api/agents/${DOCS_AGENT_ID}/generate`,
                         {
                             method: 'POST',
                             headers: { 'content-type': 'application/json' },
@@ -168,24 +191,37 @@ export function useDocsChat() {
                             signal: controller.signal,
                         },
                     )
-                    if (!res.ok) return false
+                    if (!res.ok)
+                        return {
+                            ok: false,
+                            kind: 'upstream-error',
+                            message: `generate HTTP ${res.status}`,
+                        }
                     const data = await res.json()
                     const text = typeof data.text === 'string' ? data.text : ''
-                    if (!text) return false
+                    if (!text.trim()) return { ok: false, kind: 'empty-reply' }
                     setAssistant({
                         content: text,
                         streaming: false,
                         steps: settleSteps(steps),
                     })
-                    return true
-                } catch {
-                    return false
+                    return { ok: true }
+                } catch (e: unknown) {
+                    return {
+                        ok: false,
+                        kind: 'upstream-error',
+                        message:
+                            e instanceof Error ? e.message : 'fetch failed',
+                    }
                 }
             }
 
             try {
                 let streamed = ''
                 let opened = false
+                // Why the stream path failed, kept so the failure is reported
+                // even when the answer is rescued below.
+                let streamFailure: string | null = null
                 // Text parts are separate: the agent writes some text, calls a
                 // tool, then writes more. Each part gets its own id and the
                 // parts carry no separator, so the next part's first token is
@@ -245,6 +281,8 @@ export function useDocsChat() {
                             signal: controller.signal,
                         },
                     )
+                    if (!res.ok || !res.body)
+                        streamFailure = `stream HTTP ${res.status}`
                     if (res.ok && res.body) {
                         opened = true
                         const reader = res.body.getReader()
@@ -276,11 +314,14 @@ export function useDocsChat() {
                         // Flush any trailing event without a closing blank line.
                         consume(buffer)
                     }
-                } catch {
-                    // Fall through to the fallback decision below.
+                } catch (e: unknown) {
+                    // Fall through to the fallback decision below, but keep the
+                    // reason: the visitor may never see this failure.
+                    streamFailure =
+                        e instanceof Error ? e.message : 'stream failed'
                 }
 
-                if (streamed) {
+                if (streamed.trim()) {
                     // Got real tokens — finalize with what streamed, even if the
                     // stream later hiccuped; the answer is already useful.
                     setAssistant({
@@ -288,12 +329,26 @@ export function useDocsChat() {
                         streaming: false,
                         steps: settleSteps(steps),
                     })
-                } else if (!opened) {
-                    // Stream never opened (non-200 / network) — try /generate.
-                    if (!(await runGenerate())) finishError()
+                    if (streamFailure !== null)
+                        report('stream-failed', streamFailure)
                 } else {
-                    // Stream opened but produced no text — also fall back.
-                    if (!(await runGenerate())) finishError()
+                    // Stream never opened (non-200 / network), or opened but
+                    // produced no text — fall back to /generate.
+                    if (opened && streamFailure === null)
+                        streamFailure = 'empty stream'
+                    const generated = await runGenerate()
+                    if (generated.ok) {
+                        if (streamFailure !== null)
+                            report('stream-failed', streamFailure)
+                    } else {
+                        finishError()
+                        // The turn ended in the error bubble: ONE event, with
+                        // the stream reason folded in.
+                        const reason = [generated.message, streamFailure]
+                            .filter(Boolean)
+                            .join('; ')
+                        report(generated.kind, reason || undefined)
+                    }
                 }
             } finally {
                 // Release the shared gate only if this send still owns it.

@@ -5,7 +5,7 @@ import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
 import { MarkdownMessage } from './MarkdownMessage'
 import { StepTrail } from './StepTrail'
-import type { AiFeedbackEvent } from '../types'
+import type { AiFeedbackEvent, AssistantErrorInfo } from '../types'
 
 type AssistantPanelProps = {
     /** Where the Mastra dev/prod server lives. Default: localhost dev. */
@@ -18,6 +18,8 @@ type AssistantPanelProps = {
     posthogDistinctId?: string | undefined
     /** Host sink for thumbs ratings / comments. Absent -> no thumbs rendered. */
     onAiFeedback?: ((event: AiFeedbackEvent) => void) | undefined
+    /** Host sink for turns that end in the error state. Absent -> not reported. */
+    onAssistantError?: ((info: AssistantErrorInfo) => void) | undefined
 }
 
 /** The model behind the agent, reported on feedback events for slicing. */
@@ -177,6 +179,7 @@ export function AssistantPanel({
     appId = 'upup',
     posthogDistinctId,
     onAiFeedback,
+    onAssistantError,
 }: AssistantPanelProps) {
     const ctx = useContext(ConfigContext)
     const [input, setInput] = useState('')
@@ -189,6 +192,7 @@ export function AssistantPanel({
             agentId,
             appId,
             distinctId: posthogDistinctId,
+            onAssistantError,
             onPatch: event => {
                 ctx?.setConfigPatch(event.patch)
             },

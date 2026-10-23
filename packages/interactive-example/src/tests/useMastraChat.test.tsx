@@ -95,14 +95,16 @@ const toolResult = (
 
 function setup() {
     const onPatch = vi.fn()
+    const onAssistantError = vi.fn()
     const view = renderHook(() =>
         useMastraChat({
             baseUrl: 'http://mastra.test',
             agentId: 'playground-agent',
             onPatch,
+            onAssistantError,
         }),
     )
-    return { ...view, onPatch }
+    return { ...view, onPatch, onAssistantError }
 }
 
 /** Pause the scripted stream after chunk `after`; returns the release fn. */
@@ -543,5 +545,134 @@ describe('useMastraChat step trail', () => {
         })
 
         expect(result.current.messages).toEqual([])
+    })
+})
+
+describe('useMastraChat failure visibility', () => {
+    const PROMPT = 'secret-prompt-text-7731'
+
+    it('turns a stream that ends with no text into the unavailable turn, not a blank reply', async () => {
+        sdk.chunks = []
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        const turn = result.current.messages[1]
+        expect(turn?.error).toBe(true)
+        expect(turn?.pending).toBe(false)
+        expect(turn?.text).toContain('AI assistant is unavailable')
+        expect(result.current.error).toContain('AI assistant is unavailable')
+        expect(onAssistantError).toHaveBeenCalledTimes(1)
+        expect(onAssistantError).toHaveBeenCalledWith(
+            expect.objectContaining({
+                path: 'playground-chat',
+                agentId: 'playground-agent',
+                kind: 'empty-reply',
+            }),
+        )
+    })
+
+    it('treats a whitespace-only reply as empty', async () => {
+        sdk.chunks = [delta('  '), delta('\n')]
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        expect(result.current.messages[1]?.error).toBe(true)
+        expect(onAssistantError).toHaveBeenCalledTimes(1)
+        expect(onAssistantError.mock.calls[0]?.[0]).toMatchObject({
+            kind: 'empty-reply',
+        })
+    })
+
+    it('keeps a patch-only turn as a real answer: the config change was applied', async () => {
+        sdk.chunks = [toolResult('call-1')]
+        const { result, onPatch, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        expect(onPatch).toHaveBeenCalledTimes(1)
+        expect(result.current.messages[1]?.error).toBeUndefined()
+        expect(onAssistantError).not.toHaveBeenCalled()
+    })
+
+    it('reports an upstream error chunk once, with the path and agent id', async () => {
+        sdk.chunks = [
+            delta('Partial '),
+            { type: 'error', payload: { error: { message: 'model down' } } },
+        ]
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        expect(result.current.messages[1]?.error).toBe(true)
+        expect(onAssistantError).toHaveBeenCalledTimes(1)
+        expect(onAssistantError).toHaveBeenCalledWith({
+            path: 'playground-chat',
+            agentId: 'playground-agent',
+            kind: 'upstream-error',
+            message: 'model down',
+        })
+    })
+
+    it('never puts the visitor prompt in the report', async () => {
+        sdk.chunks = [
+            { type: 'error', payload: { error: { message: 'model down' } } },
+        ]
+        const first = setup()
+        await act(async () => first.result.current.send(PROMPT))
+        sdk.chunks = []
+        const second = setup()
+        await act(async () => second.result.current.send(PROMPT))
+
+        const payloads = [
+            ...first.onAssistantError.mock.calls,
+            ...second.onAssistantError.mock.calls,
+        ]
+        expect(payloads).toHaveLength(2)
+        expect(JSON.stringify(payloads)).not.toContain(PROMPT)
+    })
+
+    it('does not report a healthy turn', async () => {
+        sdk.chunks = [delta('All good.')]
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        expect(result.current.messages[1]?.error).toBeUndefined()
+        expect(onAssistantError).not.toHaveBeenCalled()
+    })
+
+    it('does not report a turn superseded by reset()', async () => {
+        let release!: () => void
+        sdk.gate = new Promise<void>(r => (release = r))
+        sdk.chunks = [delta('First '), delta('late')]
+        sdk.pauseAfter = 0
+        const { result, onAssistantError } = setup()
+
+        act(() => void result.current.send(PROMPT))
+        await waitFor(() =>
+            expect(result.current.messages[1]?.text).toBe('First '),
+        )
+        act(() => result.current.reset())
+        await act(async () => {
+            release()
+            await new Promise(r => setTimeout(r, 0))
+        })
+
+        expect(onAssistantError).not.toHaveBeenCalled()
+    })
+
+    it('still shows the unavailable turn when the reporter itself throws', async () => {
+        sdk.chunks = []
+        const { result, onAssistantError } = setup()
+        onAssistantError.mockImplementation(() => {
+            throw new Error('reporter down')
+        })
+
+        await act(async () => result.current.send(PROMPT))
+
+        expect(result.current.messages[1]?.error).toBe(true)
+        expect(result.current.isPending).toBe(false)
     })
 })

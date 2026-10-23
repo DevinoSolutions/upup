@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
-import type { UpupConfig } from '../types'
+import type { AssistantErrorInfo, UpupConfig } from '../types'
 import { applyStepChunk, settleSteps, type ChatStep } from './chatSteps'
 
 /**
@@ -60,6 +60,20 @@ type UseMastraChatOptions = {
      * (-> PostHog distinct id) so a later rating groups under the same person.
      */
     distinctId?: string | undefined
+    /**
+     * Called once for every turn that ends in the visible error state, with
+     * the path, agent id and a short reason (never the prompt). Not called
+     * for a turn superseded by reset()/unmount. A throwing reporter is
+     * swallowed: reporting must never change what the visitor sees.
+     */
+    onAssistantError?: ((info: AssistantErrorInfo) => void) | undefined
+}
+
+/** The stream finished cleanly but the agent produced no usable text. */
+class EmptyReplyError extends Error {
+    constructor() {
+        super('the assistant returned an empty reply')
+    }
 }
 
 // crypto.randomUUID needs a secure context; getRandomValues does not, so the
@@ -116,6 +130,7 @@ export function useMastraChat({
     onPatch,
     appId,
     distinctId,
+    onAssistantError,
 }: UseMastraChatOptions) {
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [isPending, setIsPending] = useState(false)
@@ -296,6 +311,12 @@ export function useMastraChat({
 
                 if (!isCurrent()) return
                 if (streamError !== null) throw new Error(streamError)
+                // A stream that ends with no text and no error chunk would
+                // otherwise land as a blank bubble. A turn that applied a
+                // patch is a real answer (the chips are the reply), so only a
+                // wholly empty one goes to the error state.
+                if (!text.trim() && patches.length === 0)
+                    throw new EmptyReplyError()
 
                 updateTurn({
                     text,
@@ -309,6 +330,20 @@ export function useMastraChat({
                 const detail = e instanceof Error ? e.message : 'Network error.'
                 const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
                 setError(friendly)
+                try {
+                    onAssistantError?.({
+                        path: 'playground-chat',
+                        agentId,
+                        ...(e instanceof EmptyReplyError
+                            ? { kind: 'empty-reply' as const }
+                            : {
+                                  kind: 'upstream-error' as const,
+                                  message: detail,
+                              }),
+                    })
+                } catch {
+                    // Reporting must never break the error turn below.
+                }
                 // Render the honest error AS the assistant turn — never a canned
                 // patch (round-8 item 2). Flag it so no thumbs attach to a
                 // non-answer. Patches that already streamed in stay listed:
@@ -334,6 +369,7 @@ export function useMastraChat({
             conversationId,
             distinctId,
             isPending,
+            onAssistantError,
             onPatch,
         ],
     )
