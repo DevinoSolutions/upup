@@ -6,6 +6,7 @@ import type { ServerModeProvider, ServerDriveFile } from '@useupup/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
+import { renderHeaderExtra } from '../context/source-view-header-extra'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
@@ -50,6 +51,7 @@ function cell(
         const controller = new ServerModeDriveController({
             provider,
             serverUrl: () => ctx.serverUrl,
+            core: () => ctx.core,
         })
         c = {
             controller,
@@ -107,6 +109,42 @@ export function serverModeDriveUploader(
         snap.state.status === 'loading' || snap.state.status === 'idle'
     const files: ServerDriveFile[] =
         snap.state.status === 'ready' ? snap.state.files : []
+
+    // Account controls live in the SourceView header row (portal), exactly like
+    // the client-mode drive header: Log out + hairline, only once the list is
+    // showing. Any other state clears whatever was teleported there before.
+    if (isLoading || snap.state.status === 'reauth') {
+        renderHeaderExtra(ctx, nothing)
+    } else {
+        const slot = ctx.theme.getSnapshot().slotOverrides
+        renderHeaderExtra(
+            ctx,
+            html`<button
+                    class=${cn(
+                        'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                        {
+                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
+                                isDark,
+                        },
+                        slot.driveLogoutButton,
+                    )}
+                    @click=${() => {
+                        void controller.signOut().then(ok => {
+                            if (ok) ctx.setActiveSource(undefined)
+                        })
+                    }}
+                >
+                    ${ctx.translations.logOut}
+                </button>
+                <span
+                    aria-hidden="true"
+                    class=${cn(
+                        'upup-h-4 upup-w-px',
+                        isDark ? 'upup-bg-white/15' : 'upup-bg-black/15',
+                    )}
+                ></span>`,
+        )
+    }
 
     if (snap.state.status === 'reauth') {
         return driveAuthFallback(ctx, {

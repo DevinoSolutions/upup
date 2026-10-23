@@ -58,6 +58,7 @@ cloud drives — OAuth, listing, and transfer on your server:
 browser ──GET  /files/:provider ──> your server ──> Google / MS / ...
 browser ──POST /files/:provider/transfer ──> your server ──> S3
                        (drive → server → S3, in bounded 5 MiB chunks)
+browser ──POST /files/:provider/logout ──> your server (drops this user's drive tokens)
 ```
 
 The uploader calls one API origin, plus your bucket for the PUTs — so the

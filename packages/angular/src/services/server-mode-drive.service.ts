@@ -44,6 +44,7 @@ export class ServerModeDriveService {
         this.controller = new ServerModeDriveController({
             provider,
             serverUrl: () => this.store.serverUrl,
+            core: () => this.store.core,
         })
         this.bridge = toSignalStore(this.controller)
         this.controller.init()
@@ -54,6 +55,9 @@ export class ServerModeDriveService {
     }
     startAuth(): void {
         this.controller.startAuth()
+    }
+    signOut(): Promise<boolean> {
+        return this.controller.signOut()
     }
     setFolderId(id: string | undefined): void {
         this.controller.setFolderId(id)

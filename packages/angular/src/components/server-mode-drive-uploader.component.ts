@@ -1,15 +1,18 @@
 import {
     Component,
+    ElementRef,
     Input,
     inject,
     OnInit,
     OnDestroy,
     Type,
+    ViewChild,
 } from '@angular/core'
 import { NgComponentOutlet } from '@angular/common'
 import { errorCodeToMessageKey } from '@useupup/core'
 import { cn } from '@useupup/core/internal'
 import { UpupStore } from '../upup-store.service'
+import { SourceViewHeaderExtraService } from '../context/source-view-header-extra.service'
 import {
     ServerModeDriveService,
     type ServerModeProvider,
@@ -58,6 +61,21 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                 @if (isLoading) {
                     <ng-container [ngComponentOutlet]="loader" />
                 } @else {
+                    @if (headerExtra?.host()) {
+                        <div #extra style="display: contents">
+                            <button
+                                type="button"
+                                [class]="logoutClass"
+                                (click)="onLogout()"
+                            >
+                                {{ store.translations().logOut }}
+                            </button>
+                            <span
+                                aria-hidden="true"
+                                [class]="separatorClass"
+                            ></span>
+                        </div>
+                    }
                     <div
                         data-testid="upup-server-drive-browser"
                         class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -182,8 +200,27 @@ import { SourceViewContainerComponent } from './source-view-container.component'
     `,
 })
 export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
-    private store = inject(UpupStore)
+    readonly store = inject(UpupStore)
     readonly svc = inject(ServerModeDriveService)
+    // Optional: absent in isolated tests, in which case the Log out control
+    // simply doesn't portal (same fallback as DriveBrowserHeader).
+    readonly headerExtra = inject(SourceViewHeaderExtraService, {
+        optional: true,
+    })
+
+    /** Log out + hairline wrapper, relocated into the SourceView header row
+     *  (the same appendChild portal DriveBrowserHeader uses). */
+    private movedNode: HTMLElement | null = null
+
+    @ViewChild('extra')
+    set extra(ref: ElementRef<HTMLElement> | undefined) {
+        const node = ref?.nativeElement ?? null
+        const host = this.headerExtra?.host() ?? null
+        if (node && host) {
+            host.appendChild(node)
+            this.movedNode = node
+        }
+    }
 
     @Input({ required: true }) provider!: ServerModeProvider
     @Input() onBack: () => void = () => {}
@@ -198,7 +235,33 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
+        this.movedNode?.remove()
+        this.movedNode = null
         this.svc.destroy()
+    }
+
+    onLogout(): void {
+        void this.svc.signOut().then(ok => {
+            if (ok) this.store.setActiveSource(undefined)
+        })
+    }
+
+    get logoutClass(): string {
+        const dark = this.store.isDark()
+        const slotClasses = this.store.slotOverrides()
+        return cn(
+            'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+            dark ? 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]' : '',
+            slotClasses.driveLogoutButton,
+        )
+    }
+
+    get separatorClass(): string {
+        const dark = this.store.isDark()
+        return cn(
+            'upup-h-4 upup-w-px',
+            dark ? 'upup-bg-white/15' : 'upup-bg-black/15',
+        )
     }
 
     // ── Bound handlers ────────────────────────────────────────────

@@ -4,6 +4,7 @@ import { enUS } from './i18n/locales/en-US'
 import { resolveLocaleBundle } from './i18n/resolve-locale'
 import type { PipelineContext } from './contracts-pipeline'
 import type { UploadFile } from './types/upload-file'
+import type { FileSource } from './types/file-source'
 import { UploadStatus } from './types/upload-status'
 import { EventEmitter } from './events'
 import type { CoreEvents } from './types/core-events'
@@ -281,6 +282,48 @@ export class UpupCore {
 
     get ext(): Record<string, ExtensionMethods> {
         return this.pluginManager.getExtensions()
+    }
+
+    /**
+     * Surface a file that was already placed in storage server-side (a
+     * server-mode cloud-drive transfer) as a completed entry. When every file
+     * in the list is complete the run status flips to SUCCESSFUL, so the UI
+     * shows the same completed state as a client-mode upload.
+     */
+    addTransferredFile(info: {
+        name: string
+        size: number
+        type: string
+        key: string
+        url?: string | undefined
+        source: FileSource
+    }): UploadFile {
+        if (this.destroyed)
+            throw new UpupError(
+                'UpupCore: addTransferredFile() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
+        const file = this.fileManager.addCompleted(info)
+        this.emitter.emit('files-added', [file])
+        this.emitter.emit('upload-success', {
+            file,
+            result: {
+                key: info.key,
+                ...(info.url !== undefined ? { downloadUrl: info.url } : {}),
+            },
+        })
+        const allComplete = [...this.files.values()].every(f => f.key != null)
+        if (allComplete) {
+            this._status = UploadStatus.SUCCESSFUL
+            this._error = null
+            this.emitter.emit('state-change', {
+                files: this.files,
+                status: this._status,
+            })
+        } else {
+            this.emitter.emit('state-change', { files: this.files })
+        }
+        return file
     }
 
     async addFiles(

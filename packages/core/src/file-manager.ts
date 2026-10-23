@@ -228,6 +228,11 @@ export class FileManager {
         // relativePath is defined non-enumerable (nativeToUploadFile) so it is
         // copied explicitly, exactly as cloneUploadFile does. Then the patch wins.
         Object.assign(next, prev, { relativePath: prev.relativePath }, patch)
+        // A remote-completed file (addCompleted) carries its real size as an own
+        // non-enumerable slot over a zero-byte backing File; Object.assign skips
+        // it, so carry it across or the size would silently reset to 0.
+        const remoteSize = Object.getOwnPropertyDescriptor(prev, 'size')
+        if (remoteSize) Object.defineProperty(next, 'size', remoteSize)
         const updated = next as UploadFile
         this.files.set(id, updated)
         return updated
@@ -407,6 +412,39 @@ export class FileManager {
             revokeObjectUrl(file)
         }
         this.files.clear()
+    }
+
+    /**
+     * Register a file that already lives in storage (a server-mode drive
+     * transfer: the server streamed it provider -> S3, so the browser never held
+     * the bytes). Stored as a SUCCESSFUL entry with its key set; the backing
+     * File is zero-byte and `size` reports the real stored size. The next
+     * upload() skips it (key != null, F-810).
+     */
+    addCompleted(info: {
+        name: string
+        size: number
+        type: string
+        key: string
+        url?: string | undefined
+        source: FileSource
+    }): UploadFile {
+        const base = new File([], info.name, { type: info.type })
+        Object.defineProperty(base, 'size', {
+            value: info.size,
+            configurable: true,
+            enumerable: false,
+        })
+        const file = Object.assign(base, {
+            id: generateFileId(),
+            source: info.source,
+            status: UploadStatus.SUCCESSFUL,
+            key: info.key,
+            metadata: { originalSize: info.size },
+            ...(info.url !== undefined ? { url: info.url } : {}),
+        }) as UploadFile
+        this.files.set(file.id, file)
+        return file
     }
 
     /** Bulk-apply pipeline-produced files (already UploadFile with status/key set). */

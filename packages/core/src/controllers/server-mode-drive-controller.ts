@@ -1,4 +1,6 @@
 import { UpupNetworkError } from '../errors'
+import { FileSource } from '../types/file-source'
+import type { UpupCore } from '../core'
 import type { ObservableController } from './types'
 
 export type ServerModeProvider =
@@ -36,6 +38,19 @@ export interface ServerModeDriveDeps {
     provider: ServerModeProvider
     /** Getter so the controller never reads a runtime global at construction. */
     serverUrl: () => string | undefined
+    /**
+     * Getter for the owning core. When present, a successful transfer registers
+     * the stored file on it (completed row + upload-success), so every
+     * framework gets the result without handling it in its own component.
+     */
+    core?: () => Pick<UpupCore, 'addTransferredFile'> | null | undefined
+}
+
+const PROVIDER_SOURCE: Record<ServerModeProvider, FileSource> = {
+    'google-drive': FileSource.GOOGLE_DRIVE,
+    'one-drive': FileSource.ONE_DRIVE,
+    dropbox: FileSource.DROPBOX,
+    box: FileSource.BOX,
 }
 
 export class ServerModeDriveController implements ObservableController<ServerDriveSnapshot> {
@@ -53,6 +68,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         this.refresh = this.refresh.bind(this)
         this.transfer = this.transfer.bind(this)
         this.startAuth = this.startAuth.bind(this)
+        this.signOut = this.signOut.bind(this)
     }
 
     subscribe = (listener: () => void): (() => void) => {
@@ -188,11 +204,74 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 return { status: 'error', message: text || `${res.status}` }
             }
             const result: unknown = await res.json()
+            this.registerTransferred(file, result)
             return { status: 'ok', result }
         } catch (err) {
             // upup-catch: transfer failures are returned to the caller as a typed
             // { status: 'error' } result (surfaced in the UI), not swallowed.
             return { status: 'error', message: (err as Error).message }
+        }
+    }
+
+    /** Surface the stored file on core as a completed row (T-6094). */
+    private registerTransferred(file: ServerDriveFile, result: unknown): void {
+        const core = this.deps.core?.()
+        const r = result as
+            | {
+                  key?: string
+                  name?: string
+                  size?: number
+                  type?: string
+                  url?: string
+              }
+            | null
+            | undefined
+        if (!core || !r || typeof r.key !== 'string') return
+        core.addTransferredFile({
+            name: r.name ?? file.name,
+            size: r.size ?? file.size ?? 0,
+            type: r.type ?? file.mimeType ?? '',
+            key: r.key,
+            url: r.url,
+            source: PROVIDER_SOURCE[this.deps.provider],
+        })
+    }
+
+    /**
+     * Disconnect the drive: the server drops THIS user's stored tokens for the
+     * provider. Resolves true on success, leaving the snapshot untouched: the
+     * caller leaves the drive view (like client mode), and the next visit's
+     * list answers `reauth`. Deliberately NOT `requestReauth()` here — the
+     * reconnect view auto-opens the OAuth popup on mount, which would pop a
+     * sign-in window the instant the user logs out. On failure the error view
+     * shows the message and it resolves false.
+     */
+    async signOut(): Promise<boolean> {
+        const serverUrl = this.deps.serverUrl()
+        if (!serverUrl) return false
+        try {
+            const res = await fetch(
+                `${serverUrl}/files/${this.deps.provider}/logout`,
+                { method: 'POST', credentials: 'include' },
+            )
+            if (!res.ok) {
+                const text = await res.text().catch(() => '')
+                this.setState({
+                    state: {
+                        status: 'error',
+                        message: text || `${res.status}`,
+                    },
+                })
+                return false
+            }
+            return true
+        } catch (err) {
+            // upup-catch: a failed disconnect is surfaced via the 'error' list
+            // state (rendered in the drive browser), not swallowed.
+            this.setState({
+                state: { status: 'error', message: (err as Error).message },
+            })
+            return false
         }
     }
 

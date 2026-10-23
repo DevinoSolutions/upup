@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
 } from '../context/UploaderContext'
+import { SourceViewHeaderExtraContext } from '../context/SourceViewHeaderExtraContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -32,12 +35,14 @@ export default function ServerModeDriveUploader({
     onBack,
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
 }: Readonly<Props>): React.ReactElement | null {
-    const { isDark: dark } = useUploaderTheme()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
         icons: { LoaderIcon },
     } = useUploaderOptions()
-    const { translator } = useUploaderI18n()
-    const { state, search, setSearch, refresh, transfer, startAuth } =
+    const { translator, translations: tr } = useUploaderI18n()
+    const { setActiveSource } = useUploaderSource()
+    const headerExtraHost = useContext(SourceViewHeaderExtraContext)
+    const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
         useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [transferring, setTransferring] = useState(false)
@@ -85,6 +90,43 @@ export default function ServerModeDriveUploader({
             isLoading={isLoading}
             data-upup-slot={dataUpupSlot}
         >
+            {!isLoading && !!headerExtraHost && (
+                // Same account-control slot + button as the client-mode
+                // DriveBrowserHeader, so both modes expose one Log out.
+                <>
+                    {createPortal(
+                        <>
+                            <button
+                                className={cn(
+                                    'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                                    {
+                                        'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
+                                            dark,
+                                    },
+                                    slotClasses.driveLogoutButton,
+                                )}
+                                onClick={() => {
+                                    void signOut().then(ok => {
+                                        if (ok) setActiveSource(undefined)
+                                    })
+                                }}
+                            >
+                                {tr.logOut}
+                            </button>
+                            <span
+                                aria-hidden="true"
+                                className={cn(
+                                    'upup-h-4 upup-w-px',
+                                    dark
+                                        ? 'upup-bg-white/15'
+                                        : 'upup-bg-black/15',
+                                )}
+                            />
+                        </>,
+                        headerExtraHost,
+                    )}
+                </>
+            )}
             {isLoading ? (
                 <LoaderIcon />
             ) : (

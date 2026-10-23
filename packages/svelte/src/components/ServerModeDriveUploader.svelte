@@ -6,8 +6,13 @@ import { cn } from '@useupup/core/internal'
   import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
   } from '../context/uploader-context'
+  import {
+    useSourceViewHeaderExtra,
+    portal,
+  } from '../context/source-view-header-extra'
   import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -36,12 +41,21 @@ import { cn } from '@useupup/core/internal'
   // provider and dataUpupSlot are static props (set once at call sites — never changed).
   // untrack() tells Svelte we intentionally read their initial values outside reactive context.
   const resolvedSlot = untrack(() => dataUpupSlot ?? `drive-browser-${provider}`)
-  const { state, search, setSearch, refresh, transfer, startAuth } =
+  const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
     untrack(() => useServerModeDrive(provider))
 
-  const { isDark: dark } = useUploaderTheme()
+  const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
   const { icons } = useUploaderOptions()
-  const { translator } = useUploaderI18n()
+  const { translator, translations: tr } = useUploaderI18n()
+  const { setActiveSource } = useUploaderSource()
+  const headerExtraStore =
+    useSourceViewHeaderExtra() ?? writable<HTMLElement | null>(null)
+
+  function onLogout() {
+    void signOut().then((ok) => {
+      if (ok) setActiveSource(undefined)
+    })
+  }
   const Loader = icons.LoaderIcon
 
   const errorText = derived(state, ($state) => {
@@ -110,6 +124,24 @@ import { cn } from '@useupup/core/internal'
     {#if $isLoading}
       <Loader />
     {:else}
+      {#if $headerExtraStore}
+        <div style="display: contents" use:portal={$headerExtraStore}>
+          <button
+            class={cn(
+              'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+              { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': $dark },
+              $slotClasses.driveLogoutButton,
+            )}
+            onclick={onLogout}
+          >
+            {tr.logOut}
+          </button>
+          <span
+            aria-hidden="true"
+            class={cn('upup-h-4 upup-w-px', $dark ? 'upup-bg-white/15' : 'upup-bg-black/15')}
+          ></span>
+        </div>
+      {/if}
       <div
         data-testid="upup-server-drive-browser"
         class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"

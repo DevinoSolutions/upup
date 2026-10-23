@@ -3,8 +3,10 @@ import { ref, computed } from 'vue'
 import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
 } from '../context/uploader-context'
+import { useSourceViewHeaderExtra } from '../context/source-view-header-extra'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -31,10 +33,19 @@ const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
 const resolvedSlot = computed(() => props.dataUpupSlot ?? `drive-browser-${props.provider}`)
 
 const { icons } = useUploaderOptions()
-const { isDark: dark } = useUploaderTheme()
-const { translator } = useUploaderI18n()
-const { state, search, setSearch, refresh, transfer, startAuth } =
+const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+const { translator, translations: tr } = useUploaderI18n()
+const { setActiveSource } = useUploaderSource()
+const headerExtraHostRef = useSourceViewHeaderExtra()
+const headerExtraHost = computed(() => headerExtraHostRef?.value ?? null)
+const { state, search, setSearch, refresh, transfer, startAuth, signOut } =
     useServerModeDrive(props.provider)
+
+function onLogout() {
+    void signOut().then(ok => {
+        if (ok) setActiveSource(undefined)
+    })
+}
 
 const errorText = computed(() => {
     if (state.value.status !== 'error') return ''
@@ -99,6 +110,31 @@ function formatBytes(bytes: number): string {
     >
         <component :is="icons.LoaderIcon" v-if="isLoading" />
         <template v-else>
+            <Teleport v-if="headerExtraHost" :to="headerExtraHost">
+                <button
+                    :class="
+                        cn(
+                            'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                            {
+                                'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark,
+                            },
+                            slotClasses.driveLogoutButton,
+                        )
+                    "
+                    @click="onLogout"
+                >
+                    {{ tr.logOut }}
+                </button>
+                <span
+                    aria-hidden="true"
+                    :class="
+                        cn(
+                            'upup-h-4 upup-w-px',
+                            dark ? 'upup-bg-white/15' : 'upup-bg-black/15',
+                        )
+                    "
+                />
+            </Teleport>
             <div
                 data-testid="upup-server-drive-browser"
                 class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"

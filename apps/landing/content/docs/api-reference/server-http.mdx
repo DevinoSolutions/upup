@@ -43,13 +43,14 @@ configured it.
 | `GET`     | `/auth/:provider/cb`        | OAuth `state` (single-use, 10 min)              | `200` HTML           |
 | `GET`     | `/files/:provider`          | resolved user id + stored drive tokens          | `200` file list      |
 | `POST`    | `/files/:provider/transfer` | resolved user id + stored drive tokens          | `200` stored object  |
+| `POST`    | `/files/:provider/logout`   | resolved user id                                | `200` `{ ok: true }` |
 
 `:provider` is one of `google-drive`, `one-drive`, `dropbox`, `box` — the
 kebab-case wire form. Anything else returns `400`.
 
 Any method/path pair not in the table falls through to
 `404 {"error":"Not found"}` — including a `GET /presign` or a
-`POST /files/:provider` without the `/transfer` suffix.
+`POST /files/:provider` without the `/transfer` or `/logout` suffix.
 
 `POST /multipart/resume` is the one route you can switch off: setting
 `multipartResumeWindowSeconds: 0` stops it from being routed at all, so it 404s
@@ -667,6 +668,33 @@ HTML from your own bucket origin), do not rely on it for Dropbox and Box
 transfers; serve downloads from a separate origin or with
 `Content-Disposition: attachment`, or reject in `hooks.onBeforeUpload`, which
 receives the file's name and size as well.
+
+## `POST /files/:provider/logout`
+
+Disconnects a drive: deletes **the caller's** stored tokens for that one
+provider, so the next list or transfer answers `401 { "reauth": true }` until
+the user signs in again. Same identity resolution as the list route (your
+`getUserId`, or the shared default user when none is configured), and it only
+ever touches the single `user + provider` entry — never another user's grant
+and never another provider's. No request body.
+
+It is idempotent: a second logout, or one for a provider the user never
+connected, is still `200`.
+
+**Response `200`**
+
+```ts
+{
+    provider: string
+    ok: true
+}
+```
+
+| Status | Body                                    | Cause                       |
+| ------ | --------------------------------------- | --------------------------- |
+| `400`  | `{ "error": "Unknown provider: x" }`    | bad slug                    |
+| `401`  | `{ "error": "Unauthenticated" }`        | `getUserId` returned `null` |
+| `500`  | `{ "error": "tokenStore is required" }` | no `tokenStore`             |
 
 ## Policy and limits
 

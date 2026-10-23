@@ -18,15 +18,17 @@ export interface UseServerModeDriveReturn {
     refresh: ServerModeDriveController['refresh']
     transfer: ServerModeDriveController['transfer']
     startAuth: ServerModeDriveController['startAuth']
+    signOut: ServerModeDriveController['signOut']
 }
 
 export function useServerModeDrive(
     provider: ServerModeProvider,
 ): UseServerModeDriveReturn {
-    const { serverUrl } = useUploaderRuntime()
+    const { serverUrl, core } = useUploaderRuntime()
     const controller = new ServerModeDriveController({
         provider,
         serverUrl: () => serverUrl,
+        core: () => core,
     })
 
     const state = toReadable(controller)
@@ -50,5 +52,6 @@ export function useServerModeDrive(
         refresh: controller.refresh.bind(controller),
         transfer: controller.transfer.bind(controller),
         startAuth: controller.startAuth.bind(controller),
+        signOut: controller.signOut.bind(controller),
     }
 }
