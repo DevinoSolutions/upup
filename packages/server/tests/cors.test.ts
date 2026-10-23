@@ -232,3 +232,44 @@ describe('CORS — OAuth routes carry ACAO (F-108)', () => {
         )
     })
 })
+
+describe('CORS — Vary: Origin on every response once cors is configured (T-6186)', () => {
+    // A shared cache keys on Vary. If only the allowed-origin reply carried it, a
+    // header-less reply to a disallowed (or origin-less) request could be cached
+    // and then served to an allowed origin, which would then fail CORS.
+    const cors = { allowedOrigins: ['https://app.example'] }
+
+    it('sends Vary: Origin on a reply to a non-allowlisted origin', async () => {
+        const handler = createUpupHandler({ ...baseConfig, cors })
+        const res = await handler(
+            options('http://localhost/presign', {
+                Origin: 'https://evil.example',
+            }),
+        )
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+        expect(res.headers.get('Vary')).toBe('Origin')
+    })
+
+    it('sends Vary: Origin on a reply to a request with no Origin header', async () => {
+        const handler = createUpupHandler({ ...baseConfig, cors })
+        const res = await handler(options('http://localhost/presign'))
+        expect(res.headers.get('Access-Control-Allow-Origin')).toBeNull()
+        expect(res.headers.get('Vary')).toBe('Origin')
+    })
+
+    it('sends Vary: Origin on a non-preflight reply too', async () => {
+        const handler = createUpupHandler({ ...baseConfig, cors })
+        const res = await handler(
+            new Request('http://localhost/no-such-route', {
+                headers: { Origin: 'https://evil.example' },
+            }),
+        )
+        expect(res.headers.get('Vary')).toBe('Origin')
+    })
+
+    it('sends no Vary header when cors is not configured', async () => {
+        const handler = createUpupHandler(baseConfig)
+        const res = await handler(options('http://localhost/presign'))
+        expect(res.headers.get('Vary')).toBeNull()
+    })
+})

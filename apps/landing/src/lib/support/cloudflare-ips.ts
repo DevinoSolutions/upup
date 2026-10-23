@@ -133,6 +133,24 @@ function inRange(ip: ParsedIp, range: Range): boolean {
     return true
 }
 
+/** Canonical rate-limit key for `ip`, or null when it does not parse.
+ *  IPv4 (and IPv4-mapped IPv6, which `parseIp` already folds to IPv4) keys as the
+ *  dotted quad. IPv6 keys on its /64: a residential or cloud customer is handed
+ *  a whole /64 (or larger), so keying the full /128 would let one client mint
+ *  2^64 buckets just by rotating the host half of its address. */
+export function rateLimitKey(ip: string): string | null {
+    const parsed = parseIp(ip)
+    if (!parsed) return null
+    if (parsed.family === 4) {
+        const [high = 0, low = 0] = parsed.groups
+        return `${high >> 8}.${high & 0xff}.${low >> 8}.${low & 0xff}`
+    }
+    return `${parsed.groups
+        .slice(0, 4)
+        .map(group => group.toString(16))
+        .join(':')}::/64`
+}
+
 /** True when `ip` (IPv4, IPv6 or IPv4-mapped IPv6) is inside Cloudflare's
  *  published ranges. Anything unparseable is NOT Cloudflare. */
 export function isCloudflareIp(ip: string): boolean {

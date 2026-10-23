@@ -4,7 +4,7 @@
 // Fine for a single-region deploy; swap the Map for a shared store to scale out.
 
 import { env } from '@/lib/env'
-import { isCloudflareIp } from '@/lib/support/cloudflare-ips'
+import { isCloudflareIp, rateLimitKey } from '@/lib/support/cloudflare-ips'
 
 type Bucket = { tokens: number; updatedAt: number }
 
@@ -105,8 +105,11 @@ function cfOverride(): 'force' | 'never' | 'auto' {
     return 'auto'
 }
 
+/** The bucket key for an address: canonicalised (IPv6 -> its /64, IPv4-mapped ->
+ *  plain IPv4) so one client cannot mint buckets by varying how it writes or
+ *  which host bits it uses. An unparseable value is kept as-is, length-bounded. */
 function bounded(ip: string): string {
-    return ip.slice(0, MAX_KEY_LENGTH) || 'unknown'
+    return rateLimitKey(ip) ?? (ip.slice(0, MAX_KEY_LENGTH) || 'unknown')
 }
 
 /**
@@ -122,7 +125,8 @@ function bounded(ip: string): string {
  * last hop (the immediate peer) is inside Cloudflare's published ranges (see
  * cloudflare-ips.ts), or when `TRUST_CF_CONNECTING_IP=1` overrides that check.
  * Otherwise the peer address itself is the key, which fails closed: a forged
- * header cannot mint buckets.
+ * header cannot mint buckets. Either way the key is canonicalised: IPv6 keys on
+ * its /64 and an IPv4-mapped IPv6 address keys as its IPv4 (see `bounded`).
  */
 export function clientIpFromHeaders(headers: Headers): string {
     const xff = headers.get('x-forwarded-for')
