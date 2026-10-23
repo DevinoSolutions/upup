@@ -17,7 +17,7 @@ jobs:
         # check. Pinned to a commit SHA like every other action here. upup stays
         # on ubuntu-latest, so the reusable workflow's ubuntu-devino default is
         # overridden.
-        uses: DevinoSolutions/.github/.github/workflows/security-audit.yml@0f0d46183478802c4e1f2bd51580afa48518c1e
+        uses: DevinoSolutions/.github/.github/workflows/security-audit.yml@0f0d46183478802c4e1f2bd51580afa48518c1e8
         with:
             runner: ubuntu-latest
             audit-flags: '--prod'
