@@ -17,15 +17,37 @@ const AGENT_UNAVAILABLE_VISITOR_LINE = 'Please try again in a moment.'
 // Inlined by the consumer's bundler; the package carries no node types.
 declare const process: { env: { NODE_ENV?: string } }
 
-/** True when the developer hint is meaningful: a local agent or a dev build. */
-function showDeveloperHint(baseUrl: string): boolean {
-    if (process.env.NODE_ENV === 'development') return true
+/**
+ * True when the developer hint is meaningful: the PAGE runs locally or in a dev
+ * build. Keyed on the page, not the agent URL: the default agent URL is
+ * localhost, so a public deploy that never sets one would otherwise show every
+ * visitor the setup hint.
+ */
+function showDeveloperHint(): boolean {
     try {
-        const { hostname } = new URL(baseUrl)
-        return hostname === 'localhost' || hostname === '127.0.0.1'
+        if (typeof window !== 'undefined') {
+            const { hostname } = window.location
+            if (
+                hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '[::1]'
+            )
+                return true
+        }
+        return (
+            typeof process !== 'undefined' &&
+            process.env.NODE_ENV === 'development'
+        )
     } catch {
         return false
     }
+}
+
+/** Visitor-facing detail: drop URLs and host:port so internal hosts don't show. */
+function visitorDetail(detail: string): string {
+    return detail
+        .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, '[host]')
+        .replace(/\b[\w.-]+:\d{2,5}\b/g, '[host]')
 }
 
 type ChatRole = 'user' | 'assistant'
@@ -344,8 +366,8 @@ export function useMastraChat({
             } catch (e: unknown) {
                 if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
-                const friendly = `AI assistant is unavailable (${detail}). ${
-                    showDeveloperHint(baseUrl)
+                const friendly = `AI assistant is unavailable (${visitorDetail(detail)}). ${
+                    showDeveloperHint()
                         ? AGENT_UNAVAILABLE_HINT
                         : AGENT_UNAVAILABLE_VISITOR_LINE
                 }`

@@ -702,6 +702,7 @@ describe('useMastraChat failure visibility', () => {
     })
 
     it('shows visitors a plain unavailable line, not the developer hint', async () => {
+        vi.stubGlobal('location', { hostname: 'useupup.com' })
         sdk.chunks = []
         const { result, onAssistantError } = setup('https://agents.useupup.com')
 
@@ -715,25 +716,81 @@ describe('useMastraChat failure visibility', () => {
         expect(turn?.text).not.toContain('OPENROUTER_API_KEY')
         expect(result.current.error).not.toContain('localhost:4111')
         expect(onAssistantError).toHaveBeenCalledTimes(1)
+        vi.unstubAllGlobals()
     })
 
-    it.each(['http://localhost:4111', 'http://127.0.0.1:4111'])(
-        'keeps the developer hint when the agent base URL is %s',
-        async baseUrl => {
-            sdk.chunks = []
-            const { result } = setup(baseUrl)
+    it.each(['localhost', '127.0.0.1', '[::1]'])(
+        'keeps the developer hint when the page runs on %s',
+        async hostname => {
+            vi.stubGlobal('location', { hostname })
+            try {
+                sdk.chunks = []
+                const { result } = setup('http://localhost:4111')
 
-            await act(async () => result.current.send(PROMPT))
+                await act(async () => result.current.send(PROMPT))
 
-            const turn = result.current.messages[1]
-            expect(turn?.text).toContain('AI assistant is unavailable')
-            expect(turn?.text).toContain('pnpm run dev')
-            expect(turn?.text).toContain('OPENROUTER_API_KEY')
+                const turn = result.current.messages[1]
+                expect(turn?.text).toContain('pnpm run dev')
+                expect(turn?.text).toContain('OPENROUTER_API_KEY')
+            } finally {
+                vi.unstubAllGlobals()
+            }
         },
     )
 
-    it('keeps the developer hint under NODE_ENV=development, whatever the base URL', async () => {
+    it.each(['useupup.com', 'localhost.evil.com'])(
+        'shows no developer hint on public page %s, even with a localhost agent URL',
+        async hostname => {
+            vi.stubGlobal('location', { hostname })
+            try {
+                sdk.chunks = []
+                const { result } = setup('http://localhost:4111')
+
+                await act(async () => result.current.send(PROMPT))
+
+                const turn = result.current.messages[1]
+                expect(turn?.text).toContain('Please try again in a moment.')
+                expect(turn?.text).not.toContain('pnpm')
+                expect(turn?.text).not.toContain('OPENROUTER_API_KEY')
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        },
+    )
+
+    it('strips URLs and host:port from the visitor-facing detail but not from the report', async () => {
+        vi.stubGlobal('location', { hostname: 'useupup.com' })
+        try {
+            sdk.chunks = [
+                {
+                    type: 'error',
+                    payload: {
+                        error: {
+                            message:
+                                'ECONNREFUSED http://mastra:4111/api/x via 10.0.0.5:4111',
+                        },
+                    },
+                },
+            ]
+            const { result, onAssistantError } = setup()
+
+            await act(async () => result.current.send(PROMPT))
+
+            const text = result.current.messages[1]?.text ?? ''
+            expect(text).toContain('ECONNREFUSED')
+            expect(text).not.toContain('mastra:4111')
+            expect(text).not.toContain('10.0.0.5')
+            expect(onAssistantError.mock.calls[0]![0].message).toContain(
+                'mastra:4111',
+            )
+        } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
+    it('keeps the developer hint under NODE_ENV=development, whatever the page host', async () => {
         vi.stubEnv('NODE_ENV', 'development')
+        vi.stubGlobal('location', { hostname: 'useupup.com' })
         try {
             sdk.chunks = []
             const { result } = setup('https://agents.useupup.com')
@@ -743,6 +800,7 @@ describe('useMastraChat failure visibility', () => {
             expect(result.current.messages[1]?.text).toContain('pnpm run dev')
         } finally {
             vi.unstubAllEnvs()
+            vi.unstubAllGlobals()
         }
     })
 
