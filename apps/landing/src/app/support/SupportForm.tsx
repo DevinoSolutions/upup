@@ -8,12 +8,13 @@ import {
     SupportNoticeRegion,
     type SupportNotice,
 } from './support-feedback'
+import { SUPPORT_REPLY_SHORT } from '@/lib/support/reply-time'
 import {
-    SUPPORT_REPLY_SHORT,
-    SUPPORT_SUCCESS_REPLY_TEXT,
-    SUPPORT_SUCCESS_TEXT,
-} from '@/lib/support/reply-time'
-import { SUPPORT_FORM_TYPES, type SupportFormType } from '@/lib/support/schema'
+    SUPPORT_FORM_TYPES,
+    type SupportFormType,
+    type SupportResponse,
+} from '@/lib/support/schema'
+import { interpretSupportResponse } from '@/lib/support/success-notice'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
 
@@ -22,13 +23,6 @@ type FormStatus = 'idle' | 'submitting' | 'error'
 // toast() calls into a mounted container, and a support form's outcome should
 // persist on screen anyway rather than auto-dismiss.
 type Notice = SupportNotice
-
-interface SupportResponseBody {
-    ok: boolean
-    feedbackId: string
-    posthog: 'ok' | 'failed' | 'skipped'
-    email: 'ok' | 'failed' | 'not_configured'
-}
 
 const TYPE_LABELS: Record<SupportFormType, string> = {
     problem: 'Report a problem',
@@ -121,9 +115,14 @@ export default function SupportForm() {
             })
             const body = (await res
                 .json()
-                .catch(() => null)) as SupportResponseBody | null
+                .catch(() => null)) as SupportResponse | null
 
-            if (res.ok && body?.ok) onSuccess(body)
+            const outcome = interpretSupportResponse({
+                httpOk: res.ok,
+                body,
+                wantsReply,
+            })
+            if (outcome.kind === 'success') onSuccess(outcome)
             else onFailure()
         } catch {
             onFailure()
@@ -132,21 +131,18 @@ export default function SupportForm() {
         }
     }
 
-    const onSuccess = (body: SupportResponseBody) => {
-        setNotice({
-            kind: 'success',
-            text: wantsReply
-                ? SUPPORT_SUCCESS_REPLY_TEXT
-                : SUPPORT_SUCCESS_TEXT,
-        })
+    const onSuccess = ({
+        text,
+        warning,
+    }: {
+        text: string
+        warning?: string
+    }) => {
         // Analytics failure is internal (already logged server-side); the user
         // still succeeded. But a wanted reply that could not be delivered gets
-        // a heads-up.
-        if (wantsReply && body.email === 'failed') {
-            setWarning(
-                "Recorded, but direct reply delivery failed — we'll follow up via the recorded request.",
-            )
-        }
+        // a heads-up instead of the reply-time promise.
+        setNotice({ kind: 'success', text })
+        if (warning) setWarning(warning)
         setType('problem')
         setMessage('')
         setExpectedOutcome('')

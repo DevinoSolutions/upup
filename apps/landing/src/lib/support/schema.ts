@@ -128,10 +128,18 @@ export type SupportRequest = z.infer<typeof supportRequestSchema>
 
 export type PosthogLegStatus = 'ok' | 'failed' | 'skipped'
 export type EmailLegStatus = 'ok' | 'failed' | 'not_configured'
+/**
+ * The submitter confirmation email. `skipped`: nothing to send (no address, a
+ * dropped honeypot, or a submission recorded nowhere); `throttled`: this
+ * address was already confirmed inside the throttle window.
+ */
+export type ConfirmationLegStatus =
+    'ok' | 'failed' | 'not_configured' | 'skipped' | 'throttled'
 
 export interface SupportResponse {
     ok: boolean
     feedbackId: string
     posthog: PosthogLegStatus
     email: EmailLegStatus
+    confirmation: ConfirmationLegStatus
 }
