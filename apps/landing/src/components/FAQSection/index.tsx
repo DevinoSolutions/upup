@@ -117,7 +117,7 @@ export default function FAQSection({
                     >
                         contact support
                     </Link>
-                    .
+                    . A human replies within 1 business day.
                 </p>
             </div>
         </Section>
