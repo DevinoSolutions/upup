@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { SUPPORT_CONFIRMATION_REPLY_LINE } from '@/lib/support/reply-time'
 
 // Mock the two external boundaries (unit layer — the route logic is what we
 // exercise, not the real PostHog/Sendly services). Hoisted fns stay stable across
@@ -342,7 +343,9 @@ describe('support email leg via Sendly', () => {
         const body = await res.json()
 
         expect(body.email).toBe('ok')
-        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+        // The team notification, then the submitter's confirmation (this
+        // submission has an address); the notification is always call 0.
+        expect(h.fetchMock).toHaveBeenCalledTimes(2)
         const mail = sentMail()
         expect(mail.url).toBe('https://api.sendly.now/api/v1/emails')
         expect(mail.init.method).toBe('POST')
@@ -422,6 +425,232 @@ describe('support email leg via Sendly', () => {
 
         expect(body.email).toBe('not_configured')
         expect(body.posthog).toBe('ok')
+        expect(h.fetchMock).not.toHaveBeenCalled()
+    })
+})
+
+describe('submitter confirmation email via Sendly (T-6725)', () => {
+    const withEmail = (over: Record<string, unknown> = {}) =>
+        payload({ wantsReply: true, email: 'dev@example.com', ...over })
+
+    /** Sendly stub whose confirmation sends (idempotency key `<id>:confirm`) are handled by `onConfirm`. */
+    const stubSendly = (onConfirm: () => Response | Promise<Response>) =>
+        h.fetchMock.mockImplementation(
+            async (_url: string, init: RequestInit) => {
+                const key = (init.headers as Record<string, string>)[
+                    'idempotency-key'
+                ]
+                return key.endsWith(':confirm')
+                    ? onConfirm()
+                    : new Response('{}', { status: 202 })
+            },
+        )
+
+    it('sends the submitter one confirmation with their id, an escaped echo and the reply promise', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const id = randomUUID()
+        const res = await POST(
+            makeRequest(
+                withEmail({
+                    feedbackId: id,
+                    message: '<b>hi</b> {{#if a}} line1\nline2',
+                }),
+            ),
+        )
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.confirmation).toBe('ok')
+        expect(h.fetchMock).toHaveBeenCalledTimes(2)
+
+        // Leg 0 is still the team notification, untouched.
+        expect(sentMail(0).body.to).toBe('hello@devino.ca')
+
+        const confirm = sentMail(1)
+        expect(confirm.url).toBe('https://api.sendly.now/api/v1/emails')
+        expect(confirm.headers.authorization).toBe(
+            'Bearer pk_test_not_a_real_key',
+        )
+        expect(confirm.headers['idempotency-key']).toBe(`${id}:confirm`)
+        expect(confirm.body.to).toBe('dev@example.com')
+        expect(confirm.body.from).toBe('upup-support@useupup.com')
+        // A reply to the confirmation lands in the team inbox.
+        expect(confirm.body.reply).toBe('hello@devino.ca')
+        expect(confirm.body.subject).toContain(id)
+        expect(confirm.body.subject).toMatch(/got your message/i)
+
+        const html = confirm.body.body
+        expect(html).toContain(id)
+        expect(html).toContain(SUPPORT_CONFIRMATION_REPLY_LINE)
+        expect(html).toContain('within 1 business day')
+        expect(html).toContain('&lt;b&gt;hi&lt;/b&gt;')
+        expect(html).not.toContain('<b>')
+        expect(html).not.toContain('{{')
+        expect(html).toContain('&#123;&#123;#if a&#125;&#125;')
+        expect(html).toContain('line1<br>')
+    })
+
+    it('truncates a long echoed message to 2000 characters with an ellipsis', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        await POST(makeRequest(withEmail({ message: 'a'.repeat(4500) })))
+
+        const html = sentMail(1).body.body
+        expect(html).toContain('a'.repeat(2000) + '…')
+        expect(html).not.toContain('a'.repeat(2001))
+        // The team notification keeps the full text.
+        expect(sentMail(0).body.body).toContain('a'.repeat(4500))
+    })
+
+    it('echoes a short message whole, with no ellipsis', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        await POST(makeRequest(withEmail({ message: 'short and sweet' })))
+        expect(sentMail(1).body.body).toContain('short and sweet')
+        expect(sentMail(1).body.body).not.toContain('…')
+    })
+
+    it('sends nothing to the submitter when no email was given', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(payload()))
+        const body = await res.json()
+
+        expect(body.confirmation).toBe('skipped')
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+        expect(sentMail(0).body.to).toBe('hello@devino.ca')
+    })
+
+    it('reports not_configured without calling Sendly when SENDLY_API_KEY is absent', async () => {
+        const POST = await loadRoute({
+            POSTHOG_DATASET: 'e2e',
+            NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST:
+                'https://e2e.posthog.test',
+            NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: 'phc_e2e_token',
+        })
+        const res = await POST(makeRequest(withEmail()))
+        const body = await res.json()
+
+        expect(body.confirmation).toBe('not_configured')
+        expect(h.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('mails one confirmation per normalized address per 24h, while the team notification always goes out', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+
+        const first = await (
+            await POST(makeRequest(withEmail({ email: 'Dev+one@Example.com' })))
+        ).json()
+        const second = await (
+            await POST(makeRequest(withEmail({ email: 'dev+two@example.com' })))
+        ).json()
+
+        expect(first.confirmation).toBe('ok')
+        expect(second.confirmation).toBe('throttled')
+        expect(second.ok).toBe(true)
+        // 2 team notifications + 1 confirmation.
+        expect(h.fetchMock).toHaveBeenCalledTimes(3)
+        const recipients = h.fetchMock.mock.calls.map(
+            (_call, i) => sentMail(i).body.to,
+        )
+        expect(recipients.filter(to => to === 'hello@devino.ca')).toHaveLength(
+            2,
+        )
+        expect(
+            recipients.filter(to => to.toLowerCase().startsWith('dev+')),
+        ).toHaveLength(1)
+    })
+
+    it('does not let one address throttle another', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const a = await (
+            await POST(makeRequest(withEmail({ email: 'a@example.com' })))
+        ).json()
+        const b = await (
+            await POST(makeRequest(withEmail({ email: 'b@example.com' })))
+        ).json()
+        expect([a.confirmation, b.confirmation]).toEqual(['ok', 'ok'])
+    })
+
+    it('mails the same address again once 24h have passed', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] })
+        try {
+            const POST = await loadRoute(ENABLED_ENV)
+            const first = await (await POST(makeRequest(withEmail()))).json()
+            vi.setSystemTime(Date.now() + 24 * 60 * 60 * 1000 + 1000)
+            const later = await (await POST(makeRequest(withEmail()))).json()
+            expect([first.confirmation, later.confirmation]).toEqual([
+                'ok',
+                'ok',
+            ])
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('never fails the request when only the confirmation send fails, and frees the slot for a retry', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        let failConfirm = true
+        stubSendly(() => {
+            if (failConfirm) throw new Error('ECONNRESET')
+            return new Response('{}', { status: 202 })
+        })
+        const POST = await loadRoute(ENABLED_ENV)
+
+        const res = await POST(makeRequest(withEmail()))
+        const body = await res.json()
+        expect(res.status).toBe(200)
+        expect(body.ok).toBe(true)
+        expect(body.email).toBe('ok')
+        expect(body.posthog).toBe('ok')
+        expect(body.confirmation).toBe('failed')
+        expect(JSON.stringify(errorSpy.mock.calls)).not.toContain(
+            'pk_test_not_a_real_key',
+        )
+
+        // A failed send must not burn the address's daily allowance.
+        failConfirm = false
+        const retry = await (await POST(makeRequest(withEmail()))).json()
+        expect(retry.confirmation).toBe('ok')
+    })
+
+    it('reports a non-2xx confirmation as failed without failing the request', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        stubSendly(() => new Response('{"code":"forbidden"}', { status: 403 }))
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(withEmail()))
+        const body = await res.json()
+        expect(res.status).toBe(200)
+        expect(body.confirmation).toBe('failed')
+    })
+
+    it('does not confirm a submission that was recorded nowhere', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        h.captureMock.mockImplementation(() => {
+            throw new Error('posthog down')
+        })
+        h.fetchMock.mockRejectedValue(new Error('network down'))
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(withEmail()))
+        const body = await res.json()
+
+        expect(res.status).toBe(502)
+        expect(body.confirmation).toBe('skipped')
+        // Only the (failed) team notification was attempted.
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('replays a duplicate feedbackId without mailing the submitter again', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const req = withEmail()
+        const first = await (await POST(makeRequest(req))).json()
+        const second = await (await POST(makeRequest(req))).json()
+
+        expect(second).toEqual(first)
+        expect(h.fetchMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('sends nothing for a honeypot-filled submission', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(withEmail({ website: 'spam-bot' })))
+        expect((await res.json()).confirmation).toBe('skipped')
         expect(h.fetchMock).not.toHaveBeenCalled()
     })
 })

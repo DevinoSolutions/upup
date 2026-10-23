@@ -5,7 +5,11 @@ import {
     buildFeedbackProperties,
 } from '@/lib/analytics/contract.server'
 import { serverDatasetCredentials } from '@/lib/analytics/dataset.server'
-import { sendSupportEmail } from '@/lib/support/email'
+import {
+    releaseConfirmationSlot,
+    takeConfirmationSlot,
+} from '@/lib/support/confirmation-throttle'
+import { sendSupportConfirmation, sendSupportEmail } from '@/lib/support/email'
 import { getProcessed, rememberProcessed } from '@/lib/support/idempotency'
 import { clientIpFromHeaders, takeToken } from '@/lib/support/rate-limit'
 import {
@@ -66,11 +70,7 @@ export async function POST(req: Request): Promise<Response> {
     // 1 — per-IP rate limit
     const ip = clientIpFromHeaders(req.headers)
     if (!takeToken(ip)) {
-        return json(
-            { ok: false, feedbackId: '', posthog: 'failed', email: 'failed' },
-            429,
-            { 'retry-after': '60' },
-        )
+        return json(rejected(), 429, { 'retry-after': '60' })
     }
 
     // 2 — parse + validate against the shared schema
@@ -88,7 +88,13 @@ export async function POST(req: Request): Promise<Response> {
     // success shape (silent drop) and record NOTHING.
     if (data.website && data.website.length > 0) {
         return json(
-            { ok: true, feedbackId, posthog: 'ok', email: 'not_configured' },
+            {
+                ok: true,
+                feedbackId,
+                posthog: 'ok',
+                email: 'not_configured',
+                confirmation: 'skipped',
+            },
             200,
         )
     }
@@ -191,13 +197,65 @@ export async function POST(req: Request): Promise<Response> {
 
     // 5 — 200 when at least one leg landed; 502 when nothing was recorded.
     const ok = posthog === 'ok' || email === 'ok'
-    const body: SupportResponse = { ok, feedbackId, posthog, email }
+
+    // 6 — confirm receipt to the submitter, only for a submission that landed
+    // somewhere (never "we got it" for a request recorded nowhere). Best
+    // effort: it can neither fail the request nor change `ok`.
+    const confirmation = ok
+        ? await confirmToSubmitter(feedbackId, data.email, data.message)
+        : 'skipped'
+
+    const body: SupportResponse = {
+        ok,
+        feedbackId,
+        posthog,
+        email,
+        confirmation,
+    }
     if (ok) rememberProcessed(feedbackId, body)
     return json(body, ok ? 200 : 502)
 }
 
+/**
+ * Mail the submitter a confirmation, at most once per address per throttle
+ * window (the form takes any address, so an unthrottled echo would be a spam
+ * relay). A send that did not go out hands the allowance back. Never throws.
+ */
+async function confirmToSubmitter(
+    feedbackId: string,
+    email: string | undefined,
+    message: string,
+): Promise<SupportResponse['confirmation']> {
+    if (!email) return 'skipped'
+    if (!takeConfirmationSlot(email)) {
+        console.info(`[support] confirmation throttled for ${feedbackId}`)
+        return 'throttled'
+    }
+    try {
+        const status = await sendSupportConfirmation({
+            feedbackId,
+            email,
+            message,
+        })
+        if (status !== 'ok') releaseConfirmationSlot(email)
+        return status
+    } catch (error) {
+        releaseConfirmationSlot(email)
+        console.error(
+            `[support] confirmation errored for ${feedbackId}: ${String(error)}`,
+        )
+        return 'failed'
+    }
+}
+
 function rejected(): SupportResponse {
-    return { ok: false, feedbackId: '', posthog: 'failed', email: 'failed' }
+    return {
+        ok: false,
+        feedbackId: '',
+        posthog: 'failed',
+        email: 'failed',
+        confirmation: 'skipped',
+    }
 }
 
 function json(

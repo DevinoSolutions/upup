@@ -8,12 +8,13 @@ import {
     SupportNoticeRegion,
     type SupportNotice,
 } from './support-feedback'
+import { SUPPORT_REPLY_SHORT } from '@/lib/support/reply-time'
 import {
-    SUPPORT_REPLY_SHORT,
-    SUPPORT_SUCCESS_REPLY_TEXT,
-    SUPPORT_SUCCESS_TEXT,
-} from '@/lib/support/reply-time'
-import { SUPPORT_FORM_TYPES, type SupportFormType } from '@/lib/support/schema'
+    SUPPORT_FORM_TYPES,
+    type EmailLegStatus,
+    type SupportFormType,
+} from '@/lib/support/schema'
+import { resolveSuccessNotice } from '@/lib/support/success-notice'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
 
@@ -27,7 +28,7 @@ interface SupportResponseBody {
     ok: boolean
     feedbackId: string
     posthog: 'ok' | 'failed' | 'skipped'
-    email: 'ok' | 'failed' | 'not_configured'
+    email: EmailLegStatus
 }
 
 const TYPE_LABELS: Record<SupportFormType, string> = {
@@ -133,20 +134,12 @@ export default function SupportForm() {
     }
 
     const onSuccess = (body: SupportResponseBody) => {
-        setNotice({
-            kind: 'success',
-            text: wantsReply
-                ? SUPPORT_SUCCESS_REPLY_TEXT
-                : SUPPORT_SUCCESS_TEXT,
-        })
         // Analytics failure is internal (already logged server-side); the user
         // still succeeded. But a wanted reply that could not be delivered gets
-        // a heads-up.
-        if (wantsReply && body.email === 'failed') {
-            setWarning(
-                "Recorded, but direct reply delivery failed — we'll follow up via the recorded request.",
-            )
-        }
+        // a heads-up instead of the reply-time promise.
+        const { text, warning } = resolveSuccessNotice(wantsReply, body.email)
+        setNotice({ kind: 'success', text })
+        if (warning) setWarning(warning)
         setType('problem')
         setMessage('')
         setExpectedOutcome('')
