@@ -316,7 +316,11 @@ export function AssistantPanel({
                 )}
             </div>
 
-            {error && <div className="upup-ie-ai-error">{error}</div>}
+            {error && (
+                <div className="upup-ie-ai-error" role="alert">
+                    {error}
+                </div>
+            )}
 
             <form className="upup-ie-ai-input" onSubmit={handleSubmit}>
                 <textarea

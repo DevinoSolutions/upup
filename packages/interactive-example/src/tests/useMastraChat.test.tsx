@@ -615,9 +615,14 @@ describe('useMastraChat failure visibility', () => {
         })
     })
 
-    it('never puts the visitor prompt in the report', async () => {
+    it('never puts the visitor prompt in the report, even when the upstream error echoes it', async () => {
         sdk.chunks = [
-            { type: 'error', payload: { error: { message: 'model down' } } },
+            {
+                type: 'error',
+                payload: {
+                    error: { message: `400 bad request: ${PROMPT}` },
+                },
+            },
         ]
         const first = setup()
         await act(async () => first.result.current.send(PROMPT))
@@ -631,6 +636,53 @@ describe('useMastraChat failure visibility', () => {
         ]
         expect(payloads).toHaveLength(2)
         expect(JSON.stringify(payloads)).not.toContain(PROMPT)
+        // The reason survives, minus the echoed prompt.
+        expect(payloads[0]![0].message).toContain('400 bad request')
+    })
+
+    it('reports exactly path, agentId, kind and message, nothing else', async () => {
+        sdk.chunks = [
+            { type: 'error', payload: { error: { message: 'model down' } } },
+        ]
+        const upstream = setup()
+        await act(async () => upstream.result.current.send(PROMPT))
+        sdk.chunks = []
+        const empty = setup()
+        await act(async () => empty.result.current.send(PROMPT))
+
+        expect(
+            Object.keys(upstream.onAssistantError.mock.calls[0]![0]).sort(),
+        ).toEqual(['agentId', 'kind', 'message', 'path'])
+        expect(
+            Object.keys(empty.onAssistantError.mock.calls[0]![0]).sort(),
+        ).toEqual(['agentId', 'kind', 'path'])
+    })
+
+    it('scrubs key-like tokens out of the upstream reason, then caps it', async () => {
+        const secrets = [
+            'sk-or-v1-abcdef1234567890abcdef',
+            'Bearer eyJhbGciOi.payload.sig',
+            'a'.repeat(16) + 'b'.repeat(40),
+        ]
+        sdk.chunks = [
+            {
+                type: 'error',
+                payload: {
+                    error: {
+                        message: `401 ${secrets.join(' | ')} ${'z '.repeat(400)}`,
+                    },
+                },
+            },
+        ]
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(PROMPT))
+
+        const message = onAssistantError.mock.calls[0]![0].message as string
+        for (const secret of secrets) expect(message).not.toContain(secret)
+        expect(message).toContain('401')
+        expect(message).toContain('[redacted]')
+        expect(message.length).toBeLessThanOrEqual(200)
     })
 
     it('does not report a healthy turn', async () => {

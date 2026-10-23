@@ -14,13 +14,14 @@ const hook = vi.hoisted(() => ({
     conversationId: 'conv-1' as string | null,
     isPending: false,
     sent: [] as string[],
+    error: null as string | null,
 }))
 
 vi.mock('../ai/useMastraChat', () => ({
     useMastraChat: () => ({
         messages: hook.messages,
         isPending: hook.isPending,
-        error: null,
+        error: hook.error,
         conversationId: hook.conversationId,
         // Like the real hook, a send starts a turn that is pending until
         // the stream ends; the panel's own re-render picks the flag up.
@@ -89,7 +90,25 @@ beforeEach(() => {
     hook.conversationId = 'conv-1'
     hook.isPending = false
     hook.sent = []
+    hook.error = null
     vi.clearAllMocks()
+})
+
+describe('AssistantPanel error banner', () => {
+    it('announces the unavailable banner to assistive tech as an alert', () => {
+        hook.error = 'AI assistant is unavailable (model down).'
+        renderPanel([])
+
+        const banner = screen.getByRole('alert')
+        expect(banner.textContent).toBe(hook.error)
+        expect(banner.className).toContain('upup-ie-ai-error')
+    })
+
+    it('renders no alert while there is no error', () => {
+        renderPanel([])
+
+        expect(screen.queryByRole('alert')).toBeNull()
+    })
 })
 
 describe('AssistantPanel composer', () => {

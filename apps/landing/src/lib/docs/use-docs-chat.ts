@@ -8,6 +8,7 @@ import {
     settleSteps,
     type ChatStep,
 } from '@useupup/interactive-example/ai/chatSteps'
+import { scrubFailureMessage } from '@useupup/interactive-example/ai/scrubFailure'
 
 const DOCS_AGENT_ID = 'docs-agent'
 
@@ -61,6 +62,14 @@ export interface DocsChatMessage {
 interface StreamChunk {
     type: string
     payload?: unknown
+}
+
+/** The message of a stream `error` chunk (`payload.error`: string or {message}). */
+function errorChunkMessage(payload: unknown): string {
+    const error = (payload as { error?: unknown } | null | undefined)?.error
+    if (typeof error === 'string' && error) return error
+    const message = (error as { message?: unknown } | null | undefined)?.message
+    return typeof message === 'string' && message ? message : 'stream error'
 }
 
 function parseStreamChunks(eventBlock: string): StreamChunk[] {
@@ -166,16 +175,33 @@ export function useDocsChat() {
 
             // One Sentry event per failure; a turn the visitor cleared (or that
             // was aborted by unmount) is not a failure worth reporting.
+            // A tab close or navigation also makes the in-flight fetch reject
+            // ("Failed to fetch") while the run is still current; that is the
+            // visitor leaving, not a failure. (document.visibilityState is NOT
+            // used: a backgrounded tab with a real outage must still report.)
+            let unloading = false
+            const onPageHide = () => {
+                unloading = true
+            }
+            if (typeof window !== 'undefined')
+                window.addEventListener('pagehide', onPageHide)
+
             const report = (
                 kind: AiFailureReport['kind'],
                 message?: string,
             ) => {
-                if (!isCurrent() || controller.signal.aborted) return
+                if (unloading || !isCurrent() || controller.signal.aborted)
+                    return
+                // The provider can echo the request back: scrub the prompt and
+                // key-like tokens before the reason leaves the page.
+                const reason = message
+                    ? scrubFailureMessage(message, content)
+                    : ''
                 reportAiFailure({
                     path: 'docs-ask-ai',
                     agentId: DOCS_AGENT_ID,
                     kind,
-                    ...(message ? { message } : {}),
+                    ...(reason ? { message: reason } : {}),
                 })
             }
 
@@ -222,6 +248,10 @@ export function useDocsChat() {
                 // Why the stream path failed, kept so the failure is reported
                 // even when the answer is rescued below.
                 let streamFailure: string | null = null
+                // Mastra reports an upstream failure as an `error` chunk inside
+                // an HTTP 200 stream. Whatever text arrived before it is a cut-off
+                // answer, not a finished one, so it must not pass as complete.
+                let streamErrored = false
                 // Text parts are separate: the agent writes some text, calls a
                 // tool, then writes more. Each part gets its own id and the
                 // parts carry no separator, so the next part's first token is
@@ -235,6 +265,11 @@ export function useDocsChat() {
                 const consume = (eventBlock: string) => {
                     let changed = false
                     for (const chunk of parseStreamChunks(eventBlock)) {
+                        if (chunk.type === 'error') {
+                            streamErrored = true
+                            streamFailure ??= errorChunkMessage(chunk.payload)
+                            continue
+                        }
                         if (chunk.type === 'text-delta') {
                             const { id, text } = (chunk.payload ?? {}) as {
                                 id?: unknown
@@ -321,9 +356,11 @@ export function useDocsChat() {
                         e instanceof Error ? e.message : 'stream failed'
                 }
 
-                if (streamed.trim()) {
+                if (streamed.trim() && !streamErrored) {
                     // Got real tokens — finalize with what streamed, even if the
-                    // stream later hiccuped; the answer is already useful.
+                    // transport later hiccuped; the answer is already useful. A
+                    // stream that ended on an error chunk is the exception: it
+                    // falls through to /generate below.
                     setAssistant({
                         content: streamed,
                         streaming: false,
@@ -332,8 +369,9 @@ export function useDocsChat() {
                     if (streamFailure !== null)
                         report('stream-failed', streamFailure)
                 } else {
-                    // Stream never opened (non-200 / network), or opened but
-                    // produced no text — fall back to /generate.
+                    // Stream never opened (non-200 / network), opened but
+                    // produced no text, or ended on an error chunk — fall back
+                    // to /generate.
                     if (opened && streamFailure === null)
                         streamFailure = 'empty stream'
                     const generated = await runGenerate()
@@ -351,6 +389,8 @@ export function useDocsChat() {
                     }
                 }
             } finally {
+                if (typeof window !== 'undefined')
+                    window.removeEventListener('pagehide', onPageHide)
                 // Release the shared gate only if this send still owns it.
                 if (isCurrent()) {
                     inFlightRef.current = false

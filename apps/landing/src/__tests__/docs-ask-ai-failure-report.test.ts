@@ -79,6 +79,11 @@ const delta = (text: string) => ({
     payload: { id: 't', text },
 })
 
+const errorChunk = (message: string) => ({
+    type: 'error',
+    payload: { error: { message } },
+})
+
 async function sendPrompt() {
     await act(async () => {
         await chat.send(PROMPT)
@@ -207,19 +212,159 @@ describe('docs Ask AI failure reporting', () => {
         expect(reportAiFailure).not.toHaveBeenCalled()
     })
 
-    it('never puts the prompt in any report', async () => {
+    it('never puts the prompt in any report, even when the upstream error echoes it', async () => {
+        const echo = (status: number) =>
+            new Response(`400 bad request: ${PROMPT}`, { status })
+        stubFetch({
+            stream: () => sseResponse(errorChunk(`echo: ${PROMPT}`)),
+            generate: () => echo(500),
+        })
+        await sendPrompt()
+        stubFetch({
+            stream: () => {
+                throw new Error(`stream broke on ${PROMPT}`)
+            },
+            generate: () => json({ text: '' }),
+        })
+        await sendPrompt()
+        stubFetch({
+            stream: () => echo(502),
+            generate: () => json({ text: 'rescued' }),
+        })
+        await sendPrompt()
+
+        expect(reportAiFailure).toHaveBeenCalledTimes(3)
+        expect(JSON.stringify(reportAiFailure.mock.calls)).not.toContain(PROMPT)
+        // The reason is still there, minus the prompt.
+        expect(JSON.stringify(reportAiFailure.mock.calls[0])).toContain('echo:')
+    })
+
+    it('reports exactly path, agentId, kind and message, nothing else', async () => {
         stubFetch({
             stream: () => new Response('bad gateway', { status: 502 }),
             generate: () => new Response('bad gateway', { status: 502 }),
         })
-        await sendPrompt()
-        stubFetch({
-            stream: () => sseResponse({ type: 'finish' }),
-            generate: () => json({ text: '' }),
-        })
+
         await sendPrompt()
 
-        expect(reportAiFailure).toHaveBeenCalledTimes(2)
-        expect(JSON.stringify(reportAiFailure.mock.calls)).not.toContain(PROMPT)
+        expect(Object.keys(reportAiFailure.mock.calls[0]![0]).sort()).toEqual([
+            'agentId',
+            'kind',
+            'message',
+            'path',
+        ])
+    })
+
+    it('treats an error chunk with no text as a failed stream and reports its real reason', async () => {
+        stubFetch({
+            stream: () => sseResponse(errorChunk('model overloaded')),
+            generate: () => new Response('down', { status: 503 }),
+        })
+
+        await sendPrompt()
+
+        expect(last().error).toBe(true)
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+        const report = reportAiFailure.mock.calls[0]![0]
+        expect(report.kind).toBe('upstream-error')
+        expect(report.message).toContain('model overloaded')
+        expect(report.message).not.toContain('empty stream')
+    })
+
+    it('warns with the real reason when /generate rescues a stream that ended on an error chunk with no text', async () => {
+        stubFetch({
+            stream: () => sseResponse(errorChunk('model overloaded')),
+            generate: () => json({ text: 'Rescued answer.' }),
+        })
+
+        await sendPrompt()
+
+        expect(last().content).toBe('Rescued answer.')
+        expect(last().error).toBeUndefined()
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+        expect(reportAiFailure.mock.calls[0]![0]).toMatchObject({
+            kind: 'stream-failed',
+            message: 'model overloaded',
+        })
+    })
+
+    it('does not let partial text pass as the answer when the stream ends on an error chunk', async () => {
+        stubFetch({
+            stream: () =>
+                sseResponse(
+                    delta('Half an ans'),
+                    errorChunk('model overloaded'),
+                ),
+            generate: () => new Response('down', { status: 503 }),
+        })
+
+        await sendPrompt()
+
+        expect(last().error).toBe(true)
+        expect(last().content).not.toContain('Half an ans')
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+        const report = reportAiFailure.mock.calls[0]![0]
+        expect(report.kind).toBe('upstream-error')
+        expect(report.message).toContain('model overloaded')
+    })
+
+    it('replaces partial text with the /generate answer, and warns once, when it rescues an errored stream', async () => {
+        stubFetch({
+            stream: () =>
+                sseResponse(
+                    delta('Half an ans'),
+                    errorChunk('model overloaded'),
+                ),
+            generate: () => json({ text: 'The full answer.' }),
+        })
+
+        await sendPrompt()
+
+        expect(last().content).toBe('The full answer.')
+        expect(last().error).toBeUndefined()
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+        expect(reportAiFailure.mock.calls[0]![0]).toMatchObject({
+            kind: 'stream-failed',
+            message: 'model overloaded',
+        })
+    })
+
+    it('scrubs key-like tokens out of the reason', async () => {
+        const key = 'sk-or-v1-abcdef1234567890abcdef'
+        stubFetch({
+            stream: () => sseResponse(errorChunk(`401 bad key ${key}`)),
+            generate: () => new Response('down', { status: 503 }),
+        })
+
+        await sendPrompt()
+
+        const serialised = JSON.stringify(reportAiFailure.mock.calls)
+        expect(serialised).not.toContain(key)
+        expect(serialised).toContain('401 bad key')
+    })
+
+    it('does not report a fetch that rejects because the page is unloading', async () => {
+        let rejectStream!: (e: unknown) => void
+        stubFetch({
+            stream: () =>
+                new Promise<Response>((_, reject) => {
+                    rejectStream = reject
+                }),
+            generate: () =>
+                Promise.reject(new TypeError('Failed to fetch')) as never,
+        })
+
+        let sent!: Promise<void>
+        await act(async () => {
+            sent = chat.send(PROMPT)
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await act(async () => {
+            window.dispatchEvent(new Event('pagehide'))
+            rejectStream(new TypeError('Failed to fetch'))
+            await sent
+        })
+
+        expect(reportAiFailure).not.toHaveBeenCalled()
     })
 })

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MastraClient } from '@mastra/client-js'
 import type { AssistantErrorInfo, UpupConfig } from '../types'
 import { applyStepChunk, settleSteps, type ChatStep } from './chatSteps'
+import { scrubFailureMessage } from './scrubFailure'
 
 /**
  * Shown inline (as the assistant turn) when the real Mastra agent can't be
@@ -338,7 +339,10 @@ export function useMastraChat({
                             ? { kind: 'empty-reply' as const }
                             : {
                                   kind: 'upstream-error' as const,
-                                  message: detail,
+                                  // Providers can echo the request back:
+                                  // scrub the prompt and key-like tokens,
+                                  // then cap.
+                                  message: scrubFailureMessage(detail, trimmed),
                               }),
                     })
                 } catch {

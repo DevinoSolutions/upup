@@ -19,7 +19,6 @@ const sdk = vi.hoisted(() => ({
 vi.mock('@sentry/browser', () => sdk)
 
 const DSN = 'https://abc123@sentry.example.test/42'
-const PROMPT = 'secret-prompt-text-7731'
 
 async function loadFresh() {
     vi.resetModules()
@@ -94,25 +93,65 @@ describe('reportAiFailure', () => {
         })
     })
 
-    it('never carries the prompt and caps the upstream message', async () => {
+    it('sends exactly the tagged payload and nothing else', async () => {
         const { reportAiFailure } = await liveSentry()
 
         reportAiFailure({
             path: 'playground-chat',
             agentId: 'playground-agent',
             kind: 'upstream-error',
-            message: 'x'.repeat(5000),
+            message: 'word '.repeat(100),
         })
 
-        const serialised = JSON.stringify(
-            sdk.captureException.mock.calls,
-            (_key, value) =>
-                value instanceof Error
-                    ? { message: value.message, stack: value.stack }
-                    : value,
+        const [error, hint] = sdk.captureException.mock.calls[0]!
+        expect((error as Error).message).toBe(
+            'AI assistant failure: upstream-error',
         )
-        expect(serialised).not.toContain(PROMPT)
-        expect(serialised.length).toBeLessThan(2500)
+        expect(Object.keys(hint).sort()).toEqual([
+            'extra',
+            'fingerprint',
+            'level',
+            'tags',
+        ])
+        expect(Object.keys(hint.tags).sort()).toEqual([
+            'ai_agent_id',
+            'ai_failure_kind',
+            'ai_path',
+        ])
+        expect(Object.keys(hint.extra)).toEqual(['upstream_message'])
+        expect(hint.extra.upstream_message).toHaveLength(200)
+    })
+
+    it('omits extra when there is no reason', async () => {
+        const { reportAiFailure } = await liveSentry()
+
+        reportAiFailure({
+            path: 'docs-ask-ai',
+            agentId: 'docs-agent',
+            kind: 'empty-reply',
+        })
+
+        expect(
+            Object.keys(sdk.captureException.mock.calls[0]![1]).sort(),
+        ).toEqual(['fingerprint', 'level', 'tags'])
+    })
+
+    it('scrubs key-like tokens from the reason before capping it', async () => {
+        const { reportAiFailure } = await liveSentry()
+        const key = 'sk-or-v1-abcdef1234567890abcdef'
+
+        reportAiFailure({
+            path: 'docs-ask-ai',
+            agentId: 'docs-agent',
+            kind: 'upstream-error',
+            message: `401 ${key} Bearer abc.def.ghi ${'f'.repeat(64)}`,
+        })
+
+        const serialised = JSON.stringify(sdk.captureException.mock.calls)
+        expect(serialised).not.toContain(key)
+        expect(serialised).not.toContain('Bearer abc.def.ghi')
+        expect(serialised).not.toContain('f'.repeat(32))
+        expect(serialised).toContain('[redacted]')
     })
 
     it('swallows an SDK failure', async () => {

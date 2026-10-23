@@ -1,5 +1,6 @@
 import { clientEnv } from '@/lib/client/env'
 import { isProductionSite } from '@/lib/site-url'
+import { scrubFailureMessage } from '@useupup/interactive-example/ai/scrubFailure'
 import {
     REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
@@ -76,8 +77,6 @@ export interface AiFailureReport {
     message?: string
 }
 
-const AI_FAILURE_MESSAGE_CAP = 200
-
 /**
  * Send one Sentry event for an AI-assistant failure. A no-op until Sentry is
  * initialised, and it never throws: reporting must not change what the
@@ -100,9 +99,11 @@ export function reportAiFailure(report: AiFailureReport): void {
                 ...(report.message
                     ? {
                           extra: {
-                              upstream_message: report.message.slice(
-                                  0,
-                                  AI_FAILURE_MESSAGE_CAP,
+                              // Callers scrub the prompt (they know it);
+                              // this is the backstop for key-like tokens
+                              // plus the length cap.
+                              upstream_message: scrubFailureMessage(
+                                  report.message,
                               ),
                           },
                       }
