@@ -67,7 +67,7 @@ describe('addTransferredFile restrictions', () => {
         )
     })
 
-    it('rejects a second transfer of the same drive file or the same key (file-rejected)', () => {
+    it('rejects a second transfer of the same drive file (file-rejected)', () => {
         const core = new UpupCore({ contentDeduplication: true })
         const rejected = vi.fn()
         core.on('file-rejected', rejected)
@@ -80,10 +80,9 @@ describe('addTransferredFile restrictions', () => {
                 driveId: 'google-drive:f1',
             }),
         ).toBeUndefined()
-        expect(core.addTransferredFile(info)).toBeUndefined()
 
         expect(core.files.size).toBe(1)
-        expect(rejected).toHaveBeenCalledTimes(2)
+        expect(rejected).toHaveBeenCalledTimes(1)
         expect(rejected).toHaveBeenCalledWith({ count: 1 })
     })
 })
@@ -106,8 +105,9 @@ describe('ServerModeDriveController transfer pre-check', () => {
         expect(fetchSpy).not.toHaveBeenCalled()
         expect(r).toMatchObject({
             status: 'error',
-            code: UpupErrorCode.FILE_TOO_LARGE,
+            message: expect.stringContaining('big.bin'),
         })
+        expect(r).not.toHaveProperty('code')
         expect(failed).toHaveBeenCalledTimes(1)
         expect(core.files.size).toBe(0)
     })
@@ -127,8 +127,9 @@ describe('ServerModeDriveController transfer pre-check', () => {
         expect(fetchSpy).not.toHaveBeenCalled()
         expect(r).toMatchObject({
             status: 'error',
-            code: UpupErrorCode.LIMIT_EXCEEDED,
+            message: expect.stringContaining('limit'),
         })
+        expect(r).not.toHaveProperty('code')
     })
 
     it('rejects a drive file already transferred (contentDeduplication on)', async () => {
@@ -148,8 +149,9 @@ describe('ServerModeDriveController transfer pre-check', () => {
 
         expect(second).toMatchObject({
             status: 'error',
-            code: UpupErrorCode.DUPLICATE,
+            message: expect.stringContaining('already added'),
         })
+        expect(second).not.toHaveProperty('code')
         expect(fetchSpy).toHaveBeenCalledTimes(1)
         expect(core.files.size).toBe(1)
     })
@@ -186,6 +188,105 @@ describe('ServerModeDriveController transfer pre-check', () => {
     })
 })
 
+describe('ServerModeDriveController unknown size/type and post-storage rejection', () => {
+    const stored = (size: number, type = 'application/pdf', name = 'x.bin') =>
+        fetchOk({ key: 'uploads/x.bin', name, size, type })
+
+    it('rejects when the real stored size breaks maxFileSize but the listing had none: error result, 0 rows', async () => {
+        const fetchSpy = stored(5000)
+        vi.stubGlobal('fetch', fetchSpy)
+        const core = new UpupCore({ maxFileSize: { size: 5, unit: 'B' } })
+        const failed = vi.fn()
+        core.on('restriction-failed', failed)
+
+        const r = await controllerFor(core).transfer({
+            id: 'f1',
+            name: 'x.bin',
+            isFolder: false,
+        })
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1)
+        expect(r).toMatchObject({
+            status: 'error',
+            message: expect.stringContaining('x.bin'),
+        })
+        expect(failed).toHaveBeenCalledTimes(1)
+        expect(core.files.size).toBe(0)
+    })
+
+    it('does not pre-reject an unknown size against minFileSize', async () => {
+        const fetchSpy = stored(5000)
+        vi.stubGlobal('fetch', fetchSpy)
+        const core = new UpupCore({ minFileSize: { size: 100, unit: 'B' } })
+
+        const r = await controllerFor(core).transfer({
+            id: 'f1',
+            name: 'x.bin',
+            isFolder: false,
+        })
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1)
+        expect(r.status).toBe('ok')
+        expect(core.files.size).toBe(1)
+    })
+
+    it('does not pre-reject a missing mimeType against a MIME-only accept', async () => {
+        const fetchSpy = stored(10, 'image/png')
+        vi.stubGlobal('fetch', fetchSpy)
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+
+        const r = await controllerFor(core).transfer({
+            id: 'f1',
+            name: 'pic',
+            isFolder: false,
+        })
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1)
+        expect(r.status).toBe('ok')
+    })
+
+    it('falls back to the filename extension when accept lists extensions and the type is unknown', async () => {
+        const fetchSpy = stored(10, 'image/png', 'a.png')
+        vi.stubGlobal('fetch', fetchSpy)
+        const core = new UpupCore({ allowedFileTypes: '.png' })
+        const c = controllerFor(core)
+
+        const bad = await c.transfer({
+            id: 'f1',
+            name: 'a.txt',
+            isFolder: false,
+        })
+        expect(bad.status).toBe('error')
+        expect(fetchSpy).not.toHaveBeenCalled()
+
+        const good = await c.transfer({
+            id: 'f2',
+            name: 'a.png',
+            isFolder: false,
+        })
+        expect(good.status).toBe('ok')
+    })
+
+    it('shows the parsed {error} of a failed transfer, not the raw JSON body', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn().mockResolvedValue({
+                status: 500,
+                ok: false,
+                text: async () => '{"error":"boom"}',
+            }),
+        )
+
+        const r = await controllerFor(new UpupCore({})).transfer({
+            id: 'f1',
+            name: 'x.bin',
+            isFolder: false,
+        })
+
+        expect(r).toEqual({ status: 'error', message: 'boom' })
+    })
+})
+
 describe('addTransferredFile completion events', () => {
     it('emits upload-all-complete once when every row is complete', () => {
         const core = new UpupCore({})
@@ -196,6 +297,30 @@ describe('addTransferredFile completion events', () => {
 
         expect(done).toHaveBeenCalledTimes(1)
         expect(done.mock.calls[0]![0]).toHaveLength(1)
+    })
+
+    it('emits upload-all-complete once for a multi-file batch, not once per file', () => {
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+
+        core.addTransferredFile({ ...info, key: 'uploads/1.pdf' })
+        core.addTransferredFile({ ...info, key: 'uploads/2.pdf' })
+        core.addTransferredFile({ ...info, key: 'uploads/3.pdf' })
+
+        expect(core.files.size).toBe(3)
+        expect(done).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not re-emit for files that were already reported complete', () => {
+        const core = new UpupCore({})
+        core.addTransferredFile(info)
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+
+        core.addTransferredFile({ ...info, key: 'uploads/2.pdf' })
+
+        expect(done).not.toHaveBeenCalled()
     })
 
     it('does not emit upload-all-complete while a pending local file remains', async () => {

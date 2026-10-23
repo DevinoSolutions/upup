@@ -102,4 +102,56 @@ describe('ServerModeDriveUploader (vue) - Log out', () => {
         ).toHaveLength(1)
         expect(open).not.toHaveBeenCalled()
     })
+
+    it('a failed transfer stays in the view: error shown, list kept, no onBack', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string) => {
+                if (url.endsWith('/transfer'))
+                    return jsonRes(500, { error: 'boom' })
+                return jsonRes(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        ctx.setActiveSource = vi.fn()
+        ctx.headerHost = document.createElement('span')
+        const root = document.createElement('div')
+        document.body.appendChild(root)
+        const onBack = vi.fn()
+
+        app = createApp(ServerModeDriveUploader, {
+            provider: 'google-drive',
+            onBack,
+        })
+        app.mount(root)
+
+        await vi.waitFor(() => {
+            expect(
+                root.querySelector('[data-upup-slot="drive-browser-item"]'),
+            ).not.toBeNull()
+        })
+        root.querySelector<HTMLButtonElement>(
+            '[data-upup-slot="drive-browser-item"]',
+        )!.click()
+        await vi.waitFor(() => {
+            const add = Array.from(root.querySelectorAll('button')).find(b =>
+                b.textContent?.includes('Add files'),
+            )
+            expect(add?.disabled).toBe(false)
+        })
+        Array.from(root.querySelectorAll('button'))
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+
+        await vi.waitFor(() => {
+            const error = root.querySelector('[data-testid="upup-drive-error"]')
+            expect(error?.getAttribute('role')).toBe('alert')
+            expect(error?.textContent).toContain('boom')
+        })
+        expect(
+            root.querySelector('[data-upup-slot="drive-browser-item"]'),
+        ).not.toBeNull()
+        expect(onBack).not.toHaveBeenCalled()
+    })
 })

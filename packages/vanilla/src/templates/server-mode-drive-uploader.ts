@@ -164,6 +164,11 @@ export function serverModeDriveUploader(
         else c.selected.add(id)
         ctx.invalidate()
     }
+    // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+    const navigate = (opts: { folderId?: string; search?: string }) => {
+        c.transferError = null
+        return controller.list(opts)
+    }
     const shownError =
         snap.state.status === 'error' ? snap.state : c.transferError
     const handleTransfer = async () => {
@@ -216,7 +221,7 @@ export function serverModeDriveUploader(
                 }}
                 @keydown=${(e: KeyboardEvent) => {
                     if (e.key === 'Enter')
-                        void controller.list({
+                        void navigate({
                             search: (e.target as HTMLInputElement).value,
                         })
                 }}
@@ -247,7 +252,10 @@ export function serverModeDriveUploader(
                               shownError.code
                                   ? ctx.translator(
                                         `errors.${errorCodeToMessageKey(shownError.code)}`,
-                                        { code: shownError.code },
+                                        {
+                                            code: shownError.code,
+                                            message: shownError.message,
+                                        },
                                     )
                                   : shownError.message
                           }
@@ -273,7 +281,7 @@ export function serverModeDriveUploader(
                         )}
                         @click=${() => {
                             file.isFolder
-                                ? void controller.list({
+                                ? void navigate({
                                       folderId: file.id,
                                   })
                                 : toggle(file.id)
@@ -341,7 +349,10 @@ export function serverModeDriveUploader(
             <button
                 type="button"
                 class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-                @click=${() => onBack?.()}
+                @click=${() => {
+                    c.transferError = null
+                    onBack?.()
+                }}
             >
                 Cancel
             </button>

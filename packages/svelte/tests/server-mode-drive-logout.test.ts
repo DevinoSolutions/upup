@@ -108,4 +108,59 @@ describe('ServerModeDriveUploader (svelte) - Log out', () => {
         ).toHaveLength(1)
         expect(open).not.toHaveBeenCalled()
     })
+
+    it('a failed transfer stays in the view: error shown, list kept, no onBack', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string) => {
+                if (url.endsWith('/transfer'))
+                    return jsonRes(500, { error: 'boom' })
+                return jsonRes(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        ctx.setActiveSource = vi.fn()
+        ctx.headerHost = document.createElement('span')
+        const onBack = vi.fn()
+
+        const { container } = render(ServerModeDriveUploader, {
+            provider: 'google-drive',
+            onBack,
+        })
+
+        await vi.waitFor(() => {
+            expect(
+                container.querySelector(
+                    '[data-upup-slot="drive-browser-item"]',
+                ),
+            ).not.toBeNull()
+        })
+        container
+            .querySelector<HTMLButtonElement>(
+                '[data-upup-slot="drive-browser-item"]',
+            )!
+            .click()
+        await vi.waitFor(() => {
+            const add = Array.from(container.querySelectorAll('button')).find(
+                b => b.textContent?.includes('Add files'),
+            )
+            expect(add?.disabled).toBe(false)
+        })
+        Array.from(container.querySelectorAll('button'))
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+
+        await vi.waitFor(() => {
+            const error = container.querySelector(
+                '[data-testid="upup-drive-error"]',
+            )
+            expect(error?.getAttribute('role')).toBe('alert')
+            expect(error?.textContent).toContain('boom')
+        })
+        expect(
+            container.querySelector('[data-upup-slot="drive-browser-item"]'),
+        ).not.toBeNull()
+        expect(onBack).not.toHaveBeenCalled()
+    })
 })

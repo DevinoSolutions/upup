@@ -57,11 +57,23 @@ const errorText = computed(() => {
     const e = shownError.value
     if (!e) return ''
     return e.code && translator
-        ? translator(`errors.${errorCodeToMessageKey(e.code)}`, { code: e.code })
+        ? translator(`errors.${errorCodeToMessageKey(e.code)}`, {
+              code: e.code,
+              message: e.message,
+          })
         : e.message
 })
 const selected = ref<Set<string>>(new Set())
 const transferring = ref(false)
+// Leaving the current listing (folder, search) or the view clears a stale transfer error.
+function navigate(opts: { folderId?: string; search?: string }) {
+    transferError.value = null
+    return refresh(opts)
+}
+function cancel() {
+    transferError.value = null
+    props.onBack?.()
+}
 
 const isLoading = computed(() =>
     state.value.status === 'loading' || state.value.status === 'idle',
@@ -167,7 +179,7 @@ function formatBytes(bytes: number): string {
                         aria-label="Search"
                         :value="search"
                         @input="setSearch(($event.target as HTMLInputElement).value)"
-                        @keydown.enter="refresh({ search: ($event.target as HTMLInputElement).value })"
+                        @keydown.enter="navigate({ search: ($event.target as HTMLInputElement).value })"
                         placeholder="Search…"
                         :class="cn(
                             'upup-ml-auto upup-rounded upup-border upup-px-2 upup-py-1 upup-text-xs',
@@ -204,7 +216,7 @@ function formatBytes(bytes: number): string {
                                   ? 'upup-bg-white/[0.04] upup-text-[#e2e8f0] upup-ring-white/[0.06] hover:upup-bg-white/[0.07]'
                                   : 'upup-bg-black/[0.03] upup-text-gray-800 upup-ring-black/[0.06] hover:upup-bg-black/[0.05]',
                         )"
-                        @click="file.isFolder ? refresh({ folderId: file.id }) : toggle(file.id)"
+                        @click="file.isFolder ? navigate({ folderId: file.id }) : toggle(file.id)"
                     >
                         <span
                             class="upup-flex upup-h-[30px] upup-w-[30px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[8px] upup-bg-white/[0.05]"
@@ -256,7 +268,7 @@ function formatBytes(bytes: number): string {
                     <button
                         type="button"
                         class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-                        @click="props.onBack?.()"
+                        @click="cancel()"
                     >
                         Cancel
                     </button>

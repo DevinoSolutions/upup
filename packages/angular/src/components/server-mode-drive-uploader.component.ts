@@ -177,7 +177,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
                             <button
                                 type="button"
                                 class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-                                (click)="onBack()"
+                                (click)="onCancel()"
                             >
                                 Cancel
                             </button>
@@ -301,6 +301,7 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
         return s.code
             ? this.store.translator(`errors.${errorCodeToMessageKey(s.code)}`, {
                   code: s.code,
+                  message: s.message,
               })
             : s.message
     }
@@ -384,6 +385,11 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
 
     onSearchEnter(ev: Event): void {
         void this.svc.list({ search: (ev.target as HTMLInputElement).value })
+    }
+
+    onCancel(): void {
+        this.svc.transferError.set(null)
+        this.onBack()
     }
 
     handleTransfer(): void {

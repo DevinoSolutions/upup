@@ -60,6 +60,15 @@ import { cn } from '@useupup/core/internal'
 
   const selected = writable<Set<string>>(new Set())
   const transferring = writable(false)
+  // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+  function navigate(opts: { folderId?: string; search?: string }) {
+    transferError.set(null)
+    return refresh(opts)
+  }
+  function cancel() {
+    transferError.set(null)
+    onBack?.()
+  }
   // A failed transfer stays in this view: its message shows in the same
   // drive-error slot as a list error and the file list is kept for a retry.
   const transferError = writable<{ message: string; code?: string | undefined } | null>(null)
@@ -71,7 +80,10 @@ import { cn } from '@useupup/core/internal'
   const errorText = derived(shownError, ($e) => {
     if (!$e) return ''
     return $e.code && translator
-      ? translator(`errors.${errorCodeToMessageKey($e.code)}`, { code: $e.code })
+      ? translator(`errors.${errorCodeToMessageKey($e.code)}`, {
+          code: $e.code,
+          message: $e.message,
+        })
       : $e.message
   })
 
@@ -176,7 +188,7 @@ import { cn } from '@useupup/core/internal'
             oninput={(e) => setSearch((e.target as HTMLInputElement).value)}
             onkeydown={(e) => {
               if (e.key === 'Enter') {
-                void refresh({ search: (e.target as HTMLInputElement).value })
+                void navigate({ search: (e.target as HTMLInputElement).value })
               }
             }}
             placeholder="Search…"
@@ -217,7 +229,7 @@ import { cn } from '@useupup/core/internal'
               )}
               onclick={() =>
                 file.isFolder
-                  ? void refresh({ folderId: file.id })
+                  ? void navigate({ folderId: file.id })
                   : toggle(file.id)}
             >
               <span
@@ -271,7 +283,7 @@ import { cn } from '@useupup/core/internal'
           <button
             type="button"
             class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-            onclick={() => onBack?.()}
+            onclick={cancel}
           >
             Cancel
           </button>

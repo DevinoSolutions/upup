@@ -57,6 +57,7 @@ export class ServerModeDriveService {
     }
 
     list(opts?: { folderId?: string; search?: string }): Promise<void> {
+        this.transferError.set(null)
         return this.controller.list(opts)
     }
     startAuth(): void {

@@ -288,11 +288,7 @@ export class UpupCore {
         return this.pluginManager.getExtensions()
     }
 
-    /**
-     * Would a transferred file pass the client restrictions (type/size, limit,
-     * duplicates)? A violation is emitted on core's usual channel
-     * (restriction-failed, or file-rejected for a duplicate) and returned.
-     */
+    // Check a transferred file's restrictions; a violation is emitted and returned.
     checkTransferredFile(
         info: Parameters<FileManager['checkCompleted']>[0],
     ): UpupValidationError | null {
@@ -304,11 +300,7 @@ export class UpupCore {
         return error
     }
 
-    /**
-     * Deliberately public: register a file that is ALREADY stored (a
-     * server-mode drive transfer) as a completed row. Returns undefined, after
-     * emitting the rejection, when it breaks a restriction.
-     */
+    /** Public by design: register an already-stored file (drive transfer) as a completed row. */
     addTransferredFile(info: TransferredFileInfo): UploadFile | undefined {
         if (this.destroyed)
             throw new UpupError(
@@ -325,18 +317,18 @@ export class UpupCore {
                 ...(info.url !== undefined ? { downloadUrl: info.url } : {}),
             },
         })
+        const wasComplete = this._status === UploadStatus.SUCCESSFUL
         const allComplete = [...this.files.values()].every(f => f.key != null)
         if (allComplete) {
             this._status = UploadStatus.SUCCESSFUL
             this._error = null
-            this.emitter.emit('state-change', {
-                files: this.files,
-                status: this._status,
-            })
-            this.emitter.emit('upload-all-complete', [...this.files.values()])
-        } else {
-            this.emitter.emit('state-change', { files: this.files })
         }
+        this.emitter.emit('state-change', {
+            files: this.files,
+            ...(allComplete && { status: this._status }),
+        })
+        if (allComplete && !wasComplete)
+            this.emitter.emit('upload-all-complete', [...this.files.values()])
         return file
     }
 

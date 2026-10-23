@@ -457,4 +457,57 @@ describe('ServerModeDriveUploaderComponent — Log out', () => {
         expect(open).not.toHaveBeenCalled()
         headerHost.remove()
     })
+
+    it('a failed transfer stays in the view: error shown, list kept, no onBack', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string) => {
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/transfer'))
+                    return json(500, { error: 'boom' })
+                return json(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        const onBack = vi.fn()
+
+        await TestBed.configureTestingModule({
+            imports: [ServerModeDriveUploaderComponent],
+            providers: [{ provide: UpupStore, useValue: makeStoreMock() }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(
+            ServerModeDriveUploaderComponent,
+        )
+        fixture.componentInstance.provider = 'google-drive'
+        fixture.componentInstance.onBack = onBack
+        fixture.detectChanges()
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status === 'ready')
+        fixture.detectChanges()
+
+        const el = fixture.nativeElement as HTMLElement
+        el.querySelector<HTMLButtonElement>(
+            '[data-upup-slot="drive-browser-item"]',
+        )!.click()
+        fixture.detectChanges()
+        ;[...el.querySelectorAll('button')]
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+        await waitFor(() => svc.transferError() !== null)
+        fixture.detectChanges()
+
+        const error = el.querySelector('[data-testid="upup-drive-error"]')
+        expect(error?.getAttribute('role')).toBe('alert')
+        expect(error?.textContent).toContain('boom')
+        expect(
+            el.querySelector('[data-upup-slot="drive-browser-item"]'),
+        ).not.toBeNull()
+        expect(onBack).not.toHaveBeenCalled()
+    })
 })

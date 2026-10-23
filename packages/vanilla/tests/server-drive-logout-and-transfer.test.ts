@@ -134,4 +134,48 @@ describe('vanilla serverModeDriveUploader', () => {
         expect(onBack).not.toHaveBeenCalled()
         destroyServerDrives(ctx)
     })
+
+    it('Cancel clears a stale transfer error', async () => {
+        stubDrive({ transferStatus: 500 })
+        const ctx = makeCtx()
+        const onBack = vi.fn()
+        const host = document.createElement('div')
+        const draw = () =>
+            render(
+                serverModeDriveUploader(ctx, {
+                    provider: 'google-drive',
+                    onBack,
+                }),
+                host,
+            )
+        const clickButton = (label: string) =>
+            [...host.querySelectorAll('button')]
+                .find(b => b.textContent?.includes(label))!
+                .click()
+
+        serverModeDriveUploader(ctx, { provider: 'google-drive', onBack })
+        await settle()
+        draw()
+        ;(
+            host.querySelector(
+                '[data-upup-slot="drive-browser-item"]',
+            ) as HTMLButtonElement
+        ).click()
+        draw()
+        clickButton('Add files')
+        await settle()
+        draw()
+        expect(
+            host.querySelector('[data-testid="upup-drive-error"]'),
+        ).not.toBeNull()
+
+        clickButton('Cancel')
+        draw()
+
+        expect(onBack).toHaveBeenCalledTimes(1)
+        expect(
+            host.querySelector('[data-testid="upup-drive-error"]'),
+        ).toBeNull()
+        destroyServerDrives(ctx)
+    })
 })

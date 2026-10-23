@@ -65,6 +65,11 @@ export default function ServerModeDriveUploader({
     const isLoading = state.status === 'loading' || state.status === 'idle'
     const files: ServerDriveFile[] = state.status === 'ready' ? state.files : []
     const shownError = state.status === 'error' ? state : transferError
+    // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+    const navigate = (opts: { folderId?: string; search?: string }) => {
+        setTransferError(null)
+        return refresh(opts)
+    }
 
     const toggle = (id: string) => {
         setSelected(prev => {
@@ -168,7 +173,7 @@ export default function ServerModeDriveUploader({
                             }}
                             onKeyDown={e => {
                                 if (e.key === 'Enter') {
-                                    void refresh({
+                                    void navigate({
                                         search: e.currentTarget.value,
                                     })
                                 }
@@ -198,7 +203,10 @@ export default function ServerModeDriveUploader({
                                 {shownError.code && translator
                                     ? translator(
                                           `errors.${errorCodeToMessageKey(shownError.code)}`,
-                                          { code: shownError.code },
+                                          {
+                                              code: shownError.code,
+                                              message: shownError.message,
+                                          },
                                       )
                                     : shownError.message}
                             </p>
@@ -211,7 +219,7 @@ export default function ServerModeDriveUploader({
                                     type="button"
                                     onClick={() => {
                                         file.isFolder
-                                            ? void refresh({
+                                            ? void navigate({
                                                   folderId: file.id,
                                               })
                                             : toggle(file.id)
@@ -285,7 +293,10 @@ export default function ServerModeDriveUploader({
                     >
                         <button
                             type="button"
-                            onClick={onBack}
+                            onClick={() => {
+                                setTransferError(null)
+                                onBack?.()
+                            }}
                             className="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
                         >
                             Cancel

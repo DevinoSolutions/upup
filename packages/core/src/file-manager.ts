@@ -115,11 +115,11 @@ export interface TransferredFileInfo {
     key: string
     url?: string | undefined
     source: FileSource
-    /** Provider-scoped drive file id (google-drive:<id>), for duplicate checks. */
+    // `google-drive:<id>`, for duplicate checks.
     driveId?: string | undefined
 }
 
-/** Zero-byte File whose `size` reports the real stored size (own non-enumerable slot). */
+// Zero-byte File reporting the real size (own non-enumerable slot).
 function completedBase(
     info: Pick<TransferredFileInfo, 'name' | 'size' | 'type'>,
 ): File {
@@ -436,45 +436,63 @@ export class FileManager {
         this.files.clear()
     }
 
-    /**
-     * Would an already-stored file pass the client restrictions? Same checks as
-     * addFiles (type/size, limit, total size) plus duplicates: the same storage
-     * key, or - with contentDeduplication - the same provider file.
-     */
+    // addFiles' restrictions for an already-stored file; unknown size/type are skipped.
     checkCompleted(
-        info: Omit<TransferredFileInfo, 'key' | 'source'> & {
-            key?: string | undefined
+        info: Omit<TransferredFileInfo, 'key' | 'source' | 'size' | 'type'> & {
+            size?: number | undefined
+            type?: string | undefined
         },
     ): UpupValidationError | null {
-        const probe = completedBase(info)
+        const probe = completedBase({
+            name: info.name,
+            size: info.size ?? 0,
+            type: info.type ?? '',
+        })
         const existing = [...this.files.values()]
-        const dup = existing.some(
-            f =>
-                (info.key !== undefined && f.key === info.key) ||
-                (this.options.contentDeduplication &&
-                    info.driveId !== undefined &&
+        const opts = this.options
+        const isDup =
+            opts.contentDeduplication &&
+            info.driveId !== undefined &&
+            existing.some(
+                f =>
                     (f.metadata as Record<string, unknown> | undefined)
-                        ?.driveFileId === info.driveId),
-        )
-        if (dup) {
+                        ?.driveFileId === info.driveId,
+            )
+        const [violation] = isDup
+            ? [
+                  {
+                      code: UpupErrorCode.DUPLICATE as const,
+                      message: `File "${info.name}" was already added`,
+                  },
+              ]
+            : validateFileRestrictions(probe, {
+                  ...opts,
+                  // A type-less file still gets the extension check.
+                  allowedFileTypes:
+                      info.type || opts.allowedFileTypes?.includes('.')
+                          ? opts.allowedFileTypes
+                          : undefined,
+                  ...(info.size === undefined && {
+                      maxFileSize: undefined,
+                      minFileSize: undefined,
+                  }),
+              })
+        if (violation)
             return new UpupValidationError(
-                `File "${info.name}" was already added`,
-                UpupErrorCode.DUPLICATE,
+                violation.message,
+                violation.code,
                 probe,
             )
-        }
         try {
-            this.validateFile(probe)
             this.assertBatchFits([probe], existing)
         } catch (err) {
-            // upup-catch: the violation is RETURNED to the caller, which emits
-            // it on core's restriction channel; nothing is swallowed.
+            // upup-catch: the violation is returned; core emits it.
             return err as UpupValidationError
         }
         return null
     }
 
-    /** Register an already-stored file (zero-byte backing File, real `size`); upload() skips it (F-810). */
+    // Register an already-stored file as a SUCCESSFUL row; upload() skips it (F-810).
     addCompleted(info: TransferredFileInfo): UploadFile {
         const file = Object.assign(completedBase(info), {
             id: generateFileId(),

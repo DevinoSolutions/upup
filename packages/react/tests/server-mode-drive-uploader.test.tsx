@@ -1,7 +1,13 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import React, { useState } from 'react'
-import { UpupCore, UploadStatus, FileSource } from '@useupup/core'
+import {
+    UpupCore,
+    UploadStatus,
+    FileSource,
+    createTranslator,
+    enUS,
+} from '@useupup/core'
 
 afterEach(() => {
     cleanup()
@@ -13,6 +19,9 @@ afterEach(() => {
 // smallest surface that still exercises the real controller -> core wiring.
 const harness = vi.hoisted(() => ({
     core: undefined as unknown,
+    // A REAL translator: the views map error codes through it, so a fake/undefined
+    // one would hide wrong-message bugs.
+    translator: undefined as unknown,
     setActiveSource: undefined as undefined | ((s: unknown) => void),
 }))
 
@@ -26,7 +35,7 @@ vi.mock('../src/context/UploaderContext', () => ({
     }),
     useUploaderTheme: () => ({ isDark: false, slotOverrides: {} }),
     useUploaderI18n: () => ({
-        translator: undefined,
+        translator: harness.translator,
         translations: {
             logOut: 'Log out',
             authenticatePrompt: 'Sign in to {{provider}}',
@@ -41,6 +50,8 @@ vi.mock('../src/context/UploaderContext', () => ({
 
 import ServerModeDriveUploader from '../src/components/ServerModeDriveUploader'
 import { SourceViewHeaderExtraContext } from '../src/context/SourceViewHeaderExtraContext'
+
+harness.translator = createTranslator({ bundle: enUS })
 
 const jsonRes = (status: number, body: unknown) => ({
     status,
@@ -238,5 +249,59 @@ describe('ServerModeDriveUploader (T-6094, T-6093)', () => {
         ).toBe(false)
         expect(onBack).not.toHaveBeenCalled()
         expect(core.files.size).toBe(0)
+    })
+
+    it('a restriction rejection shows its own message through a real translator, not the generic upload-failed text', async () => {
+        stubServer()
+        const core = new UpupCore({ limit: 1 })
+        core.addTransferredFile({
+            name: 'prior.pdf',
+            size: 1,
+            type: 'application/pdf',
+            key: 'uploads/prior.pdf',
+            source: FileSource.GOOGLE_DRIVE,
+        })
+        const { findByText, getByText, findByTestId } = render(
+            <Host core={core} />,
+        )
+
+        fireEvent.click(await findByText('report.pdf'))
+        fireEvent.click(getByText(/Add files/))
+
+        const text = (await findByTestId('upup-drive-error')).textContent
+        expect(text).toBe('Adding 1 files would exceed the limit of 1')
+    })
+
+    it('a stale transfer error clears when the user searches again', async () => {
+        const calls = stubServer({ transferStatus: 500 })
+        const core = new UpupCore({})
+        const {
+            findByText,
+            getByText,
+            findByTestId,
+            getByLabelText,
+            queryByTestId,
+        } = render(<Host core={core} />)
+        const lists = () =>
+            calls.filter(
+                c =>
+                    c.method === 'GET' && c.url.includes('/files/google-drive'),
+            ).length
+
+        fireEvent.click(await findByText('report.pdf'))
+        fireEvent.click(getByText(/Add files/))
+        await findByTestId('upup-drive-error')
+        expect(lists()).toBe(1)
+
+        fireEvent.keyDown(getByLabelText('Search'), { key: 'Enter' })
+        await waitFor(() => {
+            expect(lists()).toBe(2)
+        })
+        // The refreshed listing is back on screen, and the old error is gone.
+        await findByText('report.pdf')
+        await waitFor(() => {
+            expect(queryByTestId('loader-icon')).toBeNull()
+            expect(queryByTestId('upup-drive-error')).toBeNull()
+        })
     })
 })

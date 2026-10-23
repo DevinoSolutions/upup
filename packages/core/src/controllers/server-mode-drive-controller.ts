@@ -47,6 +47,17 @@ export interface ServerModeDriveDeps {
         | undefined
 }
 
+// The `{error}` of a JSON error body, else the raw text, else the status.
+function errorText(text: string, status: number): string {
+    try {
+        const body = JSON.parse(text) as { error?: unknown } | null
+        if (typeof body?.error === 'string') return body.error
+    } catch {
+        // upup-catch: a non-JSON body is shown as-is.
+    }
+    return text || `${status}`
+}
+
 const PROVIDER_SOURCE: Record<ServerModeProvider, FileSource> = {
     'google-drive': FileSource.GOOGLE_DRIVE,
     'one-drive': FileSource.ONE_DRIVE,
@@ -171,20 +182,15 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 status: 'error',
                 message: 'Server Mode requires `serverUrl` prop',
             }
-        // Client restrictions (limit, size, type, duplicates) are checked BEFORE
-        // the server round-trip: a rejected file must not be stored at all.
+        // Restrictions are checked BEFORE the round-trip so a rejected file is
+        // never stored. No `code`: the views would show a generic message.
         const violation = this.deps.core?.()?.checkTransferredFile({
             name: file.name,
-            size: file.size ?? 0,
-            type: file.mimeType ?? '',
+            size: file.size,
+            type: file.mimeType,
             driveId: this.driveId(file),
         })
-        if (violation)
-            return {
-                status: 'error',
-                message: violation.message,
-                code: violation.code,
-            }
+        if (violation) return { status: 'error', message: violation.message }
         try {
             const res = await fetch(
                 `${serverUrl}/files/${this.deps.provider}/transfer`,
@@ -216,15 +222,19 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             }
             if (!res.ok) {
                 const text = await res.text().catch(() => '')
-                return { status: 'error', message: text || `${res.status}` }
+                return {
+                    status: 'error',
+                    message: errorText(text, res.status),
+                }
             }
             const result: unknown = await res.json()
             try {
-                this.registerTransferred(file, result)
+                // Stored, but the real size/type may break a restriction.
+                const rejected = this.registerTransferred(file, result)
+                if (rejected) return { status: 'error', message: rejected }
             } catch (err) {
-                // upup-catch: the file IS stored; a core that cannot take the
-                // row (e.g. destroyed mid-transfer) must not turn that into a
-                // failed transfer. Reported, not swallowed.
+                // upup-catch: stored, but core can't take the row (destroyed
+                // mid-transfer): still ok, reported not swallowed.
                 console.warn(
                     'upup: transferred file stored but not registered on core',
                     err,
@@ -242,8 +252,11 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         return `${this.deps.provider}:${file.id}`
     }
 
-    /** Surface the stored file on core as a completed row. */
-    private registerTransferred(file: ServerDriveFile, result: unknown): void {
+    // Register the stored file on core; returns the restriction message if refused.
+    private registerTransferred(
+        file: ServerDriveFile,
+        result: unknown,
+    ): string | null {
         const core = this.deps.core?.()
         const r = result as
             | {
@@ -255,8 +268,8 @@ export class ServerModeDriveController implements ObservableController<ServerDri
               }
             | null
             | undefined
-        if (!core || !r || typeof r.key !== 'string') return
-        core.addTransferredFile({
+        if (!core || !r || typeof r.key !== 'string') return null
+        const info = {
             name: r.name ?? file.name,
             size: r.size ?? file.size ?? 0,
             type: r.type ?? file.mimeType ?? '',
@@ -264,16 +277,16 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             url: r.url,
             source: PROVIDER_SOURCE[this.deps.provider],
             driveId: this.driveId(file),
-        })
+        }
+        const violation = core.checkTransferredFile(info)
+        if (violation) return violation.message
+        core.addTransferredFile(info)
+        return null
     }
 
-    /**
-     * Disconnect the drive (drops THIS user's tokens server-side). Resolves
-     * true on success without touching the snapshot: the caller leaves the view
-     * and the next list answers `reauth`. Not `requestReauth()` - that view
-     * auto-opens the OAuth popup on mount, i.e. on logout. Failure shows the
-     * error view and resolves false.
-     */
+    // Drop THIS user's server-held tokens. True on success, snapshot untouched:
+    // the caller leaves the view (not `requestReauth()`, whose view auto-opens
+    // the OAuth popup). Failure shows the error view and resolves false.
     async signOut(): Promise<boolean> {
         const serverUrl = this.deps.serverUrl()
         if (!serverUrl) return false
@@ -285,15 +298,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             // 401: no session to drop - already logged out.
             if (res.ok || res.status === 401) return true
             const text = await res.text().catch(() => '')
-            const body = (() => {
-                try {
-                    return JSON.parse(text) as { error?: string }
-                } catch {
-                    // upup-catch: a non-JSON body is shown as-is.
-                    return null
-                }
-            })()
-            this.setError(body?.error ?? (text || `${res.status}`))
+            this.setError(errorText(text, res.status))
         } catch (err) {
             // upup-catch: a failed disconnect is surfaced via the 'error' list
             // state (rendered in the drive browser), not swallowed.
