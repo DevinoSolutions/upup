@@ -649,6 +649,14 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
   `if: always()`) fail on any need whose result is not `success` (E2E: not
   `success`/sanctioned `skipped`), so a cancelled run can never read green.
+  `main.yml` also routes docs-only PRs (T-6160): a `Changes` job flags a diff
+  as docs-only when EVERY changed file is under `docs/` or is a root-level
+  `*.md`; every other job then skips and `Status Check` accepts `skipped` only
+  in that case (fail-open: dispatch or an empty diff means `code=true`). Do NOT
+  swap this for workflow-level `paths-ignore`: a skipped workflow reports no
+  check, leaving the required `Status Check` pending forever. `nightly.yml`
+  (group `nightly`) and `publish-sdk.yml` (group `publish-sdk`) carry
+  `cancel-in-progress: false` concurrency groups — they queue, never cancel.
 - `e2e.yml` — PRs to master/dev: **affected-test routed**. A `Resolve-Affected`
   job classifies the diff via `scripts/ci/resolve-affected-tests.mjs` (impact
   map in code, unit-tested by `test:scripts`; fail-open — an unmatched path
