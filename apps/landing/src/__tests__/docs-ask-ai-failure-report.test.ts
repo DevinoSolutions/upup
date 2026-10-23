@@ -213,11 +213,14 @@ describe('docs Ask AI failure reporting', () => {
     })
 
     it('never puts the prompt in any report, even when the upstream error echoes it', async () => {
-        const echo = (status: number) =>
-            new Response(`400 bad request: ${PROMPT}`, { status })
+        // Only the paths that carry upstream text can echo the prompt: an error
+        // chunk, a stream transport throw, and a /generate transport throw.
+        // (HTTP bodies are never read, so a body echo cannot reach a report.)
         stubFetch({
             stream: () => sseResponse(errorChunk(`echo: ${PROMPT}`)),
-            generate: () => echo(500),
+            generate: () => {
+                throw new Error(`generate broke on ${PROMPT}`)
+            },
         })
         await sendPrompt()
         stubFetch({
@@ -227,16 +230,63 @@ describe('docs Ask AI failure reporting', () => {
             generate: () => json({ text: '' }),
         })
         await sendPrompt()
+
+        expect(reportAiFailure).toHaveBeenCalledTimes(2)
+        expect(JSON.stringify(reportAiFailure.mock.calls)).not.toContain(PROMPT)
+        // The reasons are still there, with the prompt replaced.
+        const first = reportAiFailure.mock.calls[0]![0].message as string
+        expect(first).toContain('echo: [redacted]')
+        expect(first).toContain('generate broke on [redacted]')
+        expect(reportAiFailure.mock.calls[1]![0].message).toContain(
+            'stream broke on [redacted]',
+        )
+    })
+
+    it('redacts a multi-line prompt echoed inside a JSON body', async () => {
+        const multiLine = 'first line "quoted"\nsecond secret-9921'
         stubFetch({
-            stream: () => echo(502),
-            generate: () => json({ text: 'rescued' }),
+            stream: () =>
+                sseResponse(
+                    errorChunk(`400 ${JSON.stringify({ input: multiLine })}`),
+                ),
+            generate: () => json({ text: '' }),
         })
+
+        await act(async () => {
+            await chat.send(multiLine)
+        })
+
+        expect(JSON.stringify(reportAiFailure.mock.calls)).not.toContain(
+            'secret-9921',
+        )
+        expect(reportAiFailure.mock.calls[0]![0].message).toContain(
+            '[redacted]',
+        )
+    })
+
+    it('keeps the first, more specific reason when a transport throw follows an error chunk', async () => {
+        let sent = false
+        const body = new ReadableStream<Uint8Array>({
+            pull(c) {
+                if (!sent) {
+                    sent = true
+                    c.enqueue(sse(errorChunk('model overloaded')))
+                    return
+                }
+                throw new Error('socket reset')
+            },
+        })
+        stubFetch({
+            stream: () => new Response(body, { status: 200 }),
+            generate: () => new Response('down', { status: 503 }),
+        })
+
         await sendPrompt()
 
-        expect(reportAiFailure).toHaveBeenCalledTimes(3)
-        expect(JSON.stringify(reportAiFailure.mock.calls)).not.toContain(PROMPT)
-        // The reason is still there, minus the prompt.
-        expect(JSON.stringify(reportAiFailure.mock.calls[0])).toContain('echo:')
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+        const message = reportAiFailure.mock.calls[0]![0].message as string
+        expect(message).toContain('model overloaded')
+        expect(message).not.toContain('socket reset')
     })
 
     it('reports exactly path, agentId, kind and message, nothing else', async () => {

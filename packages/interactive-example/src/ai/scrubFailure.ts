@@ -20,8 +20,13 @@ const KEY_LIKE = [
 export function scrubFailureMessage(message: string, prompt?: string): string {
     let out = message
     const needle = prompt?.trim()
-    if (needle && needle.length >= MIN_PROMPT_REDACT)
+    if (needle && needle.length >= MIN_PROMPT_REDACT) {
         out = out.split(needle).join('[redacted]')
+        // A provider that echoes the request as JSON escapes newlines and
+        // quotes in the prompt, so the raw form no longer matches.
+        const escaped = JSON.stringify(needle).slice(1, -1)
+        if (escaped !== needle) out = out.split(escaped).join('[redacted]')
+    }
     for (const pattern of KEY_LIKE) out = out.replace(pattern, '[redacted]')
     return out.slice(0, FAILURE_MESSAGE_CAP)
 }

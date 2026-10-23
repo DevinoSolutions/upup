@@ -7,11 +7,26 @@ import { scrubFailureMessage } from './scrubFailure'
 /**
  * Shown inline (as the assistant turn) when the real Mastra agent can't be
  * reached — no canned patches, ever (round-8 item 2). The playground talks only
- * to the real agent; if it's down, say so honestly and tell the user how to
- * bring it up.
+ * to the real agent; if it's down, say so honestly. Public visitors get a plain
+ * line; the setup hint is for a developer running the agent locally.
  */
 const AGENT_UNAVAILABLE_HINT =
     'Start the Mastra server with `pnpm run dev` (it boots on http://localhost:4111) and set OPENROUTER_API_KEY in apps/mastra/.env.'
+const AGENT_UNAVAILABLE_VISITOR_LINE = 'Please try again in a moment.'
+
+// Inlined by the consumer's bundler; the package carries no node types.
+declare const process: { env: { NODE_ENV?: string } }
+
+/** True when the developer hint is meaningful: a local agent or a dev build. */
+function showDeveloperHint(baseUrl: string): boolean {
+    if (process.env.NODE_ENV === 'development') return true
+    try {
+        const { hostname } = new URL(baseUrl)
+        return hostname === 'localhost' || hostname === '127.0.0.1'
+    } catch {
+        return false
+    }
+}
 
 type ChatRole = 'user' | 'assistant'
 
@@ -329,7 +344,11 @@ export function useMastraChat({
             } catch (e: unknown) {
                 if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
-                const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
+                const friendly = `AI assistant is unavailable (${detail}). ${
+                    showDeveloperHint(baseUrl)
+                        ? AGENT_UNAVAILABLE_HINT
+                        : AGENT_UNAVAILABLE_VISITOR_LINE
+                }`
                 setError(friendly)
                 try {
                     onAssistantError?.({

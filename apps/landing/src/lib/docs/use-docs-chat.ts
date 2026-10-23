@@ -173,9 +173,7 @@ export function useDocsChat() {
                     steps: settleSteps(steps),
                 })
 
-            // One Sentry event per failure; a turn the visitor cleared (or that
-            // was aborted by unmount) is not a failure worth reporting.
-            // A tab close or navigation also makes the in-flight fetch reject
+            // A tab close or navigation makes the in-flight fetch reject
             // ("Failed to fetch") while the run is still current; that is the
             // visitor leaving, not a failure. (document.visibilityState is NOT
             // used: a backgrounded tab with a real outage must still report.)
@@ -186,6 +184,8 @@ export function useDocsChat() {
             if (typeof window !== 'undefined')
                 window.addEventListener('pagehide', onPageHide)
 
+            // One Sentry event per failure; a turn the visitor cleared (or that
+            // was aborted by unmount) is not a failure worth reporting.
             const report = (
                 kind: AiFailureReport['kind'],
                 message?: string,
@@ -352,7 +352,7 @@ export function useDocsChat() {
                 } catch (e: unknown) {
                     // Fall through to the fallback decision below, but keep the
                     // reason: the visitor may never see this failure.
-                    streamFailure =
+                    streamFailure ??=
                         e instanceof Error ? e.message : 'stream failed'
                 }
 

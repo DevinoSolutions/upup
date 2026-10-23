@@ -93,12 +93,12 @@ const toolResult = (
     },
 })
 
-function setup() {
+function setup(baseUrl = 'http://mastra.test') {
     const onPatch = vi.fn()
     const onAssistantError = vi.fn()
     const view = renderHook(() =>
         useMastraChat({
-            baseUrl: 'http://mastra.test',
+            baseUrl,
             agentId: 'playground-agent',
             onPatch,
             onAssistantError,
@@ -683,6 +683,67 @@ describe('useMastraChat failure visibility', () => {
         expect(message).toContain('401')
         expect(message).toContain('[redacted]')
         expect(message.length).toBeLessThanOrEqual(200)
+    })
+
+    it('redacts a multi-line prompt that the upstream echoes inside a JSON body', async () => {
+        const multiLine = 'line one "quoted"\nline two secret-7731'
+        const echoed = JSON.stringify({ input: multiLine })
+        sdk.chunks = [
+            { type: 'error', payload: { error: { message: `400 ${echoed}` } } },
+        ]
+        const { result, onAssistantError } = setup()
+
+        await act(async () => result.current.send(multiLine))
+
+        const message = onAssistantError.mock.calls[0]![0].message as string
+        expect(message).not.toContain('secret-7731')
+        expect(message).toContain('[redacted]')
+        expect(message).toContain('400')
+    })
+
+    it('shows visitors a plain unavailable line, not the developer hint', async () => {
+        sdk.chunks = []
+        const { result, onAssistantError } = setup('https://agents.useupup.com')
+
+        await act(async () => result.current.send(PROMPT))
+
+        const turn = result.current.messages[1]
+        expect(turn?.error).toBe(true)
+        expect(turn?.text).toContain('AI assistant is unavailable')
+        expect(turn?.text).toContain('Please try again in a moment.')
+        expect(turn?.text).not.toContain('pnpm')
+        expect(turn?.text).not.toContain('OPENROUTER_API_KEY')
+        expect(result.current.error).not.toContain('localhost:4111')
+        expect(onAssistantError).toHaveBeenCalledTimes(1)
+    })
+
+    it.each(['http://localhost:4111', 'http://127.0.0.1:4111'])(
+        'keeps the developer hint when the agent base URL is %s',
+        async baseUrl => {
+            sdk.chunks = []
+            const { result } = setup(baseUrl)
+
+            await act(async () => result.current.send(PROMPT))
+
+            const turn = result.current.messages[1]
+            expect(turn?.text).toContain('AI assistant is unavailable')
+            expect(turn?.text).toContain('pnpm run dev')
+            expect(turn?.text).toContain('OPENROUTER_API_KEY')
+        },
+    )
+
+    it('keeps the developer hint under NODE_ENV=development, whatever the base URL', async () => {
+        vi.stubEnv('NODE_ENV', 'development')
+        try {
+            sdk.chunks = []
+            const { result } = setup('https://agents.useupup.com')
+
+            await act(async () => result.current.send(PROMPT))
+
+            expect(result.current.messages[1]?.text).toContain('pnpm run dev')
+        } finally {
+            vi.unstubAllEnvs()
+        }
     })
 
     it('does not report a healthy turn', async () => {
