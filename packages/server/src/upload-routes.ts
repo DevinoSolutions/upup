@@ -187,7 +187,7 @@ async function validateUploadMetadata(
         body.name.length === 0 ||
         typeof body.type !== 'string' ||
         typeof body.size !== 'number' ||
-        !Number.isFinite(body.size) ||
+        !Number.isInteger(body.size) ||
         body.size < 0
     ) {
         return res.json(
@@ -857,6 +857,23 @@ export async function handleMultipartSignPart(
     }
 }
 
+function isCompletedPartList(
+    parts: unknown,
+): parts is Array<{ partNumber: number; eTag: string }> {
+    return (
+        Array.isArray(parts) &&
+        parts.every(
+            (part: { partNumber?: unknown; eTag?: unknown } | null) =>
+                typeof part === 'object' &&
+                part !== null &&
+                typeof part.partNumber === 'number' &&
+                Number.isInteger(part.partNumber) &&
+                part.partNumber >= 1 &&
+                typeof part.eTag === 'string',
+        )
+    )
+}
+
 export async function handleMultipartComplete(
     req: Request,
     config: UpupServerConfig,
@@ -886,6 +903,18 @@ export async function handleMultipartComplete(
             req.method,
         )
         if (owned) return owned
+
+        // Shape check AFTER the trust checks (a forged token stays 403) and before
+        // any storage call: a malformed list is the client's error, not a 500 from S3.
+        if (!isCompletedPartList(body.parts)) {
+            return res.json(
+                {
+                    error: 'parts must be an array of { partNumber, eTag }',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
+            )
+        }
 
         const storage = await resolveBoundStorageOrFail(
             config,

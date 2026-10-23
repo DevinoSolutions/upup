@@ -44,7 +44,7 @@ describe('clientIpFromHeaders (T-5466)', () => {
             'cf-connecting-ip': '2001:db8::7',
             'x-forwarded-for': '2606:4700:4700::1111',
         })
-        expect(clientIpFromHeaders(h)).toBe('2001:db8::7')
+        expect(clientIpFromHeaders(h)).toBe('2001:db8:0:0::/64')
     })
 
     it('a forged cf-connecting-ip from a non-Cloudflare peer is ignored: the peer IP is used', async () => {
@@ -54,13 +54,14 @@ describe('clientIpFromHeaders (T-5466)', () => {
             '104.15.255.255', // just below 104.16.0.0/13
             '104.32.0.0', // just above 104.24.0.0/14
             '2606:4701::1', // outside 2606:4700::/32
-            '::1',
         ]) {
             const h = headers({
                 'cf-connecting-ip': '198.51.100.9',
                 'x-forwarded-for': `9.9.9.9, ${peer}`,
             })
-            expect(clientIpFromHeaders(h)).toBe(peer)
+            expect(clientIpFromHeaders(h)).toBe(
+                peer.includes(':') ? '2606:4701:0:0::/64' : peer,
+            )
         }
     })
 
@@ -75,7 +76,7 @@ describe('clientIpFromHeaders (T-5466)', () => {
             'cf-connecting-ip': '198.51.100.9',
             'x-forwarded-for': '::ffff:203.0.113.7',
         })
-        expect(clientIpFromHeaders(other)).toBe('::ffff:203.0.113.7')
+        expect(clientIpFromHeaders(other)).toBe('203.0.113.7')
     })
 
     it('ignores a cf-connecting-ip when there is no peer to vouch for it', async () => {
@@ -147,6 +148,53 @@ describe('clientIpFromHeaders (T-5466)', () => {
         expect(results.slice(5)).toEqual([false, false, false])
     })
 
+    it('keys an IPv6 client on its /64, so rotating the host half mints no new bucket (T-6186)', async () => {
+        const { clientIpFromHeaders, takeToken } = await load()
+        const results: boolean[] = []
+        for (let i = 1; i <= 8; i++) {
+            const ip = clientIpFromHeaders(
+                headers({
+                    'cf-connecting-ip': `2001:db8:1:2:aaaa:bbbb:cccc:${i.toString(16)}`,
+                    'x-forwarded-for': '172.70.0.5',
+                }),
+            )
+            expect(ip).toBe('2001:db8:1:2::/64')
+            results.push(takeToken(ip))
+        }
+        expect(results.filter(Boolean)).toHaveLength(5)
+    })
+
+    it('gives two IPv6 clients in different /64s different keys (T-6186)', async () => {
+        const { clientIpFromHeaders } = await load()
+        const key = (cf: string) =>
+            clientIpFromHeaders(
+                headers({
+                    'cf-connecting-ip': cf,
+                    'x-forwarded-for': '172.70.0.5',
+                }),
+            )
+        expect(key('2001:db8:1:2::1')).not.toBe(key('2001:db8:1:3::1'))
+    })
+
+    it('keys a non-Cloudflare IPv6 peer on its /64 as well (T-6186)', async () => {
+        const { clientIpFromHeaders } = await load()
+        const key = (peer: string) =>
+            clientIpFromHeaders(
+                headers({ 'x-forwarded-for': `9.9.9.9, ${peer}` }),
+            )
+        expect(key('2001:db8:aaaa:bbbb:1:2:3:4')).toBe(
+            key('2001:db8:aaaa:bbbb:ffff:ffff:ffff:ffff'),
+        )
+    })
+
+    it('an IPv4-mapped IPv6 address shares the key of the plain IPv4 address (T-6186)', async () => {
+        const { clientIpFromHeaders } = await load()
+        const key = (peer: string) =>
+            clientIpFromHeaders(headers({ 'x-forwarded-for': peer }))
+        expect(key('::ffff:203.0.113.7')).toBe(key('203.0.113.7'))
+        expect(key('::ffff:cb00:7107')).toBe(key('203.0.113.7'))
+    })
+
     it('bounds the length of an attacker-supplied address', async () => {
         const { clientIpFromHeaders } = await load()
         const ip = clientIpFromHeaders(
@@ -159,6 +207,31 @@ describe('clientIpFromHeaders (T-5466)', () => {
         const { clientIpFromHeaders } = await load()
         expect(clientIpFromHeaders(headers({}))).toBe('unknown')
     })
+})
+
+describe('rateLimitKey canonicalisation (T-6186)', () => {
+    it.each([
+        ['203.0.113.7', '203.0.113.7'],
+        ['::ffff:203.0.113.7', '203.0.113.7'],
+        ['::FFFF:cb00:7107', '203.0.113.7'],
+        ['2001:DB8:1:2:3:4:5:6', '2001:db8:1:2::/64'],
+        ['2001:db8:1:2::', '2001:db8:1:2::/64'],
+        ['[2001:db8:1:2::9]', '2001:db8:1:2::/64'],
+        ['fe80::1%eth0', 'fe80:0:0:0::/64'],
+        ['::', '0:0:0:0::/64'],
+    ])('rateLimitKey(%j) is %j', async (ip, expected) => {
+        const { rateLimitKey } = await import('@/lib/support/cloudflare-ips')
+        expect(rateLimitKey(ip)).toBe(expected)
+    })
+
+    it.each(['', 'not-an-ip', '1.2.3', '2001:db8::1::2', '1:2:3:4:5:6:7:8:9'])(
+        'rateLimitKey(%j) is null (unparseable)',
+        async ip => {
+            const { rateLimitKey } =
+                await import('@/lib/support/cloudflare-ips')
+            expect(rateLimitKey(ip)).toBeNull()
+        },
+    )
 })
 
 describe('Cloudflare range matching (T-5466)', () => {

@@ -23,7 +23,10 @@ export function corsHeaders(
     const origin = req.headers.get('origin') ?? ''
     const allowsWildcard = cors.allowedOrigins.includes('*')
     const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
-    if (!allowsWildcard && !allowsOrigin) return {}
+    // Vary: Origin goes on EVERY response once cors is configured, allowed or not:
+    // a shared cache that stored a header-less reply to a disallowed (or
+    // origin-less) request would otherwise serve it to an allowed origin.
+    if (!allowsWildcard && !allowsOrigin) return { Vary: 'Origin' }
 
     // Never send a literal '*' to a browser (Origin present): reflect the matched
     // origin so no route (incl. /files/*, /presign) exposes a bare wildcard. '*'
