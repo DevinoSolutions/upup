@@ -14,10 +14,10 @@ concurrency:
 jobs:
     security-audit:
         # Org reusable audit (DevinoSolutions/.github): pnpm audit + stale-override
-        # check. Pinned to a commit SHA like every other action here. upup stays
+        # check. Tracks the org main branch like every other org caller. upup stays
         # on ubuntu-latest, so the reusable workflow's ubuntu-devino default is
         # overridden.
-        uses: DevinoSolutions/.github/.github/workflows/security-audit.yml@0f0d46183478802c4e1f2bd51580afa48518c1e8
+        uses: DevinoSolutions/.github/.github/workflows/security-audit.yml@main
         with:
             runner: ubuntu-latest
             audit-flags: '--prod'
