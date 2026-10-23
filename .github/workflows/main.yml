@@ -25,10 +25,51 @@ concurrency:
 # (F-787). Do not reintroduce the hardcoded `npm install -g pnpm@x` bootstrap.
 
 jobs:
+    # Docs-only PRs (every changed file is under docs/ or a root-level *.md)
+    # skip the heavy gates below. A workflow-level `paths-ignore` is NOT used
+    # on purpose: a skipped workflow reports no check at all, which would leave
+    # the REQUIRED `Status Check` pending forever. Here the workflow always
+    # runs, this job decides, and Status-Check (if: always()) still reports --
+    # green on a docs-only diff, red if this job itself fails. Fail-open: any
+    # doubt (dispatch, empty or unreadable diff) reports code=true. Keep the
+    # docs-only definition in sync with the LIGHT_DOC rules in
+    # scripts/ci/resolve-affected-tests.mjs.
+    Changes:
+        name: Classify changes
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        outputs:
+            code: ${{ steps.classify.outputs.code }}
+        steps:
+            - name: Checkout the repository (full history for merge-base diff)
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Classify the diff
+              id: classify
+              env:
+                  EVENT: ${{ github.event_name }}
+                  BASE: ${{ github.event.pull_request.base.sha }}
+                  HEAD: ${{ github.event.pull_request.head.sha }}
+              run: |
+                  code=true
+                  if [ "$EVENT" = "pull_request" ]; then
+                    if files=$(git diff --no-renames --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
+                      if ! printf '%s\n' "$files" | grep -qvE '^(docs/|[^/]+\.md$)'; then
+                        code=false
+                      fi
+                    fi
+                  fi
+                  echo "code=$code" >> "$GITHUB_OUTPUT"
+                  echo "code=$code"
+
     Prettier-check:
         name: Prettier Check
         runs-on: ubuntu-latest
         timeout-minutes: 15
+        needs: [Changes]
+        if: needs.Changes.outputs.code == 'true'
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -267,6 +308,8 @@ jobs:
         name: Oxlint (fast lint)
         runs-on: ubuntu-latest
         timeout-minutes: 15
+        needs: [Changes]
+        if: needs.Changes.outputs.code == 'true'
         steps:
             - name: Checkout repo
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -361,6 +404,7 @@ jobs:
         timeout-minutes: 15
         needs:
             [
+                Changes,
                 Prettier-check,
                 Oxlint,
                 Test,
@@ -374,19 +418,35 @@ jobs:
             ]
         if: always()
         steps:
+            # Docs-only PRs (Changes.code == 'false') skip every gate, so a
+            # 'skipped' need is acceptable ONLY then. Otherwise -- and always for
+            # Changes itself -- anything but 'success' (cancelled, failed,
+            # skipped) is red, exactly as before.
             - name: Check status
+              env:
+                  CODE: ${{ needs.Changes.outputs.code }}
+                  RESULTS: >-
+                      ${{ needs.Prettier-check.result }}
+                      ${{ needs.Oxlint.result }}
+                      ${{ needs.Test.result }}
+                      ${{ needs.Build.result }}
+                      ${{ needs.Typecheck.result }}
+                      ${{ needs.Bundle-Size.result }}
+                      ${{ needs.Dependency-Audit.result }}
+                      ${{ needs.Lint.result }}
+                      ${{ needs.Knip.result }}
+                      ${{ needs.Docs-Gate.result }}
               run: |
-                  if [ "${{ needs.Prettier-check.result }}" != "success" ] || \
-                     [ "${{ needs.Oxlint.result }}" != "success" ] || \
-                     [ "${{ needs.Test.result }}" != "success" ] || \
-                     [ "${{ needs.Build.result }}" != "success" ] || \
-                     [ "${{ needs.Typecheck.result }}" != "success" ] || \
-                     [ "${{ needs.Bundle-Size.result }}" != "success" ] || \
-                     [ "${{ needs.Dependency-Audit.result }}" != "success" ] || \
-                     [ "${{ needs.Lint.result }}" != "success" ] || \
-                     [ "${{ needs.Knip.result }}" != "success" ] || \
-                     [ "${{ needs.Docs-Gate.result }}" != "success" ]; then
-                    echo "One or more jobs failed"
+                  if [ "${{ needs.Changes.result }}" != "success" ]; then
+                    echo "Changes classification did not succeed"
                     exit 1
                   fi
-                  echo "All jobs passed successfully"
+                  ok="success"
+                  if [ "$CODE" = "false" ]; then ok="success skipped"; fi
+                  for r in $RESULTS; do
+                    case " $ok " in
+                      *" $r "*) ;;
+                      *) echo "One or more jobs failed ($r)"; exit 1 ;;
+                    esac
+                  done
+                  echo "All jobs passed successfully (code=$CODE)"

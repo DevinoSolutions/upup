@@ -23,6 +23,16 @@ on:
         - cron: '17 3 * * *' # 03:17 UTC daily
     workflow_dispatch:
 
+# One nightly at a time, queued rather than cancelled: the 03:17 cron and a
+# manual dispatch share the group, so an overlap waits its turn instead of two
+# runs fighting over the nightly-failure tracking issue. cancel-in-progress is
+# false -- killing a half-finished full e2e would lose the night's signal and
+# could leave the Nightly-Status issue update undone. (GitHub keeps at most one
+# pending run per group, so a backlog can never build up behind a slow run.)
+concurrency:
+    group: nightly
+    cancel-in-progress: false
+
 jobs:
     E2E-Full:
         name: Full E2E + a11y sweep (Playwright + MinIO)
