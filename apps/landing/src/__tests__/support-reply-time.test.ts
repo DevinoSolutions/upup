@@ -7,6 +7,7 @@ import FAQSection from '@/components/FAQSection'
 import FeedbackSection from '@/components/FeedbackSection'
 import {
     SUPPORT_REPLY_PROMISE,
+    SUPPORT_SUCCESS_REPLY_TEXT,
     SUPPORT_SUCCESS_TEXT,
 } from '@/lib/support/reply-time'
 
@@ -26,12 +27,14 @@ describe('support reply-time promise', () => {
     it('the form states the reply time next to the submit button', () => {
         const markup = html(createElement(SupportForm))
         expect(markup).toContain('data-testid="support-reply-promise"')
-        expect(markup).toContain('A human replies within 1 business day.')
+        expect(markup).toContain('a human replies within 1 business day.')
     })
 
-    it('the confirmation text repeats the promise', () => {
+    it('only promises a reply in the confirmation when one was asked for', () => {
         expect(SUPPORT_SUCCESS_TEXT).toMatch(/we got it/i)
-        expect(SUPPORT_SUCCESS_TEXT).toContain('within 1 business day')
+        expect(SUPPORT_SUCCESS_TEXT).not.toContain('business day')
+        expect(SUPPORT_SUCCESS_REPLY_TEXT).toMatch(/we got it/i)
+        expect(SUPPORT_SUCCESS_REPLY_TEXT).toContain('within 1 business day')
     })
 
     it('home feedback section and FAQ footer line carry it', () => {
@@ -44,8 +47,11 @@ describe('support reply-time promise', () => {
     })
 
     it('stays marketing wording, never a contractual SLA', () => {
-        for (const text of [SUPPORT_REPLY_PROMISE, SUPPORT_SUCCESS_TEXT]) {
-            expect(text).not.toMatch(/sla|guarantee|refund|credit/i)
+        for (const text of [
+            SUPPORT_REPLY_PROMISE,
+            SUPPORT_SUCCESS_REPLY_TEXT,
+        ]) {
+            expect(text).not.toMatch(/(sla|guarantee|refund|credit)/i)
         }
     })
 })
