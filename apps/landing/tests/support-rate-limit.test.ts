@@ -209,6 +209,31 @@ describe('clientIpFromHeaders (T-5466)', () => {
     })
 })
 
+describe('rateLimitKey canonicalisation (T-6186)', () => {
+    it.each([
+        ['203.0.113.7', '203.0.113.7'],
+        ['::ffff:203.0.113.7', '203.0.113.7'],
+        ['::FFFF:cb00:7107', '203.0.113.7'],
+        ['2001:DB8:1:2:3:4:5:6', '2001:db8:1:2::/64'],
+        ['2001:db8:1:2::', '2001:db8:1:2::/64'],
+        ['[2001:db8:1:2::9]', '2001:db8:1:2::/64'],
+        ['fe80::1%eth0', 'fe80:0:0:0::/64'],
+        ['::', '0:0:0:0::/64'],
+    ])('rateLimitKey(%j) is %j', async (ip, expected) => {
+        const { rateLimitKey } = await import('@/lib/support/cloudflare-ips')
+        expect(rateLimitKey(ip)).toBe(expected)
+    })
+
+    it.each(['', 'not-an-ip', '1.2.3', '2001:db8::1::2', '1:2:3:4:5:6:7:8:9'])(
+        'rateLimitKey(%j) is null (unparseable)',
+        async ip => {
+            const { rateLimitKey } =
+                await import('@/lib/support/cloudflare-ips')
+            expect(rateLimitKey(ip)).toBeNull()
+        },
+    )
+})
+
 describe('Cloudflare range matching (T-5466)', () => {
     it.each([
         ['173.245.48.0', true],

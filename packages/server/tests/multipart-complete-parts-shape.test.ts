@@ -66,6 +66,10 @@ describe('multipart/complete validates the parts list (T-6186)', () => {
             { parts: [{ partNumber: 1.5, eTag: 'e' }] },
         ],
         [
+            'a part with a partNumber below 1',
+            { parts: [{ partNumber: 0, eTag: 'e' }] },
+        ],
+        [
             'a part with a non-string eTag',
             { parts: [{ partNumber: 1, eTag: 7 }] },
         ],

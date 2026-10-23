@@ -863,13 +863,13 @@ function isCompletedPartList(
     return (
         Array.isArray(parts) &&
         parts.every(
-            part =>
+            (part: { partNumber?: unknown; eTag?: unknown } | null) =>
                 typeof part === 'object' &&
                 part !== null &&
-                Number.isInteger(
-                    (part as { partNumber?: unknown }).partNumber,
-                ) &&
-                typeof (part as { eTag?: unknown }).eTag === 'string',
+                typeof part.partNumber === 'number' &&
+                Number.isInteger(part.partNumber) &&
+                part.partNumber >= 1 &&
+                typeof part.eTag === 'string',
         )
     )
 }
