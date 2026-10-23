@@ -108,6 +108,30 @@ function contentHashPatch(file: UploadFile, hash: string): Partial<UploadFile> {
     return patch
 }
 
+export interface TransferredFileInfo {
+    name: string
+    size: number
+    type: string
+    key: string
+    url?: string | undefined
+    source: FileSource
+    // `google-drive:<id>`, for duplicate checks.
+    driveId?: string | undefined
+}
+
+// Zero-byte File reporting the real size (own non-enumerable slot).
+function completedBase(
+    info: Pick<TransferredFileInfo, 'name' | 'size' | 'type'>,
+): File {
+    const base = new File([], info.name, { type: info.type })
+    Object.defineProperty(base, 'size', {
+        value: info.size,
+        configurable: true,
+        enumerable: false,
+    })
+    return base
+}
+
 function nativeToUploadFile(
     file: File,
     source: FileSource = FileSource.LOCAL,
@@ -228,6 +252,9 @@ export class FileManager {
         // relativePath is defined non-enumerable (nativeToUploadFile) so it is
         // copied explicitly, exactly as cloneUploadFile does. Then the patch wins.
         Object.assign(next, prev, { relativePath: prev.relativePath }, patch)
+        // addCompleted's real size is a non-enumerable own slot; carry it over.
+        const remoteSize = Object.getOwnPropertyDescriptor(prev, 'size')
+        if (remoteSize) Object.defineProperty(next, 'size', remoteSize)
         const updated = next as UploadFile
         this.files.set(id, updated)
         return updated
@@ -407,6 +434,81 @@ export class FileManager {
             revokeObjectUrl(file)
         }
         this.files.clear()
+    }
+
+    // addFiles' restrictions for an already-stored file; unknown size/type are skipped.
+    checkCompleted(
+        info: Omit<TransferredFileInfo, 'key' | 'source' | 'size' | 'type'> & {
+            size?: number | undefined
+            type?: string | undefined
+        },
+    ): UpupValidationError | null {
+        const probe = completedBase({
+            name: info.name,
+            size: info.size ?? 0,
+            type: info.type ?? '',
+        })
+        const existing = [...this.files.values()]
+        const opts = this.options
+        const isDup =
+            opts.contentDeduplication &&
+            info.driveId !== undefined &&
+            existing.some(
+                f =>
+                    (f.metadata as Record<string, unknown> | undefined)
+                        ?.driveFileId === info.driveId,
+            )
+        const [violation] = isDup
+            ? [
+                  {
+                      code: UpupErrorCode.DUPLICATE as const,
+                      message: `File "${info.name}" was already added`,
+                  },
+              ]
+            : validateFileRestrictions(probe, {
+                  ...opts,
+                  // A type-less file still gets the extension check.
+                  allowedFileTypes:
+                      info.type || opts.allowedFileTypes?.includes('.')
+                          ? opts.allowedFileTypes
+                          : undefined,
+                  ...(info.size === undefined && {
+                      maxFileSize: undefined,
+                      minFileSize: undefined,
+                  }),
+              })
+        if (violation)
+            return new UpupValidationError(
+                violation.message,
+                violation.code,
+                probe,
+            )
+        try {
+            this.assertBatchFits([probe], existing)
+        } catch (err) {
+            // upup-catch: the violation is returned; core emits it.
+            return err as UpupValidationError
+        }
+        return null
+    }
+
+    // Register an already-stored file as a SUCCESSFUL row; upload() skips it (F-810).
+    addCompleted(info: TransferredFileInfo): UploadFile {
+        const file = Object.assign(completedBase(info), {
+            id: generateFileId(),
+            source: info.source,
+            status: UploadStatus.SUCCESSFUL,
+            key: info.key,
+            metadata: {
+                originalSize: info.size,
+                ...(info.driveId !== undefined
+                    ? { driveFileId: info.driveId }
+                    : {}),
+            },
+            ...(info.url !== undefined ? { url: info.url } : {}),
+        }) as UploadFile
+        this.files.set(file.id, file)
+        return file
     }
 
     /** Bulk-apply pipeline-produced files (already UploadFile with status/key set). */

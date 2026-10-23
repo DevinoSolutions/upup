@@ -33,6 +33,8 @@ import { UpupStore } from '../upup-store.service'
 import { ServerModeDriveService } from './server-mode-drive.service'
 import { ServerModeDriveUploaderComponent } from '../components/server-mode-drive-uploader.component'
 import { EmptyIconComponent } from '../components/icons/empty-icon.component'
+import { SourceViewHeaderExtraService } from '../context/source-view-header-extra.service'
+import { UpupCore } from '@useupup/core'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -63,6 +65,7 @@ function makeStoreMock() {
         translations: signal({
             authenticatePrompt: 'Sign in to {{provider}}',
             signInWith: 'Sign in with {{provider}}',
+            logOut: 'Log out',
         }),
         uiProps: {
             icons: {
@@ -378,5 +381,193 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         const secondHandler =
             messageAddCalls[1]![1] as EventListenerOrEventListenerObject
         expect(secondHandler).not.toBe(firstHandler)
+    })
+})
+
+// ── Log out (T-6093) ──────────────────────────────────────────────────────────
+
+describe('ServerModeDriveUploaderComponent — Log out', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+        vi.unstubAllGlobals()
+        TestBed.resetTestingModule()
+    })
+
+    it('POSTs /files/:provider/logout, returns to the selector and never opens the OAuth popup', async () => {
+        const calls: Array<{ url: string; method: string }> = []
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { method?: string }) => {
+                calls.push({ url, method: init?.method ?? 'GET' })
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/logout')) return json(200, { ok: true })
+                return json(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        const open = vi.spyOn(window, 'open').mockReturnValue(null)
+        const headerHost = document.createElement('span')
+        document.body.appendChild(headerHost)
+        const store = makeStoreMock()
+
+        await TestBed.configureTestingModule({
+            imports: [ServerModeDriveUploaderComponent],
+            providers: [
+                { provide: UpupStore, useValue: store },
+                {
+                    provide: SourceViewHeaderExtraService,
+                    useValue: { host: signal(headerHost) },
+                },
+            ],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(
+            ServerModeDriveUploaderComponent,
+        )
+        fixture.componentInstance.provider = 'google-drive'
+        fixture.componentInstance.onBack = () => {}
+        fixture.detectChanges()
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status === 'ready')
+        fixture.detectChanges()
+
+        const logout = headerHost.querySelector('button')
+        expect(logout?.textContent?.trim()).toBe('Log out')
+        logout!.click()
+        await waitFor(() => calls.some(c => c.url.endsWith('/logout')))
+        await waitFor(
+            () =>
+                (store.setActiveSource as ReturnType<typeof vi.fn>).mock.calls
+                    .length > 0,
+        )
+
+        expect(
+            calls.filter(
+                c =>
+                    c.method === 'POST' &&
+                    c.url ===
+                        'http://localhost:53060/files/google-drive/logout',
+            ),
+        ).toHaveLength(1)
+        expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
+        expect(open).not.toHaveBeenCalled()
+        headerHost.remove()
+    })
+
+    it('a failed transfer stays in the view: error shown, list kept, no onBack', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string) => {
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/transfer'))
+                    return json(500, { error: 'boom' })
+                return json(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        const onBack = vi.fn()
+
+        await TestBed.configureTestingModule({
+            imports: [ServerModeDriveUploaderComponent],
+            providers: [{ provide: UpupStore, useValue: makeStoreMock() }],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(
+            ServerModeDriveUploaderComponent,
+        )
+        fixture.componentInstance.provider = 'google-drive'
+        fixture.componentInstance.onBack = onBack
+        fixture.detectChanges()
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status === 'ready')
+        fixture.detectChanges()
+
+        const el = fixture.nativeElement as HTMLElement
+        el.querySelector<HTMLButtonElement>(
+            '[data-upup-slot="drive-browser-item"]',
+        )!.click()
+        fixture.detectChanges()
+        ;[...el.querySelectorAll('button')]
+            .find(b => b.textContent?.includes('Add files'))!
+            .click()
+        await waitFor(() => svc.transferError() !== null)
+        fixture.detectChanges()
+
+        const error = el.querySelector('[data-testid="upup-drive-error"]')
+        expect(error?.getAttribute('role')).toBe('alert')
+        expect(error?.textContent).toContain('boom')
+        expect(
+            el.querySelector('[data-upup-slot="drive-browser-item"]'),
+        ).not.toBeNull()
+        expect(onBack).not.toHaveBeenCalled()
+    })
+
+    it('reports a 2-file selection ONCE with both files (upload-all-complete)', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { body?: string }) => {
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return json(200, {
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 3,
+                        type: 'text/plain',
+                    })
+                }
+                return json(200, {
+                    files: ['a.txt', 'b.txt'].map((name, i) => ({
+                        id: `f${i + 1}`,
+                        name,
+                        isFolder: false,
+                        size: 3,
+                        mimeType: 'text/plain',
+                    })),
+                })
+            }),
+        )
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        const store = Object.assign(makeStoreMock(), { core })
+
+        TestBed.configureTestingModule({
+            providers: [
+                { provide: UpupStore, useValue: store },
+                ServerModeDriveService,
+            ],
+        })
+        const svc = TestBed.inject(ServerModeDriveService)
+        svc.init('google-drive')
+        await waitFor(() => svc.listState().status === 'ready')
+        svc.toggleSelected('f1')
+        svc.toggleSelected('f2')
+
+        expect(await svc.transfer()).toBe(true)
+
+        expect(done).toHaveBeenCalledTimes(1)
+        expect(
+            (done.mock.calls[0]![0] as Array<{ key: string }>)
+                .map(f => f.key)
+                .sort(),
+        ).toEqual(['uploads/f1', 'uploads/f2'])
     })
 })

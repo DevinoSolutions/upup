@@ -82,6 +82,31 @@ export async function handleListFiles(
     }
 }
 
+/**
+ * Disconnect a drive: drop the CALLER's stored tokens for this provider so the
+ * next list/transfer demands a fresh sign-in. Scoped by resolveUserId (same
+ * gate as list/transfer) to exactly one user+provider key; idempotent, so a
+ * second logout (or one with no stored grant) is still 200.
+ */
+export async function handleDriveLogout(
+    req: Request,
+    config: UpupServerConfig,
+    provider: string,
+    res: Responder,
+): Promise<Response> {
+    if (!isValidProvider(provider)) {
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
+    }
+    if (!config.tokenStore)
+        return res.json({ error: 'tokenStore is required' }, 500)
+
+    const userId = await resolveUserId(config, req)
+    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
+
+    await deleteTokens(config.tokenStore, userId, provider)
+    return res.json({ provider, ok: true }, 200)
+}
+
 /** Cancel an open drive stream. Best-effort and idempotent: a stream the
  *  transfer already consumed (locked or closed) rejects, which is fine. */
 async function releaseStream(

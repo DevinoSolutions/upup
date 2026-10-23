@@ -1,9 +1,12 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
 } from '../context/UploaderContext'
+import { SourceViewHeaderExtraContext } from '../context/SourceViewHeaderExtraContext'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -32,15 +35,31 @@ export default function ServerModeDriveUploader({
     onBack,
     'data-upup-slot': dataUpupSlot = `drive-browser-${provider}`,
 }: Readonly<Props>): React.ReactElement | null {
-    const { isDark: dark } = useUploaderTheme()
+    const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
     const {
         icons: { LoaderIcon },
     } = useUploaderOptions()
-    const { translator } = useUploaderI18n()
-    const { state, search, setSearch, refresh, transfer, startAuth } =
-        useServerModeDrive(provider)
+    const { translator, translations: tr } = useUploaderI18n()
+    const { setActiveSource } = useUploaderSource()
+    const headerExtraHost = useContext(SourceViewHeaderExtraContext)
+    const {
+        state,
+        search,
+        setSearch,
+        refresh,
+        transfer,
+        startAuth,
+        signOut,
+        finishTransfers,
+    } = useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [transferring, setTransferring] = useState(false)
+    // A failed transfer stays in this view: its message shows in the same
+    // drive-error slot as a list error and the file list is kept for a retry.
+    const [transferError, setTransferError] = useState<{
+        message: string
+        code?: string | undefined
+    } | null>(null)
 
     if (state.status === 'reauth') {
         return (
@@ -53,6 +72,12 @@ export default function ServerModeDriveUploader({
 
     const isLoading = state.status === 'loading' || state.status === 'idle'
     const files: ServerDriveFile[] = state.status === 'ready' ? state.files : []
+    const shownError = state.status === 'error' ? state : transferError
+    // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+    const navigate = (opts: { folderId?: string; search?: string }) => {
+        setTransferError(null)
+        return refresh(opts)
+    }
 
     const toggle = (id: string) => {
         setSelected(prev => {
@@ -65,6 +90,7 @@ export default function ServerModeDriveUploader({
 
     const handleTransfer = async () => {
         setTransferring(true)
+        setTransferError(null)
         try {
             for (const file of files.filter(f => selected.has(f.id))) {
                 const result = await transfer(file)
@@ -72,10 +98,15 @@ export default function ServerModeDriveUploader({
                     startAuth()
                     return
                 }
+                if (result.status === 'error') {
+                    setTransferError(result)
+                    return
+                }
+                toggle(file.id)
             }
-            setSelected(new Set())
             onBack?.()
         } finally {
+            finishTransfers() // report the finished selection once (any exit path)
             setTransferring(false)
         }
     }
@@ -85,6 +116,43 @@ export default function ServerModeDriveUploader({
             isLoading={isLoading}
             data-upup-slot={dataUpupSlot}
         >
+            {!isLoading && !!headerExtraHost && (
+                // Same account-control slot + button as the client-mode
+                // DriveBrowserHeader, so both modes expose one Log out.
+                <>
+                    {createPortal(
+                        <>
+                            <button
+                                className={cn(
+                                    'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                                    {
+                                        'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
+                                            dark,
+                                    },
+                                    slotClasses.driveLogoutButton,
+                                )}
+                                onClick={() => {
+                                    void signOut().then(ok => {
+                                        if (ok) setActiveSource(undefined)
+                                    })
+                                }}
+                            >
+                                {tr.logOut}
+                            </button>
+                            <span
+                                aria-hidden="true"
+                                className={cn(
+                                    'upup-h-4 upup-w-px',
+                                    dark
+                                        ? 'upup-bg-white/15'
+                                        : 'upup-bg-black/15',
+                                )}
+                            />
+                        </>,
+                        headerExtraHost,
+                    )}
+                </>
+            )}
             {isLoading ? (
                 <LoaderIcon />
             ) : (
@@ -114,7 +182,7 @@ export default function ServerModeDriveUploader({
                             }}
                             onKeyDown={e => {
                                 if (e.key === 'Enter') {
-                                    void refresh({
+                                    void navigate({
                                         search: e.currentTarget.value,
                                     })
                                 }
@@ -129,7 +197,7 @@ export default function ServerModeDriveUploader({
                         />
                     </div>
                     <div className="upup-overflow-auto upup-p-2">
-                        {state.status === 'error' && (
+                        {shownError && (
                             <p
                                 data-testid="upup-drive-error"
                                 data-upup-slot="drive-error"
@@ -141,12 +209,15 @@ export default function ServerModeDriveUploader({
                                         : 'upup-text-red-600',
                                 )}
                             >
-                                {state.code && translator
+                                {shownError.code && translator
                                     ? translator(
-                                          `errors.${errorCodeToMessageKey(state.code)}`,
-                                          { code: state.code },
+                                          `errors.${errorCodeToMessageKey(shownError.code)}`,
+                                          {
+                                              code: shownError.code,
+                                              message: shownError.message,
+                                          },
                                       )
-                                    : state.message}
+                                    : shownError.message}
                             </p>
                         )}
                         {files.map(file => {
@@ -157,7 +228,7 @@ export default function ServerModeDriveUploader({
                                     type="button"
                                     onClick={() => {
                                         file.isFolder
-                                            ? void refresh({
+                                            ? void navigate({
                                                   folderId: file.id,
                                               })
                                             : toggle(file.id)
@@ -231,7 +302,10 @@ export default function ServerModeDriveUploader({
                     >
                         <button
                             type="button"
-                            onClick={onBack}
+                            onClick={() => {
+                                setTransferError(null)
+                                onBack?.()
+                            }}
                             className="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
                         >
                             Cancel

@@ -22,15 +22,18 @@ interface UseServerModeDriveReturn {
     refresh: ServerModeDriveController['refresh']
     transfer: ServerModeDriveController['transfer']
     startAuth: ServerModeDriveController['startAuth']
+    signOut: ServerModeDriveController['signOut']
+    finishTransfers: ServerModeDriveController['finishTransfers']
 }
 
 export function useServerModeDrive(
     provider: ServerModeProvider,
 ): UseServerModeDriveReturn {
-    const { serverUrl } = useUploaderRuntime()
+    const { serverUrl, core } = useUploaderRuntime()
     const controller = new ServerModeDriveController({
         provider,
         serverUrl: () => serverUrl,
+        core: () => core,
     })
 
     const snap = shallowRef(controller.getSnapshot())
@@ -62,6 +65,10 @@ export function useServerModeDrive(
         transfer: file => controller.transfer(file),
         startAuth: () => {
             controller.startAuth()
+        },
+        signOut: () => controller.signOut(),
+        finishTransfers: () => {
+            controller.finishTransfers()
         },
     }
 }

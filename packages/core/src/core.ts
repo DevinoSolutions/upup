@@ -1,4 +1,9 @@
-import { UpupConfigError, UpupError, UpupErrorCode } from './errors'
+import {
+    UpupConfigError,
+    UpupError,
+    UpupErrorCode,
+    type UpupValidationError,
+} from './errors'
 import { createTranslator } from './i18n/create-translator'
 import { enUS } from './i18n/locales/en-US'
 import { resolveLocaleBundle } from './i18n/resolve-locale'
@@ -8,7 +13,7 @@ import { UploadStatus } from './types/upload-status'
 import { EventEmitter } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import { FileManager } from './file-manager'
+import { FileManager, type TransferredFileInfo } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
@@ -281,6 +286,47 @@ export class UpupCore {
 
     get ext(): Record<string, ExtensionMethods> {
         return this.pluginManager.getExtensions()
+    }
+
+    // Check a transferred file's restrictions; a violation is emitted and returned.
+    checkTransferredFile(
+        info: Parameters<FileManager['checkCompleted']>[0],
+    ): UpupValidationError | null {
+        const error = this.fileManager.checkCompleted(info)
+        if (!error) return null
+        if (error.code === (UpupErrorCode.DUPLICATE as string))
+            this.emitter.emit('file-rejected', { count: 1 })
+        else this.emitter.emit('restriction-failed', { error })
+        return error
+    }
+
+    /** Public by design: register an already-stored file (drive transfer) as a completed row. */
+    addTransferredFile(info: TransferredFileInfo): UploadFile | undefined {
+        if (this.destroyed)
+            throw new UpupError(
+                'UpupCore: addTransferredFile() after destroy()',
+                UpupErrorCode.BAD_REQUEST,
+            )
+        if (this.checkTransferredFile(info)) return undefined
+        const file = this.fileManager.addCompleted(info)
+        this.emitter.emit('files-added', [file])
+        this.emitter.emit('upload-success', {
+            file,
+            result: {
+                key: info.key,
+                ...(info.url !== undefined ? { downloadUrl: info.url } : {}),
+            },
+        })
+        const allComplete = [...this.files.values()].every(f => f.key != null)
+        if (allComplete) {
+            this._status = UploadStatus.SUCCESSFUL
+            this._error = null
+        }
+        this.emitter.emit('state-change', {
+            files: this.files,
+            ...(allComplete && { status: this._status }),
+        })
+        return file
     }
 
     async addFiles(

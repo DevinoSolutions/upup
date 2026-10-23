@@ -1,4 +1,6 @@
 import { UpupNetworkError } from '../errors'
+import { FileSource } from '../types/file-source'
+import type { UpupCore } from '../core'
 import type { ObservableController } from './types'
 
 export type ServerModeProvider =
@@ -36,6 +38,37 @@ export interface ServerModeDriveDeps {
     provider: ServerModeProvider
     /** Getter so the controller never reads a runtime global at construction. */
     serverUrl: () => string | undefined
+    /** Owning core; a successful transfer registers the stored file on it. */
+    core?:
+        | (() =>
+              | Pick<
+                    UpupCore,
+                    | 'addTransferredFile'
+                    | 'checkTransferredFile'
+                    | 'emit'
+                    | 'files'
+                >
+              | null
+              | undefined)
+        | undefined
+}
+
+// The `{error}` of a JSON error body, else the raw text, else the status.
+function errorText(text: string, status: number): string {
+    try {
+        const body = JSON.parse(text) as { error?: unknown } | null
+        if (typeof body?.error === 'string') return body.error
+    } catch {
+        // upup-catch: a non-JSON body is shown as-is.
+    }
+    return text || `${status}`
+}
+
+const PROVIDER_SOURCE: Record<ServerModeProvider, FileSource> = {
+    'google-drive': FileSource.GOOGLE_DRIVE,
+    'one-drive': FileSource.ONE_DRIVE,
+    dropbox: FileSource.DROPBOX,
+    box: FileSource.BOX,
 }
 
 export class ServerModeDriveController implements ObservableController<ServerDriveSnapshot> {
@@ -53,6 +86,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         this.refresh = this.refresh.bind(this)
         this.transfer = this.transfer.bind(this)
         this.startAuth = this.startAuth.bind(this)
+        this.signOut = this.signOut.bind(this)
     }
 
     subscribe = (listener: () => void): (() => void) => {
@@ -154,6 +188,15 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 status: 'error',
                 message: 'Server Mode requires `serverUrl` prop',
             }
+        // Restrictions are checked BEFORE the round-trip so a rejected file is
+        // never stored. No `code`: the views would show a generic message.
+        const violation = this.deps.core?.()?.checkTransferredFile({
+            name: file.name,
+            size: file.size,
+            type: file.mimeType,
+            driveId: this.driveId(file),
+        })
+        if (violation) return { status: 'error', message: violation.message }
         try {
             const res = await fetch(
                 `${serverUrl}/files/${this.deps.provider}/transfer`,
@@ -185,15 +228,103 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             }
             if (!res.ok) {
                 const text = await res.text().catch(() => '')
-                return { status: 'error', message: text || `${res.status}` }
+                return {
+                    status: 'error',
+                    message: errorText(text, res.status),
+                }
             }
             const result: unknown = await res.json()
+            try {
+                // Stored, but the real size/type may break a restriction.
+                const rejected = this.registerTransferred(file, result)
+                if (rejected) return { status: 'error', message: rejected }
+                this.transferred++
+            } catch (err) {
+                // upup-catch: stored, but core can't take the row (destroyed
+                // mid-transfer): still ok, reported not swallowed.
+                console.warn(
+                    'upup: transferred file stored but not registered on core',
+                    err,
+                )
+            }
             return { status: 'ok', result }
         } catch (err) {
             // upup-catch: transfer failures are returned to the caller as a typed
             // { status: 'error' } result (surfaced in the UI), not swallowed.
             return { status: 'error', message: (err as Error).message }
         }
+    }
+
+    // Files registered since the last finishTransfers().
+    private transferred = 0
+
+    // End of a selection: report the completed set ONCE, like a normal run
+    // (upload-all-complete with every file), not once per transferred file.
+    finishTransfers(): void {
+        const core = this.deps.core?.()
+        if (!core || !this.transferred) return
+        this.transferred = 0
+        const all = [...core.files.values()]
+        if (all.every(f => f.key != null)) core.emit('upload-all-complete', all)
+    }
+
+    private driveId(file: ServerDriveFile): string {
+        return `${this.deps.provider}:${file.id}`
+    }
+
+    // Register the stored file on core; returns the restriction message if refused.
+    private registerTransferred(
+        file: ServerDriveFile,
+        result: unknown,
+    ): string | null {
+        const core = this.deps.core?.()
+        const r = result as
+            | {
+                  key?: string
+                  name?: string
+                  size?: number
+                  type?: string
+                  url?: string
+              }
+            | null
+            | undefined
+        if (!core || !r || typeof r.key !== 'string') return null
+        const info = {
+            name: r.name ?? file.name,
+            size: r.size ?? file.size ?? 0,
+            type: r.type ?? file.mimeType ?? '',
+            key: r.key,
+            url: r.url,
+            source: PROVIDER_SOURCE[this.deps.provider],
+            driveId: this.driveId(file),
+        }
+        const violation = core.checkTransferredFile(info)
+        if (violation) return violation.message
+        core.addTransferredFile(info)
+        return null
+    }
+
+    // Drop THIS user's server-held tokens. True on success, snapshot untouched:
+    // the caller leaves the view (not `requestReauth()`, whose view auto-opens
+    // the OAuth popup). Failure shows the error view and resolves false.
+    async signOut(): Promise<boolean> {
+        const serverUrl = this.deps.serverUrl()
+        if (!serverUrl) return false
+        try {
+            const res = await fetch(
+                `${serverUrl}/files/${this.deps.provider}/logout`,
+                { method: 'POST', credentials: 'include' },
+            )
+            // 401: no session to drop - already logged out.
+            if (res.ok || res.status === 401) return true
+            const text = await res.text().catch(() => '')
+            this.setError(errorText(text, res.status))
+        } catch (err) {
+            // upup-catch: a failed disconnect is surfaced via the 'error' list
+            // state (rendered in the drive browser), not swallowed.
+            this.setError((err as Error).message)
+        }
+        return false
     }
 
     startAuth(): void {
