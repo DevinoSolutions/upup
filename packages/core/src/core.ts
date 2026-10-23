@@ -284,12 +284,7 @@ export class UpupCore {
         return this.pluginManager.getExtensions()
     }
 
-    /**
-     * Surface a file that was already placed in storage server-side (a
-     * server-mode cloud-drive transfer) as a completed entry. When every file
-     * in the list is complete the run status flips to SUCCESSFUL, so the UI
-     * shows the same completed state as a client-mode upload.
-     */
+    /** Surface a file already stored server-side (server-mode drive transfer) as a completed row. */
     addTransferredFile(info: {
         name: string
         size: number
