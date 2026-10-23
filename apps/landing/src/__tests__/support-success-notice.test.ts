@@ -1,5 +1,10 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { resolveSuccessNotice } from '@/lib/support/success-notice'
+import {
+    interpretSupportResponse,
+    resolveSuccessNotice,
+} from '@/lib/support/success-notice'
 import {
     SUPPORT_SUCCESS_REPLY_TEXT,
     SUPPORT_SUCCESS_TEXT,
@@ -34,5 +39,79 @@ describe('resolveSuccessNotice', () => {
             expect(result.text).toBe(SUPPORT_SUCCESS_TEXT)
             expect(result.warning).toBeUndefined()
         }
+    })
+})
+
+describe('interpretSupportResponse', () => {
+    const landed = (email: 'ok' | 'failed' | 'not_configured') => ({
+        ok: true,
+        email,
+    })
+
+    it('turns a 200 whose email leg landed into the reply-promise success', () => {
+        expect(
+            interpretSupportResponse({
+                httpOk: true,
+                body: landed('ok'),
+                wantsReply: true,
+            }),
+        ).toEqual({ kind: 'success', text: SUPPORT_SUCCESS_REPLY_TEXT })
+    })
+
+    it('takes wantsReply and the email leg from the right inputs (swapped or hardcoded values change the outcome)', () => {
+        const success = (wantsReply: boolean, email: 'ok' | 'failed') => {
+            const outcome = interpretSupportResponse({
+                httpOk: true,
+                body: landed(email),
+                wantsReply,
+            })
+            if (outcome.kind !== 'success') throw new Error('expected success')
+            return outcome
+        }
+        expect(success(true, 'ok').text).toBe(SUPPORT_SUCCESS_REPLY_TEXT)
+        expect(success(false, 'ok').text).toBe(SUPPORT_SUCCESS_TEXT)
+        expect(success(true, 'failed').text).toBe(SUPPORT_SUCCESS_TEXT)
+        expect(success(true, 'failed').warning).toBeDefined()
+        expect(success(false, 'failed').warning).toBeUndefined()
+    })
+
+    it('is a failure for a non-2xx, a missing body, or ok:false', () => {
+        const failure = { kind: 'failure' }
+        expect(
+            interpretSupportResponse({
+                httpOk: false,
+                body: landed('ok'),
+                wantsReply: true,
+            }),
+        ).toEqual(failure)
+        expect(
+            interpretSupportResponse({
+                httpOk: true,
+                body: null,
+                wantsReply: true,
+            }),
+        ).toEqual(failure)
+        expect(
+            interpretSupportResponse({
+                httpOk: true,
+                body: { ok: false, email: 'failed' },
+                wantsReply: true,
+            }),
+        ).toEqual(failure)
+    })
+
+    it('SupportForm hands the submitted wantsReply and the response body to it', () => {
+        // The form needs a DOM to render and this suite runs in node, so pin
+        // the wiring at the call site: the live state and the parsed body,
+        // never literals.
+        const source = readFileSync(
+            fileURLToPath(
+                new URL('../app/support/SupportForm.tsx', import.meta.url),
+            ),
+            'utf8',
+        )
+        expect(source).toMatch(
+            /interpretSupportResponse\(\{\s*httpOk: res\.ok,\s*body,\s*wantsReply,?\s*\}\)/,
+        )
     })
 })

@@ -434,17 +434,21 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         payload({ wantsReply: true, email: 'dev@example.com', ...over })
 
     /** Sendly stub whose confirmation sends (idempotency key `<id>:confirm`) are handled by `onConfirm`. */
-    const stubSendly = (onConfirm: () => Response | Promise<Response>) =>
+    const stubSendly = (
+        onConfirm: (init: RequestInit) => Response | Promise<Response>,
+        onNotify: () => Response = () => new Response('{}', { status: 202 }),
+    ) =>
         h.fetchMock.mockImplementation(
             async (_url: string, init: RequestInit) => {
                 const key = (init.headers as Record<string, string>)[
                     'idempotency-key'
                 ]
-                return key.endsWith(':confirm')
-                    ? onConfirm()
-                    : new Response('{}', { status: 202 })
+                return key.endsWith(':confirm') ? onConfirm(init) : onNotify()
             },
         )
+
+    const LONE_SURROGATE =
+        /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
 
     it('sends the submitter one confirmation with their id, an escaped echo and the reply promise', async () => {
         const POST = await loadRoute(ENABLED_ENV)
@@ -490,15 +494,36 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         expect(html).toContain('line1<br>')
     })
 
-    it('truncates a long echoed message to 2000 characters with an ellipsis', async () => {
+    it('echoes only a 500-character excerpt of a long message, with an ellipsis', async () => {
         const POST = await loadRoute(ENABLED_ENV)
         await POST(makeRequest(withEmail({ message: 'a'.repeat(4500) })))
 
         const html = sentMail(1).body.body
-        expect(html).toContain('a'.repeat(2000) + '…')
-        expect(html).not.toContain('a'.repeat(2001))
+        expect(html).toContain('a'.repeat(500) + '…')
+        expect(html).not.toContain('a'.repeat(501))
         // The team notification keeps the full text.
         expect(sentMail(0).body.body).toContain('a'.repeat(4500))
+    })
+
+    it('cuts the excerpt on a code point, never splitting a surrogate pair', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        // Odd-length lead so a UTF-16 slice would land inside a pair.
+        await POST(makeRequest(withEmail({ message: 'x' + '😀'.repeat(600) })))
+
+        const html = sentMail(1).body.body
+        expect(html).toContain('x' + '😀'.repeat(499) + '…')
+        expect(html).not.toContain('😀'.repeat(500))
+        expect(LONE_SURROGATE.test(html)).toBe(false)
+    })
+
+    it('truncates before escaping, so the cut never lands inside an entity', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        await POST(makeRequest(withEmail({ message: '<'.repeat(600) })))
+
+        const html = sentMail(1).body.body
+        expect(html).toContain('&lt;'.repeat(500) + '…')
+        expect(html).not.toContain('&lt;'.repeat(501))
+        expect(html).not.toMatch(/&(?!lt;|amp;|gt;|quot;|#)/)
     })
 
     it('echoes a short message whole, with no ellipsis', async () => {
@@ -611,14 +636,25 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         expect(retry.confirmation).toBe('ok')
     })
 
-    it('reports a non-2xx confirmation as failed without failing the request', async () => {
-        vi.spyOn(console, 'error').mockImplementation(() => {})
-        stubSendly(() => new Response('{"code":"forbidden"}', { status: 403 }))
+    it('reports a non-2xx confirmation as failed, logging the status code but never the response body', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+        // Sendly's error body can echo the (third-party) recipient.
+        stubSendly(
+            () =>
+                new Response('{"to":"dev@example.com","code":"forbidden"}', {
+                    status: 403,
+                }),
+        )
         const POST = await loadRoute(ENABLED_ENV)
         const res = await POST(makeRequest(withEmail()))
         const body = await res.json()
         expect(res.status).toBe(200)
         expect(body.confirmation).toBe('failed')
+
+        const logged = JSON.stringify(errorSpy.mock.calls)
+        expect(logged).toContain('403')
+        expect(logged).not.toContain('dev@example.com')
+        expect(logged).not.toContain('forbidden')
     })
 
     it('does not confirm a submission that was recorded nowhere', async () => {
@@ -652,6 +688,138 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         const res = await POST(makeRequest(withEmail({ website: 'spam-bot' })))
         expect((await res.json()).confirmation).toBe('skipped')
         expect(h.fetchMock).not.toHaveBeenCalled()
+    })
+
+    it('sends no confirmation when no reply was asked for, even with an address', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(withEmail({ wantsReply: false })))
+        const body = await res.json()
+
+        expect(res.status).toBe(200)
+        expect(body.confirmation).toBe('skipped')
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('skips the homepage Notify-me type entirely, without spending the address allowance', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const notify = await (
+            await POST(makeRequest(withEmail({ type: 'provider_notify' })))
+        ).json()
+        expect(notify.confirmation).toBe('skipped')
+        expect(h.fetchMock).toHaveBeenCalledTimes(1)
+
+        // Same address, a real support request: still gets its confirmation.
+        const support = await (await POST(makeRequest(withEmail()))).json()
+        expect(support.confirmation).toBe('ok')
+    })
+
+    it('confirms receipt without the reply-time promise when the team email leg failed', async () => {
+        vi.spyOn(console, 'error').mockImplementation(() => {})
+        stubSendly(
+            () => new Response('{}', { status: 202 }),
+            () => new Response('{}', { status: 500 }),
+        )
+        const POST = await loadRoute(ENABLED_ENV)
+        const res = await POST(makeRequest(withEmail()))
+        const body = await res.json()
+
+        // PostHog landed, so the request is recorded, but nobody was mailed.
+        expect(res.status).toBe(200)
+        expect(body.email).toBe('failed')
+        expect(body.confirmation).toBe('ok')
+        const html = sentMail(1).body.body
+        expect(html).toContain('we received your message')
+        expect(html).not.toContain('business day')
+        expect(html).not.toContain(SUPPORT_CONFIRMATION_REPLY_LINE)
+    })
+
+    it('mails at most 2 confirmations per client IP per hour, across different addresses', async () => {
+        const POST = await loadRoute(ENABLED_ENV)
+        const send = async (email: string, ip: string) =>
+            (
+                await POST(
+                    makeRequest(withEmail({ email }), {
+                        'x-forwarded-for': ip,
+                    }),
+                )
+            ).json()
+
+        const a = await send('a@example.com', '203.0.113.10')
+        const b = await send('b@example.com', '203.0.113.10')
+        const c = await send('c@example.com', '203.0.113.10')
+        const other = await send('d@example.com', '203.0.113.99')
+
+        expect([a, b, c, other].map(r => r.confirmation)).toEqual([
+            'ok',
+            'ok',
+            'throttled',
+            'ok',
+        ])
+        // The over-budget request is still recorded and notified.
+        expect(c.ok).toBe(true)
+        expect(c.email).toBe('ok')
+        // 4 team notifications + 3 confirmations.
+        expect(h.fetchMock).toHaveBeenCalledTimes(7)
+        // The throttled address kept its allowance for a later request.
+        const later = await send('c@example.com', '203.0.113.77')
+        expect(later.confirmation).toBe('ok')
+    })
+
+    it('aborts the confirmation send after 5 seconds instead of holding the response', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+        try {
+            vi.spyOn(console, 'error').mockImplementation(() => {})
+            let signal: AbortSignal | undefined
+            stubSendly(init => {
+                signal = init.signal as AbortSignal
+                return new Promise<Response>((_resolve, reject) => {
+                    signal?.addEventListener('abort', () =>
+                        reject(new Error('aborted')),
+                    )
+                })
+            })
+            const POST = await loadRoute(ENABLED_ENV)
+            const pending = POST(makeRequest(withEmail()))
+            // Flush microtasks (no virtual time) until the send is in flight.
+            for (let tick = 0; tick < 100 && !signal; tick++) {
+                await vi.advanceTimersByTimeAsync(0)
+            }
+            expect(signal).toBeDefined()
+
+            await vi.advanceTimersByTimeAsync(4_999)
+            expect(signal?.aborted).toBe(false)
+            await vi.advanceTimersByTimeAsync(1)
+            expect(signal?.aborted).toBe(true)
+
+            const res = await pending
+            const body = await res.json()
+            expect(res.status).toBe(200)
+            expect(body.confirmation).toBe('failed')
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('replays a retry that lands while the confirmation is still in flight, without a second send', async () => {
+        let release: (res: Response) => void = () => {}
+        stubSendly(
+            () =>
+                new Promise<Response>(resolve => {
+                    release = resolve
+                }),
+        )
+        const POST = await loadRoute(ENABLED_ENV)
+        const req = withEmail()
+        const first = POST(makeRequest(req))
+        // Notification sent, confirmation request now in flight.
+        await vi.waitFor(() => expect(h.fetchMock).toHaveBeenCalledTimes(2))
+
+        const retry = await POST(makeRequest(req))
+        expect(retry.status).toBe(200)
+        expect(h.fetchMock).toHaveBeenCalledTimes(2)
+
+        release(new Response('{}', { status: 202 }))
+        expect((await (await first).json()).confirmation).toBe('ok')
     })
 })
 

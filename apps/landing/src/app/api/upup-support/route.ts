@@ -6,7 +6,9 @@ import {
 } from '@/lib/analytics/contract.server'
 import { serverDatasetCredentials } from '@/lib/analytics/dataset.server'
 import {
+    releaseConfirmationBudget,
     releaseConfirmationSlot,
+    takeConfirmationBudget,
     takeConfirmationSlot,
 } from '@/lib/support/confirmation-throttle'
 import { sendSupportConfirmation, sendSupportEmail } from '@/lib/support/email'
@@ -198,54 +200,76 @@ export async function POST(req: Request): Promise<Response> {
     // 5 — 200 when at least one leg landed; 502 when nothing was recorded.
     const ok = posthog === 'ok' || email === 'ok'
 
-    // 6 — confirm receipt to the submitter, only for a submission that landed
-    // somewhere (never "we got it" for a request recorded nowhere). Best
-    // effort: it can neither fail the request nor change `ok`.
-    const confirmation = ok
-        ? await confirmToSubmitter(feedbackId, data.email, data.message)
-        : 'skipped'
-
-    const body: SupportResponse = {
+    // Remember the handled request BEFORE the confirmation goes out: a client
+    // retry that lands while it is in flight replays this (confirmation
+    // `skipped`: it is not this request's to report yet) instead of re-running
+    // the legs. Re-remembered below once the real status is known.
+    const handled: SupportResponse = {
         ok,
         feedbackId,
         posthog,
         email,
-        confirmation,
+        confirmation: 'skipped',
     }
+    if (ok) rememberProcessed(feedbackId, handled)
+
+    // 6 — confirm receipt to the submitter. Only when they asked for a reply
+    // (the homepage Notify-me type never gets one) and the request landed
+    // somewhere (never "we got it" for a request recorded nowhere). Best
+    // effort: it can neither fail the request nor change `ok`.
+    const confirmation =
+        ok && data.wantsReply && data.type !== 'provider_notify' && data.email
+            ? await confirmToSubmitter({
+                  feedbackId,
+                  email: data.email,
+                  message: data.message,
+                  ip,
+                  // The reply-time promise is only honest when the team was
+                  // actually mailed (same rule as the form's success text).
+                  promiseReply: email === 'ok',
+              })
+            : 'skipped'
+
+    const body: SupportResponse = { ...handled, confirmation }
     if (ok) rememberProcessed(feedbackId, body)
     return json(body, ok ? 200 : 502)
 }
 
 /**
- * Mail the submitter a confirmation, at most once per address per throttle
- * window (the form takes any address, so an unthrottled echo would be a spam
- * relay). A send that did not go out hands the allowance back. Never throws.
+ * Mail the submitter a confirmation, inside every abuse limit (the form takes
+ * any address, so an unguarded echo would be a spam relay): once per address per
+ * 24h, 2 per client IP per hour, 200 per UTC day overall. A request that is over
+ * a limit, or whose send did not go out, spends none of the allowances. Never
+ * throws (`sendSupportConfirmation` maps every failure to a status).
  */
-async function confirmToSubmitter(
-    feedbackId: string,
-    email: string | undefined,
-    message: string,
-): Promise<SupportResponse['confirmation']> {
-    if (!email) return 'skipped'
+async function confirmToSubmitter(args: {
+    feedbackId: string
+    email: string
+    message: string
+    ip: string
+    promiseReply: boolean
+}): Promise<SupportResponse['confirmation']> {
+    const { feedbackId, email, message, ip, promiseReply } = args
     if (!takeConfirmationSlot(email)) {
         console.info(`[support] confirmation throttled for ${feedbackId}`)
         return 'throttled'
     }
-    try {
-        const status = await sendSupportConfirmation({
-            feedbackId,
-            email,
-            message,
-        })
-        if (status !== 'ok') releaseConfirmationSlot(email)
-        return status
-    } catch (error) {
+    if (!takeConfirmationBudget(ip)) {
         releaseConfirmationSlot(email)
-        console.error(
-            `[support] confirmation errored for ${feedbackId}: ${String(error)}`,
-        )
-        return 'failed'
+        console.info(`[support] confirmation over budget for ${feedbackId}`)
+        return 'throttled'
     }
+    const status = await sendSupportConfirmation({
+        feedbackId,
+        email,
+        message,
+        promiseReply,
+    })
+    if (status !== 'ok') {
+        releaseConfirmationSlot(email)
+        releaseConfirmationBudget(ip)
+    }
+    return status
 }
 
 function rejected(): SupportResponse {

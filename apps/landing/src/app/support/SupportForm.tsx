@@ -11,10 +11,10 @@ import {
 import { SUPPORT_REPLY_SHORT } from '@/lib/support/reply-time'
 import {
     SUPPORT_FORM_TYPES,
-    type EmailLegStatus,
     type SupportFormType,
+    type SupportResponse,
 } from '@/lib/support/schema'
-import { resolveSuccessNotice } from '@/lib/support/success-notice'
+import { interpretSupportResponse } from '@/lib/support/success-notice'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
 
@@ -23,13 +23,6 @@ type FormStatus = 'idle' | 'submitting' | 'error'
 // toast() calls into a mounted container, and a support form's outcome should
 // persist on screen anyway rather than auto-dismiss.
 type Notice = SupportNotice
-
-interface SupportResponseBody {
-    ok: boolean
-    feedbackId: string
-    posthog: 'ok' | 'failed' | 'skipped'
-    email: EmailLegStatus
-}
 
 const TYPE_LABELS: Record<SupportFormType, string> = {
     problem: 'Report a problem',
@@ -122,9 +115,14 @@ export default function SupportForm() {
             })
             const body = (await res
                 .json()
-                .catch(() => null)) as SupportResponseBody | null
+                .catch(() => null)) as SupportResponse | null
 
-            if (res.ok && body?.ok) onSuccess(body)
+            const outcome = interpretSupportResponse({
+                httpOk: res.ok,
+                body,
+                wantsReply,
+            })
+            if (outcome.kind === 'success') onSuccess(outcome)
             else onFailure()
         } catch {
             onFailure()
@@ -133,11 +131,16 @@ export default function SupportForm() {
         }
     }
 
-    const onSuccess = (body: SupportResponseBody) => {
+    const onSuccess = ({
+        text,
+        warning,
+    }: {
+        text: string
+        warning?: string
+    }) => {
         // Analytics failure is internal (already logged server-side); the user
         // still succeeded. But a wanted reply that could not be delivered gets
         // a heads-up instead of the reply-time promise.
-        const { text, warning } = resolveSuccessNotice(wantsReply, body.email)
         setNotice({ kind: 'success', text })
         if (warning) setWarning(warning)
         setType('problem')
