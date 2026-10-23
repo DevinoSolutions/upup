@@ -43,11 +43,15 @@ function showDeveloperHint(): boolean {
     }
 }
 
-/** Visitor-facing detail: drop URLs and host:port so internal hosts don't show. */
-function visitorDetail(detail: string): string {
-    return detail
-        .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, '[host]')
-        .replace(/\b[\w.-]+:\d{2,5}\b/g, '[host]')
+/**
+ * What a public visitor is told went wrong: a fixed phrase by failure kind, never
+ * upstream text (which can carry internal hosts). Developers and Sentry get the
+ * real detail.
+ */
+function visitorReason(e: unknown): string {
+    if (e instanceof EmptyReplyError) return e.message
+    if (e instanceof StreamErrorChunk) return 'the assistant returned an error'
+    return 'the assistant service could not be reached'
 }
 
 type ChatRole = 'user' | 'assistant'
@@ -106,6 +110,9 @@ type UseMastraChatOptions = {
      */
     onAssistantError?: ((info: AssistantErrorInfo) => void) | undefined
 }
+
+/** The stream carried an upstream `error` chunk. */
+class StreamErrorChunk extends Error {}
 
 /** The stream finished cleanly but the agent produced no usable text. */
 class EmptyReplyError extends Error {
@@ -348,7 +355,8 @@ export function useMastraChat({
                 })
 
                 if (!isCurrent()) return
-                if (streamError !== null) throw new Error(streamError)
+                if (streamError !== null)
+                    throw new StreamErrorChunk(streamError)
                 // A stream that ends with no text and no error chunk would
                 // otherwise land as a blank bubble. A turn that applied a
                 // patch is a real answer (the chips are the reply), so only a
@@ -366,8 +374,9 @@ export function useMastraChat({
             } catch (e: unknown) {
                 if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
-                const friendly = `AI assistant is unavailable (${visitorDetail(detail)}). ${
-                    showDeveloperHint()
+                const developer = showDeveloperHint()
+                const friendly = `AI assistant is unavailable (${developer ? detail : visitorReason(e)}). ${
+                    developer
                         ? AGENT_UNAVAILABLE_HINT
                         : AGENT_UNAVAILABLE_VISITOR_LINE
                 }`

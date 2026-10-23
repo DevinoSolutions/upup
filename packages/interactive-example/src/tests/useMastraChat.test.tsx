@@ -703,20 +703,25 @@ describe('useMastraChat failure visibility', () => {
 
     it('shows visitors a plain unavailable line, not the developer hint', async () => {
         vi.stubGlobal('location', { hostname: 'useupup.com' })
-        sdk.chunks = []
-        const { result, onAssistantError } = setup('https://agents.useupup.com')
+        try {
+            sdk.chunks = []
+            const { result, onAssistantError } = setup(
+                'https://agents.useupup.com',
+            )
 
-        await act(async () => result.current.send(PROMPT))
+            await act(async () => result.current.send(PROMPT))
 
-        const turn = result.current.messages[1]
-        expect(turn?.error).toBe(true)
-        expect(turn?.text).toContain('AI assistant is unavailable')
-        expect(turn?.text).toContain('Please try again in a moment.')
-        expect(turn?.text).not.toContain('pnpm')
-        expect(turn?.text).not.toContain('OPENROUTER_API_KEY')
-        expect(result.current.error).not.toContain('localhost:4111')
-        expect(onAssistantError).toHaveBeenCalledTimes(1)
-        vi.unstubAllGlobals()
+            const turn = result.current.messages[1]
+            expect(turn?.error).toBe(true)
+            expect(turn?.text).toContain('AI assistant is unavailable')
+            expect(turn?.text).toContain('Please try again in a moment.')
+            expect(turn?.text).not.toContain('pnpm')
+            expect(turn?.text).not.toContain('OPENROUTER_API_KEY')
+            expect(result.current.error).not.toContain('localhost:4111')
+            expect(onAssistantError).toHaveBeenCalledTimes(1)
+        } finally {
+            vi.unstubAllGlobals()
+        }
     })
 
     it.each(['localhost', '127.0.0.1', '[::1]'])(
@@ -758,32 +763,78 @@ describe('useMastraChat failure visibility', () => {
         },
     )
 
-    it('strips URLs and host:port from the visitor-facing detail but not from the report', async () => {
+    it.each([
+        'ECONNREFUSED http://mastra:4111/api/x via 10.0.0.5:4111',
+        'getaddrinfo ENOTFOUND mastra',
+    ])(
+        'tells visitors a fixed reason, never upstream text (%s)',
+        async message => {
+            vi.stubGlobal('location', { hostname: 'useupup.com' })
+            try {
+                sdk.chunks = [
+                    { type: 'error', payload: { error: { message } } },
+                ]
+                const { result, onAssistantError } = setup()
+
+                await act(async () => result.current.send(PROMPT))
+
+                const text = result.current.messages[1]?.text ?? ''
+                expect(text).toContain(
+                    'AI assistant is unavailable (the assistant returned an error).',
+                )
+                for (const leak of ['mastra', '10.0.0.5', '4111', 'ECONN'])
+                    expect(text).not.toContain(leak)
+                expect(onAssistantError.mock.calls[0]![0].message).toContain(
+                    'mastra',
+                )
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        },
+    )
+
+    it('keeps the empty-reply reason for visitors', async () => {
         vi.stubGlobal('location', { hostname: 'useupup.com' })
         try {
-            sdk.chunks = [
-                {
-                    type: 'error',
-                    payload: {
-                        error: {
-                            message:
-                                'ECONNREFUSED http://mastra:4111/api/x via 10.0.0.5:4111',
-                        },
-                    },
-                },
-            ]
-            const { result, onAssistantError } = setup()
-
+            sdk.chunks = []
+            const { result } = setup()
             await act(async () => result.current.send(PROMPT))
-
-            const text = result.current.messages[1]?.text ?? ''
-            expect(text).toContain('ECONNREFUSED')
-            expect(text).not.toContain('mastra:4111')
-            expect(text).not.toContain('10.0.0.5')
-            expect(onAssistantError.mock.calls[0]![0].message).toContain(
-                'mastra:4111',
+            expect(result.current.messages[1]?.text).toContain(
+                '(the assistant returned an empty reply)',
             )
         } finally {
+            vi.unstubAllGlobals()
+        }
+    })
+
+    it('shows no hint when reading the page location throws', async () => {
+        vi.stubGlobal('location', {
+            get hostname(): string {
+                throw new Error('no location')
+            },
+        })
+        vi.stubEnv('NODE_ENV', '')
+        try {
+            sdk.chunks = []
+            const { result } = setup()
+            await act(async () => result.current.send(PROMPT))
+            expect(result.current.messages[1]?.text).not.toContain('pnpm')
+        } finally {
+            vi.unstubAllEnvs()
+            vi.unstubAllGlobals()
+        }
+    })
+
+    it('shows no hint on a public host when NODE_ENV is unset', async () => {
+        vi.stubGlobal('location', { hostname: 'useupup.com' })
+        vi.stubEnv('NODE_ENV', '')
+        try {
+            sdk.chunks = []
+            const { result } = setup()
+            await act(async () => result.current.send(PROMPT))
+            expect(result.current.messages[1]?.text).not.toContain('pnpm')
+        } finally {
+            vi.unstubAllEnvs()
             vi.unstubAllGlobals()
         }
     })
