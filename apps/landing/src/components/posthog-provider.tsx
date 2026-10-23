@@ -7,15 +7,12 @@ import {
     e2eSuperProperties,
     readE2ETestContext,
 } from '@/lib/analytics/dataset'
-import {
-    isMarketingLandingPath,
-    isOAuthRedirectPath,
-} from '@/lib/analytics/landing-routes'
+import { analyticsBootMode } from '@/lib/analytics/landing-routes'
 import { setPostHogClient } from '@/lib/analytics/posthog-client'
 import {
+    POSTHOG_REPLAY_SAMPLE_RATE,
     REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
-    REPLAY_SESSION_SAMPLE_RATE,
 } from '@/lib/analytics/replay'
 import { bootSentry } from '@/lib/analytics/sentry'
 import {
@@ -27,16 +24,17 @@ import {
 // across client-side navigations (the provider lives in the root layout).
 let bootStarted = false
 
-// Where a deferred landing visit started, so its $pageview is still recorded if
-// the visitor navigates away before PostHog has booted.
+// Where a deferred landing/docs visit started, so its $pageview is still
+// recorded if the visitor navigates away before PostHog has booted.
 let deferredEntry: { href: string; pathname: string; at: Date } | null = null
 
-// Landing routes wait for the load event, then for an idle slot (capped), or
-// for the visitor's first input, whichever comes first.
+// Landing and docs routes wait for the load event, then for an idle slot
+// (capped), or for the visitor's first input, whichever comes first.
 const IDLE_TIMEOUT_MS = 2000
 const FIRST_INPUT_EVENTS = ['pointerdown', 'keydown'] as const
 
-function bootPostHog(): void {
+/** Exported for tests only; the provider below is the one caller. */
+export function bootPostHog(): void {
     if (bootStarted) return
     // Dataset drives which project (if any) receives events. `disabled`
     // skips init entirely; `e2e` targets the separate test project.
@@ -67,13 +65,13 @@ function bootPostHog(): void {
                 // are ever added.
                 disable_surveys: true,
                 // Session replay. Recording is switched on in the project
-                // settings (production domain only); this sets the shared
-                // 1-in-10 sample (overriding the dashboard's rate), masks
+                // settings (production domain only); this sets the 1-in-10
+                // sample (overriding the dashboard's rate), masks
                 // every input, hides the text of the shared mask selectors
                 // and leaves the uploader's media out entirely (see
                 // lib/analytics/replay.ts).
                 session_recording: {
-                    sampleRate: REPLAY_SESSION_SAMPLE_RATE,
+                    sampleRate: POSTHOG_REPLAY_SAMPLE_RATE,
                     maskAllInputs: true,
                     maskTextSelector: REPLAY_MASK_SELECTORS.join(', '),
                     blockSelector: REPLAY_BLOCK_SELECTORS.join(', '),
@@ -165,28 +163,34 @@ function bootAfterLoad(): () => void {
     return cleanup
 }
 
+/** Exported for tests only; the provider below is the one caller. */
+export function rememberDeferredEntry(): void {
+    if (!deferredEntry)
+        deferredEntry = {
+            href: window.location.href,
+            pathname: window.location.pathname,
+            at: new Date(),
+        }
+}
+
 export function PostHogProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname()
 
     useEffect(() => {
         if (typeof window === 'undefined' || bootStarted) return
+        const mode = analyticsBootMode(pathname)
         // A drive sign-in popup carries the provider's one-time code in its
         // URL; it must never reach a $pageview.
-        if (isOAuthRedirectPath(pathname)) return
-        // Every route other than the marketing landing pages (docs, support,
-        // agent-setup, …) initialises at mount, exactly as before. Sentry
-        // boots at the same moment as PostHog on every route.
-        if (!isMarketingLandingPath(pathname)) {
+        if (mode === 'skip') return
+        // Every route other than the marketing landing pages and the docs
+        // (support, agent-setup, …) initialises at mount, exactly as before.
+        // Sentry boots at the same moment as PostHog on every route.
+        if (mode === 'at-mount') {
             bootPostHog()
             bootSentry()
             return
         }
-        if (!deferredEntry)
-            deferredEntry = {
-                href: window.location.href,
-                pathname: window.location.pathname,
-                at: new Date(),
-            }
+        rememberDeferredEntry()
         return bootAfterLoad()
     }, [pathname])
 

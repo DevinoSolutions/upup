@@ -207,6 +207,62 @@ describe('crash-recovery restore progress seeding', () => {
         core.destroy()
     })
 
+    it('replays upload-progress for several restored paused files in snapshot order with its own persisted offset per file', async () => {
+        vi.stubGlobal('localStorage', new MemoryStorage())
+        const storage = makeInstantStorage()
+        const specs = [
+            { size: 64, uploadedBytes: 48 },
+            { size: 96, uploadedBytes: 32 },
+            { size: 128, uploadedBytes: 80 },
+        ]
+        const files = specs.map(({ size }, i) =>
+            Object.assign(
+                new File([new Uint8Array(size)], `seed-${i}.mp4`, {
+                    type: 'video/mp4',
+                    lastModified: 1_700_000_000_000 + i,
+                }),
+                {
+                    id: `seed-${i}`,
+                    source: FileSource.LOCAL,
+                    status: UploadStatus.UPLOADING,
+                    metadata: {},
+                },
+            ),
+        )
+        storage.store.set(STORAGE_KEY, {
+            files: files.map(file => [file.id, file]),
+            status: UploadStatus.UPLOADING,
+        })
+        for (const [i, file] of files.entries()) {
+            const { uploadedBytes } = specs[i]!
+            saveSession(fileFingerprint(file), {
+                token: `live-token-${i}`,
+                key: `uploads/seed-${i}.mp4`,
+                partSize: 16,
+                updatedAt: Date.now(),
+                uploadedBytes,
+                scope: SERVER_URL,
+            })
+        }
+
+        const core = new UpupCore({
+            serverUrl: SERVER_URL,
+            crashRecovery: { storage },
+        })
+        const events: unknown[] = []
+        core.on('upload-progress', (event: unknown) => {
+            events.push(event)
+        })
+
+        await expect(core.restoreFromCrashRecovery()).resolves.toBe(true)
+        expect(events).toEqual([
+            { fileId: 'seed-0', loaded: 48, total: 64 },
+            { fileId: 'seed-1', loaded: 32, total: 96 },
+            { fileId: 'seed-2', loaded: 80, total: 128 },
+        ])
+        core.destroy()
+    })
+
     it('ignores a session scoped to a different server — its offset belongs to an upload this core cannot resume', async () => {
         vi.stubGlobal('localStorage', new MemoryStorage())
         const storage = makeInstantStorage()

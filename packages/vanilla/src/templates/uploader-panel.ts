@@ -398,13 +398,13 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
                                   isDark
                                       ? html`<img
                                             src=${devinoDark}
-                                            width="61"
+                                            width="43"
                                             height="13"
                                             alt="logo-dark"
                                         />`
                                       : html`<img
                                             src=${devinoLight}
-                                            width="61"
+                                            width="43"
                                             height="13"
                                             alt="logo-light"
                                         />`

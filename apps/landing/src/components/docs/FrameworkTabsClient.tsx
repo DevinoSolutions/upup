@@ -155,7 +155,7 @@ export function FrameworkTabsClient({ tabs }: { tabs: FrameworkTab[] }) {
                                 choose(next.fw)
                                 tabRefs.current[next.fw]?.focus()
                             }}
-                            className={`-mb-px flex items-center gap-1.5 rounded-t-md border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                            className={`-mb-px flex min-h-11 items-center gap-1.5 rounded-t-md md:min-h-0 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
                                 isActive
                                     ? 'border-blue-600 text-gray-900 dark:border-blue-400 dark:text-white'
                                     : 'border-transparent text-gray-500 hover:bg-black/[0.03] hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/[0.04] dark:hover:text-white'

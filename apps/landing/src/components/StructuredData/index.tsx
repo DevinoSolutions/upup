@@ -22,6 +22,9 @@ const softwareApplication = {
     '@type': 'SoftwareApplication',
     '@id': SOFTWARE_APPLICATION_ID,
     name: 'upup',
+    // Same alternate names as the Organization node: the brand is searched as
+    // the bare word, the npm scope and the handle.
+    alternateName: ['useupup', '@useupup', 'upup file uploader'],
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'Web',
     description:

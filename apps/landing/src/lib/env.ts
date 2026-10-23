@@ -102,14 +102,16 @@ const serverSchema = z.object({
         .min(1)
         .optional(),
     // Support/feedback email leg (optional — absent disables the email path).
-    // Two transports, REST preferred: the UseSend REST API (USESEND_API_URL +
-    // USESEND_API_KEY) or a generic SMTP_URL. A self-hosted UseSend is HTTP-only
-    // behind a CDN, so REST is the routable path; SMTP_URL stays as a fallback.
-    USESEND_API_URL: z.string().min(1).optional(),
-    USESEND_API_KEY: z.string().min(1).optional(),
-    SMTP_URL: z.string().min(1).optional(),
+    // Every email goes through Sendly (REST, Bearer key; a pk_* sending-only key
+    // is enough). The API origin is fixed in lib/support/email.ts.
+    SENDLY_API_KEY: z.string().min(1).optional(),
     SUPPORT_EMAIL_TO: z.string().min(1).optional(),
     SUPPORT_EMAIL_FROM: z.string().min(1).optional(),
+    // Explicit override for trusting cf-connecting-ip in the support rate limit
+    // (see lib/support/rate-limit.ts). Unset = trust it only when the immediate
+    // peer is a Cloudflare edge; '1'/'true' = always; '0'/'false' = never.
+    // Free-form string: a typo must fall back to the safe default, not crash boot.
+    TRUST_CF_CONNECTING_IP: z.string().optional(),
 })
 
 export const env: z.infer<typeof serverSchema> = (() => {

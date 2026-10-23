@@ -27,21 +27,155 @@ export function parseLlmsFull(text: string): DocsChunk[] {
 }
 
 const TITLE_BOOST = 5
+const PATH_BOOST = 5
+const SEGMENT_BOOST = 5
+const INTENT_BOOST = 8
+
+// Generic question filler. These words appear on nearly every page, so
+// counting them just rewards the longest pages instead of the relevant one.
+const STOPWORDS = new Set([
+    'the',
+    'and',
+    'for',
+    'with',
+    'from',
+    'that',
+    'this',
+    'what',
+    'how',
+    'can',
+    'does',
+    'show',
+    'tell',
+    'give',
+    'please',
+    'minimal',
+    'simple',
+    'basic',
+    'usage',
+    'use',
+    'using',
+    'code',
+    'example',
+    'examples',
+    'snippet',
+    'upup',
+    'need',
+    'want',
+    'about',
+    'are',
+    'you',
+    'your',
+    'get',
+    'getting',
+    'make',
+    'work',
+])
+
+// Install-style questions belong on the quickstart / getting-started pages,
+// whose bodies are short and so lose a pure keyword count to long reference pages.
+const INSTALL_INTENT = new Set(['install', 'quickstart', 'started'])
+// Package-manager words describe HOW to install, never WHAT is being
+// installed, and they never appear in titles or paths. Counting them as topic
+// terms would zero the coverage of every install page.
+const INSTALL_FILLER = new Set([
+    'npm',
+    'pnpm',
+    'yarn',
+    'bun',
+    'npx',
+    'add',
+    'package',
+])
+const INSTALL_PATHS = ['/quickstarts/', '/getting-started']
+
+// Words that appear in the title and path of dozens of pages (every
+// comparison page is "...file upload..."), so boosting them there buries the
+// page that actually names the topic. They still count in the body.
+const GENERIC_TERMS = new Set([
+    'upload',
+    'uploads',
+    'uploader',
+    'file',
+    'files',
+])
+
+/**
+ * Crude, deterministic stemmer so `theme` matches `theming` and `drives`
+ * matches `drive`: strip one common suffix (`es` only after a sibilant, so
+ * `files` -> `file`, `boxes` -> `box`), then a trailing `e` from longer words
+ * only, so a short word like `file` is not over-stripped to `fil`. Used for
+ * title and URL-path matching, which stays substring-based.
+ */
+export function stem(word: string): string {
+    let w = word
+    for (const suffix of ['ing', 'es', 'ed', 's']) {
+        if (!w.endsWith(suffix) || w.length - suffix.length < 3) continue
+        if (suffix === 'es' && !/(s|x|z|ch|sh)es$/.test(w)) continue
+        w = w.slice(0, -suffix.length)
+        break
+    }
+    return w.length > 4 && w.endsWith('e') ? w.slice(0, -1) : w
+}
 
 export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
-    const terms = query
+    // Keep 3+ letter words, plus short tokens with a digit (`s3`, `v2`).
+    const tokens = query
         .toLowerCase()
         .split(/\W+/)
-        .filter(t => t.length > 2)
+        .filter(t => t.length > 2 || (t.length === 2 && /\d/.test(t)))
+    const meaningful = tokens.filter(t => !STOPWORDS.has(t))
+    // A query that is all filler ("what is upup") still has to find something.
+    const onlyFiller = meaningful.length === 0
+    const terms = onlyFiller ? tokens : meaningful
     if (terms.length === 0) return []
+    // "upload files to backblaze": generic terms must not drive title/path
+    // boosts. A query made only of them ("file upload") keeps the boost.
+    const hasSpecific = terms.some(t => !GENERIC_TERMS.has(t))
+    const boostsTitlePath = (t: string) => !hasSpecific || !GENERIC_TERMS.has(t)
+    // Terms beyond install intent: they say what the user is actually after.
+    const topicTerms = onlyFiller
+        ? []
+        : terms.filter(
+              t =>
+                  !INSTALL_INTENT.has(t) &&
+                  !INSTALL_FILLER.has(t) &&
+                  boostsTitlePath(t),
+          )
     return chunks
         .map(chunk => {
             const title = chunk.title.toLowerCase()
+            const path = urlPath(chunk.url)
             const body = chunk.body.toLowerCase()
+            // Raw counts grow with page length; sqrt-normalise so a long page
+            // full of generic words cannot outrank a short, on-topic one.
+            const lengthNorm = Math.sqrt(Math.max(body.length, 1))
+            const segments = path.split('/')
+            const installPage = INSTALL_PATHS.some(p => path.includes(p))
+            // "getting started with server mode" is about server mode, not
+            // install: scale the intent boost by the share of topic terms
+            // this page's title/path covers, so "React install" keeps the
+            // react quickstart's full boost while server-mode drops it.
+            const topicCoverage =
+                topicTerms.length === 0
+                    ? 1
+                    : topicTerms.filter(t => {
+                          const root = stem(t)
+                          return title.includes(root) || path.includes(root)
+                      }).length / topicTerms.length
             let score = 0
             for (const term of terms) {
-                if (title.includes(term)) score += TITLE_BOOST
-                score += body.split(term).length - 1
+                // Stem for title/path (theme -> theming); body counts stay
+                // literal so a short stem like "mod" cannot hit "module".
+                if (boostsTitlePath(term)) {
+                    const root = stem(term)
+                    if (title.includes(root)) score += TITLE_BOOST
+                    if (path.includes(root)) score += PATH_BOOST
+                    if (segments.includes(term)) score += SEGMENT_BOOST
+                }
+                if (installPage && (onlyFiller || INSTALL_INTENT.has(term)))
+                    score += INTENT_BOOST * topicCoverage
+                score += (body.split(term).length - 1) / lengthNorm
             }
             return { chunk, score }
         })
@@ -50,9 +184,18 @@ export function scoreChunks(chunks: DocsChunk[], query: string): DocsChunk[] {
         .map(entry => entry.chunk)
 }
 
+/** URL path only (e.g. `/docs/quickstarts/react/`), so the host never matches. */
+function urlPath(url: string): string {
+    try {
+        return new URL(url).pathname.toLowerCase()
+    } catch {
+        return ''
+    }
+}
+
 const CACHE_TTL_MS = 60 * 60 * 1000
 const EXCERPT_MAX = 1500
-const TOP_K = 4
+const TOP_K = 5
 
 let cache: { chunks: DocsChunk[]; fetchedAt: number } | null = null
 

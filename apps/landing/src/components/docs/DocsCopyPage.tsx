@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Copy } from 'lucide-react'
+import { CopyIconSwap } from '@/components/copy-icon-swap'
 import { useCopied } from '@/lib/use-copied'
 
 // "Copy page" — fetches the page's raw-markdown twin (the force-static
@@ -32,22 +32,23 @@ export function DocsCopyPage({ mdUrl }: { mdUrl: string }) {
     }
 
     return (
-        <button
-            type="button"
-            onClick={copy}
-            data-testid="docs-copy-page"
-            aria-label="Copy page as Markdown"
-            className="inline-flex items-center gap-1.5 rounded-md border border-black/5 px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:border-black/10 hover:text-gray-900 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
-        >
-            {copied ? (
-                <Check
-                    className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400"
-                    aria-hidden
+        <>
+            <button
+                type="button"
+                onClick={copy}
+                data-testid="docs-copy-page"
+                aria-label="Copy page as Markdown"
+                className="inline-flex items-center gap-1.5 rounded-md border border-black/5 px-2.5 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:border-black/10 hover:text-gray-900 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-white"
+            >
+                <CopyIconSwap
+                    copied={copied}
+                    checkClassName="text-teal-600 dark:text-teal-400"
                 />
-            ) : (
-                <Copy className="h-3.5 w-3.5" aria-hidden />
-            )}
-            {copied ? 'Copied' : failed ? 'Copy failed' : 'Copy page'}
-        </button>
+                {copied ? 'Copied' : failed ? 'Copy failed' : 'Copy page'}
+            </button>
+            <span role="status" aria-live="polite" className="sr-only">
+                {copied ? 'Copied' : failed ? 'Copy failed' : ''}
+            </span>
+        </>
     )
 }

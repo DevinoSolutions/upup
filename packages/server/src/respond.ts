@@ -23,7 +23,10 @@ export function corsHeaders(
     const origin = req.headers.get('origin') ?? ''
     const allowsWildcard = cors.allowedOrigins.includes('*')
     const allowsOrigin = origin && cors.allowedOrigins.includes(origin)
-    if (!allowsWildcard && !allowsOrigin) return {}
+    // Vary: Origin goes on EVERY response once cors is configured, allowed or not:
+    // a shared cache that stored a header-less reply to a disallowed (or
+    // origin-less) request would otherwise serve it to an allowed origin.
+    if (!allowsWildcard && !allowsOrigin) return { Vary: 'Origin' }
 
     // Never send a literal '*' to a browser (Origin present): reflect the matched
     // origin so no route (incl. /files/*, /presign) exposes a bare wildcard. '*'
@@ -57,8 +60,14 @@ export type Responder = {
      *  x-upup-request-id header on every response. */
     requestId: string
     json(data: unknown, status?: number): Response
-    html(body: string, status?: number): Response
-    redirect(location: string, status?: number): Response
+    /** `extra` headers (e.g. a Set-Cookie) are layered on after the baked-in
+     *  CORS + request-id headers; they cannot remove those. */
+    html(body: string, status?: number, extra?: ResponseHeaders): Response
+    redirect(
+        location: string,
+        status?: number,
+        extra?: ResponseHeaders,
+    ): Response
     noContent(status?: number): Response
     /** One home for every logged failure: reports via the onError seam (redacted),
      *  then returns the uniform `{ error, code }` body. The real cause goes to the
@@ -90,18 +99,19 @@ export function createResponder(
     return {
         requestId,
         json,
-        html: (body, status = 200) =>
+        html: (body, status = 200, extra) =>
             new Response(body, {
                 status,
                 headers: {
                     'Content-Type': 'text/html; charset=utf-8',
                     ...headers,
+                    ...extra,
                 },
             }),
-        redirect: (location, status = 302) =>
+        redirect: (location, status = 302, extra) =>
             new Response(null, {
                 status,
-                headers: { ...headers, Location: location },
+                headers: { ...headers, ...extra, Location: location },
             }),
         noContent: (status = 204) => new Response(null, { status, headers }),
         fail: (route, method, status, code, message, error) => {
@@ -119,14 +129,34 @@ export function createResponder(
     }
 }
 
+/** Every route reads named fields off the body, so only a JSON OBJECT is a
+ *  usable body: `null`, an array or a scalar is a client error, not something to
+ *  dereference (it used to surface as a 500). */
+export function isJsonObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 /** Parse a JSON request body, returning a 400 Response (not an unhandled throw)
- *  on malformed JSON. Collapses the two divergent body-parse sites. */
+ *  on malformed JSON or a non-object body. Collapses the two divergent
+ *  body-parse sites. */
 export async function parseJsonBody(
     req: Request,
     res: Responder,
 ): Promise<{ ok: true; value: unknown } | { ok: false; response: Response }> {
     try {
         const value: unknown = await req.json()
+        if (!isJsonObject(value)) {
+            return {
+                ok: false,
+                response: res.json(
+                    {
+                        error: 'Request body must be a JSON object',
+                        code: UpupErrorCode.BAD_REQUEST,
+                    },
+                    400,
+                ),
+            }
+        }
         return { ok: true, value }
     } catch {
         // upup-catch: malformed JSON becomes a 400 Result the caller returns —

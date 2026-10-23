@@ -307,7 +307,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     border: 0.8px solid var(--ie-card-border);
     border-radius: var(--ie-radius-card);
     box-shadow: var(--ie-card-shadow);
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease;
     overflow: hidden;
 }
 
@@ -524,7 +524,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     font-family: inherit;
     font-size: 13px;
     line-height: 1.4;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
 .upup-ie-field input[type="text"]:hover,
@@ -989,7 +989,7 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
 .upup-ie-expand-wrap {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.35s ease;
+    transition: grid-template-rows 0.25s ease;
 }
 
 .upup-ie-expand-wrap[data-expanded] {
@@ -1074,7 +1074,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     position: relative;
     flex-shrink: 0;
     margin: 0;
-    transition: all 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .upup-ie-multiselect-item input[type="checkbox"]:checked {
@@ -1126,7 +1129,10 @@ html.dark .upup-ie-focus:not([data-theme="light"]),
     font-size: 13px;
     font-weight: 500;
     color: var(--ie-fg-muted);
-    transition: all 0.15s ease;
+    transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .upup-ie-tabs button:hover {
@@ -1281,7 +1287,7 @@ html.dark .upup-ie-preview-placeholder,
     font-family: var(--ie-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     font-size: 12.5px;
     line-height: 1.4;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease;
 }
 
 .upup-ie-combo-input:focus {
@@ -1591,6 +1597,211 @@ html.dark .upup-ie-ai-panel,
     50% { opacity: 0; }
 }
 
+/* Assistant markdown (MarkdownMessage). While streaming only whole units are
+   rendered, and each unit is its own element, so the mount animation below
+   eases every word, link, row, item and code block in exactly once. */
+.upup-ie-ai-msg-assistant .upup-ie-ai-md {
+    white-space: normal;
+}
+
+.upup-ie-ai-md > * + * {
+    margin-top: 8px;
+}
+
+.upup-ie-ai-md p,
+.upup-ie-ai-md ul,
+.upup-ie-ai-md ol,
+.upup-ie-ai-md pre,
+.upup-ie-ai-md h3,
+.upup-ie-ai-md h4,
+.upup-ie-ai-md h5,
+.upup-ie-ai-md h6 {
+    margin: 0;
+}
+
+.upup-ie-ai-md p {
+    white-space: pre-line;
+}
+
+.upup-ie-ai-md h3,
+.upup-ie-ai-md h4,
+.upup-ie-ai-md h5,
+.upup-ie-ai-md h6 {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.upup-ie-ai-md ul,
+.upup-ie-ai-md ol {
+    padding-left: 18px;
+}
+
+/* Tailwind's preflight strips list markers; numbered steps need their numbers. */
+.upup-ie-ai-md ul {
+    list-style-type: disc;
+}
+
+.upup-ie-ai-md ol {
+    list-style-type: decimal;
+}
+
+.upup-ie-ai-md li > ul,
+.upup-ie-ai-md li > ol {
+    margin-top: 2px;
+}
+
+.upup-ie-ai-md code {
+    font: 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: 4px;
+    padding: 0 4px;
+}
+
+.upup-ie-ai-md pre {
+    padding: 8px 10px;
+    background: var(--ie-card-bg);
+    border: 1px solid var(--ie-card-border);
+    border-radius: var(--ie-radius-input);
+}
+
+.upup-ie-ai-md pre code {
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+.upup-ie-ai-md-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.upup-ie-ai-md-scroll:focus-visible,
+.upup-ie-ai-md a:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-ai-md table {
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.upup-ie-ai-md th,
+.upup-ie-ai-md td {
+    border: 1px solid var(--ie-card-border);
+    padding: 4px 8px;
+    text-align: left;
+}
+
+.upup-ie-ai-md hr {
+    height: 0;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-ai-md a {
+    color: var(--ie-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.upup-ie-ai-ease {
+    animation: upup-ie-ai-ease-in 180ms ease-out both;
+}
+
+.upup-ie-ai-ease-block {
+    animation: upup-ie-ai-ease-in-block 200ms ease-out both;
+}
+
+@keyframes upup-ie-ai-ease-in {
+    from { opacity: 0; }
+}
+
+@keyframes upup-ie-ai-ease-in-block {
+    from { opacity: 0; transform: translateY(4px); }
+}
+
+/* Step trail: a collapsed disclosure of what the agent did this turn. */
+.upup-ie-ai-steps {
+    position: relative;
+    align-self: flex-start;
+    max-width: 95%;
+    font-size: 12px;
+    color: var(--ie-fg-muted);
+}
+
+.upup-ie-ai-steps-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 2px 6px 2px 2px;
+    background: transparent;
+    border: none;
+    border-radius: var(--ie-radius-input);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.upup-ie-ai-steps-toggle:hover {
+    color: var(--ie-fg);
+}
+
+.upup-ie-ai-steps-toggle:focus-visible {
+    outline: 2px solid var(--ie-accent);
+    outline-offset: 2px;
+}
+
+.upup-ie-ai-steps-chevron {
+    flex: none;
+    transition: transform 150ms ease-out;
+}
+
+.upup-ie-ai-steps[data-open] .upup-ie-ai-steps-chevron {
+    transform: rotate(90deg);
+}
+
+.upup-ie-ai-steps-list {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0 0 0 8px;
+    border-left: 1px solid var(--ie-card-border);
+}
+
+.upup-ie-ai-steps-list[hidden] {
+    display: none;
+}
+
+.upup-ie-ai-steps-list li {
+    padding: 1px 0;
+    word-break: break-word;
+}
+
+.upup-ie-ai-steps-list li[data-status="error"] {
+    color: #b91c1c;
+}
+
+html.dark .upup-ie-ai-steps-list li[data-status="error"],
+[data-theme="dark"] .upup-ie-ai-steps-list li[data-status="error"] {
+    color: #fca5a5;
+}
+
+.upup-ie-ai-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .upup-ie-ai-patch {
     align-self: flex-start;
     background: var(--ie-accent-soft);
@@ -1778,7 +1989,7 @@ html.dark .upup-ie-ai-panel,
     cursor: pointer;
 }
 
-.upup-ie-ai-input button[type="submit"]:disabled {
+.upup-ie-ai-input button[type="submit"][aria-disabled="true"] {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -1821,7 +2032,18 @@ html.dark .upup-ie-ai-panel,
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .upup-ie-ai-cursor {
+    .upup-ie-ai-cursor,
+    .upup-ie-ai-ease,
+    .upup-ie-ai-ease-block {
         animation: none;
+    }
+
+    .upup-ie-category-chevron,
+    .upup-ie-toggle input[type="checkbox"]::before,
+    .upup-ie-source-tile,
+    .upup-ie-expand-wrap,
+    .upup-ie-code-header button,
+    .upup-ie-ai-steps-chevron {
+        transition: none;
     }
 }

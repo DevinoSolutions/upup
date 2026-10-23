@@ -1,4 +1,11 @@
 #!/usr/bin/env sh
+# Sitemap <lastmod> snapshot (T-5788): regenerate from git (a page with dirty
+# sources = today) and stage it, so the committed
+# apps/landing/src/generated/page-lastmod.json describes THIS commit, then run
+# its gate (coverage, sane dates, freshness). Before lint-staged so the
+# regenerated file gets the same prettier check as every staged file.
+node scripts/seo/page-lastmod.mjs && git add apps/landing/src/generated/page-lastmod.json || exit 1
+node scripts/seo/page-lastmod.mjs --check || exit 1
 pnpm exec lint-staged
 pnpm --filter @useupup/core run test
 pnpm --filter @useupup/react run test

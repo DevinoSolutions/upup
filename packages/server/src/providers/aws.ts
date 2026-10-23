@@ -141,6 +141,7 @@ export async function generatePresignedPartUrl(
     uploadId: string,
     partNumber: number,
     expiresIn = DEFAULT_EXPIRES_IN,
+    contentLength?: number,
 ): Promise<MultipartSignPartResponse> {
     const client = createS3Client(storage)
 
@@ -149,9 +150,20 @@ export async function generatePresignedPartUrl(
         Key: key,
         UploadId: uploadId,
         PartNumber: partNumber,
+        ...(contentLength !== undefined
+            ? { ContentLength: contentLength }
+            : {}),
     })
 
-    const uploadUrl = await getSignedUrl(client, command, { expiresIn })
+    // With a length, bind content-length into the signature (same as the
+    // single-PUT presign above) so the part body cannot be larger or smaller
+    // than the length the server derived from the signed size envelope (T-5492).
+    const uploadUrl = await getSignedUrl(client, command, {
+        expiresIn,
+        ...(contentLength !== undefined
+            ? { signableHeaders: new Set(['content-length']) }
+            : {}),
+    })
 
     return { uploadUrl, expiresIn }
 }

@@ -1,6 +1,6 @@
 ---
-title: Secure S3 File Upload Server for Node.js and Next.js
-description: Set up a secure S3 file upload server for Node.js with Express, Fastify, Hono or Next.js. It signs each upload; the browser PUTs the file to the bucket.
+title: S3 Upload Server for Node.js, Express & Next.js
+description: Build a secure S3 upload server in Node.js with Express, Fastify, Hono or Next.js. Signed uploads, drive OAuth, Redis token store. 15-30 min setup.
 ---
 
 This guide sets up upup server mode (`mode="server"`): a secure S3 file
@@ -219,6 +219,29 @@ shows the happy path; steps 4 and 5 below cover finishing and recovering:
     included. See
     [Cross-reload resume](/docs/resumable-uploads/#cross-reload-resume).
 
+    This is also the backstop for uploads that are started and never
+    completed. The signed part URLs pin every part to its exact expected
+    length, so such an upload cannot hold more than the size declared at
+    `init` (which `maxFileSize` already capped), but the stored parts are only
+    reclaimed by this rule or by an explicit abort.
+
+    ```json
+    {
+        "Rules": [
+            {
+                "ID": "abort-incomplete-multipart-uploads",
+                "Status": "Enabled",
+                "Filter": { "Prefix": "" },
+                "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+            }
+        ]
+    }
+    ```
+
+    Apply it with `aws s3api put-bucket-lifecycle-configuration --bucket
+    <bucket> --lifecycle-configuration file://rule.json` (add `--endpoint-url`
+    for MinIO, R2 and other S3-compatible stores).
+
 </Callout>
 
 Two consequences worth knowing:
@@ -383,14 +406,17 @@ billing, or webhooks on top of them — the gaps are structural, not bugs:
 | `POST /multipart/init`           | yes              | yes                 | no               | no                 |
 | `POST /multipart/sign-part`      | no               | yes                 | no               | no                 |
 | `POST /multipart/complete`       | no               | no                  | yes              | yes                |
-| `POST /files/:provider/transfer` | no               | no                  | yes              | no                 |
+| `POST /files/:provider/transfer` | yes              | no                  | yes              | no                 |
 
 - **`onBeforeUpload` is an admission gate, not a completion signal.** It runs
   during metadata validation on `/presign` and `/multipart/init`, after the
   `maxFileSize` and `allowedTypes` checks. Returning `false` responds
   `403 Upload rejected` and nothing is presigned. To explain the rejection,
   **throw an `UpupError`** instead — see
-  [Explaining a rejection](#explaining-a-rejection) below.
+  [Explaining a rejection](#explaining-a-rejection) below. It also gates
+  `POST /files/:provider/transfer`, where the file it receives carries the
+  type, name and size the **provider** reported (not the client's claim),
+  and a rejection happens before any bytes are written to storage.
 - **`onPresignResponse` is the only hook that can change a response body.** It
   sees the three presign-side payloads and nothing else — see
   [Rewriting presign responses](#rewriting-presign-responses).

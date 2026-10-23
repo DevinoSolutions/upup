@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -15,6 +15,11 @@ const MOBILE_MENU_ID = 'navbar-mobile-menu'
 
 export default function Navbar() {
     const [navbarOpen, setNavbarOpen] = useState(false)
+    // The icon fade is feedback for a toggle, so it stays off until the
+    // first one: the hamburger must not fade in on every page load.
+    const [menuToggled, setMenuToggled] = useState(false)
+    const iconMotion = menuToggled ? ' motion-safe:animate-motion-fade' : ''
+    const toggleRef = useRef<HTMLButtonElement>(null)
     const [mounted, setMounted] = useState(false)
     const { isDarkMode } = useContext(ThemeContext)
     const pathname = usePathname()
@@ -27,6 +32,24 @@ export default function Navbar() {
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    // An open menu closes on Escape and hands focus back to its toggle. Only
+    // while open. This is a document bubble listener that skips
+    // `defaultPrevented` keys, so every overlay above the menu must
+    // preventDefault the Escape it handles: the notify modal, docs search and
+    // StackBlitz warning do so from capture-phase document listeners (which run
+    // first), the Ask AI drawer from its React onKeyDown (React is rooted on
+    // `document`, so stopPropagation alone cannot keep the key from here).
+    useEffect(() => {
+        if (!navbarOpen) return
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== 'Escape' || e.defaultPrevented) return
+            setNavbarOpen(false)
+            toggleRef.current?.focus()
+        }
+        document.addEventListener('keydown', onKeyDown)
+        return () => document.removeEventListener('keydown', onKeyDown)
+    }, [navbarOpen])
 
     const navLinks = (
         <>
@@ -138,7 +161,7 @@ export default function Navbar() {
                             {/* CTA Button - Desktop Only */}
                             <Link
                                 href="/#demo"
-                                className="hidden lg:flex items-center px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                className="hidden lg:flex items-center px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                             >
                                 Get Started
                             </Link>
@@ -169,17 +192,33 @@ export default function Navbar() {
                             WCAG 2.5.8 target size against a 20px icon — the
                             hit area grows, the icon does not. */}
                             <button
+                                ref={toggleRef}
                                 aria-label="Toggle navigation"
                                 aria-expanded={navbarOpen}
                                 aria-controls={MOBILE_MENU_ID}
                                 className="lg:hidden inline-flex min-h-11 min-w-11 items-center justify-center p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
-                                onClick={() => setNavbarOpen(!navbarOpen)}
+                                onClick={() => {
+                                    setMenuToggled(true)
+                                    setNavbarOpen(!navbarOpen)
+                                }}
                             >
-                                {navbarOpen ? (
-                                    <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                ) : (
-                                    <Menu className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                )}
+                                {/* Fixed 20px box: the incoming icon fades in
+                                place (motion-fade, fast token, after the first toggle only) and
+                                can never resize the target. */}
+                                <span
+                                    data-testid="navbar-toggle-icon"
+                                    className="inline-flex h-5 w-5 items-center justify-center"
+                                >
+                                    {navbarOpen ? (
+                                        <X
+                                            className={`w-5 h-5 text-gray-700 dark:text-gray-300${iconMotion}`}
+                                        />
+                                    ) : (
+                                        <Menu
+                                            className={`w-5 h-5 text-gray-700 dark:text-gray-300${iconMotion}`}
+                                        />
+                                    )}
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -191,7 +230,11 @@ export default function Navbar() {
                         id={MOBILE_MENU_ID}
                         className="lg:hidden bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-t border-gray-200/20 dark:border-gray-800/50"
                     >
-                        <div className="px-6 py-6 space-y-4">
+                        {/* Animate this inner div, never the backdrop-blur
+                        container above (fading a backdrop-filter repaints the
+                        blur every frame). Enter only; exit is instant. Reduced
+                        motion keeps opacity and drops the translate. */}
+                        <div className="px-6 py-6 space-y-4 motion-safe:animate-motion-enter-down motion-reduce:animate-motion-fade">
                             <ul className="space-y-4">
                                 {navLinks}
                                 <li>
@@ -215,7 +258,7 @@ export default function Navbar() {
                             <div className="pt-4 border-t border-gray-200/50 dark:border-gray-800/50">
                                 <Link
                                     href="/#demo"
-                                    className="flex items-center justify-center w-full px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                    className="flex items-center justify-center w-full px-4 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                                     onClick={() => setNavbarOpen(false)}
                                 >
                                     Get Started

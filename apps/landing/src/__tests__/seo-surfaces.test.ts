@@ -6,6 +6,7 @@ import sitemap from '@/app/sitemap'
 import EntityStructuredData from '@/components/StructuredData/EntityStructuredData'
 import StructuredData from '@/components/StructuredData'
 import { AI_CRAWLER_USER_AGENTS } from '@/lib/seo/ai-crawlers'
+import { pageLastmodDate, pageLastmodPaths } from '@/lib/page-lastmod'
 
 // The public site's machine-readable surfaces — sitemap, robots, JSON-LD — are
 // the ones nobody looks at until a search engine has already acted on them.
@@ -109,16 +110,38 @@ describe('sitemap enumerates only canonical, indexable page URLs', () => {
         }
     })
 
-    it('stamps no lastModified date on any entry', () => {
-        // A build-time `new Date()` on all 73 URLs claimed the whole site
+    it('stamps every entry with its own committed YYYY-MM-DD date, never a build-time one', () => {
+        // A build-time `new Date()` on every URL claimed the whole site
         // changed on every deploy; Google's response to an uncorroborated
-        // lastmod is to ignore the field site-wide. No real per-page date
-        // exists, so the field stays absent rather than invented.
+        // lastmod is to ignore the field site-wide. The date must be the
+        // page's entry in the git-derived snapshot: a bare calendar-date
+        // string (a Date object or a timestamp would be computed at build).
+        const today = new Date().toISOString().slice(0, 10)
         for (const entry of entries) {
+            const path = new URL(entry.url).pathname
             expect(entry.lastModified, `${entry.url} lastModified`).toBe(
-                undefined,
+                pageLastmodDate(path),
             )
+            expect(entry.lastModified).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+            expect(
+                (entry.lastModified as string) <= today,
+                `${entry.url} is dated in the future`,
+            ).toBe(true)
         }
+        // Real per-page history, not one stamp copied onto every URL.
+        expect(
+            new Set(entries.map(entry => entry.lastModified)).size,
+        ).toBeGreaterThan(1)
+    })
+
+    it('has a snapshot entry for exactly the sitemapped pages, none orphaned', () => {
+        // scripts/seo/page-lastmod.mjs discovers routes on its own (plain
+        // Node, reading FRAMEWORK_IDS/AGENT_IDS as text); this pins its list
+        // to what sitemap() really emits, so the two cannot drift apart.
+        const sitemapPaths = entries
+            .map(entry => new URL(entry.url).pathname.replace(/(.)\/$/, '$1'))
+            .toSorted()
+        expect([...pageLastmodPaths()].toSorted()).toEqual(sitemapPaths)
     })
 })
 
@@ -271,6 +294,11 @@ describe('entity JSON-LD ties the brand to one referenced organization', () => {
         expect(app.author).toEqual({
             '@id': `${PRODUCTION_ORIGIN}/#organization`,
         })
+        expect(app.alternateName).toEqual([
+            'useupup',
+            '@useupup',
+            'upup file uploader',
+        ])
     })
 
     it('emits no AggregateRating or Review anywhere in the rendered markup', () => {

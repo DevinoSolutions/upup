@@ -51,7 +51,7 @@ export default function BeatChips({
                         // works there, it jumps to the beat's static frame.
                         aria-pressed={active}
                         onClick={() => onSelect(beat.seekTo)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                             active
                                 ? 'border-sky-500/60 bg-sky-500/[0.08] text-sky-700 dark:text-sky-300'
                                 : 'border-black/10 text-gray-600 hover:bg-black/[0.03] dark:border-white/15 dark:text-gray-300 dark:hover:bg-white/[0.05]'

@@ -8,6 +8,12 @@ name: Publish npm placeholder
 on:
     workflow_dispatch:
 
+# A publish must never be killed mid-way: a second dispatch queues behind the
+# running one instead of cancelling it.
+concurrency:
+    group: publish-sdk
+    cancel-in-progress: false
+
 jobs:
     publish:
         runs-on: ubuntu-latest

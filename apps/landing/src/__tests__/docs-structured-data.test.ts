@@ -33,12 +33,12 @@ const HUBS = [
 // count. The FAQ page asks each question as a `## ` heading; every other page
 // asks its questions as `### ` headings under a `## FAQ` section.
 const FAQ_PAGES = [
-    { slug: ['faq'], file: 'faq.mdx', questions: 12 },
+    { slug: ['faq'], file: 'faq.mdx', questions: 13 },
     { slug: ['comparisons'], file: 'comparisons/index.mdx', questions: 4 },
     {
         slug: ['comparisons', 'upup-vs-uploadthing'],
         file: 'comparisons/upup-vs-uploadthing.mdx',
-        questions: 7,
+        questions: 9,
     },
     {
         slug: ['comparisons', 'best-react-file-upload-libraries'],
@@ -71,6 +71,21 @@ const FAQ_PAGES = [
         questions: 5,
     },
     {
+        slug: ['comparisons', 'upup-vs-uppy'],
+        file: 'comparisons/upup-vs-uppy.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-filepond'],
+        file: 'comparisons/upup-vs-filepond.mdx',
+        questions: 3,
+    },
+    {
+        slug: ['comparisons', 'upup-vs-react-dropzone'],
+        file: 'comparisons/upup-vs-react-dropzone.mdx',
+        questions: 3,
+    },
+    {
         slug: ['comparisons', 'upup-vs-devextreme-fileuploader'],
         file: 'comparisons/upup-vs-devextreme-fileuploader.mdx',
         questions: 5,
@@ -98,7 +113,7 @@ const FAQ_PAGES = [
     {
         slug: ['guides', 'storage', 'azure-blob'],
         file: 'guides/storage/azure-blob.mdx',
-        questions: 8,
+        questions: 11,
     },
     {
         slug: ['guides', 'storage', 'digitalocean-spaces'],
@@ -352,7 +367,7 @@ describe('docs folder hub pages', () => {
                 ['Guides', '/docs/guides/'],
                 ['Storage', '/docs/guides/storage/'],
                 [
-                    'Upload Files to Azure Blob Storage from the Browser',
+                    'Upload Files to Azure Blob Storage with a SAS URL',
                     '/docs/guides/storage/azure-blob/',
                 ],
             ],

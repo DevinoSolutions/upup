@@ -278,6 +278,16 @@ type MultipartSignPartResponse = {
 
 This handler returns `uploadUrl` and `expiresIn: 3600`.
 
+**The part length is signed.** `init` binds the part size into the token, so
+this route knows how long every part must be: `partSize` for each part but the
+last, and the remainder for the final one. That length is signed into the
+returned URL (`content-length` is a signed header), so storage itself rejects a
+`PUT` whose body is any other size. A `partNumber` outside `1..ceil(size /
+partSize)` is refused with `400 Invalid part number` and nothing is signed.
+This enforces the size envelope per part, at upload time, which also covers
+uploads that never reach `/multipart/complete`. Tokens minted before the part
+size was bound keep working but fall back to the complete-time check alone.
+
 **Token failures.** A missing, tampered, or stale token returns `403` with the
 specific reason, so you can tell a bug from an expiry:
 
@@ -344,8 +354,9 @@ This handler returns `key`, a signed `downloadUrl` (three days by default, see
 `downloadUrlExpiresIn`), and `etag` when S3
 supplied one.
 
-**The envelope check.** Because `sign-part` and the browser's direct PUTs never
-re-send a size, the real byte total is only knowable here. The handler sums what
+**The envelope check.** `sign-part` pins each part's length, but the real byte
+total is only confirmed here, and this check stays as defence in depth (and as
+the only guard for tokens minted before part lengths were signed). The handler sums what
 S3 actually received (`ListParts`) and compares it against the `[smin, smax]`
 range signed at `init`. Outside that range, the multipart upload is **aborted**
 — nothing partial is left in the bucket — and the request gets:
@@ -602,7 +613,7 @@ list route.
     fileId: string // required
     fileName?: string // overrides the provider's name
     size?: number // client-declared; used only for the fast reject
-    mimeType?: string // checked against allowedTypes
+    mimeType?: string // early-out hint only; the provider's reported type decides
 }
 ```
 
@@ -630,12 +641,32 @@ throw-is-logged-and-swallowed treatment as multipart complete.
 | `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
 | `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
 | `413`  | `{ "error": "File too large" }`                                | declared `size` exceeds `maxFileSize`          |
-| `415`  | `{ "error": "File type not allowed" }`                         | `mimeType` fails `allowedTypes`                |
+| `415`  | `{ "error": "File type not allowed" }`                         | the file's type fails `allowedTypes`           |
+| `403`  | `{ "error": "Upload rejected" }`                               | your `hooks.onBeforeUpload` returned `false` (or threw an `UpupError`, as on the upload routes) |
 | `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
 | `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
 
 The `413` above is only a cheap early-out on the client-declared size. The
 authoritative cap is enforced against the bytes actually streamed — see below.
+
+**The type is the provider's, not the client's.** The request's `mimeType` is
+only a hint: it gives a cheap first reject, and is used as the stored type when
+the provider reports nothing (or only `application/octet-stream`). Otherwise the
+type the provider reports is what is checked against `allowedTypes`, handed to
+`hooks.onBeforeUpload` (alongside the provider's name and size) and stored as
+the object's `Content-Type`. A client claiming `image/png` for an HTML file
+therefore gets `415` under an `image/*` allowlist, or the file stored as
+`text/html` otherwise; both happen before any bytes reach storage.
+
+**Provider reports only `application/octet-stream`.** Dropbox (always) and
+Box (sometimes) cannot say what a file is, so the type from the request's
+`mimeType` is used for it, after it has passed `allowedTypes`. That value is
+still the client's claim: the file's contents are **not** sniffed. If an
+allowlist is your only defence against a type being served back (for example
+HTML from your own bucket origin), do not rely on it for Dropbox and Box
+transfers; serve downloads from a separate origin or with
+`Content-Disposition: attachment`, or reject in `hooks.onBeforeUpload`, which
+receives the file's name and size as well.
 
 ## Policy and limits
 

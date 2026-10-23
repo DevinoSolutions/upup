@@ -213,6 +213,10 @@ export type UpupServerConfig = {
          * "Storage limit exceeded — upgrade to keep uploading"). Any other
          * throw stays a generic 500 — internal error text never reaches the
          * client.
+         *
+         * Also gates the cloud-drive transfer route (`/files/:provider/transfer`),
+         * where `file` carries the PROVIDER-reported name, type and size rather
+         * than the client's claim.
          */
         onBeforeUpload?: (file: FileMetadata, req: Request) => Promise<boolean>
         onFileUploaded?: (file: UploadedFile, req: Request) => Promise<void>
@@ -303,6 +307,11 @@ export interface OAuthState {
     userId: string
     provider: string
     returnTo?: string | undefined
+    /** sha256 (hex) of the nonce set as the `upup_oauth_<provider>` cookie
+     *  (`__Host-upup_oauth_<provider>` over https) on the /auth redirect. The /cb handler requires a cookie that hashes to
+     *  this, binding the callback to the browser that started the flow. A
+     *  state without it fails closed. */
+    nonceHash?: string | undefined
 }
 
 export interface FileMetadata {

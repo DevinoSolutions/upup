@@ -15,9 +15,17 @@ import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
 import { UploadManager } from './upload-manager'
 import { resolveUploadConfig } from './resolve-upload-config'
 import { abortPersistedMultipartSessions } from './strategies/multipart-upload'
-import { fileFingerprint, loadSession } from './utils/multipart-session-store'
 import { isUploadActive } from './utils/status-helpers'
 import { CrashRecoveryManager, IndexedDBStorage } from './crash-recovery'
+import {
+    CrashRecoveryWriteQueue,
+    warnCrashRecoveryFailure,
+} from './core-crash-recovery-queue'
+import {
+    isStaleMultipartRestore,
+    normalizeRestoredFiles,
+    restoredProgressPayloads,
+} from './core-restore'
 import {
     serializeCrashRecovery,
     reviveCrashRecoverySnapshot,
@@ -55,18 +63,7 @@ export class UpupCore {
     // release its cached IndexedDB connection.
     private crashRecoveryStorage: IndexedDBStorage | null = null
     private crashRecoveryUnsubscribe: (() => void) | null = null
-    /** Every crash-recovery storage write flows through this one promise chain.
-     *  Blob snapshots of large files make IndexedDB puts slow; fire-and-forget
-     *  save/clear calls complete out of order, so a save started before
-     *  completion can land after the completion clear and resurrect a finished
-     *  upload as a resumable one. FIFO ordering makes the last requested op the
-     *  last applied op. */
-    private crashRecoveryChain: Promise<void> = Promise.resolve()
-    /** True while a snapshot sync is queued but not yet run. Progress ticks
-     *  arrive far faster than a large snapshot writes; coalescing them into the
-     *  one queued sync (which reads state at write time) keeps it to at most
-     *  one write in flight plus one pending, instead of N stacked blob puts. */
-    private crashRecoverySyncQueued = false
+    private crashRecoveryWrites = new CrashRecoveryWriteQueue()
     private fileOverrides = new Map<string, Partial<UploadOptions>>()
     private pauseRequested = false
     private cancelRequested = false
@@ -191,21 +188,8 @@ export class UpupCore {
         }
     }
 
-    /**
-     * Crash-recovery persistence is best-effort by design — a failed save/clear
-     * must never break an upload. But full silence hides a dead durability
-     * opt-in (F-734): surface failures dev-only, matching the worker-fallback
-     * convention in maybeCreateWorkerProvider().
-     */
     private warnCrashRecoveryFailure(op: 'save' | 'clear') {
-        return (err: unknown): void => {
-            if (
-                typeof process !== 'undefined' &&
-                process.env.NODE_ENV !== 'production'
-            ) {
-                console.warn(`[upup] crash-recovery ${op} failed`, err)
-            }
-        }
+        return warnCrashRecoveryFailure(op)
     }
 
     private configureCrashRecovery(
@@ -232,10 +216,7 @@ export class UpupCore {
      *  came last, and a completion observed while a save is queued turns that
      *  queued write into the clear instead of racing it. */
     private queueCrashRecoverySync(): void {
-        if (this.crashRecoverySyncQueued) return
-        this.crashRecoverySyncQueued = true
-        void this.enqueueCrashRecoveryOp(async () => {
-            this.crashRecoverySyncQueued = false
+        this.crashRecoveryWrites.queueSync(async () => {
             const manager = this.crashRecovery
             if (!manager || this.destroyed || this.files.size === 0) return
             if (this._status === UploadStatus.SUCCESSFUL) {
@@ -261,12 +242,7 @@ export class UpupCore {
     }
 
     private enqueueCrashRecoveryOp(op: () => Promise<void>): Promise<void> {
-        const run = this.crashRecoveryChain.then(op)
-        this.crashRecoveryChain = run.then(
-            () => undefined,
-            () => undefined,
-        )
-        return run
+        return this.crashRecoveryWrites.enqueue(op)
     }
 
     private disableCrashRecovery(): void {
@@ -379,11 +355,29 @@ export class UpupCore {
         }
     }
 
+    /** The snapshot write paths skip an empty file set (nothing to save), so
+     *  a path that EMPTIES the set must clear the snapshot itself — otherwise
+     *  the discarded files come back on the next reload. removeAll() clears
+     *  unconditionally; per-file removal and setFiles([]) land here. */
+    private clearCrashRecoveryIfEmpty(): void {
+        if (this.files.size > 0) return
+        const manager = this.crashRecovery
+        if (!manager) return
+        // Re-check when the clear RUNS, not just when it is queued: later state
+        // changes coalesce into a snapshot sync queued ahead of this clear, so
+        // files added in between must not be wiped by a stale "empty" decision.
+        this.enqueueCrashRecoveryOp(async () => {
+            if (this.files.size > 0) return
+            await manager.clear()
+        }).catch(this.warnCrashRecoveryFailure('clear'))
+    }
+
     removeFile(id: string): void {
         const file = this.fileManager.removeFile(id)
         if (file) {
             this.discardPersistedMultipartSessions([file])
             this.fileOverrides.delete(id)
+            this.clearCrashRecoveryIfEmpty()
             this.emitter.emit('file-removed', file)
             this.emitter.emit('state-change', { files: this.files })
         }
@@ -407,6 +401,7 @@ export class UpupCore {
                 UpupErrorCode.BAD_REQUEST,
             )
         await this.fileManager.setFiles(files)
+        this.clearCrashRecoveryIfEmpty()
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-set', { count: this.files.size })
     }
@@ -1032,9 +1027,6 @@ export class UpupCore {
         const snapshot = await this.crashRecovery.restore()
         const restored = reviveCrashRecoverySnapshot(snapshot)
         if (restored && restored.files.length > 0) {
-            const wasActive =
-                restored.status === UploadStatus.PROCESSING ||
-                restored.status === UploadStatus.UPLOADING
             const liveFiles = restored.files.filter(
                 ([, file]) => !this.isStaleMultipartRestore(file),
             )
@@ -1044,27 +1036,10 @@ export class UpupCore {
                 )
                 return false
             }
-            const normalized = {
-                files: liveFiles.map(([id, file]) => {
-                    if (
-                        wasActive &&
-                        file.key == null &&
-                        (file.status === UploadStatus.PROCESSING ||
-                            file.status === UploadStatus.UPLOADING ||
-                            file.status === UploadStatus.READY ||
-                            file.status === UploadStatus.IDLE)
-                    ) {
-                        return [
-                            id,
-                            Object.assign(file, {
-                                status: UploadStatus.PAUSED,
-                            }),
-                        ] as [string, UploadFile]
-                    }
-                    return [id, file] as [string, UploadFile]
-                }),
-                status: wasActive ? UploadStatus.PAUSED : restored.status,
-            }
+            const normalized = normalizeRestoredFiles(
+                liveFiles,
+                restored.status,
+            )
             this.restore(normalized)
             this.seedRestoredProgress(normalized.files)
             this.emitter.emit('crash-recovery-restored', {})
@@ -1094,50 +1069,16 @@ export class UpupCore {
         }, 0)
     }
 
-    /** A restored PAUSED file rendered "0 B of N" even when most of it was
-     *  already in storage — the persisted multipart session knows the real
-     *  offset, but nothing replayed it into the progress pipeline until the
-     *  user actually hit resume. Emit it here so the restored UI opens at the
-     *  byte count the resume will continue from. Same session gates as
-     *  tryResume (scope), minus the server round-trip: this is display-only
-     *  and must not spend a request; the authoritative recheck still happens
-     *  on resume. */
-    /** A finished multipart upload can die in the window between its
-     *  synchronous session removal and the asynchronous IndexedDB snapshot
-     *  clear — the next visit then restores a file the server already
-     *  assembled, offering a Resume that would re-upload all of it. The
-     *  session store is the tiebreaker: init writes the session synchronously
-     *  before the first byte moves and completion removes it synchronously,
-     *  so an UPLOADING-status file of multipart size with no session is a
-     *  stale snapshot, not a crashed upload. PROCESSING files never had a
-     *  session and stay restorable; so does everything below the multipart
-     *  threshold or outside persist mode. */
     private isStaleMultipartRestore(file: UploadFile): boolean {
-        const resumable = this.options.resumable
-        if (resumable?.protocol !== 'multipart') return false
-        if (!(resumable.persist ?? true)) return false
-        if (!(file instanceof File)) return false
-        if (file.status !== UploadStatus.UPLOADING) return false
-        if (file.key != null) return false
-        if (file.size < (resumable.thresholdBytes ?? 5 * 1024 * 1024)) {
-            return false
-        }
-        return loadSession(fileFingerprint(file)) == null
+        return isStaleMultipartRestore(file, this.options.resumable)
     }
 
     private seedRestoredProgress(restored: [string, UploadFile][]): void {
-        for (const [, file] of restored) {
-            if (file.status !== UploadStatus.PAUSED) continue
-            if (!(file instanceof File)) continue
-            const session = loadSession(fileFingerprint(file))
-            if (!session || session.scope !== this.options.serverUrl) continue
-            const loaded = Math.min(session.uploadedBytes ?? 0, file.size)
-            if (loaded <= 0) continue
-            this.emitter.emit('upload-progress', {
-                fileId: file.id,
-                loaded,
-                total: file.size,
-            })
+        for (const payload of restoredProgressPayloads(
+            restored,
+            this.options.serverUrl,
+        )) {
+            this.emitter.emit('upload-progress', payload)
         }
     }
 

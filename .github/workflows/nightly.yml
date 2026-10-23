@@ -23,6 +23,16 @@ on:
         - cron: '17 3 * * *' # 03:17 UTC daily
     workflow_dispatch:
 
+# One nightly at a time, queued rather than cancelled: the 03:17 cron and a
+# manual dispatch share the group, so an overlap waits its turn instead of two
+# runs fighting over the nightly-failure tracking issue. cancel-in-progress is
+# false -- killing a half-finished full e2e would lose the night's signal and
+# could leave the Nightly-Status issue update undone. (GitHub keeps at most one
+# pending run per group, so a backlog can never build up behind a slow run.)
+concurrency:
+    group: nightly
+    cancel-in-progress: false
+
 jobs:
     E2E-Full:
         name: Full E2E + a11y sweep (Playwright + MinIO)
@@ -131,7 +141,7 @@ jobs:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
                   if-no-files-found: warn
-                  retention-days: 14
+                  retention-days: 7
 
             - name: Upload Playwright traces and reports
               if: failure()
@@ -141,7 +151,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 7
 
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
@@ -431,7 +441,7 @@ jobs:
                       apps/landing/.lighthouseci-reports/
                       apps/landing/.lighthouseci-mobile-reports/
                   if-no-files-found: warn
-                  retention-days: 14
+                  retention-days: 7
 
     # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
     # branch-protection input (nightly has no PR) — it exists so one signal
@@ -548,7 +558,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 7
 
     # Read-only checks against the DEPLOYED site: each of the four drive
     # sign-ins (homepage demo popups + server-mode start routes) must reach the
@@ -595,7 +605,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 7
 
     Nightly-Status:
         name: Nightly Status Check

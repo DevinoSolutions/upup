@@ -519,6 +519,11 @@ describe('handler — OAuth redirect_uri consistency', () => {
             }),
         )
         expect(authRes.status).toBe(302)
+        // The browser keeps the nonce cookie from the redirect and sends it
+        // back on /cb (T-5463).
+        const nonceCookie = (authRes.headers.get('set-cookie') as string).split(
+            ';',
+        )[0] as string
         const authLocation = new URL(authRes.headers.get('location') as string)
         const authRedirectUri = authLocation.searchParams.get('redirect_uri')
         const state = authLocation.searchParams.get('state') as string
@@ -551,7 +556,7 @@ describe('handler — OAuth redirect_uri consistency', () => {
         await handler(
             new Request(
                 `http://localhost:53060/auth/google-drive/cb?code=AUTHCODE&state=${state}`,
-                { method: 'GET' },
+                { method: 'GET', headers: { Cookie: nonceCookie } },
             ),
         )
         fetchSpy.mockRestore()
