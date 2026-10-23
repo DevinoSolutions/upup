@@ -55,7 +55,7 @@ jobs:
               run: |
                   code=true
                   if [ "$EVENT" = "pull_request" ]; then
-                    if files=$(git diff --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
+                    if files=$(git diff --no-renames --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
                       if ! printf '%s\n' "$files" | grep -qvE '^(docs/|[^/]+\.md$)'; then
                         code=false
                       fi
