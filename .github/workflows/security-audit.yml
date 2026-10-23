@@ -1,0 +1,23 @@
+name: Security Audit
+
+permissions:
+    contents: read
+on:
+    pull_request:
+        branches: [master, dev]
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    security-audit:
+        # Org reusable audit (DevinoSolutions/.github): pnpm audit + stale-override
+        # check. Pinned to a commit SHA like every other action here. upup stays
+        # on ubuntu-latest, so the reusable workflow's ubuntu-devino default is
+        # overridden.
+        uses: DevinoSolutions/.github/.github/workflows/security-audit.yml@0f0d46183478802c4e1f2bd51580afa48518c1e
+        with:
+            runner: ubuntu-latest
+            audit-flags: '--prod'
