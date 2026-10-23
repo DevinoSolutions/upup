@@ -4,7 +4,7 @@
         "path": "packages/core/dist/**/*.js",
         "gzip": false,
         "brotli": false,
-        "limit": "422 KB"
+        "limit": "424 KB"
     },
     {
         "name": "@useupup/react",

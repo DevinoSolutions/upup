@@ -47,13 +47,18 @@ function onLogout() {
     })
 }
 
+// A failed transfer stays in this view: its message shows in the same
+// drive-error slot as a list error and the file list is kept for a retry.
+const transferError = ref<{ message: string; code?: string | undefined } | null>(null)
+const shownError = computed(() =>
+    state.value.status === 'error' ? state.value : transferError.value,
+)
 const errorText = computed(() => {
-    if (state.value.status !== 'error') return ''
-    return state.value.code && translator
-        ? translator(`errors.${errorCodeToMessageKey(state.value.code)}`, {
-              code: state.value.code,
-          })
-        : state.value.message
+    const e = shownError.value
+    if (!e) return ''
+    return e.code && translator
+        ? translator(`errors.${errorCodeToMessageKey(e.code)}`, { code: e.code })
+        : e.message
 })
 const selected = ref<Set<string>>(new Set())
 const transferring = ref(false)
@@ -74,6 +79,7 @@ function toggle(id: string) {
 
 async function handleTransfer() {
     transferring.value = true
+    transferError.value = null
     try {
         for (const file of files.value.filter(f => selected.value.has(f.id))) {
             const result = await transfer(file)
@@ -81,8 +87,12 @@ async function handleTransfer() {
                 startAuth()
                 return
             }
+            if (result.status === 'error') {
+                transferError.value = result
+                return
+            }
+            toggle(file.id)
         }
-        selected.value = new Set()
         props.onBack?.()
     } finally {
         transferring.value = false
@@ -169,7 +179,7 @@ function formatBytes(bytes: number): string {
                 </div>
                 <div class="upup-overflow-auto upup-p-2">
                     <p
-                        v-if="state.status === 'error'"
+                        v-if="shownError"
                         data-testid="upup-drive-error"
                         data-upup-slot="drive-error"
                         role="alert"

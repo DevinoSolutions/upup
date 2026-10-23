@@ -124,6 +124,21 @@ describe('POST /files/:provider/logout', () => {
         expect((await handler(logout('nope'))).status).toBe(400)
     })
 
+    it('is POST-only: GET /files/:provider/logout is 404 and keeps the grant', async () => {
+        const store = new InMemoryTokenStore()
+        await setTokens(store, DEFAULT_USER_ID, 'google-drive', {
+            accessToken: 'g',
+        })
+        const handler = createUpupHandler(config(store))
+        const res = await handler(
+            new Request('http://localhost/files/google-drive/logout'),
+        )
+        expect(res.status).toBe(404)
+        expect(
+            await getTokens(store, DEFAULT_USER_ID, 'google-drive'),
+        ).not.toBeNull()
+    })
+
     it('carries the request-id header (single Responder contract)', async () => {
         const handler = createUpupHandler(config(new InMemoryTokenStore()))
         const res = await handler(logout('google-drive'))

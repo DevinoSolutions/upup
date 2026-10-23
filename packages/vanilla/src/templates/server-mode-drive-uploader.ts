@@ -28,6 +28,9 @@ interface ServerDriveCell {
     // controller's list/folder/search state — mirrors angular's Angular-only signals.
     selected: Set<string>
     transferring: boolean
+    // A failed transfer stays in the view: shown in the drive-error slot (like
+    // a list error) with the file list kept for a retry.
+    transferError: { message: string; code?: string | undefined } | null
     inited: boolean
 }
 
@@ -61,6 +64,7 @@ function cell(
             }),
             selected: new Set(),
             transferring: false,
+            transferError: null,
             inited: false,
         }
         m.set(provider, c)
@@ -160,8 +164,11 @@ export function serverModeDriveUploader(
         else c.selected.add(id)
         ctx.invalidate()
     }
+    const shownError =
+        snap.state.status === 'error' ? snap.state : c.transferError
     const handleTransfer = async () => {
         c.transferring = true
+        c.transferError = null
         ctx.invalidate()
         try {
             for (const file of files.filter(f => c.selected.has(f.id))) {
@@ -170,8 +177,12 @@ export function serverModeDriveUploader(
                     controller.startAuth()
                     return
                 }
+                if (result.status === 'error') {
+                    c.transferError = result
+                    return
+                }
+                c.selected.delete(file.id)
             }
-            c.selected = new Set()
             onBack?.()
         } finally {
             c.transferring = false
@@ -220,7 +231,7 @@ export function serverModeDriveUploader(
         </div>
         <div class="upup-overflow-auto upup-p-2">
             ${
-                snap.state.status === 'error'
+                shownError
                     ? html`<p
                           data-testid="upup-drive-error"
                           data-upup-slot="drive-error"
@@ -233,12 +244,12 @@ export function serverModeDriveUploader(
                           )}
                       >
                           ${
-                              snap.state.code
+                              shownError.code
                                   ? ctx.translator(
-                                        `errors.${errorCodeToMessageKey(snap.state.code)}`,
-                                        { code: snap.state.code },
+                                        `errors.${errorCodeToMessageKey(shownError.code)}`,
+                                        { code: shownError.code },
                                     )
-                                  : snap.state.message
+                                  : shownError.message
                           }
                       </p>`
                     : nothing

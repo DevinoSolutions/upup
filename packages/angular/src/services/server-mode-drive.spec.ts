@@ -33,6 +33,7 @@ import { UpupStore } from '../upup-store.service'
 import { ServerModeDriveService } from './server-mode-drive.service'
 import { ServerModeDriveUploaderComponent } from '../components/server-mode-drive-uploader.component'
 import { EmptyIconComponent } from '../components/icons/empty-icon.component'
+import { SourceViewHeaderExtraService } from '../context/source-view-header-extra.service'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -63,6 +64,7 @@ function makeStoreMock() {
         translations: signal({
             authenticatePrompt: 'Sign in to {{provider}}',
             signInWith: 'Sign in with {{provider}}',
+            logOut: 'Log out',
         }),
         uiProps: {
             icons: {
@@ -378,5 +380,81 @@ describe('ServerModeDriveService — startAuth() de-dups the re-auth message lis
         const secondHandler =
             messageAddCalls[1]![1] as EventListenerOrEventListenerObject
         expect(secondHandler).not.toBe(firstHandler)
+    })
+})
+
+// ── Log out (T-6093) ──────────────────────────────────────────────────────────
+
+describe('ServerModeDriveUploaderComponent — Log out', () => {
+    afterEach(() => {
+        vi.restoreAllMocks()
+        vi.unstubAllGlobals()
+        TestBed.resetTestingModule()
+    })
+
+    it('POSTs /files/:provider/logout, returns to the selector and never opens the OAuth popup', async () => {
+        const calls: Array<{ url: string; method: string }> = []
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { method?: string }) => {
+                calls.push({ url, method: init?.method ?? 'GET' })
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/logout')) return json(200, { ok: true })
+                return json(200, {
+                    files: [{ id: '1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        const open = vi.spyOn(window, 'open').mockReturnValue(null)
+        const headerHost = document.createElement('span')
+        document.body.appendChild(headerHost)
+        const store = makeStoreMock()
+
+        await TestBed.configureTestingModule({
+            imports: [ServerModeDriveUploaderComponent],
+            providers: [
+                { provide: UpupStore, useValue: store },
+                {
+                    provide: SourceViewHeaderExtraService,
+                    useValue: { host: signal(headerHost) },
+                },
+            ],
+        }).compileComponents()
+
+        const fixture = TestBed.createComponent(
+            ServerModeDriveUploaderComponent,
+        )
+        fixture.componentInstance.provider = 'google-drive'
+        fixture.componentInstance.onBack = () => {}
+        fixture.detectChanges()
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status === 'ready')
+        fixture.detectChanges()
+
+        const logout = headerHost.querySelector('button')
+        expect(logout?.textContent?.trim()).toBe('Log out')
+        logout!.click()
+        await waitFor(() => calls.some(c => c.url.endsWith('/logout')))
+        await waitFor(
+            () =>
+                (store.setActiveSource as ReturnType<typeof vi.fn>).mock.calls
+                    .length > 0,
+        )
+
+        expect(
+            calls.filter(
+                c =>
+                    c.method === 'POST' &&
+                    c.url ===
+                        'http://localhost:53060/files/google-drive/logout',
+            ),
+        ).toHaveLength(1)
+        expect(store.setActiveSource).toHaveBeenCalledWith(undefined)
+        expect(open).not.toHaveBeenCalled()
+        headerHost.remove()
     })
 })

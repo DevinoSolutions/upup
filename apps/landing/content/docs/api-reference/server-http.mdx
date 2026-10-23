@@ -681,6 +681,15 @@ and never another provider's. No request body.
 It is idempotent: a second logout, or one for a provider the user never
 connected, is still `200`.
 
+**What it does not do.** Log out deletes only the tokens your server holds. It
+does **not** revoke the grant at Google, Microsoft, Dropbox or Box: the app
+stays authorized in the user's provider account until they remove it there.
+
+**Shared identity without `getUserId`.** When `getUserId` is unset, every caller
+resolves to the same `default` user, so anyone who can reach this route can
+disconnect that shared drive. That is the same trust level as the list and
+transfer routes; configure `getUserId` in production.
+
 **Response `200`**
 
 ```ts

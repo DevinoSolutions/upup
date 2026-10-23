@@ -46,6 +46,12 @@ export default function ServerModeDriveUploader({
         useServerModeDrive(provider)
     const [selected, setSelected] = useState<Set<string>>(new Set())
     const [transferring, setTransferring] = useState(false)
+    // A failed transfer stays in this view: its message shows in the same
+    // drive-error slot as a list error and the file list is kept for a retry.
+    const [transferError, setTransferError] = useState<{
+        message: string
+        code?: string | undefined
+    } | null>(null)
 
     if (state.status === 'reauth') {
         return (
@@ -58,6 +64,7 @@ export default function ServerModeDriveUploader({
 
     const isLoading = state.status === 'loading' || state.status === 'idle'
     const files: ServerDriveFile[] = state.status === 'ready' ? state.files : []
+    const shownError = state.status === 'error' ? state : transferError
 
     const toggle = (id: string) => {
         setSelected(prev => {
@@ -70,6 +77,7 @@ export default function ServerModeDriveUploader({
 
     const handleTransfer = async () => {
         setTransferring(true)
+        setTransferError(null)
         try {
             for (const file of files.filter(f => selected.has(f.id))) {
                 const result = await transfer(file)
@@ -77,8 +85,12 @@ export default function ServerModeDriveUploader({
                     startAuth()
                     return
                 }
+                if (result.status === 'error') {
+                    setTransferError(result)
+                    return
+                }
+                toggle(file.id)
             }
-            setSelected(new Set())
             onBack?.()
         } finally {
             setTransferring(false)
@@ -171,7 +183,7 @@ export default function ServerModeDriveUploader({
                         />
                     </div>
                     <div className="upup-overflow-auto upup-p-2">
-                        {state.status === 'error' && (
+                        {shownError && (
                             <p
                                 data-testid="upup-drive-error"
                                 data-upup-slot="drive-error"
@@ -183,12 +195,12 @@ export default function ServerModeDriveUploader({
                                         : 'upup-text-red-600',
                                 )}
                             >
-                                {state.code && translator
+                                {shownError.code && translator
                                     ? translator(
-                                          `errors.${errorCodeToMessageKey(state.code)}`,
-                                          { code: state.code },
+                                          `errors.${errorCodeToMessageKey(shownError.code)}`,
+                                          { code: shownError.code },
                                       )
-                                    : state.message}
+                                    : shownError.message}
                             </p>
                         )}
                         {files.map(file => {

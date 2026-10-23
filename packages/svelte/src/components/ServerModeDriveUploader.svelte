@@ -58,17 +58,22 @@ import { cn } from '@useupup/core/internal'
   }
   const Loader = icons.LoaderIcon
 
-  const errorText = derived(state, ($state) => {
-    if ($state.status !== 'error') return ''
-    return $state.code && translator
-      ? translator(`errors.${errorCodeToMessageKey($state.code)}`, {
-          code: $state.code,
-        })
-      : $state.message
-  })
-
   const selected = writable<Set<string>>(new Set())
   const transferring = writable(false)
+  // A failed transfer stays in this view: its message shows in the same
+  // drive-error slot as a list error and the file list is kept for a retry.
+  const transferError = writable<{ message: string; code?: string | undefined } | null>(null)
+  const shownError = derived(
+    [state, transferError],
+    ([$state, $transferError]) =>
+      $state.status === 'error' ? $state : $transferError,
+  )
+  const errorText = derived(shownError, ($e) => {
+    if (!$e) return ''
+    return $e.code && translator
+      ? translator(`errors.${errorCodeToMessageKey($e.code)}`, { code: $e.code })
+      : $e.message
+  })
 
   const isLoading = derived(state, ($state) =>
     $state.status === 'loading' || $state.status === 'idle',
@@ -88,6 +93,7 @@ import { cn } from '@useupup/core/internal'
 
   async function handleTransfer() {
     transferring.set(true)
+    transferError.set(null)
     try {
       for (const file of $files.filter((f) => $selected.has(f.id))) {
         const result = await transfer(file)
@@ -95,8 +101,12 @@ import { cn } from '@useupup/core/internal'
           startAuth()
           return
         }
+        if (result.status === 'error') {
+          transferError.set(result)
+          return
+        }
+        toggle(file.id)
       }
-      selected.set(new Set())
       onBack?.()
     } finally {
       transferring.set(false)
@@ -179,7 +189,7 @@ import { cn } from '@useupup/core/internal'
           />
         </div>
         <div class="upup-overflow-auto upup-p-2">
-          {#if $state.status === 'error'}
+          {#if $shownError}
             <p
               data-testid="upup-drive-error"
               data-upup-slot="drive-error"

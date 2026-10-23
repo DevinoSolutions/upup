@@ -52,7 +52,9 @@ const jsonRes = (status: number, body: unknown) => ({
     },
 })
 
-function stubServer(opts: { logoutStatus?: number } = {}) {
+function stubServer(
+    opts: { logoutStatus?: number; transferStatus?: number } = {},
+) {
     const calls: Array<{ url: string; method: string }> = []
     vi.stubGlobal(
         'fetch',
@@ -60,7 +62,7 @@ function stubServer(opts: { logoutStatus?: number } = {}) {
             const method = init?.method ?? 'GET'
             calls.push({ url, method })
             if (url.endsWith('/files/google-drive/transfer'))
-                return jsonRes(200, {
+                return jsonRes(opts.transferStatus ?? 200, {
                     provider: 'google-drive',
                     key: 'uploads/report.pdf',
                     name: 'report.pdf',
@@ -196,5 +198,45 @@ describe('ServerModeDriveUploader (T-6094, T-6093)', () => {
         })
         fireEvent.click(logout)
         expect(await findByTestId('upup-drive-error')).not.toBeNull()
+    })
+
+    it('a failed transfer stays in the view: error shown, list kept, no onBack, nothing added', async () => {
+        stubServer({ transferStatus: 500 })
+        const core = new UpupCore({})
+        const onBack = vi.fn()
+        const { findByText, getByText, findByTestId, queryByText } = render(
+            <Host core={core} onBack={onBack} />,
+        )
+
+        fireEvent.click(await findByText('report.pdf'))
+        fireEvent.click(getByText(/Add files/))
+
+        const error = await findByTestId('upup-drive-error')
+        expect(error.getAttribute('role')).toBe('alert')
+        expect(error.textContent).not.toBe('')
+        expect(onBack).not.toHaveBeenCalled()
+        expect(queryByText('report.pdf')).not.toBeNull()
+        expect(core.files.size).toBe(0)
+    })
+
+    it('a transfer rejected by the core restrictions is not sent to the server and shows the reason', async () => {
+        const calls = stubServer()
+        const core = new UpupCore({ maxFileSize: { size: 1, unit: 'B' } })
+        const onBack = vi.fn()
+        const { findByText, getByText, findByTestId } = render(
+            <Host core={core} onBack={onBack} />,
+        )
+
+        fireEvent.click(await findByText('report.pdf'))
+        fireEvent.click(getByText(/Add files/))
+
+        expect((await findByTestId('upup-drive-error')).textContent).toContain(
+            'report.pdf',
+        )
+        expect(
+            calls.some(c => c.url.endsWith('/files/google-drive/transfer')),
+        ).toBe(false)
+        expect(onBack).not.toHaveBeenCalled()
+        expect(core.files.size).toBe(0)
     })
 })

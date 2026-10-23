@@ -108,6 +108,30 @@ function contentHashPatch(file: UploadFile, hash: string): Partial<UploadFile> {
     return patch
 }
 
+export interface TransferredFileInfo {
+    name: string
+    size: number
+    type: string
+    key: string
+    url?: string | undefined
+    source: FileSource
+    /** Provider-scoped drive file id (google-drive:<id>), for duplicate checks. */
+    driveId?: string | undefined
+}
+
+/** Zero-byte File whose `size` reports the real stored size (own non-enumerable slot). */
+function completedBase(
+    info: Pick<TransferredFileInfo, 'name' | 'size' | 'type'>,
+): File {
+    const base = new File([], info.name, { type: info.type })
+    Object.defineProperty(base, 'size', {
+        value: info.size,
+        configurable: true,
+        enumerable: false,
+    })
+    return base
+}
+
 function nativeToUploadFile(
     file: File,
     source: FileSource = FileSource.LOCAL,
@@ -412,27 +436,57 @@ export class FileManager {
         this.files.clear()
     }
 
+    /**
+     * Would an already-stored file pass the client restrictions? Same checks as
+     * addFiles (type/size, limit, total size) plus duplicates: the same storage
+     * key, or - with contentDeduplication - the same provider file.
+     */
+    checkCompleted(
+        info: Omit<TransferredFileInfo, 'key' | 'source'> & {
+            key?: string | undefined
+        },
+    ): UpupValidationError | null {
+        const probe = completedBase(info)
+        const existing = [...this.files.values()]
+        const dup = existing.some(
+            f =>
+                (info.key !== undefined && f.key === info.key) ||
+                (this.options.contentDeduplication &&
+                    info.driveId !== undefined &&
+                    (f.metadata as Record<string, unknown> | undefined)
+                        ?.driveFileId === info.driveId),
+        )
+        if (dup) {
+            return new UpupValidationError(
+                `File "${info.name}" was already added`,
+                UpupErrorCode.DUPLICATE,
+                probe,
+            )
+        }
+        try {
+            this.validateFile(probe)
+            this.assertBatchFits([probe], existing)
+        } catch (err) {
+            // upup-catch: the violation is RETURNED to the caller, which emits
+            // it on core's restriction channel; nothing is swallowed.
+            return err as UpupValidationError
+        }
+        return null
+    }
+
     /** Register an already-stored file (zero-byte backing File, real `size`); upload() skips it (F-810). */
-    addCompleted(info: {
-        name: string
-        size: number
-        type: string
-        key: string
-        url?: string | undefined
-        source: FileSource
-    }): UploadFile {
-        const base = new File([], info.name, { type: info.type })
-        Object.defineProperty(base, 'size', {
-            value: info.size,
-            configurable: true,
-            enumerable: false,
-        })
-        const file = Object.assign(base, {
+    addCompleted(info: TransferredFileInfo): UploadFile {
+        const file = Object.assign(completedBase(info), {
             id: generateFileId(),
             source: info.source,
             status: UploadStatus.SUCCESSFUL,
             key: info.key,
-            metadata: { originalSize: info.size },
+            metadata: {
+                originalSize: info.size,
+                ...(info.driveId !== undefined
+                    ? { driveFileId: info.driveId }
+                    : {}),
+            },
             ...(info.url !== undefined ? { url: info.url } : {}),
         }) as UploadFile
         this.files.set(file.id, file)

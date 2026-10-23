@@ -29,7 +29,7 @@ describe('UpupCore.addTransferredFile', () => {
 
         expect(core.files.size).toBe(1)
         const stored = [...core.files.values()][0]!
-        expect(stored.id).toBe(file.id)
+        expect(stored.id).toBe(file?.id)
         expect(stored.status).toBe(UploadStatus.SUCCESSFUL)
         expect(stored.key).toBe('uploads/report.pdf')
         expect(stored.size).toBe(2048)

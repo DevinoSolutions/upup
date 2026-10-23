@@ -1,15 +1,19 @@
-import { UpupConfigError, UpupError, UpupErrorCode } from './errors'
+import {
+    UpupConfigError,
+    UpupError,
+    UpupErrorCode,
+    type UpupValidationError,
+} from './errors'
 import { createTranslator } from './i18n/create-translator'
 import { enUS } from './i18n/locales/en-US'
 import { resolveLocaleBundle } from './i18n/resolve-locale'
 import type { PipelineContext } from './contracts-pipeline'
 import type { UploadFile } from './types/upload-file'
-import type { FileSource } from './types/file-source'
 import { UploadStatus } from './types/upload-status'
 import { EventEmitter } from './events'
 import type { CoreEvents } from './types/core-events'
 import { PluginManager, type UpupPlugin, type ExtensionMethods } from './plugin'
-import { FileManager } from './file-manager'
+import { FileManager, type TransferredFileInfo } from './file-manager'
 import { validateFileRestrictions } from './validate-file-restrictions'
 import { PipelineEngine } from './pipeline/engine'
 import { buildAutoPipeline } from './pipeline/build-auto-pipeline'
@@ -284,20 +288,34 @@ export class UpupCore {
         return this.pluginManager.getExtensions()
     }
 
-    /** Surface a file already stored server-side (server-mode drive transfer) as a completed row. */
-    addTransferredFile(info: {
-        name: string
-        size: number
-        type: string
-        key: string
-        url?: string | undefined
-        source: FileSource
-    }): UploadFile {
+    /**
+     * Would a transferred file pass the client restrictions (type/size, limit,
+     * duplicates)? A violation is emitted on core's usual channel
+     * (restriction-failed, or file-rejected for a duplicate) and returned.
+     */
+    checkTransferredFile(
+        info: Parameters<FileManager['checkCompleted']>[0],
+    ): UpupValidationError | null {
+        const error = this.fileManager.checkCompleted(info)
+        if (!error) return null
+        if (error.code === (UpupErrorCode.DUPLICATE as string))
+            this.emitter.emit('file-rejected', { count: 1 })
+        else this.emitter.emit('restriction-failed', { error })
+        return error
+    }
+
+    /**
+     * Deliberately public: register a file that is ALREADY stored (a
+     * server-mode drive transfer) as a completed row. Returns undefined, after
+     * emitting the rejection, when it breaks a restriction.
+     */
+    addTransferredFile(info: TransferredFileInfo): UploadFile | undefined {
         if (this.destroyed)
             throw new UpupError(
                 'UpupCore: addTransferredFile() after destroy()',
                 UpupErrorCode.BAD_REQUEST,
             )
+        if (this.checkTransferredFile(info)) return undefined
         const file = this.fileManager.addCompleted(info)
         this.emitter.emit('files-added', [file])
         this.emitter.emit('upload-success', {
@@ -315,6 +333,7 @@ export class UpupCore {
                 files: this.files,
                 status: this._status,
             })
+            this.emitter.emit('upload-all-complete', [...this.files.values()])
         } else {
             this.emitter.emit('state-change', { files: this.files })
         }

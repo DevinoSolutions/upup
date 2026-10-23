@@ -39,7 +39,12 @@ export interface ServerModeDriveDeps {
     /** Getter so the controller never reads a runtime global at construction. */
     serverUrl: () => string | undefined
     /** Owning core; a successful transfer registers the stored file on it. */
-    core?: () => Pick<UpupCore, 'addTransferredFile'> | null | undefined
+    core?:
+        | (() =>
+              | Pick<UpupCore, 'addTransferredFile' | 'checkTransferredFile'>
+              | null
+              | undefined)
+        | undefined
 }
 
 const PROVIDER_SOURCE: Record<ServerModeProvider, FileSource> = {
@@ -166,6 +171,20 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 status: 'error',
                 message: 'Server Mode requires `serverUrl` prop',
             }
+        // Client restrictions (limit, size, type, duplicates) are checked BEFORE
+        // the server round-trip: a rejected file must not be stored at all.
+        const violation = this.deps.core?.()?.checkTransferredFile({
+            name: file.name,
+            size: file.size ?? 0,
+            type: file.mimeType ?? '',
+            driveId: this.driveId(file),
+        })
+        if (violation)
+            return {
+                status: 'error',
+                message: violation.message,
+                code: violation.code,
+            }
         try {
             const res = await fetch(
                 `${serverUrl}/files/${this.deps.provider}/transfer`,
@@ -200,13 +219,27 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 return { status: 'error', message: text || `${res.status}` }
             }
             const result: unknown = await res.json()
-            this.registerTransferred(file, result)
+            try {
+                this.registerTransferred(file, result)
+            } catch (err) {
+                // upup-catch: the file IS stored; a core that cannot take the
+                // row (e.g. destroyed mid-transfer) must not turn that into a
+                // failed transfer. Reported, not swallowed.
+                console.warn(
+                    'upup: transferred file stored but not registered on core',
+                    err,
+                )
+            }
             return { status: 'ok', result }
         } catch (err) {
             // upup-catch: transfer failures are returned to the caller as a typed
             // { status: 'error' } result (surfaced in the UI), not swallowed.
             return { status: 'error', message: (err as Error).message }
         }
+    }
+
+    private driveId(file: ServerDriveFile): string {
+        return `${this.deps.provider}:${file.id}`
     }
 
     /** Surface the stored file on core as a completed row. */
@@ -230,6 +263,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
             key: r.key,
             url: r.url,
             source: PROVIDER_SOURCE[this.deps.provider],
+            driveId: this.driveId(file),
         })
     }
 
@@ -248,8 +282,18 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 `${serverUrl}/files/${this.deps.provider}/logout`,
                 { method: 'POST', credentials: 'include' },
             )
-            if (res.ok) return true
-            this.setError((await res.text().catch(() => '')) || `${res.status}`)
+            // 401: no session to drop - already logged out.
+            if (res.ok || res.status === 401) return true
+            const text = await res.text().catch(() => '')
+            const body = (() => {
+                try {
+                    return JSON.parse(text) as { error?: string }
+                } catch {
+                    // upup-catch: a non-JSON body is shown as-is.
+                    return null
+                }
+            })()
+            this.setError(body?.error ?? (text || `${res.status}`))
         } catch (err) {
             // upup-catch: a failed disconnect is surfaced via the 'error' list
             // state (rendered in the drive browser), not swallowed.

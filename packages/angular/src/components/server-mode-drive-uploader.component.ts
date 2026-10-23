@@ -102,7 +102,7 @@ import { SourceViewContainerComponent } from './source-view-container.component'
 
                         <!-- Body: file list -->
                         <div class="upup-overflow-auto upup-p-2">
-                            @if (svc.listState().status === 'error') {
+                            @if (shownError) {
                                 <p
                                     data-testid="upup-drive-error"
                                     data-upup-slot="drive-error"
@@ -290,9 +290,14 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
         return s.status === 'ready' ? s.files : []
     }
 
-    get errorMessage(): string {
+    get shownError(): { message: string; code?: string | undefined } | null {
         const s = this.svc.listState()
-        if (s.status !== 'error') return ''
+        return s.status === 'error' ? s : this.svc.transferError()
+    }
+
+    get errorMessage(): string {
+        const s = this.shownError
+        if (!s) return ''
         return s.code
             ? this.store.translator(`errors.${errorCodeToMessageKey(s.code)}`, {
                   code: s.code,
@@ -382,7 +387,9 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     }
 
     handleTransfer(): void {
-        void this.svc.transfer()
+        void this.svc.transfer().then(ok => {
+            if (ok) this.onBack()
+        })
     }
 
     // ── Helpers ───────────────────────────────────────────────────
