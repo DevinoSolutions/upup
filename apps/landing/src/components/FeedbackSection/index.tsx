@@ -20,7 +20,7 @@ export default function FeedbackSection() {
             icon: <LifeBuoy className="w-5 h-5" />,
             title: 'Contact Support',
             description:
-                'Open a support request — problems, feature ideas, or questions',
+                'Open a support request: problems, feature ideas, or questions. A human replies within 1 business day.',
             // Slashed: trailingSlash:true serves the page at /support/, so the
             // slashless form costs every visitor a 308 round trip.
             action: '/support/',
@@ -29,7 +29,8 @@ export default function FeedbackSection() {
         {
             icon: <Mail className="w-5 h-5" />,
             title: 'Email Us',
-            description: 'Send feedback directly to our team',
+            description:
+                'Send feedback directly to our team. A human replies within 1 business day.',
             action: 'mailto:hello@devino.ca?subject=UpUp Feedback',
             buttonText: 'Send Email',
         },

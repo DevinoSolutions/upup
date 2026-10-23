@@ -8,6 +8,11 @@ import {
     SupportNoticeRegion,
     type SupportNotice,
 } from './support-feedback'
+import {
+    SUPPORT_REPLY_SHORT,
+    SUPPORT_SUCCESS_REPLY_TEXT,
+    SUPPORT_SUCCESS_TEXT,
+} from '@/lib/support/reply-time'
 import { SUPPORT_FORM_TYPES, type SupportFormType } from '@/lib/support/schema'
 
 type FormStatus = 'idle' | 'submitting' | 'error'
@@ -128,7 +133,12 @@ export default function SupportForm() {
     }
 
     const onSuccess = (body: SupportResponseBody) => {
-        setNotice({ kind: 'success', text: 'Thanks — we got it.' })
+        setNotice({
+            kind: 'success',
+            text: wantsReply
+                ? SUPPORT_SUCCESS_REPLY_TEXT
+                : SUPPORT_SUCCESS_TEXT,
+        })
         // Analytics failure is internal (already logged server-side); the user
         // still succeeded. But a wanted reply that could not be delivered gets
         // a heads-up.
@@ -291,6 +301,12 @@ export default function SupportForm() {
                     </button>
                 )}
             </div>
+            <p
+                data-testid="support-reply-promise"
+                className="text-sm text-gray-600 dark:text-gray-400"
+            >
+                {SUPPORT_REPLY_SHORT}
+            </p>
         </form>
     )
 }
