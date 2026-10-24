@@ -501,6 +501,54 @@ describe('useMastraChat step trail', () => {
         expect(result.current.messages[1]?.error).toBeUndefined()
     })
 
+    describe('tool-error text in the step trail', () => {
+        const leaky = 'ECONNREFUSED http://mastra:4111/api/tools'
+        const failing = () => [
+            toolCall('call-1'),
+            {
+                type: 'tool-error',
+                payload: {
+                    toolCallId: 'call-1',
+                    toolName: 'apply-config-patch',
+                    error: new Error(leaky),
+                },
+            },
+            delta('That did not work.'),
+        ]
+
+        it('shows a fixed phrase on a public page', async () => {
+            vi.stubGlobal('location', { hostname: 'useupup.com' })
+            try {
+                sdk.chunks = failing()
+                const { result } = setup()
+
+                await act(async () => result.current.send('photos only'))
+
+                const steps = result.current.messages[1]?.steps
+                expect(steps?.[0]?.label).toBe('That change failed')
+                expect(JSON.stringify(steps)).not.toContain('mastra')
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        })
+
+        it('shows the real detail on a localhost page', async () => {
+            vi.stubGlobal('location', { hostname: 'localhost' })
+            try {
+                sdk.chunks = failing()
+                const { result } = setup()
+
+                await act(async () => result.current.send('photos only'))
+
+                expect(result.current.messages[1]?.steps?.[0]?.label).toBe(
+                    `That change failed: ${leaky}`,
+                )
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        })
+    })
+
     it('gives a turn with no tool calls no trail', async () => {
         sdk.chunks = [delta('Hello.')]
         const { result } = setup()

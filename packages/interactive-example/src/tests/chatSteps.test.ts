@@ -26,8 +26,12 @@ const toolError = (
     payload: { toolCallId, toolName, error },
 })
 
-const fold = (chunks: Array<{ type: string; payload?: unknown }>) =>
-    chunks.reduce<ChatStep[]>(applyStepChunk, [])
+type Chunk = { type: string; payload?: unknown }
+const fold = (chunks: Chunk[], detail = false) =>
+    chunks.reduce<ChatStep[]>(
+        (steps, chunk) => applyStepChunk(steps, chunk, { detail }),
+        [],
+    )
 
 describe('applyStepChunk', () => {
     it('turns a tool call and its result into one running-then-done step', () => {
@@ -98,14 +102,17 @@ describe('applyStepChunk', () => {
     })
 
     it('shows a failed step as "That change failed: <reason>"', () => {
-        const [step] = fold([
-            call('c1', 'apply-config-patch'),
-            toolError(
-                'c1',
-                'apply-config-patch',
-                new Error('maxFiles must be positive'),
-            ),
-        ])
+        const [step] = fold(
+            [
+                call('c1', 'apply-config-patch'),
+                toolError(
+                    'c1',
+                    'apply-config-patch',
+                    new Error('maxFiles must be positive'),
+                ),
+            ],
+            true,
+        )
         expect(step).toMatchObject({
             status: 'error',
             label: 'That change failed: maxFiles must be positive',
@@ -113,13 +120,16 @@ describe('applyStepChunk', () => {
     })
 
     it('treats an isError tool-result like a tool-error', () => {
-        const [step] = fold([
-            call('c1', 'apply-config-patch'),
-            result('c1', 'apply-config-patch', {
-                isError: true,
-                result: { message: 'Invalid patch' },
-            }),
-        ])
+        const [step] = fold(
+            [
+                call('c1', 'apply-config-patch'),
+                result('c1', 'apply-config-patch', {
+                    isError: true,
+                    result: { message: 'Invalid patch' },
+                }),
+            ],
+            true,
+        )
         expect(step).toMatchObject({
             status: 'error',
             label: 'That change failed: Invalid patch',
@@ -153,9 +163,41 @@ describe('applyStepChunk', () => {
         expect(
             applyStepChunk(running, result('c1', 'lookup-thing'))[0]?.label,
         ).toBe('Finished lookup-thing')
-        expect(fold([toolError('c2', 'lookup-thing', 'boom')])[0]?.label).toBe(
-            'Could not run lookup-thing: boom',
+        expect(
+            fold([toolError('c2', 'lookup-thing', 'boom')], true)[0]?.label,
+        ).toBe('Could not run lookup-thing: boom')
+    })
+
+    describe('tool-error text for public visitors', () => {
+        const leaky = 'ECONNREFUSED http://mastra:4111/api/tools'
+
+        it.each([
+            ['apply-config-patch', 'That change failed'],
+            ['search-docs', 'Docs search failed'],
+            ['lookup-thing', 'Could not run lookup-thing'],
+        ])(
+            'shows a fixed phrase for %s, never the upstream text',
+            (tool, phrase) => {
+                const [step] = fold([toolError('c1', tool, leaky)])
+                expect(step?.label).toBe(phrase)
+                expect(step?.status).toBe('error')
+            },
         )
+
+        it('does the same for an isError tool-result', () => {
+            const [step] = fold([
+                result('c1', 'lookup-thing', {
+                    isError: true,
+                    result: { message: leaky },
+                }),
+            ])
+            expect(step?.label).toBe('Could not run lookup-thing')
+        })
+
+        it('shows the reason when the caller opts in to detail', () => {
+            const [step] = fold([toolError('c1', 'lookup-thing', leaky)], true)
+            expect(step?.label).toBe(`Could not run lookup-thing: ${leaky}`)
+        })
     })
 
     it('prints only a safe tool name, and a placeholder when it has none', () => {
@@ -208,9 +250,16 @@ describe('applyStepChunk', () => {
     })
 
     it('keeps a long failure reason to one short line', () => {
-        const [step] = fold([
-            toolError('c1', 'apply-config-patch', `bad\n\n${'x'.repeat(500)}`),
-        ])
+        const [step] = fold(
+            [
+                toolError(
+                    'c1',
+                    'apply-config-patch',
+                    `bad\n\n${'x'.repeat(500)}`,
+                ),
+            ],
+            true,
+        )
         expect(step?.label).not.toContain('\n')
         expect(step?.label.length).toBeLessThan(180)
         expect(step?.label.endsWith('…')).toBe(true)
