@@ -154,7 +154,7 @@ jobs:
               with:
                   name: code-coverage-report
                   path: coverage/
-                  retention-days: 3
+                  retention-days: 2
 
     Build:
         name: Build project
@@ -450,3 +450,32 @@ jobs:
                     esac
                   done
                   echo "All jobs passed successfully (code=$CODE)"
+
+    # T-7021: built-dist exists only for Bundle-Size and Docs-Gate. Once both
+    # SUCCEED, delete it so it stops counting against the org's artifact quota
+    # for its 1-day retention window. If either consumer failed (or was
+    # skipped) the artifact is KEPT so "Re-run failed jobs" can still download
+    # it. A separate job, not a Status-Check step: it needs `actions: write`
+    # and must never touch the required rollup's needs, permissions or verdict.
+    # Fork PRs get a read-only token, so the DELETE 403s: tolerated with a
+    # notice (continue-on-error is banned by the test-quality guard).
+    Cleanup-Built-Dist:
+        name: Delete built-dist
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        needs: [Bundle-Size, Docs-Gate]
+        if: needs.Bundle-Size.result == 'success' && needs.Docs-Gate.result == 'success'
+        # Job-level permissions REPLACE the workflow set, hence contents: read.
+        permissions:
+            actions: write
+            contents: read
+        steps:
+            - name: Delete built-dist artifact
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  # A failed list (5xx / rate limit) must not fail the job: the artifact just expires.
+                  ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?name=built-dist" --jq ".artifacts[].id") || { echo "::notice::could not list artifacts; built-dist expires in 1 day"; exit 0; }
+                  for id in $ids; do
+                    gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id || echo "::notice::built-dist $id not deleted (read-only fork token or API error); it expires in 1 day"
+                  done

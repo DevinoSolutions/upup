@@ -644,6 +644,12 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
+  Artifact retention (T-7021, org 500 MB Actions artifact quota): every
+  `upload-artifact` step keeps its files 2 days (`built-dist` 1) — a new upload
+  step must set `retention-days` to 2 or less. `Cleanup-Built-Dist` deletes the
+  run's `built-dist` once Bundle-Size and Docs-Gate both pass; it is not a
+  required check, keeps the artifact on failure so "Re-run failed jobs" still
+  works, and is non-fatal on fork PRs (read-only token) and API errors.
   Both `main.yml` and `e2e.yml` carry a top-level `concurrency` group
   (`workflow-PR number or ref`, `cancel-in-progress: true`): a newer push
   cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
