@@ -7,11 +7,52 @@ import { scrubFailureMessage } from './scrubFailure'
 /**
  * Shown inline (as the assistant turn) when the real Mastra agent can't be
  * reached — no canned patches, ever (round-8 item 2). The playground talks only
- * to the real agent; if it's down, say so honestly and tell the user how to
- * bring it up.
+ * to the real agent; if it's down, say so honestly. Public visitors get a plain
+ * line; the setup hint is for a developer running the agent locally.
  */
 const AGENT_UNAVAILABLE_HINT =
     'Start the Mastra server with `pnpm run dev` (it boots on http://localhost:4111) and set OPENROUTER_API_KEY in apps/mastra/.env.'
+const AGENT_UNAVAILABLE_VISITOR_LINE = 'Please try again in a moment.'
+
+// Inlined by the consumer's bundler; the package carries no node types.
+declare const process: { env: { NODE_ENV?: string } }
+
+/**
+ * True when the developer hint is meaningful: the PAGE runs locally or in a dev
+ * build. Keyed on the page, not the agent URL: the default agent URL is
+ * localhost, so a public deploy that never sets one would otherwise show every
+ * visitor the setup hint.
+ */
+function showDeveloperHint(): boolean {
+    try {
+        if (typeof window !== 'undefined') {
+            const { hostname } = window.location
+            if (
+                hostname === 'localhost' ||
+                hostname === '127.0.0.1' ||
+                hostname === '[::1]'
+            )
+                return true
+        }
+        return (
+            typeof process !== 'undefined' &&
+            process.env.NODE_ENV === 'development'
+        )
+    } catch {
+        return false
+    }
+}
+
+/**
+ * What a public visitor is told went wrong: a fixed phrase by failure kind, never
+ * upstream text (which can carry internal hosts). Developers and Sentry get the
+ * real detail.
+ */
+function visitorReason(e: unknown): string {
+    if (e instanceof EmptyReplyError) return e.message
+    if (e instanceof StreamErrorChunk) return 'the assistant returned an error'
+    return 'the assistant service could not be reached'
+}
 
 type ChatRole = 'user' | 'assistant'
 
@@ -69,6 +110,9 @@ type UseMastraChatOptions = {
      */
     onAssistantError?: ((info: AssistantErrorInfo) => void) | undefined
 }
+
+/** The stream carried an upstream `error` chunk. */
+class StreamErrorChunk extends Error {}
 
 /** The stream finished cleanly but the agent produced no usable text. */
 class EmptyReplyError extends Error {
@@ -311,7 +355,8 @@ export function useMastraChat({
                 })
 
                 if (!isCurrent()) return
-                if (streamError !== null) throw new Error(streamError)
+                if (streamError !== null)
+                    throw new StreamErrorChunk(streamError)
                 // A stream that ends with no text and no error chunk would
                 // otherwise land as a blank bubble. A turn that applied a
                 // patch is a real answer (the chips are the reply), so only a
@@ -329,7 +374,12 @@ export function useMastraChat({
             } catch (e: unknown) {
                 if (!isCurrent()) return
                 const detail = e instanceof Error ? e.message : 'Network error.'
-                const friendly = `AI assistant is unavailable (${detail}). ${AGENT_UNAVAILABLE_HINT}`
+                const developer = showDeveloperHint()
+                const friendly = `AI assistant is unavailable (${developer ? detail : visitorReason(e)}). ${
+                    developer
+                        ? AGENT_UNAVAILABLE_HINT
+                        : AGENT_UNAVAILABLE_VISITOR_LINE
+                }`
                 setError(friendly)
                 try {
                     onAssistantError?.({
