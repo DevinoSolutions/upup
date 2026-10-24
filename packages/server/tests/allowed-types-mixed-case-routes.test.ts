@@ -93,7 +93,8 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
         expect(res.status).toBe(415)
     })
 
-    it('drive transfer accepts a mixed-case claimed AND provider-reported type', async () => {
+    /** Google Drive reports `mimeType` (omitted when undefined) for the file. */
+    const stubDrive = (mimeType: string | undefined) =>
         vi.stubGlobal(
             'fetch',
             vi.fn(async (url: unknown) =>
@@ -102,13 +103,16 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
                     : new Response(
                           JSON.stringify({
                               name: 'a.png',
-                              mimeType: 'Image/Png',
+                              mimeType,
                               size: '100',
                           }),
                           { status: 200 },
                       ),
             ),
         )
+
+    it('drive transfer accepts a mixed-case claimed type against a lower-case allowlist', async () => {
+        stubDrive('image/png')
         const handler = createUpupHandler(makeConfig(store, ['image/*']))
 
         const res = await handler(
@@ -122,4 +126,42 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
         expect(res.status).toBe(200)
         expect(transferMock).toHaveBeenCalledTimes(1)
     })
+
+    it.each([undefined, 'application/octet-stream'])(
+        're-gates a mixed-case CLAIMED type when the provider reports %s',
+        async reported => {
+            stubDrive(reported)
+            const handler = createUpupHandler(makeConfig(store, ['image/*']))
+
+            const res = await handler(
+                post('/files/google-drive/transfer', {
+                    fileId: 'f1',
+                    size: 100,
+                    mimeType: 'IMAGE/PNG',
+                }),
+            )
+
+            expect(res.status).toBe(200)
+            expect(transferMock).toHaveBeenCalledTimes(1)
+        },
+    )
+
+    it.each([['image/png'], ['image/*']])(
+        'drive transfer 415s (not 500) a non-string mimeType against %s',
+        async allowed => {
+            stubDrive('image/png')
+            const handler = createUpupHandler(makeConfig(store, [allowed!]))
+
+            const res = await handler(
+                post('/files/google-drive/transfer', {
+                    fileId: 'f1',
+                    size: 100,
+                    mimeType: 123,
+                }),
+            )
+
+            expect(res.status).toBe(415)
+            expect(transferMock).not.toHaveBeenCalled()
+        },
+    )
 })

@@ -794,6 +794,7 @@ policy across the upload and drive-transfer paths:
 
 - Omitted or empty → every type passes.
 - An `image/*` entry honours the wildcard.
+- Matching is case-insensitive (ASCII): `IMAGE/PNG` matches `image/png`.
 - An absent or empty type does **not** match a non-empty allowlist. A file
   with no declared MIME type is rejected, never silently waved through.
 

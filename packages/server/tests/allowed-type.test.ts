@@ -48,4 +48,22 @@ describe('matchesAllowedType (F-743 shared policy)', () => {
         expect(matchesAllowedType('', ['IMAGE/PNG'])).toBe(false)
         expect(matchesAllowedType('', ['IMAGE/*'])).toBe(false)
     })
+
+    it('folds case for ASCII only: a non-ASCII lookalike never matches', () => {
+        // U+212A KELVIN SIGN lower-cases to ASCII "k" under toLowerCase().
+        expect(matchesAllowedType('text/marKdown', ['text/markdown'])).toBe(
+            false,
+        )
+        expect(matchesAllowedType('text/markdown', ['text/marKdown'])).toBe(
+            false,
+        )
+    })
+
+    it('treats a non-string type as a non-match instead of throwing', () => {
+        // The drive route hands over an unchecked `body.mimeType` cast.
+        const bad = 123 as unknown as string
+        expect(matchesAllowedType(bad, ['image/png'])).toBe(false)
+        expect(matchesAllowedType(bad, ['image/*'])).toBe(false)
+        expect(matchesAllowedType(bad, undefined)).toBe(true)
+    })
 })
