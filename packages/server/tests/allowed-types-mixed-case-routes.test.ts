@@ -94,22 +94,22 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
     })
 
     /** Google Drive reports `mimeType` (omitted when undefined) for the file. */
-    const stubDrive = (mimeType: string | undefined) =>
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async (url: unknown) =>
-                String(url).includes('alt=media')
-                    ? new Response('x'.repeat(100), { status: 200 })
-                    : new Response(
-                          JSON.stringify({
-                              name: 'a.png',
-                              mimeType,
-                              size: '100',
-                          }),
-                          { status: 200 },
-                      ),
-            ),
+    const stubDrive = (mimeType: string | undefined) => {
+        const driveFetch = vi.fn(async (url: unknown) =>
+            String(url).includes('alt=media')
+                ? new Response('x'.repeat(100), { status: 200 })
+                : new Response(
+                      JSON.stringify({
+                          name: 'a.png',
+                          mimeType,
+                          size: '100',
+                      }),
+                      { status: 200 },
+                  ),
         )
+        vi.stubGlobal('fetch', driveFetch)
+        return driveFetch
+    }
 
     it('drive transfer accepts a mixed-case claimed type against a lower-case allowlist', async () => {
         stubDrive('image/png')
@@ -165,10 +165,10 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
         },
     )
 
-    it.each([[123], [{}], [[]], [true]])(
+    it.each([[123], [{}], [[]], [true], [null]])(
         'drive transfer 400s a non-string mimeType (%j) when no allowlist is configured (T-7833)',
         async bad => {
-            stubDrive('image/png')
+            const driveFetch = stubDrive('image/png')
             const handler = createUpupHandler(makeConfig(store))
 
             const res = await handler(
@@ -180,6 +180,8 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
             )
 
             expect(res.status).toBe(400)
+            expect(await res.json()).toEqual({ error: 'Invalid mimeType' })
+            expect(driveFetch).not.toHaveBeenCalled()
             expect(transferMock).not.toHaveBeenCalled()
         },
     )
