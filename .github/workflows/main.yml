@@ -474,7 +474,8 @@ jobs:
               env:
                   GH_TOKEN: ${{ github.token }}
               run: |
-                  ids=$(gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[] | select(.name=="built-dist") | .id')
+                  # A failed list (5xx / rate limit) must not fail the job: the artifact just expires.
+                  ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?name=built-dist" --jq ".artifacts[].id") || { echo "::notice::could not list artifacts; built-dist expires in 1 day"; exit 0; }
                   for id in $ids; do
-                    gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id || echo "::notice::built-dist not deleted (read-only token); expires in 1 day"
+                    gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id || echo "::notice::built-dist $id not deleted (read-only fork token or API error); it expires in 1 day"
                   done
