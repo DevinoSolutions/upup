@@ -305,7 +305,9 @@ export function useMastraChat({
                             chunk.type === 'tool-result' ||
                             chunk.type === 'tool-error'
                         ) {
-                            const next = applyStepChunk(steps, chunk)
+                            const next = applyStepChunk(steps, chunk, {
+                                detail: showDeveloperHint(),
+                            })
                             if (next !== steps) {
                                 steps = next
                                 updateTurn({ steps })

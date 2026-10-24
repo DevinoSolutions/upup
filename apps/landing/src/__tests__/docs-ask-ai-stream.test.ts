@@ -513,6 +513,33 @@ describe('step trail', () => {
         expect(drawerText()).not.toContain('ECONNRESET')
     })
 
+    it('words a docs tool-error as a fixed phrase, without the upstream text', async () => {
+        const stream = stubStream()
+        await act(async () => {
+            void chat.send('q')
+            await new Promise(r => setTimeout(r, 0))
+        })
+        await stream.push(
+            TOOL_CALL,
+            {
+                type: 'tool-error',
+                payload: {
+                    toolCallId: 'c1',
+                    toolName: 'searchDocs',
+                    error: new Error('ECONNREFUSED http://mastra:4111/api'),
+                },
+            },
+            delta('Answer. '),
+        )
+        await stream.close()
+
+        const steps = chat.messages[chat.messages.length - 1]!.steps!
+        expect(steps[0]!.label).toBe('Docs search failed')
+        const serialised = JSON.stringify(steps)
+        expect(serialised).not.toContain('mastra')
+        expect(serialised).not.toContain('ECONNREFUSED')
+    })
+
     it('keeps the trail visible, settled, on a turn that failed', async () => {
         const stream = stubStream()
         await act(async () => {

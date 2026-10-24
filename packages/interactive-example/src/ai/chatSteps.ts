@@ -10,8 +10,9 @@
  *
  * Labels live in STEP_LABELS, keyed by tool id, with a generic fallback for
  * unknown tools. Nothing here ever prints raw args or results: the only
- * dynamic text is a short list of config field names, a docs query and a
- * sanitised one-line failure reason.
+ * dynamic text is a short list of config field names, a docs query and, for
+ * developers only (`detail`), a sanitised one-line failure reason. Upstream
+ * error text can carry internal hosts, so public visitors get a fixed phrase.
  */
 
 type ChatStepStatus = 'running' | 'done' | 'error'
@@ -133,8 +134,8 @@ function failureReason(error: unknown): string {
     return /^[{[]/.test(msg) ? '' : msg
 }
 
-const failedLabel = (labels: StepLabels, error: unknown) => {
-    const reason = failureReason(error)
+const failedLabel = (labels: StepLabels, error: unknown, detail: boolean) => {
+    const reason = detail ? failureReason(error) : ''
     return reason ? `${labels.failed}: ${reason}` : labels.failed
 }
 
@@ -143,11 +144,13 @@ const failedLabel = (labels: StepLabels, error: unknown) => {
  * reported more than once yields one step, and a finished step is never
  * downgraded by a late duplicate. Returns the same array when nothing changed.
  * A chunk with no id attaches to the latest running step of its tool, or
- * starts a step of its own.
+ * starts a step of its own. `detail` (default false) adds the upstream failure
+ * reason to a failed step's label; leave it off for public visitors.
  */
 export function applyStepChunk(
     steps: ChatStep[],
     chunk: StepChunk,
+    { detail = false }: { detail?: boolean } = {},
 ): ChatStep[] {
     if (
         chunk.type !== 'tool-call' &&
@@ -191,13 +194,13 @@ export function applyStepChunk(
 
     let next: Pick<ChatStep, 'status' | 'label'>
     if (chunk.type === 'tool-error') {
-        next = { status: 'error', label: failedLabel(labels, p.error) }
+        next = { status: 'error', label: failedLabel(labels, p.error, detail) }
     } else {
         const result = asRecord(p.result)
         if (p.isError === true) {
             next = {
                 status: 'error',
-                label: failedLabel(labels, p.result),
+                label: failedLabel(labels, p.result, detail),
             }
         } else if (
             (tool === 'search-docs' || tool === 'searchDocs') &&
