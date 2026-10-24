@@ -50,4 +50,15 @@ describe('docs home agent-setup link', () => {
             /<a [^>]*href="\/agent-setup\/opencode\/?"[^>]*>Set up upup in OpenCode<\/a>/,
         )
     })
+
+    it('server-renders a crawlable link to the /agent-setup/ hub', () => {
+        const html = renderToStaticMarkup(createElement(DocsHome))
+        expect(html).toMatch(
+            /<a [^>]*href="\/agent-setup\/?"[^>]*>set up Claude Code, Codex, Cursor or OpenCode<\/a>/,
+        )
+        expect(html).toContain('data-testid="docs-agent-setup-hub-link"')
+        expect(html).toMatch(
+            /<a [^>]*href="\/agent-setup\/opencode\/?"[^>]*>Set up upup in OpenCode<\/a>/,
+        )
+    })
 })
