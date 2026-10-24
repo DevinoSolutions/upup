@@ -134,11 +134,12 @@ function matchesAccept(accept: string, name: string, type: string): boolean {
         .filter(Boolean)
     if (entries.length === 0) return true
     const lower = name.toLowerCase()
+    const mime = type.toLowerCase()
     return entries.some(
         e =>
             e === '*' ||
             e === '*/*' ||
-            (e.endsWith('/*') ? type.startsWith(e.slice(0, -1)) : e === type) ||
+            (e.endsWith('/*') ? mime.startsWith(e.slice(0, -1)) : e === mime) ||
             (e.startsWith('.') && lower.endsWith(e)),
     )
 }
