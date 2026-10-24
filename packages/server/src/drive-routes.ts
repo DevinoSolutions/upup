@@ -229,6 +229,12 @@ export async function handleFileTransfer(
     if (!matchesAllowedType(body.mimeType ?? '', config.allowedTypes)) {
         return res.json({ error: 'File type not allowed' }, 415)
     }
+    // T-7833: with no allowlist the gate above passes anything, so a non-string
+    // claim (123, {}, []) would flow on to the S3 ContentType. A present
+    // mimeType must be a string; absent keeps the provider-type fallback.
+    if (body.mimeType !== undefined && typeof body.mimeType !== 'string') {
+        return res.json({ error: 'Invalid mimeType' }, 400)
+    }
 
     // The open drive response body, tracked outside the try so EVERY failure
     // after the provider fetch (a rejection, a throwing onBeforeUpload, a
