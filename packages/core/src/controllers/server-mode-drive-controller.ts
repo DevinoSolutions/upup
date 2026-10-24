@@ -1,5 +1,6 @@
 import { UpupNetworkError } from '../errors'
 import { FileSource } from '../types/file-source'
+import { fileSizeInBytes } from '../validate-file-restrictions'
 import type { UpupCore } from '../core'
 import type { ObservableController } from './types'
 
@@ -45,6 +46,7 @@ export interface ServerModeDriveDeps {
                     UpupCore,
                     | 'addTransferredFile'
                     | 'checkTransferredFile'
+                    | 'options'
                     | 'emit'
                     | 'files'
                 >
@@ -209,6 +211,8 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                         fileName: file.name,
                         size: file.size,
                         mimeType: file.mimeType,
+                        // Lets the server refuse before storing (T-7058).
+                        restrictions: this.restrictions(),
                     }),
                 },
             )
@@ -238,7 +242,6 @@ export class ServerModeDriveController implements ObservableController<ServerDri
                 // Stored, but the real size/type may break a restriction.
                 const rejected = this.registerTransferred(file, result)
                 if (rejected) return { status: 'error', message: rejected }
-                this.transferred++
             } catch (err) {
                 // upup-catch: stored, but core can't take the row (destroyed
                 // mid-transfer): still ok, reported not swallowed.
@@ -255,6 +258,17 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         }
     }
 
+    // The uploader's own limits, sent so the server can refuse before storing.
+    private restrictions() {
+        const o = this.deps.core?.()?.options
+        return o?.maxFileSize || o?.allowedFileTypes
+            ? {
+                  maxFileSize: o.maxFileSize && fileSizeInBytes(o.maxFileSize),
+                  accept: o.allowedFileTypes,
+              }
+            : undefined
+    }
+
     // Files registered since the last finishTransfers().
     private transferred = 0
 
@@ -265,7 +279,8 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         if (!core || !this.transferred) return
         this.transferred = 0
         const all = [...core.files.values()]
-        if (all.every(f => f.key != null)) core.emit('upload-all-complete', all)
+        if (all.length && all.every(f => f.key != null))
+            core.emit('upload-all-complete', all)
     }
 
     private driveId(file: ServerDriveFile): string {
@@ -300,7 +315,7 @@ export class ServerModeDriveController implements ObservableController<ServerDri
         }
         const violation = core.checkTransferredFile(info)
         if (violation) return violation.message
-        core.addTransferredFile(info)
+        if (core.addTransferredFile(info)) this.transferred++
         return null
     }
 

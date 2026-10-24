@@ -107,6 +107,42 @@ export async function handleDriveLogout(
     return res.json({ provider, ok: true }, 200)
 }
 
+/** The client's own restrictions for this transfer (T-7058). They are an
+ *  ADDITIONAL tightening of the server policy, never a loosening: a malformed
+ *  value is ignored, and the effective cap is min(server, client). */
+function clientRestrictions(raw: unknown): { cap?: number; accept?: string } {
+    if (!isJsonObject(raw)) return {}
+    const { maxFileSize, accept } = raw
+    return {
+        ...(typeof maxFileSize === 'number' &&
+        Number.isFinite(maxFileSize) &&
+        maxFileSize > 0
+            ? { cap: maxFileSize }
+            : {}),
+        ...(typeof accept === 'string' && accept.length <= 2000
+            ? { accept }
+            : {}),
+    }
+}
+
+/** `accept` semantics of the client: `*` / `*\/*`, `type/*`, exact MIME, and
+ *  `.ext` (matched on the provider's file name). */
+function matchesAccept(accept: string, name: string, type: string): boolean {
+    const entries = accept
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(Boolean)
+    if (entries.length === 0) return true
+    const lower = name.toLowerCase()
+    return entries.some(
+        e =>
+            e === '*' ||
+            e === '*/*' ||
+            (e.endsWith('/*') ? type.startsWith(e.slice(0, -1)) : e === type) ||
+            (e.startsWith('.') && lower.endsWith(e)),
+    )
+}
+
 /** Cancel an open drive stream. Best-effort and idempotent: a stream the
  *  transfer already consumed (locked or closed) rejects, which is fine. */
 async function releaseStream(
@@ -156,6 +192,7 @@ export async function handleFileTransfer(
         size?: number
         mimeType?: string
         metadata?: UpupClientMetadata
+        restrictions?: unknown
     }
     try {
         const raw: unknown = await req.json()
@@ -174,11 +211,12 @@ export async function handleFileTransfer(
     // Fast client-declared-size reject (cheap early-out before we open the
     // drive stream); the AUTHORITATIVE cap is enforced against actual streamed
     // bytes inside transferDriveFileToS3 via `maxBytes` below (F-743).
-    if (
-        config.maxFileSize &&
-        typeof body.size === 'number' &&
-        body.size > config.maxFileSize
-    ) {
+    const client = clientRestrictions(body.restrictions)
+    const maxBytes = Math.min(
+        config.maxFileSize || Infinity,
+        client.cap ?? Infinity,
+    )
+    if (typeof body.size === 'number' && body.size > maxBytes) {
         return res.json({ error: 'File too large' }, 413)
     }
     // One shared allowed-types policy with the upload path (F-743): honour the
@@ -207,19 +245,26 @@ export async function handleFileTransfer(
         // consumed, and cancel the open drive stream so the connection is freed.
         const rejected = !matchesAllowedType(mimeType, config.allowedTypes)
             ? res.json({ error: 'File type not allowed' }, 415)
-            : await runBeforeUploadHook(
-                  config,
-                  {
-                      name: fileName,
-                      size,
-                      type: mimeType,
-                      ...(body.metadata !== undefined
-                          ? { metadata: body.metadata }
-                          : {}),
-                  },
-                  req,
-                  res,
-              )
+            : size > maxBytes
+              ? // The provider's own size already breaks the (client or server)
+                // cap: refuse before streaming, so nothing is stored.
+                res.json({ error: 'File too large' }, 413)
+              : client.accept !== undefined &&
+                  !matchesAccept(client.accept, fileName, mimeType)
+                ? res.json({ error: 'File type not allowed' }, 415)
+                : await runBeforeUploadHook(
+                      config,
+                      {
+                          name: fileName,
+                          size,
+                          type: mimeType,
+                          ...(body.metadata !== undefined
+                              ? { metadata: body.metadata }
+                              : {}),
+                      },
+                      req,
+                      res,
+                  )
         if (rejected) {
             await releaseStream(driveStream)
             return rejected
@@ -246,7 +291,7 @@ export async function handleFileTransfer(
             // Enforce maxFileSize against the ACTUAL streamed bytes, and route
             // an abort-cleanup failure through onError instead of swallowing it
             // (F-743 / F-744).
-            maxBytes: config.maxFileSize,
+            maxBytes: Number.isFinite(maxBytes) ? maxBytes : undefined,
             onError: config.onError,
             requestId: res.requestId,
             downloadUrlExpiresIn: config.downloadUrlExpiresIn,
