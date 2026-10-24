@@ -395,6 +395,7 @@ export class ServerModeDriveUploaderComponent implements OnInit, OnDestroy {
     handleTransfer(): void {
         void this.svc.transfer().then(ok => {
             if (ok) this.onBack()
+            this.svc.finishTransfers() // report the finished selection once, after onBack (as the other frameworks)
         })
     }
 

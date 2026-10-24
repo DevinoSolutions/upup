@@ -63,6 +63,9 @@ export class ServerModeDriveService {
     startAuth(): void {
         this.controller.startAuth()
     }
+    finishTransfers(): void {
+        this.controller.finishTransfers()
+    }
     signOut(): Promise<boolean> {
         return this.controller.signOut()
     }
@@ -111,7 +114,6 @@ export class ServerModeDriveService {
             }
             return true
         } finally {
-            this.controller.finishTransfers() // report the finished selection once (any exit path)
             this.isTransferring.set(false)
         }
     }

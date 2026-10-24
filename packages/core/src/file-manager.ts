@@ -450,6 +450,7 @@ export class FileManager {
         })
         const existing = [...this.files.values()]
         const opts = this.options
+        const dupMessage = `File "${info.name}" was already added`
         const isDup =
             opts.contentDeduplication &&
             info.driveId !== undefined &&
@@ -459,17 +460,16 @@ export class FileManager {
                         ?.driveFileId === info.driveId,
             )
         const [violation] = isDup
-            ? [
-                  {
-                      code: UpupErrorCode.DUPLICATE as const,
-                      message: `File "${info.name}" was already added`,
-                  },
-              ]
+            ? [{ code: UpupErrorCode.DUPLICATE as const, message: dupMessage }]
             : validateFileRestrictions(probe, {
                   ...opts,
-                  // A type-less file still gets the extension check.
+                  // A type-less file only gets the extension check, and only
+                  // when accept lists nothing but extensions (else: unknown).
                   allowedFileTypes:
-                      info.type || opts.allowedFileTypes?.includes('.')
+                      info.type ||
+                      opts.allowedFileTypes
+                          ?.split(',')
+                          .every(t => t.trim().startsWith('.'))
                           ? opts.allowedFileTypes
                           : undefined,
                   ...(info.size === undefined && {

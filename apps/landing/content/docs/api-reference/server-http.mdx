@@ -615,8 +615,25 @@ list route.
     fileName?: string // overrides the provider's name
     size?: number // client-declared; used only for the fast reject
     mimeType?: string // early-out hint only; the provider's reported type decides
+    restrictions?: {
+        maxFileSize?: number // bytes; the uploader's own cap
+        accept?: string // the uploader's `accept`: MIME types, `type/*`, `.ext`
+    }
 }
 ```
+
+**`restrictions` only tighten.** The UI packages send the uploader's own
+`maxFileSize` and accepted types so a file the browser would refuse is never
+stored (it would otherwise be stored first and then orphaned when the client
+rejected it). The effective cap is `min(maxFileSize, restrictions.maxFileSize)`
+and the type must pass both `allowedTypes` and `restrictions.accept`: a client
+value can never loosen your server policy, and a malformed value is ignored.
+The declared size, then the **provider-reported** size, are checked against the
+cap before any byte is streamed (`413`, nothing stored), the provider-reported
+type and file name against `accept` before any S3 call (`415`), and the cap is
+enforced again on the streamed bytes. This is not authentication: a caller can
+simply omit `restrictions`, so keep your own `maxFileSize` / `allowedTypes`
+set for anything that must hold.
 
 **Response `200`**
 
@@ -641,13 +658,13 @@ throw-is-logged-and-swallowed treatment as multipart complete.
 | `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                       |
 | `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
 | `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
-| `413`  | `{ "error": "File too large" }`                                | declared `size` exceeds `maxFileSize`          |
-| `415`  | `{ "error": "File type not allowed" }`                         | the file's type fails `allowedTypes`           |
+| `413`  | `{ "error": "File too large" }`                                | declared or provider-reported size exceeds the cap |
+| `415`  | `{ "error": "File type not allowed" }`                         | the type fails `allowedTypes` or `restrictions.accept` |
 | `403`  | `{ "error": "Upload rejected" }`                               | your `hooks.onBeforeUpload` returned `false` (or threw an `UpupError`, as on the upload routes) |
 | `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
 | `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
 
-The `413` above is only a cheap early-out on the client-declared size. The
+The `413` above is an early-out on the declared and provider-reported size. The
 authoritative cap is enforced against the bytes actually streamed — see below.
 
 **The type is the provider's, not the client's.** The request's `mimeType` is

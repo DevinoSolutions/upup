@@ -267,6 +267,21 @@ describe('ServerModeDriveController unknown size/type and post-storage rejection
         expect(good.status).toBe('ok')
     })
 
+    it('does not pre-reject a type-less file when accept mixes MIME types and extensions', async () => {
+        const fetchSpy = stored(10, 'image/png', 'a.png')
+        vi.stubGlobal('fetch', fetchSpy)
+        const core = new UpupCore({ allowedFileTypes: 'image/*,.pdf' })
+
+        const r = await controllerFor(core).transfer({
+            id: 'f1',
+            name: 'a.png',
+            isFolder: false,
+        })
+
+        expect(fetchSpy).toHaveBeenCalledTimes(1)
+        expect(r.status).toBe('ok')
+    })
+
     it('shows the parsed {error} of a failed transfer, not the raw JSON body', async () => {
         vi.stubGlobal(
             'fetch',
@@ -444,5 +459,90 @@ describe('ServerModeDriveController.signOut failures', () => {
             status: 'error',
             message: 'tokenStore is required',
         })
+    })
+})
+
+describe('finishTransfers only counts files that really registered (T-7058)', () => {
+    it('a 200 without a key registers nothing, so finishTransfers does not report', async () => {
+        const core = new UpupCore({})
+        core.addTransferredFile(info) // a prior completed row, already reported
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        vi.stubGlobal('fetch', fetchOk({ name: 'x.bin', size: 1 }))
+        const c = controllerFor(core)
+
+        const r = await c.transfer({ id: 'f1', name: 'x.bin', isFolder: false })
+        c.finishTransfers()
+
+        expect(r.status).toBe('ok')
+        expect(core.files.size).toBe(1)
+        expect(done).not.toHaveBeenCalled()
+    })
+
+    it('never emits upload-all-complete with an empty list', async () => {
+        const core = new UpupCore({})
+        const done = vi.fn()
+        core.on('upload-all-complete', done)
+        vi.stubGlobal(
+            'fetch',
+            fetchOk({ key: 'uploads/x', name: 'x.bin', size: 1, type: 'a/b' }),
+        )
+        const c = controllerFor(core)
+
+        await c.transfer({ id: 'f1', name: 'x.bin', isFolder: false })
+        core.removeAll() // the user cleared the list before the batch ended
+        c.finishTransfers()
+
+        expect(done).not.toHaveBeenCalled()
+    })
+})
+
+describe('the client sends its own restrictions with the transfer (T-7058)', () => {
+    const bodyOf = (spy: ReturnType<typeof vi.fn>) =>
+        JSON.parse(spy.mock.calls[0]![1].body as string) as {
+            restrictions?: { maxFileSize?: number; accept?: string }
+        }
+
+    it('maxFileSize in bytes and the accept string', async () => {
+        const spy = fetchOk({
+            key: 'uploads/x',
+            name: 'x.png',
+            size: 1,
+            type: 'image/png',
+        })
+        vi.stubGlobal('fetch', spy)
+        const core = new UpupCore({
+            maxFileSize: { size: 5, unit: 'KB' },
+            allowedFileTypes: 'image/*,.pdf',
+        })
+
+        await controllerFor(core).transfer({
+            id: 'f1',
+            name: 'x.png',
+            isFolder: false,
+        })
+
+        expect(bodyOf(spy).restrictions).toEqual({
+            maxFileSize: 5 * 1024,
+            accept: 'image/*,.pdf',
+        })
+    })
+
+    it('omits `restrictions` when the uploader has none', async () => {
+        const spy = fetchOk({
+            key: 'uploads/x',
+            name: 'x',
+            size: 1,
+            type: 'a/b',
+        })
+        vi.stubGlobal('fetch', spy)
+
+        await controllerFor(new UpupCore({})).transfer({
+            id: 'f1',
+            name: 'x',
+            isFolder: false,
+        })
+
+        expect(bodyOf(spy)).not.toHaveProperty('restrictions')
     })
 })

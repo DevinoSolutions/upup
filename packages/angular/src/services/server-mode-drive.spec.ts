@@ -562,6 +562,7 @@ describe('ServerModeDriveUploaderComponent — Log out', () => {
         svc.toggleSelected('f2')
 
         expect(await svc.transfer()).toBe(true)
+        svc.finishTransfers()
 
         expect(done).toHaveBeenCalledTimes(1)
         expect(
@@ -569,5 +570,60 @@ describe('ServerModeDriveUploaderComponent — Log out', () => {
                 .map(f => f.key)
                 .sort(),
         ).toEqual(['uploads/f1', 'uploads/f2'])
+    })
+
+    it('reports the batch AFTER onBack, in the same order as the other frameworks', async () => {
+        vi.stubGlobal(
+            'fetch',
+            vi.fn(async (url: string, init?: { body?: string }) => {
+                const json = (status: number, body: unknown) =>
+                    new Response(JSON.stringify(body), {
+                        status,
+                        headers: { 'Content-Type': 'application/json' },
+                    })
+                if (url.endsWith('/transfer')) {
+                    const { fileId, fileName } = JSON.parse(init!.body!) as {
+                        fileId: string
+                        fileName: string
+                    }
+                    return json(200, {
+                        key: `uploads/${fileId}`,
+                        name: fileName,
+                        size: 3,
+                        type: 'text/plain',
+                    })
+                }
+                return json(200, {
+                    files: [{ id: 'f1', name: 'a.txt', isFolder: false }],
+                })
+            }),
+        )
+        const core = new UpupCore({})
+        const order: string[] = []
+        core.on('upload-all-complete', () => order.push('complete'))
+
+        await TestBed.configureTestingModule({
+            imports: [ServerModeDriveUploaderComponent],
+            providers: [
+                {
+                    provide: UpupStore,
+                    useValue: Object.assign(makeStoreMock(), { core }),
+                },
+            ],
+        }).compileComponents()
+        const fixture = TestBed.createComponent(
+            ServerModeDriveUploaderComponent,
+        )
+        fixture.componentInstance.provider = 'google-drive'
+        fixture.componentInstance.onBack = () => order.push('back')
+        fixture.detectChanges()
+        const svc = fixture.debugElement.injector.get(ServerModeDriveService)
+        await waitFor(() => svc.listState().status === 'ready')
+        svc.toggleSelected('f1')
+
+        fixture.componentInstance.handleTransfer()
+        await waitFor(() => order.length >= 2)
+
+        expect(order).toEqual(['back', 'complete'])
     })
 })
