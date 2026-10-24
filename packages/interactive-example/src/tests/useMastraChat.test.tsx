@@ -473,32 +473,37 @@ describe('useMastraChat step trail', () => {
     })
 
     it('records a tool-error as a failed step in plain words', async () => {
-        sdk.chunks = [
-            toolCall('call-1'),
-            {
-                type: 'tool-error',
-                payload: {
-                    toolCallId: 'call-1',
-                    toolName: 'apply-config-patch',
-                    error: new Error('maxFiles must be positive'),
+        vi.stubGlobal('location', { hostname: 'localhost' })
+        try {
+            sdk.chunks = [
+                toolCall('call-1'),
+                {
+                    type: 'tool-error',
+                    payload: {
+                        toolCallId: 'call-1',
+                        toolName: 'apply-config-patch',
+                        error: new Error('maxFiles must be positive'),
+                    },
                 },
-            },
-            delta('That did not work.'),
-        ]
-        const { result, onPatch } = setup()
+                delta('That did not work.'),
+            ]
+            const { result, onPatch } = setup()
 
-        await act(async () => result.current.send('photos only'))
+            await act(async () => result.current.send('photos only'))
 
-        expect(result.current.messages[1]?.steps).toEqual([
-            {
-                id: 'call-1',
-                tool: 'apply-config-patch',
-                status: 'error',
-                label: 'That change failed: maxFiles must be positive',
-            },
-        ])
-        expect(onPatch).not.toHaveBeenCalled()
-        expect(result.current.messages[1]?.error).toBeUndefined()
+            expect(result.current.messages[1]?.steps).toEqual([
+                {
+                    id: 'call-1',
+                    tool: 'apply-config-patch',
+                    status: 'error',
+                    label: 'That change failed: maxFiles must be positive',
+                },
+            ])
+            expect(onPatch).not.toHaveBeenCalled()
+            expect(result.current.messages[1]?.error).toBeUndefined()
+        } finally {
+            vi.unstubAllGlobals()
+        }
     })
 
     describe('tool-error text in the step trail', () => {
