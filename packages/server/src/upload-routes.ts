@@ -157,20 +157,32 @@ async function enforceTokenOwner(
     return null
 }
 
+/** ASCII-only case fold: `toLowerCase()` also folds non-ASCII lookalikes (the
+ *  Kelvin sign U+212A becomes "k"), which must not match an ASCII allowlist. */
+const asciiLower = (s: string): string =>
+    s.replace(/[A-Z]/g, c => c.toLowerCase())
+
 /** The single allowed-types policy, shared by the presign/multipart path and
  *  the drive-transfer path (F-743). No allowlist -> everything passes; an
  *  `image/*` entry honours the wildcard; an absent/empty type does NOT match a
  *  non-empty allowlist (callers pass `mimeType ?? ''` so a missing type is
- *  rejected identically on both paths, never bypassed). */
+ *  rejected identically on both paths, never bypassed). Matching is
+ *  case-insensitive (ASCII) on both sides (T-7540); a non-string type is a
+ *  non-match. */
 export function matchesAllowedType(
     type: string,
     allowedTypes?: string[],
 ): boolean {
     if (!allowedTypes?.length) return true
-    return allowedTypes.some(allowed => {
-        if (allowed === type) return true
+    // The drive route hands over an unchecked `body.mimeType` cast.
+    if (typeof type !== 'string') return false
+    // MIME types are case-insensitive (RFC 2045): fold both sides.
+    const mime = asciiLower(type)
+    return allowedTypes.some(entry => {
+        const allowed = asciiLower(entry)
+        if (allowed === mime) return true
         if (allowed.endsWith('/*')) {
-            return type.startsWith(`${allowed.slice(0, -2)}/`)
+            return mime.startsWith(`${allowed.slice(0, -2)}/`)
         }
         return false
     })

@@ -732,7 +732,8 @@ S3 multipart upload is aborted, and **nothing is persisted**. Omit the option an
 no size limit applies.
 
 **`allowedTypes`** is a list of MIME patterns. An exact match passes; a trailing
-`/*` matches the whole type family (`image/*` matches `image/png`). An empty or
+`/*` matches the whole type family (`image/*` matches `image/png`). Matching is
+case-insensitive (ASCII), so `IMAGE/PNG` matches `image/png`. An empty or
 absent type does **not** match a non-empty allowlist — a missing MIME type is
 rejected on both the upload and the transfer path, never waved through. Omit the
 option and every type passes.
