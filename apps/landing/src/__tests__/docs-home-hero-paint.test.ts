@@ -44,10 +44,14 @@ describe('docs home hero paint', () => {
 })
 
 describe('docs home agent-setup link', () => {
-    it('server-renders a crawlable link to the OpenCode setup guide', () => {
+    it('server-renders crawlable links to the OpenCode guide and the /agent-setup/ hub', () => {
         const html = renderToStaticMarkup(createElement(DocsHome))
         expect(html).toMatch(
             /<a [^>]*href="\/agent-setup\/opencode\/?"[^>]*>Set up upup in OpenCode<\/a>/,
         )
+        expect(html).toMatch(
+            /<a [^>]*href="\/agent-setup\/?"[^>]*>see the setup guides for Claude Code, Codex, Cursor and more<\/a>/,
+        )
+        expect(html).toContain('data-testid="docs-agent-setup-hub-link"')
     })
 })

@@ -241,6 +241,15 @@ export function DocsHome() {
                     >
                         Set up upup in OpenCode
                     </Link>
+                    , or{' '}
+                    <Link
+                        href="/agent-setup/"
+                        data-testid="docs-agent-setup-hub-link"
+                        className="font-medium text-gray-900 underline underline-offset-4 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
+                    >
+                        see the setup guides for Claude Code, Codex, Cursor and
+                        more
+                    </Link>
                     .
                 </p>
             </div>
