@@ -247,7 +247,8 @@ export function DocsHome() {
                         data-testid="docs-agent-setup-hub-link"
                         className="font-medium text-gray-900 underline underline-offset-4 transition-colors hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
                     >
-                        set up Claude Code, Codex, Cursor or OpenCode
+                        see the setup guides for Claude Code, Codex, Cursor and
+                        more
                     </Link>
                     .
                 </p>
