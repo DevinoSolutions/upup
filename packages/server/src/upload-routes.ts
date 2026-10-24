@@ -161,16 +161,20 @@ async function enforceTokenOwner(
  *  the drive-transfer path (F-743). No allowlist -> everything passes; an
  *  `image/*` entry honours the wildcard; an absent/empty type does NOT match a
  *  non-empty allowlist (callers pass `mimeType ?? ''` so a missing type is
- *  rejected identically on both paths, never bypassed). */
+ *  rejected identically on both paths, never bypassed). Matching is
+ *  case-insensitive on both sides (T-7540). */
 export function matchesAllowedType(
     type: string,
     allowedTypes?: string[],
 ): boolean {
     if (!allowedTypes?.length) return true
-    return allowedTypes.some(allowed => {
-        if (allowed === type) return true
+    // MIME types are case-insensitive (RFC 2045): fold both sides.
+    const mime = type.toLowerCase()
+    return allowedTypes.some(entry => {
+        const allowed = entry.toLowerCase()
+        if (allowed === mime) return true
         if (allowed.endsWith('/*')) {
-            return type.startsWith(`${allowed.slice(0, -2)}/`)
+            return mime.startsWith(`${allowed.slice(0, -2)}/`)
         }
         return false
     })

@@ -27,4 +27,25 @@ describe('matchesAllowedType (F-743 shared policy)', () => {
         expect(matchesAllowedType('', ['image/*'])).toBe(false)
         expect(matchesAllowedType('', ['image/png'])).toBe(false)
     })
+
+    // RFC 2045: MIME types and subtypes are case-insensitive, so a client
+    // claiming `IMAGE/PNG` must match an allowlist written in lower case (and
+    // vice versa). Case is folded on BOTH sides; nothing else is loosened.
+    it('matches an exact type case-insensitively on both sides', () => {
+        expect(matchesAllowedType('IMAGE/PNG', ['image/png'])).toBe(true)
+        expect(matchesAllowedType('image/png', ['IMAGE/PNG'])).toBe(true)
+    })
+
+    it('honours the wildcard case-insensitively on both sides', () => {
+        expect(matchesAllowedType('Image/Png', ['image/*'])).toBe(true)
+        expect(matchesAllowedType('image/png', ['IMAGE/*'])).toBe(true)
+        expect(matchesAllowedType('IMAGE/PNG', ['Image/*'])).toBe(true)
+    })
+
+    it('still rejects a different type or an empty type after case folding', () => {
+        expect(matchesAllowedType('TEXT/PLAIN', ['image/*'])).toBe(false)
+        expect(matchesAllowedType('text/plain', ['image/*'])).toBe(false)
+        expect(matchesAllowedType('', ['IMAGE/PNG'])).toBe(false)
+        expect(matchesAllowedType('', ['IMAGE/*'])).toBe(false)
+    })
 })
