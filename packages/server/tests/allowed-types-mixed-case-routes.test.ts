@@ -32,14 +32,14 @@ import type { UpupServerConfig } from '../src/config'
 
 const makeConfig = (
     store: InMemoryTokenStore,
-    allowedTypes: string[],
+    allowedTypes?: string[],
 ): UpupServerConfig => ({
     storage: { type: 'aws', bucket: 'test-bucket', region: 'us-east-1' },
     uploadTokenSecret: 'mixed-case-types-secret-0123456789',
     tokenStore: store,
     allowAnonymous: true,
     allowAnonymousUploads: true,
-    allowedTypes,
+    ...(allowedTypes ? { allowedTypes } : {}),
     providers: { googleDrive: { clientId: 'gid', clientSecret: 'gsec' } },
 })
 
@@ -94,22 +94,22 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
     })
 
     /** Google Drive reports `mimeType` (omitted when undefined) for the file. */
-    const stubDrive = (mimeType: string | undefined) =>
-        vi.stubGlobal(
-            'fetch',
-            vi.fn(async (url: unknown) =>
-                String(url).includes('alt=media')
-                    ? new Response('x'.repeat(100), { status: 200 })
-                    : new Response(
-                          JSON.stringify({
-                              name: 'a.png',
-                              mimeType,
-                              size: '100',
-                          }),
-                          { status: 200 },
-                      ),
-            ),
+    const stubDrive = (mimeType: string | undefined) => {
+        const driveFetch = vi.fn(async (url: unknown) =>
+            String(url).includes('alt=media')
+                ? new Response('x'.repeat(100), { status: 200 })
+                : new Response(
+                      JSON.stringify({
+                          name: 'a.png',
+                          mimeType,
+                          size: '100',
+                      }),
+                      { status: 200 },
+                  ),
         )
+        vi.stubGlobal('fetch', driveFetch)
+        return driveFetch
+    }
 
     it('drive transfer accepts a mixed-case claimed type against a lower-case allowlist', async () => {
         stubDrive('image/png')
@@ -164,4 +164,37 @@ describe('allowedTypes is case-insensitive through the routes (T-7540)', () => {
             expect(transferMock).not.toHaveBeenCalled()
         },
     )
+
+    it.each([[123], [{}], [[]], [true], [null]])(
+        'drive transfer 400s a non-string mimeType (%j) when no allowlist is configured (T-7833)',
+        async bad => {
+            const driveFetch = stubDrive('image/png')
+            const handler = createUpupHandler(makeConfig(store))
+
+            const res = await handler(
+                post('/files/google-drive/transfer', {
+                    fileId: 'f1',
+                    size: 100,
+                    mimeType: bad,
+                }),
+            )
+
+            expect(res.status).toBe(400)
+            expect(await res.json()).toEqual({ error: 'Invalid mimeType' })
+            expect(driveFetch).not.toHaveBeenCalled()
+            expect(transferMock).not.toHaveBeenCalled()
+        },
+    )
+
+    it('drive transfer still 200s an absent mimeType when no allowlist is configured (T-7833)', async () => {
+        stubDrive('image/png')
+        const handler = createUpupHandler(makeConfig(store))
+
+        const res = await handler(
+            post('/files/google-drive/transfer', { fileId: 'f1', size: 100 }),
+        )
+
+        expect(res.status).toBe(200)
+        expect(transferMock).toHaveBeenCalledTimes(1)
+    })
 })

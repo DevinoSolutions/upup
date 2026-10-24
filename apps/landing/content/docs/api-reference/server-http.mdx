@@ -655,6 +655,7 @@ throw-is-logged-and-swallowed treatment as multipart complete.
 | ------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                                                                                |
 | `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                                                                     |
+| `400`  | `{ "error": "Invalid mimeType" }`                              | `mimeType` present but not a string (incl. `null`)                                              |
 | `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                                                                        |
 | `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                                                                     |
 | `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens                                                             |
