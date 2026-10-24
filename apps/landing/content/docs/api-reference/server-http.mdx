@@ -185,18 +185,18 @@ three days unless `downloadUrlExpiresIn` says otherwise.
 
 **Status codes**
 
-| Status | Body                                                          | Cause                                         |
-| ------ | ------------------------------------------------------------- | --------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`     | unparseable body                              |
-| `400`  | `{ "error": "Invalid file metadata", "code": "BAD_REQUEST" }` | missing/wrong-typed `name`, `type`, or `size` |
-| `401`  | `{ "error": "Unauthorized" }`                                 | your `auth` gate returned `false`             |
-| `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                   |
-| `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                       |
-| `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`  |
+| Status | Body                                                          | Cause                                                                       |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`     | unparseable body                                                            |
+| `400`  | `{ "error": "Invalid file metadata", "code": "BAD_REQUEST" }` | missing/wrong-typed `name`, `type`, or `size`                               |
+| `401`  | `{ "error": "Unauthorized" }`                                 | your `auth` gate returned `false`                                           |
+| `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                                                 |
+| `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                                                     |
+| `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`                                |
 | `403`  | `{ "error": "…", "code": "…" }`                               | your `hooks.onBeforeUpload` threw an `UpupError` — its own message and code |
-| `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                  |
-| `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`          |
-| `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                        |
+| `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                                                |
+| `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`                                        |
+| `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                                                      |
 
 Checks run in that order: JSON parse, metadata shape, size, type,
 `onBeforeUpload`, then identity resolution. So an oversized file is rejected
@@ -651,18 +651,18 @@ set for anything that must hold.
 `hooks.onFileUploaded` runs after the object is durable, with the same
 throw-is-logged-and-swallowed treatment as multipart complete.
 
-| Status | Body                                                           | Cause                                          |
-| ------ | -------------------------------------------------------------- | ---------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                               |
-| `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                    |
-| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                       |
-| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
-| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
-| `413`  | `{ "error": "File too large" }`                                | declared or provider-reported size exceeds the cap |
-| `415`  | `{ "error": "File type not allowed" }`                         | the type fails `allowedTypes` or `restrictions.accept` |
+| Status | Body                                                           | Cause                                                                                           |
+| ------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                                                                                |
+| `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                                                                     |
+| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                                                                        |
+| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                                                                     |
+| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens                                                             |
+| `413`  | `{ "error": "File too large" }`                                | declared or provider-reported size exceeds the cap                                              |
+| `415`  | `{ "error": "File type not allowed" }`                         | the type fails `allowedTypes` or `restrictions.accept`                                          |
 | `403`  | `{ "error": "Upload rejected" }`                               | your `hooks.onBeforeUpload` returned `false` (or threw an `UpupError`, as on the upload routes) |
-| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
-| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
+| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                                                                 |
+| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed                                                  |
 
 The `413` above is an early-out on the declared and provider-reported size. The
 authoritative cap is enforced against the bytes actually streamed — see below.
@@ -775,11 +775,11 @@ This is independent of the one-hour upload-URL expiry.
 `hooks.onPresignResponse` is the one seam that can change what a route sends.
 It fires on three responses only, discriminated by `ctx.phase`:
 
-| `ctx.phase`           | Route                       | Body it receives                          |
-| --------------------- | --------------------------- | ----------------------------------------- |
-| `presign`             | `POST /presign`             | `PresignedUrlResponse`                    |
-| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token`      |
-| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`               |
+| `ctx.phase`           | Route                       | Body it receives                     |
+| --------------------- | --------------------------- | ------------------------------------ |
+| `presign`             | `POST /presign`             | `PresignedUrlResponse`               |
+| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token` |
+| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`          |
 
 Returning an object replaces the payload; returning nothing keeps it. The
 context is `{ req, phase, key, metadata?, userId }` — `key` is always the key
@@ -805,11 +805,11 @@ const url = await getDownloadUrl(config, 'user-42/9f3a/invoice.pdf', {
 })
 ```
 
-| Argument         | Type                              | Notes                                                        |
-| ---------------- | --------------------------------- | ------------------------------------------------------------ |
+| Argument         | Type                                | Notes                                                         |
+| ---------------- | ----------------------------------- | ------------------------------------------------------------- |
 | `config`         | `{ storage, downloadUrlExpiresIn?}` | Your `UpupServerConfig`, or any object with a `storage` slice |
-| `key`            | `string`                          | The stored object key. Signed as given — not validated       |
-| `opts.expiresIn` | `number`                          | Seconds, for this URL only                                    |
+| `key`            | `string`                            | The stored object key. Signed as given — not validated        |
+| `opts.expiresIn` | `number`                            | Seconds, for this URL only                                    |
 
 Expiry resolves `opts.expiresIn` → `config.downloadUrlExpiresIn` → three days.
 Throws `UpupConfigError` when `storage.type` has no S3 API, matching

@@ -48,7 +48,7 @@ const transferReq = (body: Record<string, unknown>) =>
     })
 
 /** Google Drive reports `size` bytes of `type` named `name`. */
-function stubGoogleDrive(name: string, type: string, size: number) {
+function stubGoogleDrive(name: string, type: string | undefined, size: number) {
     vi.stubGlobal(
         'fetch',
         vi.fn(async (url: unknown) =>
@@ -243,5 +243,42 @@ describe('drive transfer: client restrictions only tighten (T-7058)', () => {
 
         expect(res.status).toBe(200)
         expect(transferMock.mock.calls[0]![0].maxBytes).toBeUndefined()
+    })
+
+    it('compares a mixed-case claimed type case-insensitively (provider reports none)', async () => {
+        stubGoogleDrive('a.png', undefined, 100)
+        const handler = createUpupHandler(makeConfig(store))
+
+        const res = await handler(
+            transferReq({
+                fileId: 'f1',
+                mimeType: 'IMAGE/PNG',
+                restrictions: { accept: 'image/png' },
+            }),
+        )
+
+        expect(res.status).toBe(200)
+    })
+
+    it('an .ext entry is checked against the name fetchFile returns (the exported name), not the stored title', async () => {
+        // The view sends the name the user will see (e.g. a Google-native doc
+        // with its exported extension); fetchFile returns that name over the
+        // provider's bare title, and the .ext rule must use it.
+        stubGoogleDrive('Quarterly', 'application/pdf', 100)
+        const handler = createUpupHandler(makeConfig(store))
+
+        const exported = await handler(
+            transferReq({
+                fileId: 'f1',
+                fileName: 'Quarterly.pdf',
+                restrictions: { accept: '.pdf' },
+            }),
+        )
+        expect(exported.status).toBe(200)
+
+        const bare = await handler(
+            transferReq({ fileId: 'f1', restrictions: { accept: '.pdf' } }),
+        )
+        expect(bare.status).toBe(415)
     })
 })
