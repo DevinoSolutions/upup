@@ -183,7 +183,7 @@ jobs:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
                   if-no-files-found: warn
-                  retention-days: 3
+                  retention-days: 2
 
             - name: Upload Playwright traces and reports
               if: failure()
@@ -193,7 +193,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 3
+                  retention-days: 2
 
     # MinIO NEVER truncates ListParts (it answers MaxParts=10000,
     # IsTruncated=false even past 1000 parts), so on the MinIO job the
@@ -383,7 +383,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 3
+                  retention-days: 2
 
     # The six static `storybook build` productions. Nightly-only until now, and
     # nightly-only is why they rotted unnoticed for weeks: a production build
