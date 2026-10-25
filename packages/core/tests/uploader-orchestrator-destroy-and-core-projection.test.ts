@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { UploaderOrchestrator } from '../src/orchestrator/uploader-orchestrator'
 import { UpupCore } from '../src/core'
 import { UploadStatus } from '../src/types/upload-status'
-import type { UploadFile } from '../src/types/upload-file'
 import {
     createMockCore,
     createMockCoreWithHandlers,
