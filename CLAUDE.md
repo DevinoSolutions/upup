@@ -586,6 +586,18 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   nested `.husky` dirs (`apps/landing`, `apps/playground`) were removed. Never
   bypass either hook (`--no-verify`) — fix the underlying failure instead, and
   see the flake protocol above before assuming your change broke something.
+- The pre-commit hook also regenerates and stages
+  `apps/landing/src/generated/page-lastmod.json` (T-5788): sitemap route →
+  UTC date of the last commit touching that page's sources, committed because
+  the deploy image has no `.git`. `scripts/seo/page-lastmod.mjs` owns the
+  route→source map (`PAGE_SOURCES`; docs pages = their `.mdx` plus any
+  `<FrameworkTabs>` snippet dir; global chrome is deliberately excluded so a
+  navbar edit does not re-date every URL). Renaming a mapped file fails the
+  hook until the map is updated. Regenerate by hand with
+  `pnpm run seo:lastmod`; a commit made without the hook (rebase, web edit)
+  leaves the snapshot stale until the next hooked commit fixes it.
+  `sitemap.ts` throws on a page with no entry. CI (`main.yml` Test job) runs
+  `pnpm run seo:lastmod:check` on a shallow clone: coverage + date sanity only.
 
 ## CI (`.github/workflows`)
 
