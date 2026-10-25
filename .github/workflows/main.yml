@@ -149,15 +149,36 @@ jobs:
             - name: Retired-vocabulary census # naming sweeps must land in EVERY layer (identifiers, DOM strings, fixtures) — see scripts/check-retired-vocab.mjs
               run: pnpm run vocab:check
 
-            - name: Archive code coverage results
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-              with:
-                  name: code-coverage-report
-                  path: coverage/
-                  retention-days: 2
+            # Coverage goes to the run summary, not an artifact: the org artifact
+            # quota was exhausted in October 2026 and a blocked upload FAILS its
+            # step. Reads the json-summary each package's vitest config writes
+            # under coverage/<pkg>/; a missing or unparsable file is skipped and
+            # the step can never fail.
+            - name: Coverage summary
+              if: ${{ !cancelled() }}
+              run: |
+                  {
+                    echo "### Unit coverage (v8: statements / branches / functions / lines)"
+                    echo
+                    node -e '
+                      const fs = require("fs");
+                      let rows = 0;
+                      if (fs.existsSync("coverage")) {
+                        for (const d of fs.readdirSync("coverage").sort()) {
+                          try {
+                            const t = JSON.parse(fs.readFileSync("coverage/" + d + "/coverage-summary.json", "utf8")).total;
+                            const f = (k) => t[k].pct + "%";
+                            console.log("- `" + d + "`: " + f("statements") + " / " + f("branches") + " / " + f("functions") + " / " + f("lines"));
+                            rows++;
+                          } catch {}
+                        }
+                      }
+                      if (!rows) console.log("No coverage-summary.json files found.");
+                    '
+                  } >> "$GITHUB_STEP_SUMMARY" || true
 
     Build:
-        name: Build project
+        name: Build, size and snippet typecheck
         runs-on: ubuntu-latest
         timeout-minutes: 30
         needs: [Prettier-check]
@@ -187,18 +208,15 @@ jobs:
                   UPUP_E2E_REGION: us-east-1
                   UPUP_E2E_ENDPOINT: http://localhost:9100
 
-            # Bundle-Size and Docs-Gate consume this instead of rebuilding.
-            # Tarred so paths/permissions survive upload-artifact exactly.
-            - name: Pack built dist
-              run: tar -cf built-dist.tar packages/*/dist
+            # Size budgets and the doc-snippet typecheck both read the dist this
+            # job just built, so they run here rather than in jobs that would need
+            # the dist handed over as an artifact (artifact uploads are blocked
+            # org-wide while the quota is exhausted).
+            - name: Size limit
+              run: pnpm run size
 
-            - name: Upload built dist
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-              with:
-                  name: built-dist
-                  path: built-dist.tar
-                  if-no-files-found: error
-                  retention-days: 1
+            - name: Snippet typecheck (needs built dist)
+              run: pnpm run docs:snippets:check
 
     Typecheck:
         name: Typecheck project
@@ -223,38 +241,6 @@ jobs:
 
             - name: Typecheck
               run: pnpm run typecheck
-
-    Bundle-Size:
-        name: Bundle size check
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
-        needs: [Build]
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-            - name: Setup pnpm
-              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-            - name: Setup Node.js
-              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-              with:
-                  node-version-file: '.nvmrc'
-                  cache: pnpm
-
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile
-
-            - name: Download built dist
-              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-              with:
-                  name: built-dist
-
-            - name: Unpack built dist
-              run: tar -xf built-dist.tar
-
-            - name: Size limit
-              run: pnpm run size
 
     Dependency-Audit:
         name: Dependency audit (packages/*, production scope)
@@ -357,7 +343,7 @@ jobs:
         name: Docs sync gate
         runs-on: ubuntu-latest
         timeout-minutes: 30
-        needs: [Prettier-check, Build]
+        needs: [Prettier-check]
         steps:
             - name: Checkout repo
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -385,19 +371,6 @@ jobs:
             - name: Snippet coverage
               run: pnpm run docs:snippets:coverage
 
-            # check-snippets.mjs type-checks every doc snippet against the built
-            # package dist: reuse the Build job's output rather than rebuilding.
-            - name: Download built dist
-              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-              with:
-                  name: built-dist
-
-            - name: Unpack built dist
-              run: tar -xf built-dist.tar
-
-            - name: Snippet typecheck (needs built dist)
-              run: pnpm run docs:snippets:check
-
     Status-Check:
         name: Status Check
         runs-on: ubuntu-latest
@@ -410,7 +383,6 @@ jobs:
                 Test,
                 Build,
                 Typecheck,
-                Bundle-Size,
                 Dependency-Audit,
                 Lint,
                 Knip,
@@ -431,7 +403,6 @@ jobs:
                       ${{ needs.Test.result }}
                       ${{ needs.Build.result }}
                       ${{ needs.Typecheck.result }}
-                      ${{ needs.Bundle-Size.result }}
                       ${{ needs.Dependency-Audit.result }}
                       ${{ needs.Lint.result }}
                       ${{ needs.Knip.result }}
@@ -450,32 +421,3 @@ jobs:
                     esac
                   done
                   echo "All jobs passed successfully (code=$CODE)"
-
-    # T-7021: built-dist exists only for Bundle-Size and Docs-Gate. Once both
-    # SUCCEED, delete it so it stops counting against the org's artifact quota
-    # for its 1-day retention window. If either consumer failed (or was
-    # skipped) the artifact is KEPT so "Re-run failed jobs" can still download
-    # it. A separate job, not a Status-Check step: it needs `actions: write`
-    # and must never touch the required rollup's needs, permissions or verdict.
-    # Fork PRs get a read-only token, so the DELETE 403s: tolerated with a
-    # notice (continue-on-error is banned by the test-quality guard).
-    Cleanup-Built-Dist:
-        name: Delete built-dist
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        needs: [Bundle-Size, Docs-Gate]
-        if: needs.Bundle-Size.result == 'success' && needs.Docs-Gate.result == 'success'
-        # Job-level permissions REPLACE the workflow set, hence contents: read.
-        permissions:
-            actions: write
-            contents: read
-        steps:
-            - name: Delete built-dist artifact
-              env:
-                  GH_TOKEN: ${{ github.token }}
-              run: |
-                  # A failed list (5xx / rate limit) must not fail the job: the artifact just expires.
-                  ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts?name=built-dist" --jq ".artifacts[].id") || { echo "::notice::could not list artifacts; built-dist expires in 1 day"; exit 0; }
-                  for id in $ids; do
-                    gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$id || echo "::notice::built-dist $id not deleted (read-only fork token or API error); it expires in 1 day"
-                  done

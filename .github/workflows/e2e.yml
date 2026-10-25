@@ -172,18 +172,20 @@ jobs:
 
             # Visual layer: the suites freeze named product states as PNGs
             # (apps/e2e-test/visual/product-state-screenshots.ts). Uploaded on
-            # success AND failure — they are review evidence now and the
-            # snapvisor.io (Argos-style) diff input once its uploader is wired
-            # into this job. An empty upload warns: e2e ran but captured
-            # nothing, which means the capture layer itself broke.
+            # FAILURE only: the org artifact quota was exhausted in October
+            # 2026 and a blocked upload fails its step, so a green-path upload
+            # would turn a passing job red. They stay the snapvisor.io
+            # (Argos-style) diff input once its uploader is wired into this
+            # job. An empty upload warns: e2e ran but captured nothing, which
+            # means the capture layer itself broke.
             - name: Upload visual product-state screenshots
-              if: always()
+              if: failure()
               uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
                   if-no-files-found: warn
-                  retention-days: 2
+                  retention-days: 1
 
             - name: Upload Playwright traces and reports
               if: failure()

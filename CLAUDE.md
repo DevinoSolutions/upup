@@ -344,8 +344,10 @@ settled, live regions masked). Naming contract
 `screenshots/<suite>/<framework>/<flow>--<state>.png` is what snapvisor.io
 (our Argos-style visual-diff service) will key on once its uploader lands in
 CI; until then the PNGs upload as workflow artifacts
-(`e2e-visual-screenshots` / `nightly-visual-screenshots`, always — not just on
-failure). No golden images are committed and there is no regen mode: baselines
+(`e2e-visual-screenshots` / `nightly-visual-screenshots`) on FAILURE only, with
+1-day retention — the org artifact quota was exhausted in October 2026 and a
+blocked upload fails its step, so a green-path upload would red a passing job.
+No golden images are committed and there is no regen mode: baselines
 live server-side in snapvisor, so there is nothing here for the regen guards
 to protect. Every capture sits AFTER a real behavioral assertion — the
 assertion proves the state happened, the pixels prove what it looked like.
@@ -635,21 +637,25 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   span ~12%–97% (svelte/preact floors are near-vacuous), so the gate's real
   strength is uneven (F-789). `test:coverage` is a turbo task (F-790), so
   preact/vanilla coverage sees fresh dist regardless of invocation order →
-  typecheck → build (runs in parallel with Test, uploads `packages/*/dist` as
-  the one-day `built-dist` artifact; Bundle-Size and Docs-Gate `needs: Build`
-  and download it instead of rebuilding) → size-limit → a prod-scoped
+  typecheck → build (runs in parallel with Test and also runs `pnpm run size`
+  and the docs snippet typecheck against the dist it just built: jobs never hand
+  files to each other through artifacts, so there is no `built-dist` and no
+  separate Bundle-Size job; Docs-Gate keeps only the checks that need no build)
+  → a prod-scoped
   dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
   fails on high+ advisories reachable from the 9 publishable packages'
   production trees only (dev-only apps/private-package noise is excluded by
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
-  Artifact retention (T-7021, org 500 MB Actions artifact quota): every
-  `upload-artifact` step keeps its files 2 days (`built-dist` 1) — a new upload
-  step must set `retention-days` to 2 or less. `Cleanup-Built-Dist` deletes the
-  run's `built-dist` once Bundle-Size and Docs-Gate both pass; it is not a
-  required check, keeps the artifact on failure so "Re-run failed jobs" still
-  works, and is non-fatal on fork PRs (read-only token) and API errors.
+  Artifacts (T-7021, T-8322; the org Actions artifact quota was exhausted in
+  October 2026 and uploads are blocked until 2026-11-01): a blocked upload FAILS
+  its step, so no green path may upload. Jobs never pass files to each other
+  through artifacts (merge the jobs instead), reports go to `$GITHUB_STEP_SUMMARY`
+  (the Test job's per-package coverage lines, the nightly Lighthouse scores),
+  and every remaining `upload-artifact` step is `if: failure()` with
+  `retention-days` 2 or less (screenshot/evidence uploads 1). A new upload step
+  must follow all three; `continue-on-error` stays banned.
   Both `main.yml` and `e2e.yml` carry a top-level `concurrency` group
   (`workflow-PR number or ref`, `cancel-in-progress: true`): a newer push
   cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
