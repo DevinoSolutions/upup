@@ -197,6 +197,16 @@ test('reads namespaces CDATA XML entities and invalid dates conservatively', () 
     assert.deepEqual(sitemapDocument(sitemapIndex(root)).children, [root])
 })
 
+test('strips comments that a single pass would reassemble', () => {
+    const document = sitemapDocument(`<urlset>
+        <url><loc>${SITE_ORIGIN}/kept</loc></url>
+        <!<!---->-- <url><loc>${SITE_ORIGIN}/hidden</loc></url> -->
+      </urlset>`)
+    assert.deepEqual(document.entries, [
+        { loc: `${SITE_ORIGIN}/kept`, lastmod: null },
+    ])
+})
+
 test('rejects a malformed sitemap instead of treating it as no changes', () => {
     for (const xml of [
         '<html>upstream error</html>',
