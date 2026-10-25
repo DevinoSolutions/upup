@@ -58,7 +58,7 @@ Ad-hoc MinIO-dependent invocations must go through the root scripts (they wrap
 
 **Every PR (main.yml — never routed):** prettier → test-quality guard →
 script self-tests → all unit suites → coverage ratchets → env/vocab checks →
-typecheck → build → size → prod dependency audit → lint/oxlint/knip, rolled
+typecheck → build (+ size + docs snippet typecheck) → prod dependency audit → lint/oxlint/knip, rolled
 up by the required **Status Check**.
 
 **Every PR (e2e.yml — routed):** `Resolve-Affected` classifies the diff with
@@ -84,13 +84,17 @@ not sanction (and on a failed resolver), so routing cannot hide required
 coverage. Branch protection must require BOTH rollups (F-780).
 `workflow_dispatch` forces every suite (`--all`).
 
-The E2E job uploads two artifacts: `e2e-visual-screenshots` (**always** — the
-visual layer's PNGs, see "Visual screenshots" below) and
-`e2e-playwright-artifacts` (traces + reports, failure only).
+The E2E job uploads two artifacts, both on failure only: `e2e-visual-screenshots`
+(the visual layer's PNGs, see "Visual screenshots" below; 1-day retention) and
+`e2e-playwright-artifacts` (traces + reports). The org artifact quota was
+exhausted in October 2026 and a blocked upload fails its step, so no green path
+uploads; jobs never pass files to each other through artifacts either (Build runs
+size-limit and the snippet typecheck itself) and every upload keeps its files at
+most 2 days.
 
 **Nightly (nightly.yml, 03:17 UTC + manual):** full e2e + MinIO suites +
-a11y/overflow sweep (with `nightly-visual-screenshots` uploaded always and
-Playwright trace/report artifacts on failure),
+a11y/overflow sweep (with `nightly-visual-screenshots` and the Playwright trace/report
+artifacts uploaded on failure only; Lighthouse scores go to the run summary),
 static builds of all six storybooks, package smoke, the mastra LLM evals, and
 the cloud-drive live integration suites — the `Drive-Sandbox` job runs both the
 vitest client-direct suite and a Playwright HTTP-surface layer (all four
@@ -139,8 +143,8 @@ The e2e suites freeze named product states as PNGs via
 (`captureProductStateScreenshot`). This is the geometry/paint complement to
 the DOM parity harness, and the input for **snapvisor.io** — our Argos-style
 visual-diff service — once its uploader is wired into CI. Until then the PNGs
-ship as plain workflow artifacts (`e2e-visual-screenshots` on PRs,
-`nightly-visual-screenshots` on nightly) and are reviewed by humans.
+ship as plain workflow artifacts on failure only (`e2e-visual-screenshots` on
+PRs, `nightly-visual-screenshots` on nightly) and are reviewed by humans.
 
 **Naming contract** (snapvisor will key diffs on these paths — treat renames
 like fixture changes, not refactors):
