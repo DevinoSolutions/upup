@@ -84,10 +84,13 @@ function xmlText(value) {
 
 /** @param {string} xml @returns {{ children: string[], entries: SitemapEntry[] }} */
 export function sitemapDocument(xml) {
-    const document = xml
-        .replace(/<!--[\s\S]*?-->/g, '')
-        .trim()
-        .replace(/^<\?xml[\s\S]*?\?>\s*/, '')
+    // Strip comments until none are left: one pass turns `<!<!---->--` into a fresh `<!--`.
+    let uncommented = xml
+    for (let previous; previous !== uncommented;) {
+        previous = uncommented
+        uncommented = uncommented.replace(/<!--[\s\S]*?-->/g, '')
+    }
+    const document = uncommented.trim().replace(/^<\?xml[\s\S]*?\?>\s*/, '')
     const root =
         /^<((?:[\w.-]+:)?(?:urlset|sitemapindex))\b[^>]*>([\s\S]*)<\/\1\s*>$/.exec(
             document,
