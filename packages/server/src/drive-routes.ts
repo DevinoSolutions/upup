@@ -144,13 +144,21 @@ function matchesAccept(accept: string, name: string, type: string): boolean {
     )
 }
 
-/** Cancel an open drive stream. Best-effort and idempotent: a stream the
- *  transfer already consumed (locked or closed) rejects, which is fine. */
-async function releaseStream(
-    stream: ReadableStream<Uint8Array> | undefined,
-): Promise<void> {
+/** Release an open drive stream. Best-effort, idempotent and NEVER awaited: a
+ *  stream the transfer already consumed (locked or closed) rejects, which is
+ *  fine, and a cancel() that is slow or never settles (a tee'd fetch body only
+ *  settles once its sibling branch is cancelled too; a stalled socket) must not
+ *  hold the client's response hostage — T-7972: a 413/415 rejected after the
+ *  drive fetch opened the stream never answered. The cancel is still issued
+ *  before the response is returned, so the connection is freed either way. */
+function releaseStream(stream: ReadableStream<Uint8Array> | undefined): void {
     if (!stream) return
-    await stream.cancel().catch(() => undefined)
+    try {
+        void stream.cancel().catch(() => undefined)
+    } catch {
+        // upup-catch: releasing is best-effort — a stream whose cancel() throws
+        // synchronously has nothing left to free, and the response must go out.
+    }
 }
 
 export async function handleFileTransfer(
@@ -273,7 +281,7 @@ export async function handleFileTransfer(
                       res,
                   )
         if (rejected) {
-            await releaseStream(driveStream)
+            releaseStream(driveStream)
             return rejected
         }
         // Resolved AFTER the drive reports the real name/type/size, so a
@@ -318,7 +326,7 @@ export async function handleFileTransfer(
         )
         return res.json({ provider, ...result }, 200)
     } catch (err) {
-        await releaseStream(driveStream)
+        releaseStream(driveStream)
         if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)
