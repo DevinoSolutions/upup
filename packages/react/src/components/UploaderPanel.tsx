@@ -80,11 +80,13 @@ export default function UploaderPanel(): React.ReactElement | null {
             document.activeElement instanceof HTMLElement
         )
             triggerRef.current = document.activeElement
-        overlayEl
-            .querySelector<HTMLElement>(
+        // No enabled control (every tile disabled): the dialog itself
+        // (tabIndex -1) takes focus so it still lands inside the sheet.
+        const target =
+            overlayEl.querySelector<HTMLElement>(
                 'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
-            )
-            ?.focus()
+            ) ?? overlayEl
+        target.focus()
     }, [sourceOverlayOpen, activeSource])
     // When the overlay fully settles closed (past the reverse slide), restore
     // focus to the trigger if it's still in the document.
@@ -317,12 +319,13 @@ export default function UploaderPanel(): React.ReactElement | null {
                     role={sourceOverlayClosing ? undefined : 'dialog'}
                     aria-modal={sourceOverlayClosing ? undefined : 'true'}
                     aria-label={tr.addingMoreFiles}
+                    tabIndex={-1}
                     onKeyDown={e => {
                         if (e.key === 'Escape' && !sourceOverlayClosing)
                             closeSourceOverlay()
                     }}
                     className={cn(
-                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
                         sourceOverlayClosing
                             ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                             : 'upup-fx-overlay-slide',

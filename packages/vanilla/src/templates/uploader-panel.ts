@@ -45,9 +45,13 @@ function getOverlayState(ctx: UploaderContext): OverlayState {
                 document.activeElement instanceof HTMLElement
             )
                 created.trigger = document.activeElement
-            next.querySelector<HTMLElement>(
-                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
-            )?.focus()
+            // No enabled control (every tile disabled): the dialog itself
+            // (tabindex -1) takes focus so it still lands inside the sheet.
+            const target =
+                next.querySelector<HTMLElement>(
+                    'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+                ) ?? next
+            target.focus()
         } else {
             // On close (element removed): restore focus to the trigger.
             const trigger = created.trigger
@@ -286,12 +290,13 @@ export function uploaderPanel(ctx: UploaderContext): TemplateResult {
                           role=${sourceOverlayClosing ? nothing : 'dialog'}
                           aria-modal=${sourceOverlayClosing ? nothing : 'true'}
                           aria-label=${tr.addingMoreFiles}
+                          tabindex="-1"
                           @keydown=${(e: KeyboardEvent) => {
                               if (e.key === 'Escape' && !sourceOverlayClosing)
                                   ctx.closeSourceOverlay()
                           }}
                           class=${cn(
-                              'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+                              'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
                               sourceOverlayClosing
                                   ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                                   : 'upup-fx-overlay-slide',
