@@ -46,7 +46,11 @@
     if (!el) return
     if (!triggerEl && document.activeElement instanceof HTMLElement)
       triggerEl = document.activeElement
-    el.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+    el
+      .querySelector<HTMLElement>(
+        'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+      )
+      ?.focus()
   })
 
   $effect(() => {

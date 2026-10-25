@@ -102,6 +102,26 @@ describe('add-more source overlay', () => {
         expect(dialog.contains(document.activeElement)).toBe(true)
     })
 
+    it('pulls focus into the overlay but never onto the decorative sheet grip', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+
+        const grip = container.querySelector(
+            '[data-testid="upup-sheet-grip"]',
+        ) as HTMLButtonElement
+        expect(grip).not.toBeNull()
+        // The grip is the first button in the sheet, so a bare
+        // `button:not([disabled])` lookup lands on it and its focus ring is
+        // drawn over the view title. Focus must go to a real control instead.
+        const dialog = overlay(container) as HTMLElement
+        expect(dialog.contains(document.activeElement)).toBe(true)
+        expect(document.activeElement).not.toBe(grip)
+    })
+
     it('closes the overlay when files are added while it is open', async () => {
         const { container } = renderUploader()
         await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])

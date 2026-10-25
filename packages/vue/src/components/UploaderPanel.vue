@@ -83,7 +83,11 @@ watch([sourceOverlayOpen, activeSource], () => {
         if (!overlayEl) return
         if (!triggerEl && document.activeElement instanceof HTMLElement)
             triggerEl = document.activeElement
-        overlayEl.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+        overlayEl
+            .querySelector<HTMLElement>(
+                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+            )
+            ?.focus()
     })
 })
 watch([sourceOverlayOpen, sourceOverlayClosing, activeSource], () => {
