@@ -45,7 +45,9 @@ function getOverlayState(ctx: UploaderContext): OverlayState {
                 document.activeElement instanceof HTMLElement
             )
                 created.trigger = document.activeElement
-            next.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+            next.querySelector<HTMLElement>(
+                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+            )?.focus()
         } else {
             // On close (element removed): restore focus to the trigger.
             const trigger = created.trigger

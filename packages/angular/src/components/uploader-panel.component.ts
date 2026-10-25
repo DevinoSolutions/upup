@@ -288,7 +288,9 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
                     )
                         this.triggerEl = document.activeElement
                     overlayEl
-                        .querySelector<HTMLElement>('button:not([disabled])')
+                        .querySelector<HTMLElement>(
+                            'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+                        )
                         ?.focus()
                 })
                 return

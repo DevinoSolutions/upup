@@ -63,7 +63,9 @@ export default function UploaderPanel(): React.ReactElement | null {
     // On open (or an inner view swap) pull focus into the overlay so keyboard/SR
     // users don't land on the inert list underneath, capturing the element that
     // triggered it. Skips the closing phase (open/activeSource both false there)
-    // so the departing overlay never steals focus back.
+    // so the departing overlay never steals focus back. The decorative sheet grip
+    // is the first button in the sheet but is not a landing target (its focus
+    // ring would paint over the view title), so it is excluded from the lookup.
     const overlayRef = useRef<HTMLDivElement>(null)
     const triggerRef = useRef<HTMLElement | null>(null)
     // Sheet swipe-to-dismiss state (refs — dragging must not re-render).
@@ -78,7 +80,11 @@ export default function UploaderPanel(): React.ReactElement | null {
             document.activeElement instanceof HTMLElement
         )
             triggerRef.current = document.activeElement
-        overlayEl.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+        overlayEl
+            .querySelector<HTMLElement>(
+                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+            )
+            ?.focus()
     }, [sourceOverlayOpen, activeSource])
     // When the overlay fully settles closed (past the reverse slide), restore
     // focus to the trigger if it's still in the document.
