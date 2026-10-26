@@ -1,12 +1,12 @@
 {
     "pages": {
-        "/": "2026-10-23",
+        "/": "2026-10-26",
         "/agent-setup": "2026-10-20",
         "/agent-setup/claude-code": "2026-10-20",
         "/agent-setup/codex": "2026-10-20",
         "/agent-setup/cursor": "2026-10-20",
         "/agent-setup/opencode": "2026-10-20",
-        "/angular": "2026-10-23",
+        "/angular": "2026-10-26",
         "/docs": "2026-10-24",
         "/docs/ai-assistants": "2026-10-22",
         "/docs/api-reference/azure-generate-sas-url": "2026-07-22",
@@ -88,12 +88,12 @@
         "/docs/quickstarts/vanilla": "2026-10-13",
         "/docs/quickstarts/vue": "2026-10-22",
         "/docs/resumable-uploads": "2026-09-12",
-        "/preact": "2026-10-23",
+        "/preact": "2026-10-26",
         "/privacy": "2026-09-12",
-        "/react": "2026-10-23",
+        "/react": "2026-10-26",
         "/support": "2026-10-23",
-        "/svelte": "2026-10-23",
-        "/vanilla": "2026-10-23",
-        "/vue": "2026-10-23"
+        "/svelte": "2026-10-26",
+        "/vanilla": "2026-10-26",
+        "/vue": "2026-10-26"
     }
 }

@@ -31,7 +31,7 @@ export default function FeedbackSection() {
             title: 'Email Us',
             description:
                 'Send feedback directly to our team. A human replies within 1 business day.',
-            action: 'mailto:hello@devino.ca?subject=UpUp Feedback',
+            action: 'mailto:support@useupup.com?subject=UpUp Feedback',
             buttonText: 'Send Email',
         },
         {
