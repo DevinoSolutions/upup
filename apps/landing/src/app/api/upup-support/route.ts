@@ -239,8 +239,10 @@ export async function POST(req: Request): Promise<Response> {
  * Mail the submitter a confirmation, inside every abuse limit (the form takes
  * any address, so an unguarded echo would be a spam relay): once per address per
  * 24h, 2 per client IP per hour, 200 per UTC day overall. A request that is over
- * a limit, or whose send did not go out, spends none of the allowances. Never
- * throws (`sendSupportConfirmation` maps every failure to a status).
+ * a limit, or whose send definitely did not go out, spends none of the
+ * allowances. A send that timed out (`unknown`) may have been accepted, so it
+ * keeps its allowances: refunding would let a retry mail the address twice.
+ * Never throws (`sendSupportConfirmation` maps every failure to a status).
  */
 async function confirmToSubmitter(args: {
     feedbackId: string
@@ -265,7 +267,7 @@ async function confirmToSubmitter(args: {
         message,
         promiseReply,
     })
-    if (status !== 'ok') {
+    if (status !== 'ok' && status !== 'unknown') {
         releaseConfirmationSlot(email)
         releaseConfirmationBudget(ip)
     }

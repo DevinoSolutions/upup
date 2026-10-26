@@ -131,10 +131,12 @@ export type EmailLegStatus = 'ok' | 'failed' | 'not_configured'
 /**
  * The submitter confirmation email. `skipped`: nothing to send (no address, a
  * dropped honeypot, or a submission recorded nowhere); `throttled`: this
- * address was already confirmed inside the throttle window.
+ * address was already confirmed inside the throttle window; `unknown`: our
+ * request timed out after it was sent, so Sendly may still have accepted the
+ * mail (neither a delivery nor a failure we can claim).
  */
 export type ConfirmationLegStatus =
-    'ok' | 'failed' | 'not_configured' | 'skipped' | 'throttled'
+    'ok' | 'failed' | 'not_configured' | 'skipped' | 'throttled' | 'unknown'
 
 export interface SupportResponse {
     ok: boolean

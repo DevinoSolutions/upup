@@ -27,6 +27,8 @@ const PER_IP_LIMIT = 2
 const IP_WINDOW_MS = 60 * 60 * 1000
 /** Hard ceiling on tracked IPs (same reasoning as the address cap). */
 const MAX_TRACKED_IPS = 10_000
+/** How often IPs whose hour has passed are swept out (also swept when the cap is hit). */
+const IP_SWEEP_INTERVAL_MS = 60 * 1000
 
 /** At most this many confirmations per process per UTC day. */
 export const CONFIRMATIONS_PER_DAY = 200
@@ -37,6 +39,7 @@ export const CONFIRMATIONS_PER_DAY = 200
 const sentAt = new Map<string, number>()
 // ip -> times (ms) of the confirmations it triggered inside the last hour.
 const byIp = new Map<string, number[]>()
+let lastIpSweepAt = 0
 let today = { day: '', count: 0 }
 
 const GMAIL_DOMAINS = new Set(['gmail.com', 'googlemail.com'])
@@ -90,11 +93,32 @@ function utcDay(now: number): string {
 }
 
 /**
+ * Drop every IP whose newest confirmation is older than the window: it is
+ * indistinguishable from an IP never seen, so forgetting it changes no decision.
+ * Timestamps are appended in order, so the last one is the newest.
+ */
+function sweepStaleIps(now: number): void {
+    lastIpSweepAt = now
+    for (const [ip, times] of byIp) {
+        const newest = times[times.length - 1]
+        if (newest === undefined || now - newest >= IP_WINDOW_MS) {
+            byIp.delete(ip)
+        }
+    }
+}
+
+/** Test-only: number of IPs currently tracked. */
+export function trackedIpCountForTests(): number {
+    return byIp.size
+}
+
+/**
  * Claim one confirmation from this client IP's hourly budget AND the process's
  * daily cap. A request the IP budget refuses never spends the daily cap.
  */
 export function takeConfirmationBudget(ip: string): boolean {
     const now = Date.now()
+    if (now - lastIpSweepAt >= IP_SWEEP_INTERVAL_MS) sweepStaleIps(now)
     const recent = (byIp.get(ip) ?? []).filter(t => now - t < IP_WINDOW_MS)
     if (recent.length >= PER_IP_LIMIT) {
         byIp.delete(ip)
@@ -109,6 +133,8 @@ export function takeConfirmationBudget(ip: string): boolean {
     recent.push(now)
     byIp.delete(ip)
     byIp.set(ip, recent)
+    // Over the cap: expired IPs go first; only then the oldest live one.
+    if (byIp.size > MAX_TRACKED_IPS) sweepStaleIps(now)
     while (byIp.size > MAX_TRACKED_IPS) {
         const oldest = byIp.keys().next().value
         if (oldest === undefined) break
@@ -118,12 +144,22 @@ export function takeConfirmationBudget(ip: string): boolean {
     return true
 }
 
-/** Hand one confirmation of budget back (the matching send did not go out). */
+/**
+ * Hand one confirmation of budget back (the matching send did not go out).
+ * Refunds the IP's newest confirmation, and the daily cap only when that
+ * confirmation was taken on the CURRENT UTC day: after midnight the counter
+ * belongs to a new day, and decrementing it would refund against the wrong one.
+ * An IP with no record has nothing to give back.
+ */
 export function releaseConfirmationBudget(ip: string): void {
     const times = byIp.get(ip)
-    if (times?.length) {
-        times.pop()
-        if (times.length === 0) byIp.delete(ip)
+    const takenAt = times?.pop()
+    if (times && times.length === 0) byIp.delete(ip)
+    if (
+        takenAt !== undefined &&
+        utcDay(takenAt) === today.day &&
+        today.count > 0
+    ) {
+        today.count -= 1
     }
-    if (today.count > 0) today.count -= 1
 }

@@ -162,3 +162,71 @@ describe('global daily cap', () => {
         expect(granted).toBe(198)
     })
 })
+
+describe('budget release across the UTC day boundary', () => {
+    it('does not refund the new day when the slot was taken the day before', async () => {
+        const t = await load()
+        vi.setSystemTime(new Date('2026-10-23T23:59:58Z'))
+        expect(t.takeConfirmationBudget('203.0.113.1')).toBe(true)
+
+        // The send straddles midnight: the budget is released on the next day.
+        vi.setSystemTime(new Date('2026-10-24T00:00:01Z'))
+        expect(t.takeConfirmationBudget('203.0.113.2')).toBe(true)
+        t.releaseConfirmationBudget('203.0.113.1')
+
+        // The new day spent 1 of 200 and the stale release must not give it
+        // back, so exactly 199 more are granted and the next one is refused.
+        for (let i = 0; i < 199; i++) {
+            expect(t.takeConfirmationBudget(`10.3.0.${i}`)).toBe(true)
+        }
+        expect(t.takeConfirmationBudget('192.0.2.1')).toBe(false)
+    })
+
+    it('still returns the hourly IP allowance when the release crosses midnight', async () => {
+        const t = await load()
+        vi.setSystemTime(new Date('2026-10-23T23:59:58Z'))
+        t.takeConfirmationBudget('203.0.113.1')
+        t.takeConfirmationBudget('203.0.113.1')
+
+        vi.setSystemTime(new Date('2026-10-24T00:00:01Z'))
+        t.releaseConfirmationBudget('203.0.113.1')
+        expect(t.takeConfirmationBudget('203.0.113.1')).toBe(true)
+    })
+
+    it('does not count down an IP it has no record of', async () => {
+        const t = await load()
+        t.takeConfirmationBudget('203.0.113.1')
+        t.releaseConfirmationBudget('203.0.113.99')
+        t.releaseConfirmationBudget('203.0.113.99')
+        for (let i = 0; i < 199; i++) {
+            expect(t.takeConfirmationBudget(`10.4.0.${i}`)).toBe(true)
+        }
+        expect(t.takeConfirmationBudget('192.0.2.1')).toBe(false)
+    })
+})
+
+describe('stale per-IP entries', () => {
+    it('drops IPs whose hour has passed once traffic arrives, keeping the map small', async () => {
+        const t = await load()
+        t.takeConfirmationBudget('203.0.113.1')
+        t.takeConfirmationBudget('203.0.113.2')
+        t.takeConfirmationBudget('203.0.113.3')
+        expect(t.trackedIpCountForTests()).toBe(3)
+
+        vi.setSystemTime(Date.now() + 2 * HOUR)
+        t.takeConfirmationBudget('203.0.113.4')
+        expect(t.trackedIpCountForTests()).toBe(1)
+    })
+
+    it('keeps an IP that is still inside its hour when expired ones are swept', async () => {
+        const t = await load()
+        t.takeConfirmationBudget('203.0.113.1')
+        t.takeConfirmationBudget('203.0.113.1')
+
+        vi.setSystemTime(Date.now() + HOUR / 2)
+        t.takeConfirmationBudget('203.0.113.2')
+        expect(t.trackedIpCountForTests()).toBe(2)
+        // The kept entry still limits that IP.
+        expect(t.takeConfirmationBudget('203.0.113.1')).toBe(false)
+    })
+})

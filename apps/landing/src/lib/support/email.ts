@@ -48,7 +48,7 @@ export async function sendSupportEmail(
     const apiKey = env.SENDLY_API_KEY
     if (!apiKey) return 'not_configured'
 
-    return postToSendly({
+    const status = await postToSendly({
         apiKey,
         feedbackId: input.feedbackId,
         idempotencyKey: input.feedbackId,
@@ -62,6 +62,9 @@ export async function sendSupportEmail(
             ...(input.email ? { reply: input.email } : {}),
         },
     })
+    // The team notification has no refund to protect, so a timed-out send is
+    // simply reported as failed (its idempotency key makes a retry safe).
+    return status === 'unknown' ? 'failed' : status
 }
 
 interface SupportConfirmationInput {
@@ -80,11 +83,12 @@ interface SupportConfirmationInput {
  * HTML). Replies go to the team inbox. A distinct idempotency key keeps a retry
  * of the same submission from mailing the submitter twice without colliding with
  * the notification's key. Never throws; never logs the key, the address, or
- * Sendly's error body (it can echo the third-party recipient).
+ * Sendly's error body (it can echo the third-party recipient). Resolves
+ * `unknown` when the `CONFIRMATION_TIMEOUT_MS` abort fires mid-request.
  */
 export async function sendSupportConfirmation(
     input: SupportConfirmationInput,
-): Promise<EmailLegStatus> {
+): Promise<EmailLegStatus | 'unknown'> {
     const apiKey = env.SENDLY_API_KEY
     if (!apiKey) return 'not_configured'
 
@@ -104,7 +108,12 @@ export async function sendSupportConfirmation(
     })
 }
 
-/** One Sendly send. Maps every outcome to a status; never throws, never logs the key. */
+/**
+ * One Sendly send. Maps every outcome to a status; never throws, never logs the
+ * key. `unknown`: our own timeout aborted the request, so Sendly may already
+ * have accepted the mail. Callers must not treat it as a send that did not go
+ * out (no refunding of allowances).
+ */
 async function postToSendly(args: {
     apiKey: string
     feedbackId: string
@@ -113,7 +122,7 @@ async function postToSendly(args: {
     /** Include a (truncated) non-2xx response body in the log. Off for mail to third parties. */
     logResponseBody: boolean
     payload: Record<string, string>
-}): Promise<EmailLegStatus> {
+}): Promise<EmailLegStatus | 'unknown'> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), args.timeoutMs)
     try {
@@ -140,6 +149,12 @@ async function postToSendly(args: {
         }
         return 'ok'
     } catch (error) {
+        if (controller.signal.aborted) {
+            console.error(
+                `[support] sendly send timed out for ${args.feedbackId}, outcome unknown`,
+            )
+            return 'unknown'
+        }
         console.error(
             `[support] sendly send errored for ${args.feedbackId}:`,
             error instanceof Error ? error.message : error,
