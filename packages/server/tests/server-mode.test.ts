@@ -405,7 +405,7 @@ describe('GET /auth/:provider/cb', () => {
         expect(body.error).toContain('access_denied')
     })
 
-    it('502s on provider token-exchange failure', async () => {
+    it('424s on provider token-exchange failure', async () => {
         fetchSpy.mockResolvedValueOnce(
             new Response('bad', { status: 400, statusText: 'Bad Request' }),
         )
@@ -422,7 +422,7 @@ describe('GET /auth/:provider/cb', () => {
                 headers: cbCookie('dropbox'),
             }),
         )
-        expect(res.status).toBe(502)
+        expect(res.status).toBe(424)
     })
 })
 

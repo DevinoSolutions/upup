@@ -13,6 +13,34 @@ import { UpupErrorCode } from '@useupup/core'
 
 export type ResponseHeaders = Record<string, string>
 
+/** A provider call failed because of something the CLIENT supplied or controls:
+ *  the authorization code (expired, reused, forged) or the integrator's own
+ *  OAuth app (client id/secret, redirect URI). Retrying unchanged cannot
+ *  succeed, so it is 424 (Failed Dependency), which clients do not retry.
+ *  Cloudflare also passes 424 through, so the JSON body, the `UpupErrorCode` and
+ *  `x-upup-request-id` reach the client (T-6087). */
+export const DEPENDENCY_REJECTED_STATUS = 424
+
+/** A provider call failed for a reason that is OURS or transient: the provider
+ *  was unreachable, timed out, answered 5xx/429, or sent a malformed success.
+ *  Clients retry a 502, so it stays 502. Trade-off (T-6087): behind Cloudflare
+ *  an origin 502 is replaced by Cloudflare's own text/plain page, so this body
+ *  and request id are lost there; the cause still reaches `onError`.
+ *  `tests/response-contract.test.ts` allows no other 502/504 literal in src/. */
+export const UPSTREAM_UNAVAILABLE_STATUS = 502
+
+/** Map a provider token endpoint's non-2xx status to ours: 5xx, 429 and 408
+ *  are transient (502); any other 4xx is a rejection the client must fix (424). */
+export function providerFailureStatus(
+    providerStatus: number,
+): typeof DEPENDENCY_REJECTED_STATUS | typeof UPSTREAM_UNAVAILABLE_STATUS {
+    return providerStatus >= 500 ||
+        providerStatus === 429 ||
+        providerStatus === 408
+        ? UPSTREAM_UNAVAILABLE_STATUS
+        : DEPENDENCY_REJECTED_STATUS
+}
+
 export function corsHeaders(
     req: Request,
     config: UpupServerConfig,

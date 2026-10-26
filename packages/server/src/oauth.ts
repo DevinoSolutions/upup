@@ -18,7 +18,12 @@ import {
     resolveUserId,
 } from './tokenStore'
 import { reportServerError, toSafeError } from './observability'
-import { type Responder } from './respond'
+import {
+    DEPENDENCY_REJECTED_STATUS,
+    UPSTREAM_UNAVAILABLE_STATUS,
+    providerFailureStatus,
+    type Responder,
+} from './respond'
 
 export const VALID_PROVIDERS = [
     'google-drive',
@@ -359,13 +364,14 @@ async function runOAuthCallback(
             signal: AbortSignal.timeout(TOKEN_ENDPOINT_TIMEOUT_MS),
         })
     } catch (error) {
-        // upup-catch: a stalled or unreachable provider is reported through
-        // onError and surfaced as the same 502 a rejected exchange gets, so the
-        // popup never hangs and the cause is never lost.
+        // upup-catch: a stalled or unreachable provider is OUR upstream failing
+        // transiently, so it is a retryable UPSTREAM_UNAVAILABLE_STATUS (502),
+        // reported through onError so the popup never hangs and the cause is
+        // never lost (T-6087).
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status: UPSTREAM_UNAVAILABLE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Token exchange request failed',
             error: toSafeError(error),
@@ -375,18 +381,21 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            UPSTREAM_UNAVAILABLE_STATUS,
         )
     }
 
     if (!tokenRes.ok) {
+        // A provider 4xx rejected the code or the integrator's OAuth app (424,
+        // not retryable); a provider 5xx/429/408 is transient (502).
+        const status = providerFailureStatus(tokenRes.status)
         const body = await tokenRes.text()
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
-            message: 'Token exchange failed',
+            message: `Token exchange failed (provider ${tokenRes.status})`,
             error: toSafeError(new Error(body.slice(0, 500))),
         })
         return res.json(
@@ -394,12 +403,13 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            status,
         )
     }
 
     const payload = (await tokenRes.json()) as {
         access_token?: unknown
+        error?: unknown
         expires_in?: number
         refresh_token?: string
         scope?: string
@@ -407,11 +417,18 @@ async function runOAuthCallback(
     }
 
     // A 200 without a usable access_token must not be stored as a credential.
+    // An OAuth `error` in that 200 body is a rejection of what the client sent
+    // (424); a 200 with neither a token nor an error is a malformed provider
+    // answer, which is ours to retry (502).
     if (typeof payload.access_token !== 'string' || !payload.access_token) {
+        const status =
+            typeof payload.error === 'string' && payload.error
+                ? DEPENDENCY_REJECTED_STATUS
+                : UPSTREAM_UNAVAILABLE_STATUS
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Token exchange response had no access_token',
             error: toSafeError(new Error('missing access_token')),
@@ -421,7 +438,7 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            status,
         )
     }
 
@@ -564,7 +581,7 @@ export async function refreshAccessToken(
         reportServerError(config.onError, {
             route: `auth/${provider}/refresh`,
             method: 'POST',
-            status: 502,
+            status: UPSTREAM_UNAVAILABLE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Drive token refresh request failed',
             error: toSafeError(error),

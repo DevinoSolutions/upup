@@ -541,14 +541,17 @@ redirect target.
     there, or scope your gate to the upload routes.
 </Callout>
 
-| Status | Body                                                                  | Cause                                             |
-| ------ | --------------------------------------------------------------------- | ------------------------------------------------- |
-| `400`  | `{ "error": "OAuth error: access_denied" }`                           | the provider returned an error                    |
-| `400`  | `{ "error": "Missing code or state" }`                                | truncated callback                                |
-| `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state` |
-| `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                          |
-| `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                   |
-| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code exchange           |
+| Status | Body                                                                  | Cause                                                                                               |
+| ------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "OAuth error: access_denied" }`                           | the provider returned an error                                                                      |
+| `400`  | `{ "error": "Missing code or state" }`                                | truncated callback                                                                                  |
+| `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state`                                                   |
+| `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                                                                            |
+| `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                                                                     |
+| `424`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code or your OAuth app (a provider `4xx`, or an OAuth `error` in a `200`) |
+| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider was unreachable, timed out, answered `5xx`/`429`/`408`, or sent a `200` with no token  |
+
+A `424` (Failed Dependency) means retrying the same callback cannot succeed: the user has to start the sign-in again, or you have to fix the app's client id, secret or redirect URI. A `502` is transient and safe to retry. Cloudflare passes a `424` through, but replaces an origin `502` with its own plain-text page, so behind Cloudflare a `502` arrives without this body; the cause still reaches the [`onError` seam](/docs/guides/error-monitoring/).
 
 ## `GET /files/:provider`
 

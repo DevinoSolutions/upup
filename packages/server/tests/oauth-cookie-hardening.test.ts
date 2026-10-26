@@ -232,7 +232,7 @@ describe('the nonce cookie is cleared on every /cb exit that carried a real pend
             expectCleared(res, origin)
         })
 
-        it(`${origin}: 502 token exchange failure clears it`, async () => {
+        it(`${origin}: 424 token exchange failure clears it`, async () => {
             fetchSpy = vi
                 .spyOn(globalThis, 'fetch')
                 .mockResolvedValue(new Response('nope', { status: 400 }))
@@ -241,7 +241,7 @@ describe('the nonce cookie is cleared on every /cb exit that carried a real pend
             )
             const { name, nonce, state } = await startFlow(handler, origin)
             const res = await handler(cb(origin, state, `${name}=${nonce}`))
-            expect(res.status).toBe(502)
+            expect(res.status).toBe(424)
             expectCleared(res, origin)
         })
 
