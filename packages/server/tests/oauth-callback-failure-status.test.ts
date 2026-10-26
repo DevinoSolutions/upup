@@ -7,8 +7,9 @@
 // and looked like a Cloudflare outage. The callback now maps each cause:
 //  - the provider rejected the code or the integrator's OAuth app (a 4xx, or an
 //    OAuth `error` in a 200 body): 424, not retryable, passed through by Cloudflare;
-//  - the provider was unreachable, timed out, answered 5xx/429/408, or sent a
-//    200 with neither a token nor an error: 502, which clients retry.
+//  - the provider was unreachable, timed out, answered 5xx/429/408 (or a non-4xx
+//    error), or sent a 200 with neither a token nor an error, or a non-JSON 200:
+//    502, where starting the sign-in again may succeed.
 // The body shape, the request id and the cleared nonce cookie are identical for both.
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
@@ -121,7 +122,7 @@ describe('OAuth callback token-exchange failures are mapped per cause (T-6087)',
         })
     }
 
-    it('the two statuses are 424 (client must fix) and 502 (retryable)', () => {
+    it('the two statuses are 424 (client must fix) and 502 (ours or transient)', () => {
         expect(DEPENDENCY_REJECTED_STATUS).toBe(424)
         expect(UPSTREAM_UNAVAILABLE_STATUS).toBe(502)
     })
@@ -175,7 +176,27 @@ describe('OAuth callback token-exchange failures are mapped per cause (T-6087)',
         )
     })
 
-    it('providerFailureStatus maps only 5xx, 429 and 408 to 502', () => {
+    it('a 200 with an empty error and no access_token is malformed: 502', async () => {
+        await expectFailure(
+            await runCallback(async () => json({ error: '' }, 200)),
+            502,
+        )
+    })
+
+    it('a 200 whose body is not JSON is malformed: 502, not the router 500', async () => {
+        await expectFailure(
+            await runCallback(
+                async () =>
+                    new Response('<html>maintenance</html>', {
+                        status: 200,
+                        headers: { 'Content-Type': 'text/html' },
+                    }),
+            ),
+            502,
+        )
+    })
+
+    it('providerFailureStatus maps only a 4xx other than 408/429 to 424', () => {
         expect(providerFailureStatus(400)).toBe(424)
         expect(providerFailureStatus(401)).toBe(424)
         expect(providerFailureStatus(499)).toBe(424)
@@ -183,6 +204,10 @@ describe('OAuth callback token-exchange failures are mapped per cause (T-6087)',
         expect(providerFailureStatus(429)).toBe(502)
         expect(providerFailureStatus(500)).toBe(502)
         expect(providerFailureStatus(599)).toBe(502)
+        // An unfollowed redirect or an informational status is not a rejection.
+        expect(providerFailureStatus(304)).toBe(502)
+        expect(providerFailureStatus(399)).toBe(502)
+        expect(providerFailureStatus(101)).toBe(502)
     })
 
     it('the trust checks are untouched: a forged callback is still 403, a bad state still 400', async () => {

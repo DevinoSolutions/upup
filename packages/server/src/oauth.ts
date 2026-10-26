@@ -386,8 +386,9 @@ async function runOAuthCallback(
     }
 
     if (!tokenRes.ok) {
-        // A provider 4xx rejected the code or the integrator's OAuth app (424,
-        // not retryable); a provider 5xx/429/408 is transient (502).
+        // A provider 4xx rejected the code or the integrator's OAuth app (424:
+        // signing in again cannot succeed until it is fixed); a provider
+        // 5xx/429/408 or any non-4xx failure is ours or transient (502).
         const status = providerFailureStatus(tokenRes.status)
         const body = await tokenRes.text()
         reportServerError(config.onError, {
@@ -407,7 +408,7 @@ async function runOAuthCallback(
         )
     }
 
-    const payload = (await tokenRes.json()) as {
+    let payload: {
         access_token?: unknown
         error?: unknown
         expires_in?: number
@@ -415,11 +416,32 @@ async function runOAuthCallback(
         scope?: string
         token_type?: string
     }
+    try {
+        payload = (await tokenRes.json()) as typeof payload
+    } catch (error) {
+        // upup-catch: a 200 whose body is not JSON is a malformed provider
+        // answer, ours to retry (502), not the router's generic 500.
+        reportServerError(config.onError, {
+            route: `auth/${provider}/cb`,
+            method: req.method,
+            status: UPSTREAM_UNAVAILABLE_STATUS,
+            code: UpupErrorCode.AUTH_PROVIDER_ERROR,
+            message: 'Token exchange response was not JSON',
+            error: toSafeError(error),
+        })
+        return res.json(
+            {
+                error: 'Token exchange failed',
+                code: UpupErrorCode.AUTH_PROVIDER_ERROR,
+            },
+            UPSTREAM_UNAVAILABLE_STATUS,
+        )
+    }
 
     // A 200 without a usable access_token must not be stored as a credential.
     // An OAuth `error` in that 200 body is a rejection of what the client sent
     // (424); a 200 with neither a token nor an error is a malformed provider
-    // answer, which is ours to retry (502).
+    // answer, ours or transient (502).
     if (typeof payload.access_token !== 'string' || !payload.access_token) {
         const status =
             typeof payload.error === 'string' && payload.error
