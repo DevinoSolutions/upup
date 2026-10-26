@@ -62,7 +62,7 @@ describe('OAuth token exchange validation + timeout (T-5494)', () => {
         return { handler, state, cookie: cookie as string }
     }
 
-    it('a 200 token response WITHOUT access_token is a 502 and stores nothing', async () => {
+    it('a 200 token response WITHOUT access_token is a 424 and stores nothing', async () => {
         const store = new InMemoryTokenStore()
         const { handler, state, cookie } = await flow(store)
         fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
@@ -77,7 +77,7 @@ describe('OAuth token exchange validation + timeout (T-5494)', () => {
                 { headers: { Cookie: cookie } },
             ),
         )
-        expect(res.status).toBe(502)
+        expect(res.status).toBe(424)
         expect(
             await getTokens(store, DEFAULT_USER_ID, 'google-drive'),
         ).toBeNull()
@@ -100,14 +100,14 @@ describe('OAuth token exchange validation + timeout (T-5494)', () => {
                     { headers: { Cookie: cookie } },
                 ),
             )
-            expect(res.status, String(bad)).toBe(502)
+            expect(res.status, String(bad)).toBe(424)
             expect(
                 await getTokens(store, DEFAULT_USER_ID, 'google-drive'),
             ).toBeNull()
         }
     })
 
-    it('the callback token fetch carries an AbortSignal timeout, and a timed-out fetch is a clean 502', async () => {
+    it('the callback token fetch carries an AbortSignal timeout, and a timed-out fetch is a clean 424', async () => {
         const store = new InMemoryTokenStore()
         const { handler, state, cookie } = await flow(store)
         let seen: AbortSignal | undefined | null
@@ -124,7 +124,7 @@ describe('OAuth token exchange validation + timeout (T-5494)', () => {
             ),
         )
         expect(seen).toBeInstanceOf(AbortSignal)
-        expect(res.status).toBe(502)
+        expect(res.status).toBe(424)
         expect(
             await getTokens(store, DEFAULT_USER_ID, 'google-drive'),
         ).toBeNull()

@@ -28,4 +28,19 @@ describe('response contract (F-108 / F-715)', () => {
             .filter(file => file !== 'respond.ts')
         expect(offenders).toEqual([])
     })
+
+    // T-6087: Cloudflare rewrites every ORIGIN 502/504 into its own text/plain
+    // "error code: 502" page (no JSON body, no UpupErrorCode, no
+    // x-upup-request-id), so a provider misconfiguration read as a Cloudflare
+    // outage. Upstream-provider failures use UPSTREAM_FAILURE_STATUS (424).
+    it('no 502/504 status is emitted or logged from src/ (Cloudflare masks them)', () => {
+        const stripComments = (text: string) =>
+            text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+        const offenders = walk(SRC)
+            .filter(file =>
+                /\b50[24]\b/.test(stripComments(readFileSync(file, 'utf8'))),
+            )
+            .map(file => relative(SRC, file).replace(/\\/g, '/'))
+        expect(offenders).toEqual([])
+    })
 })

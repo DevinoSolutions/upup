@@ -13,6 +13,16 @@ import { UpupErrorCode } from '@useupup/core'
 
 export type ResponseHeaders = Record<string, string>
 
+/** The status for "the request was fine but a third-party provider it depends
+ *  on (an OAuth token endpoint) failed or was unreachable".
+ *
+ *  Never 502/504 (T-6087): Cloudflare replaces EVERY origin 502/504 with its own
+ *  text/plain "error code: 502" page, dropping the JSON body, the
+ *  `UpupErrorCode` and `x-upup-request-id`, so a provider misconfiguration read
+ *  as a Cloudflare outage. 424 (Failed Dependency) is passed through untouched.
+ *  `tests/response-contract.test.ts` fails on a 502/504 status literal in src/. */
+export const UPSTREAM_FAILURE_STATUS = 424
+
 export function corsHeaders(
     req: Request,
     config: UpupServerConfig,

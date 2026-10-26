@@ -547,7 +547,9 @@ redirect target.
 | `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state` |
 | `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                          |
 | `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                   |
-| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code exchange           |
+| `424`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code exchange           |
+
+A failed provider exchange is `424` (Failed Dependency), not `502`: Cloudflare replaces every origin `502`/`504` with its own plain-text `error code: 502` page, which would drop this JSON body and the `x-upup-request-id` header and make a provider misconfiguration look like a Cloudflare outage.
 
 ## `GET /files/:provider`
 

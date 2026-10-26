@@ -18,7 +18,7 @@ import {
     resolveUserId,
 } from './tokenStore'
 import { reportServerError, toSafeError } from './observability'
-import { type Responder } from './respond'
+import { UPSTREAM_FAILURE_STATUS, type Responder } from './respond'
 
 export const VALID_PROVIDERS = [
     'google-drive',
@@ -360,12 +360,12 @@ async function runOAuthCallback(
         })
     } catch (error) {
         // upup-catch: a stalled or unreachable provider is reported through
-        // onError and surfaced as the same 502 a rejected exchange gets, so the
+        // onError and surfaced as the same UPSTREAM_FAILURE_STATUS a rejected exchange gets, so the
         // popup never hangs and the cause is never lost.
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status: UPSTREAM_FAILURE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Token exchange request failed',
             error: toSafeError(error),
@@ -375,7 +375,7 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            UPSTREAM_FAILURE_STATUS,
         )
     }
 
@@ -384,7 +384,7 @@ async function runOAuthCallback(
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status: UPSTREAM_FAILURE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Token exchange failed',
             error: toSafeError(new Error(body.slice(0, 500))),
@@ -394,7 +394,7 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            UPSTREAM_FAILURE_STATUS,
         )
     }
 
@@ -411,7 +411,7 @@ async function runOAuthCallback(
         reportServerError(config.onError, {
             route: `auth/${provider}/cb`,
             method: req.method,
-            status: 502,
+            status: UPSTREAM_FAILURE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Token exchange response had no access_token',
             error: toSafeError(new Error('missing access_token')),
@@ -421,7 +421,7 @@ async function runOAuthCallback(
                 error: 'Token exchange failed',
                 code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             },
-            502,
+            UPSTREAM_FAILURE_STATUS,
         )
     }
 
@@ -564,7 +564,7 @@ export async function refreshAccessToken(
         reportServerError(config.onError, {
             route: `auth/${provider}/refresh`,
             method: 'POST',
-            status: 502,
+            status: UPSTREAM_FAILURE_STATUS,
             code: UpupErrorCode.AUTH_PROVIDER_ERROR,
             message: 'Drive token refresh request failed',
             error: toSafeError(error),
