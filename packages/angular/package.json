@@ -94,7 +94,7 @@
         "@angular/platform-browser": "~20.3.34",
         "@useupup/eslint-config": "workspace:*",
         "@useupup/tailwind-config": "workspace:*",
-        "@vitest/coverage-v8": "^4.1.2",
+        "@vitest/coverage-v8": "^4.1.12",
         "eslint": "^10.6.0",
         "jsdom": "22.1.0",
         "ng-packagr": "~20.3.2",
@@ -103,7 +103,7 @@
         "rxjs": "^7.8.0",
         "typescript": "~5.9.3",
         "vite": "^7",
-        "vitest": "^4.1.11",
+        "vitest": "^4.1.12",
         "zone.js": "~0.15.0"
     }
 }
