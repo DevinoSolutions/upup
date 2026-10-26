@@ -794,7 +794,54 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
             const res = await pending
             const body = await res.json()
             expect(res.status).toBe(200)
-            expect(body.confirmation).toBe('failed')
+            // Sendly may already have accepted the mail: not a definite failure.
+            expect(body.confirmation).toBe('unknown')
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('keeps the address allowance and IP budget, and reports unknown, when the 5 s abort fires after the request went out', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+        try {
+            vi.spyOn(console, 'error').mockImplementation(() => {})
+            let hang = true
+            let signal: AbortSignal | undefined
+            stubSendly(init => {
+                if (!hang) return new Response('{}', { status: 202 })
+                signal = init.signal as AbortSignal
+                return new Promise<Response>((_resolve, reject) => {
+                    signal?.addEventListener('abort', () =>
+                        reject(
+                            new DOMException(
+                                'This operation was aborted',
+                                'AbortError',
+                            ),
+                        ),
+                    )
+                })
+            })
+            const POST = await loadRoute(ENABLED_ENV)
+            const send = async (email: string) =>
+                (await POST(makeRequest(withEmail({ email })))).json()
+
+            const pending = send('a@example.com')
+            for (let tick = 0; tick < 100 && !signal; tick++) {
+                await vi.advanceTimersByTimeAsync(0)
+            }
+            await vi.advanceTimersByTimeAsync(5_000)
+            const aborted = await pending
+            expect(aborted.ok).toBe(true)
+            expect(aborted.confirmation).toBe('unknown')
+
+            // The mail may be on its way, so a retry must not mail the same
+            // address a second time...
+            hang = false
+            expect((await send('a@example.com')).confirmation).toBe('throttled')
+            // ...and the aborted send still counts against the client IP's 2
+            // per hour: one more goes out, the next is refused.
+            expect((await send('b@example.com')).confirmation).toBe('ok')
+            expect((await send('c@example.com')).confirmation).toBe('throttled')
         } finally {
             vi.useRealTimers()
         }
