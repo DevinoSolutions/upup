@@ -86,7 +86,7 @@ beforeEach(() => {
             JSON.stringify({
                 id: 'em_1',
                 status: 'PENDING',
-                to: 'hello@devino.ca',
+                to: 'support@useupup.com',
                 from: 'upup-support@useupup.com',
             }),
             { status: 202 },
@@ -332,7 +332,7 @@ describe('support email leg via Sendly', () => {
         const POST = await loadRoute({
             ...ENABLED_ENV,
             SUPPORT_EMAIL_FROM: 'upup-support@useupup.com',
-            SUPPORT_EMAIL_TO: 'hello@devino.ca',
+            SUPPORT_EMAIL_TO: 'support@useupup.com',
         })
         const id = randomUUID()
         const res = await POST(
@@ -353,7 +353,7 @@ describe('support email leg via Sendly', () => {
         expect(mail.headers['content-type']).toBe('application/json')
         expect(mail.headers['idempotency-key']).toBe(id)
         expect(mail.body.from).toBe('upup-support@useupup.com')
-        expect(mail.body.to).toBe('hello@devino.ca')
+        expect(mail.body.to).toBe('support@useupup.com')
         expect(mail.body.reply).toBe('a@b.co')
         expect(mail.body.subject).toBe(`[upup support] problem — ${id}`)
     })
@@ -468,7 +468,7 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         expect(h.fetchMock).toHaveBeenCalledTimes(2)
 
         // Leg 0 is still the team notification, untouched.
-        expect(sentMail(0).body.to).toBe('hello@devino.ca')
+        expect(sentMail(0).body.to).toBe('support@useupup.com')
 
         const confirm = sentMail(1)
         expect(confirm.url).toBe('https://api.sendly.now/api/v1/emails')
@@ -479,7 +479,7 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         expect(confirm.body.to).toBe('dev@example.com')
         expect(confirm.body.from).toBe('upup-support@useupup.com')
         // A reply to the confirmation lands in the team inbox.
-        expect(confirm.body.reply).toBe('hello@devino.ca')
+        expect(confirm.body.reply).toBe('support@useupup.com')
         expect(confirm.body.subject).toContain(id)
         expect(confirm.body.subject).toMatch(/got your message/i)
 
@@ -540,7 +540,7 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
 
         expect(body.confirmation).toBe('skipped')
         expect(h.fetchMock).toHaveBeenCalledTimes(1)
-        expect(sentMail(0).body.to).toBe('hello@devino.ca')
+        expect(sentMail(0).body.to).toBe('support@useupup.com')
     })
 
     it('reports not_configured without calling Sendly when SENDLY_API_KEY is absent', async () => {
@@ -575,9 +575,9 @@ describe('submitter confirmation email via Sendly (T-6725)', () => {
         const recipients = h.fetchMock.mock.calls.map(
             (_call, i) => sentMail(i).body.to,
         )
-        expect(recipients.filter(to => to === 'hello@devino.ca')).toHaveLength(
-            2,
-        )
+        expect(
+            recipients.filter(to => to === 'support@useupup.com'),
+        ).toHaveLength(2)
         expect(
             recipients.filter(to => to.toLowerCase().startsWith('dev+')),
         ).toHaveLength(1)

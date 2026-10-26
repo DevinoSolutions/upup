@@ -2,9 +2,11 @@ import { env } from '@/lib/env'
 import { SUPPORT_CONFIRMATION_REPLY_LINE } from './reply-time'
 import type { EmailLegStatus, SupportType } from './schema'
 
-// Placeholder defaults — a real deploy sets SUPPORT_EMAIL_FROM / _TO.
+// Defaults a deploy can override with SUPPORT_EMAIL_FROM / _TO. Tickets go to the
+// support@ Sendly mailbox, where support is answered (hello@devino.ca until
+// 2026-10-26, T-8910).
 const DEFAULT_FROM = 'upup-support@useupup.com'
-const DEFAULT_TO = 'hello@devino.ca'
+const DEFAULT_TO = 'support@useupup.com'
 
 // Sendly's REST API origin. `POST /api/v1/emails` sends ONE transactional email
 // and answers 202 `{ id, status, to, from }`. Not env-configurable on purpose:
