@@ -97,6 +97,7 @@ describe('upload token with extra segments is malformed (T-5494)', () => {
         uid: null,
         smin: 0,
         smax: 10,
+        ps: 5 * 1024 * 1024,
         exp: Math.floor(Date.now() / 1000) + 600,
     }
 

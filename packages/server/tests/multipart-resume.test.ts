@@ -85,6 +85,7 @@ function mintToken(
         uid: null,
         smin: 0,
         smax: 50 * 1024 * 1024,
+        ps: 5 * 1024 * 1024,
         exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
         iat: issuedAt,
         ...overrides,
@@ -239,6 +240,7 @@ describe('POST /multipart/resume — happy path', () => {
             uid: null,
             smin: 0,
             smax: 50 * 1024 * 1024,
+            ps: 5 * 1024 * 1024,
             exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
         })
         const res = await resume(handler, legacy)
@@ -267,6 +269,7 @@ describe('POST /multipart/resume — token rejection', () => {
                 uid: null,
                 smin: 0,
                 smax: 100,
+                ps: 5 * 1024 * 1024,
                 exp: nowSeconds() + 3600,
                 iat: nowSeconds(),
             },

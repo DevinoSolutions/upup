@@ -4,12 +4,11 @@
 // from the signed token (part size + total size, both bound at init) and has
 // the part URL sign it, so S3 itself refuses a body of any other size. A part
 // number outside the file's part range is refused outright. The complete-time
-// envelope check is kept (defence in depth; also the only guard for tokens
-// minted before part sizes were bound).
+// envelope check is kept (defence in depth). A token without a part size is
+// refused on every route (T-6185).
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
 import {
-    PART_LENGTH_BINDING_CUTOFF_SECONDS,
     signUploadToken,
     verifyUploadToken,
     type UploadTokenPayload,
@@ -49,7 +48,12 @@ vi.mock('../src/providers/aws', () => ({
     getMultipartUploadedSize: vi.fn().mockResolvedValue(0),
 }))
 
-import { generatePresignedPartUrl } from '../src/providers/aws'
+import {
+    abortMultipartUpload,
+    completeMultipartUpload,
+    generatePresignedPartUrl,
+    listMultipartParts,
+} from '../src/providers/aws'
 
 const partUrl = vi.mocked(generatePresignedPartUrl)
 const SECRET = 'part-length-test-secret-0123456789'
@@ -156,7 +160,6 @@ describe('POST /multipart/sign-part: signed part length (T-5492)', () => {
     it('keeps the part size across /multipart/resume re-issues', async () => {
         const handler = createUpupHandler(config)
         const { token } = await initUpload(handler, 12 * MiB)
-        const { listMultipartParts } = await import('../src/providers/aws')
         vi.mocked(listMultipartParts).mockResolvedValue({ parts: [] })
         const res = await post(handler, '/multipart/resume', { token })
         expect(res.status).toBe(200)
@@ -164,41 +167,100 @@ describe('POST /multipart/sign-part: signed part length (T-5492)', () => {
         const payload = await verifyUploadToken(SECRET, fresh, Date.now())
         expect(payload.ps).toBe(5 * MiB)
     })
+})
 
-    const legacyToken = (iat: number) => {
-        const legacy: UploadTokenPayload = {
-            k: 'uuid-big.zip',
-            u: 'mp-123',
-            uid: null,
-            smin: 0,
-            smax: 12 * MiB,
-            exp: Math.floor(Date.now() / 1000) + 600,
-            iat,
-        }
-        return signUploadToken(SECRET, legacy)
-    }
+// T-6185: the grace window for tokens minted before part-length binding closed
+// on 2026-10-28. A validly HMAC-signed token with no `ps` is refused on EVERY
+// route that verifies upload tokens, whatever its issue time (these two iat
+// values straddle the retired cutoff), and nothing reaches storage.
+describe('legacy upload tokens without a part size are refused (T-6185)', () => {
+    const BEFORE_RETIRED_CUTOFF = Date.UTC(2026, 9, 1) / 1000
+    const AFTER_RETIRED_CUTOFF = Date.UTC(2026, 10, 1) / 1000
 
-    it('a token minted BEFORE the cutoff without a part size still signs (no length; complete-time check still applies)', async () => {
+    const legacyPayload = (iat: number): Omit<UploadTokenPayload, 'ps'> => ({
+        k: 'uuid-big.zip',
+        u: 'mp-123',
+        uid: null,
+        smin: 0,
+        smax: 12 * MiB,
+        exp: Math.floor(Date.now() / 1000) + 600,
+        iat,
+    })
+    const legacyToken = (iat: number) =>
+        signUploadToken(SECRET, legacyPayload(iat) as UploadTokenPayload)
+
+    const routes: Array<[string, (token: string) => unknown]> = [
+        ['/multipart/sign-part', token => ({ token, partNumber: 2 })],
+        [
+            '/multipart/complete',
+            token => ({ token, parts: [{ partNumber: 1, eTag: 'e1' }] }),
+        ],
+        ['/multipart/abort', token => ({ token })],
+        ['/multipart/resume', token => ({ token })],
+    ]
+
+    beforeEach(() => {
+        partUrl.mockClear()
+        vi.mocked(completeMultipartUpload).mockClear()
+        vi.mocked(abortMultipartUpload).mockClear()
+        vi.mocked(listMultipartParts).mockClear()
+    })
+
+    it.each(
+        routes.flatMap(([path, makeBody]) => [
+            [path, 'before', BEFORE_RETIRED_CUTOFF, makeBody] as const,
+            [path, 'after', AFTER_RETIRED_CUTOFF, makeBody] as const,
+        ]),
+    )(
+        '%s refuses a token minted %s the retired cutoff with 403 malformed and touches no storage',
+        async (path, _when, iat, makeBody) => {
+            const handler = createUpupHandler(config)
+            const res = await post(
+                handler,
+                path,
+                makeBody(await legacyToken(iat)),
+            )
+            expect(res.status).toBe(403)
+            expect(((await res.json()) as { code: string }).code).toBe(
+                'malformed',
+            )
+            expect(partUrl).not.toHaveBeenCalled()
+            expect(completeMultipartUpload).not.toHaveBeenCalled()
+            expect(abortMultipartUpload).not.toHaveBeenCalled()
+            expect(listMultipartParts).not.toHaveBeenCalled()
+        },
+    )
+
+    it('the same payload WITH a part size is accepted, so `ps` is the only thing refused', async () => {
         const handler = createUpupHandler(config)
-        const token = await legacyToken(PART_LENGTH_BINDING_CUTOFF_SECONDS - 1)
+        const token = await signUploadToken(SECRET, {
+            ...legacyPayload(BEFORE_RETIRED_CUTOFF),
+            ps: 5 * MiB,
+        })
         const res = await post(handler, '/multipart/sign-part', {
             token,
             partNumber: 2,
         })
         expect(res.status).toBe(200)
-        expect(signedLength()).toBeUndefined()
+        expect(signedLength()).toBe(5 * MiB)
     })
 
-    it('a token minted AFTER the cutoff without a part size is refused, nothing signed', async () => {
-        const handler = createUpupHandler(config)
-        const token = await legacyToken(PART_LENGTH_BINDING_CUTOFF_SECONDS + 1)
-        const res = await post(handler, '/multipart/sign-part', {
-            token,
-            partNumber: 2,
-        })
-        expect(res.status).toBe(403)
-        expect(partUrl).not.toHaveBeenCalled()
-    })
+    it.each([0, -1, 5.5, '5242880', null])(
+        'refuses a signed token whose part size is %j',
+        async ps => {
+            const handler = createUpupHandler(config)
+            const token = await signUploadToken(SECRET, {
+                ...legacyPayload(AFTER_RETIRED_CUTOFF),
+                ps,
+            } as unknown as UploadTokenPayload)
+            const res = await post(handler, '/multipart/sign-part', {
+                token,
+                partNumber: 2,
+            })
+            expect(res.status).toBe(403)
+            expect(partUrl).not.toHaveBeenCalled()
+        },
+    )
 })
 
 // The review finding: `chunkSizeBytes` is client input. A value that made

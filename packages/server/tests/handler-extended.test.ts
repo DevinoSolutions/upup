@@ -804,6 +804,7 @@ describe('handler — error channel: upload-token codes', () => {
                 uid: null,
                 smin: 0,
                 smax: 100,
+                ps: 5 * 1024 * 1024,
                 exp: Math.floor(Date.now() / 1000) + 3600,
             },
         )
@@ -831,6 +832,7 @@ describe('handler — error channel: upload-token codes', () => {
             uid: null,
             smin: 0,
             smax: 100,
+            ps: 5 * 1024 * 1024,
             exp: Math.floor(Date.now() / 1000) - 10, // already expired
         })
         const handler = createUpupHandler(config)
