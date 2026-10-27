@@ -295,6 +295,7 @@ describe('multipart continuations stay bound to the init storage (#337)', () => 
             smin: 0,
             smax: 2048,
             ps: 5 * 1024 * 1024,
+            iat: Math.floor(Date.now() / 1000),
             sid: identityOf(BUCKETS.quarantine!)!,
             exp: Math.floor(Date.now() / 1000) + 600,
         })
@@ -357,6 +358,7 @@ describe('multipart continuations stay bound to the init storage (#337)', () => 
             smin: 0,
             smax: 2048,
             ps: 5 * 1024 * 1024,
+            iat: Math.floor(Date.now() / 1000),
             sid: identityOf(BUCKETS.quarantine!)!,
             exp: Math.floor(Date.now() / 1000) + 600,
         })
@@ -377,6 +379,7 @@ describe('multipart continuations stay bound to the init storage (#337)', () => 
             smin: 0,
             smax: 2048,
             ps: 5 * 1024 * 1024,
+            iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) + 600,
         })
         const res = await handler(

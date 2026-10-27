@@ -231,30 +231,37 @@ describe('POST /multipart/resume — happy path', () => {
         expect(res.headers.get('x-upup-request-id')).toMatch(/^[0-9a-f-]{36}$/i)
     })
 
-    it('resumes a legacy token minted before iat existed, anchoring the window at exp - TTL', async () => {
+    // T-6185: a token minted before `iat` existed (and so before `ps`) used to
+    // resume by deriving its init time from `exp - TTL`. It is refused now: the
+    // window is only ever anchored at a signed `iat`.
+    it('refuses a real pre-iat token (no iat, no ps) with 403 malformed and never reaches storage', async () => {
         const handler = createUpupHandler(config)
         const issuedAt = nowSeconds() - 600
-        const legacy = await signUploadToken(SECRET, {
+        const preIat = (await signUploadToken(SECRET, {
             k: 'alice/uuid/big.zip',
             u: 'mp-abc',
             uid: null,
             smin: 0,
             smax: 50 * 1024 * 1024,
-            ps: 5 * 1024 * 1024,
             exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
-        })
-        const res = await resume(handler, legacy)
+        } as UploadTokenPayload)) as string
+        const res = await resume(handler, preIat)
         const body = (await res.json()) as ResumeBody
-        const refreshed = await verifyUploadToken(
-            SECRET,
-            body.token as string,
-            Date.now(),
+
+        expect(res.status).toBe(403)
+        expect(body.code).toBe('malformed')
+        expect(listParts).not.toHaveBeenCalled()
+    })
+
+    it('refuses a token that has a part size but no issue time with 403 malformed', async () => {
+        const handler = createUpupHandler(config)
+        const res = await resume(
+            handler,
+            await mintToken({ iat: undefined } as Partial<UploadTokenPayload>),
         )
 
-        expect(res.status).toBe(200)
-        // The derived anchor is stamped onto the re-issued token, so the window
-        // stays fixed from here on instead of restarting at each resume.
-        expect(refreshed.iat).toBe(issuedAt)
+        expect(res.status).toBe(403)
+        expect(((await res.json()) as ResumeBody).code).toBe('malformed')
     })
 })
 

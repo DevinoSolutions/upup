@@ -640,11 +640,7 @@ export async function handleMultipartResume(
         if (payload instanceof Response) return payload
 
         const nowSeconds = Math.floor(Date.now() / 1000)
-        // Tokens minted before `iat` existed still resume: their init time is
-        // recoverable from the expiry, since init is the only issuer and always
-        // used the same TTL.
-        const issuedAt =
-            payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
+        const issuedAt = payload.iat
         const windowSeconds =
             config.multipartResumeWindowSeconds ??
             DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS

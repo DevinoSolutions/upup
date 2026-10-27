@@ -37,6 +37,7 @@ async function validToken(): Promise<string> {
         smin: 0,
         smax: 10,
         ps: 5 * 1024 * 1024,
+        iat: Math.floor(Date.now() / 1000),
         exp: Math.floor(Date.now() / 1000) + 600,
     })
 }
