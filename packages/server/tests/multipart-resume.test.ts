@@ -257,7 +257,7 @@ describe('POST /multipart/resume — happy path', () => {
         const handler = createUpupHandler(config)
         const res = await resume(
             handler,
-            await mintToken({ iat: undefined } as Partial<UploadTokenPayload>),
+            await mintToken({ iat: undefined as unknown as number }),
         )
 
         expect(res.status).toBe(403)
