@@ -112,6 +112,10 @@ services:
             - POSTHOG_HOST
             - POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN
             - POSTHOG_E2E_TEST_PROJECT_HOST
+            # Sentry for agent model failures (project upup-mastra; T-7047).
+            # Bare passthrough: unset stays absent and the client is off.
+            - SENTRY_DSN
+            - SENTRY_ENVIRONMENT
         expose:
             - '4111'
         restart: unless-stopped
