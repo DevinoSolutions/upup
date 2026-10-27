@@ -1,6 +1,7 @@
 import { Mastra } from '@mastra/core'
 import { env } from '../lib/env.js'
 import { buildObservability } from '../lib/observability.js'
+import { initSentry } from '../lib/sentry.js'
 import { playgroundAgent } from './agents/playground-agent.js'
 import { docsAgent } from './agents/docs-agent.js'
 import { corsMiddleware } from './middleware/cors.js'
@@ -25,6 +26,10 @@ import { schemaRoute } from './routes/schema.js'
  *     ../lib/observability.ts). `environment` tags every trace with the
  *     dataset name so e2e traces stay isolable from production.
  */
+// Called, not imported for its side effect: mastra build drops side-effect
+// imports (see ../lib/sentry.ts).
+initSentry()
+
 const { observability, environment } = buildObservability()
 
 export const mastra = new Mastra({

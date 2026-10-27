@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent'
 import { env } from '../../lib/env.js'
 import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
+import { reportModelFailure } from '../../lib/model-failure.js'
 import { applyConfigPatch } from '../tools/applyConfigPatch.js'
 import { renderSchemaForPrompt } from '../schema/upup-config.schema.js'
 
@@ -70,6 +71,8 @@ a chat interface — not a chatbot.
             ? modelDefaults.defaultOptions
             : {}),
         maxSteps: PLAYGROUND_AGENT_MAX_STEPS,
+        // Mastra's stream hook for a failed model call; see lib/model-failure.ts.
+        onError: reportModelFailure('playground-agent'),
     },
     tools: { applyConfigPatch },
 })
