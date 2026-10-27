@@ -66,6 +66,15 @@ jobs:
             - name: Script self-tests (quality guard, affected resolver, tarball lib)
               run: pnpm run test:scripts
 
+            # Sitemap <lastmod> snapshot gate (T-5788): every sitemapped page has
+            # an entry in apps/landing/src/generated/page-lastmod.json, none is
+            # orphaned, every mapped source exists, dates are real and not in
+            # the future. This checkout is shallow, so the freshness comparison
+            # against git history is skipped here and says so; the pre-commit
+            # hook regenerates the snapshot and runs the full check locally.
+            - name: Page-lastmod snapshot check
+              run: pnpm run seo:lastmod:check
+
             - name: Run all package unit suites # F-163 / F-502 — every package, not just react
               run: pnpm run test # after P1 === `turbo run test --continue`
 

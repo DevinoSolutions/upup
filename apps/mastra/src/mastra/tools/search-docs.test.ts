@@ -37,3 +37,47 @@ describe('scoreChunks', () => {
         ).toHaveLength(0)
     })
 })
+
+const pad = (word: string, n: number) => Array(n).fill(word).join(' ')
+
+// Mimics the shape of the real llms-full.txt: long server/azure/migration
+// pages stuffed with generic words, short quickstart pages.
+const REAL_SHAPED = [
+    `# Server Mode Setup\nhttps://useupup.com/docs/server-mode-setup/\n\nSet up the server handler. ${pad('react install code usage minimal handler presign route', 120)} Configure the HMAC secret and storage.`,
+    `# Azure Blob Storage\nhttps://useupup.com/docs/azure-blob/\n\n${pad('install code usage react azure container sas token', 150)}`,
+    `# Migration Guide\nhttps://useupup.com/docs/migration/\n\n${pad('react install code usage upgrade rename removed', 130)}`,
+    '# Getting Started\nhttps://useupup.com/docs/getting-started/\n\nInstall upup with pnpm add @useupup/react, then render the uploader component.',
+    '# Framework quickstarts\nhttps://useupup.com/docs/quickstarts/react/\n\nReact quickstart: install @useupup/react and use the UpupUploader component.',
+].join('\n---\n')
+
+describe('scoreChunks on a real-shaped corpus', () => {
+    const chunks = parseLlmsFull(REAL_SHAPED)
+
+    it('surfaces a quickstart page in the top 3 for a generic install question', () => {
+        const top3 = scoreChunks(
+            chunks,
+            'Show the minimal React install and usage code for upup',
+        )
+            .slice(0, 3)
+            .map(c => c.url)
+        expect(
+            top3.some(
+                u =>
+                    u.includes('/getting-started/') ||
+                    u.includes('/quickstarts/react/'),
+            ),
+        ).toBe(true)
+    })
+
+    it('still ranks server-mode-setup first for a server-mode query', () => {
+        const ranked = scoreChunks(
+            chunks,
+            'how do I set up server mode handler with HMAC secret',
+        )
+        expect(ranked[0].url).toContain('server-mode-setup')
+    })
+
+    it('drops stopword-only queries', () => {
+        expect(scoreChunks(chunks, 'show me the how to')).toHaveLength(0)
+    })
+})

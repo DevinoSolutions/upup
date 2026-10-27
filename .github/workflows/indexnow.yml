@@ -1,0 +1,53 @@
+name: IndexNow submit
+
+# IndexNow automation (T-5788, ported from DoDomain/Uptimely): tell Bing/Yandex/
+# Seznam/Naver about new or changed useupup.com pages without a human. Reads
+# every same-host `Sitemap:` in robots.txt, selects URLs whose <lastmod> is
+# within 48h (daily cron => overlap, safe; a URL with no lastmod always counts)
+# or every URL with the `all` input. A sitemap/key-file problem or a non-200/202
+# answer fails the run: a red run is the signal. Logic:
+# scripts/ci/indexnow-submit.mjs + indexnow-verdict.mjs (node:test self-tests
+# in `pnpm run test:scripts`); the key and origin are read from
+# apps/landing/src/lib/{indexnow,site-url}.ts. Node builtins only: no pnpm, no
+# install. Actions pinned to full commit SHAs (F-792), same pins as nightly.yml.
+
+permissions:
+    contents: read
+
+on:
+    schedule:
+        - cron: '47 3 * * *' # 03:47 UTC daily, clear of nightly.yml's 03:17
+    workflow_dispatch:
+        inputs:
+            all:
+                description: 'Resubmit every sitemap URL instead of the last 48 hours'
+                type: boolean
+                default: false
+
+concurrency:
+    group: indexnow-useupup-com
+    cancel-in-progress: false
+
+jobs:
+    Submit:
+        name: Submit changed URLs to IndexNow
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+            - name: Setup Node.js
+              uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+              with:
+                  node-version-file: '.nvmrc'
+
+            - name: Submit changed URLs to IndexNow
+              env:
+                  RESUBMIT_ALL: ${{ inputs.all }}
+              run: |
+                  if [ "$RESUBMIT_ALL" = "true" ]; then
+                      node scripts/ci/indexnow-submit.mjs --all
+                  else
+                      node scripts/ci/indexnow-submit.mjs
+                  fi
