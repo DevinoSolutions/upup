@@ -13,6 +13,7 @@ import {
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createUpupHandler } from '../../src/handler'
 import { generatePresignedPartUrl } from '../../src/providers/aws'
+import { signUploadToken, type UploadTokenPayload } from '../../src/uploadToken'
 import type { UpupServerConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
@@ -118,12 +119,12 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     // well under that and upload one real 5 MiB part.
     //
     // Since T-5492 /multipart/sign-part signs the part length, so the handler's
-    // own part URL refuses this body at storage (next test), and a handler that
-    // mints a no-length URL no longer exists for any token issued after
-    // PART_LENGTH_BINDING_CUTOFF_SECONDS. This test therefore mints the part URL
-    // straight from the provider with no signed length, standing in for a
-    // legacy (pre-cutoff, no `ps`) token, so the oversized part lands and ONLY
-    // the complete-time envelope check stands between it and a finalized object.
+    // own part URL refuses this body at storage (next test), and since T-6185 a
+    // token without a part size is refused outright, so no handler path mints a
+    // no-length URL any more. This test therefore mints the part URL straight
+    // from the provider with no signed length, so the oversized part lands and
+    // ONLY the complete-time envelope check (defence in depth) stands between it
+    // and a finalized object.
     it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
         const handler = createUpupHandler(config)
         const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
@@ -225,6 +226,58 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
             body: new Uint8Array(declaredSize).fill(4),
         })
         expect(exact.status).toBe(200)
+    }, 30_000)
+
+    // T-6185: a token minted before part-length binding existed (validly signed
+    // by this server's secret, bound to a REAL upload, but with no `ps`) is
+    // refused on every continuation route, and the refusal leaves the multipart
+    // upload alive: abort in particular must not tear anything down.
+    it('T-6185: refuses a validly signed token with no part size on sign-part, complete and abort, and leaves the upload intact', async () => {
+        const handler = createUpupHandler(config)
+        const init = (await (
+            await post(handler, '/multipart/init', {
+                name: 't6185-legacy-token.bin',
+                size: 1024,
+                type: 'application/octet-stream',
+            })
+        ).json()) as MultipartInitBody
+        createdKeys.push(init.key)
+
+        const now = Math.floor(Date.now() / 1000)
+        const legacy = await signUploadToken(SECRET, {
+            k: init.key,
+            u: init.uploadId,
+            uid: null,
+            smin: 0,
+            smax: 1024,
+            exp: now + 600,
+            iat: now,
+        } as UploadTokenPayload)
+
+        for (const [path, body] of [
+            ['/multipart/sign-part', { token: legacy, partNumber: 1 }],
+            [
+                '/multipart/complete',
+                { token: legacy, parts: [{ partNumber: 1, eTag: 'x' }] },
+            ],
+            ['/multipart/abort', { token: legacy }],
+        ] as const) {
+            const res = await post(handler, path, body)
+            expect(res.status, path).toBe(403)
+            expect(((await res.json()) as { code: string }).code, path).toBe(
+                'malformed',
+            )
+        }
+
+        // The upload is still there: ListParts on a dead uploadId would reject.
+        const parts = await s3.send(
+            new ListPartsCommand({
+                Bucket: storage.bucket,
+                Key: init.key,
+                UploadId: init.uploadId,
+            }),
+        )
+        expect(parts.Parts ?? []).toHaveLength(0)
     }, 30_000)
 
     // S2: a tampered token must be refused; a valid token must succeed.

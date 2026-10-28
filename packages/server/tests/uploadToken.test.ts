@@ -18,6 +18,8 @@ const payload = (
     uid: 'alice',
     smin: 0,
     smax: 2048,
+    ps: 5 * 1024 * 1024,
+    iat: Math.floor(now / 1000),
     exp: Math.floor(now / 1000) + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
     ...over,
 })
@@ -85,6 +87,50 @@ describe('uploadToken', () => {
             },
         )
     })
+
+    // T-6185: the part size is half of the signed length binding. A validly
+    // signed token that lacks it (minted before the binding existed) or carries
+    // an unusable value is malformed on every route that verifies tokens.
+    it.each([
+        ['absent', undefined],
+        ['zero', 0],
+        ['negative', -1],
+        ['fractional', 5.5],
+        ['a string', '5242880'],
+        ['null', null],
+    ])(
+        'rejects a validly signed token whose part size is %s',
+        async (_n, ps) => {
+            const legacy = { ...payload(), ps } as unknown as UploadTokenPayload
+            const tok = await signUploadToken(SECRET, legacy)
+            await expect(
+                verifyUploadToken(SECRET, tok, now),
+            ).rejects.toMatchObject({
+                code: 'malformed',
+            })
+        },
+    )
+
+    it.each([
+        ['absent', undefined],
+        ['a string', '1750000000'],
+        ['null', null],
+        ['NaN', Number.NaN],
+    ])(
+        'rejects a validly signed token whose issue time is %s',
+        async (_n, iat) => {
+            const legacy = {
+                ...payload(),
+                iat,
+            } as unknown as UploadTokenPayload
+            const tok = await signUploadToken(SECRET, legacy)
+            await expect(
+                verifyUploadToken(SECRET, tok, now),
+            ).rejects.toMatchObject({
+                code: 'malformed',
+            })
+        },
+    )
 
     it('assertUploadTokenSecret throws on missing/short secret', () => {
         expect(() => assertUploadTokenSecret(undefined)).toThrow()

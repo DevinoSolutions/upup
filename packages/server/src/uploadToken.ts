@@ -9,22 +9,6 @@
 
 import { UpupConfigError } from '@useupup/core'
 
-/**
- * Tokens minted before `ps` existed carry no part size, so sign-part can only
- * fall back to the complete-time envelope check for them. Every token this code
- * mints carries `ps`, and a token is HMAC-signed, so a token WITHOUT `ps` issued
- * at or after this instant can only be a server bug: sign-part refuses it
- * rather than silently signing URLs with no length.
- *
- * 2026-10-28T00:00:00Z: a week after the fix was written (2026-10-21), so a
- * deploy lands well before it. Pre-`ps` tokens live 1 h and are re-issued only
- * by /multipart/resume inside `multipartResumeWindowSeconds` (24 h by default,
- * anchored at the original `iat`), so by this date none can still be in flight
- * unless an operator widened that window. Once that is true the whole legacy
- * path (and this constant) can be deleted.
- */
-export const PART_LENGTH_BINDING_CUTOFF_SECONDS = Date.UTC(2026, 9, 28) / 1000
-
 export interface UploadTokenPayload {
     /** Object key the upload is bound to. */
     k: string
@@ -40,10 +24,10 @@ export interface UploadTokenPayload {
      * Part size (bytes) the server chose at init. Together with `smax` (the
      * exact size declared at init) it fixes the length of every part, which
      * sign-part signs into the part URL so storage refuses any other body
-     * length. Optional: tokens minted before it existed carry none and fall
-     * back to the complete-time envelope check alone.
+     * length. Required: `verifyUploadToken` refuses a token without it on every
+     * route, so a token minted before part-length binding existed is dead.
      */
-    ps?: number
+    ps: number
     /**
      * Opaque identity of the storage this upload's `init` resolved (#337).
      * Present only when `config.storage` is a resolver; a static config binds
@@ -54,13 +38,13 @@ export interface UploadTokenPayload {
     /** Expiry, epoch SECONDS. */
     exp: number
     /**
-     * Issue time of the ORIGINAL multipart init, epoch SECONDS. Optional: tokens
-     * minted before cross-reload resume shipped carry no `iat` and must keep
-     * verifying, so the resume route falls back to `exp - TTL`. Carried forward
-     * UNCHANGED by /multipart/resume — the resume window is anchored at the
-     * original init, so rolling resumes can never extend it.
+     * Issue time of the ORIGINAL multipart init, epoch SECONDS. Required:
+     * `verifyUploadToken` refuses a token without it, so the resume window is
+     * always anchored at a signed value. Carried forward UNCHANGED by
+     * /multipart/resume — the resume window is anchored at the original init, so
+     * rolling resumes can never extend it.
      */
-    iat?: number
+    iat: number
 }
 
 export type UploadTokenErrorCode = 'malformed' | 'bad_signature' | 'expired'
@@ -194,15 +178,31 @@ export async function verifyUploadToken(
         typeof payload.exp !== 'number' ||
         typeof payload.smin !== 'number' ||
         typeof payload.smax !== 'number' ||
-        (payload.sid !== undefined && typeof payload.sid !== 'string') ||
-        (payload.ps !== undefined &&
-            (typeof payload.ps !== 'number' ||
-                !Number.isInteger(payload.ps) ||
-                payload.ps <= 0))
+        (payload.sid !== undefined && typeof payload.sid !== 'string')
     ) {
         throw new UploadTokenError(
             'malformed',
             'Upload token payload is missing required fields',
+        )
+    }
+    // Both fields below were added after the first tokens shipped. A token
+    // without them predates the length binding (T-5492) or cross-reload resume
+    // and is refused on every route (T-6185). Pre-`iat` tokens have no `ps`
+    // either, so they were already unusable.
+    if (
+        typeof payload.ps !== 'number' ||
+        !Number.isInteger(payload.ps) ||
+        payload.ps <= 0
+    ) {
+        throw new UploadTokenError(
+            'malformed',
+            'Upload token carries no part size; restart the upload',
+        )
+    }
+    if (typeof payload.iat !== 'number' || !Number.isFinite(payload.iat)) {
+        throw new UploadTokenError(
+            'malformed',
+            'Upload token carries no issue time; restart the upload',
         )
     }
     if (!options.allowExpired && payload.exp <= Math.floor(nowMs / 1000)) {

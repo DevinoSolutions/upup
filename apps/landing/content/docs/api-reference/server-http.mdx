@@ -243,9 +243,8 @@ back verbatim on every continuation request.
 
 The issue time is what [`/multipart/resume`](#post-multipartresume) anchors its
 window on, and it is carried forward unchanged when that route re-issues a
-token. Tokens minted before resume shipped carry no issue time; the resume route
-derives it from the expiry, since `init` is the only issuer and has always used
-the same TTL.
+token. A token without a signed issue time is refused with
+`403 { "code": "malformed" }`, like one without a signed part size.
 
 `partSize` is the server's decision, not your request — see
 [Policy and limits](#policy-and-limits).
@@ -287,7 +286,8 @@ returned URL (`content-length` is a signed header), so storage itself rejects a
 partSize)` is refused with `400 Invalid part number` and nothing is signed.
 This enforces the size envelope per part, at upload time, which also covers
 uploads that never reach `/multipart/complete`. Tokens minted before the part
-size was bound keep working but fall back to the complete-time check alone.
+size was bound are refused on every continuation route with
+`403 { "code": "malformed" }`; the upload must be restarted.
 
 **Token failures.** A missing, tampered, or stale token returns `403` with the
 specific reason, so you can tell a bug from an expiry:
@@ -356,8 +356,7 @@ This handler returns `key`, a signed `downloadUrl` (three days by default, see
 supplied one.
 
 **The envelope check.** `sign-part` pins each part's length, but the real byte
-total is only confirmed here, and this check stays as defence in depth (and as
-the only guard for tokens minted before part lengths were signed). The handler sums what
+total is only confirmed here, and this check stays as defence in depth. The handler sums what
 S3 actually received (`ListParts`) and compares it against the `[smin, smax]`
 range signed at `init`. Outside that range, the multipart upload is **aborted**
 — nothing partial is left in the bucket — and the request gets:
@@ -456,14 +455,14 @@ is the model, as everywhere else.
 
 **Status codes**
 
-| Status | Body                                                                          | Cause                                                                               |
-| ------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`                     | unparseable body                                                                    |
-| `403`  | `{ "error": "Invalid upload token", "code": "malformed" \| "bad_signature" }` | the token is not a token, or the signature does not verify                          |
-| `403`  | `{ "error": "Upload resume window has expired", "code": "expired" }`          | more than `multipartResumeWindowSeconds` since the original `init`                  |
-| `403`  | `{ "error": "…", "code": "AUTH_DENIED" }`                                     | owner mismatch                                                                      |
-| `404`  | `{ "error": "Multipart upload no longer exists", "code": "NOT_FOUND" }`       | the provider has no such upload — completed, aborted, or reaped by a lifecycle rule |
-| `500`  | `{ "error": "Multipart resume failed", "code": "STORAGE_ERROR" }`             | the storage call threw for any other reason                                         |
+| Status | Body                                                                          | Cause                                                                                             |
+| ------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`                     | unparseable body                                                                                  |
+| `403`  | `{ "error": "Invalid upload token", "code": "malformed" \| "bad_signature" }` | the token is not a token, has no signed part size or issue time, or the signature does not verify |
+| `403`  | `{ "error": "Upload resume window has expired", "code": "expired" }`          | more than `multipartResumeWindowSeconds` since the original `init`                                |
+| `403`  | `{ "error": "…", "code": "AUTH_DENIED" }`                                     | owner mismatch                                                                                    |
+| `404`  | `{ "error": "Multipart upload no longer exists", "code": "NOT_FOUND" }`       | the provider has no such upload — completed, aborted, or reaped by a lifecycle rule               |
+| `500`  | `{ "error": "Multipart resume failed", "code": "STORAGE_ERROR" }`             | the storage call threw for any other reason                                                       |
 
 A dead upload is deliberately a `404`, never a `500`: upup clients drop the
 session and start fresh on a `4xx`, whereas a `5xx` reads as "try again later"

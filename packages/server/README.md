@@ -89,9 +89,9 @@ freshness check:
   `multipartResumeWindowSeconds` (default 86400 / 24h), measured from `iat` —
   the ORIGINAL init, carried forward unchanged on every re-issue, so a chain of
   resumes cannot extend it. Past the window, resume answers
-  `403 {code: 'expired'}`. Tokens minted before `iat` existed fall back to
-  `exp - TTL`. Set the knob to `0` to remove the route entirely; a negative or
-  fractional value throws `UpupConfigError` at construction.
+  `403 {code: 'expired'}`. A token with no `iat` (or no signed
+  part size) is refused `403 {code: 'malformed'}`. Set the knob to `0` to remove
+  the route entirely; a negative or fractional value throws `UpupConfigError` at construction.
   **The trade:** a leaked token is usable for the window rather than an hour,
   but only to continue the same upload, to the same key, inside the same signed
   size envelope, still owner-bound whenever `getUserId` is set.

@@ -35,7 +35,6 @@ import {
     verifyUploadToken,
     UploadTokenError,
     DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
-    PART_LENGTH_BINDING_CUTOFF_SECONDS,
     type UploadTokenPayload,
 } from './uploadToken'
 import { resolveUserId, DEFAULT_USER_ID } from './tokenStore'
@@ -641,11 +640,7 @@ export async function handleMultipartResume(
         if (payload instanceof Response) return payload
 
         const nowSeconds = Math.floor(Date.now() / 1000)
-        // Tokens minted before `iat` existed still resume: their init time is
-        // recoverable from the expiry, since init is the only issuer and always
-        // used the same TTL.
-        const issuedAt =
-            payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
+        const issuedAt = payload.iat
         const windowSeconds =
             config.multipartResumeWindowSeconds ??
             DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS
@@ -714,7 +709,7 @@ export async function handleMultipartResume(
             uid: payload.uid,
             smin: payload.smin,
             smax: payload.smax,
-            ...(payload.ps !== undefined ? { ps: payload.ps } : {}),
+            ps: payload.ps,
             ...(payload.sid !== undefined ? { sid: payload.sid } : {}),
             // Clamp to the resume window, not a fresh full TTL. The window is
             // the operator's stated cap on how long a leaked token stays
@@ -803,42 +798,24 @@ export async function handleMultipartSignPart(
             payload.sid,
         )
         if (storage instanceof Response) return storage
-        // T-5492: when the token binds a part size, the part number must be one
-        // the file actually has and the URL signs that part's exact length, so
-        // storage rejects any other body. Without this the envelope was only
-        // checked at complete, which an upload that never completes escapes.
-        let partLength: number | undefined
-        if (payload.ps === undefined) {
-            // Only tokens minted before part sizes were bound may lack `ps`
-            // (see PART_LENGTH_BINDING_CUTOFF_SECONDS); they keep the
-            // complete-time check alone. Any later one is refused.
-            const issuedAt =
-                payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
-            if (issuedAt >= PART_LENGTH_BINDING_CUTOFF_SECONDS) {
-                return res.json(
-                    {
-                        error: 'Upload token carries no part size; restart the upload',
-                        code: UpupErrorCode.AUTH_DENIED,
-                    },
-                    403,
-                )
-            }
-        } else {
-            const length = expectedPartLength(
-                payload.smax,
-                payload.ps,
-                body.partNumber,
+        // T-5492: the token binds the part size (verifyUploadToken refuses one
+        // that does not), so the part number must be one the file actually has
+        // and the URL signs that part's exact length, so storage rejects any
+        // other body. Without this the envelope was only checked at complete,
+        // which an upload that never completes escapes.
+        const partLength = expectedPartLength(
+            payload.smax,
+            payload.ps,
+            body.partNumber,
+        )
+        if (partLength === null) {
+            return res.json(
+                {
+                    error: 'Invalid part number',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
             )
-            if (length === null) {
-                return res.json(
-                    {
-                        error: 'Invalid part number',
-                        code: UpupErrorCode.BAD_REQUEST,
-                    },
-                    400,
-                )
-            }
-            partLength = length
         }
         const result = await generatePresignedPartUrl(
             storage,
