@@ -7,6 +7,7 @@ import {
     REPLAY_ON_ERROR_SAMPLE_RATE,
     SENTRY_REPLAY_SAMPLE_RATE,
 } from './replay'
+import { SENTRY_IGNORED_ERRORS } from './sentry-noise'
 import { SENTRY_TUNNEL_PATH, sentryEnvelopeUrl } from './sentry-tunnel'
 
 // Guard against re-initialising during React Strict Mode's double-invoke and
@@ -39,6 +40,7 @@ export function bootSentry(): void {
                 environment: isProductionSite() ? 'production' : 'preview',
                 // Errors and replays only. Performance tracing is not used.
                 tracesSampleRate: 0,
+                ignoreErrors: SENTRY_IGNORED_ERRORS,
                 replaysSessionSampleRate: SENTRY_REPLAY_SAMPLE_RATE,
                 replaysOnErrorSampleRate: REPLAY_ON_ERROR_SAMPLE_RATE,
                 integrations: [
