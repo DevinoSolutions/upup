@@ -297,4 +297,4 @@ by all Devino apps' automated tests; synthetic data only, never production).
   only raw exit codes (see CLAUDE.md "Machine-local notes").
 - Flakes: re-run the failing test isolated before suspecting your change
   (CLAUDE.md "Flake protocol"); cross-framework storybook boot is legitimately
-  slow (420 s webServer timeout) — don't kill it.
+  slow (900 s webServer timeout, see CLAUDE.md "E2E") — don't kill it.
