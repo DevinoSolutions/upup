@@ -19,4 +19,4 @@ rotates, and the lift no longer tweens its shadow. With `animations={false}` or
 `prefers-reduced-motion: reduce`, transitions, the pulsing record and
 drive-loading buttons and the progress-bar width tween are now off too (the bar
 still shows its value), while loading spinners keep spinning. No new, renamed or removed classes, tokens,
-props or markup (only timing values changed).
+props or markup; only existing token values and the keyframe and transition rules behind them changed.
