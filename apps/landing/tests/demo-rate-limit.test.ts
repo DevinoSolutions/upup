@@ -109,3 +109,147 @@ describe('withDemoRateLimit trailing slashes (T-6184)', () => {
         },
     )
 })
+
+describe('withDemoRateLimit client keying (T-6184)', () => {
+    async function exhaust(ip: string) {
+        const { withDemoRateLimit, DEMO_RATE_LIMIT } = await load()
+        const handle = withDemoRateLimit(ok)
+        for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+            const res = await handle(post('/presign', ip))
+            expect(res.status).toBe(200)
+        }
+        return handle
+    }
+
+    it('shares one bucket across IPv6 addresses in the same /64', async () => {
+        const handle = await exhaust('2001:db8:1:2::1')
+        for (const sibling of [
+            '2001:db8:1:2:ffff:ffff:ffff:ffff',
+            '2001:DB8:1:2:abcd::9',
+            '[2001:db8:1:2::7]',
+        ]) {
+            const res = await handle(post('/presign', sibling))
+            expect(res.status).toBe(429)
+        }
+    })
+
+    it('does not share a bucket across different /64s', async () => {
+        const handle = await exhaust('2001:db8:1:2::1')
+        const res = await handle(post('/presign', '2001:db8:1:3::1'))
+        expect(res.status).toBe(200)
+    })
+
+    it('counts an IPv4-mapped IPv6 address against the plain IPv4 bucket', async () => {
+        const handle = await exhaust('203.0.113.20')
+        for (const mapped of ['::ffff:203.0.113.20', '::ffff:cb00:7114']) {
+            const res = await handle(post('/presign', mapped))
+            expect(res.status).toBe(429)
+        }
+    })
+
+    describe('with the visitor wrapper composed as the route does', () => {
+        const SECRET = 'cookie-test-secret-cookie-test-secret'
+        const IP = '203.0.113.21'
+
+        async function composed() {
+            const { withDemoRateLimit } = await load()
+            const { withDemoVisitor } = await import('@/lib/demo-visitor')
+            return withDemoRateLimit(withDemoVisitor(SECRET, ok))
+        }
+
+        // The cookie a browser holds after the proxy/route minted its identity.
+        async function signedSidCookie(): Promise<string> {
+            const { visitorCookies } = await import('@/lib/demo-visitor')
+            const id = '11111111-1111-4111-8111-111111111111'
+            const setCookie = visitorCookies(SECRET, id, post('/presign', IP))
+            return setCookie[0]!.split(';')[0]!
+        }
+
+        function withCookie(cookie: string): Request {
+            return new Request('https://useupup.com/api/upup/presign', {
+                method: 'POST',
+                headers: { 'x-forwarded-for': IP, cookie },
+            })
+        }
+
+        it('does not exempt a client holding a validly signed session cookie', async () => {
+            const { DEMO_RATE_LIMIT } = await import('@/lib/demo-rate-limit')
+            const handle = await composed()
+            const cookie = await signedSidCookie()
+            for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+                const res = await handle(withCookie(cookie))
+                expect(res.status).toBe(200)
+            }
+            const res = await handle(withCookie(cookie))
+            expect(res.status).toBe(429)
+        })
+
+        it('does not exempt a client sending a forged session cookie', async () => {
+            const { DEMO_RATE_LIMIT } = await import('@/lib/demo-rate-limit')
+            const handle = await composed()
+            const forged =
+                'upup_demo_sid=11111111-1111-4111-8111-111111111111.forged'
+            for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+                await handle(withCookie(forged))
+            }
+            const res = await handle(withCookie(forged))
+            expect(res.status).toBe(429)
+        })
+    })
+})
+
+describe('withVaryOrigin (T-6184)', () => {
+    async function loadVary() {
+        return import('@/lib/demo-vary-origin')
+    }
+
+    it('adds Vary: Origin to a response that has none', async () => {
+        const { withVaryOrigin } = await loadVary()
+        const res = await withVaryOrigin(ok)(post('/presign', '203.0.113.30'))
+        expect(res.headers.get('vary')).toBe('Origin')
+        expect(res.status).toBe(200)
+    })
+
+    it('appends Origin to an existing Vary without dropping its tokens', async () => {
+        const { withVaryOrigin } = await loadVary()
+        const res = await withVaryOrigin(
+            async () =>
+                new Response('ok', { headers: { vary: 'Accept-Encoding' } }),
+        )(post('/presign', '203.0.113.31'))
+        expect(res.headers.get('vary')).toBe('Accept-Encoding, Origin')
+    })
+
+    it.each(['Origin', 'accept-encoding, ORIGIN', '*'])(
+        'leaves an existing Vary of %s untouched',
+        async vary => {
+            const { withVaryOrigin } = await loadVary()
+            const res = await withVaryOrigin(
+                async () => new Response('ok', { headers: { vary } }),
+            )(post('/presign', '203.0.113.32'))
+            expect(res.headers.get('vary')).toBe(vary)
+        },
+    )
+
+    it('keeps status and Location of a response with immutable headers', async () => {
+        const { withVaryOrigin } = await loadVary()
+        const res = await withVaryOrigin(async () =>
+            Response.redirect('https://useupup.com/done', 302),
+        )(post('/presign', '203.0.113.33'))
+        expect(res.status).toBe(302)
+        expect(res.headers.get('location')).toBe('https://useupup.com/done')
+        expect(res.headers.get('vary')).toBe('Origin')
+    })
+
+    it('covers the 429 the rate limiter answers itself', async () => {
+        const { withDemoRateLimit, DEMO_RATE_LIMIT } = await load()
+        const { withVaryOrigin } = await loadVary()
+        const handle = withVaryOrigin(withDemoRateLimit(ok))
+        for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+            await handle(post('/presign', '203.0.113.34'))
+        }
+        const res = await handle(post('/presign', '203.0.113.34'))
+        expect(res.status).toBe(429)
+        expect(res.headers.get('vary')).toBe('Origin')
+        expect(res.headers.get('retry-after')).toBe('60')
+    })
+})
