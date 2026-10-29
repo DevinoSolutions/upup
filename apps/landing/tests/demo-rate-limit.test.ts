@@ -147,18 +147,54 @@ describe('withDemoRateLimit client keying (T-6184)', () => {
         }
     })
 
-    it('does not exempt a client that sends a session cookie', async () => {
-        const handle = await exhaust('203.0.113.21')
-        const res = await handle(
-            new Request('https://useupup.com/api/upup/presign', {
+    describe('with the visitor wrapper composed as the route does', () => {
+        const SECRET = 'cookie-test-secret-cookie-test-secret'
+        const IP = '203.0.113.21'
+
+        async function composed() {
+            const { withDemoRateLimit } = await load()
+            const { withDemoVisitor } = await import('@/lib/demo-visitor')
+            return withDemoRateLimit(withDemoVisitor(SECRET, ok))
+        }
+
+        // The cookie a browser holds after the proxy/route minted its identity.
+        async function signedSidCookie(): Promise<string> {
+            const { visitorCookies } = await import('@/lib/demo-visitor')
+            const id = '11111111-1111-4111-8111-111111111111'
+            const setCookie = visitorCookies(SECRET, id, post('/presign', IP))
+            return setCookie[0]!.split(';')[0]!
+        }
+
+        function withCookie(cookie: string): Request {
+            return new Request('https://useupup.com/api/upup/presign', {
                 method: 'POST',
-                headers: {
-                    'x-forwarded-for': '203.0.113.21',
-                    cookie: 'upup_demo_sid=11111111-1111-4111-8111-111111111111.forged',
-                },
-            }),
-        )
-        expect(res.status).toBe(429)
+                headers: { 'x-forwarded-for': IP, cookie },
+            })
+        }
+
+        it('does not exempt a client holding a validly signed session cookie', async () => {
+            const { DEMO_RATE_LIMIT } = await import('@/lib/demo-rate-limit')
+            const handle = await composed()
+            const cookie = await signedSidCookie()
+            for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+                const res = await handle(withCookie(cookie))
+                expect(res.status).toBe(200)
+            }
+            const res = await handle(withCookie(cookie))
+            expect(res.status).toBe(429)
+        })
+
+        it('does not exempt a client sending a forged session cookie', async () => {
+            const { DEMO_RATE_LIMIT } = await import('@/lib/demo-rate-limit')
+            const handle = await composed()
+            const forged =
+                'upup_demo_sid=11111111-1111-4111-8111-111111111111.forged'
+            for (let i = 0; i < DEMO_RATE_LIMIT.capacity; i++) {
+                await handle(withCookie(forged))
+            }
+            const res = await handle(withCookie(forged))
+            expect(res.status).toBe(429)
+        })
     })
 })
 
