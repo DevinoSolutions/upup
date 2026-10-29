@@ -208,8 +208,8 @@ for (const testCase of UNIVERSAL_CASES) {
 
 const LIGHT_CASES = [
     {
-        name: 'a root-level README edit stays light because root markdown has no runtime surface and nothing main.yml gates reads it',
-        path: 'README.md',
+        name: 'a README edit inside packages/core stays light because markdown cannot change runtime behavior',
+        path: 'packages/core/README.md',
     },
     {
         name: 'a top-level docs change stays light because documentation has no runtime surface',
@@ -292,10 +292,8 @@ test('the landing playwright config is universal so it forces every suite includ
     ])
 })
 
-test('a landing README routes by its directory to docsE2e alone because only root-level markdown is docs-only', () => {
-    const resolved = resolveFile('apps/landing/README.md')
-    assert.equal(resolved.tier, 'targeted')
-    assert.deepEqual(resolved.suites, ['docsE2e'])
+test('a landing README stays fully light because the markdown carve-out outranks the docs-e2e rule and a readme cannot regress the rendered docs', () => {
+    assert.deepEqual(resolveFile('apps/landing/README.md').suites, [])
 })
 
 // ── resolveFile: storybook-build routing ───────────────────────────────────
@@ -358,19 +356,13 @@ test('a config basename outranks the package rule so a package vitest config sti
     ])
 })
 
-test('markdown nested under a package follows its directory rule so a package README is not docs-only', () => {
+test('the markdown carve-out outranks a directory-targeted rule so a package README skips every suite', () => {
     const resolved = resolveFile('packages/server/docs/architecture.md')
-    assert.equal(resolved.tier, 'targeted')
-    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
-})
-
-test('the docs-only carve-out outranks a directory-targeted rule so a root doc skips every suite', () => {
-    const resolved = resolveFile('docs/testing.md')
     assert.equal(resolved.tier, 'light-doc')
     assert.deepEqual(resolved.suites, [])
 })
 
-test('a universal shared factory outranks the docs-only carve-out so its README still runs everything', () => {
+test('a universal shared factory outranks the markdown carve-out so its README still runs everything', () => {
     const resolved = resolveFile('packages/eslint-config/README.md')
     assert.equal(resolved.tier, 'universal')
     assert.deepEqual(resolved.suites, [
@@ -758,4 +750,71 @@ test('the CLI computes an affected set from real git history so the git-diff pat
     } finally {
         rmSync(repo, { recursive: true, force: true, maxRetries: 3 })
     }
+})
+
+// ── Markdown has no runtime surface (pinned equal to the pre-T-10020 behavior) ──
+
+const NO_SUITES = {
+    e2e: false,
+    minio: false,
+    smoke: false,
+    docsE2e: false,
+    storybook: false,
+}
+
+test('a changeset entry alone runs no suite because markdown has no runtime surface', () => {
+    const result = resolveAffected(['.changeset/foo.md'])
+    assert.deepEqual(result.suites, NO_SUITES)
+    assert.equal(resolveFile('.changeset/foo.md').tier, 'light-doc')
+})
+
+test('a changeset entry beside landing source leaves docsE2e as the only suite so carrying a changeset never widens the run', () => {
+    const result = resolveAffected([
+        'apps/landing/src/app/docs/page.tsx',
+        '.changeset/foo.md',
+    ])
+    assert.deepEqual(result.suites, { ...NO_SUITES, docsE2e: true })
+})
+
+test('a changeset entry beside server source runs exactly the suites the server source runs alone', () => {
+    const alone = resolveAffected(['packages/server/src/handler.ts'])
+    const withChangeset = resolveAffected([
+        'packages/server/src/handler.ts',
+        '.changeset/foo.md',
+    ])
+    assert.deepEqual(withChangeset.suites, alone.suites)
+    assert.deepEqual(withChangeset.suites, {
+        e2e: true,
+        minio: true,
+        smoke: true,
+        docsE2e: true,
+        storybook: false,
+    })
+})
+
+test('a package README runs no suite because nested markdown is runtime-neutral even though main.yml does not call it docs-only', () => {
+    assert.deepEqual(
+        resolveAffected(['packages/core/README.md']).suites,
+        NO_SUITES,
+    )
+    assert.equal(resolveFile('packages/core/README.md').tier, 'light-doc')
+})
+
+test('a changeset config.json is not markdown so it still fails open to every suite', () => {
+    const result = resolveAffected(['.changeset/config.json'])
+    assert.deepEqual(result.unmatched, ['.changeset/config.json'])
+    assert.deepEqual(result.suites, {
+        e2e: true,
+        minio: true,
+        smoke: true,
+        docsE2e: true,
+        storybook: true,
+    })
+})
+
+test('the LIGHT_DOC tier is the shared docs-only predicate plus one resolver-only markdown rule', () => {
+    const names = IMPACT_RULES.filter(r => r.tier === 'light-doc').map(
+        r => r.name,
+    )
+    assert.deepEqual(names, ['docs-only', 'markdown-no-runtime'])
 })

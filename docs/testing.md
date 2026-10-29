@@ -79,19 +79,26 @@ directories > **fail-open (unmatched paths run everything)**. Summary:
 | `docs/**`, root-level `*.md`, landing/docs/playground/next-example apps, interactive-example, mastra             |     |       |       |
 | **anything unmatched**                                                                                           | ✓   | ✓     | ✓     |
 
-**One docs-only rule, two routers.** "Docs-only" means a path under `docs/` or a
-markdown file directly in the repo root, and it is defined exactly once, in
-`scripts/ci/docs-only.mjs`. main.yml's `Changes` job pipes the PR's changed
-files to that script (exit 0 = every file is docs-only, so `code=false` and the
-heavy main.yml jobs skip), and the resolver's LIGHT_DOC tier imports the same
-predicate. `scripts/ci/docs-only.test.mjs` (in `test:scripts`) pins a fixture
-list against both, and fails if main.yml grows an inline copy of the rule.
-It is narrow on purpose: markdown deeper in the tree is NOT docs-only.
-Package and app markdown (`packages/*/README.md`, `apps/**/*.md`) is read by
-main.yml-gated checks (`vocab:check` scans `.md` under
-packages/apps/scripts/.github), and `.changeset/*.md` is simply not covered. Such
-a file routes by its directory like any other, or fails open. Widening the rule
-means redoing that census first.
+**One docs-only rule, two routers that ask different questions.** main.yml's
+`Changes` job asks "skip the static gates?", and the e2e resolver asks "which
+runtime suites?".
+
+- **Docs-only verdict (shared).** A path under `docs/` or a markdown file
+  directly in the repo root is docs-only, defined exactly once in
+  `scripts/ci/docs-only.mjs`. main.yml's `Changes` job pipes the PR's changed
+  files to that script (exit 0 = every file is docs-only, so `code=false` and
+  the heavy main.yml jobs skip), and the resolver's `docs-only` rule is the same
+  predicate. `scripts/ci/docs-only.test.mjs` (in `test:scripts`) pins a fixture
+  list against both and fails if the `Changes` step is anything but that CLI
+  call. The rule is narrow on purpose: markdown deeper in the tree is NOT
+  docs-only for main.yml, because `vocab:check` scans `.md` under
+  packages/apps/scripts/.github. A PR that only touches `.changeset/*.md` or a
+  package README therefore still runs main.yml.
+- **Runtime neutrality (resolver only).** Nested markdown never triggers a
+  runtime suite: the resolver's separate `markdown-no-runtime` rule gives any
+  `*.md` no suites, so a changeset or a package README adds nothing to the e2e
+  run. Non-markdown files (e.g. `.changeset/config.json`) route as before and
+  fail open.
 
 The required **E2E Status Check** rollup fails on any skip the resolver did
 not sanction (and on a failed resolver), so routing cannot hide required
