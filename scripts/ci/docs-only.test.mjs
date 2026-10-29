@@ -103,6 +103,6 @@ test('main.yml classifies docs-only through scripts/ci/docs-only.mjs and carries
 })
 
 test('the shared pattern is anchored so a nested docs directory is not docs-only', () => {
-    assert.equal(DOCS_ONLY_PATTERN.test('packages/core/docs/a.md'), false)
-    assert.equal(DOCS_ONLY_PATTERN.test('docs/a.md'), true)
+    assert.equal(DOCS_ONLY_PATTERN.exec('packages/core/docs/a.md'), null)
+    assert.equal(DOCS_ONLY_PATTERN.exec('docs/a.md')?.index, 0)
 })
