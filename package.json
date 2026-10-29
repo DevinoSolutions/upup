@@ -105,7 +105,7 @@
             "@tootallnate/once@^2.0.0": "^2.0.1",
             "@puppeteer/browsers@^2.0.0>extract-zip": "-",
             "basic-ftp@^5.0.0": "^6.2.1",
-            "body-parser@^1.0.0": "^1.20.6",
+            "body-parser@^1.0.0": "^1.20.9",
             "body-parser@^2.0.0": "^2.4.0",
             "brace-expansion@^1.0.0": "^1.1.21",
             "brace-expansion@^2.0.0": "^2.1.7",
@@ -159,7 +159,8 @@
             "vite@^7.0.0>esbuild": "^0.28.1",
             "undici@^6.0.0": "^6.29.1",
             "vite@^7.0.0": "^7.3.7",
-            "zod@^4.0.0": "^4.6.6"
+            "zod@^4.0.0": "^4.6.6",
+            "re2js": ">=2.8.7"
         },
         "patchedDependencies": {
             "@storybook/angular@10.6.3": "patches/@storybook__angular@10.6.3.patch"
