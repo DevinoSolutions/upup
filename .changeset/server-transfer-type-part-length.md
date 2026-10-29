@@ -1,5 +1,5 @@
 ---
-'@useupup/server': patch
+'@useupup/server': minor
 ---
 
 Drive transfers now gate and store the type the cloud provider reports instead of the client's `mimeType` claim, re-check it against `allowedTypes`, and run `hooks.onBeforeUpload` before any bytes are written.
