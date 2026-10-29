@@ -18,5 +18,5 @@ really hover, the button sheen sweeps in 150ms, the remove button no longer
 rotates, and the lift no longer tweens its shadow. With `animations={false}` or
 `prefers-reduced-motion: reduce`, transitions, the pulsing record and
 drive-loading buttons and the progress-bar width tween are now off too (the bar
-still shows its value), while loading spinners keep spinning. No class, token,
-prop or markup changes.
+still shows its value), while loading spinners keep spinning. No new, renamed or removed classes, tokens,
+props or markup (only timing values changed).
