@@ -1,0 +1,14 @@
+T-10050 proof: cf warmup timings from #676 CI (head e0628cbd), run 40815277126, job 123254845083 (Cross-framework E2E, success)
+https://github.com/DevinoSolutions/upup/actions/runs/40815277126/job/123254845083
+
+2026-10-29T04:05:15.8154609Z [storybook-react]   <- first storybook boot output
+2026-10-29T04:06:06.7185306Z [cf-setup] infra ready (MinIO + harness)
+2026-10-29T04:06:07.0208509Z Running 139 tests using 3 workers
+2026-10-29T04:06:11.1507620Z [cf-warmup] angular ready in 3s
+2026-10-29T04:06:12.2929464Z [cf-warmup] vanilla ready in 5s
+2026-10-29T04:06:14.6804613Z [cf-warmup] svelte ready in 7s
+2026-10-29T04:06:15.0594141Z [cf-warmup] vue ready in 7s
+2026-10-29T04:06:16.8103181Z [cf-warmup] preact ready in 9s
+2026-10-29T04:06:18.4016022Z [cf-warmup] react ready in 11s
+2026-10-29T04:06:18.4347305Z   ✓    1 [warmup] › cross-framework/warmup.setup.ts:21:1 › warm up all six storybooks (first-request story compile) (10.8s)
+2026-10-29T04:08:15.7623373Z   134 passed (3.0m)
