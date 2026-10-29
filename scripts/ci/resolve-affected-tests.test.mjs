@@ -208,8 +208,8 @@ for (const testCase of UNIVERSAL_CASES) {
 
 const LIGHT_CASES = [
     {
-        name: 'a README edit inside packages/core stays light because markdown cannot change runtime behavior',
-        path: 'packages/core/README.md',
+        name: 'a root-level README edit stays light because root markdown has no runtime surface and nothing main.yml gates reads it',
+        path: 'README.md',
     },
     {
         name: 'a top-level docs change stays light because documentation has no runtime surface',
@@ -292,8 +292,10 @@ test('the landing playwright config is universal so it forces every suite includ
     ])
 })
 
-test('a landing README stays fully light because the markdown carve-out outranks the docs-e2e rule and a readme cannot regress the rendered docs', () => {
-    assert.deepEqual(resolveFile('apps/landing/README.md').suites, [])
+test('a landing README routes by its directory to docsE2e alone because only root-level markdown is docs-only', () => {
+    const resolved = resolveFile('apps/landing/README.md')
+    assert.equal(resolved.tier, 'targeted')
+    assert.deepEqual(resolved.suites, ['docsE2e'])
 })
 
 // ── resolveFile: storybook-build routing ───────────────────────────────────
@@ -356,13 +358,19 @@ test('a config basename outranks the package rule so a package vitest config sti
     ])
 })
 
-test('the markdown carve-out outranks a directory-targeted rule so a package README skips every suite', () => {
+test('markdown nested under a package follows its directory rule so a package README is not docs-only', () => {
     const resolved = resolveFile('packages/server/docs/architecture.md')
+    assert.equal(resolved.tier, 'targeted')
+    assert.deepEqual(resolved.suites, ['e2e', 'minio', 'smoke', 'docsE2e'])
+})
+
+test('the docs-only carve-out outranks a directory-targeted rule so a root doc skips every suite', () => {
+    const resolved = resolveFile('docs/testing.md')
     assert.equal(resolved.tier, 'light-doc')
     assert.deepEqual(resolved.suites, [])
 })
 
-test('a universal shared factory outranks the markdown carve-out so its README still runs everything', () => {
+test('a universal shared factory outranks the docs-only carve-out so its README still runs everything', () => {
     const resolved = resolveFile('packages/eslint-config/README.md')
     assert.equal(resolved.tier, 'universal')
     assert.deepEqual(resolved.suites, [

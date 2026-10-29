@@ -56,7 +56,7 @@ Ad-hoc MinIO-dependent invocations must go through the root scripts (they wrap
 
 ## CI: what runs when
 
-**Every PR (main.yml — never routed):** prettier → test-quality guard →
+**Every PR (main.yml — gated only by the docs-only rule below):** prettier → test-quality guard →
 script self-tests → all unit suites → coverage ratchets → env/vocab checks →
 typecheck → build (+ size + docs snippet typecheck) → prod dependency audit → lint/oxlint/knip, rolled
 up by the required **Status Check**.
@@ -64,7 +64,7 @@ up by the required **Status Check**.
 **Every PR (e2e.yml — routed):** `Resolve-Affected` classifies the diff with
 `scripts/ci/resolve-affected-tests.mjs` and heavy jobs run only when needed.
 The impact map is code, exported for unit tests. Precedence per file:
-UNIVERSAL config > docs/markdown (light) > targeted package rules > light
+UNIVERSAL config > docs-only (light) > targeted package rules > light
 directories > **fail-open (unmatched paths run everything)**. Summary:
 
 | Changed path                                                                                                     | e2e | minio | smoke |
@@ -76,8 +76,22 @@ directories > **fail-open (unmatched paths run everything)**. Summary:
 | `docker-compose.yml`, `local-dev/**`, e2e/env scripts                                                            | ✓   | ✓     |       |
 | smoke consumer script, `scripts/lib/**`                                                                          |     |       | ✓     |
 | root manifests, lockfile, turbo, workflows, any `tsconfig*`/`vitest`/`vite`/`playwright` config, `scripts/ci/**` | ✓   | ✓     | ✓     |
-| markdown anywhere, `docs/**`, landing/docs/playground/next-example apps, interactive-example, mastra             |     |       |       |
+| `docs/**`, root-level `*.md`, landing/docs/playground/next-example apps, interactive-example, mastra             |     |       |       |
 | **anything unmatched**                                                                                           | ✓   | ✓     | ✓     |
+
+**One docs-only rule, two routers.** "Docs-only" means a path under `docs/` or a
+markdown file directly in the repo root, and it is defined exactly once, in
+`scripts/ci/docs-only.mjs`. main.yml's `Changes` job pipes the PR's changed
+files to that script (exit 0 = every file is docs-only, so `code=false` and the
+heavy main.yml jobs skip), and the resolver's LIGHT_DOC tier imports the same
+predicate. `scripts/ci/docs-only.test.mjs` (in `test:scripts`) pins a fixture
+list against both, and fails if main.yml grows an inline copy of the rule.
+It is narrow on purpose: markdown deeper in the tree is NOT docs-only.
+Package and app markdown (`packages/*/README.md`, `apps/**/*.md`) is read by
+main.yml-gated checks (`vocab:check` scans `.md` under
+packages/apps/scripts/.github), and `.changeset/*.md` is simply not covered. Such
+a file routes by its directory like any other, or fails open. Widening the rule
+means redoing that census first.
 
 The required **E2E Status Check** rollup fails on any skip the resolver did
 not sanction (and on a failed resolver), so routing cannot hide required

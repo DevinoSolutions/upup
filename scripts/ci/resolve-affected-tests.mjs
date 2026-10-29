@@ -20,8 +20,10 @@
  * Fail-open is the core safety property: a path that matches no rule runs
  * EVERYTHING. An unknown/new directory can never silently skip coverage.
  *
- * main.yml (static + unit gates) is deliberately NOT routed — those always run.
- * This resolver feeds e2e.yml's Resolve-Affected job only.
+ * main.yml (static + unit gates) is deliberately NOT routed — those always run,
+ * except that docs-only PRs skip them via main.yml's `Changes` job. That job and
+ * this resolver's LIGHT_DOC tier share ONE definition of "docs-only":
+ * scripts/ci/docs-only.mjs. This resolver feeds e2e.yml's Resolve-Affected job.
  *
  * Usage:
  *   node scripts/ci/resolve-affected-tests.mjs --base <ref> --head <ref>
@@ -45,6 +47,7 @@ import { appendFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
+import { isDocsOnlyPath } from './docs-only.mjs'
 
 // ── Suites ───────────────────────────────────────────────────────────────
 
@@ -62,7 +65,7 @@ export const SUITES = ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook']
 //
 // so that, per file:
 //   - a config basename / shared factory beats everything          (UNIVERSAL)
-//   - a README/doc beats the directory it lives in                 (LIGHT_DOC)
+//   - a docs/ file or root-level *.md beats the directory it is in (LIGHT_DOC)
 //   - a package/app source change routes to its suites             (TARGETED)
 //   - a dev-only app/meta file routes nowhere                      (LIGHT_DIR)
 //   - anything unmatched fails open to every suite                 (fail-open)
@@ -153,16 +156,16 @@ export const IMPACT_RULES = [
 
     // ── LIGHT_DOC → NONE (beats the directory a doc lives in) ────────────
     {
-        name: 'markdown',
+        // main.yml's `Changes` job classifies docs-only PRs with this SAME
+        // predicate (scripts/ci/docs-only.mjs is the single definition), so
+        // the two routers cannot drift. It is narrow on purpose: markdown
+        // deeper than the repo root is read by main.yml-gated checks
+        // (vocab:check scans .md under packages/apps/scripts/.github), so it
+        // routes by its directory like any other file.
+        name: 'docs-only',
         tier: TIER.LIGHT_DOC,
         suites: 'NONE',
-        test: path => /\.md$/i.test(path),
-    },
-    {
-        name: 'docs-tree',
-        tier: TIER.LIGHT_DOC,
-        suites: 'NONE',
-        test: path => path.startsWith('docs/'),
+        test: isDocsOnlyPath,
     },
 
     // ── TARGETED → union of suites ───────────────────────────────────────
