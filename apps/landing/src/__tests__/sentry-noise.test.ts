@@ -14,13 +14,17 @@ describe('Sentry ignoreErrors on the landing', () => {
             ),
         ).toBe(true)
         expect(
-            ignored('Object Not Found Matching Id:12, MethodName:update, ParamCount:4'),
+            ignored(
+                'Object Not Found Matching Id:12, MethodName:update, ParamCount:4',
+            ),
         ).toBe(true)
     })
 
     it('keeps reporting every other rejection and error', () => {
         expect(
-            ignored('Non-Error promise rejection captured with value: undefined'),
+            ignored(
+                'Non-Error promise rejection captured with value: undefined',
+            ),
         ).toBe(false)
         expect(ignored('TypeError: Failed to fetch')).toBe(false)
         expect(ignored('Object Not Found')).toBe(false)
