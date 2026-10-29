@@ -664,11 +664,18 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   `main.yml` also routes docs-only PRs (T-6160): a `Changes` job flags a diff
   as docs-only when EVERY changed file is under `docs/` or is a root-level
   `*.md`; every other job then skips and `Status Check` accepts `skipped` only
-  in that case (fail-open: dispatch or an empty diff means `code=true`). Do NOT
-  swap this for workflow-level `paths-ignore`: a skipped workflow reports no
-  check, leaving the required `Status Check` pending forever. `nightly.yml`
-  (group `nightly`) and `publish-sdk.yml` (group `publish-sdk`) carry
-  `cancel-in-progress: false` concurrency groups — they queue, never cancel.
+  in that case (fail-open: dispatch or an empty diff means `code=true`). That
+  rule lives once, in `scripts/ci/docs-only.mjs`: the `Changes` step is exactly
+  one call to it, and the e2e resolver's `docs-only` rule is the same
+  predicate (pinned by `scripts/ci/docs-only.test.mjs`). It is narrow because
+  `vocab:check` reads nested `.md`, so a README or `.changeset/*.md` edit still
+  runs main.yml. The resolver separately treats any `*.md` as runtime-neutral
+  (`markdown-no-runtime`), so nested markdown never triggers a runtime suite.
+  Do NOT swap this for workflow-level `paths-ignore`: a skipped workflow
+  reports no check, leaving the required `Status Check` pending forever.
+  `nightly.yml` (group `nightly`) and `publish-sdk.yml` (group `publish-sdk`)
+  carry `cancel-in-progress: false` concurrency groups — they queue, never
+  cancel.
 - `e2e.yml` — PRs to master/dev: **affected-test routed**. A `Resolve-Affected`
   job classifies the diff via `scripts/ci/resolve-affected-tests.mjs` (impact
   map in code, unit-tested by `test:scripts`; fail-open — an unmatched path

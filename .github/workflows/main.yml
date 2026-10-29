@@ -31,9 +31,10 @@ jobs:
     # the REQUIRED `Status Check` pending forever. Here the workflow always
     # runs, this job decides, and Status-Check (if: always()) still reports --
     # green on a docs-only diff, red if this job itself fails. Fail-open: any
-    # doubt (dispatch, empty or unreadable diff) reports code=true. Keep the
-    # docs-only definition in sync with the LIGHT_DOC rules in
-    # scripts/ci/resolve-affected-tests.mjs.
+    # doubt (dispatch, empty or unreadable diff, a crashing classifier) reports
+    # code=true. The docs-only definition lives in ONE place,
+    # scripts/ci/docs-only.mjs, shared with the LIGHT_DOC tier of
+    # scripts/ci/resolve-affected-tests.mjs (e2e.yml); do not inline a regex here.
     Changes:
         name: Classify changes
         runs-on: ubuntu-latest
@@ -56,7 +57,7 @@ jobs:
                   code=true
                   if [ "$EVENT" = "pull_request" ]; then
                     if files=$(git diff --no-renames --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
-                      if ! printf '%s\n' "$files" | grep -qvE '^(docs/|[^/]+\.md$)'; then
+                      if printf '%s\n' "$files" | node scripts/ci/docs-only.mjs; then
                         code=false
                       fi
                     fi
