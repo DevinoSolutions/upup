@@ -131,9 +131,20 @@ const EXPECTED_CLASSIFY_RUN = [
     'echo "code=$code"',
 ].join('\n')
 
-test('main.yml Changes job has exactly one run step and its classification is the exact docs-only.mjs invocation', () => {
+/** Every `run:` key in a job, whatever its scalar style (inline, `|`, `|-`, `>`). */
+function runKeyCount(job) {
+    return job
+        .split('\n')
+        .filter(line => /^\s*(?:-\s+)?["']?run["']?\s*:/.test(line)).length
+}
+
+test('main.yml Changes job has exactly one run key of any style so no inline step can hide beside the CLI call', () => {
+    assert.equal(runKeyCount(changesJob()), 1)
+})
+
+test('main.yml Changes job classification is the exact docs-only.mjs invocation', () => {
     const blocks = runBlocks(changesJob())
-    assert.equal(blocks.length, 1, 'Changes must keep a single run step')
+    assert.equal(blocks.length, 1, 'the run key must be a literal block')
     assert.equal(blocks[0], EXPECTED_CLASSIFY_RUN)
 })
 

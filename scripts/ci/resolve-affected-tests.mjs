@@ -177,7 +177,7 @@ export const IMPACT_RULES = [
         name: 'markdown-no-runtime',
         tier: TIER.LIGHT_DOC,
         suites: 'NONE',
-        test: path => /.md$/i.test(path),
+        test: path => /\.md$/i.test(path),
     },
 
     // ── TARGETED → union of suites ───────────────────────────────────────

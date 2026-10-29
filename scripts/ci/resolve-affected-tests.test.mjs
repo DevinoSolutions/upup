@@ -812,6 +812,42 @@ test('a changeset config.json is not markdown so it still fails open to every su
     })
 })
 
+const ALL_SUITES = ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook']
+
+// Paths that merely END in "md" are not markdown: the markdown rule must
+// match a literal ".md" (an unescaped dot once made these skip every suite).
+const NOT_MARKDOWN_CASES = [
+    {
+        path: 'packages/core/src/cmd',
+        tier: 'targeted',
+        suites: ALL_SUITES,
+    },
+    {
+        path: 'packages/core/src/foo-md',
+        tier: 'targeted',
+        suites: ALL_SUITES,
+    },
+    {
+        path: 'apps/e2e-test/run.cmd',
+        tier: 'targeted',
+        suites: ['e2e', 'minio'],
+    },
+    {
+        path: 'scripts/run.cmd',
+        tier: 'fail-open',
+        suites: ALL_SUITES,
+    },
+]
+
+for (const testCase of NOT_MARKDOWN_CASES) {
+    test(`${testCase.path} is not markdown so it routes by its directory exactly as before`, () => {
+        const resolved = resolveFile(testCase.path)
+        assert.notEqual(resolved.tier, 'light-doc')
+        assert.equal(resolved.tier, testCase.tier)
+        assert.deepEqual(resolved.suites, testCase.suites)
+    })
+}
+
 test('the LIGHT_DOC tier is the shared docs-only predicate plus one resolver-only markdown rule', () => {
     const names = IMPACT_RULES.filter(r => r.tier === 'light-doc').map(
         r => r.name,
