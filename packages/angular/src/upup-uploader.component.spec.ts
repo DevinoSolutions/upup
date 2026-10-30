@@ -14,16 +14,16 @@ describe('UpupUploaderComponent', () => {
     // whole standalone component tree (analog runs tests in JIT mode) plus the
     // first DI setup and render. On a loaded 2-core CI runner that took 4264 ms
     // of the 5 s default for 'mounts and renders the uploader root' (T-10845,
-    // same flake as uploader-panel.spec.ts). Pay it here, under its own
-    // generous hook timeout, so no test carries it. The global testTimeout is
-    // deliberately left alone.
+    // same cold-compile cost as uploader-panel.spec.ts). Pay it here, under
+    // its own generous hook timeout, so no test carries it. The global
+    // testTimeout is deliberately left alone.
     beforeAll(() => {
         const f = TestBed.createComponent(UpupUploaderComponent)
         try {
             f.componentInstance.config = {} as unknown as UploaderProps
             f.detectChanges()
         } finally {
-            f.destroy() // ngOnDestroy → store.destroy()
+            f.destroy() // DestroyRef.onDestroy (registered in ngOnInit) → store.destroy()
             TestBed.resetTestingModule()
         }
     }, 30_000)
