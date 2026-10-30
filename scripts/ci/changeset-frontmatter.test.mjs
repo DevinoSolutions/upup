@@ -25,6 +25,18 @@ const { getPackagesSync } = require(
     resolveFrom('@manypkg/get-packages', cliDir),
 )
 
+// @changesets/changelog-github strips these override lines from the summary
+// (then trims) before taking the first line as the bullet. Regexes copied
+// verbatim from its getReleaseLine, so the guard sees the same first line.
+function changelogBulletLine(summary) {
+    return summary
+        .replace(/^\s*(?:pr|pull|pull\s+request):\s*#?(\d+)/im, '')
+        .replace(/^\s*commit:\s*([^\s]+)/im, '')
+        .replace(/^\s*(?:author|user):\s*@?([^\s]+)/gim, '')
+        .trim()
+        .split('\n')[0]
+}
+
 /**
  * Validate one changeset file with the real changesets parser. Pure: returns
  * a list of problem strings. `workspaceNames` / `ignored` are Sets.
@@ -58,9 +70,9 @@ export function validateChangeset(text, workspaceNames, ignored = new Set()) {
             )
         else if (lines.every(l => MAJOR_ALLOW.test(l)))
             problems.push('major bump summary contains only the marker')
-        else if (MAJOR_ALLOW.test(lines[0]))
+        else if (MAJOR_ALLOW.test(changelogBulletLine(parsed.summary)))
             problems.push(
-                'major-allow marker must not be the first summary line (changesets uses the first line as the CHANGELOG bullet)',
+                'major-allow marker must not be the first summary line (it would become the CHANGELOG.md bullet line and demote the headline to a continuation line)',
             )
     }
     return problems
@@ -174,8 +186,22 @@ test('rejects a major-allow marker on the first summary line', () => {
     const first =
         '---\n"@useupup/core": major\n---\n<!-- major-allow: reason -->\nBreaking.\n'
     assert.deepEqual(check(first), [
-        'major-allow marker must not be the first summary line (changesets uses the first line as the CHANGELOG bullet)',
+        'major-allow marker must not be the first summary line (it would become the CHANGELOG.md bullet line and demote the headline to a continuation line)',
     ])
+})
+
+test('rejects a marker that only becomes first after changelog-github strips pr:/commit:/author: override lines', () => {
+    const msg =
+        'major-allow marker must not be the first summary line (it would become the CHANGELOG.md bullet line and demote the headline to a continuation line)'
+    for (const override of [
+        'pr: #12',
+        'commit: abc1234',
+        'author: @someone',
+        'user: someone',
+    ]) {
+        const text = `---\n"@useupup/core": major\n---\n${override}\n<!-- major-allow: r -->\nBreaking.\n`
+        assert.deepEqual(check(text), [msg], override)
+    }
 })
 
 test('every tracked changeset has valid frontmatter', () => {
