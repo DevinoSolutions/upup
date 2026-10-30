@@ -11,12 +11,19 @@ const BUMPS = new Set(['patch', 'minor', 'major', 'none'])
 const MAJOR_ALLOW = /^\s*<!--\s*major-allow:\s*\S.*-->\s*$/
 
 // The real parser + package discovery changesets uses. Neither is resolvable
-// from the root under pnpm strict, so resolve through @changesets/cli itself.
+// from the root under pnpm strict, so walk declared dependencies only:
+// @changesets/cli -> @manypkg/get-packages, and
+// @changesets/cli -> @changesets/read -> @changesets/parse.
 const require = createRequire(import.meta.url)
+const resolveFrom = (id, fromDir) => require.resolve(id, { paths: [fromDir] })
 const cliDir = dirname(require.resolve('@changesets/cli/package.json'))
-const fromCli = id => require(require.resolve(id, { paths: [cliDir] }))
-const parseChangeset = fromCli('@changesets/parse').default
-const { getPackagesSync } = fromCli('@manypkg/get-packages')
+const readDir = dirname(resolveFrom('@changesets/read/package.json', cliDir))
+const parseChangeset = require(
+    resolveFrom('@changesets/parse', readDir),
+).default
+const { getPackagesSync } = require(
+    resolveFrom('@manypkg/get-packages', cliDir),
+)
 
 /**
  * Validate one changeset file with the real changesets parser. Pure: returns
@@ -51,6 +58,10 @@ export function validateChangeset(text, workspaceNames, ignored = new Set()) {
             )
         else if (lines.every(l => MAJOR_ALLOW.test(l)))
             problems.push('major bump summary contains only the marker')
+        else if (MAJOR_ALLOW.test(lines[0]))
+            problems.push(
+                'major-allow marker must not be the first summary line (changesets uses the first line as the CHANGELOG bullet)',
+            )
     }
     return problems
 }
@@ -107,14 +118,18 @@ test('rejects a package listed in the changeset config ignore list', () => {
 
 test('rejects an invalid bump type', () => {
     const problems = check('---\n"@useupup/core": minr\n---\nBody\n')
-    assert.ok(problems.length >= 1, 'a bad bump must produce a problem')
+    assert.equal(problems.length, 1)
+    assert.match(problems[0], /^changesets parser rejected the file/)
+    assert.match(problems[0], /invalid version type "minr"/)
 })
 
 test('rejects a duplicate package key', () => {
     const problems = check(
         '---\n"@useupup/core": patch\n"@useupup/core": minor\n---\nB\n',
     )
-    assert.ok(problems.length >= 1, 'a duplicate key must produce a problem')
+    assert.equal(problems.length, 1)
+    assert.match(problems[0], /^changesets parser rejected the file/)
+    assert.match(problems[0], /duplicated mapping key/)
 })
 
 test('rejects an empty summary body when there are releases', () => {
@@ -125,7 +140,9 @@ test('rejects an empty summary body when there are releases', () => {
 
 test('rejects a file with no frontmatter block', () => {
     const problems = check('"@useupup/core": patch\nBody\n')
-    assert.ok(problems.length >= 1, 'missing frontmatter must be a problem')
+    assert.equal(problems.length, 1)
+    assert.match(problems[0], /^changesets parser rejected the file/)
+    assert.match(problems[0], /missing or invalid frontmatter/)
 })
 
 test('parses CRLF line endings identically to LF', () => {
@@ -150,6 +167,14 @@ test('rejects a major whose summary is only the marker', () => {
         '---\n"@useupup/core": major\n---\n<!-- major-allow: reason -->\n'
     assert.deepEqual(check(markerOnly), [
         'major bump summary contains only the marker',
+    ])
+})
+
+test('rejects a major-allow marker on the first summary line', () => {
+    const first =
+        '---\n"@useupup/core": major\n---\n<!-- major-allow: reason -->\nBreaking.\n'
+    assert.deepEqual(check(first), [
+        'major-allow marker must not be the first summary line (changesets uses the first line as the CHANGELOG bullet)',
     ])
 })
 
