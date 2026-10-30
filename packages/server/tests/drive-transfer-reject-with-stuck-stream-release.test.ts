@@ -4,11 +4,12 @@
 // download stream (the provider's real size over the cap, a client `accept`
 // mismatch, a provider type outside allowedTypes, a refusing onBeforeUpload)
 // must answer immediately. The rejection used to `await stream.cancel()` before
-// returning, so a stream whose cancel() never settles (a tee'd branch whose
-// sibling is never cancelled, a stalled socket) hung the response until the
-// client gave up (observed live: POST /files/google-drive/transfer never
-// answering a 413/415). Releasing the connection is best-effort and must never
-// gate the response; the status/body stay exactly the same and nothing is stored.
+// returning, so a cancel() that never settles would hang the response. A
+// 413/415 that never answered was observed live (POST
+// /files/google-drive/transfer), but the root cause was not confirmed; the
+// awaited cancel was the only in-code suspect. Releasing the connection is
+// best-effort and must never gate the response; the status/body stay exactly
+// the same and nothing is stored.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
 import * as awsMock from '../src/providers/aws'
@@ -337,6 +338,9 @@ describe('drive transfer: a post-fetch rejection never waits on releasing the dr
         // The release was attempted on the locked stream; cancel() on a locked
         // stream rejects with a TypeError, and that rejection is swallowed.
         expect(await cancelOutcome).toBeInstanceOf(TypeError)
+        // Guards against the handler reaching storage outside the (mocked)
+        // transfer path; the real "stores nothing" guarantee lives in the
+        // real-MinIO / drive-sandbox layers.
         expect(awsMock.generatePresignedUrl).not.toHaveBeenCalled()
         expect(awsMock.initiateMultipartUpload).not.toHaveBeenCalled()
         expect(awsMock.completeMultipartUpload).not.toHaveBeenCalled()
