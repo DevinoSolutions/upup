@@ -146,11 +146,13 @@ function matchesAccept(accept: string, name: string, type: string): boolean {
 
 /** Release an open drive stream. Best-effort, idempotent and NEVER awaited: a
  *  stream the transfer already consumed (locked or closed) rejects, which is
- *  fine, and a cancel() that is slow or never settles (a tee'd fetch body only
- *  settles once its sibling branch is cancelled too; a stalled socket) must not
- *  hold the client's response hostage — T-7972: a 413/415 rejected after the
- *  drive fetch opened the stream never answered. The cancel is still issued
- *  before the response is returned, so the connection is freed either way. */
+ *  fine, and a cancel() that is slow or never settles (a stalled socket) must
+ *  not hold the client's response hostage. T-7972: a 413/415 rejected after the
+ *  drive fetch opened the stream never answered live; the awaited cancel() was
+ *  the only in-code suspect (the live root cause was not confirmed — a bare
+ *  undici cancel returns in ~0 ms), and issuing it fire-and-forget removes it
+ *  from the response path. The cancel is still issued before the response is
+ *  returned, so the connection is freed either way. */
 function releaseStream(stream: ReadableStream<Uint8Array> | undefined): void {
     if (!stream) return
     try {
