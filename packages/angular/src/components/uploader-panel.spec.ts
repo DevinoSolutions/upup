@@ -47,12 +47,13 @@ async function setup(store: UpupStore) {
 describe('UploaderPanelComponent', () => {
     let store: UpupStore
 
-    // The first configureTestingModule + createComponent in a worker pays the
-    // cold cost of the whole standalone component tree (analog-compiled
-    // modules, first jsdom render). On a loaded 2-core CI runner that alone
-    // exceeded vitest's 5 s default and flaked whichever test ran first
-    // (T-10845). Pay it here, under its own generous hook timeout, so no test
-    // carries it. The global testTimeout is deliberately left alone.
+    // The first compile + createComponent in a worker pays Angular's JIT
+    // compile of the whole standalone component tree (analog runs tests in
+    // JIT mode) plus the first DI setup and render. On a loaded 2-core CI
+    // runner that alone exceeded vitest's 5 s default and flaked whichever
+    // test ran first (T-10845). Pay it here, under its own generous hook
+    // timeout, so no test carries it. The global testTimeout is deliberately
+    // left alone.
     beforeAll(async () => {
         const warmStore = makeStore()
         try {
