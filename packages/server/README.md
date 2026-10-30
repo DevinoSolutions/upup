@@ -89,9 +89,9 @@ freshness check:
   `multipartResumeWindowSeconds` (default 86400 / 24h), measured from `iat` —
   the ORIGINAL init, carried forward unchanged on every re-issue, so a chain of
   resumes cannot extend it. Past the window, resume answers
-  `403 {code: 'expired'}`. Tokens minted before `iat` existed fall back to
-  `exp - TTL`. Set the knob to `0` to remove the route entirely; a negative or
-  fractional value throws `UpupConfigError` at construction.
+  `403 {code: 'expired'}`. A token with no `iat` (or no signed
+  part size) is refused `403 {code: 'malformed'}`. Set the knob to `0` to remove
+  the route entirely; a negative or fractional value throws `UpupConfigError` at construction.
   **The trade:** a leaked token is usable for the window rather than an hour,
   but only to continue the same upload, to the same key, inside the same signed
   size envelope, still owner-bound whenever `getUserId` is set.
@@ -154,7 +154,7 @@ to the client — it goes only to the [`onError`](#onerror--the-logging-seam) se
 | `BAD_REQUEST`         | any route, 400                                                                                     | Empty body, malformed JSON, or invalid file metadata (missing/wrong-typed `name`/`type`/`size`)                                                                         |
 | `AUTH_REQUIRED`       | `POST /presign`, `POST /multipart/init`, 403                                                       | Neither `auth`, `getUserId`, nor `allowAnonymousUploads` is configured — anonymous uploads are rejected by default                                                      |
 | `AUTH_DENIED`         | multipart sign-part/complete/abort/resume, 403                                                     | The resolved caller (via `getUserId`) doesn't match the uid the upload token was issued to                                                                              |
-| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 502                                                                          | The provider's token endpoint rejected the code/refresh-token exchange                                                                                                  |
+| `AUTH_PROVIDER_ERROR` | OAuth token exchange, 424 (rejected) or 502 (unreachable/transient)                                | The provider's token endpoint rejected the code/refresh-token exchange                                                                                                  |
 | `AUTH_EXPIRED`        | drive token refresh failure (internal)                                                             | Refresh token dead/revoked — forces a clean re-auth                                                                                                                     |
 
 Upload-token verification failures (multipart sign-part/complete/abort/resume)

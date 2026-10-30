@@ -519,6 +519,11 @@ describe('handler — OAuth redirect_uri consistency', () => {
             }),
         )
         expect(authRes.status).toBe(302)
+        // The browser keeps the nonce cookie from the redirect and sends it
+        // back on /cb (T-5463).
+        const nonceCookie = (authRes.headers.get('set-cookie') as string).split(
+            ';',
+        )[0] as string
         const authLocation = new URL(authRes.headers.get('location') as string)
         const authRedirectUri = authLocation.searchParams.get('redirect_uri')
         const state = authLocation.searchParams.get('state') as string
@@ -551,7 +556,7 @@ describe('handler — OAuth redirect_uri consistency', () => {
         await handler(
             new Request(
                 `http://localhost:53060/auth/google-drive/cb?code=AUTHCODE&state=${state}`,
-                { method: 'GET' },
+                { method: 'GET', headers: { Cookie: nonceCookie } },
             ),
         )
         fetchSpy.mockRestore()
@@ -799,6 +804,8 @@ describe('handler — error channel: upload-token codes', () => {
                 uid: null,
                 smin: 0,
                 smax: 100,
+                ps: 5 * 1024 * 1024,
+                iat: Math.floor(Date.now() / 1000),
                 exp: Math.floor(Date.now() / 1000) + 3600,
             },
         )
@@ -826,6 +833,8 @@ describe('handler — error channel: upload-token codes', () => {
             uid: null,
             smin: 0,
             smax: 100,
+            ps: 5 * 1024 * 1024,
+            iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) - 10, // already expired
         })
         const handler = createUpupHandler(config)

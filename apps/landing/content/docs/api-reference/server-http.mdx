@@ -43,13 +43,14 @@ configured it.
 | `GET`     | `/auth/:provider/cb`        | OAuth `state` (single-use, 10 min)              | `200` HTML           |
 | `GET`     | `/files/:provider`          | resolved user id + stored drive tokens          | `200` file list      |
 | `POST`    | `/files/:provider/transfer` | resolved user id + stored drive tokens          | `200` stored object  |
+| `POST`    | `/files/:provider/logout`   | resolved user id                                | `200` `{ ok: true }` |
 
 `:provider` is one of `google-drive`, `one-drive`, `dropbox`, `box` — the
 kebab-case wire form. Anything else returns `400`.
 
 Any method/path pair not in the table falls through to
 `404 {"error":"Not found"}` — including a `GET /presign` or a
-`POST /files/:provider` without the `/transfer` suffix.
+`POST /files/:provider` without the `/transfer` or `/logout` suffix.
 
 `POST /multipart/resume` is the one route you can switch off: setting
 `multipartResumeWindowSeconds: 0` stops it from being routed at all, so it 404s
@@ -184,18 +185,18 @@ three days unless `downloadUrlExpiresIn` says otherwise.
 
 **Status codes**
 
-| Status | Body                                                          | Cause                                         |
-| ------ | ------------------------------------------------------------- | --------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`     | unparseable body                              |
-| `400`  | `{ "error": "Invalid file metadata", "code": "BAD_REQUEST" }` | missing/wrong-typed `name`, `type`, or `size` |
-| `401`  | `{ "error": "Unauthorized" }`                                 | your `auth` gate returned `false`             |
-| `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                   |
-| `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                       |
-| `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`  |
+| Status | Body                                                          | Cause                                                                       |
+| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`     | unparseable body                                                            |
+| `400`  | `{ "error": "Invalid file metadata", "code": "BAD_REQUEST" }` | missing/wrong-typed `name`, `type`, or `size`                               |
+| `401`  | `{ "error": "Unauthorized" }`                                 | your `auth` gate returned `false`                                           |
+| `401`  | `{ "error": "Unauthenticated" }`                              | `getUserId` returned `null`                                                 |
+| `403`  | `{ "error": "…", "code": "AUTH_REQUIRED" }`                   | no auth path configured                                                     |
+| `403`  | `{ "error": "Upload rejected" }`                              | your `hooks.onBeforeUpload` returned `false`                                |
 | `403`  | `{ "error": "…", "code": "…" }`                               | your `hooks.onBeforeUpload` threw an `UpupError` — its own message and code |
-| `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                  |
-| `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`          |
-| `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                        |
+| `413`  | `{ "error": "File too large" }`                               | `size` exceeds `maxFileSize`                                                |
+| `415`  | `{ "error": "File type not allowed" }`                        | `type` does not match `allowedTypes`                                        |
+| `500`  | `{ "error": "Presign failed", "code": "PRESIGN_FAILED" }`     | the storage call threw                                                      |
 
 Checks run in that order: JSON parse, metadata shape, size, type,
 `onBeforeUpload`, then identity resolution. So an oversized file is rejected
@@ -242,9 +243,8 @@ back verbatim on every continuation request.
 
 The issue time is what [`/multipart/resume`](#post-multipartresume) anchors its
 window on, and it is carried forward unchanged when that route re-issues a
-token. Tokens minted before resume shipped carry no issue time; the resume route
-derives it from the expiry, since `init` is the only issuer and has always used
-the same TTL.
+token. A token without a signed issue time is refused with
+`403 { "code": "malformed" }`, like one without a signed part size.
 
 `partSize` is the server's decision, not your request — see
 [Policy and limits](#policy-and-limits).
@@ -277,6 +277,17 @@ type MultipartSignPartResponse = {
 ```
 
 This handler returns `uploadUrl` and `expiresIn: 3600`.
+
+**The part length is signed.** `init` binds the part size into the token, so
+this route knows how long every part must be: `partSize` for each part but the
+last, and the remainder for the final one. That length is signed into the
+returned URL (`content-length` is a signed header), so storage itself rejects a
+`PUT` whose body is any other size. A `partNumber` outside `1..ceil(size /
+partSize)` is refused with `400 Invalid part number` and nothing is signed.
+This enforces the size envelope per part, at upload time, which also covers
+uploads that never reach `/multipart/complete`. Tokens minted before the part
+size was bound are refused on every continuation route with
+`403 { "code": "malformed" }`; the upload must be restarted.
 
 **Token failures.** A missing, tampered, or stale token returns `403` with the
 specific reason, so you can tell a bug from an expiry:
@@ -344,8 +355,8 @@ This handler returns `key`, a signed `downloadUrl` (three days by default, see
 `downloadUrlExpiresIn`), and `etag` when S3
 supplied one.
 
-**The envelope check.** Because `sign-part` and the browser's direct PUTs never
-re-send a size, the real byte total is only knowable here. The handler sums what
+**The envelope check.** `sign-part` pins each part's length, but the real byte
+total is only confirmed here, and this check stays as defence in depth. The handler sums what
 S3 actually received (`ListParts`) and compares it against the `[smin, smax]`
 range signed at `init`. Outside that range, the multipart upload is **aborted**
 — nothing partial is left in the bucket — and the request gets:
@@ -444,14 +455,14 @@ is the model, as everywhere else.
 
 **Status codes**
 
-| Status | Body                                                                          | Cause                                                                               |
-| ------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`                     | unparseable body                                                                    |
-| `403`  | `{ "error": "Invalid upload token", "code": "malformed" \| "bad_signature" }` | the token is not a token, or the signature does not verify                          |
-| `403`  | `{ "error": "Upload resume window has expired", "code": "expired" }`          | more than `multipartResumeWindowSeconds` since the original `init`                  |
-| `403`  | `{ "error": "…", "code": "AUTH_DENIED" }`                                     | owner mismatch                                                                      |
-| `404`  | `{ "error": "Multipart upload no longer exists", "code": "NOT_FOUND" }`       | the provider has no such upload — completed, aborted, or reaped by a lifecycle rule |
-| `500`  | `{ "error": "Multipart resume failed", "code": "STORAGE_ERROR" }`             | the storage call threw for any other reason                                         |
+| Status | Body                                                                          | Cause                                                                                             |
+| ------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body", "code": "BAD_REQUEST" }`                     | unparseable body                                                                                  |
+| `403`  | `{ "error": "Invalid upload token", "code": "malformed" \| "bad_signature" }` | the token is not a token, has no signed part size or issue time, or the signature does not verify |
+| `403`  | `{ "error": "Upload resume window has expired", "code": "expired" }`          | more than `multipartResumeWindowSeconds` since the original `init`                                |
+| `403`  | `{ "error": "…", "code": "AUTH_DENIED" }`                                     | owner mismatch                                                                                    |
+| `404`  | `{ "error": "Multipart upload no longer exists", "code": "NOT_FOUND" }`       | the provider has no such upload — completed, aborted, or reaped by a lifecycle rule               |
+| `500`  | `{ "error": "Multipart resume failed", "code": "STORAGE_ERROR" }`             | the storage call threw for any other reason                                                       |
 
 A dead upload is deliberately a `404`, never a `500`: upup clients drop the
 session and start fresh on a `4xx`, whereas a `5xx` reads as "try again later"
@@ -529,14 +540,17 @@ redirect target.
     there, or scope your gate to the upload routes.
 </Callout>
 
-| Status | Body                                                                  | Cause                                             |
-| ------ | --------------------------------------------------------------------- | ------------------------------------------------- |
-| `400`  | `{ "error": "OAuth error: access_denied" }`                           | the provider returned an error                    |
-| `400`  | `{ "error": "Missing code or state" }`                                | truncated callback                                |
-| `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state` |
-| `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                          |
-| `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                   |
-| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code exchange           |
+| Status | Body                                                                  | Cause                                                                                               |
+| ------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "OAuth error: access_denied" }`                           | the provider returned an error                                                                      |
+| `400`  | `{ "error": "Missing code or state" }`                                | truncated callback                                                                                  |
+| `400`  | `{ "error": "Invalid or expired state" }`                             | replayed, unknown, or provider-mismatched `state`                                                   |
+| `400`  | `{ "error": "Unknown provider: x" }`                                  | bad slug                                                                                            |
+| `500`  | `{ "error": "tokenStore is required" }`                               | no `tokenStore`                                                                                     |
+| `424`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider rejected the code or your OAuth app (a provider `4xx`, or an OAuth `error` in a `200`) |
+| `502`  | `{ "error": "Token exchange failed", "code": "AUTH_PROVIDER_ERROR" }` | the provider was unreachable or timed out, answered `5xx`/`429`/`408`, or sent a malformed `200`    |
+
+Neither status can be retried by replaying the callback URL: its `state` is consumed and the provider's code is single-use, so recovery always means starting the sign-in again. After a `424` (Failed Dependency) that cannot succeed until the cause is fixed: the user signs in afresh, or you fix the app's client id, secret or redirect URI. After a `502` the failure was on the provider's side or transient, so signing in again may work. Cloudflare passes a `424` through, but replaces an origin `502` with its own plain-text page, so behind Cloudflare a `502` arrives without this body; the cause still reaches the [`onError` seam](/docs/guides/error-monitoring/).
 
 ## `GET /files/:provider`
 
@@ -602,9 +616,26 @@ list route.
     fileId: string // required
     fileName?: string // overrides the provider's name
     size?: number // client-declared; used only for the fast reject
-    mimeType?: string // checked against allowedTypes
+    mimeType?: string // early-out hint only; the provider's reported type decides
+    restrictions?: {
+        maxFileSize?: number // bytes; the uploader's own cap
+        accept?: string // the uploader's `accept`: MIME types, `type/*`, `.ext`
+    }
 }
 ```
+
+**`restrictions` only tighten.** The UI packages send the uploader's own
+`maxFileSize` and accepted types so a file the browser would refuse is never
+stored (it would otherwise be stored first and then orphaned when the client
+rejected it). The effective cap is `min(maxFileSize, restrictions.maxFileSize)`
+and the type must pass both `allowedTypes` and `restrictions.accept`: a client
+value can never loosen your server policy, and a malformed value is ignored.
+The declared size, then the **provider-reported** size, are checked against the
+cap before any byte is streamed (`413`, nothing stored), the provider-reported
+type and file name against `accept` before any S3 call (`415`), and the cap is
+enforced again on the streamed bytes. This is not authentication: a caller can
+simply omit `restrictions`, so keep your own `maxFileSize` / `allowedTypes`
+set for anything that must hold.
 
 **Response `200`**
 
@@ -622,20 +653,77 @@ list route.
 `hooks.onFileUploaded` runs after the object is durable, with the same
 throw-is-logged-and-swallowed treatment as multipart complete.
 
-| Status | Body                                                           | Cause                                          |
-| ------ | -------------------------------------------------------------- | ---------------------------------------------- |
-| `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                               |
-| `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                    |
-| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                       |
-| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                    |
-| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens            |
-| `413`  | `{ "error": "File too large" }`                                | declared `size` exceeds `maxFileSize`          |
-| `415`  | `{ "error": "File type not allowed" }`                         | `mimeType` fails `allowedTypes`                |
-| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                |
-| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed |
+| Status | Body                                                           | Cause                                                                                           |
+| ------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `400`  | `{ "error": "Invalid JSON body" }`                             | unparseable body                                                                                |
+| `400`  | `{ "error": "Missing fileId" }`                                | no `fileId`                                                                                     |
+| `400`  | `{ "error": "Invalid mimeType" }`                              | `mimeType` present but not a string (incl. `null`)                                              |
+| `400`  | `{ "error": "Unknown provider: x" }`                           | bad slug                                                                                        |
+| `401`  | `{ "error": "Unauthenticated" }`                               | `getUserId` returned `null`                                                                     |
+| `401`  | `{ "reauth": true, "provider": "…" }`                          | no / expired / revoked drive tokens                                                             |
+| `413`  | `{ "error": "File too large" }`                                | declared or provider-reported size exceeds the cap                                              |
+| `415`  | `{ "error": "File type not allowed" }`                         | the type fails `allowedTypes` or `restrictions.accept`                                          |
+| `403`  | `{ "error": "Upload rejected" }`                               | your `hooks.onBeforeUpload` returned `false` (or threw an `UpupError`, as on the upload routes) |
+| `500`  | `{ "error": "tokenStore is required" }`                        | no `tokenStore`                                                                                 |
+| `500`  | `{ "error": "Drive request failed", "code": "STORAGE_ERROR" }` | drive fetch, size cap, or storage write failed                                                  |
 
-The `413` above is only a cheap early-out on the client-declared size. The
+The `413` above is an early-out on the declared and provider-reported size. The
 authoritative cap is enforced against the bytes actually streamed — see below.
+
+**The type is the provider's, not the client's.** The request's `mimeType` is
+only a hint: it gives a cheap first reject, and is used as the stored type when
+the provider reports nothing (or only `application/octet-stream`). Otherwise the
+type the provider reports is what is checked against `allowedTypes`, handed to
+`hooks.onBeforeUpload` (alongside the provider's name and size) and stored as
+the object's `Content-Type`. A client claiming `image/png` for an HTML file
+therefore gets `415` under an `image/*` allowlist, or the file stored as
+`text/html` otherwise; both happen before any bytes reach storage.
+
+**Provider reports only `application/octet-stream`.** Dropbox (always) and
+Box (sometimes) cannot say what a file is, so the type from the request's
+`mimeType` is used for it, after it has passed `allowedTypes`. That value is
+still the client's claim: the file's contents are **not** sniffed. If an
+allowlist is your only defence against a type being served back (for example
+HTML from your own bucket origin), do not rely on it for Dropbox and Box
+transfers; serve downloads from a separate origin or with
+`Content-Disposition: attachment`, or reject in `hooks.onBeforeUpload`, which
+receives the file's name and size as well.
+
+## `POST /files/:provider/logout`
+
+Disconnects a drive: deletes **the caller's** stored tokens for that one
+provider, so the next list or transfer answers `401 { "reauth": true }` until
+the user signs in again. Same identity resolution as the list route (your
+`getUserId`, or the shared default user when none is configured), and it only
+ever touches the single `user + provider` entry — never another user's grant
+and never another provider's. No request body.
+
+It is idempotent: a second logout, or one for a provider the user never
+connected, is still `200`.
+
+**What it does not do.** Log out deletes only the tokens your server holds. It
+does **not** revoke the grant at Google, Microsoft, Dropbox or Box: the app
+stays authorized in the user's provider account until they remove it there.
+
+**Shared identity without `getUserId`.** When `getUserId` is unset, every caller
+resolves to the same `default` user, so anyone who can reach this route can
+disconnect that shared drive. That is the same trust level as the list and
+transfer routes; configure `getUserId` in production.
+
+**Response `200`**
+
+```ts
+{
+    provider: string
+    ok: true
+}
+```
+
+| Status | Body                                    | Cause                       |
+| ------ | --------------------------------------- | --------------------------- |
+| `400`  | `{ "error": "Unknown provider: x" }`    | bad slug                    |
+| `401`  | `{ "error": "Unauthenticated" }`        | `getUserId` returned `null` |
+| `500`  | `{ "error": "tokenStore is required" }` | no `tokenStore`             |
 
 ## Policy and limits
 
@@ -647,7 +735,8 @@ S3 multipart upload is aborted, and **nothing is persisted**. Omit the option an
 no size limit applies.
 
 **`allowedTypes`** is a list of MIME patterns. An exact match passes; a trailing
-`/*` matches the whole type family (`image/*` matches `image/png`). An empty or
+`/*` matches the whole type family (`image/*` matches `image/png`). Matching is
+case-insensitive (ASCII), so `IMAGE/PNG` matches `image/png`. An empty or
 absent type does **not** match a non-empty allowlist — a missing MIME type is
 rejected on both the upload and the transfer path, never waved through. Omit the
 option and every type passes.
@@ -690,11 +779,11 @@ This is independent of the one-hour upload-URL expiry.
 `hooks.onPresignResponse` is the one seam that can change what a route sends.
 It fires on three responses only, discriminated by `ctx.phase`:
 
-| `ctx.phase`           | Route                       | Body it receives                          |
-| --------------------- | --------------------------- | ----------------------------------------- |
-| `presign`             | `POST /presign`             | `PresignedUrlResponse`                    |
-| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token`      |
-| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`               |
+| `ctx.phase`           | Route                       | Body it receives                     |
+| --------------------- | --------------------------- | ------------------------------------ |
+| `presign`             | `POST /presign`             | `PresignedUrlResponse`               |
+| `multipart-init`      | `POST /multipart/init`      | `MultipartInitResponse` plus `token` |
+| `multipart-sign-part` | `POST /multipart/sign-part` | `MultipartSignPartResponse`          |
 
 Returning an object replaces the payload; returning nothing keeps it. The
 context is `{ req, phase, key, metadata?, userId }` — `key` is always the key
@@ -720,11 +809,11 @@ const url = await getDownloadUrl(config, 'user-42/9f3a/invoice.pdf', {
 })
 ```
 
-| Argument         | Type                              | Notes                                                        |
-| ---------------- | --------------------------------- | ------------------------------------------------------------ |
+| Argument         | Type                                | Notes                                                         |
+| ---------------- | ----------------------------------- | ------------------------------------------------------------- |
 | `config`         | `{ storage, downloadUrlExpiresIn?}` | Your `UpupServerConfig`, or any object with a `storage` slice |
-| `key`            | `string`                          | The stored object key. Signed as given — not validated       |
-| `opts.expiresIn` | `number`                          | Seconds, for this URL only                                    |
+| `key`            | `string`                            | The stored object key. Signed as given — not validated        |
+| `opts.expiresIn` | `number`                            | Seconds, for this URL only                                    |
 
 Expiry resolves `opts.expiresIn` → `config.downloadUrlExpiresIn` → three days.
 Throws `UpupConfigError` when `storage.type` has no S3 API, matching

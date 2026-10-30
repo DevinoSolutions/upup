@@ -16,7 +16,11 @@ import {
     DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS,
 } from './upload-routes'
 import { handleOAuthRedirect, handleOAuthCallback } from './oauth'
-import { handleListFiles, handleFileTransfer } from './drive-routes'
+import {
+    handleListFiles,
+    handleFileTransfer,
+    handleDriveLogout,
+} from './drive-routes'
 
 export type RouteHandler = (req: Request) => Promise<Response>
 
@@ -139,9 +143,10 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                 return await handleOAuthRedirect(req, config, provider, res)
             }
 
-            // File routes: GET /files/:provider and POST /files/:provider/transfer
+            // File routes: GET /files/:provider, POST /files/:provider/transfer
+            // and POST /files/:provider/logout
             const filesMatch = path.match(
-                /\/files\/([\w-]+?)(?:\/(transfer))?$/,
+                /\/files\/([\w-]+?)(?:\/(transfer|logout))?$/,
             )
             if (filesMatch) {
                 const provider = filesMatch[1]
@@ -149,10 +154,14 @@ export function createUpupHandler(config: UpupServerConfig): RouteHandler {
                     return res.json({ error: 'Not found' }, 404)
                 }
                 const isTransfer = filesMatch[2] === 'transfer'
+                const isLogout = filesMatch[2] === 'logout'
                 if (req.method === 'POST' && isTransfer) {
                     return await handleFileTransfer(req, config, provider, res)
                 }
-                if (req.method === 'GET' && !isTransfer) {
+                if (req.method === 'POST' && isLogout) {
+                    return await handleDriveLogout(req, config, provider, res)
+                }
+                if (req.method === 'GET' && !isTransfer && !isLogout) {
                     return await handleListFiles(req, config, provider, res)
                 }
             }

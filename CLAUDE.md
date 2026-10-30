@@ -173,7 +173,9 @@ pnpm run test:quality   # test-suite hygiene guard: committed .only, disabled
                         # file is invisible until staged, so verify after
                         # `git add`, not before.
 pnpm run test:scripts   # node:test self-tests for scripts/ci (the guard + the
-                        # affected-test resolver's impact map) + scripts/lib
+                        # affected-test resolver's impact map) + scripts/lib;
+                        # also validates .changeset/*.md against the real
+                        # changesets parser (needs install)
 pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite
                         # build, dist-shape + entry-budget asserts). Slow (~5m);
                         # run it after anything that can grow core/react's
@@ -344,8 +346,10 @@ settled, live regions masked). Naming contract
 `screenshots/<suite>/<framework>/<flow>--<state>.png` is what snapvisor.io
 (our Argos-style visual-diff service) will key on once its uploader lands in
 CI; until then the PNGs upload as workflow artifacts
-(`e2e-visual-screenshots` / `nightly-visual-screenshots`, always — not just on
-failure). No golden images are committed and there is no regen mode: baselines
+(`e2e-visual-screenshots` / `nightly-visual-screenshots`) on FAILURE only, with
+1-day retention — the org artifact quota was exhausted in October 2026 and a
+blocked upload fails its step, so a green-path upload would red a passing job.
+No golden images are committed and there is no regen mode: baselines
 live server-side in snapvisor, so there is nothing here for the regen guards
 to protect. Every capture sits AFTER a real behavioral assertion — the
 assertion proves the state happened, the pixels prove what it looked like.
@@ -478,16 +482,38 @@ the suites actually drive):
   OR `(prefers-reduced-motion: reduce)`, else `on`); the emitted gate is
   `[data-motion='off'] :is([class*='upup-fx-'], [class*='upup-animate-fx-']):not(.upup-fx-essential)`
   (plus its `::after` twin and a `prefers-reduced-motion` defense-in-depth copy).
-  `upup-fx-essential` must stay safelisted forever — it is referenced ONLY inside
-  `:not()`, no markup may ever carry it, and it is the candidate that forces the
-  kill-switch + reduced-motion rules to emit. Timing lives ONLY in the
+  The same gate (both the `[data-motion='off']` and the media-query forms) also
+  drops non-fx motion that components carry (motion audit T-5010, 2026-10-20):
+  `transition: none` on any `[class*='upup-transition']` element,
+  `animation: none` on any `[class*='animate-pulse']` element, and no width tween on
+  `upup-fx-progress-fill` (the bar still renders; its width jumps). Spinners
+  (`upup-animate-spin`) are deliberately untouched and keep spinning.
+  `upup-fx-essential` must stay safelisted forever — in the CSS it is referenced
+  ONLY inside `:not()`, and it is the candidate that forces the kill-switch +
+  reduced-motion rules to emit. The progress fill is the one element that
+  carries it (in all five ported packages); no other markup may, and the
+  safelist must not rely on that one carrier. All hover motion
+  (`fx-hover-lift`, `fx-icon-nudge`, `fx-sheen-sweep`, `fx-remove`) sits under
+  `@media (hover: hover)`; `fx-hover-lift` transitions `transform` +
+  `background-color` only (its shadow changes instantly — box-shadow is never
+  tweened); core's overlay close timer (`transient-ui-state.ts` `overlayMs`)
+  defaults to the same 250ms as `--upup-fx-overlay` — change them together;
+  `fx-pop` has no
+  overshoot (opacity + scale 0.96 -> 1); `fx-rec-pulse` is opacity-only. Recorded
+  motion-audit exceptions: the overlay sheet's full-height `translateY(100%)`
+  travel, the progress fill tweening `width` (inline-width driven, contained in
+  its track), and the `upup-transition-all` utilities in component markup
+  (renaming them is a six-framework DOM sweep). Timing lives ONLY in the
   `--upup-fx-*` tokens on `.upup-scope` (`--upup-fx-fast` 150ms /
-  `--upup-fx-base` 200ms / `--upup-fx-overlay` 350ms /
+  `--upup-fx-base` 200ms / `--upup-fx-overlay` 250ms /
   `--upup-fx-ease` cubic-bezier(0.22, 1, 0.36, 1)) — a hardcoded duration inside
   an fx rule is a defect. The token rule governs interaction/transition timings;
   the sanctioned literal-duration carve-out is the infinite ambient loops plus
   the one-shot draw (`fx-sheen` 1.6s, `fx-dash-march` 8s, `fx-rec-pulse` 1.4s,
-  `fx-draw` 400ms). Two-phase transitions are owned by core `later()` timers; DOM
+  `fx-draw` 300ms). `fx-sheen` and `fx-dash-march` are live-state indicators,
+  not idle decoration: the sheen renders only while an upload is active and the
+  dashes march only during a drag over the panel. Two-phase transitions are
+  owned by core `later()` timers; DOM
   `animationend`/`transitionend` listeners are banned. `animations?: boolean` is
   the ONE public prop (default true), identical across all six frameworks;
   `prefers-reduced-motion` also forces motion off regardless of the prop. Pinned
@@ -603,20 +629,55 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
 
 - `main.yml` — PRs to master/dev (+ manual dispatch): prettier → test-quality
   guard (`pnpm run test:quality`) + script self-tests (`pnpm run test:scripts`)
-  → all-package unit suites
-  (`pnpm run test`) + per-package v8 coverage **anti-regression ratchets** on all
-  nine publishable packages (`pnpm run test:coverage`) — NOT a uniform bar: each
+  → every unit suite exactly ONCE (T-5373): `pnpm run test:coverage` runs the
+  nine publishable packages' suites with their per-package v8 **anti-regression
+  ratchets**, then a `turbo run test --filter='!…'` step runs the remaining
+  private package/app suites (it excludes the nine by name — a NEW publishable
+  package must be added to both that filter and `test:coverage`). The old
+  separate `pnpm run test` step ran the nine twice. Ratchets — NOT a uniform bar: each
   threshold is hand-tuned ~3 pts below that package's measured coverage and they
   span ~12%–97% (svelte/preact floors are near-vacuous), so the gate's real
   strength is uneven (F-789). `test:coverage` is a turbo task (F-790), so
   preact/vanilla coverage sees fresh dist regardless of invocation order →
-  typecheck → build → size-limit → a prod-scoped
+  typecheck → build (runs in parallel with Test and also runs `pnpm run size`
+  and the docs snippet typecheck against the dist it just built: jobs never hand
+  files to each other through artifacts, so there is no `built-dist` and no
+  separate Bundle-Size job; Docs-Gate keeps only the checks that need no build)
+  → a prod-scoped
   dependency-audit gate (`pnpm run audit:prod`, `scripts/audit-prod.mjs`) that
   fails on high+ advisories reachable from the 9 publishable packages'
   production trees only (dev-only apps/private-package noise is excluded by
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
+  Artifacts (T-7021, T-8322; the org Actions artifact quota was exhausted in
+  October 2026 and uploads are blocked until 2026-11-01): a blocked upload FAILS
+  its step, so no green path may upload. Jobs never pass files to each other
+  through artifacts (merge the jobs instead), reports go to `$GITHUB_STEP_SUMMARY`
+  (the Test job's per-package coverage lines, the nightly Lighthouse scores),
+  and every remaining `upload-artifact` step is `if: failure()` with
+  `retention-days` 2 or less (screenshot/evidence uploads 1). A new upload step
+  must follow all three; `continue-on-error` stays banned.
+  Both `main.yml` and `e2e.yml` carry a top-level `concurrency` group
+  (`workflow-PR number or ref`, `cancel-in-progress: true`): a newer push
+  cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
+  `if: always()`) fail on any need whose result is not `success` (E2E: not
+  `success`/sanctioned `skipped`), so a cancelled run can never read green.
+  `main.yml` also routes docs-only PRs (T-6160): a `Changes` job flags a diff
+  as docs-only when EVERY changed file is under `docs/` or is a root-level
+  `*.md`; every other job then skips and `Status Check` accepts `skipped` only
+  in that case (fail-open: dispatch or an empty diff means `code=true`). That
+  rule lives once, in `scripts/ci/docs-only.mjs`: the `Changes` step is exactly
+  one call to it, and the e2e resolver's `docs-only` rule is the same
+  predicate (pinned by `scripts/ci/docs-only.test.mjs`). It is narrow because
+  `vocab:check` reads nested `.md`, so a README or `.changeset/*.md` edit still
+  runs main.yml. The resolver separately treats any `*.md` as runtime-neutral
+  (`markdown-no-runtime`), so nested markdown never triggers a runtime suite.
+  Do NOT swap this for workflow-level `paths-ignore`: a skipped workflow
+  reports no check, leaving the required `Status Check` pending forever.
+  `nightly.yml` (group `nightly`) and `publish-sdk.yml` (group `publish-sdk`)
+  carry `cancel-in-progress: false` concurrency groups — they queue, never
+  cancel.
 - `e2e.yml` — PRs to master/dev: **affected-test routed**. A `Resolve-Affected`
   job classifies the diff via `scripts/ci/resolve-affected-tests.mjs` (impact
   map in code, unit-tested by `test:scripts`; fail-open — an unmatched path

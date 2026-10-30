@@ -15,6 +15,17 @@
     color-scheme: light;
     --bg-base: #f8fafc;
     --fg-base: #171717;
+
+    /* Motion tokens. Landing-only: the uploader ships its own --upup-fx-*
+       tokens on .upup-scope, and the --motion- prefix keeps the two apart.
+       Wired into Tailwind (duration-fast/base/slow/panel, ease-motion-out/in and the
+       animate-motion-* utilities) in tailwind.config.ts. */
+    --motion-dur-fast: 120ms;
+    --motion-dur-base: 180ms;
+    --motion-dur-slow: 240ms;
+    --motion-dur-panel: 150ms;
+    --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
 }
 
 .dark {
@@ -35,16 +46,14 @@ html {
    "render delay" — the text was in the HTML the whole time, just painted
    transparent. A CSS animation runs off the server HTML instead, so the
    first paint already carries the copy.
-   Stagger with an inline `--hero-delay`; keep every delay short, because
-   the element is invisible until its delay elapses (fill-mode `both`) and
-   the subtitle is the LCP element. */
+   Stagger with an inline `--hero-delay`. Both keyframes are transform-only:
+   an element is never at opacity 0, so nothing is invisible while its delay
+   elapses (fill-mode `both` only holds the translated start position). */
 @keyframes hero-rise {
     from {
-        opacity: 0;
         transform: translate3d(0, 18px, 0);
     }
     to {
-        opacity: 1;
         transform: none;
     }
 }
@@ -106,22 +115,6 @@ body {
         sans-serif;
 }
 
-@layer utilities {
-    .animate-scale-in {
-        animation: scale-in 0.15s ease-out forwards;
-    }
-    @keyframes scale-in {
-        0% {
-            transform: scaleY(0);
-            opacity: 0;
-        }
-        100% {
-            transform: scaleY(1);
-            opacity: 1;
-        }
-    }
-}
-
 @layer components {
     .docs-body {
         @apply prose dark:prose-invert max-w-none lg:prose-lg;
@@ -154,127 +147,127 @@ body {
 
     /* Uploader Component Buttons */
     .uploader-btn-blue {
-        @apply !bg-blue-500 hover:!bg-blue-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-blue-500 hover:!bg-blue-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-emerald {
-        @apply !bg-emerald-500 hover:!bg-emerald-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-emerald-500 hover:!bg-emerald-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-purple {
-        @apply !bg-purple-500 hover:!bg-purple-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-purple-500 hover:!bg-purple-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-rose {
-        @apply !bg-rose-500 hover:!bg-rose-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-rose-500 hover:!bg-rose-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-orange {
-        @apply !bg-orange-500 hover:!bg-orange-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-orange-500 hover:!bg-orange-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     .uploader-btn-indigo {
-        @apply !bg-indigo-500 hover:!bg-indigo-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-all !duration-200;
+        @apply !bg-indigo-500 hover:!bg-indigo-600 !text-white !font-semibold !px-6 !py-3 !rounded-xl !transition-colors !duration-200;
     }
 
     /* Progress bars */
     .uploader-progress-blue {
-        @apply !bg-blue-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-blue-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-emerald {
-        @apply !bg-emerald-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-emerald-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-purple {
-        @apply !bg-purple-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-purple-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-rose {
-        @apply !bg-rose-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-rose-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-orange {
-        @apply !bg-orange-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-orange-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     .uploader-progress-indigo {
-        @apply !bg-indigo-500 !rounded-full !transition-all !duration-300;
+        @apply !bg-indigo-500 !rounded-full !transition-[background-color,width] !duration-300;
     }
 
     /* Adapter buttons */
     .uploader-source-blue {
-        @apply !border-2 !border-blue-500/20 hover:!border-blue-500/40 hover:!bg-blue-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-blue-500/20 hover:!border-blue-500/40 hover:!bg-blue-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-emerald {
-        @apply !border-2 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-emerald-500/20 hover:!border-emerald-500/40 hover:!bg-emerald-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-purple {
-        @apply !border-2 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-purple-500/20 hover:!border-purple-500/40 hover:!bg-purple-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-rose {
-        @apply !border-2 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-rose-500/20 hover:!border-rose-500/40 hover:!bg-rose-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-orange {
-        @apply !border-2 !border-orange-500/20 hover:!border-orange-500/40 hover:!bg-orange-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-orange-500/20 hover:!border-orange-500/40 hover:!bg-orange-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     .uploader-source-indigo {
-        @apply !border-2 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-500/5 !rounded-xl !p-4 !transition-all !duration-200 !shadow-md dark:!shadow-none;
+        @apply !border-2 !border-indigo-500/20 hover:!border-indigo-500/40 hover:!bg-indigo-500/5 !rounded-xl !p-4 !transition-[border-color,background-color] !duration-200 !shadow-md dark:!shadow-none;
     }
 
     /* Preview buttons */
     .uploader-preview-blue {
-        @apply !text-blue-500 hover:!text-blue-600 !transition-all !duration-200;
+        @apply !text-blue-500 hover:!text-blue-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-emerald {
-        @apply !text-emerald-500 hover:!text-emerald-600 !transition-all !duration-200;
+        @apply !text-emerald-500 hover:!text-emerald-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-purple {
-        @apply !text-purple-500 hover:!text-purple-600 !transition-all !duration-200;
+        @apply !text-purple-500 hover:!text-purple-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-rose {
-        @apply !text-rose-500 hover:!text-rose-600 !transition-all !duration-200;
+        @apply !text-rose-500 hover:!text-rose-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-orange {
-        @apply !text-orange-500 hover:!text-orange-600 !transition-all !duration-200;
+        @apply !text-orange-500 hover:!text-orange-600 !transition-colors !duration-200;
     }
 
     .uploader-preview-indigo {
-        @apply !text-indigo-500 hover:!text-indigo-600 !transition-all !duration-200;
+        @apply !text-indigo-500 hover:!text-indigo-600 !transition-colors !duration-200;
     }
 
     /* Add more buttons */
     .uploader-add-blue {
-        @apply !border-2 !border-dashed !border-blue-500/30 hover:!border-blue-500/50 hover:!bg-blue-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-blue-500/30 hover:!border-blue-500/50 hover:!bg-blue-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-emerald {
-        @apply !border-2 !border-dashed !border-emerald-500/30 hover:!border-emerald-500/50 hover:!bg-emerald-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-emerald-500/30 hover:!border-emerald-500/50 hover:!bg-emerald-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-purple {
-        @apply !border-2 !border-dashed !border-purple-500/30 hover:!border-purple-500/50 hover:!bg-purple-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-purple-500/30 hover:!border-purple-500/50 hover:!bg-purple-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-rose {
-        @apply !border-2 !border-dashed !border-rose-500/30 hover:!border-rose-500/50 hover:!bg-rose-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-rose-500/30 hover:!border-rose-500/50 hover:!bg-rose-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-orange {
-        @apply !border-2 !border-dashed !border-orange-500/30 hover:!border-orange-500/50 hover:!bg-orange-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-orange-500/30 hover:!border-orange-500/50 hover:!bg-orange-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     .uploader-add-indigo {
-        @apply !border-2 !border-dashed !border-indigo-500/30 hover:!border-indigo-500/50 hover:!bg-indigo-500/5 !rounded-xl !transition-all !duration-200;
+        @apply !border-2 !border-dashed !border-indigo-500/30 hover:!border-indigo-500/50 hover:!bg-indigo-500/5 !rounded-xl !transition-[border-color,background-color] !duration-200;
     }
 
     /* Container backgrounds - soft pastels with dark mode support */
@@ -461,6 +454,16 @@ body {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
 }
+/* Below lg the copy button (CodeCardControls) is always visible and 44px, and
+   the card reserves no space for it, so it would sit over the end of a long
+   first line. Reserve its width (44px + 4px inset + gap) so the line is not
+   covered and the user can still scroll to its end. Same breakpoint as the
+   button's `lg:` size undo / Tailwind's `max-lg`; desktop is untouched. */
+@media not all and (min-width: 1024px) {
+    .upup-code > pre {
+        padding-right: 3.5rem;
+    }
+}
 .upup-code > pre::-webkit-scrollbar {
     height: 8px;
 }
@@ -470,4 +473,38 @@ body {
 .upup-code > pre::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.22);
     border-radius: 9999px;
+}
+
+/* ── Global reduced-motion net ────────────────────────────────────
+   Deliberately OUTSIDE @layer so its !important beats any utility. Collapses
+   CSS animation/transition timing for every landing element, including
+   react-toastify, Tailwind animate-* utilities and third-party CSS. Does NOT
+   touch framer-motion (JS-driven) — <MotionConfig reducedMotion="user"> in
+   components/motion-provider.tsx covers that.
+   Two exclusions: spinners (an indeterminate-state indicator may keep
+   spinning) and the embedded uploader subtree (.upup-scope), which owns a
+   data-motion gate and deliberately keeps its progress tween and spinner.
+   Pseudo-elements cannot sit inside :where()/:is(), so ::before/::after are
+   spelled out as their own selectors. Delays are zeroed too: the
+   animate-motion-* utilities use `backwards` fill, so a delay would otherwise
+   hold an element at its 0% keyframe (opacity 0) under reduced motion.
+   Transitions get 0s, not 0.01ms: an element with no transition classes has
+   the initial `transition-property: all`, so any non-zero duration makes
+   EVERY property transition, `visibility` included. A hidden -> visible
+   transition stays `hidden` for its first frame, so a focus() in the same
+   tick fails (the Ask AI drawer lost composer focus this way). A 0s
+   transition never starts, so state flips instantly. Nothing on the landing
+   listens for transitionend. Animations keep 0.01ms so the backwards fill
+   resolves. */
+@media (prefers-reduced-motion: reduce) {
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *),
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::before,
+    *:not([class*='animate-spin'], .upup-scope, .upup-scope *)::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0s !important;
+        animation-delay: 0s !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
 }

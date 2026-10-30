@@ -1,6 +1,6 @@
 ---
-title: PrimeVue and PrimeReact FileUpload Alternatives
-description: PrimeVue 5 and PrimeReact 11 moved to the PrimeUI License. What FileUpload does, what to use instead, and how to migrate to upup, Uppy or FilePond.
+title: PrimeVue and PrimeReact File Upload Alternatives
+description: 'Replace PrimeVue FileUpload or PrimeReact FileUpload with upup, Uppy or FilePond: S3 presigned and resumable uploads, drive imports, migration code.'
 faq:
     - q: Is PrimeVue FileUpload free?
       a: 'It depends on the version. PrimeVue 4 and earlier are MIT-licensed. PrimeVue 5 uses the PrimeUI License, which has a free Community License for individuals and eligible small organizations and a paid Commercial License for everyone else. Either way, version 5 needs a license key.'
@@ -14,7 +14,17 @@ faq:
       a: No. upup replaces only the upload component. The rest of your PrimeVue or PrimeReact UI can stay as it is.
 ---
 
-**The short answer:** PrimeVue 5 and PrimeReact 11 are no longer MIT-licensed.
+**Replacing PrimeVue FileUpload or PrimeReact FileUpload:** both are file upload
+form controls. They pick files, show a list and progress, and post to the `url` you
+set, or hand the files to your own `customUpload` function. Replace one when
+you want files to go to your own S3-compatible bucket, when you need resumable
+uploads or cloud-drive imports, or when you would rather not take a PrimeUI
+license key with PrimeVue 5 or PrimeReact 11. upup replaces only the upload
+component: your endpoint (or `@useupup/server`) signs presigned S3 uploads,
+interrupted uploads can resume (S3 multipart or tus), and users can import from
+Google Drive, OneDrive, Dropbox and Box. The rest of your Prime UI stays.
+
+**On the license:** PrimeVue 5 and PrimeReact 11 are no longer MIT-licensed.
 They use PrimeTek's PrimeUI License, with a free Community License for
 individuals and eligible small organizations, a paid Commercial License for
 everyone else, and a license key in both cases. PrimeVue 4 and PrimeReact 10

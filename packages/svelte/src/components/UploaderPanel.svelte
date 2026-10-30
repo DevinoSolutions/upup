@@ -46,7 +46,13 @@
     if (!el) return
     if (!triggerEl && document.activeElement instanceof HTMLElement)
       triggerEl = document.activeElement
-    el.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+    // No enabled control (every tile disabled): the dialog itself
+    // (tabindex -1) takes focus so it still lands inside the sheet.
+    const target =
+      el.querySelector<HTMLElement>(
+        'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+      ) ?? el
+    target.focus()
   })
 
   $effect(() => {
@@ -276,8 +282,9 @@
       role={$sourceOverlayClosing ? undefined : 'dialog'}
       aria-modal={$sourceOverlayClosing ? undefined : 'true'}
       aria-label={tr.addingMoreFiles}
+      tabindex="-1"
       class={cn(
-        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
         $sourceOverlayClosing
           ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
           : 'upup-fx-overlay-slide',
@@ -353,9 +360,9 @@
           {tr.builtBy}
         </span>
         {#if $dark}
-          <img src={devinoDark} width={61} height={13} alt="logo-dark" />
+          <img src={devinoDark} width={43} height={13} alt="logo-dark" />
         {:else}
-          <img src={devinoLight} width={61} height={13} alt="logo-light" />
+          <img src={devinoLight} width={43} height={13} alt="logo-light" />
         {/if}
       </a>
     </div>

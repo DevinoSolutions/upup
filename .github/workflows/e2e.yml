@@ -9,6 +9,14 @@ on:
         branches: [master, dev]
     workflow_dispatch:
 
+# A newer push to the same PR cancels the superseded run (T-5373). The
+# E2E-Status rollup cannot go falsely green: a cancelled Resolve-Affected or
+# required job reads non-success and fails the check; the new head's run
+# supplies the passing check. workflow_dispatch runs group by ref.
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
 # Actions pinned to full commit SHAs (F-792); pnpm via pnpm/action-setup +
 # setup-node cache:pnpm (F-787) — same mechanism as main.yml / publish.yml.
 
@@ -164,18 +172,20 @@ jobs:
 
             # Visual layer: the suites freeze named product states as PNGs
             # (apps/e2e-test/visual/product-state-screenshots.ts). Uploaded on
-            # success AND failure — they are review evidence now and the
-            # snapvisor.io (Argos-style) diff input once its uploader is wired
-            # into this job. An empty upload warns: e2e ran but captured
-            # nothing, which means the capture layer itself broke.
+            # FAILURE only: the org artifact quota was exhausted in October
+            # 2026 and a blocked upload fails its step, so a green-path upload
+            # would turn a passing job red. They stay the snapvisor.io
+            # (Argos-style) diff input once its uploader is wired into this
+            # job. An empty upload warns: e2e ran but captured nothing, which
+            # means the capture layer itself broke.
             - name: Upload visual product-state screenshots
-              if: always()
+              if: failure()
               uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
                   if-no-files-found: warn
-                  retention-days: 14
+                  retention-days: 1
 
             - name: Upload Playwright traces and reports
               if: failure()
@@ -185,7 +195,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 2
 
     # MinIO NEVER truncates ListParts (it answers MaxParts=10000,
     # IsTruncated=false even past 1000 parts), so on the MinIO job the
@@ -375,7 +385,7 @@ jobs:
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 2
 
     # The six static `storybook build` productions. Nightly-only until now, and
     # nightly-only is why they rotted unnoticed for weeks: a production build

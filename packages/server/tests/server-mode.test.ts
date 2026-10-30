@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
 import {
@@ -36,6 +37,14 @@ const baseConfig = (
         dropbox: { appKey: 'dkey', appSecret: 'dsec' },
         box: { clientId: 'bid', clientSecret: 'bsec' },
     },
+})
+
+// The /cb handler requires the nonce cookie set by /auth/:provider (T-5463);
+// these fixtures stand in for a browser that completed the redirect leg.
+const CB_NONCE = 'cb-test-nonce'
+const cbNonceHash = createHash('sha256').update(CB_NONCE).digest('hex')
+const cbCookie = (provider: string) => ({
+    Cookie: `upup_oauth_${provider}=${CB_NONCE}`,
 })
 
 // Shared shape for the JSON bodies read back from createUpupHandler's OAuth
@@ -335,12 +344,13 @@ describe('GET /auth/:provider/cb', () => {
         await saveOAuthState(store, 'valid-state', {
             userId: 'u',
             provider: 'google-drive',
+            nonceHash: cbNonceHash,
         })
         const handler = createUpupHandler(baseConfig(store))
         const res = await handler(
             new Request(
                 'http://localhost/auth/google-drive/cb?code=xyz&state=valid-state',
-                { method: 'GET' },
+                { method: 'GET', headers: cbCookie('google-drive') },
             ),
         )
         expect(res.status).toBe(200)
@@ -395,19 +405,24 @@ describe('GET /auth/:provider/cb', () => {
         expect(body.error).toContain('access_denied')
     })
 
-    it('502s on provider token-exchange failure', async () => {
+    it('424s on provider token-exchange failure', async () => {
         fetchSpy.mockResolvedValueOnce(
             new Response('bad', { status: 400, statusText: 'Bad Request' }),
         )
         const store = new InMemoryTokenStore()
-        await saveOAuthState(store, 's', { userId: 'u', provider: 'dropbox' })
+        await saveOAuthState(store, 's', {
+            userId: 'u',
+            provider: 'dropbox',
+            nonceHash: cbNonceHash,
+        })
         const handler = createUpupHandler(baseConfig(store))
         const res = await handler(
             new Request('http://localhost/auth/dropbox/cb?code=x&state=s', {
                 method: 'GET',
+                headers: cbCookie('dropbox'),
             }),
         )
-        expect(res.status).toBe(502)
+        expect(res.status).toBe(424)
     })
 })
 

@@ -335,8 +335,11 @@ export class UploaderOrchestrator {
                 // Image editor auto-open
                 const editorOpts = this.callbacks.imageEditorOptions
                 if (editorOpts?.enabled) {
-                    const images = added.filter(file =>
-                        file.type.startsWith('image/'),
+                    // Completed rows (key set, e.g. a server-mode drive transfer)
+                    // are zero-byte stand-ins: nothing to edit.
+                    const images = added.filter(
+                        file =>
+                            file.key == null && file.type.startsWith('image/'),
                     )
                     if (
                         editorOpts.autoOpen === 'single' &&
@@ -351,7 +354,12 @@ export class UploaderOrchestrator {
                 }
 
                 // Auto-upload
-                if (this.callbacks.autoUpload) {
+                // Completed rows have nothing to send; a run would only flicker
+                // PROCESSING and fire a spurious onUploadStart.
+                if (
+                    this.callbacks.autoUpload &&
+                    added.some(file => file.key == null)
+                ) {
                     this.core.emit('auto-upload', { count: added.length })
                     // Guard the deferred run: an unmount that races this 0-ms timer must not
                     // hit the now-terminal core.upload() (F-148). Swallow if it still does.

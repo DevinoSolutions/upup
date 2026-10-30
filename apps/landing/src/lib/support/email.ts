@@ -1,10 +1,23 @@
-import nodemailer from 'nodemailer'
 import { env } from '@/lib/env'
+import { SUPPORT_CONFIRMATION_REPLY_LINE } from './reply-time'
 import type { EmailLegStatus, SupportType } from './schema'
 
-// Placeholder defaults — a real deploy sets SUPPORT_EMAIL_FROM / _TO.
+// Defaults a deploy can override with SUPPORT_EMAIL_FROM / _TO. Tickets go to the
+// support@ Sendly mailbox, where support is answered (hello@devino.ca until
+// 2026-10-26, T-8910).
 const DEFAULT_FROM = 'upup-support@useupup.com'
-const DEFAULT_TO = 'hello@devino.ca'
+const DEFAULT_TO = 'support@useupup.com'
+
+// Sendly's REST API origin. `POST /api/v1/emails` sends ONE transactional email
+// and answers 202 `{ id, status, to, from }`. Not env-configurable on purpose:
+// there is a single hosted API, and tests mock `fetch`.
+const SENDLY_ENDPOINT = 'https://api.sendly.now/api/v1/emails'
+
+/** Longest excerpt of the submitter's own message echoed back in the confirmation (kept short: this mail goes to an address the form did not verify). */
+const CONFIRMATION_ECHO_MAX_CHARS = 500
+/** The team notification may take its time; the submitter confirmation must not hold the response. */
+const NOTIFICATION_TIMEOUT_MS = 15_000
+const CONFIRMATION_TIMEOUT_MS = 5_000
 
 export interface SupportEmailInput {
     feedbackId: string
@@ -24,108 +37,152 @@ export interface SupportEmailInput {
 }
 
 /**
- * Deliver a support request by email. Two transports are supported, tried in
- * order: the UseSend REST API (USESEND_API_URL + USESEND_API_KEY) — preferred,
- * because a self-hosted UseSend is HTTP-only behind a CDN with no reachable
- * SMTP endpoint — then a generic SMTP_URL. Returns `not_configured` (distinct
- * from `failed`) when NEITHER is set, so the route can tell "we chose not to
- * email" from "the send broke". Never throws.
+ * Deliver a support request by email through Sendly (the one transport — every
+ * Devino app mails through Sendly). Returns `not_configured` (distinct from
+ * `failed`) when SENDLY_API_KEY is unset, so the route can tell "we chose not
+ * to email" from "the send broke". Never throws, and never logs the key.
  */
 export async function sendSupportEmail(
     input: SupportEmailInput,
 ): Promise<EmailLegStatus> {
-    const from = env.SUPPORT_EMAIL_FROM || DEFAULT_FROM
-    const to = env.SUPPORT_EMAIL_TO || DEFAULT_TO
-    const subject = `[upup support] ${input.type} — ${input.feedbackId}`
-    const text = buildBody(input)
+    const apiKey = env.SENDLY_API_KEY
+    if (!apiKey) return 'not_configured'
 
-    if (env.USESEND_API_URL && env.USESEND_API_KEY) {
-        return sendViaUseSend({
-            apiUrl: env.USESEND_API_URL,
-            apiKey: env.USESEND_API_KEY,
-            from,
-            to,
-            subject,
-            text,
-            replyTo: input.email,
-            feedbackId: input.feedbackId,
-        })
-    }
+    const status = await postToSendly({
+        apiKey,
+        feedbackId: input.feedbackId,
+        idempotencyKey: input.feedbackId,
+        timeoutMs: NOTIFICATION_TIMEOUT_MS,
+        logResponseBody: true,
+        payload: {
+            from: env.SUPPORT_EMAIL_FROM || DEFAULT_FROM,
+            to: env.SUPPORT_EMAIL_TO || DEFAULT_TO,
+            subject: `[upup support] ${input.type} — ${input.feedbackId}`,
+            body: toHtml(buildBody(input)),
+            ...(input.email ? { reply: input.email } : {}),
+        },
+    })
+    // The team notification has no refund to protect, so a timed-out send is
+    // simply reported as failed (its idempotency key makes a retry safe).
+    return status === 'unknown' ? 'failed' : status
+}
 
-    const smtpUrl = env.SMTP_URL
-    if (!smtpUrl) return 'not_configured'
-
-    try {
-        const transport = nodemailer.createTransport(smtpUrl)
-        await transport.sendMail({
-            from,
-            to,
-            ...(input.email ? { replyTo: input.email } : {}),
-            subject,
-            text,
-        })
-        return 'ok'
-    } catch (error) {
-        console.error(
-            `[support] email send failed for ${input.feedbackId}:`,
-            error instanceof Error ? error.message : error,
-        )
-        return 'failed'
-    }
+interface SupportConfirmationInput {
+    feedbackId: string
+    /** The submitter's address — the confirmation's only recipient. */
+    email: string
+    /** The submitter's own message, echoed back as a short excerpt. */
+    message: string
+    /** Add the "a human replies within 1 business day" line. Only true when the team notification actually landed. */
+    promiseReply: boolean
 }
 
 /**
- * Send through the UseSend REST API (Resend-compatible `POST /api/v1/emails`).
- * A self-hosted UseSend validates the Bearer key against its own DB, so this is
- * the correct transport for a CDN-fronted, HTTP-only deployment where the SMTP
- * proxy is not routable. Never throws — maps every outcome to a leg status.
+ * Confirm receipt to the submitter, through the same Sendly transport as the
+ * team notification. Plain text in the same escaped wrapper (no marketing
+ * HTML). Replies go to the team inbox. A distinct idempotency key keeps a retry
+ * of the same submission from mailing the submitter twice without colliding with
+ * the notification's key. Never throws; never logs the key, the address, or
+ * Sendly's error body (it can echo the third-party recipient). Resolves
+ * `unknown` when the `CONFIRMATION_TIMEOUT_MS` abort fires mid-request.
  */
-async function sendViaUseSend(msg: {
-    apiUrl: string
+export async function sendSupportConfirmation(
+    input: SupportConfirmationInput,
+): Promise<EmailLegStatus | 'unknown'> {
+    const apiKey = env.SENDLY_API_KEY
+    if (!apiKey) return 'not_configured'
+
+    return postToSendly({
+        apiKey,
+        feedbackId: input.feedbackId,
+        idempotencyKey: `${input.feedbackId}:confirm`,
+        timeoutMs: CONFIRMATION_TIMEOUT_MS,
+        logResponseBody: false,
+        payload: {
+            from: env.SUPPORT_EMAIL_FROM || DEFAULT_FROM,
+            to: input.email,
+            subject: `[upup support] We got your message — ${input.feedbackId}`,
+            body: toHtml(buildConfirmationBody(input)),
+            reply: env.SUPPORT_EMAIL_TO || DEFAULT_TO,
+        },
+    })
+}
+
+/**
+ * One Sendly send. Maps every outcome to a status; never throws, never logs the
+ * key. `unknown`: our own timeout aborted the request, so Sendly may already
+ * have accepted the mail. Callers must not treat it as a send that did not go
+ * out (no refunding of allowances).
+ */
+async function postToSendly(args: {
     apiKey: string
-    from: string
-    to: string
-    subject: string
-    text: string
-    replyTo?: string
     feedbackId: string
-}): Promise<EmailLegStatus> {
-    const endpoint = `${msg.apiUrl.replace(/\/+$/, '')}/api/v1/emails`
+    idempotencyKey: string
+    timeoutMs: number
+    /** Include a (truncated) non-2xx response body in the log. Off for mail to third parties. */
+    logResponseBody: boolean
+    payload: Record<string, string>
+}): Promise<EmailLegStatus | 'unknown'> {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 15000)
+    const timeout = setTimeout(() => controller.abort(), args.timeoutMs)
     try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(SENDLY_ENDPOINT, {
             method: 'POST',
             headers: {
-                authorization: `Bearer ${msg.apiKey}`,
+                authorization: `Bearer ${args.apiKey}`,
                 'content-type': 'application/json',
+                // A retry of the same submission replays the first receipt
+                // instead of mailing twice (Sendly keeps keys for 24h).
+                'idempotency-key': args.idempotencyKey,
             },
-            body: JSON.stringify({
-                from: msg.from,
-                to: msg.to,
-                subject: msg.subject,
-                text: msg.text,
-                ...(msg.replyTo ? { replyTo: msg.replyTo } : {}),
-            }),
+            body: JSON.stringify(args.payload),
             signal: controller.signal,
         })
         if (!res.ok) {
-            const detail = await res.text().catch(() => '')
+            const detail = args.logResponseBody
+                ? ` ${(await res.text().catch(() => '')).slice(0, 300)}`
+                : ''
             console.error(
-                `[support] usesend send failed for ${msg.feedbackId}: ${res.status} ${detail.slice(0, 300)}`,
+                `[support] sendly send failed for ${args.feedbackId}: ${res.status}${detail}`,
             )
             return 'failed'
         }
         return 'ok'
     } catch (error) {
+        if (controller.signal.aborted) {
+            console.error(
+                `[support] sendly send timed out for ${args.feedbackId}, outcome unknown`,
+            )
+            return 'unknown'
+        }
         console.error(
-            `[support] usesend send errored for ${msg.feedbackId}:`,
+            `[support] sendly send errored for ${args.feedbackId}:`,
             error instanceof Error ? error.message : error,
         )
         return 'failed'
     } finally {
         clearTimeout(timeout)
     }
+}
+
+function buildConfirmationBody(input: SupportConfirmationInput): string {
+    return [
+        'Thanks for contacting upup support, we received your message.',
+        '',
+        `Feedback ID: ${input.feedbackId}`,
+        '',
+        'Here is what you sent us:',
+        truncateEcho(input.message),
+        ...(input.promiseReply ? ['', SUPPORT_CONFIRMATION_REPLY_LINE] : []),
+    ].join('\n')
+}
+
+/** Cap the echoed message by code point (never splitting a surrogate pair), marking the cut with an ellipsis. Runs BEFORE HTML escaping, so the cut can never land inside an entity. */
+function truncateEcho(message: string): string {
+    const chars = Array.from(message)
+    return chars.length > CONFIRMATION_ECHO_MAX_CHARS
+        ? `${chars.slice(0, CONFIRMATION_ECHO_MAX_CHARS).join('')}…`
+        : message
 }
 
 function buildBody(input: SupportEmailInput): string {
@@ -148,4 +205,24 @@ function buildBody(input: SupportEmailInput): string {
         '',
         `Investigate in PostHog: ${input.posthogHost || '(host not configured)'} — filter events by the feedback_id above. No keys are included in this message.`,
     ].join('\n')
+}
+
+/**
+ * Sendly's `body` is an HTML template, not plain text: it is rendered through
+ * Sendly's template engine, where `{{...}}` is markup (a malformed block fails
+ * the whole send). The submission is untrusted, so escape HTML and encode `{`/`}`
+ * as entities (they still display as braces) so user text can never be parsed as
+ * template syntax or injected as markup; newlines become `<br>`.
+ */
+function toHtml(text: string): string {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\{/g, '&#123;')
+        .replace(/\}/g, '&#125;')
+        .replace(/\r?\n/g, '<br>\n')
+    return `<div style="font-family:system-ui,sans-serif;font-size:14px;line-height:1.5">${escaped}</div>`
 }

@@ -13,7 +13,7 @@
  *   - active adapter suppresses drag action
  *   - handlePaste with clipboard files calls handleSetSelectedFiles + emits 'paste'
  */
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { TestBed } from '@angular/core/testing'
 import { signal } from '@angular/core'
 import { FileSource } from '@useupup/core'
@@ -46,6 +46,23 @@ async function setup(store: UpupStore) {
 
 describe('UploaderPanelComponent', () => {
     let store: UpupStore
+
+    // The first compile + createComponent in a worker pays Angular's JIT
+    // compile of the whole standalone component tree (analog runs tests in
+    // JIT mode) plus the first DI setup and render. On a loaded 2-core CI
+    // runner that alone exceeded vitest's 5 s default and flaked whichever
+    // test ran first (T-10845). Pay it here, under its own generous hook
+    // timeout, so no test carries it. The global testTimeout is deliberately
+    // left alone.
+    beforeAll(async () => {
+        const warmStore = makeStore()
+        try {
+            await setup(warmStore)
+        } finally {
+            warmStore.destroy()
+            TestBed.resetTestingModule()
+        }
+    }, 30_000)
 
     afterEach(() => {
         store?.destroy()

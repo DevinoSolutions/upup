@@ -102,6 +102,59 @@ describe('add-more source overlay', () => {
         expect(dialog.contains(document.activeElement)).toBe(true)
     })
 
+    it('pulls focus into the overlay but never onto the decorative sheet grip', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+
+        const grip = container.querySelector(
+            '[data-testid="upup-sheet-grip"]',
+        ) as HTMLButtonElement
+        expect(grip).not.toBeNull()
+        // The grip is the first button in the sheet, so a bare
+        // `button:not([disabled])` lookup lands on it and its focus ring is
+        // drawn over the view title. Focus must go to a real control instead.
+        const dialog = overlay(container) as HTMLElement
+        expect(dialog.contains(document.activeElement)).toBe(true)
+        expect(document.activeElement).not.toBe(grip)
+    })
+
+    it('focuses the dialog itself when the sheet has no enabled control', async () => {
+        const { container } = renderUploader()
+        await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])
+        openViaHeader(container)
+        await waitFor(() => {
+            if (!overlay(container)) throw new Error('overlay not rendered')
+        })
+        const dialog = overlay(container) as HTMLElement
+        // The public API never renders a disabled source tile, so reach the
+        // zero-enabled-button state on the live DOM: disable every button in
+        // the sheet (the grip included), then re-open through the real
+        // controller while the departing sheet is still mounted so the real
+        // focus effect re-runs against this exact element.
+        fireEvent.keyDown(dialog, { key: 'Escape' })
+        await waitFor(() => {
+            if (dialog.getAttribute('role') !== null)
+                throw new Error('overlay not closing')
+        })
+        dialog.querySelectorAll('button').forEach(b => {
+            b.disabled = true
+        })
+        expect(dialog.querySelector('button:not([disabled])')).toBeNull()
+        ;(document.activeElement as HTMLElement | null)?.blur()
+        openViaHeader(container)
+        await waitFor(() => {
+            expect(dialog.getAttribute('role')).toBe('dialog')
+        })
+
+        expect(overlay(container)).toBe(dialog)
+        expect(dialog.getAttribute('tabindex')).toBe('-1')
+        expect(document.activeElement).toBe(dialog)
+    })
+
     it('closes the overlay when files are added while it is open', async () => {
         const { container } = renderUploader()
         await seedAndWaitForList(container, [txt('a.txt'), txt('b.txt')])

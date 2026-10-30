@@ -12,7 +12,7 @@ FROM node:20.20.2-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.11.0 --activate
 WORKDIR /app
 
 FROM base AS build

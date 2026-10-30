@@ -12,6 +12,8 @@ import {
 } from '@aws-sdk/client-s3'
 import { buildS3ClientConfig } from '../../src/providers/s3-client'
 import { createUpupHandler } from '../../src/handler'
+import { generatePresignedPartUrl } from '../../src/providers/aws'
+import { signUploadToken, type UploadTokenPayload } from '../../src/uploadToken'
 import type { UpupServerConfig } from '../../src/config'
 
 const RUN = process.env.UPUP_E2E_MINIO === '1'
@@ -115,6 +117,14 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
     // declared size (=> tiny smax) then upload real oversized parts and still
     // complete. MinIO requires >=5 MiB for a non-final part, so declare a size
     // well under that and upload one real 5 MiB part.
+    //
+    // Since T-5492 /multipart/sign-part signs the part length, so the handler's
+    // own part URL refuses this body at storage (next test), and since T-6185 a
+    // token without a part size is refused outright, so no handler path mints a
+    // no-length URL any more. This test therefore mints the part URL straight
+    // from the provider with no signed length, so the oversized part lands and
+    // ONLY the complete-time envelope check (defence in depth) stands between it
+    // and a finalized object.
     it('S1 (multipart): rejects complete when uploaded bytes exceed the signed smax', async () => {
         const handler = createUpupHandler(config)
         const declaredSize = 1024 // tiny declared size -> smax = 1024 bytes
@@ -130,13 +140,13 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
 
         // Upload ONE real part far larger than the declared/signed size.
         const oversizedPart = new Uint8Array(5 * 1024 * 1024).fill(3) // 5 MiB >> 1 KiB declared
-        const signed = (await (
-            await post(handler, '/multipart/sign-part', {
-                token: init.token,
-                partNumber: 1,
-            })
-        ).json()) as SignedPartBody
-        const put = await fetch(signed.uploadUrl, {
+        const unsigned = await generatePresignedPartUrl(
+            storage,
+            init.key,
+            init.uploadId,
+            1,
+        )
+        const put = await fetch(unsigned.uploadUrl, {
             method: 'PUT',
             body: oversizedPart,
         })
@@ -170,6 +180,104 @@ describe.skipIf(!RUN)('trust model — exploit harness', () => {
                 }),
             ),
         ).rejects.toThrow()
+    }, 30_000)
+
+    // T-5492: the size envelope is also enforced PER PART, at storage. The part
+    // URL the handler hands out signs the exact length derived from the signed
+    // token, so an oversized body is refused by S3/MinIO at PUT time (the upload
+    // never reaches complete, so the complete-time check alone never saw it) and
+    // the part is never stored.
+    it('T-5492: refuses an oversized part at storage, and accepts the exact signed length', async () => {
+        const handler = createUpupHandler(config)
+        const declaredSize = 1024 // tiny declared size -> signed part length 1024
+        const init = (await (
+            await post(handler, '/multipart/init', {
+                name: 't5492-oversized-part.bin',
+                size: declaredSize,
+                type: 'application/octet-stream',
+            })
+        ).json()) as MultipartInitBody
+        createdKeys.push(init.key)
+
+        const signed = (await (
+            await post(handler, '/multipart/sign-part', {
+                token: init.token,
+                partNumber: 1,
+            })
+        ).json()) as SignedPartBody
+
+        const oversized = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: new Uint8Array(5 * 1024 * 1024).fill(3),
+        })
+        expect(oversized.ok).toBe(false)
+
+        const parts = await s3.send(
+            new ListPartsCommand({
+                Bucket: storage.bucket,
+                Key: init.key,
+                UploadId: init.uploadId,
+            }),
+        )
+        expect(parts.Parts ?? []).toHaveLength(0)
+
+        const exact = await fetch(signed.uploadUrl, {
+            method: 'PUT',
+            body: new Uint8Array(declaredSize).fill(4),
+        })
+        expect(exact.status).toBe(200)
+    }, 30_000)
+
+    // T-6185: a token minted before part-length binding existed (validly signed
+    // by this server's secret, bound to a REAL upload, but with no `ps`) is
+    // refused on every continuation route, and the refusal leaves the multipart
+    // upload alive: abort in particular must not tear anything down.
+    it('T-6185: refuses a validly signed token with no part size on sign-part, complete and abort, and leaves the upload intact', async () => {
+        const handler = createUpupHandler(config)
+        const init = (await (
+            await post(handler, '/multipart/init', {
+                name: 't6185-legacy-token.bin',
+                size: 1024,
+                type: 'application/octet-stream',
+            })
+        ).json()) as MultipartInitBody
+        createdKeys.push(init.key)
+
+        const now = Math.floor(Date.now() / 1000)
+        const legacy = await signUploadToken(SECRET, {
+            k: init.key,
+            u: init.uploadId,
+            uid: null,
+            smin: 0,
+            smax: 1024,
+            exp: now + 600,
+            iat: now,
+        } as UploadTokenPayload)
+
+        for (const [path, body] of [
+            ['/multipart/sign-part', { token: legacy, partNumber: 1 }],
+            [
+                '/multipart/complete',
+                { token: legacy, parts: [{ partNumber: 1, eTag: 'x' }] },
+            ],
+            ['/multipart/abort', { token: legacy }],
+        ] as const) {
+            const res = await post(handler, path, body)
+            expect(res.status, path).toBe(403)
+            expect(((await res.json()) as { code: string }).code, path).toBe(
+                'malformed',
+            )
+        }
+
+        // The upload is still there: ListParts on a dead uploadId would reject.
+        const parts = await s3.send(
+            new ListPartsCommand({
+                Bucket: storage.bucket,
+                Key: init.key,
+                UploadId: init.uploadId,
+            }),
+        )
+        expect(parts.Parts ?? []).toHaveLength(0)
     }, 30_000)
 
     // S2: a tampered token must be refused; a valid token must succeed.

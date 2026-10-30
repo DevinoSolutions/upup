@@ -102,7 +102,7 @@ function PageNavCard({
     return (
         <Link
             href={page.url}
-            className={`group flex flex-col rounded-lg border border-black/5 p-4 transition-all hover:-translate-y-0.5 hover:border-black/10 hover:shadow-sm dark:border-white/10 dark:hover:border-white/20 ${
+            className={`group flex flex-col rounded-lg border border-black/5 p-4 transition-[transform,border-color] duration-fast ease-motion-out [@media(hover:hover)]:hover:-translate-y-0.5 hover:border-black/10 hover:shadow-sm dark:border-white/10 dark:hover:border-white/20 ${
                 isNext ? 'sm:text-right' : ''
             }`}
         >

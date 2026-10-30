@@ -84,7 +84,7 @@ function HighlightedContent({ content }: { content: string }) {
 // for AskAiTrigger + DocsAskAi.
 //
 // This is not cosmetic. When the whole widget was rendered twice, each copy kept
-// its own `open` state, its own ⌘K window listener and its own body-scroll lock,
+// its own `open` state, its own ⌘K document capture-phase listener and its own body-scroll lock,
 // so one ⌘K opened TWO dialogs: the real one plus an invisible 0x0 copy inside
 // the `lg:hidden` disclosure. Choosing a result closed only the copy you clicked;
 // the hidden one stayed mounted with `document.body.style.overflow = 'hidden'`
@@ -95,11 +95,11 @@ export function DocsSearchTrigger({ onClick }: { onClick: () => void }) {
             type="button"
             aria-label="Search docs"
             onClick={onClick}
-            className="flex w-full items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-transparent dark:text-gray-400 dark:hover:border-white/25 dark:hover:text-gray-200"
+            className="flex min-h-11 w-full items-center gap-2 rounded-md border border-gray-200 lg:min-h-0 bg-white px-3 py-2.5 text-sm text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-transparent dark:text-gray-400 dark:hover:border-white/25 dark:hover:text-gray-200"
         >
             <Search className="h-4 w-4" />
             <span>Search…</span>
-            <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+            <kbd className="ml-auto inline-flex items-center rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-mono text-[10px] leading-none max-lg:text-xs text-gray-500 dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
                 ⌘K
             </kbd>
         </button>
@@ -137,12 +137,18 @@ export function DocsSearchDialog({
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault()
                 onOpenChange(!open)
-            } else if (e.key === 'Escape') {
+            } else if (e.key === 'Escape' && open && !e.defaultPrevented) {
+                // Consume the key so a layer underneath (the navbar's mobile
+                // menu) sees it was handled and stays open. Only while open: a
+                // closed dialog must leave Escape for those layers.
+                e.preventDefault()
                 onOpenChange(false)
             }
         }
-        window.addEventListener('keydown', onKeyDown)
-        return () => window.removeEventListener('keydown', onKeyDown)
+        // Capture phase on document: a bubble listener the navbar registered
+        // earlier would otherwise run before this one and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
+        return () => document.removeEventListener('keydown', onKeyDown, true)
     }, [open, onOpenChange])
 
     // Scroll lock. The teardown clears the property OUTRIGHT rather than
@@ -202,7 +208,7 @@ export function DocsSearchDialog({
         <>
             {open ? (
                 <div
-                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh]"
+                    className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[15vh] motion-safe:animate-motion-fade"
                     onClick={close}
                 >
                     <div
@@ -210,7 +216,7 @@ export function DocsSearchDialog({
                         aria-modal="true"
                         aria-label="Search documentation"
                         onClick={e => e.stopPropagation()}
-                        className="w-full max-w-lg overflow-hidden rounded-lg border border-black/5 bg-white shadow-xl dark:border-white/10 dark:bg-gray-950"
+                        className="w-full max-w-lg overflow-hidden rounded-lg border border-black/5 bg-white shadow-xl motion-safe:animate-motion-panel motion-reduce:animate-motion-fade dark:border-white/10 dark:bg-gray-950"
                     >
                         <div className="flex items-center gap-2 border-b border-black/5 px-4 py-3 dark:border-white/10">
                             <Search className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />

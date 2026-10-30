@@ -170,7 +170,9 @@ describe('hooks.onPresignResponse (#338)', () => {
             await handler(post('/multipart/init', meta))
         ).json()) as { token: string }
         await handler(
-            post('/multipart/sign-part', { token: init.token, partNumber: 2 }),
+            // Part 1: a 1 KiB file has exactly one part, and sign-part refuses a
+            // part number the signed size envelope does not contain (T-5492).
+            post('/multipart/sign-part', { token: init.token, partNumber: 1 }),
         )
 
         expect(seen).toEqual([

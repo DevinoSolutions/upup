@@ -1,764 +1,20 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { m, AnimatePresence } from 'framer-motion'
-import {
-    FaFileAlt,
-    FaStar,
-    FaTimes,
-    FaSpinner,
-    FaPlus,
-    FaInstagram,
-    FaFacebook,
-    FaApple,
-    FaPinterest,
-    FaTiktok,
-    FaGoogle,
-    FaPhotoVideo,
-    FaImage,
-    FaVideo,
-    FaMusic,
-} from 'react-icons/fa'
-import {
-    SiAmazonwebservices,
-    SiDigitalocean,
-    SiBackblaze,
-    SiBox,
-    SiGoogledrive,
-    SiJavascript,
-    SiCloudflare,
-    SiVercel,
-    SiSupabase,
-    SiDropbox,
-    SiZoom,
-    SiMinio,
-    SiAlibabadotcom,
-    SiHetzner,
-    SiScaleway,
-    SiWasabi,
-    SiOracle,
-} from 'react-icons/si'
-import { GrOnedrive } from 'react-icons/gr'
-import { VscAzure } from 'react-icons/vsc'
-import { ImFileZip } from 'react-icons/im'
-import { IbmLogo, IDriveLogo, LinodeLogo } from './ProviderLogos'
+import { useState, useRef } from 'react'
 import * as gtag from '@/lib/gtag'
-import { submitAndRecordProviderInterest } from './notify-signup'
 import FeatureShowcase from '@/components/FeatureShowcase'
 import Section from '@/components/ui/Section'
 import SectionHeading, {
     GRADIENT_TEXT,
     H3_HEADING,
 } from '@/components/ui/SectionHeading'
-
-interface Integration {
-    id: string
-    name: string
-    icon: React.ComponentType<{
-        className?: string
-        style?: React.CSSProperties
-    }>
-    status: 'supported' | 'in-development' | 'planned'
-    description: string
-    category: string
-    /** Docs page for this provider. When set, the supported chip links to it. */
-    href?: string
-    /** Short caveat shown under the chip name (e.g. a mode restriction). */
-    qualifier?: string
-}
-
-interface EmailModalProps {
-    isOpen: boolean
-    onClose: () => void
-    integrationName: string
-    isCustom?: boolean
-}
-
-// User Storage Providers - for end users to connect their personal cloud storage
-const userStorageProviders: Integration[] = [
-    {
-        id: 'google-drive',
-        name: 'Google Drive',
-        icon: SiGoogledrive,
-        status: 'supported',
-        description: 'Direct access to files',
-        category: 'User Storage',
-    },
-    {
-        id: 'one-drive',
-        name: 'OneDrive',
-        icon: GrOnedrive,
-        status: 'supported',
-        description: 'Microsoft cloud storage',
-        category: 'User Storage',
-    },
-    {
-        id: 'dropbox',
-        name: 'Dropbox',
-        icon: SiDropbox,
-        status: 'supported',
-        description: 'Cloud file sharing',
-        category: 'User Storage',
-    },
-    {
-        id: 'box',
-        name: 'Box',
-        icon: SiBox,
-        status: 'supported',
-        description: 'Secure content management',
-        category: 'User Storage',
-    },
-    {
-        id: 'instagram',
-        name: 'Instagram',
-        icon: FaInstagram,
-        status: 'planned',
-        description: 'Import photos and videos',
-        category: 'User Storage',
-    },
-    {
-        id: 'facebook',
-        name: 'Facebook',
-        icon: FaFacebook,
-        status: 'planned',
-        description: 'Access photos and videos',
-        category: 'User Storage',
-    },
-    {
-        id: 'zoom',
-        name: 'Zoom',
-        icon: SiZoom,
-        status: 'planned',
-        description: 'Upload recordings',
-        category: 'User Storage',
-    },
-    {
-        id: 'google-photos',
-        name: 'Google Photos Picker',
-        icon: FaPhotoVideo,
-        status: 'planned',
-        description: 'Photos picker integration',
-        category: 'User Storage',
-    },
-    {
-        id: 'icloud',
-        name: 'iCloud Drive',
-        icon: FaApple,
-        status: 'planned',
-        description: 'Apple cloud storage',
-        category: 'User Storage',
-    },
-    {
-        id: 'pinterest',
-        name: 'Pinterest',
-        icon: FaPinterest,
-        status: 'planned',
-        description: 'Import images',
-        category: 'User Storage',
-    },
-    {
-        id: 'tiktok',
-        name: 'TikTok',
-        icon: FaTiktok,
-        status: 'planned',
-        description: 'Upload videos',
-        category: 'User Storage',
-    },
-]
-
-// Developer Storage Providers - for developers to connect their cloud buckets.
-//
-// The `supported` entries mirror the StorageProvider enum in @useupup/core
-// (packages/core/src/types/storage-provider.ts) — CHECK THE ENUM before
-// marking anything supported here. This list is a curated subset, not the
-// whole enum: the long tail (Vultr, UpCloud, OVHcloud, Contabo, Storj, Ceph)
-// is deliberately omitted to keep the wall readable, so absence from this
-// list does NOT mean absence from the enum. The durable fix is deriving the
-// supported set from the enum instead of restating it; until then a provider
-// added to the enum has to be added here by hand.
-const developerStorageProviders: Integration[] = [
-    {
-        id: 'aws',
-        name: 'AWS S3',
-        icon: SiAmazonwebservices,
-        status: 'supported',
-        description: 'Amazon S3 buckets',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'azure',
-        name: 'Azure Blob',
-        icon: VscAzure,
-        status: 'supported',
-        description: 'Microsoft Azure storage',
-        category: 'Developer Storage',
-        href: '/docs/guides/storage/azure-blob/',
-        // Azure is the sole member of NON_S3_STORAGE_PROVIDERS in
-        // @useupup/core: it has no S3 surface, so createUpupHandler throws
-        // for it at construct time and server mode cannot serve it.
-        qualifier: 'client mode only',
-    },
-    {
-        id: 'backblaze',
-        name: 'Backblaze B2',
-        icon: SiBackblaze,
-        status: 'supported',
-        description: 'Cost-effective storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'digitalocean',
-        name: 'DigitalOcean',
-        icon: SiDigitalocean,
-        status: 'supported',
-        description: 'Spaces object storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'cloudflare',
-        name: 'Cloudflare R2',
-        icon: SiCloudflare,
-        status: 'supported',
-        description: 'R2 object storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'wasabi',
-        name: 'Wasabi Hot Cloud Storage',
-        icon: SiWasabi,
-        status: 'supported',
-        description: 'Hot cloud storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'linode',
-        name: 'Linode Object Storage',
-        icon: LinodeLogo,
-        status: 'supported',
-        description: 'Linode object storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'idrive',
-        name: 'IDrive e2',
-        icon: IDriveLogo,
-        status: 'supported',
-        description: 'IDrive object storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'hetzner',
-        name: 'Hetzner Object Storage',
-        icon: SiHetzner,
-        status: 'supported',
-        description: 'Hetzner cloud storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'scaleway',
-        name: 'Scaleway Object Storage',
-        icon: SiScaleway,
-        status: 'supported',
-        description: 'Scaleway cloud storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'oracle',
-        name: 'Oracle Cloud Object Storage',
-        icon: SiOracle,
-        status: 'supported',
-        description: 'Oracle cloud storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'alibaba',
-        name: 'Alibaba Cloud OSS',
-        icon: SiAlibabadotcom,
-        status: 'supported',
-        description: 'Alibaba Cloud OSS',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'minio',
-        name: 'MinIO',
-        icon: SiMinio,
-        status: 'supported',
-        description: 'Self-hosted storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'gcp',
-        name: 'Google Cloud Storage',
-        icon: FaGoogle,
-        status: 'supported',
-        description: 'Google Cloud storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'supabase',
-        name: 'Supabase',
-        icon: SiSupabase,
-        status: 'supported',
-        description: 'Supabase storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'vercel',
-        name: 'Vercel Blob',
-        icon: SiVercel,
-        status: 'planned',
-        description: 'Vercel blob storage',
-        category: 'Developer Storage',
-    },
-    {
-        id: 'ibm',
-        name: 'IBM Cloud Object Storage',
-        icon: IbmLogo,
-        status: 'planned',
-        description: 'IBM cloud storage',
-        category: 'Developer Storage',
-    },
-]
-
-const fileTypes = [
-    {
-        icon: <FaImage className="w-8 h-8" />,
-        label: 'Images',
-        types: 'JPG, PNG, GIF, WebP',
-    },
-    {
-        icon: <FaFileAlt className="w-8 h-8" />,
-        label: 'Documents',
-        types: 'PDF, DOC, DOCX, TXT',
-    },
-    {
-        icon: <FaVideo className="w-8 h-8" />,
-        label: 'Videos',
-        types: 'MP4, AVI, MOV, WebM',
-    },
-    {
-        icon: <FaMusic className="w-8 h-8" />,
-        label: 'Audio',
-        types: 'MP3, WAV, OGG, FLAC',
-    },
-    {
-        icon: <ImFileZip className="w-8 h-8" />,
-        label: 'Archives',
-        types: 'ZIP, RAR, 7Z, TAR',
-    },
-    {
-        icon: <SiJavascript className="w-8 h-8" aria-hidden />,
-        label: 'Code',
-        types: 'JS, TS, JSON, XML',
-    },
-]
-
-const EmailModal: React.FC<EmailModalProps> = ({
-    isOpen,
-    onClose,
-    integrationName,
-    isCustom = false,
-}) => {
-    const [email, setEmail] = useState('')
-    const [customToolName, setCustomToolName] = useState('')
-    const [website, setWebsite] = useState('') // honeypot
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [isSubmitted, setIsSubmitted] = useState(false)
-    const [failed, setFailed] = useState(false)
-    // One id per submission lifecycle so a retry is idempotent server-side;
-    // regenerated only after a confirmed success (same rule as SupportForm).
-    const feedbackIdRef = useRef<string>('')
-    const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-    useEffect(
-        () => () => {
-            if (closeTimer.current) clearTimeout(closeTimer.current)
-        },
-        [],
-    )
-
-    const providerName = isCustom ? customToolName : integrationName
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!email || (isCustom && !customToolName) || isSubmitting) return
-
-        setIsSubmitting(true)
-        setFailed(false)
-        if (!feedbackIdRef.current) feedbackIdRef.current = crypto.randomUUID()
-
-        // Google Analytics records WHICH provider was asked for, never who
-        // asked. PostHog (after a confirmed sign-up) gets the submission id as
-        // the person id; no email or derivative of one ever reaches it.
-        gtag.event({
-            action: 'provider_email_submit',
-            event_category: 'providers',
-            event_label: isCustom ? `Custom: ${customToolName}` : providerName,
-        })
-
-        // Calls the route, then records the sign-up and its source (UTM, referrer,
-        // landing page) in the browser only on a confirmed server success.
-        const ok = await submitAndRecordProviderInterest({
-            email,
-            providerName,
-            isCustom,
-            feedbackId: feedbackIdRef.current,
-            website,
-        })
-        setIsSubmitting(false)
-
-        if (!ok) {
-            // Keep every field and the same feedbackId so Retry is idempotent.
-            setFailed(true)
-            return
-        }
-
-        setIsSubmitted(true)
-        feedbackIdRef.current = ''
-        closeTimer.current = setTimeout(() => {
-            onClose()
-            setEmail('')
-            setCustomToolName('')
-            setWebsite('')
-            setIsSubmitted(false)
-        }, 2000)
-    }
-
-    return (
-        <AnimatePresence>
-            {isOpen ? (
-                <m.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                    onClick={onClose}
-                >
-                    <m.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-black/5 dark:border-white/10"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {!isSubmitted ? (
-                            <>
-                                <m.div
-                                    className="flex items-center justify-between mb-6"
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 }}
-                                >
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                                        {isCustom
-                                            ? 'Request Custom Provider'
-                                            : `Get notified for ${integrationName}`}
-                                    </h3>
-                                    <m.button
-                                        onClick={onClose}
-                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                                    >
-                                        <FaTimes className="w-4 h-4 text-gray-500" />
-                                    </m.button>
-                                </m.div>
-
-                                <m.p
-                                    className="text-gray-600 dark:text-gray-400 mb-6"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                >
-                                    {isCustom
-                                        ? "Tell us which storage provider you'd like us to integrate with upup and we'll notify you when it's ready."
-                                        : `We'll send you an email as soon as the ${integrationName} integration is ready for beta testing.`}
-                                </m.p>
-
-                                <m.form
-                                    onSubmit={handleSubmit}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                >
-                                    {isCustom && (
-                                        <m.input
-                                            type="text"
-                                            value={customToolName}
-                                            onChange={e =>
-                                                setCustomToolName(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Provider name (e.g., MinIO, Wasabi, IBM Cloud)"
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
-                                            required
-                                            initial={{ x: -10, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: 0.4 }}
-                                        />
-                                    )}
-
-                                    <m.input
-                                        type="email"
-                                        value={email}
-                                        onChange={e => setEmail(e.target.value)}
-                                        placeholder="Enter your email address"
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 mb-4"
-                                        required
-                                        initial={{ x: -10, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{
-                                            delay: isCustom ? 0.5 : 0.4,
-                                        }}
-                                    />
-
-                                    {/* Honeypot: hidden from users + assistive tech;
-                                    bots that fill it are silently dropped by the
-                                    API. Same field name the support form uses. */}
-                                    <input
-                                        type="text"
-                                        name="website"
-                                        value={website}
-                                        onChange={e =>
-                                            setWebsite(e.target.value)
-                                        }
-                                        tabIndex={-1}
-                                        autoComplete="off"
-                                        aria-hidden="true"
-                                        className="pointer-events-none absolute -left-[9999px] h-0 w-0 opacity-0"
-                                    />
-
-                                    {failed && (
-                                        <p
-                                            role="alert"
-                                            className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-700 dark:text-red-400"
-                                        >
-                                            Something went wrong recording that.
-                                            Your details are still here — try
-                                            again.
-                                        </p>
-                                    )}
-
-                                    <m.div
-                                        className="flex gap-3"
-                                        initial={{ y: 10, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{
-                                            delay: isCustom ? 0.6 : 0.5,
-                                        }}
-                                    >
-                                        <m.button
-                                            type="button"
-                                            onClick={onClose}
-                                            className="flex-1 px-4 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-xl border border-black/5 dark:border-white/10 hover:border-black/10 dark:hover:border-white/20"
-                                        >
-                                            Cancel
-                                        </m.button>
-                                        <m.button
-                                            type="submit"
-                                            disabled={isSubmitting}
-                                            className="flex-1 px-4 py-3 bg-primary hover:opacity-90 text-white font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                                        >
-                                            {isSubmitting ? (
-                                                <>
-                                                    <FaSpinner className="w-4 h-4 animate-spin" />
-                                                    {isCustom
-                                                        ? 'Requesting...'
-                                                        : 'Subscribing...'}
-                                                </>
-                                            ) : isCustom ? (
-                                                'Request Provider'
-                                            ) : (
-                                                'Notify me'
-                                            )}
-                                        </m.button>
-                                    </m.div>
-                                </m.form>
-                            </>
-                        ) : (
-                            <m.div
-                                className="text-center"
-                                initial={{ scale: 0.8, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                transition={{
-                                    type: 'spring',
-                                    damping: 20,
-                                    stiffness: 300,
-                                }}
-                            >
-                                <m.div
-                                    className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4"
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{
-                                        delay: 0.2,
-                                        type: 'spring',
-                                        damping: 15,
-                                        stiffness: 400,
-                                    }}
-                                >
-                                    <m.div
-                                        className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{
-                                            delay: 0.4,
-                                            type: 'spring',
-                                            damping: 15,
-                                            stiffness: 400,
-                                        }}
-                                    >
-                                        <m.svg
-                                            className="w-4 h-4 text-white"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            initial={{ pathLength: 0 }}
-                                            animate={{ pathLength: 1 }}
-                                            transition={{
-                                                delay: 0.6,
-                                                duration: 0.3,
-                                            }}
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M5 13l4 4L19 7"
-                                            />
-                                        </m.svg>
-                                    </m.div>
-                                </m.div>
-                                <m.h3
-                                    className="text-xl font-bold text-gray-900 dark:text-white mb-2"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.3 }}
-                                >
-                                    You&apos;re all set!
-                                </m.h3>
-                                <m.p
-                                    className="text-gray-600 dark:text-gray-400"
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                >
-                                    {`We’ll email you when ${providerName} integration is ready.`}
-                                </m.p>
-                            </m.div>
-                        )}
-                    </m.div>
-                </m.div>
-            ) : null}
-        </AnimatePresence>
-    )
-}
-
-/* Dense, calm logo wall — compact icon+name tiles on the raised surface with
-   ONE shared "supported" affordance (a single caption, not a badge per card).
-   Replaces the two 12/13-identical-card grids the audit flagged. */
-const SupportedWall: React.FC<{ providers: Integration[] }> = ({
-    providers,
-}) => {
-    const captionId = React.useId()
-    return (
-        <div className="mx-auto max-w-4xl">
-            <p
-                id={captionId}
-                className="mb-6 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400"
-            >
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-                Supported today
-            </p>
-            <div
-                role="list"
-                aria-labelledby={captionId}
-                className="flex flex-wrap justify-center gap-3"
-            >
-                {providers.map(provider => {
-                    const card = (
-                        <>
-                            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/5 bg-black/[0.03] text-gray-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-400">
-                                <provider.icon
-                                    className="h-5 w-5"
-                                    aria-hidden
-                                />
-                            </span>
-                            <span className="text-xs font-medium leading-tight text-gray-900 dark:text-white">
-                                {provider.name}
-                            </span>
-                            {provider.qualifier ? (
-                                <span className="text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                                    {provider.qualifier}
-                                </span>
-                            ) : null}
-                        </>
-                    )
-                    const cardClass =
-                        'flex h-full flex-col items-center gap-2.5 rounded-xl border border-black/5 bg-[var(--bg-base)] px-3 py-4 text-center dark:border-white/10'
-                    return (
-                        <div
-                            key={provider.id}
-                            role="listitem"
-                            className="w-[120px]"
-                        >
-                            {provider.href ? (
-                                <Link
-                                    href={provider.href}
-                                    className={`${cardClass} transition-colors hover:border-black/10 dark:hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
-                                >
-                                    {card}
-                                </Link>
-                            ) : (
-                                <div className={cardClass}>{card}</div>
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-        </div>
-    )
-}
-
-interface PlannedStripProps {
-    planned: Integration[]
-    onProviderClick: (provider: Integration) => void
-    onCustomRequest: () => void
-}
-
-const PlannedStrip: React.FC<PlannedStripProps> = ({
-    planned,
-    onProviderClick,
-    onCustomRequest,
-}) => (
-    <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            On the roadmap — click to request one
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-            {planned.map(provider => (
-                <button
-                    key={provider.id}
-                    type="button"
-                    onClick={() => onProviderClick(provider)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                >
-                    <provider.icon className="w-3.5 h-3.5" aria-hidden />
-                    {provider.name}
-                </button>
-            ))}
-            <button
-                type="button"
-                onClick={onCustomRequest}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-black/5 dark:border-white/10 text-xs font-medium text-gray-600 dark:text-gray-400 hover:border-black/10 dark:hover:border-white/20 hover:text-gray-900 dark:hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-                <FaPlus className="w-3.5 h-3.5" />
-                Request Custom
-            </button>
-        </div>
-    </div>
-)
+import { FaStar } from 'react-icons/fa'
+import EmailModal from './EmailModal'
+import PlannedStrip from './PlannedStrip'
+import SupportedWall from './SupportedWall'
+import { fileTypes } from './fileTypes'
+import { developerStorageProviders, userStorageProviders } from './providers'
+import type { Integration } from './types'
 
 export default function HomepageFeatures() {
     const [selectedProvider, setSelectedProvider] = useState<string | null>(
@@ -766,6 +22,7 @@ export default function HomepageFeatures() {
     )
     const [modalOpen, setModalOpen] = useState(false)
     const [isCustomRequest, setIsCustomRequest] = useState(false)
+    const triggerRef = useRef<HTMLElement | null>(null)
 
     const userSupported = userStorageProviders.filter(
         p => p.status !== 'planned',
@@ -778,7 +35,10 @@ export default function HomepageFeatures() {
         p => p.status === 'planned',
     )
 
-    const handleProviderClick = (provider: Integration) => {
+    const handleProviderClick = (
+        provider: Integration,
+        trigger: HTMLElement,
+    ) => {
         if (provider.status === 'supported') return // Don't show modal for supported providers
 
         // Track the interest in analytics. Status rides the label, not `value`
@@ -789,17 +49,19 @@ export default function HomepageFeatures() {
             event_label: `${provider.name} (${provider.status})`,
         })
 
+        triggerRef.current = trigger
         setSelectedProvider(provider.name)
         setIsCustomRequest(false)
         setModalOpen(true)
     }
 
-    const handleCustomRequest = () => {
+    const handleCustomRequest = (trigger: HTMLElement) => {
         gtag.event({
             action: 'request_provider',
             event_category: 'providers',
             event_label: 'custom_request',
         })
+        triggerRef.current = trigger
         setSelectedProvider('Custom Provider')
         setIsCustomRequest(true)
         setModalOpen(true)
@@ -807,20 +69,21 @@ export default function HomepageFeatures() {
 
     return (
         <Section id="features">
-            {/* Marquee keyframes + reduced-motion stop for the file-type strip */}
+            {/* Marquee keyframes for the file-type strip. The loop only exists
+                under no-preference (the motion-safe equivalent): reduced motion
+                renders the row static, never a started-then-stopped animation. */}
             <style>{`
                 @keyframes marquee {
                     0% { transform: translateX(0) }
                     100% { transform: translateX(-50%) }
                 }
-                .animate-marquee {
-                    animation: marquee 25s linear infinite;
-                }
-                .animate-marquee:hover {
-                    animation-play-state: paused;
-                }
-                @media (prefers-reduced-motion: reduce) {
-                    .animate-marquee { animation: none; }
+                @media (prefers-reduced-motion: no-preference) {
+                    .animate-marquee {
+                        animation: marquee 25s linear infinite;
+                    }
+                    .animate-marquee:hover {
+                        animation-play-state: paused;
+                    }
                 }
             `}</style>
 
@@ -954,6 +217,7 @@ export default function HomepageFeatures() {
                 onClose={() => setModalOpen(false)}
                 integrationName={selectedProvider || ''}
                 isCustom={isCustomRequest}
+                triggerRef={triggerRef}
             />
         </Section>
     )

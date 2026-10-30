@@ -19,10 +19,12 @@ export function useServerModeDrive(provider: ServerModeProvider): {
     refresh: (opts?: { folderId?: string; search?: string }) => Promise<void>
     transfer: (file: ServerDriveFile) => Promise<ServerDriveTransferResult>
     startAuth: () => void
+    signOut: () => Promise<boolean>
+    finishTransfers: () => void
 } {
-    const { serverUrl } = useUploaderRuntime()
-    const latest = useRef({ serverUrl })
-    latest.current = { serverUrl }
+    const { serverUrl, core } = useUploaderRuntime()
+    const latest = useRef({ serverUrl, core })
+    latest.current = { serverUrl, core }
 
     const controllerRef = useRef<ServerModeDriveController | undefined>(
         undefined,
@@ -31,6 +33,7 @@ export function useServerModeDrive(provider: ServerModeProvider): {
         controllerRef.current = new ServerModeDriveController({
             provider,
             serverUrl: () => latest.current.serverUrl,
+            core: () => latest.current.core,
         })
     }
     const controller = controllerRef.current
@@ -64,6 +67,10 @@ export function useServerModeDrive(provider: ServerModeProvider): {
         transfer: (file: ServerDriveFile) => controller.transfer(file),
         startAuth: () => {
             controller.startAuth()
+        },
+        signOut: () => controller.signOut(),
+        finishTransfers: () => {
+            controller.finishTransfers()
         },
     }
 }

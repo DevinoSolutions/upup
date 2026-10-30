@@ -64,7 +64,9 @@ export function validateFileRestrictions(
     ) {
         errors.push({
             code: UpupErrorCode.TYPE_MISMATCH,
-            message: `File type "${file.type}" is not accepted`,
+            message: file.type
+                ? `File type "${file.type}" is not accepted`
+                : `File "${file.name}" is not an accepted type`,
         })
     }
 

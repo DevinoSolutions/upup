@@ -1,9 +1,22 @@
 import { InMemoryTokenStore } from '@useupup/server'
 import { createUpupNextHandler } from '@useupup/server/next'
+import { withDemoRateLimit } from '@/lib/demo-rate-limit'
+import { withVaryOrigin } from '@/lib/demo-vary-origin'
+import { getVisitorId, withDemoVisitor } from '@/lib/demo-visitor'
 import { env, requireServerEnv } from '@/lib/env'
 
-let _handler: ReturnType<typeof createUpupNextHandler> | null = null
-function handler() {
+// Largest file the homepage/interactive demo offers (its max-file-size control
+// tops out at 100 MB; the landing default is 25 MB). Enforced server-side so a
+// direct caller can't presign an arbitrarily large object on the demo bucket.
+const DEMO_MAX_FILE_SIZE = 100 * 1024 * 1024
+
+type DemoHandlers = Record<
+    'GET' | 'POST' | 'PUT' | 'DELETE',
+    (req: Request) => Promise<Response>
+>
+
+let _handler: DemoHandlers | null = null
+function handler(): DemoHandlers {
     if (_handler) return _handler
 
     const required = requireServerEnv(['UPUP_UPLOAD_TOKEN_SECRET'] as const)
@@ -46,7 +59,7 @@ function handler() {
             : {}),
     }
 
-    _handler = createUpupNextHandler(
+    const inner = createUpupNextHandler(
         {
             storage: {
                 type: 'backblaze',
@@ -57,8 +70,12 @@ function handler() {
                 endpoint: env.S3_ENDPOINT!,
             },
             uploadTokenSecret: required.UPUP_UPLOAD_TOKEN_SECRET,
-            allowAnonymous: true,
-            allowAnonymousUploads: true,
+            // Every visitor gets their own signed-cookie identity (see
+            // lib/demo-visitor.ts). getUserId never returns null, so neither
+            // allowAnonymous nor allowAnonymousUploads is needed: drive tokens,
+            // OAuth state and upload keys are all namespaced per visitor.
+            getUserId: getVisitorId,
+            maxFileSize: DEMO_MAX_FILE_SIZE,
             providers,
             // Demo-grade token store: in-memory, per-process — drive OAuth sessions
             // reset on container restart. A real deployment supplies a Redis/DB store.
@@ -74,6 +91,21 @@ function handler() {
         },
     )
 
+    const secret = required.UPUP_UPLOAD_TOKEN_SECRET
+    _handler = {
+        GET: withVaryOrigin(
+            withDemoRateLimit(withDemoVisitor(secret, inner.GET)),
+        ),
+        POST: withVaryOrigin(
+            withDemoRateLimit(withDemoVisitor(secret, inner.POST)),
+        ),
+        PUT: withVaryOrigin(
+            withDemoRateLimit(withDemoVisitor(secret, inner.PUT)),
+        ),
+        DELETE: withVaryOrigin(
+            withDemoRateLimit(withDemoVisitor(secret, inner.DELETE)),
+        ),
+    }
     return _handler
 }
 

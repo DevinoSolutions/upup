@@ -27,4 +27,43 @@ describe('matchesAllowedType (F-743 shared policy)', () => {
         expect(matchesAllowedType('', ['image/*'])).toBe(false)
         expect(matchesAllowedType('', ['image/png'])).toBe(false)
     })
+
+    // RFC 2045: MIME types and subtypes are case-insensitive, so a client
+    // claiming `IMAGE/PNG` must match an allowlist written in lower case (and
+    // vice versa). Case is folded on BOTH sides; nothing else is loosened.
+    it('matches an exact type case-insensitively on both sides', () => {
+        expect(matchesAllowedType('IMAGE/PNG', ['image/png'])).toBe(true)
+        expect(matchesAllowedType('image/png', ['IMAGE/PNG'])).toBe(true)
+    })
+
+    it('honours the wildcard case-insensitively on both sides', () => {
+        expect(matchesAllowedType('Image/Png', ['image/*'])).toBe(true)
+        expect(matchesAllowedType('image/png', ['IMAGE/*'])).toBe(true)
+        expect(matchesAllowedType('IMAGE/PNG', ['Image/*'])).toBe(true)
+    })
+
+    it('still rejects a different type or an empty type after case folding', () => {
+        expect(matchesAllowedType('TEXT/PLAIN', ['image/*'])).toBe(false)
+        expect(matchesAllowedType('text/plain', ['image/*'])).toBe(false)
+        expect(matchesAllowedType('', ['IMAGE/PNG'])).toBe(false)
+        expect(matchesAllowedType('', ['IMAGE/*'])).toBe(false)
+    })
+
+    it('folds case for ASCII only: a non-ASCII lookalike never matches', () => {
+        // U+212A KELVIN SIGN lower-cases to ASCII "k" under toLowerCase().
+        expect(matchesAllowedType('text/marKdown', ['text/markdown'])).toBe(
+            false,
+        )
+        expect(matchesAllowedType('text/markdown', ['text/marKdown'])).toBe(
+            false,
+        )
+    })
+
+    it('treats a non-string type as a non-match instead of throwing', () => {
+        // The drive route hands over an unchecked `body.mimeType` cast.
+        const bad = 123 as unknown as string
+        expect(matchesAllowedType(bad, ['image/png'])).toBe(false)
+        expect(matchesAllowedType(bad, ['image/*'])).toBe(false)
+        expect(matchesAllowedType(bad, undefined)).toBe(true)
+    })
 })

@@ -9,8 +9,8 @@ import type { PostHog } from 'posthog-js'
  * `setPostHogClient()`.
  *
  * posthog-js silently DROPS a `capture()` made before `init()` has run. On the
- * marketing landing routes the provider boots after the page has loaded (see
- * posthog-provider.tsx), so anything captured earlier is held here instead:
+ * marketing landing routes and the docs the provider boots after the page has
+ * loaded (see posthog-provider.tsx, `analyticsBootMode`), so anything captured earlier is held here instead:
  * up to PENDING_LIMIT events, each stamped with the time it actually happened,
  * then replayed in order the moment the instance registers.
  */

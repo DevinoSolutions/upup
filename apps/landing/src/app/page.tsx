@@ -9,17 +9,24 @@ import StackBlitzDemoSection from '@/components/StackBlitzDemoSection'
 import StructuredData from '@/components/StructuredData'
 import FAQSection from '@/components/FAQSection'
 import Section from '@/components/ui/Section'
-import { canonicalUrl } from '@/lib/site-url'
+import { canonicalUrl, siteUrl } from '@/lib/site-url'
+import {
+    HOME_DESCRIPTION,
+    HOME_MARKDOWN_PATH,
+    HOME_TITLE,
+} from '@/lib/home-page'
 
-// Title is brand-first and ≤60 chars ("upup" is the site's biggest query and
-// the old 77-char title truncated in SERPs); description is ≤155 so it renders
-// whole. Both budgets are pinned by src/__tests__/seo-copy-budgets.test.ts.
+// Title and description live in src/lib/home-page.ts, shared with the page's
+// Markdown twin; their length budgets are pinned by seo-copy-budgets.test.ts.
 export const metadata = {
-    title: 'upup – Open-Source File Uploader for Every Framework',
-    description:
-        'upup is a free, open-source drag and drop file uploader with native UI for React, Vue, Svelte, Angular, Vanilla JS and Preact. MIT-licensed.',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
     alternates: {
         canonical: canonicalUrl(),
+        // <link rel="alternate" type="text/markdown">: the home page's
+        // Markdown twin (src/app/index.md/route.ts), the same thing the `/`
+        // Link header in next.config.mjs says.
+        types: { 'text/markdown': `${siteUrl()}${HOME_MARKDOWN_PATH}` },
     },
 }
 
