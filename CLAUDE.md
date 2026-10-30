@@ -173,7 +173,9 @@ pnpm run test:quality   # test-suite hygiene guard: committed .only, disabled
                         # file is invisible until staged, so verify after
                         # `git add`, not before.
 pnpm run test:scripts   # node:test self-tests for scripts/ci (the guard + the
-                        # affected-test resolver's impact map) + scripts/lib
+                        # affected-test resolver's impact map) + scripts/lib;
+                        # also validates .changeset/*.md against the real
+                        # changesets parser (needs install)
 pnpm run smoke:packages # real npm-tarball consumer (packs all 9, isolated vite
                         # build, dist-shape + entry-budget asserts). Slow (~5m);
                         # run it after anything that can grow core/react's
