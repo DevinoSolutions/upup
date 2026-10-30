@@ -4,13 +4,15 @@
 // download stream (the provider's real size over the cap, a client `accept`
 // mismatch, a provider type outside allowedTypes, a refusing onBeforeUpload)
 // must answer immediately. The rejection used to `await stream.cancel()` before
-// returning, so a stream whose cancel() never settles (a tee'd branch whose
-// sibling is never cancelled, a stalled socket) hung the response until the
-// client gave up (observed live: POST /files/google-drive/transfer never
-// answering a 413/415). Releasing the connection is best-effort and must never
-// gate the response; the status/body stay exactly the same and nothing is stored.
+// returning, so a cancel() that never settles would hang the response. A
+// 413/415 that never answered was observed live (POST
+// /files/google-drive/transfer), but the root cause was not confirmed; the
+// awaited cancel was the only in-code suspect. Releasing the connection is
+// best-effort and must never gate the response; the status/body stay exactly
+// the same and nothing is stored.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createUpupHandler } from '../src/handler'
+import * as awsMock from '../src/providers/aws'
 import {
     InMemoryTokenStore,
     setTokens,
@@ -85,6 +87,30 @@ function stubGoogleDriveWithStuckCancel(
         }),
     )
     return cancelCalls
+}
+
+/** Google Drive reports 100 bytes of `image/png`; the download body is the
+ *  given stream, handed to the route untouched so a test can pre-arrange its
+ *  state (a cancel() that throws synchronously, a reader already acquired). */
+function stubGoogleDriveWithBody(body: ReadableStream<Uint8Array>) {
+    vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url: unknown) => {
+            if (!String(url).includes('alt=media')) {
+                return new Response(
+                    JSON.stringify({
+                        name: 'a.png',
+                        mimeType: 'image/png',
+                        size: '100',
+                    }),
+                    { status: 200 },
+                )
+            }
+            const res = new Response(null, { status: 200 })
+            Object.defineProperty(res, 'body', { value: body })
+            return res
+        }),
+    )
 }
 
 /** Resolves with the response, or rejects when it takes longer than the budget. */
@@ -248,5 +274,75 @@ describe('drive transfer: a post-fetch rejection never waits on releasing the dr
 
         expect(res.status).toBe(500)
         expect(cancelCalls).toHaveBeenCalledTimes(1)
+    })
+
+    it('answers 415 when cancel() throws synchronously, without crashing', async () => {
+        const cancelCalls = vi.fn()
+        const body = new ReadableStream<Uint8Array>()
+        Object.defineProperty(body, 'cancel', {
+            value: () => {
+                cancelCalls()
+                throw new Error('cancel exploded synchronously')
+            },
+        })
+        stubGoogleDriveWithBody(body)
+        const handler = createUpupHandler(
+            makeConfig(store, { allowedTypes: ['application/pdf'] }),
+        )
+
+        const res = await answeredWithin(
+            handler(transferReq({ fileId: 'f1', mimeType: 'application/pdf' })),
+            ANSWER_WITHIN_MS,
+        )
+
+        expect(res.status).toBe(415)
+        expect(await res.json()).toEqual({ error: 'File type not allowed' })
+        expect(cancelCalls).toHaveBeenCalledTimes(1)
+        expect(transferMock).not.toHaveBeenCalled()
+    })
+
+    it('answers 500 and stores nothing when the transfer fails with the body stream already locked', async () => {
+        const body = new ReadableStream<Uint8Array>()
+        const realCancel = body.cancel.bind(body)
+        let cancelOutcome: Promise<unknown> | undefined
+        Object.defineProperty(body, 'cancel', {
+            value: () => {
+                // Record the outcome via a SECOND cancel() call so the promise
+                // handed to the route stays unobserved: only the route's own
+                // .catch keeps its rejection from surfacing as unhandled.
+                cancelOutcome = realCancel().then(
+                    () => 'resolved',
+                    (err: unknown) => err,
+                )
+                return realCancel()
+            },
+        })
+        stubGoogleDriveWithBody(body)
+        // The transfer consumed the stream (acquired its reader) and then died.
+        transferMock.mockImplementation(
+            async ({ stream }: { stream: ReadableStream<Uint8Array> }) => {
+                stream.getReader()
+                throw new Error('s3 down mid-stream')
+            },
+        )
+        const handler = createUpupHandler(makeConfig(store))
+
+        const res = await answeredWithin(
+            handler(transferReq({ fileId: 'f1' })),
+            ANSWER_WITHIN_MS,
+        )
+
+        expect(res.status).toBe(500)
+        expect(body.locked).toBe(true)
+        expect(transferMock).toHaveBeenCalledTimes(1)
+        // The release was attempted on the locked stream; cancel() on a locked
+        // stream rejects with a TypeError, and that rejection is swallowed.
+        expect(await cancelOutcome).toBeInstanceOf(TypeError)
+        // Guards against the handler reaching storage outside the (mocked)
+        // transfer path; the real "stores nothing" guarantee lives in the
+        // real-MinIO / drive-sandbox layers.
+        expect(awsMock.generatePresignedUrl).not.toHaveBeenCalled()
+        expect(awsMock.initiateMultipartUpload).not.toHaveBeenCalled()
+        expect(awsMock.completeMultipartUpload).not.toHaveBeenCalled()
     })
 })
