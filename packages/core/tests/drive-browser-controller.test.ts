@@ -624,6 +624,21 @@ describe('DriveBrowserController — auth-outcome reporting (#390)', () => {
         expect(err?.message).toContain('access_denied')
     })
 
+    it('starts the popup attempt synchronously inside signIn and retryAuth, so the window.open it ends in is still inside the click (uNotes T-12111)', () => {
+        const { controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
+        const attempt = vi
+            .spyOn(plugin, 'authenticateViaPopup')
+            .mockResolvedValue(undefined)
+
+        // No await between the call and the assertion: anything that defers the
+        // attempt past a microtask would fail here.
+        controller.signIn()
+        expect(attempt).toHaveBeenCalledTimes(1)
+
+        controller.retryAuth()
+        expect(attempt).toHaveBeenCalledTimes(2)
+    })
+
     it('clears the previous attempt error when a retry starts, so a fresh sign-in is not shown under the last failure', async () => {
         const { core, controller, plugin } = setup(ONE_DRIVE_DESCRIPTOR)
         core.emit('one-drive:error', {

@@ -148,7 +148,8 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
 
     // ── Auth: build the OAuth URL with PKCE ──
 
-    async getAuthUrl(): Promise<string> {
+    /** The configured client id, or the same `UpupAuthError` `getAuthUrl` has always thrown. */
+    private requireClientId(): string {
         const clientId = this.config.clientId
         if (!clientId) {
             throw new UpupAuthError(
@@ -156,6 +157,11 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
                 this.spec.displayName,
             )
         }
+        return clientId
+    }
+
+    async getAuthUrl(): Promise<string> {
+        const clientId = this.requireClientId()
 
         const redirectUri = this.getRedirectUri()
         this.codeVerifier = generateCodeVerifier()
@@ -283,16 +289,23 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
             )
         }
 
-        const url = await this.getAuthUrl()
+        // Refuse an unconfigured provider BEFORE a window exists, so a missing
+        // client id never flashes a blank popup open and shut.
+        this.requireClientId()
 
         // Close any existing popup
         this.cleanupPopup()
 
-        const left = (typeof window !== 'undefined' ? window.screenX : 0) + 60
-        const top = (typeof window !== 'undefined' ? window.screenY : 0) + 60
+        const left = window.screenX + 60
+        const top = window.screenY + 60
 
+        // Open the window FIRST, synchronously, as a blank page. `getAuthUrl()`
+        // awaits the PKCE digest, and a `window.open` that waits for it is no
+        // longer inside the click that asked for the sign-in: Edge and others
+        // block it as an unrequested popup (uNotes T-12111, ~20 users in 14
+        // days). The popup is pointed at the provider once the URL exists.
         this.popupWindow = window.open(
-            url,
+            'about:blank',
             this.spec.popupName,
             `width=800,height=600,left=${left},top=${top},toolbar=0,scrollbars=1,status=1,resizable=1`,
         )
@@ -313,6 +326,23 @@ export abstract class PopupOAuthPlugin implements DrivePlugin {
             })
             throw blocked
         }
+
+        const popup = this.popupWindow
+        let url: string
+        try {
+            url = await this.getAuthUrl()
+        } catch (err) {
+            // The blank window is already open: close it with the attempt, or
+            // the person is left looking at an empty popup nothing will fill.
+            if (this.popupWindow === popup) this.cleanupPopup()
+            throw err
+        }
+
+        // Something else (signOut, a newer attempt) closed or replaced this
+        // popup while the URL was being built. Do not resurrect it.
+        if (this.popupWindow !== popup) return
+
+        popup.location.href = url
 
         this.setState('authenticating')
 
