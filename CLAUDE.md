@@ -769,6 +769,24 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   suite in `test:scripts` fails if either line changes shape. Any key, sitemap
   or non-200/202 problem fails the run. Preview locally with
   `node scripts/ci/indexnow-submit.mjs --dry-run` (add `--all`).
+- `dokploy-compose-build-deploy.yml` — the site's build-once, deploy-by-digest
+  path: a caller of the org's shared `dokploy-compose.yml` (pinned to a full
+  `DevinoSolutions/.github` sha) that builds `deploy/site/docker-compose.yml`'s
+  three images (landing, mastra, playground) in Actions, mirrors them to our
+  registry by digest and hands Dokploy a digest-pinned copy of the compose, so
+  Dokploy never builds from source. The compose file itself is unchanged. It
+  is INERT until its kill switch for that branch is set: repository variables
+  `UPUP_DIGEST_DEV` (dev) / `UPUP_DIGEST_PROD` (master), each empty, `mirror`
+  or `all`; a PR builds only (same-repo branches, when `deploy/site/**`,
+  `.dockerignore`, the root manifests/lockfile/`patches/**` or the workflow
+  changed). The `NEXT_PUBLIC_*` build args are per environment,
+  read by name from the GitHub Environments `development` (dev) and
+  `production` (master); `NEXT_PUBLIC_BASE_URL` is required on a push, the rest
+  build empty when unset, like the compose's `${VAR:-}`. They are all public
+  client values; runtime secrets stay in the Dokploy compose env. Gate and
+  builds run on `ubuntu-latest`; the deploy job needs the private network, so it
+  runs on `ubuntu-devino`, which this PUBLIC repo can use only once the org
+  runner group allows it. Cutover runbook: README of `DevinoSolutions/.github`.
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which
