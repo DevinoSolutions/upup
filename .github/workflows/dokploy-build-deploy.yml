@@ -1,0 +1,317 @@
+# Build the three site images of deploy/site/docker-compose.yml (landing, mastra, playground) ONCE in GitHub Actions, push them
+# to GHCR, and have Dokploy deploy them BY DIGEST through its deploy-hook path, so Dokploy stops building upup from source.
+#
+# upup is a PUBLIC repository, and the org's self-hosted runner group deliberately refuses public repositories (a fork pull
+# request could otherwise run code on our machines). So every job here runs on GitHub-hosted `ubuntu-latest`, and nothing here
+# can reach the private network: the deploy is one HTTPS request per image to the public Dokploy hook host (hooks.devino.ca).
+#
+# WHAT RUNS
+#   pull_request   build only. The images are built and thrown away: nothing is pushed, no secret or environment is read, no
+#                  hook is called. Same for a fork or Dependabot. There is no pull_request_target trigger, on purpose.
+#   push dev       build, push to GHCR (the environment's image repositories), then deploy by digest (development environment)
+#   push master    the same with the production environment
+#   manual run     the same as a push of the branch it runs on (dev or master only)
+#
+# THE KILL SWITCHES are two repository variables, one per branch. Unset (or empty) means a push of that branch does NOTHING here
+# and Dokploy keeps building from git, exactly as before this file existed.
+#     UPUP_DIGEST_DEV    dev    branch -> the development environment
+#     UPUP_DIGEST_PROD   master branch -> the production environment
+#     (unset or empty)  off
+#     build             build and push to GHCR, print the digests in the job summary, call no hook
+#     deploy            build, push, then POST each image's digest to its Dokploy application's deploy hook
+# Anything else fails the gate job.
+#
+# THE DEPLOY HOOKS. Each image is deployed by POSTing `{"image","tag","digest"}` to its Dokploy APPLICATION's deploy-hook URL
+# (https://hooks.devino.ca/api/deploy/<token>). The URL carries the application's token, so it is a SECRET of the branch's GitHub
+# Environment, never a variable and never printed (the token is also masked on its own):
+#     DOKPLOY_HOOK_LANDING, DOKPLOY_HOOK_MASTRA, DOKPLOY_HOOK_PLAYGROUND   (one set in "development", one in "production")
+# Dokploy only accepts an image whose repository is exactly the application's own (<registry>/<prefix>/<appName>), and appName
+# is unique per Dokploy instance, so dev and prod push to DIFFERENT repositories. Each environment names them in VARIABLES:
+#     UPUP_IMAGE_LANDING, UPUP_IMAGE_MASTRA, UPUP_IMAGE_PLAYGROUND   e.g. ghcr.io/devinosolutions/<landing app's appName>
+# CUTOVER PREREQUISITES (dokploy-community), all checked by hand before a switch is set to `deploy`:
+#   - the site runs as three image-type Dokploy APPLICATIONS. A compose unit's hook never deploys a supplied image
+#     (dokploy-community build-policy README, "Known gap: compose units"), so compose hook URLs are refused below;
+#   - the organization ENFORCES the build policy (enforceRemoteBuilds). Without it Dokploy ignores the body, answers 200 and
+#     redeploys whatever image the application is configured with, so a green run here would not prove the digest is live;
+#   - each application's registry is ghcr.io with the matching prefix and pull credentials (GHCR packages start private),
+#     and each image package grants this repository's Actions write access (a package created elsewhere refuses the push);
+#   - the environments are restricted to their branch ("production" to master, "development" to dev), so a workflow edited
+#     on another branch can never read their hook secrets.
+# A 2xx answer means "Dokploy accepted the deploy", not "the site now runs it": the live check after the deploy proves that.
+#
+# DEV AND PROD VALUES STAY SEPARATE. landing and playground inline their NEXT_PUBLIC_* values at build time, so each branch builds
+# its own images with the VARIABLES of its GitHub Environment, "development" (dev) or "production" (master). They are all public
+# client values (they ship in the browser bundle); no secret is ever a build arg. NEXT_PUBLIC_BASE_URL is required on a push;
+# the others build as empty when unset, exactly as the compose's `${VAR:-}` args do. Runtime secrets (S3_*, the drive client
+# secrets, SENDLY_API_KEY, OPENROUTER_API_KEY, ...) are not touched here: they stay in Dokploy.
+name: Build the site images and deploy them to Dokploy by digest
+on:
+    push:
+        branches: [dev, master]
+    pull_request:
+        branches: [dev, master]
+        # Only the changes that can alter how these images are built (or this workflow). Source changes are covered by main.yml
+        # and e2e.yml, and every push to dev or master rebuilds all three images anyway.
+        paths:
+            - .github/workflows/dokploy-build-deploy.yml
+            - deploy/site/**
+            - .dockerignore
+            # The Dockerfiles install the whole workspace, so a dependency change can break the image build too.
+            - package.json
+            - pnpm-lock.yaml
+            - pnpm-workspace.yaml
+            - patches/**
+    workflow_dispatch:
+concurrency:
+    # A newer pull request push cancels the older build. Branch runs queue: a deploy is never cancelled half-way.
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions:
+    contents: read
+jobs:
+    gate:
+        # Decides, from repository-level variables alone (no GitHub Environment, no secret), whether this run does anything.
+        name: decide what this run does
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+        permissions: {}
+        outputs:
+            run: ${{ steps.gate.outputs.run }}
+            mode: ${{ steps.gate.outputs.mode }}
+            envname: ${{ steps.gate.outputs.envname }}
+        steps:
+            - name: Read the kill switch of this branch
+              id: gate
+              env:
+                  EVENT_NAME: ${{ github.event_name }}
+                  REF: ${{ github.ref }}
+                  SWITCH: ${{ github.ref == 'refs/heads/master' && vars.UPUP_DIGEST_PROD || (github.ref == 'refs/heads/dev' && vars.UPUP_DIGEST_DEV || '') }}
+              run: |
+                  value="$(printf '%s' "${SWITCH}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+                  case "${value}" in
+                    ''|build|deploy) ;;
+                    *) echo "::error::UPUP_DIGEST_DEV / UPUP_DIGEST_PROD must be empty, build or deploy"; exit 1 ;;
+                  esac
+                  run=false; mode=off; envname=''
+                  if [ "${EVENT_NAME}" = "pull_request" ]; then
+                    run=true; mode=check
+                  else
+                    case "${REF}" in
+                      refs/heads/master) envname=production ;;
+                      refs/heads/dev) envname=development ;;
+                      *) echo "::error::push and manual runs are only for the dev and master branches"; exit 1 ;;
+                    esac
+                    if [ -n "${value}" ]; then run=true; mode="${value}"; else envname=''; fi
+                  fi
+                  echo "run=${run}" >> "${GITHUB_OUTPUT}"
+                  echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+                  echo "envname=${envname}" >> "${GITHUB_OUTPUT}"
+                  echo "event=${EVENT_NAME} ref=${REF} run=${run} mode=${mode} environment=${envname:-none}"
+
+    build:
+        name: build ${{ matrix.service }}
+        needs: gate
+        if: ${{ needs.gate.outputs.run == 'true' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        # The branch's environment supplies the NEXT_PUBLIC_* and UPUP_IMAGE_* variables. A pull request gets none.
+        environment: ${{ needs.gate.outputs.mode != 'check' && needs.gate.outputs.envname || null }}
+        permissions:
+            contents: read
+            packages: write
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    # build_args: the exact `args:` of that service's build block in deploy/site/docker-compose.yml.
+                    - service: landing
+                      dockerfile: deploy/site/Dockerfile.landing
+                      build_args: >-
+                          NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID NEXT_PUBLIC_GOOGLE_API_KEY NEXT_PUBLIC_GOOGLE_APP_ID
+                          NEXT_PUBLIC_ONEDRIVE_CLIENT_ID NEXT_PUBLIC_DROPBOX_CLIENT_ID NEXT_PUBLIC_BOX_CLIENT_ID
+                          NEXT_PUBLIC_GOOGLE_ANALYTICS_ID NEXT_PUBLIC_POSTHOG_KEY NEXT_PUBLIC_POSTHOG_HOST NEXT_PUBLIC_POSTHOG_DATASET
+                          NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN
+                          NEXT_PUBLIC_MASTRA_BASE_URL NEXT_PUBLIC_SENTRY_DSN
+                    - service: mastra
+                      dockerfile: deploy/site/Dockerfile.mastra
+                      build_args: ''
+                    - service: playground
+                      dockerfile: deploy/site/Dockerfile.playground
+                      build_args: >-
+                          NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID NEXT_PUBLIC_GOOGLE_API_KEY NEXT_PUBLIC_GOOGLE_APP_ID
+                          NEXT_PUBLIC_ONEDRIVE_CLIENT_ID NEXT_PUBLIC_DROPBOX_CLIENT_ID NEXT_PUBLIC_BOX_CLIENT_ID
+                          NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT NEXT_PUBLIC_UPUP_USE_REAL_STORAGE
+        # Outputs named per service (a leg sets only its own), read back by the deploy job.
+        outputs:
+            digest_landing: ${{ steps.build.outputs.digest_landing }}
+            digest_mastra: ${{ steps.build.outputs.digest_mastra }}
+            digest_playground: ${{ steps.build.outputs.digest_playground }}
+            image_landing: ${{ steps.build.outputs.image_landing }}
+            image_mastra: ${{ steps.build.outputs.image_mastra }}
+            image_playground: ${{ steps.build.outputs.image_playground }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  persist-credentials: false
+            - name: Build${{ needs.gate.outputs.mode != 'check' && ' and push' || '' }} the ${{ matrix.service }} image
+              id: build
+              env:
+                  SERVICE: ${{ matrix.service }}
+                  DOCKERFILE: ${{ matrix.dockerfile }}
+                  BUILD_ARGS: ${{ matrix.build_args }}
+                  MODE: ${{ needs.gate.outputs.mode }}
+                  ENVIRONMENT_NAME: ${{ needs.gate.outputs.envname }}
+                  # The default token is handed to the step only when it pushes; a pull request build never sees it.
+                  GHCR_TOKEN: ${{ needs.gate.outputs.mode != 'check' && secrets.GITHUB_TOKEN || '' }}
+                  # The repositories this environment's Dokploy applications deploy (see THE DEPLOY HOOKS above). All three are
+                  # passed and the leg picks its own by name, so an unset one fails instead of falling through to another.
+                  UPUP_IMAGE_LANDING: ${{ vars.UPUP_IMAGE_LANDING }}
+                  UPUP_IMAGE_MASTRA: ${{ vars.UPUP_IMAGE_MASTRA }}
+                  UPUP_IMAGE_PLAYGROUND: ${{ vars.UPUP_IMAGE_PLAYGROUND }}
+                  # Every NEXT_PUBLIC_* name any service takes, read from the branch's environment (empty on a pull request).
+                  NEXT_PUBLIC_BASE_URL: ${{ vars.NEXT_PUBLIC_BASE_URL }}
+                  NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+                  NEXT_PUBLIC_GOOGLE_API_KEY: ${{ vars.NEXT_PUBLIC_GOOGLE_API_KEY }}
+                  NEXT_PUBLIC_GOOGLE_APP_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_APP_ID }}
+                  NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_ONEDRIVE_CLIENT_ID }}
+                  NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${{ vars.NEXT_PUBLIC_DROPBOX_CLIENT_ID }}
+                  NEXT_PUBLIC_BOX_CLIENT_ID: ${{ vars.NEXT_PUBLIC_BOX_CLIENT_ID }}
+                  NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+                  NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
+                  NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+                  NEXT_PUBLIC_POSTHOG_DATASET: ${{ vars.NEXT_PUBLIC_POSTHOG_DATASET }}
+                  NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST }}
+                  NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ vars.NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+                  NEXT_PUBLIC_MASTRA_BASE_URL: ${{ vars.NEXT_PUBLIC_MASTRA_BASE_URL }}
+                  NEXT_PUBLIC_SENTRY_DSN: ${{ vars.NEXT_PUBLIC_SENTRY_DSN }}
+                  NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${{ vars.NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT }}
+                  NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${{ vars.NEXT_PUBLIC_UPUP_USE_REAL_STORAGE }}
+              run: |
+                  set -euo pipefail
+                  tag="sha-${GITHUB_SHA:0:12}"
+                  push=false
+                  [ "${MODE}" = "check" ] || push=true
+                  repo="ghcr.io/${GITHUB_REPOSITORY,,}/${SERVICE}"
+                  if [ "${push}" = "true" ]; then
+                    image_var="UPUP_IMAGE_${SERVICE^^}"
+                    repo="$(printf '%s' "${!image_var:-}" | tr -d '[:space:]')"
+                    case "${repo}" in
+                      # Never the layer-cache package, never an empty path segment.
+                      */cache|*/cache/*|*//*) echo "::error::${image_var} must not be the cache package or contain an empty path segment"; exit 1 ;;
+                      ghcr.io/devinosolutions/?*) ;;
+                      *) echo "::error::variable ${image_var} in the \"${ENVIRONMENT_NAME}\" environment must be a ghcr.io/devinosolutions/<name> repository"; exit 1 ;;
+                    esac
+                    case "${repo}" in *[!a-z0-9./_-]*) echo "::error::${image_var} must be a lowercase repository with no tag or digest"; exit 1 ;; esac
+                    # Two services must never share a repository (their legs would race for the same tag).
+                    for other in LANDING MASTRA PLAYGROUND; do
+                      other_var="UPUP_IMAGE_${other}"
+                      if [ "${other_var}" != "${image_var}" ] && [ "$(printf '%s' "${!other_var:-}" | tr -d '[:space:]')" = "${repo}" ]; then
+                        echo "::error::${image_var} and ${other_var} name the same repository"; exit 1
+                      fi
+                    done
+                  fi
+
+                  args=()
+                  from_env=()
+                  for name in ${BUILD_ARGS}; do
+                    value="${!name:-}"
+                    case "${value}" in *$'\n'*|*$'\r'*) echo "::error::variable ${name} is not a single line"; exit 1 ;; esac
+                    if [ "${name}" = "NEXT_PUBLIC_BASE_URL" ] && [ "${push}" = "true" ] && [ -z "${value}" ]; then
+                      echo "::error::NEXT_PUBLIC_BASE_URL is not defined in the \"${ENVIRONMENT_NAME}\" environment"
+                      exit 1
+                    fi
+                    [ -n "${value}" ] && from_env+=("${name}")
+                    args+=(--build-arg "${name}=${value}")
+                  done
+                  echo "build args set from a variable (names only): ${from_env[*]:-none}"
+
+                  # A docker-container builder: the default docker driver cannot export a registry layer cache.
+                  docker buildx create --name upup --driver docker-container --use >/dev/null
+                  cache="ghcr.io/${GITHUB_REPOSITORY,,}/cache:${SERVICE}"
+                  out=(--output type=cacheonly)
+                  if [ "${push}" = "true" ]; then
+                    printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+                    out=(--push --tag "${repo}:${tag}"
+                         --cache-to "type=registry,ref=${cache},mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true")
+                  fi
+
+                  docker buildx build . \
+                    --file "${DOCKERFILE}" \
+                    --platform linux/amd64 \
+                    --provenance=false \
+                    --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+                    --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+                    --cache-from "type=registry,ref=${cache}" \
+                    --metadata-file "${RUNNER_TEMP}/metadata.json" \
+                    "${args[@]}" "${out[@]}"
+
+                  if [ "${push}" = "true" ]; then
+                    digest="$(jq -r '."containerimage.digest" // empty' "${RUNNER_TEMP}/metadata.json")"
+                    case "${digest}" in sha256:*) ;; *) echo "::error::no image digest in the buildx metadata"; exit 1 ;; esac
+                    # The digest GHCR serves for the tag must be the one buildx reported.
+                    served="$(docker buildx imagetools inspect "${repo}:${tag}" --format '{{json .Manifest.Digest}}' | tr -d '"')"
+                    [ "${served}" = "${digest}" ] || { echo "::error::ghcr serves ${served} for ${repo}:${tag}, buildx reported ${digest}"; exit 1; }
+                    echo "digest_${SERVICE}=${digest}" >> "${GITHUB_OUTPUT}"
+                    echo "image_${SERVICE}=${repo}" >> "${GITHUB_OUTPUT}"
+                    echo "- \`${SERVICE}\`: \`${repo}@${digest}\` (tag \`${tag}\`)" >> "${GITHUB_STEP_SUMMARY}"
+                  fi
+                  docker buildx rm upup >/dev/null
+
+    deploy:
+        # Push (or manual run) of dev or master with its switch at `deploy`. Never on a pull request.
+        name: deploy the digests to Dokploy
+        needs: [gate, build]
+        if: ${{ github.event_name != 'pull_request' && needs.gate.outputs.mode == 'deploy' }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        environment: ${{ needs.gate.outputs.envname }}
+        permissions: {}
+        concurrency:
+            group: dokploy-deploy-upup-${{ needs.gate.outputs.envname }}
+            cancel-in-progress: false
+        steps:
+            - name: Call each image's Dokploy deploy hook with its digest
+              env:
+                  DIGEST_LANDING: ${{ needs.build.outputs.digest_landing }}
+                  DIGEST_MASTRA: ${{ needs.build.outputs.digest_mastra }}
+                  DIGEST_PLAYGROUND: ${{ needs.build.outputs.digest_playground }}
+                  IMAGE_LANDING: ${{ needs.build.outputs.image_landing }}
+                  IMAGE_MASTRA: ${{ needs.build.outputs.image_mastra }}
+                  IMAGE_PLAYGROUND: ${{ needs.build.outputs.image_playground }}
+                  HOOK_LANDING: ${{ secrets.DOKPLOY_HOOK_LANDING }}
+                  HOOK_MASTRA: ${{ secrets.DOKPLOY_HOOK_MASTRA }}
+                  HOOK_PLAYGROUND: ${{ secrets.DOKPLOY_HOOK_PLAYGROUND }}
+                  ENVIRONMENT_NAME: ${{ needs.gate.outputs.envname }}
+              run: |
+                  set -euo pipefail
+                  tag="sha-${GITHUB_SHA:0:12}"
+                  # Check everything before the first request, so a missing value never leaves a half-deployed site.
+                  for svc in LANDING MASTRA PLAYGROUND; do
+                    digest_var="DIGEST_${svc}"; hook_var="HOOK_${svc}"; image_var="IMAGE_${svc}"
+                    case "${!digest_var}" in sha256:*) ;; *) echo "::error::no digest for ${svc,,} from the build job"; exit 1 ;; esac
+                    case "${!image_var}" in ghcr.io/devinosolutions/?*) ;; *) echo "::error::no image repository for ${svc,,} from the build job"; exit 1 ;; esac
+                    case "${!hook_var}" in
+                      # An application hook is /api/deploy/<token>. A compose hook (/api/deploy/compose/<token>) never deploys a
+                      # supplied image and, with the policy off, would build from source while answering 200.
+                      https://hooks.devino.ca/api/deploy/*/*) echo "::error::secret DOKPLOY_HOOK_${svc} is not an application deploy hook (compose hooks are refused)"; exit 1 ;;
+                      https://hooks.devino.ca/api/deploy/?*) echo "::add-mask::${!hook_var##*/}" ;;
+                      *) echo "::error::secret DOKPLOY_HOOK_${svc} in the \"${ENVIRONMENT_NAME}\" environment is missing or is not a https://hooks.devino.ca/api/deploy/<token> URL"; exit 1 ;;
+                    esac
+                  done
+                  for svc in LANDING MASTRA PLAYGROUND; do
+                    digest_var="DIGEST_${svc}"; hook_var="HOOK_${svc}"; image_var="IMAGE_${svc}"
+                    image="${!image_var}"
+                    body="$(jq -cn --arg image "${image}" --arg tag "${tag}" --arg digest "${!digest_var}" '{image: $image, tag: $tag, digest: $digest}')"
+                    # The URL (it holds the token) goes to curl on stdin, never on its command line or in the log. A retry after a 5xx
+                    # can queue the same digest twice; Dokploy merges a waiting duplicate, and the image is identical either way.
+                    status="$(printf 'url = "%s"\n' "${!hook_var}" | curl --config - --silent --show-error \
+                      --output "${RUNNER_TEMP}/hook-response" --write-out '%{http_code}' \
+                      --max-time 60 --retry 2 \
+                      --header 'Content-Type: application/json' --data "${body}")"
+                    echo "${svc,,}: HTTP ${status} for ${image}@${!digest_var}"
+                    if [ "${status}" -lt 200 ] || [ "${status}" -ge 300 ]; then
+                      echo "::error::the ${svc,,} deploy hook answered HTTP ${status}: $(head -c 500 "${RUNNER_TEMP}/hook-response")"
+                      exit 1
+                    fi
+                    echo "- \`${svc,,}\`: hook accepted \`${image}@${!digest_var}\` (HTTP ${status}); the live check proves it runs" >> "${GITHUB_STEP_SUMMARY}"
+                  done
