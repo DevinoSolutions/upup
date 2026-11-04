@@ -1,7 +1,9 @@
 name: E2E
 
+# Workflow-wide: read-only. id-token: write is granted ONLY to the jobs that
+# upload to Devino MinIO (see their own permissions blocks): the MinIO policy
+# is org-wide, so no other job may be able to mint an OIDC token.
 permissions:
-    id-token: write
     contents: read
 
 on:
@@ -65,6 +67,12 @@ jobs:
         name: Cross-framework E2E (Playwright + MinIO)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.e2e == 'true' || needs.Resolve-Affected.outputs.minio == 'true'
         steps:
@@ -172,15 +180,18 @@ jobs:
 
             # Visual layer: the suites freeze named product states as PNGs
             # (apps/e2e-test/visual/product-state-screenshots.ts). Uploaded on
-            # FAILURE only: the org artifact quota was exhausted in October
-            # 2026 and a blocked upload fails its step, so a green-path upload
-            # would turn a passing job red. They stay the snapvisor.io
-            # (Argos-style) diff input once its uploader is wired into this
-            # job. An empty upload warns: e2e ran but captured nothing, which
-            # means the capture layer itself broke.
+            # FAILURE only, to Devino MinIO (DevinoSolutions/artifact/upload,
+            # bucket gh-artifacts, its s3:// location printed in the job summary) — the org's
+            # GitHub artifact storage is blocked until its billing cycle
+            # resets, so actions/upload-artifact is not used anywhere. The
+            # upload authenticates with the job's OIDC token, which fork PRs do
+            # not get, hence the same-repo guard on every upload step. They
+            # stay the snapvisor.io (Argos-style) diff input once its uploader
+            # is wired into this job. An empty upload warns: e2e ran but
+            # captured nothing, which means the capture layer itself broke.
             - name: Upload visual product-state screenshots
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -188,8 +199,8 @@ jobs:
                   retention-days: 1
 
             - name: Upload Playwright traces and reports
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: e2e-playwright-artifacts
                   path: |
@@ -301,6 +312,12 @@ jobs:
         name: Docs E2E (landing /docs Playwright project)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         needs: [Resolve-Affected]
         if: needs.Resolve-Affected.outputs.docsE2e == 'true'
         steps:
@@ -378,8 +395,8 @@ jobs:
                   UPUP_UPLOAD_TOKEN_SECRET: upup-e2e-upload-token-secret-dev-only
 
             - name: Upload Playwright report
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: docs-e2e-playwright-artifacts
                   path: |
