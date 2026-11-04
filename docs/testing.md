@@ -107,15 +107,18 @@ coverage. Branch protection must require BOTH rollups (F-780).
 
 The E2E job uploads two artifacts, both on failure only: `e2e-visual-screenshots`
 (the visual layer's PNGs, see "Visual screenshots" below; 1-day retention) and
-`e2e-playwright-artifacts` (traces + reports). The org artifact quota was
-exhausted in October 2026 and a blocked upload fails its step, so no green path
-uploads; jobs never pass files to each other through artifacts either (Build runs
-size-limit and the snippet typecheck itself) and every upload keeps its files at
-most 2 days.
+`e2e-playwright-artifacts` (traces + reports). They are stored on Devino MinIO via
+`DevinoSolutions/artifact/upload` (bucket `gh-artifacts`, path
+`<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary), not on GitHub:
+the org's GitHub artifact storage is hard-blocked until the billing cycle resets.
+The upload authenticates with the job's OIDC token, which fork PRs do not get, so
+fork PRs skip it. Jobs never pass files to each other through artifacts either
+(Build runs size-limit and the snippet typecheck itself) and every upload keeps
+its files at most 2 days (the action rounds up to 1/3/5/7/14/30/90).
 
 **Nightly (nightly.yml, 03:17 UTC + manual):** full e2e + MinIO suites +
 a11y/overflow sweep (with `nightly-visual-screenshots` and the Playwright trace/report
-artifacts uploaded on failure only; Lighthouse scores go to the run summary),
+artifacts uploaded to Devino MinIO on failure only; Lighthouse scores go to the run summary),
 static builds of all six storybooks, package smoke, the mastra LLM evals, and
 the cloud-drive live integration suites — the `Drive-Sandbox` job runs both the
 vitest client-direct suite and a Playwright HTTP-surface layer (all four
@@ -164,8 +167,10 @@ The e2e suites freeze named product states as PNGs via
 (`captureProductStateScreenshot`). This is the geometry/paint complement to
 the DOM parity harness, and the input for **snapvisor.io** — our Argos-style
 visual-diff service — once its uploader is wired into CI. Until then the PNGs
-ship as plain workflow artifacts on failure only (`e2e-visual-screenshots` on
-PRs, `nightly-visual-screenshots` on nightly) and are reviewed by humans.
+ship on failure only (`e2e-visual-screenshots` on PRs, `nightly-visual-screenshots`
+on nightly) to Devino MinIO (bucket `gh-artifacts`, path
+`<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary; fork PRs skip
+the upload) and are reviewed by humans.
 
 **Naming contract** (snapvisor will key diffs on these paths — treat renames
 like fixture changes, not refactors):
@@ -310,7 +315,8 @@ by all Devino apps' automated tests; synthetic data only, never production).
 
 ## Debugging Playwright failures
 
-- Nightly uploads `playwright-report/` + `test-results/` artifacts on failure;
+- Nightly uploads `playwright-report/` + `test-results/` artifacts on failure
+  (to Devino MinIO `gh-artifacts`, linked from the job summary);
   locally, `pnpm --filter @useupup/e2e-test exec playwright show-report`.
 - Traces are `on-first-retry`; view with
   `pnpm --filter @useupup/e2e-test exec playwright show-trace <trace.zip>`.

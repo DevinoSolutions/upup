@@ -345,10 +345,11 @@ The e2e suites also freeze named product states as PNGs —
 settled, live regions masked). Naming contract
 `screenshots/<suite>/<framework>/<flow>--<state>.png` is what snapvisor.io
 (our Argos-style visual-diff service) will key on once its uploader lands in
-CI; until then the PNGs upload as workflow artifacts
-(`e2e-visual-screenshots` / `nightly-visual-screenshots`) on FAILURE only, with
-1-day retention — the org artifact quota was exhausted in October 2026 and a
-blocked upload fails its step, so a green-path upload would red a passing job.
+CI; until then the PNGs upload on FAILURE only, with 1-day retention, to
+Devino MinIO (bucket `gh-artifacts`, path `<owner>/<repo>/<run_id>/<name>.tgz`,
+linked from the job summary) — `e2e-visual-screenshots` /
+`nightly-visual-screenshots`. They no longer go to GitHub artifact storage (see
+the Artifacts note under CI); fork PRs get no OIDC token, so they skip the upload.
 No golden images are committed and there is no regen mode: baselines
 live server-side in snapvisor, so there is nothing here for the regen guards
 to protect. Every capture sits AFTER a real behavioral assertion — the
@@ -650,14 +651,23 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   design). **Dependabot** (`.github/dependabot.yml`) now proposes weekly,
   grouped dependency-update PRs against the workspace + `packages/*` +
   CI-action pins; majors are paused (F-189's deferred migration clusters).
-  Artifacts (T-7021, T-8322; the org Actions artifact quota was exhausted in
-  October 2026 and uploads are blocked until 2026-11-01): a blocked upload FAILS
-  its step, so no green path may upload. Jobs never pass files to each other
-  through artifacts (merge the jobs instead), reports go to `$GITHUB_STEP_SUMMARY`
-  (the Test job's per-package coverage lines, the nightly Lighthouse scores),
-  and every remaining `upload-artifact` step is `if: failure()` with
-  `retention-days` 2 or less (screenshot/evidence uploads 1). A new upload step
-  must follow all three; `continue-on-error` stays banned.
+  Artifacts (T-7021, T-8322, T-14188; the org's GitHub Actions artifact storage
+  was exhausted in October 2026 and is hard-blocked until the billing cycle
+  resets, so EVERY `actions/upload-artifact` step is rejected): workflows never
+  use `actions/upload-artifact` / `actions/download-artifact`. Uploads use the
+  org's drop-in `DevinoSolutions/artifact/upload` (pinned by SHA), which stores
+  the archive on Devino MinIO (storage.devino.ca, bucket `gh-artifacts`, path
+  `<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary) and
+  authenticates with the job's GitHub OIDC token. A new upload step must: sit in
+  a job whose own `permissions:` carry `id-token: write` (+ `contents: read` —
+  job-level permissions REPLACE the workflow's); be guarded with
+  `(github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)`
+  because fork PRs get no OIDC token (they skip the upload); stay `if: failure()`
+  with `retention-days` 2 or less (screenshot/evidence uploads 1; the action
+  rounds up to 1/3/5/7/14/30/90); and never use `continue-on-error` (banned).
+  Jobs never pass files to each other through artifacts (merge the jobs instead);
+  reports go to `$GITHUB_STEP_SUMMARY` (the Test job's per-package coverage lines,
+  the nightly Lighthouse scores).
   Both `main.yml` and `e2e.yml` carry a top-level `concurrency` group
   (`workflow-PR number or ref`, `cancel-in-progress: true`): a newer push
   cancels the superseded run. The rollups (`Status Check`, `E2E Status Check`,
@@ -743,7 +753,9 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   until 2026-10-02). It stops at the sign-in page — never automate a sign-in
   or consent — and Microsoft only validates redirect_uri after sign-in, so
   OneDrive's registration still needs a human run. Playwright traces/reports
-  upload as artifacts on failure. `docs/testing.md` is the testing deep-dive (layers,
+  upload on failure to Devino MinIO (bucket `gh-artifacts`, path
+  `<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary), not to
+  GitHub artifact storage. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
 - `indexnow.yml` — 03:47 UTC schedule + manual dispatch (`all` input resubmits
   everything), no install (T-5788): `scripts/ci/indexnow-submit.mjs` verifies the
