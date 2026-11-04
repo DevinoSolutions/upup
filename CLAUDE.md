@@ -347,7 +347,7 @@ settled, live regions masked). Naming contract
 (our Argos-style visual-diff service) will key on once its uploader lands in
 CI; until then the PNGs upload on FAILURE only, with 1-day retention, to
 Devino MinIO (bucket `gh-artifacts`, path `<owner>/<repo>/<run_id>/<name>.tgz`,
-linked from the job summary) — `e2e-visual-screenshots` /
+its s3:// location printed in the job summary) — `e2e-visual-screenshots` /
 `nightly-visual-screenshots`. They no longer go to GitHub artifact storage (see
 the Artifacts note under CI); fork PRs get no OIDC token, so they skip the upload.
 No golden images are committed and there is no regen mode: baselines
@@ -657,10 +657,12 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   use `actions/upload-artifact` / `actions/download-artifact`. Uploads use the
   org's drop-in `DevinoSolutions/artifact/upload` (pinned by SHA), which stores
   the archive on Devino MinIO (storage.devino.ca, bucket `gh-artifacts`, path
-  `<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary) and
+  `<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary) and
   authenticates with the job's GitHub OIDC token. A new upload step must: sit in
   a job whose own `permissions:` carry `id-token: write` (+ `contents: read` —
-  job-level permissions REPLACE the workflow's); be guarded with
+  job-level permissions REPLACE the workflow's; the workflow-level block stays
+  `contents: read` only, because the MinIO policy is org-wide and no non-uploading
+  job may mint an OIDC token); be guarded with
   `(github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)`
   because fork PRs get no OIDC token (they skip the upload); stay `if: failure()`
   with `retention-days` 2 or less (screenshot/evidence uploads 1; the action
@@ -754,7 +756,7 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   or consent — and Microsoft only validates redirect_uri after sign-in, so
   OneDrive's registration still needs a human run. Playwright traces/reports
   upload on failure to Devino MinIO (bucket `gh-artifacts`, path
-  `<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary), not to
+  `<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary), not to
   GitHub artifact storage. `docs/testing.md` is the testing deep-dive (layers,
   routing table, parity workflow, credentials policy).
 - `indexnow.yml` — 03:47 UTC schedule + manual dispatch (`all` input resubmits

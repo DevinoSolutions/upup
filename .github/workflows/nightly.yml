@@ -1,7 +1,9 @@
 name: Nightly
 
+# Workflow-wide: read-only. id-token: write is granted ONLY to the jobs that
+# upload to Devino MinIO (see their own permissions blocks): the MinIO policy
+# is org-wide, so no other job may be able to mint an OIDC token.
 permissions:
-    id-token: write
     contents: read
 
 # Deep suites too slow or too external for every PR: the full e2e gate plus
@@ -145,7 +147,7 @@ jobs:
             # billing cycle resets.
             - name: Upload visual product-state screenshots
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -154,7 +156,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-playwright-artifacts
                   path: |
@@ -477,7 +479,7 @@ jobs:
 
             - name: Upload Lighthouse reports
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-lighthouse-reports
                   path: |
@@ -601,7 +603,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && steps.creds.outputs.present == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
@@ -654,7 +656,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: live-drive-login-playwright-artifacts
                   path: |

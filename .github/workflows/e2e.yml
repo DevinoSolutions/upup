@@ -1,7 +1,9 @@
 name: E2E
 
+# Workflow-wide: read-only. id-token: write is granted ONLY to the jobs that
+# upload to Devino MinIO (see their own permissions blocks): the MinIO policy
+# is org-wide, so no other job may be able to mint an OIDC token.
 permissions:
-    id-token: write
     contents: read
 
 on:
@@ -179,7 +181,7 @@ jobs:
             # Visual layer: the suites freeze named product states as PNGs
             # (apps/e2e-test/visual/product-state-screenshots.ts). Uploaded on
             # FAILURE only, to Devino MinIO (DevinoSolutions/artifact/upload,
-            # bucket gh-artifacts, linked from the job summary) — the org's
+            # bucket gh-artifacts, its s3:// location printed in the job summary) — the org's
             # GitHub artifact storage is blocked until its billing cycle
             # resets, so actions/upload-artifact is not used anywhere. The
             # upload authenticates with the job's OIDC token, which fork PRs do
@@ -189,7 +191,7 @@ jobs:
             # captured nothing, which means the capture layer itself broke.
             - name: Upload visual product-state screenshots
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: e2e-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -198,7 +200,7 @@ jobs:
 
             - name: Upload Playwright traces and reports
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: e2e-playwright-artifacts
                   path: |
@@ -394,7 +396,7 @@ jobs:
 
             - name: Upload Playwright report
               if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
-              uses: DevinoSolutions/artifact/upload@44df16680dcb504375db03d284d75808db18e4ed # v1.2.1
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: docs-e2e-playwright-artifacts
                   path: |

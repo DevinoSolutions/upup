@@ -109,12 +109,14 @@ The E2E job uploads two artifacts, both on failure only: `e2e-visual-screenshots
 (the visual layer's PNGs, see "Visual screenshots" below; 1-day retention) and
 `e2e-playwright-artifacts` (traces + reports). They are stored on Devino MinIO via
 `DevinoSolutions/artifact/upload` (bucket `gh-artifacts`, path
-`<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary), not on GitHub:
+`<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary; fetch it with `mc` or
+minio-console.devino.ca), not on GitHub:
 the org's GitHub artifact storage is hard-blocked until the billing cycle resets.
 The upload authenticates with the job's OIDC token, which fork PRs do not get, so
 fork PRs skip it. Jobs never pass files to each other through artifacts either
-(Build runs size-limit and the snippet typecheck itself) and every upload keeps
-its files at most 2 days (the action rounds up to 1/3/5/7/14/30/90).
+(Build runs size-limit and the snippet typecheck itself) and every upload sets
+`retention-days` 2 or less (the action rounds up to 1/3/5/7/14/30/90, so a 2 is
+stored for 3 days).
 
 **Nightly (nightly.yml, 03:17 UTC + manual):** full e2e + MinIO suites +
 a11y/overflow sweep (with `nightly-visual-screenshots` and the Playwright trace/report
@@ -169,7 +171,8 @@ the DOM parity harness, and the input for **snapvisor.io** — our Argos-style
 visual-diff service — once its uploader is wired into CI. Until then the PNGs
 ship on failure only (`e2e-visual-screenshots` on PRs, `nightly-visual-screenshots`
 on nightly) to Devino MinIO (bucket `gh-artifacts`, path
-`<owner>/<repo>/<run_id>/<name>.tgz`, linked from the job summary; fork PRs skip
+`<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary; fetch it with `mc` or
+minio-console.devino.ca; fork PRs skip
 the upload) and are reviewed by humans.
 
 **Naming contract** (snapvisor will key diffs on these paths — treat renames
@@ -316,7 +319,8 @@ by all Devino apps' automated tests; synthetic data only, never production).
 ## Debugging Playwright failures
 
 - Nightly uploads `playwright-report/` + `test-results/` artifacts on failure
-  (to Devino MinIO `gh-artifacts`, linked from the job summary);
+  (to Devino MinIO `gh-artifacts`, its s3:// location printed in the job summary; fetch it with `mc` or
+  minio-console.devino.ca);
   locally, `pnpm --filter @useupup/e2e-test exec playwright show-report`.
 - Traces are `on-first-retry`; view with
   `pnpm --filter @useupup/e2e-test exec playwright show-trace <trace.zip>`.
