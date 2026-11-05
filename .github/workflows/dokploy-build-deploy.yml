@@ -53,7 +53,7 @@
 name: Build and deploy the site to Dokploy
 on:
     push:
-        branches: [dev, master] # dev deploys the dev compose, master the production compose
+        branches: [dev, master, ci/gha-build-once-by-digest] # PROOF-ONLY entry, removed again # dev deploys the dev compose, master the production compose
     workflow_dispatch:
         inputs:
             mirror_only:
