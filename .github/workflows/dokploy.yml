@@ -39,7 +39,7 @@
 name: Dokploy
 on:
     push:
-        branches: [dev, master, ci/gha-build-once-by-digest]
+        branches: [dev, master]
     pull_request:
         branches: [dev, master]
     workflow_dispatch:
@@ -54,7 +54,7 @@ jobs:
     build:
         name: build ${{ matrix.service }}
         # dev and master (push, or a manual run on one of them), and same-repository pull requests. Anything else stops here.
-        if: ${{ github.ref == 'refs/heads/master' || (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/ci/gha-build-once-by-digest') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
         runs-on: ubuntu-latest
         timeout-minutes: 60
         # No `environment:` here on purpose: it would create a GitHub Deployment per build leg.
@@ -186,7 +186,7 @@ jobs:
         name: publish the Dokploy release
         needs: build
         # dev and master only (push or a manual run). A pull request stops after the build check.
-        if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/ci/gha-build-once-by-digest')) }}
+        if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         # The only job with an environment: its deployment branch policy gates the release and Dokploy re-reads that policy.
