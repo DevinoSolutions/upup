@@ -180,7 +180,7 @@ jobs:
                   code=000
                   for attempt in 1 2 3; do
                     token="$(curl -fsS "https://ghcr.io/token?scope=repository:devinosolutions/upup-${SERVICE}:pull" | jq -r '.token // empty' || true)"
-                    code="$(curl -s -o /dev/null -w '%{http_code}' -I -H "Authorization: Bearer ${token}" \n                      -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json' \n                      "https://ghcr.io/v2/devinosolutions/upup-${SERVICE}/manifests/${DIGEST}" || true)"
+                    code="$(curl -s -o /dev/null -w '%{http_code}' -I -H "Authorization: Bearer ${token}" -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json' "https://ghcr.io/v2/devinosolutions/upup-${SERVICE}/manifests/${DIGEST}" || true)"
                     [ "${code}" = 200 ] && break
                     sleep $((attempt * 5))
                   done
