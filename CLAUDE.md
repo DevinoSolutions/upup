@@ -707,7 +707,8 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   no Dokploy address, no API key and no registry secret. UpUp is PUBLIC and the
   org's self-hosted runner group refuses public repos, which is why nothing
   here needs the private network. Any other branch can only be run by hand
-  (workflow_dispatch) and only builds. There is no pull_request trigger (a
+  (workflow_dispatch) and only builds, and GitHub refuses that until the branch
+  is added to the `development` environment's branch policy. There is no pull_request trigger (a
   fork's pull request must never reach a registry push). The `NEXT_PUBLIC_*`
   build args are per-environment VARIABLES (all public client values;
   `NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy Environment
