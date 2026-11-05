@@ -8,8 +8,8 @@
 # ONE FILE FOR EVERY BRANCH. The branch decides the target:
 #   master          -> GitHub Environment `production`  -> Dokploy compose "UpupProdSite"  (release key `upup`)
 #   dev             -> GitHub Environment `development` -> Dokploy compose "UpupSite"      (release key `upup-dev`)
-#   pull request    -> build check only: the three images are built with push: false (a broken Dockerfile fails on the PR), nothing is
-#                      pushed or released. Same-repository pull requests only: a fork's pull request never gets a build here.
+#   pull request    -> the `check` job: the three images are built with push: false and a read-only token (a broken Dockerfile fails
+#                      on the PR), nothing is pushed or released. Same-repository pull requests only: a fork's never gets a build here.
 # Any other branch has no trigger. The repository's own CI (main.yml, e2e.yml) covers the rest of a pull request.
 #
 # WHY HOSTED RUNNERS. UpUp is PUBLIC; the organisation's self-hosted runner group refuses public repositories. Nothing here needs the
@@ -53,8 +53,8 @@ permissions:
 jobs:
     build:
         name: build ${{ matrix.service }}
-        # dev and master (push, or a manual run on one of them), and same-repository pull requests. Anything else stops here.
-        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) }}
+        # dev and master only (push, or a manual run on one of them). The pull request check is the `check` job below.
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         runs-on: ubuntu-latest
         timeout-minutes: 60
         # No `environment:` here on purpose: it would create a GitHub Deployment per build leg.
@@ -83,7 +83,7 @@ jobs:
                           NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID NEXT_PUBLIC_GOOGLE_API_KEY NEXT_PUBLIC_GOOGLE_APP_ID
                           NEXT_PUBLIC_ONEDRIVE_CLIENT_ID NEXT_PUBLIC_DROPBOX_CLIENT_ID NEXT_PUBLIC_BOX_CLIENT_ID
                           NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT NEXT_PUBLIC_UPUP_USE_REAL_STORAGE
-        # Named per service (a leg sets only its own), read back by the release job. Empty on a pull request.
+        # Named per service (a leg sets only its own), read back by the release job.
         outputs:
             digest_landing: ${{ steps.verify.outputs.digest_landing }}
             digest_mastra: ${{ steps.verify.outputs.digest_mastra }}
@@ -126,12 +126,11 @@ jobs:
                   echo "tag=${tag}-${GITHUB_SHA:0:12}" >> "${GITHUB_OUTPUT}"
             - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
             - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
-              if: ${{ github.event_name != 'pull_request' }}
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Build ${{ matrix.service }} (push only outside a pull request)
+            - name: Build once and push ${{ matrix.service }}
               id: build
               uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
               env:
@@ -142,7 +141,7 @@ jobs:
                   context: .
                   file: ${{ matrix.dockerfile }}
                   platforms: linux/amd64
-                  push: ${{ github.event_name != 'pull_request' }}
+                  push: true
                   tags: ghcr.io/devinosolutions/upup-${{ matrix.service }}:${{ steps.args.outputs.tag }}
                   build-args: ${{ steps.args.outputs.build-args }}
                   provenance: false
@@ -151,10 +150,9 @@ jobs:
                       org.opencontainers.image.source=https://github.com/${{ github.repository }}
                       org.opencontainers.image.revision=${{ github.sha }}
                   cache-from: type=gha,scope=upup-${{ matrix.service }}
-                  cache-to: ${{ github.event_name != 'pull_request' && format('type=gha,mode=min,scope=upup-{0}', matrix.service) || '' }}
+                  cache-to: type=gha,mode=min,scope=upup-${{ matrix.service }}
             - name: Check that GHCR serves the pushed digest
               id: verify
-              if: ${{ github.event_name != 'pull_request' }}
               env:
                   SERVICE: ${{ matrix.service }}
                   DIGEST: ${{ steps.build.outputs.digest }}
@@ -182,11 +180,81 @@ jobs:
                   echo "digest_${SERVICE}=${DIGEST}" >> "${GITHUB_OUTPUT}"
                   echo "- \`${ref}\`" >> "${GITHUB_STEP_SUMMARY}"
 
+    check:
+        name: check ${{ matrix.service }}
+        # Pull request check: same-repository pull requests only, read-only token (no packages: write, no registry login, nothing pushed).
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        permissions:
+            contents: read
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    # Same build_args as the build job above.
+                    - service: landing
+                      dockerfile: deploy/site/Dockerfile.landing
+                      build_args: >-
+                          NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID NEXT_PUBLIC_GOOGLE_API_KEY NEXT_PUBLIC_GOOGLE_APP_ID
+                          NEXT_PUBLIC_ONEDRIVE_CLIENT_ID NEXT_PUBLIC_DROPBOX_CLIENT_ID NEXT_PUBLIC_BOX_CLIENT_ID
+                          NEXT_PUBLIC_GOOGLE_ANALYTICS_ID NEXT_PUBLIC_POSTHOG_KEY NEXT_PUBLIC_POSTHOG_HOST NEXT_PUBLIC_POSTHOG_DATASET
+                          NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN
+                          NEXT_PUBLIC_MASTRA_BASE_URL NEXT_PUBLIC_SENTRY_DSN
+                    - service: mastra
+                      dockerfile: deploy/site/Dockerfile.mastra
+                      build_args: ''
+                    - service: playground
+                      dockerfile: deploy/site/Dockerfile.playground
+                      build_args: >-
+                          NEXT_PUBLIC_BASE_URL NEXT_PUBLIC_GOOGLE_CLIENT_ID NEXT_PUBLIC_GOOGLE_API_KEY NEXT_PUBLIC_GOOGLE_APP_ID
+                          NEXT_PUBLIC_ONEDRIVE_CLIENT_ID NEXT_PUBLIC_DROPBOX_CLIENT_ID NEXT_PUBLIC_BOX_CLIENT_ID
+                          NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT NEXT_PUBLIC_UPUP_USE_REAL_STORAGE
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - name: Collect the build arguments
+              id: args
+              env:
+                  NAMES: ${{ matrix.build_args }}
+                  # The DEV_* repository variables (public client values). The values do not matter for the check, only that the image builds.
+                  VARS_JSON: ${{ toJSON(vars) }}
+              run: |
+                  set -euo pipefail
+                  {
+                    echo 'build-args<<EOF_BUILD_ARGS'
+                    for name in ${NAMES}; do
+                      value="$(printf '%s' "${VARS_JSON}" | jq -r --arg key "DEV_${name}" '.[$key] // ""')"
+                      case "${value}" in *$'\n'*|*$'\r'*) echo "::error::variable DEV_${name} is not a single line" >&2; exit 1 ;; esac
+                      if [ "${name}" = "NEXT_PUBLIC_BASE_URL" ] && [ -z "${value}" ]; then
+                        echo "::error::the repository variable DEV_NEXT_PUBLIC_BASE_URL is not defined" >&2; exit 1
+                      fi
+                      echo "${name}=${value}"
+                    done
+                    echo 'EOF_BUILD_ARGS'
+                  } >> "${GITHUB_OUTPUT}"
+            - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+            - name: Build ${{ matrix.service }} without pushing
+              uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+              env:
+                  DOCKER_BUILD_RECORD_UPLOAD: false
+                  DOCKER_BUILD_SUMMARY: false
+              with:
+                  context: .
+                  file: ${{ matrix.dockerfile }}
+                  platforms: linux/amd64
+                  push: false
+                  build-args: ${{ steps.args.outputs.build-args }}
+                  provenance: false
+                  sbom: false
+                  cache-from: type=gha,scope=upup-${{ matrix.service }}
+
     release:
         name: publish the Dokploy release
         needs: build
-        # dev and master only (push or a manual run). A pull request stops after the build check.
-        if: ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
+        # dev and master only (push or a manual run).
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         # The only job with an environment: its deployment branch policy gates the release and Dokploy re-reads that policy.
