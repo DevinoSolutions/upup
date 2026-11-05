@@ -769,27 +769,29 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   suite in `test:scripts` fails if either line changes shape. Any key, sitemap
   or non-200/202 problem fails the run. Preview locally with
   `node scripts/ci/indexnow-submit.mjs --dry-run` (add `--all`).
-- `dokploy-build-deploy.yml` — the site's build-once, deploy-by-digest path.
-  A caller of the org's shared `DevinoSolutions/.github` `dokploy-compose.yml`
-  (pinned to a full commit sha). On a push to `dev` (GitHub Environment
-  `development`, Dokploy compose "UpupSite") or `master` (Environment
-  `production`, compose "UpupProdSite") it builds `deploy/site/docker-compose.yml`'s
-  three images (landing, mastra, playground) ONCE in Actions, copies them by
-  digest to our own registry and hands Dokploy a digest-pinned RAW compose, so
-  Dokploy never builds UpUp from source and shows a live "GitHub Actions" row.
-  Any other branch can only be run by hand (workflow_dispatch) and only builds.
-  Every job runs on GitHub-hosted `ubuntu-latest`: UpUp is PUBLIC and the org's
-  self-hosted runner group refuses public repos. There is no pull_request
-  trigger (the shared workflow pushes to ghcr, which a fork token cannot do).
-  The repository variable `UPUP_DIGEST_SERVICES` (`dev`, `prod`, both, or
-  empty) is the kill switch: empty = build only, Dokploy untouched. The
-  `NEXT_PUBLIC_*` build args are per-environment VARIABLES (all public client
-  values; `NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy
-  Environment tab, change it in the matching GitHub Environment too, or the
-  next build keeps the old value. Runtime secrets stay in Dokploy. Secrets per
-  environment: `CI_REGISTRY_PASSWORD`, `CI_REGISTRY_TUNNEL_KEY`,
-  `DOKPLOY_API_KEY`. The compose file is unchanged and still builds locally
-  with `docker compose up --build`. Header of the workflow = the runbook.
+- `dokploy.yml` — the site's build-once path for Dokploy (pull mode). On a push
+  to `dev` (GitHub Environment `development`, Dokploy compose "UpupSite",
+  release key `upup-dev`) or `master` (Environment `production`, compose
+  "UpupProdSite", key `upup`) it builds `deploy/site/docker-compose.yml`'s three
+  images (landing, mastra, playground) ONCE on GitHub-hosted `ubuntu-latest`,
+  pushes them to GHCR by digest (`ghcr.io/devinosolutions/upup-<service>`,
+  tagged `<prod|dev>-<sha12>`; the packages must be PUBLIC so Dokploy pulls
+  without a credential) and publishes a release with the public action
+  `DevinoSolutions/dokploy-release` (run artifact + one GitHub Deployment).
+  Dokploy polls GitHub outbound-only and deploys the digests; this repo holds
+  no Dokploy address, no API key and no registry secret. UpUp is PUBLIC and the
+  org's self-hosted runner group refuses public repos, which is why nothing
+  here needs the private network. Any other branch can only be run by hand
+  (workflow_dispatch) and only builds. There is no pull_request trigger (a
+  fork's pull request must never reach a registry push). The `NEXT_PUBLIC_*`
+  build args are per-environment VARIABLES (all public client values;
+  `NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy Environment
+  tab, change it in the matching GitHub Environment too, or the next build
+  keeps the old value. Runtime secrets stay in Dokploy. Environments restrict
+  deployment branches (production: master, development: dev); Dokploy
+  re-reads that policy at every release. The compose file is unchanged and
+  still builds locally with `docker compose up --build`. A release is ignored
+  until a Dokploy "GitHub Actions" Connect exists for its key.
 - `publish.yml` — push to master: changesets release PR, then (when packages
   need publishing) a pre-publish gate — typecheck, unit suites, build, size,
   `smoke:packages` — before `pnpm run release` (`changeset publish`, which

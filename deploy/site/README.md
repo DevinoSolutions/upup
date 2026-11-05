@@ -15,15 +15,15 @@ ports over its own network. Each service `expose`s its port for clarity.
 
 ## Deploying
 
-Dokploy does not build this stack. `.github/workflows/dokploy-build-deploy.yml`
-builds the three images ONCE per commit in GitHub Actions (landing and
-playground with the `NEXT_PUBLIC_*` variables of the branch's GitHub
-Environment: `development` for `dev`, `production` for `master`), copies them by
-digest to our own registry and hands Dokploy a digest-pinned raw copy of this
-compose file (`build:` replaced by `image: <registry>@sha256:<digest>`, nothing
-else changed). Dokploy shows a live "GitHub Actions" row for each deploy. The
-file in this directory keeps its `build:` blocks, so a local
-`docker compose up --build` still works.
+Dokploy does not build this stack. `.github/workflows/dokploy.yml` builds the
+three images ONCE per commit on GitHub Actions (landing and playground with the
+`NEXT_PUBLIC_*` variables of the branch's GitHub Environment: `development` for
+`dev`, `production` for `master`), pushes them to GHCR by digest
+(`ghcr.io/devinosolutions/upup-landing`, `-mastra`, `-playground`) and publishes a
+release (key `upup-dev` for dev, `upup` for master). Dokploy polls GitHub,
+verifies the release against the run and deploys those digests. The file in
+this directory keeps its `build:` blocks, so a local `docker compose up --build`
+still works.
 
 The runtime `.env` (secrets and the `NEXT_PUBLIC_*` values) is still the
 Dokploy Environment tab. When a `NEXT_PUBLIC_*` value changes there, change the
