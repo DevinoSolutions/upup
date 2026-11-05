@@ -35,7 +35,7 @@
 name: Dokploy
 on:
     push:
-        branches: [dev, master, ci/gha-build-once-by-digest] # PROOF-ONLY
+        branches: [dev, master]
     workflow_dispatch:
 concurrency:
     # One run per ref; a newer push waits behind the running one. Never cancel a run in progress: it may be publishing a release.
@@ -181,7 +181,7 @@ jobs:
         name: publish the Dokploy release
         needs: build
         # dev and master only. A manual run of any other branch stops after the build.
-        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/ci/gha-build-once-by-digest' }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         environment: ${{ github.ref == 'refs/heads/master' && 'production' || 'development' }}
