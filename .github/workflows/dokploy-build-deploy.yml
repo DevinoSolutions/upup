@@ -17,7 +17,11 @@
 #
 # RUNNERS. This repository is PUBLIC, and the organisation's self-hosted runner group refuses public repositories (a fork pull request
 # could otherwise run code on our machines), so every job here runs on GitHub-hosted `ubuntu-latest`. The deploy job still has to reach
-# the registry host and Dokploy, which are on the private network: see `deploy-runner` below.
+# the registry host and Dokploy, which are on the private network, so on hosted runners the build legs and the deploy job join the
+# tailnet first (an ephemeral Tailscale node tagged tag:ci-hosted, allowed to reach devino-first on tcp 22 and 443 only). Setting the
+# repository variable UPUP_RUNNER to ubuntu-devino switches the whole workflow to the self-hosted runners instead (no tailnet step).
+# NOTE: the `tailscale` and `registry-host` inputs below exist from the DevinoSolutions/.github change that adds them; bump the pin to
+# that merge commit before this file is merged.
 #
 # docker-compose.yml under deploy/site is NOT changed: it keeps its `build:` blocks, so `docker compose -f deploy/site/docker-compose.yml
 # up --build` still works. The shared workflow renders a copy with `build:` replaced by `image: <mirror>@sha256:<digest>` at deploy time
@@ -38,9 +42,10 @@
 # (POSTHOG_E2E_TEST_PROJECT_ID), and GitHub masks every secret value it knows inside a job's outputs, which turns "sha256:..." into a
 # masked output and drops the digests.
 #
-# Repository variables: DOKPLOY_URL, DOKPLOY_CURL_RESOLVE, DOKPLOY_COMPOSE_ID_DEV, DOKPLOY_COMPOSE_ID_PROD, UPUP_DIGEST_SERVICES.
+# Repository variables: DOKPLOY_URL, DOKPLOY_CURL_RESOLVE, DOKPLOY_COMPOSE_ID_DEV, DOKPLOY_COMPOSE_ID_PROD, UPUP_DIGEST_SERVICES, UPUP_RUNNER (optional).
 # Environment variables (production and development, each): the NEXT_PUBLIC_* build values.
-# Environment secrets (production and development, each): CI_REGISTRY_PASSWORD, CI_REGISTRY_TUNNEL_KEY, DOKPLOY_API_KEY.
+# Environment secrets (production and development, each): CI_REGISTRY_PASSWORD, CI_REGISTRY_TUNNEL_KEY, DOKPLOY_API_KEY, and on the
+# hosted path TS_OAUTH_CLIENT_ID and TS_OAUTH_SECRET.
 #
 # Manual run (workflow_dispatch): `mirror_only` builds, mirrors the images to our registry and renders the compose without contacting
 # Dokploy (the proof run of a new setup); `dry_run` plans against Dokploy and changes nothing; `confirm_reconciled` is for the FIRST deploy
@@ -112,10 +117,17 @@ jobs:
             mirror-only: ${{ github.event_name == 'workflow_dispatch' && inputs.mirror_only }}
             dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
             confirm-reconciled: ${{ github.event_name == 'workflow_dispatch' && inputs.confirm_reconciled }}
-            # GitHub-hosted runners (see RUNNERS above).
-            build-runner: ubuntu-latest
-            deploy-runner: ubuntu-latest
+            # THE ONE SWITCH between the two network paths (see RUNNERS above): the repository variable UPUP_RUNNER.
+            #   unset or ubuntu-latest  GitHub-hosted runners that join the tailnet (ephemeral Tailscale node) to reach devino-first
+            #   ubuntu-devino           the org's self-hosted runners on the private network (needs the runner group to allow this repo)
+            build-runner: ${{ vars.UPUP_RUNNER || 'ubuntu-latest' }}
+            deploy-runner: ${{ vars.UPUP_RUNNER || 'ubuntu-latest' }}
+            tailscale: ${{ (vars.UPUP_RUNNER || 'ubuntu-latest') == 'ubuntu-latest' }}
+            registry-host: ${{ (vars.UPUP_RUNNER || 'ubuntu-latest') == 'ubuntu-latest' && '100.109.21.40' || '192.168.2.16' }}
         secrets:
             CI_REGISTRY_PASSWORD: ${{ secrets.CI_REGISTRY_PASSWORD }}
             CI_REGISTRY_TUNNEL_KEY: ${{ secrets.CI_REGISTRY_TUNNEL_KEY }}
             DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+            # Only read when tailscale is true (the hosted path); empty on the self-hosted path.
+            TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+            TS_OAUTH_SECRET: ${{ secrets.TS_OAUTH_SECRET }}
