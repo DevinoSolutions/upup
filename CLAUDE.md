@@ -777,19 +777,23 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   pushes them to GHCR by digest (`ghcr.io/devinosolutions/upup-<service>`,
   tagged `<prod|dev>-<sha12>`; the packages must be PUBLIC so Dokploy pulls
   without a credential) and publishes a release with the public action
-  `DevinoSolutions/dokploy-release` (run artifact + one GitHub Deployment).
+  `DevinoSolutions/dokploy-release` (pinned by sha, `upload-artifact: false`).
+  **The Dokploy release manifest is read from the release job's log, there is no
+  artifact** (the no-`actions/upload-artifact` rule above holds here too).
   Dokploy polls GitHub outbound-only and deploys the digests; this repo holds
   no Dokploy address, no API key and no registry secret. UpUp is PUBLIC and the
   org's self-hosted runner group refuses public repos, which is why nothing
-  here needs the private network. Any other branch can only be run by hand
-  (workflow_dispatch) and only builds, and GitHub refuses that until the branch
-  is added to the `development` environment's branch policy. There is no pull_request trigger (a
-  fork's pull request must never reach a registry push). The `NEXT_PUBLIC_*`
-  build args are per-environment VARIABLES (all public client values;
-  `NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy Environment
-  tab, change it in the matching GitHub Environment too, or the next build
-  keeps the old value. Runtime secrets stay in Dokploy. Environments restrict
-  deployment branches (production: master, development: dev); Dokploy
+  here needs the private network. A same-repository pull request to `dev` or
+  `master` runs the same three builds with `push: false` (a broken Dockerfile
+  fails on the PR; nothing is pushed or released); a fork's pull request gets
+  no build. Only the release job names a GitHub Environment (the build legs do
+  not, which would add three Deployments per run). The `NEXT_PUBLIC_*` build
+  args are repository VARIABLES `PROD_NEXT_PUBLIC_*` (master) and
+  `DEV_NEXT_PUBLIC_*` (everything else), all public client values
+  (`NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy
+  Environment tab, change the matching `PROD_`/`DEV_` variable too, or the next
+  build keeps the old value. Runtime secrets stay in Dokploy. Environments
+  restrict deployment branches (production: master, development: dev); Dokploy
   re-reads that policy at every release. The compose file is unchanged and
   still builds locally with `docker compose up --build`. A release is ignored
   until a Dokploy "GitHub Actions" Connect exists for its key.
