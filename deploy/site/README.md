@@ -15,20 +15,35 @@ ports over its own network. Each service `expose`s its port for clarity.
 
 ## Deploying
 
-Dokploy does not build this stack. `.github/workflows/dokploy.yml` builds the
-three images ONCE per commit on GitHub Actions (landing and playground with the
-`NEXT_PUBLIC_*` variables of the branch's GitHub Environment: `development` for
-`dev`, `production` for `master`), pushes them to GHCR by digest
-(`ghcr.io/devinosolutions/upup-landing`, `-mastra`, `-playground`) and publishes a
-release (key `upup-dev` for dev, `upup` for master). Dokploy polls GitHub,
-verifies the release against the run and deploys those digests. The file in
-this directory keeps its `build:` blocks, so a local `docker compose up --build`
+`.github/workflows/dokploy.yml` builds the three images ONCE per commit on
+GitHub Actions and pushes them to GHCR by digest
+(`ghcr.io/devinosolutions/upup-landing`, `-mastra`, `-playground`, public
+packages). On `dev` it publishes the release `upup-dev` (GitHub Environment
+`development`), on `master` the release `upup` (Environment `production`). The
+release manifest is read from the release job log (no artifact is uploaded).
+A same-repository pull request to `dev` or `master` builds the three images
+with `push: false`, so a broken Dockerfile fails on the PR. The file in this
+directory keeps its `build:` blocks, so a local `docker compose up --build`
 still works.
 
+**Target state, once the Dokploy "GitHub Actions" Connect exists for the
+compose: Dokploy does not build this stack.** It polls GitHub, verifies the
+release against the run and deploys those digests, with the compose pinned to
+them (raw compose, no git source). Until the Connect exists a release is
+published and ignored, and Dokploy still builds from source as before.
+
+**Cutover step (first release, per compose):** turn off the compose git
+auto-deploy in Dokploy BEFORE merging the workflow to its branch. Otherwise the
+push triggers a source build and the GitHub Actions release at the same time,
+and the two deploys race.
+
 The runtime `.env` (secrets and the `NEXT_PUBLIC_*` values) is still the
-Dokploy Environment tab. When a `NEXT_PUBLIC_*` value changes there, change the
-same variable of the matching GitHub Environment too, or the next build keeps
-the old value. `${VAR}` interpolation of the runtime values works as before.
+Dokploy Environment tab. The build-time `NEXT_PUBLIC_*` values live in the
+repository variables `DEV_NEXT_PUBLIC_*` (dev and pull requests) and
+`PROD_NEXT_PUBLIC_*` (master). When a `NEXT_PUBLIC_*` value changes in the
+Dokploy tab, change the same `DEV_`/`PROD_` variable too, or the next build
+keeps the old value. `${VAR}` interpolation of the runtime values works as
+before.
 
 Runtime secrets use **bare list-form passthrough** (`- VAR`, no `=`): a var set
 in the `.env` file reaches the container, and an **unset** var stays **unset**
