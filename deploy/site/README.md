@@ -32,10 +32,12 @@ release against the run and deploys those digests, with the compose pinned to
 them (raw compose, no git source). Until the Connect exists a release is
 published and ignored, and Dokploy still builds from source as before.
 
-**Cutover step (first release, per compose):** turn off the compose git
-auto-deploy in Dokploy BEFORE merging the workflow to its branch. Otherwise the
-push triggers a source build and the GitHub Actions release at the same time,
-and the two deploys race.
+**Cutover order (first release, per compose): create the Connect for the key,
+then turn off the compose git auto-deploy, then merge.** The Connect must exist
+first: with auto-deploy off and no Connect, nothing deploys and the compose
+silently stays on its old image. Auto-deploy must be off before the merge: the
+push would otherwise trigger a source build and the GitHub Actions release at
+the same time, and the two deploys race.
 
 The runtime `.env` (secrets and the `NEXT_PUBLIC_*` values) is still the
 Dokploy Environment tab. The build-time `NEXT_PUBLIC_*` values live in the
