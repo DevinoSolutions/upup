@@ -15,9 +15,37 @@ ports over its own network. Each service `expose`s its port for clarity.
 
 ## Deploying
 
-Dokploy clones the repo fresh and runs this compose file with a `.env` file
-placed **next to this compose file**. `${VAR}` interpolation fills the
-build-time `NEXT_PUBLIC_*` args from that file.
+`.github/workflows/dokploy.yml` builds the three images ONCE per commit on
+GitHub Actions and pushes them to GHCR by digest
+(`ghcr.io/devinosolutions/upup/landing`, `/mastra`, `/playground`, public
+packages). On `dev` it publishes the release `upup-dev` (GitHub Environment
+`development`), on `master` the release `upup` (Environment `production`). The
+release manifest is read from the release job log (no artifact is uploaded).
+A same-repository pull request to `dev` or `master` builds the three images
+with `push: false`, so a broken Dockerfile fails on the PR. The file in this
+directory keeps its `build:` blocks, so a local `docker compose up --build`
+still works.
+
+**Target state, once the Dokploy "GitHub Actions" Connect exists for the
+compose: Dokploy does not build this stack.** It polls GitHub, verifies the
+release against the run and deploys those digests, with the compose pinned to
+them (raw compose, no git source). Until the Connect exists a release is
+published and ignored, and Dokploy still builds from source as before.
+
+**Cutover order (first release, per compose): create the Connect for the key,
+then turn off the compose git auto-deploy, then merge.** The Connect must exist
+first: with auto-deploy off and no Connect, nothing deploys and the compose
+silently stays on its old image. Auto-deploy must be off before the merge: the
+push would otherwise trigger a source build and the GitHub Actions release at
+the same time, and the two deploys race.
+
+The runtime `.env` (secrets and the `NEXT_PUBLIC_*` values) is still the
+Dokploy Environment tab. The build-time `NEXT_PUBLIC_*` values live in the
+repository variables `DEV_NEXT_PUBLIC_*` (dev and pull requests) and
+`PROD_NEXT_PUBLIC_*` (master). When a `NEXT_PUBLIC_*` value changes in the
+Dokploy tab, change the same `DEV_`/`PROD_` variable too, or the next build
+keeps the old value. `${VAR}` interpolation of the runtime values works as
+before.
 
 Runtime secrets use **bare list-form passthrough** (`- VAR`, no `=`): a var set
 in the `.env` file reaches the container, and an **unset** var stays **unset**
