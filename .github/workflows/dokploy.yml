@@ -39,9 +39,9 @@
 name: Dokploy
 on:
     push:
-        branches: [dev, master, ci/gha-build-once-by-digest]
+        branches: [dev, master]
     pull_request:
-        branches: [dev, master, ci/gha-build-once-by-digest]
+        branches: [dev, master]
     workflow_dispatch:
 concurrency:
     # One run per ref; a newer push waits behind the running one. Never cancel a run that may be publishing a release; a superseded
@@ -54,7 +54,7 @@ jobs:
     build:
         name: build ${{ matrix.service }}
         # dev and master only (push, or a manual run on one of them). The pull request check is the `check` job below.
-        if: ${{ github.ref == 'refs/heads/master' || (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/ci/gha-build-once-by-digest') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         runs-on: ubuntu-latest
         timeout-minutes: 60
         # No `environment:` here on purpose: it would create a GitHub Deployment per build leg.
@@ -254,7 +254,7 @@ jobs:
         name: publish the Dokploy release
         needs: build
         # dev and master only (push or a manual run).
-        if: ${{ github.ref == 'refs/heads/master' || (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/ci/gha-build-once-by-digest') }}
+        if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' }}
         runs-on: ubuntu-latest
         timeout-minutes: 10
         # The only job with an environment: its deployment branch policy gates the release and Dokploy re-reads that policy.
