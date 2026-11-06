@@ -774,7 +774,7 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   release key `upup-dev`) or `master` (Environment `production`, compose
   "UpupProdSite", key `upup`) it builds `deploy/site/docker-compose.yml`'s three
   images (landing, mastra, playground) ONCE on GitHub-hosted `ubuntu-latest`,
-  pushes them to GHCR by digest (`ghcr.io/devinosolutions/upup-<service>`,
+  pushes them to GHCR by digest (`ghcr.io/devinosolutions/upup/<service>`,
   tagged `<prod|dev>-<sha12>`; the packages must be PUBLIC so Dokploy pulls
   without a credential) and publishes a release with the public action
   `DevinoSolutions/dokploy-release` (pinned by sha, `upload-artifact: false`).
