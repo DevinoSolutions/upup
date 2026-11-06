@@ -16,7 +16,7 @@
 # private network: the images go to GHCR (public packages, so Dokploy pulls without a credential) and the release is a GitHub
 # Deployment plus a manifest line in the release job's log that Dokploy reads itself.
 #
-# THE IMAGES. ghcr.io/devinosolutions/upup-landing, upup-mastra and upup-playground, tagged <prod|dev>-<first 12 of the sha>. landing and
+# THE IMAGES. ghcr.io/devinosolutions/upup/landing, upup/mastra and upup/playground (the repository name is the namespace Dokploy accepts: ghcr.io/<owner>/<repo>/), tagged <prod|dev>-<first 12 of the sha>. landing and
 # playground inline their NEXT_PUBLIC_* values at build time, so dev and prod are DIFFERENT images of the same commit. The values are
 # public client values (they ship in the browser bundle), which is why they are repository VARIABLES and not secrets: PROD_NEXT_PUBLIC_*
 # for master and DEV_NEXT_PUBLIC_* for everything else. They are repository variables, not GitHub Environment variables, because a job
@@ -142,7 +142,7 @@ jobs:
                   file: ${{ matrix.dockerfile }}
                   platforms: linux/amd64
                   push: true
-                  tags: ghcr.io/devinosolutions/upup-${{ matrix.service }}:${{ steps.args.outputs.tag }}
+                  tags: ghcr.io/devinosolutions/upup/${{ matrix.service }}:${{ steps.args.outputs.tag }}
                   build-args: ${{ steps.args.outputs.build-args }}
                   provenance: false
                   sbom: false
@@ -159,7 +159,7 @@ jobs:
               run: |
                   set -euo pipefail
                   [[ "${DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "::error::no image digest from the build"; exit 1; }
-                  ref="ghcr.io/devinosolutions/upup-${SERVICE}@${DIGEST}"
+                  ref="ghcr.io/devinosolutions/upup/${SERVICE}@${DIGEST}"
                   raw=''
                   for attempt in 1 2 3; do
                     if docker buildx imagetools inspect --raw "${ref}" > "${RUNNER_TEMP}/manifest.raw"; then
@@ -171,12 +171,12 @@ jobs:
                   # Dokploy pulls without a credential: prove the package is public with an anonymous token and a manifest HEAD.
                   code=000
                   for attempt in 1 2 3; do
-                    token="$(curl -fsS "https://ghcr.io/token?scope=repository:devinosolutions/upup-${SERVICE}:pull" | jq -r '.token // empty' || true)"
-                    code="$(curl -s -o /dev/null -w '%{http_code}' -I -H "Authorization: Bearer ${token}" -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json' "https://ghcr.io/v2/devinosolutions/upup-${SERVICE}/manifests/${DIGEST}" || true)"
+                    token="$(curl -fsS "https://ghcr.io/token?scope=repository:devinosolutions/upup/${SERVICE}:pull" | jq -r '.token // empty' || true)"
+                    code="$(curl -s -o /dev/null -w '%{http_code}' -I -H "Authorization: Bearer ${token}" -H 'Accept: application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json' "https://ghcr.io/v2/devinosolutions/upup/${SERVICE}/manifests/${DIGEST}" || true)"
                     [ "${code}" = 200 ] && break
                     sleep $((attempt * 5))
                   done
-                  [ "${code}" = 200 ] || { echo "::error::ghcr.io/devinosolutions/upup-${SERVICE} is not pullable anonymously (HTTP ${code}); make the package public"; exit 1; }
+                  [ "${code}" = 200 ] || { echo "::error::ghcr.io/devinosolutions/upup/${SERVICE} is not pullable anonymously (HTTP ${code}); make the package public"; exit 1; }
                   echo "digest_${SERVICE}=${DIGEST}" >> "${GITHUB_OUTPUT}"
                   echo "- \`${ref}\`" >> "${GITHUB_STEP_SUMMARY}"
 
@@ -280,9 +280,9 @@ jobs:
                   {
                     echo "key=${key}"
                     echo 'lines<<EOF_IMAGES'
-                    echo "${key}/landing=ghcr.io/devinosolutions/upup-landing@${DIGEST_LANDING}"
-                    echo "${key}/mastra=ghcr.io/devinosolutions/upup-mastra@${DIGEST_MASTRA}"
-                    echo "${key}/playground=ghcr.io/devinosolutions/upup-playground@${DIGEST_PLAYGROUND}"
+                    echo "${key}/landing=ghcr.io/devinosolutions/upup/landing@${DIGEST_LANDING}"
+                    echo "${key}/mastra=ghcr.io/devinosolutions/upup/mastra@${DIGEST_MASTRA}"
+                    echo "${key}/playground=ghcr.io/devinosolutions/upup/playground@${DIGEST_PLAYGROUND}"
                     echo 'EOF_IMAGES'
                   } >> "${GITHUB_OUTPUT}"
             - uses: DevinoSolutions/dokploy-release@d66a2e9a36c7c154f92f9aa18b7f7aced6e73b77 # v1.1.0

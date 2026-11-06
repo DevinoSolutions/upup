@@ -17,7 +17,7 @@ ports over its own network. Each service `expose`s its port for clarity.
 
 `.github/workflows/dokploy.yml` builds the three images ONCE per commit on
 GitHub Actions and pushes them to GHCR by digest
-(`ghcr.io/devinosolutions/upup-landing`, `-mastra`, `-playground`, public
+(`ghcr.io/devinosolutions/upup/landing`, `/mastra`, `/playground`, public
 packages). On `dev` it publishes the release `upup-dev` (GitHub Environment
 `development`), on `master` the release `upup` (Environment `production`). The
 release manifest is read from the release job log (no artifact is uploaded).
