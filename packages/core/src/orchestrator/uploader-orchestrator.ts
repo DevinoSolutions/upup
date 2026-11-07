@@ -10,7 +10,7 @@ import {
     revokeAndReplace,
 } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
-import { UpupError } from '../errors'
+import { UpupError, UpupValidationError } from '../errors'
 import { UpupUploadBatchError } from '../upload-manager'
 import { computeSpeedEta, type SpeedSample } from './upload-speed'
 
@@ -109,7 +109,16 @@ export class UploaderOrchestrator {
         // If onPrepareFiles returned different files, replace them in core
         if (prepared !== currentFiles) {
             this.core.removeAll()
-            await this.core.addFiles(prepared)
+            try {
+                await this.core.addFiles(prepared, undefined, {
+                    onRefused: this.callbacks.onFileRefused,
+                })
+            } catch (error) {
+                // Every prepared file was refused and each one already reached
+                // `onFileRefused`: nothing is left to upload.
+                if (!(error instanceof UpupValidationError)) throw error
+                return undefined
+            }
         }
 
         return await this.core.upload()

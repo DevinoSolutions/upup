@@ -54,10 +54,23 @@ export type {
     UploadOptions,
 } from './options/types'
 
-/** Per-call observers for `UpupCore.addFiles`. */
+/** Per-call observers for `UpupCore.addFiles` and `UpupCore.setFiles`. */
 export interface AddFilesHooks {
-    /** Called once for each refused file, in the order they were found. */
+    /** Called once for each refused file, in the order they were found. A
+     *  throw is caught and warned about (dev only): the host's callback must
+     *  not turn an add that already committed files into a rejection. */
     onRefused?: ((error: UpupValidationError) => void) | undefined
+}
+
+/** Dev-only, like the crash-recovery warnings: a throwing host hook is
+ *  surfaced, never allowed to fail the add that already succeeded. */
+function warnRefusalHookFailure(err: unknown): void {
+    if (
+        typeof process !== 'undefined' &&
+        process.env.NODE_ENV !== 'production'
+    ) {
+        console.warn('[upup] a refusal hook threw', err)
+    }
 }
 
 export class UpupCore {
@@ -401,7 +414,14 @@ export class UpupCore {
     ): void {
         for (const error of refused) {
             this.emitter.emit('restriction-failed', { error })
-            hooks?.onRefused?.(error)
+            try {
+                hooks?.onRefused?.(error)
+            } catch (hookError) {
+                // upup-catch: the hook is host code and runs AFTER the accepted
+                // files were committed — a throw must neither reject the add
+                // nor starve the remaining refusals of their report.
+                warnRefusalHookFailure(hookError)
+            }
         }
     }
 
@@ -471,17 +491,17 @@ export class UpupCore {
 
     /**
      * Replace the selection. Refusals are judged and reported exactly like
-     * `addFiles`; when EVERY file is refused the current selection is kept and
-     * the first refusal rejects.
+     * `addFiles` (including `hooks.onRefused`); when EVERY file is refused the
+     * current selection is kept and the first refusal rejects.
      */
-    async setFiles(files: File[]): Promise<void> {
+    async setFiles(files: File[], hooks?: AddFilesHooks): Promise<void> {
         if (this.destroyed)
             throw new UpupError(
                 'UpupCore: setFiles() after destroy()',
                 UpupErrorCode.BAD_REQUEST,
             )
         const { accepted, refused } = await this.fileManager.admitFileSet(files)
-        this.reportRefusals(refused)
+        this.reportRefusals(refused, hooks)
         const [first] = refused
         if (first && accepted.length === 0) throw first
         this.clearCrashRecoveryIfEmpty()
