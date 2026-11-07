@@ -18,6 +18,7 @@ import {
     type MotionMode,
     type TransientUiSnapshot,
     type CloudProvider,
+    type UploaderCallbacks,
 } from '@useupup/core/internal'
 
 /** Read-only drive provider → flattened i18n label key (the human provider name
@@ -148,9 +149,41 @@ export class UpupStore {
     slotOverrides!: Signal<ThemeSnapshot['slotOverrides']>
     slots!: Signal<ThemeSnapshot['slots']>
 
-    /** Call before init() to provide props. */
+    /** Call before init() to provide props. Called again after init(), the new
+     *  props' callbacks take over from the old ones straight away. */
     setConfig(props: UploaderProps): void {
         this.props = props
+        this.controller?.updateCallbacks(this.currentCallbacks())
+    }
+
+    /** The host callbacks of the current props, in the shape the controller
+     *  keeps them. onError/onWarn go through the store so they always read the
+     *  props live. */
+    private currentCallbacks(): UploaderCallbacks {
+        const p = this.props ?? {}
+        return {
+            onError: (message: string) => {
+                this.onError(message)
+            },
+            onWarn: (message: string) => {
+                this.onWarn(message)
+            },
+            onUploadStart: p.onUploadStart ?? (() => {}),
+            onFileUploadStart: p.onFileUploadStart ?? (() => {}),
+            onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
+            onFilesUploadProgress: p.onFilesUploadProgress ?? (() => {}),
+            onFileUploadComplete: p.onFileUploadComplete ?? (() => {}),
+            onFilesUploadComplete: p.onFilesUploadComplete ?? (() => {}),
+            onUploadComplete: p.onUploadComplete ?? (() => {}),
+            onFilesSelected: p.onFilesSelected ?? (() => {}),
+            onDoneClicked: p.onDoneClicked ?? (() => {}),
+            onPrepareFiles: p.onPrepareFiles,
+            onFileRemoved: p.onFileRemoved,
+            onStatusChange: p.onStatusChange,
+            onFileTypeMismatch: p.onFileTypeMismatch ?? (() => {}),
+            onRestrictionFailed: p.onRestrictionFailed,
+            autoUpload: p.autoUpload ?? false,
+        }
     }
 
     // Single error/warn routing (mirrors svelte create-uploader-context.ts's onError/onWarn, ~lines 85-90).
@@ -220,22 +253,6 @@ export class UpupStore {
             resumable: p.resumable,
             i18n: p.i18n,
             onBeforeFileAdded: p.onBeforeFileAdded,
-            onError: p.onError,
-            onWarn: p.onWarn,
-            onUploadStart: p.onUploadStart ?? (() => {}),
-            onFileUploadStart: p.onFileUploadStart ?? (() => {}),
-            onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
-            onFilesUploadProgress: p.onFilesUploadProgress ?? (() => {}),
-            onFileUploadComplete: p.onFileUploadComplete ?? (() => {}),
-            onFilesUploadComplete: p.onFilesUploadComplete ?? (() => {}),
-            onUploadComplete: p.onUploadComplete ?? (() => {}),
-            onFilesSelected: p.onFilesSelected ?? (() => {}),
-            onDoneClicked: p.onDoneClicked ?? (() => {}),
-            onPrepareFiles: p.onPrepareFiles,
-            onFileRemoved: p.onFileRemoved,
-            onStatusChange: p.onStatusChange,
-            onFileTypeMismatch: p.onFileTypeMismatch ?? (() => {}),
-            onRestrictionFailed: p.onRestrictionFailed,
         }
 
         // ── Normalize options (pure) ─────────────────────────────
@@ -249,14 +266,11 @@ export class UpupStore {
         // ── Core construction via createUpupUpload (FRESH per init() call) ────────
         // Each init() creates a brand-new core + factory so cloud plugins can register
         // cleanly (plugin.use() throws on duplicate; no unregister; fresh core avoids this).
-        this.upload = createUpupUpload({
-            ...normalized.coreOptions,
-            onError: (err: unknown) => {
-                this.onError(
-                    typeof err === 'string' ? err : (err as Error).message,
-                )
-            },
-        })
+        // No onError here: a whole-run failure already reaches the host through
+        // the controller's callbacks (the orchestrator forwards core's
+        // upload-error event), so core's own options.onError would report it a
+        // second time. React, Vue and Svelte leave it out too.
+        this.upload = createUpupUpload(normalized.coreOptions)
         this.upload.start()
         this.core = this.upload.core
 
@@ -286,29 +300,7 @@ export class UpupStore {
         )
 
         // ── Callback proxy — updateCallbacks feeds the proxy's mutable ref ──
-        this.controller.updateCallbacks({
-            onError: (message: string) => {
-                this.onError(message)
-            },
-            onWarn: (message: string) => {
-                this.onWarn(message)
-            },
-            onUploadStart: p.onUploadStart ?? (() => {}),
-            onFileUploadStart: p.onFileUploadStart ?? (() => {}),
-            onFileUploadProgress: p.onFileUploadProgress ?? (() => {}),
-            onFilesUploadProgress: p.onFilesUploadProgress ?? (() => {}),
-            onFileUploadComplete: p.onFileUploadComplete ?? (() => {}),
-            onFilesUploadComplete: p.onFilesUploadComplete ?? (() => {}),
-            onUploadComplete: p.onUploadComplete ?? (() => {}),
-            onFilesSelected: p.onFilesSelected ?? (() => {}),
-            onDoneClicked: p.onDoneClicked ?? (() => {}),
-            onPrepareFiles: p.onPrepareFiles,
-            onFileRemoved: p.onFileRemoved,
-            onStatusChange: p.onStatusChange,
-            onFileTypeMismatch: p.onFileTypeMismatch ?? (() => {}),
-            onRestrictionFailed: p.onRestrictionFailed,
-            autoUpload: p.autoUpload ?? false,
-        })
+        this.controller.updateCallbacks(this.currentCallbacks())
 
         // ── Signal bridges (KEEP: toSignalStore separately for orch + theme) ──────
         this.orchState = toSignalStore(this.controller.orchestrator)
@@ -399,11 +391,21 @@ export class UpupStore {
             onError: (message: string) => {
                 this.onError(message)
             },
-            onIntegrationClick: p.onIntegrationClick ?? (() => {}),
-            onFileClick: p.onFileClick ?? (() => {}),
-            onFilesDragOver: p.onFilesDragOver ?? (() => {}),
-            onFilesDragLeave: p.onFilesDragLeave ?? (() => {}),
-            onFilesDrop: p.onFilesDrop ?? (() => {}),
+            onIntegrationClick: (sourceId: string) => {
+                this.props?.onIntegrationClick?.(sourceId)
+            },
+            onFileClick: (file: UploadFile) => {
+                this.props?.onFileClick?.(file)
+            },
+            onFilesDragOver: (files: File[]) => {
+                this.props?.onFilesDragOver?.(files)
+            },
+            onFilesDragLeave: (files: File[]) => {
+                this.props?.onFilesDragLeave?.(files)
+            },
+            onFilesDrop: (files: File[]) => {
+                this.props?.onFilesDrop?.(files)
+            },
             onWarn: (message: string) => {
                 this.onWarn(message)
             },

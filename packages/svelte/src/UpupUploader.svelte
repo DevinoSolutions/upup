@@ -31,6 +31,13 @@ $effect(() => {
     ctx.setThemeConfig(props.theme)
 })
 
+// Keep the controller's callbacks in step with the current props: it holds them
+// in refs, so a handler that arrives or changes after mount would otherwise
+// never be heard. The effect re-runs when any callback prop changes.
+$effect.pre(() => {
+    ctx.syncCallbacks()
+})
+
 function onInputChange(e: Event) {
     const target = e.target as HTMLInputElement
     if (target.files?.length) {
