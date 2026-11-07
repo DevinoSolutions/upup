@@ -9,6 +9,7 @@
 import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { PLATFORM_ID } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
+import { FileSource, UploadStatus, type UploadFile } from '@useupup/core'
 import { UpupStore } from './upup-store.service'
 import { UpupUploaderComponent } from './upup-uploader.component'
 import type { UploaderProps } from './shared/types'
@@ -19,6 +20,32 @@ afterEach(() => {
 
 const zipFile = () => new File(['x'], 'bundle.zip', { type: 'application/zip' })
 const pngFile = () => new File(['x'], 'photo.png', { type: 'image/png' })
+
+// Minimal EventSource stand-in: lets a test open and answer the server-processing
+// stream without a network.
+class FakeEventSource {
+    static instances: FakeEventSource[] = []
+    onmessage: ((event: MessageEvent) => void) | null = null
+    onerror: (() => void) | null = null
+    constructor(readonly url: string) {
+        FakeEventSource.instances.push(this)
+    }
+    close() {}
+    emit(data: string) {
+        this.onmessage?.({ data } as MessageEvent)
+    }
+}
+
+const uploadedFile = (key: string) =>
+    ({
+        id: key,
+        name: 'photo.png',
+        key,
+        url: 'blob:x',
+        source: FileSource.LOCAL,
+        status: UploadStatus.SUCCESSFUL,
+        metadata: {},
+    }) as unknown as UploadFile
 
 describe('UpupStore callbacks after init()', () => {
     it('reaches the handlers swapped in by setConfig and never the old ones', async () => {
@@ -85,6 +112,200 @@ describe('UpupStore callbacks after init()', () => {
 
         expect(onError).toHaveBeenCalledTimes(1)
         expect(onError.mock.calls[0]![0]).toMatch(/No upload target/)
+        s.destroy()
+    })
+})
+
+describe('a non-refusal callback swapped by setConfig after init()', () => {
+    it('reaches the new onFilesSelected and never the old one', async () => {
+        const first = vi.fn()
+        const s = new UpupStore()
+        s.setConfig({ allowedFileTypes: 'image/*', onFilesSelected: first })
+        s.init()
+        const next = vi.fn()
+        s.setConfig({ allowedFileTypes: 'image/*', onFilesSelected: next })
+
+        await s.handleSetSelectedFiles([pngFile()])
+
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(first).not.toHaveBeenCalled()
+        s.destroy()
+    })
+})
+
+describe('onBeforeFileAdded swapped by setConfig after init()', () => {
+    it('asks the new handler and never the old one', async () => {
+        const first = vi.fn(() => undefined)
+        const s = new UpupStore()
+        s.setConfig({ allowedFileTypes: 'image/*', onBeforeFileAdded: first })
+        s.init()
+        const next = vi.fn(() => undefined)
+        s.setConfig({ allowedFileTypes: 'image/*', onBeforeFileAdded: next })
+        const png = pngFile()
+
+        await s.handleSetSelectedFiles([png])
+
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(next).toHaveBeenCalledWith(png)
+        expect(first).not.toHaveBeenCalled()
+        s.destroy()
+    })
+
+    it('drops a file the new handler vetoes, sync or async', async () => {
+        const onFilesSelected = vi.fn()
+        const s = new UpupStore()
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: () => undefined,
+        })
+        s.init()
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: () => false,
+        })
+        await s.handleSetSelectedFiles([pngFile()])
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: () => Promise.resolve(false),
+        })
+        await s.handleSetSelectedFiles([pngFile()])
+
+        expect(onFilesSelected).not.toHaveBeenCalled()
+        s.destroy()
+    })
+
+    it('admits the file the new handler substitutes', async () => {
+        const onFilesSelected = vi.fn()
+        const s = new UpupStore()
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: () => undefined,
+        })
+        s.init()
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: () =>
+                new File(['x'], 'renamed.png', { type: 'image/png' }),
+        })
+
+        await s.handleSetSelectedFiles([pngFile()])
+
+        expect(onFilesSelected).toHaveBeenCalledTimes(1)
+        expect(onFilesSelected.mock.calls[0]![0][0].name).toBe('renamed.png')
+        s.destroy()
+    })
+
+    it('applies a handler that was absent at init and added later', async () => {
+        const onFilesSelected = vi.fn()
+        const s = new UpupStore()
+        s.setConfig({ allowedFileTypes: 'image/*', onFilesSelected })
+        s.init()
+        const late = vi.fn(() => false as const)
+        s.setConfig({
+            allowedFileTypes: 'image/*',
+            onFilesSelected,
+            onBeforeFileAdded: late,
+        })
+
+        await s.handleSetSelectedFiles([pngFile()])
+
+        expect(late).toHaveBeenCalledTimes(1)
+        expect(onFilesSelected).not.toHaveBeenCalled()
+        s.destroy()
+    })
+
+    it('admits files as before when no handler was ever set', async () => {
+        const onFilesSelected = vi.fn()
+        const s = new UpupStore()
+        s.setConfig({ allowedFileTypes: 'image/*', onFilesSelected })
+        s.init()
+
+        await s.handleSetSelectedFiles([pngFile()])
+
+        expect(onFilesSelected).toHaveBeenCalledTimes(1)
+        s.destroy()
+    })
+})
+
+describe('onFileProcessed swapped by setConfig after init()', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals()
+    })
+
+    // Finishing a file is what opens its processing stream; drive that through
+    // core's own event, with EventSource faked.
+    function initStore(config: UploaderProps) {
+        FakeEventSource.instances = []
+        vi.stubGlobal('EventSource', FakeEventSource)
+        const s = new UpupStore()
+        s.setConfig({ processingEndpoint: '/api/processing', ...config })
+        s.init()
+        const finish = (key: string) =>
+            s.core.emit('upload-all-complete', [uploadedFile(key)])
+        return { s, finish }
+    }
+
+    it('reaches the new handler and never the old one', () => {
+        const first = vi.fn()
+        const { s, finish } = initStore({ onFileProcessed: first })
+        const next = vi.fn()
+        s.setConfig({
+            processingEndpoint: '/api/processing',
+            onFileProcessed: next,
+        })
+
+        finish('k1')
+        FakeEventSource.instances[0]!.emit('{"status":"done"}')
+
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(next.mock.calls[0]![1]).toEqual({ status: 'done' })
+        expect(first).not.toHaveBeenCalled()
+        s.destroy()
+    })
+
+    it('hands a stream already open to the handler in place when the message lands', () => {
+        const first = vi.fn()
+        const { s, finish } = initStore({ onFileProcessed: first })
+        finish('k1')
+        const next = vi.fn()
+        s.setConfig({
+            processingEndpoint: '/api/processing',
+            onFileProcessed: next,
+        })
+
+        FakeEventSource.instances[0]!.emit('{"status":"done"}')
+
+        expect(next).toHaveBeenCalledTimes(1)
+        expect(first).not.toHaveBeenCalled()
+        s.destroy()
+    })
+
+    it('listens for a handler that was absent at init and added later', () => {
+        const { s, finish } = initStore({})
+        const late = vi.fn()
+        s.setConfig({
+            processingEndpoint: '/api/processing',
+            onFileProcessed: late,
+        })
+
+        finish('k1')
+        FakeEventSource.instances[0]!.emit('{"status":"done"}')
+
+        expect(late).toHaveBeenCalledTimes(1)
+        s.destroy()
+    })
+
+    it('opens no stream while there is no handler', () => {
+        const { s, finish } = initStore({})
+
+        finish('k1')
+
+        expect(FakeEventSource.instances).toHaveLength(0)
         s.destroy()
     })
 })

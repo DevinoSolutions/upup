@@ -106,7 +106,6 @@ export default function useUploaderController(
         sources,
         icons = {},
         i18n,
-        onBeforeFileAdded,
         enablePaste = false,
         autoUpload = false,
         maxConcurrentUploads,
@@ -121,7 +120,6 @@ export default function useUploaderController(
         maxRetries,
         resumable,
         processingEndpoint,
-        onFileProcessed,
         processingTimeout,
     } = props
 
@@ -201,7 +199,10 @@ export default function useUploaderController(
         maxRetries,
         resumable,
         i18n,
-        onBeforeFileAdded,
+        // Core keeps this for good, so hand it a stable wrapper that asks the
+        // current prop each time. No handler set answers undefined, which core
+        // treats as "keep the file", the same as having no hook at all.
+        onBeforeFileAdded: file => props.onBeforeFileAdded?.(file),
     }
 
     // ── Normalize options (pure) ─────────────────────────────────
@@ -215,7 +216,11 @@ export default function useUploaderController(
     // ── SSE processing ──────────────────────────────────────────
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
-        onFileProcessed,
+        // Read when a stream opens and again when its message lands, so a
+        // handler that arrives or changes after mount is the one that hears it.
+        get onFileProcessed() {
+            return props.onFileProcessed
+        },
         onError: err => {
             onError(err.message)
         },
