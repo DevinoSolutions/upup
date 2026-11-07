@@ -208,3 +208,41 @@ describe('programmatic file commands report a refusal like a picker drop', () =>
         core.destroy()
     })
 })
+
+describe('onError is read from the live callbacks', () => {
+    it('reaches an onError supplied after creation, alongside onRestrictionFailed', async () => {
+        const { controller, core } = build({
+            maxFileSize: { size: 1, unit: 'KB' },
+        })
+        const onError = vi.fn()
+        const onRestrictionFailed = vi.fn()
+        controller.updateCallbacks({ onError, onRestrictionFailed })
+        const tooBig = makeFile('big.png', 4096)
+
+        await controller.commands.uploadFiles([tooBig]).catch(() => {})
+
+        expect(onError).toHaveBeenCalledTimes(1)
+        expect(onRestrictionFailed).toHaveBeenCalledTimes(1)
+        controller.destroy()
+        core.destroy()
+    })
+
+    it('calls the replacement onError and not the one it replaced', async () => {
+        const first = vi.fn()
+        const second = vi.fn()
+        const { controller, core } = build({
+            maxFileSize: { size: 1, unit: 'KB' },
+            onError: first,
+        })
+        controller.updateCallbacks({ onError: second })
+
+        await controller.commands
+            .uploadFiles([makeFile('big.png', 4096)])
+            .catch(() => {})
+
+        expect(second).toHaveBeenCalledTimes(1)
+        expect(first).not.toHaveBeenCalled()
+        controller.destroy()
+        core.destroy()
+    })
+})

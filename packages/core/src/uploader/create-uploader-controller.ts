@@ -38,10 +38,11 @@ export function createUploaderController(
     const { resolved } = normalized
     const { connectSSE } = hostHooks
 
-    const onError = (message: string) => options.onError?.(message)
-
     // ── Callback proxy (#3): mutable ref + getter proxy; SSE wrapper folds in connectSSE ──
     let callbackRefs: UploaderCallbacks = { ...options }
+
+    // Reads the live ref so a handler set or changed after mount still fires.
+    const onError = (message: string) => callbackRefs.onError?.(message)
 
     // ── Refusal reporting: the ONE place a refused file reaches the host ──
     // Every route that admits files (picker/drop, uploadFiles, replaceFiles,
