@@ -252,7 +252,10 @@ export class UpupStore {
             maxRetries: p.maxRetries,
             resumable: p.resumable,
             i18n: p.i18n,
-            onBeforeFileAdded: p.onBeforeFileAdded,
+            // Core keeps this for good, so hand it a stable wrapper that asks the
+            // current props each time. No handler set answers undefined, which
+            // core treats as "keep the file", the same as having no hook at all.
+            onBeforeFileAdded: file => this.props?.onBeforeFileAdded?.(file),
         }
 
         // ── Normalize options (pure) ─────────────────────────────
@@ -275,9 +278,14 @@ export class UpupStore {
         this.core = this.upload.core
 
         // ── SSE processing ───────────────────────────────────────
+        const currentProps = () => this.props
         const sse = createSSEProcessing({
             processingEndpoint: p.processingEndpoint,
-            onFileProcessed: p.onFileProcessed,
+            // Read when a stream opens and again when its message lands, so a
+            // handler that arrives or changes after init is the one that hears it.
+            get onFileProcessed() {
+                return currentProps()?.onFileProcessed
+            },
             onError: (err: Error) => {
                 this.onError(err.message)
             },

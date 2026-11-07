@@ -7,8 +7,11 @@ import ImageEditorStub from './components/ImageEditorStub.svelte'
 import UploaderPanel from './components/UploaderPanel.svelte'
 
 let props: UploaderProps = $props()
-// Props are init-time configuration (mirrors Vue's `useUploaderController(props)` and
-// React's one-shot context build); capturing the initial value here is intentional.
+// The context is built once from `props` (mirrors Vue's `useUploaderController(props)`),
+// so configuration such as sources, limits and endpoints is read at setup. Host
+// callbacks and `theme` are the exception: the context reads callbacks from `props`
+// when they fire and the effects below re-sync the rest, so a change after mount
+// takes effect. Capturing the object here is intentional.
 // svelte-ignore state_referenced_locally
 const ctx = createUploaderContext(props)
 provideUploaderContext(ctx)
