@@ -7,7 +7,7 @@ import { GoogleDrivePlugin } from '../drives/google-drive-plugin'
 import { DropboxPlugin } from '../drives/dropbox-plugin'
 import { BoxPlugin } from '../drives/box-plugin'
 import { OneDrivePlugin } from '../drives/one-drive-plugin'
-import { revokeFileUrl } from '../utils/file-helpers'
+import { UpupErrorCode, UpupValidationError } from '../errors'
 import type { UploadFile } from '../types/upload-file'
 import type {
     CreateUploaderControllerParams,
@@ -16,6 +16,20 @@ import type {
     UploaderController,
     UploaderHostHooks,
 } from './types'
+
+type RestrictionReason = NonNullable<
+    Parameters<NonNullable<UploaderCallbacks['onRestrictionFailed']>>[1]
+>
+
+/** The `onRestrictionFailed` reasons a refusal can carry; a reason outside
+ *  this set (`DUPLICATE`, `BEFORE_FILE_ADDED_REJECTED`) has no callback slot. */
+const RESTRICTION_REASONS: Partial<Record<string, RestrictionReason>> = {
+    [UpupErrorCode.TYPE_MISMATCH]: 'TYPE_MISMATCH',
+    [UpupErrorCode.FILE_TOO_LARGE]: 'FILE_TOO_LARGE',
+    [UpupErrorCode.FILE_TOO_SMALL]: 'FILE_TOO_SMALL',
+    [UpupErrorCode.LIMIT_EXCEEDED]: 'LIMIT_EXCEEDED',
+    [UpupErrorCode.TOTAL_SIZE_EXCEEDED]: 'TOTAL_SIZE_EXCEEDED',
+}
 
 export function createUploaderController(
     { core, options, normalized }: CreateUploaderControllerParams,
@@ -28,6 +42,38 @@ export function createUploaderController(
 
     // ── Callback proxy (#3): mutable ref + getter proxy; SSE wrapper folds in connectSSE ──
     let callbackRefs: UploaderCallbacks = { ...options }
+
+    // ── Refusal reporting: the ONE place a refused file reaches the host ──
+    // Every route that admits files (picker/drop, uploadFiles, replaceFiles,
+    // the onPrepareFiles re-add) hands its refusals here, so a refusal is
+    // reported identically no matter how the files arrived.
+    const reportRefusal = (error: UpupValidationError) => {
+        onError(error.message)
+        if (error.reason === UpupErrorCode.TYPE_MISMATCH) {
+            callbackRefs.onFileTypeMismatch?.(
+                error.file,
+                resolved.allowedFileTypes,
+            )
+        }
+        const reason = RESTRICTION_REASONS[error.reason]
+        if (reason) callbackRefs.onRestrictionFailed?.(error.file, reason)
+    }
+    // A call can hear about the same refusal twice (core hands it over per
+    // file as it finds it, then rejects an all-refused batch with the first
+    // one); a per-call reporter folds that into one report.
+    const refusalReporter = () => {
+        const reported = new Set<UpupValidationError>()
+        return (error: UpupValidationError) => {
+            if (reported.has(error)) return
+            reported.add(error)
+            reportRefusal(error)
+        }
+    }
+    // A refusal was already reported through the hook; only a genuine
+    // failure (anything else) may still escape.
+    const rethrowUnlessRefusal = (error: unknown): void => {
+        if (!(error instanceof UpupValidationError)) throw error
+    }
 
     const proxiedCallbacks: OrchestratorCallbacks = {
         get onError() {
@@ -76,6 +122,7 @@ export function createUploaderController(
         get onFileRemoved() {
             return callbackRefs.onFileRemoved
         },
+        onFileRefused: reportRefusal,
         get imageEditorOptions() {
             return resolved.imageEditor
         },
@@ -165,13 +212,14 @@ export function createUploaderController(
     const openFilePicker = () => inputEl?.click()
 
     // ── Commands (#8/#9/#10): core-centric, vanilla-proven ──
-    const filesArray = () => [...core.files.values()]
-
     const commands: UploaderCommands = {
         async handleSetSelectedFiles(newFiles: File[]) {
             const before = core.files.size
+            const report = refusalReporter()
             try {
-                await core.addFiles(newFiles)
+                await core.addFiles(newFiles, undefined, {
+                    onRefused: report,
+                })
                 // Close the add-more overlay once files actually merge in, but
                 // ONLY on the device-pick / drop path — those add files with no
                 // active source. Camera / screen-capture / drive add files WHILE
@@ -186,37 +234,12 @@ export function createUploaderController(
                     transientUi.closeSourceOverlay()
                 }
             } catch (error) {
-                const message =
-                    error instanceof Error ? error.message : String(error)
-                onError(message)
-                const first = newFiles[0]
-                if (first) {
-                    const m = message.toLowerCase()
-                    if (m.includes('type')) {
-                        callbackRefs.onFileTypeMismatch?.(
-                            first,
-                            resolved.allowedFileTypes,
-                        )
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'TYPE_MISMATCH',
-                        )
-                    } else if (m.includes('limit')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'LIMIT_EXCEEDED',
-                        )
-                    } else if (m.includes('below')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'FILE_TOO_SMALL',
-                        )
-                    } else if (m.includes('size')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'FILE_TOO_LARGE',
-                        )
-                    }
+                if (error instanceof UpupValidationError) {
+                    report(error)
+                } else {
+                    onError(
+                        error instanceof Error ? error.message : String(error),
+                    )
                 }
             }
         },
@@ -233,14 +256,20 @@ export function createUploaderController(
             core.removeAll()
         },
         async uploadFiles(newFiles: File[] | UploadFile[]) {
-            await core.setFiles(newFiles as File[])
+            // Refused files are reported per file while the acceptable ones are
+            // uploaded; a batch where EVERY file is refused still rejects (and
+            // uploads nothing — the selection is left as it was).
+            await core.setFiles(newFiles as File[], {
+                onRefused: refusalReporter(),
+            })
             return core.upload()
         },
         replaceFiles(newFiles: File[] | UploadFile[]) {
-            filesArray().forEach(f => {
-                revokeFileUrl(f)
-            })
-            void core.setFiles(newFiles as File[])
+            // Core revokes the previews it replaces; revoking here would also
+            // break the kept selection when every file is refused.
+            core.setFiles(newFiles as File[], {
+                onRefused: refusalReporter(),
+            }).catch(rethrowUnlessRefusal)
         },
         startUpload() {
             return orchestrator.startUpload()

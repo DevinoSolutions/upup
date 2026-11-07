@@ -117,6 +117,7 @@ export { flattenSlotsToClassNames } from './theme/slots'
 // ── Core ─────────────────────────────────────────────────────
 export { UpupCore } from './core'
 export type {
+    AddFilesHooks,
     CoreOptions,
     UploadOptions,
     ValidationResult,
