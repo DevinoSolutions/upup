@@ -19,6 +19,7 @@ export default function useUpload({
     | 'uploadFiles'
 >): {
     upload: IUploaderContext['upload']['startUpload']
+    retryUpload: IUploaderContext['upload']['retryUpload']
     loading: boolean
     error: IUploaderContext['upload']['uploadError']
     progress: number
@@ -28,11 +29,17 @@ export default function useUpload({
     uploadFiles: IUploaderContext['uploadFiles']
     resetState: IUploaderContext['resetState']
 } {
-    const { startUpload, uploadStatus, uploadError, totalProgress } =
-        upload || {}
+    const {
+        startUpload,
+        retryUpload,
+        uploadStatus,
+        uploadError,
+        totalProgress,
+    } = upload || {}
 
     return {
         upload: startUpload,
+        retryUpload,
         loading: isUploadActive(uploadStatus),
         error: uploadError,
         progress: totalProgress,

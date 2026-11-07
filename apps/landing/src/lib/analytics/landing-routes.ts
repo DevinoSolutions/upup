@@ -1,10 +1,11 @@
 /**
  * The marketing landing routes — the home page and the per-framework landing
- * pages (`/react/`, `/vue/`, …). Only these boot PostHog after the page has
- * loaded instead of at mount, because they are the pages PageSpeed scores and
- * the SDK (~95 KB compressed) competed with the hero for the network and the
- * main thread. Every other route (docs, support, agent-setup, …) keeps
- * initialising PostHog at mount.
+ * pages (`/react/`, `/vue/`, …) — and the docs (`/docs/…`) start the analytics
+ * SDKs (PostHog and Sentry) after the page has loaded instead of at mount,
+ * because they are the pages PageSpeed scores and the SDKs (~100 KB and
+ * ~135 KB compressed) competed with first paint for the network and the main
+ * thread (T-2848 moved the docs over). Every other route (support,
+ * agent-setup, …) keeps initialising at mount; see `analyticsBootMode`.
  *
  * The framework slugs are listed here rather than imported from
  * `@/lib/frameworks`, which pulls react-icons and the snippet table into
@@ -45,4 +46,26 @@ export function isMarketingLandingPath(pathname: string | null): boolean {
     if (clean === '') return true
     const slug = clean.replace(/^\/+/, '')
     return (LANDING_FRAMEWORK_SLUGS as readonly string[]).includes(slug)
+}
+
+/** The docs section: `/docs`, `/docs/…`. Not `/docs-md/…` (markdown handlers). */
+export function isDocsPath(pathname: string | null): boolean {
+    if (!pathname) return false
+    const clean = pathname.replace(/\/+$/, '')
+    return clean === '/docs' || clean.startsWith('/docs/')
+}
+
+/**
+ * How the root-layout provider starts the analytics SDKs on a route: `skip`
+ * (OAuth popup pages), `after-load` (marketing landing pages and docs: after
+ * the load event, in an idle slot or on the first input), or `at-mount`
+ * (everything else, as before).
+ */
+export function analyticsBootMode(
+    pathname: string | null,
+): 'skip' | 'after-load' | 'at-mount' {
+    if (isOAuthRedirectPath(pathname)) return 'skip'
+    if (isMarketingLandingPath(pathname) || isDocsPath(pathname))
+        return 'after-load'
+    return 'at-mount'
 }

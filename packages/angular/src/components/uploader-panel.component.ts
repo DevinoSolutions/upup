@@ -167,6 +167,7 @@ import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
                         store.sourceOverlayClosing() ? null : 'true'
                     "
                     [attr.aria-label]="store.translations().addingMoreFiles"
+                    tabindex="-1"
                     (keydown)="onOverlayKeydown($event)"
                     [class]="overlayClass()"
                 >
@@ -233,14 +234,14 @@ import { devinoDark, devinoLight, logoDark, logoLight } from '../assets/logos'
                         @if (store.isDark()) {
                             <img
                                 [src]="devinoDark"
-                                width="61"
+                                width="43"
                                 height="13"
                                 alt="logo-dark"
                             />
                         } @else {
                             <img
                                 [src]="devinoLight"
-                                width="61"
+                                width="43"
                                 height="13"
                                 alt="logo-light"
                             />
@@ -287,9 +288,14 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
                         document.activeElement instanceof HTMLElement
                     )
                         this.triggerEl = document.activeElement
-                    overlayEl
-                        .querySelector<HTMLElement>('button:not([disabled])')
-                        ?.focus()
+                    // No enabled control (every tile disabled): the dialog
+                    // itself (tabindex -1) takes focus so it still lands inside
+                    // the sheet.
+                    const target =
+                        overlayEl.querySelector<HTMLElement>(
+                            'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+                        ) ?? overlayEl
+                    target.focus()
                 })
                 return
             }
@@ -431,7 +437,7 @@ export class UploaderPanelComponent implements OnInit, OnDestroy {
 
     readonly overlayClass = computed(() =>
         cn(
-            'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+            'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
             this.store.sourceOverlayClosing()
                 ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                 : 'upup-fx-overlay-slide',

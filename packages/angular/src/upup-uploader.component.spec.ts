@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
 import { PLATFORM_ID } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
 import type { UploadFile } from '@useupup/core'
@@ -10,6 +10,24 @@ afterEach(() => {
 })
 
 describe('UpupUploaderComponent', () => {
+    // The first createComponent in a worker pays Angular's JIT compile of the
+    // whole standalone component tree (analog runs tests in JIT mode) plus the
+    // first DI setup and render. On a loaded 2-core CI runner that took 4264 ms
+    // of the 5 s default for 'mounts and renders the uploader root' (T-10845,
+    // same cold-compile cost as uploader-panel.spec.ts). Pay it here, under
+    // its own generous hook timeout, so no test carries it. The global
+    // testTimeout is deliberately left alone.
+    beforeAll(() => {
+        const f = TestBed.createComponent(UpupUploaderComponent)
+        try {
+            f.componentInstance.config = {} as unknown as UploaderProps
+            f.detectChanges()
+        } finally {
+            f.destroy() // DestroyRef.onDestroy (registered in ngOnInit) → store.destroy()
+            TestBed.resetTestingModule()
+        }
+    }, 30_000)
+
     it('mounts and renders the uploader root', () => {
         const f = TestBed.createComponent(UpupUploaderComponent)
         f.componentInstance.config = {} as unknown as UploaderProps

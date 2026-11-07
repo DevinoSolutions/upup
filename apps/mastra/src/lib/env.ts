@@ -40,6 +40,16 @@ export const serverSchema = z.object({
         v => (v === '' ? undefined : v),
         z.string().min(1).default(DEFAULT_OPENROUTER_MODEL),
     ),
+    // Sentry for the mastra server (project upup-mastra). Unset = no client:
+    // a model or proxy failure is then only a console line.
+    SENTRY_DSN: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z.string().url().optional(),
+    ),
+    SENTRY_ENVIRONMENT: z.preprocess(
+        v => (v === '' ? undefined : v),
+        z.string().min(1).optional(),
+    ),
     MASTRA_API_URL: z.string().default('http://localhost:4111'),
     AGENT_ID: z.string().default('playground-agent'),
     // Deployed docs origin the search-docs tool fetches `/docs/llms-full.txt`

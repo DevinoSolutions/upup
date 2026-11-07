@@ -1,7 +1,11 @@
 ---
-title: 'UploadThing vs S3: A Self-Hosted Alternative'
-description: UploadThing vs your own S3 bucket, compared on ownership, cost model, egress and lock-in, plus a self-hosted UploadThing alternative built on upup.
+title: 'UploadThing Alternative: Open Source on Your S3'
+description: 'MIT-licensed UploadThing alternative: upup uploads to your own S3, R2 or B2 bucket with no upload-service bill. Native UI for React, Vue, Svelte, Angular.'
 faq:
+    - q: What is a good open-source alternative to UploadThing?
+      a: 'upup is an MIT-licensed uploader with native UI for React, Vue, Svelte, Angular, Preact and vanilla JS. Files go to a bucket in your own account (AWS S3, Cloudflare R2, Backblaze B2, MinIO or another S3-compatible provider), so there is no upload-service plan and you pay only your storage provider.'
+    - q: How do file upload services compare with general-purpose object storage?
+      a: 'An upload service such as UploadThing bundles storage, request signing, per-route rules, file URLs and UI components behind one account and plan. Object storage such as S3 or R2 is only the bytes plus an API: you add presigned URLs, CORS, an uploader UI and multipart handling, and pay per GB stored, per request and per GB downloaded. A library like upup supplies the upload layer on top of your own storage.'
     - q: Is UploadThing just S3?
       a: 'No. UploadThing is a service: storage, request signing, per-route upload rules and file URLs, all run for you. An S3 bucket is only the storage. Everything else is yours to build, or to take from a library such as upup.'
     - q: Is UploadThing free?
@@ -18,14 +22,20 @@ faq:
       a: Mostly. Server mode gives you one route, server-chosen keys, size and type limits, per-user namespacing and lifecycle hooks. What you take on is the bucket itself, so start from the storage guide for your provider.
 ---
 
-**The short answer:** UploadThing is a hosted upload service that stores your
-files in infrastructure it runs. An S3 bucket is storage you own and pay for
-directly, but uploading straight to S3 means building presigned URLs, CORS, an
-upload widget and multipart handling yourself. upup is the MIT-licensed library
-that supplies those pieces.
+**The short answer:** upup is an open-source (MIT) alternative to UploadThing.
+It supplies the uploader UI and the signing route, but the files go to a bucket
+in your own account: AWS S3, Cloudflare R2, Backblaze B2, MinIO or another
+S3-compatible provider. UploadThing is a hosted service that stores your files
+for you on its own plans. With upup there is no upload-service plan to buy, you
+pay only your storage provider, and the UI is native for React, Vue, Svelte,
+Angular, Preact and vanilla JS. The trade is that you own the bucket, its
+credentials and its CORS rule.
 
-This page compares the two models honestly, lists what "direct to S3" actually
-requires, and shows the migration path with upup's real server API.
+UploadThing is a hosted upload service. An S3 bucket is storage you own and pay
+for directly, but uploading straight to S3 means building presigned URLs, CORS,
+an upload widget and multipart handling yourself. upup is the library that
+supplies those pieces. This page compares the two models, lists what "direct to
+S3" actually requires, and shows the migration path with upup's real server API.
 
 ## What UploadThing is
 
@@ -41,6 +51,15 @@ storage, the request signing and the file URLs, so there is no bucket, IAM
 policy or CORS rule for you to manage. The SDK is MIT-licensed. The service has
 a free tier and paid plans; see [Is UploadThing free?](#is-uploadthing-free)
 below.
+
+## UploadThing pricing and free tier
+
+As of October 2026, UploadThing's pricing page lists a free plan with 2 GB of
+storage shared across all your apps, a 100 GB plan at $10 a month, and a
+usage-based plan from $25 a month with 250 GB included and $0.08 per GB over
+that. upup has no plan to buy: the library is MIT-licensed and you pay only your
+storage provider's rates. For worked monthly figures at three volumes, see
+[UploadThing pricing and self-hosted costs](/docs/comparisons/uploadthing-pricing/).
 
 ## UploadThing vs your own S3 bucket
 
@@ -310,6 +329,22 @@ screen-capture sources, or build in Vue, Svelte, Angular or plain JS as well as
 React.
 
 ## FAQ
+
+### What is a good open-source alternative to UploadThing?
+
+upup is an MIT-licensed uploader with native UI for React, Vue, Svelte, Angular,
+Preact and vanilla JS. Files go to a bucket in your own account (AWS S3,
+Cloudflare R2, Backblaze B2, MinIO or another S3-compatible provider), so there
+is no upload-service plan and you pay only your storage provider.
+
+### How do file upload services compare with general-purpose object storage?
+
+An upload service such as UploadThing bundles storage, request signing,
+per-route rules, file URLs and UI components behind one account and plan. Object
+storage such as S3 or R2 is only the bytes plus an API: you add presigned URLs,
+CORS, an uploader UI and multipart handling, and pay per GB stored, per request
+and per GB downloaded. A library like upup supplies the upload layer on top of
+your own storage.
 
 ### Is UploadThing just S3?
 

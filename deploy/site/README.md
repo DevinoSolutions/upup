@@ -15,9 +15,37 @@ ports over its own network. Each service `expose`s its port for clarity.
 
 ## Deploying
 
-Dokploy clones the repo fresh and runs this compose file with a `.env` file
-placed **next to this compose file**. `${VAR}` interpolation fills the
-build-time `NEXT_PUBLIC_*` args from that file.
+`.github/workflows/dokploy.yml` builds the three images ONCE per commit on
+GitHub Actions and pushes them to GHCR by digest
+(`ghcr.io/devinosolutions/upup/landing`, `/mastra`, `/playground`, public
+packages). On `dev` it publishes the release `upup-dev` (GitHub Environment
+`development`), on `master` the release `upup` (Environment `production`). The
+release manifest is read from the release job log (no artifact is uploaded).
+A same-repository pull request to `dev` or `master` builds the three images
+with `push: false`, so a broken Dockerfile fails on the PR. The file in this
+directory keeps its `build:` blocks, so a local `docker compose up --build`
+still works.
+
+**Target state, once the Dokploy "GitHub Actions" Connect exists for the
+compose: Dokploy does not build this stack.** It polls GitHub, verifies the
+release against the run and deploys those digests, with the compose pinned to
+them (raw compose, no git source). Until the Connect exists a release is
+published and ignored, and Dokploy still builds from source as before.
+
+**Cutover order (first release, per compose): create the Connect for the key,
+then turn off the compose git auto-deploy, then merge.** The Connect must exist
+first: with auto-deploy off and no Connect, nothing deploys and the compose
+silently stays on its old image. Auto-deploy must be off before the merge: the
+push would otherwise trigger a source build and the GitHub Actions release at
+the same time, and the two deploys race.
+
+The runtime `.env` (secrets and the `NEXT_PUBLIC_*` values) is still the
+Dokploy Environment tab. The build-time `NEXT_PUBLIC_*` values live in the
+repository variables `DEV_NEXT_PUBLIC_*` (dev and pull requests) and
+`PROD_NEXT_PUBLIC_*` (master). When a `NEXT_PUBLIC_*` value changes in the
+Dokploy tab, change the same `DEV_`/`PROD_` variable too, or the next build
+keeps the old value. `${VAR}` interpolation of the runtime values works as
+before.
 
 Runtime secrets use **bare list-form passthrough** (`- VAR`, no `=`): a var set
 in the `.env` file reaches the container, and an **unset** var stays **unset**
@@ -65,7 +93,7 @@ Passed as `build.args`; changing one requires a landing **rebuild**.
 | `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST`          | e2e PostHog host (used only when the dataset is `e2e`).                             |
 | `NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN` | e2e PostHog capture token (used only when the dataset is `e2e`).                    |
 | `NEXT_PUBLIC_MASTRA_BASE_URL`                        | Deployed Mastra base URL for the Ask-AI panel.                                      |
-| `NEXT_PUBLIC_SENTRY_DSN`                             | Browser DSN of the Sentry project (errors + 10% session replay). Unset → no Sentry. |
+| `NEXT_PUBLIC_SENTRY_DSN`                             | Browser DSN of the Sentry project (errors + 5% session replay). Unset → no Sentry.  |
 
 ### Build-time — playground `NEXT_PUBLIC_*` (inlined into the client bundle)
 
@@ -89,18 +117,19 @@ and upload config.
 
 **landing** (server-mode upload route handlers):
 
-| Var                                                                   | Purpose                                                                                                                                                                                                            |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                                                                                                                                                                     |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                                                                                                                                                                           |
-| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                                                                                                                                                                |
-| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                                                                                                                                                               |
-| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route).                                                                                                                                             |
-| `POSTHOG_DATASET`                                                     | Analytics dataset for the support route (`production`/`e2e`/`disabled`; optional).                                                                                                                                 |
-| `POSTHOG_E2E_TEST_PROJECT_ID`                                         | e2e project id for ingestion verification by test scripts (optional).                                                                                                                                              |
-| `POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY`           | Read-only (query:read) key for the ingestion-verification e2e spec. **Test-harness only — NEVER set on a production/disabled deploy**: the dataset isolation guard throws by name if a non-e2e runtime carries it. |
-| `SMTP_URL`                                                            | SMTP connection string for the support-email leg (optional — absent = email leg `not_configured`).                                                                                                                 |
-| `SUPPORT_EMAIL_TO` / `SUPPORT_EMAIL_FROM`                             | Support email destination + sender (optional; placeholders apply if unset).                                                                                                                                        |
+| Var                                                                   | Purpose                                                                                                                                                                                                                                                                   |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `S3_BUCKET` / `S3_REGION` / `S3_KEY_ID` / `S3_SECRET` / `S3_ENDPOINT` | S3-compatible storage for server-mode uploads.                                                                                                                                                                                                                            |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                           | Google Drive server-mode token exchange.                                                                                                                                                                                                                                  |
+| `DROPBOX_CLIENT_ID` / `DROPBOX_APP_SECRET`                            | Dropbox server-mode token exchange.                                                                                                                                                                                                                                       |
+| `ONEDRIVE_CLIENT_ID` / `ONEDRIVE_CLIENT_SECRET`                       | OneDrive server-mode token exchange.                                                                                                                                                                                                                                      |
+| `UPUP_UPLOAD_TOKEN_SECRET`                                            | HMAC secret for the upload trust model (required by the upload route).                                                                                                                                                                                                    |
+| `POSTHOG_DATASET`                                                     | Analytics dataset for the support route (`production`/`e2e`/`disabled`; optional).                                                                                                                                                                                        |
+| `POSTHOG_E2E_TEST_PROJECT_ID`                                         | e2e project id for ingestion verification by test scripts (optional).                                                                                                                                                                                                     |
+| `POSTHOG_E2E_TEST_PROJECT_QUERY_READ_ONLY_PERSONAL_API_KEY`           | Read-only (query:read) key for the ingestion-verification e2e spec. **Test-harness only — NEVER set on a production/disabled deploy**: the dataset isolation guard throws by name if a non-e2e runtime carries it.                                                        |
+| `SENDLY_API_KEY`                                                      | Sendly API key for the support-email leg (optional — absent = email leg `not_configured`).                                                                                                                                                                                |
+| `SUPPORT_EMAIL_TO` / `SUPPORT_EMAIL_FROM`                             | Support email destination + sender (optional; placeholders apply if unset).                                                                                                                                                                                               |
+| `TRUST_CF_CONNECTING_IP`                                              | Optional override for the support rate limit. Unset (the right value behind Cloudflare): `cf-connecting-ip` is trusted only when the immediate peer (last `x-forwarded-for` hop) is in Cloudflare's published ranges. `1` = always trust it (e.g. a tunnel); `0` = never. |
 
 **playground** (mounts the same `/api/upup` server-mode upload route): identical
 runtime secret set to landing — `S3_*`, `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
@@ -115,6 +144,7 @@ server-mode uploads are wanted on the playground.
 | `OPENROUTER_API_KEY`                                                       | LLM provider key for the default model (`openrouter/anthropic/claude-haiku-4.5`).                                                                                                         |
 | `OPENROUTER_API_URL`                                                       | Optional OpenAI-compatible base URL. Unset → OpenRouter. `https://proxyai.devino.ca/v1` routes both agents through the Devino proxy (then `OPENROUTER_API_KEY` holds the proxy key).      |
 | `OPENROUTER_MODEL`                                                         | Optional model id for both agents. Unset → `anthropic/claude-haiku-4.5`. On the proxy, a proxy model id (e.g. `glm-5.3`).                                                                 |
+| `OPENROUTER_FALLBACK_API_KEY` / `_MODEL` / `_AFTER_SECONDS`                | Not read, on purpose. Both agents serve anonymous site visitors only, so this app never sends a paid fallback key; setting these changes nothing.                                         |
 | `ALLOWED_ORIGINS`                                                          | Comma-separated CORS allowlist — the landing origin must be listed.                                                                                                                       |
 | `ORIGIN_TOKEN_SECRET`                                                      | HMAC origin-token secret. **Omitted from compose on dev** (min(1) — empty crashes boot) → auth disabled. To enable, add a bare `- ORIGIN_TOKEN_SECRET` line + a real `.env` value.        |
 | `DAILY_REQUEST_CAP` / `RATE_LIMIT_CAPACITY` / `RATE_LIMIT_WINDOW_MS`       | Budget/rate-limit knobs (have sane defaults).                                                                                                                                             |

@@ -23,8 +23,8 @@
         "msw": "^2.7.0"
     },
     "devDependencies": {
-        "storybook": "^10.6.1",
+        "storybook": "^10.6.2",
         "typescript": "^5.3.2",
-        "vitest": "^4.1.11"
+        "vitest": "^4.1.12"
     }
 }

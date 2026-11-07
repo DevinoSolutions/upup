@@ -13,7 +13,7 @@ export function PlaygroundCta() {
         <Link
             href={PLAYGROUND_HREF}
             data-testid="docs-playground-cta"
-            className="group not-prose my-8 flex items-center justify-between gap-4 rounded-xl border border-black/5 p-5 no-underline transition-all hover:-translate-y-0.5 hover:border-black/10 hover:shadow-sm dark:border-white/10 dark:hover:border-white/20"
+            className="group not-prose my-8 flex items-center justify-between gap-4 rounded-xl border border-black/5 p-5 no-underline transition-[transform,border-color] duration-fast ease-motion-out [@media(hover:hover)]:hover:-translate-y-0.5 hover:border-black/10 hover:shadow-sm dark:border-white/10 dark:hover:border-white/20"
         >
             <div>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">

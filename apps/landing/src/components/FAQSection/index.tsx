@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { m, AnimatePresence } from 'framer-motion'
 import { FaChevronDown, FaDiscord } from 'react-icons/fa'
 import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { faqs as homeFaqs, type Faq } from '@/lib/faqs'
@@ -68,31 +67,29 @@ export default function FAQSection({
                                         }`}
                                     />
                                 </button>
+                                {/* grid-template-rows 0fr -> 1fr animates the
+                                    height without animating `height`. Reduced
+                                    motion collapses the duration via the global
+                                    net. Closed content is `inert`: out of the
+                                    tab order and the accessibility tree. */}
                                 <div
                                     id={`faq-panel-${index}`}
                                     role="region"
                                     aria-labelledby={`faq-q-${index}`}
+                                    className={`grid transition-[grid-template-rows] duration-base ease-motion-out ${
+                                        isOpen
+                                            ? 'grid-rows-[1fr]'
+                                            : 'grid-rows-[0fr]'
+                                    }`}
                                 >
-                                    <AnimatePresence initial={false}>
-                                        {isOpen && (
-                                            <m.div
-                                                initial={{
-                                                    height: 0,
-                                                    opacity: 0,
-                                                }}
-                                                animate={{
-                                                    height: 'auto',
-                                                    opacity: 1,
-                                                }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                            >
-                                                <p className="px-6 pb-5 text-gray-600 dark:text-gray-300 leading-relaxed">
-                                                    {faq.answer}
-                                                </p>
-                                            </m.div>
-                                        )}
-                                    </AnimatePresence>
+                                    <div
+                                        className="min-h-0 overflow-hidden"
+                                        inert={!isOpen}
+                                    >
+                                        <p className="px-6 pb-5 text-gray-600 dark:text-gray-300 leading-relaxed">
+                                            {faq.answer}
+                                        </p>
+                                    </div>
                                 </div>
                             </Card>
                         )
@@ -120,7 +117,7 @@ export default function FAQSection({
                     >
                         contact support
                     </Link>
-                    .
+                    . A human replies within 1 business day.
                 </p>
             </div>
         </Section>

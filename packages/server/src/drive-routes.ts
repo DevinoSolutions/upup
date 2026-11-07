@@ -11,8 +11,12 @@ import type { UpupServerConfig } from './config'
 import { getTokens, deleteTokens, resolveUserId } from './tokenStore'
 import { isValidProvider, refreshAccessToken } from './oauth'
 import { getDriveClient } from './drive-clients'
-import { matchesAllowedType, runPostCompletionHooks } from './upload-routes'
-import { type Responder } from './respond'
+import {
+    matchesAllowedType,
+    runBeforeUploadHook,
+    runPostCompletionHooks,
+} from './upload-routes'
+import { isJsonObject, type Responder } from './respond'
 import { resolveStorage } from './resolve-storage'
 import type { UpupClientMetadata } from './config'
 
@@ -78,6 +82,87 @@ export async function handleListFiles(
     }
 }
 
+/**
+ * Disconnect a drive: drop the CALLER's stored tokens for this provider so the
+ * next list/transfer demands a fresh sign-in. Scoped by resolveUserId (same
+ * gate as list/transfer) to exactly one user+provider key; idempotent, so a
+ * second logout (or one with no stored grant) is still 200.
+ */
+export async function handleDriveLogout(
+    req: Request,
+    config: UpupServerConfig,
+    provider: string,
+    res: Responder,
+): Promise<Response> {
+    if (!isValidProvider(provider)) {
+        return res.json({ error: `Unknown provider: ${provider}` }, 400)
+    }
+    if (!config.tokenStore)
+        return res.json({ error: 'tokenStore is required' }, 500)
+
+    const userId = await resolveUserId(config, req)
+    if (!userId) return res.json({ error: 'Unauthenticated' }, 401)
+
+    await deleteTokens(config.tokenStore, userId, provider)
+    return res.json({ provider, ok: true }, 200)
+}
+
+/** The client's own restrictions for this transfer (T-7058). They are an
+ *  ADDITIONAL tightening of the server policy, never a loosening: a malformed
+ *  value is ignored, and the effective cap is min(server, client). */
+function clientRestrictions(raw: unknown): { cap?: number; accept?: string } {
+    if (!isJsonObject(raw)) return {}
+    const { maxFileSize, accept } = raw
+    return {
+        ...(typeof maxFileSize === 'number' &&
+        Number.isFinite(maxFileSize) &&
+        maxFileSize > 0
+            ? { cap: maxFileSize }
+            : {}),
+        ...(typeof accept === 'string' && accept.length <= 2000
+            ? { accept }
+            : {}),
+    }
+}
+
+/** `accept` semantics of the client: `*` / `*\/*`, `type/*`, exact MIME, and
+ *  `.ext` (matched on the provider's file name). */
+function matchesAccept(accept: string, name: string, type: string): boolean {
+    const entries = accept
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(Boolean)
+    if (entries.length === 0) return true
+    const lower = name.toLowerCase()
+    const mime = type.toLowerCase()
+    return entries.some(
+        e =>
+            e === '*' ||
+            e === '*/*' ||
+            (e.endsWith('/*') ? mime.startsWith(e.slice(0, -1)) : e === mime) ||
+            (e.startsWith('.') && lower.endsWith(e)),
+    )
+}
+
+/** Release an open drive stream. Best-effort, idempotent and NEVER awaited: a
+ *  stream the transfer already consumed (locked or closed) rejects, which is
+ *  fine, and a cancel() that is slow or never settles (a stalled socket) must
+ *  not hold the client's response hostage. T-7972: a 413/415 rejected after the
+ *  drive fetch opened the stream never answered live; the awaited cancel() was
+ *  the only in-code suspect (the live root cause was not confirmed — a bare
+ *  undici cancel returns in ~0 ms), and issuing it fire-and-forget removes it
+ *  from the response path. The cancel is still issued before the response is
+ *  returned, so the connection is freed either way. */
+function releaseStream(stream: ReadableStream<Uint8Array> | undefined): void {
+    if (!stream) return
+    try {
+        void stream.cancel().catch(() => undefined)
+    } catch {
+        // upup-catch: releasing is best-effort — a stream whose cancel() throws
+        // synchronously has nothing left to free, and the response must go out.
+    }
+}
+
 export async function handleFileTransfer(
     req: Request,
     config: UpupServerConfig,
@@ -118,9 +203,15 @@ export async function handleFileTransfer(
         size?: number
         mimeType?: string
         metadata?: UpupClientMetadata
+        restrictions?: unknown
     }
     try {
-        body = (await req.json()) as typeof body
+        const raw: unknown = await req.json()
+        // null / array / scalar is a client error, not something to dereference.
+        if (!isJsonObject(raw)) {
+            return res.json({ error: 'Invalid JSON body' }, 400)
+        }
+        body = raw as typeof body
     } catch {
         // upup-catch: a malformed JSON body is surfaced to the client as 400 —
         // returned, not swallowed.
@@ -131,24 +222,70 @@ export async function handleFileTransfer(
     // Fast client-declared-size reject (cheap early-out before we open the
     // drive stream); the AUTHORITATIVE cap is enforced against actual streamed
     // bytes inside transferDriveFileToS3 via `maxBytes` below (F-743).
-    if (
-        config.maxFileSize &&
-        typeof body.size === 'number' &&
-        body.size > config.maxFileSize
-    ) {
+    const client = clientRestrictions(body.restrictions)
+    const maxBytes = Math.min(
+        config.maxFileSize || Infinity,
+        client.cap ?? Infinity,
+    )
+    if (typeof body.size === 'number' && body.size > maxBytes) {
         return res.json({ error: 'File too large' }, 413)
     }
     // One shared allowed-types policy with the upload path (F-743): honour the
     // `image/*` wildcard, and treat an ABSENT mimeType as a non-match against a
     // non-empty allowlist (`?? ''`) rather than silently bypassing the check.
+    // This is only a cheap early-out on the CLIENT's claim (and the gate for the
+    // fallback case where the provider reports no type); the claim is never
+    // what gets stored — the provider-reported type is re-gated below (T-5467).
     if (!matchesAllowedType(body.mimeType ?? '', config.allowedTypes)) {
         return res.json({ error: 'File type not allowed' }, 415)
     }
+    // T-7833: with no allowlist the gate above passes anything, so a non-string
+    // claim (123, {}, []) would flow on to the S3 ContentType. A present
+    // mimeType must be a string; absent keeps the provider-type fallback.
+    if (body.mimeType !== undefined && typeof body.mimeType !== 'string') {
+        return res.json({ error: 'Invalid mimeType' }, 400)
+    }
 
+    // The open drive response body, tracked outside the try so EVERY failure
+    // after the provider fetch (a rejection, a throwing onBeforeUpload, a
+    // throwing storage resolver, a failed transfer) releases the connection.
+    let driveStream: ReadableStream<Uint8Array> | undefined
     try {
         const { stream, size, fileName, mimeType } = await getDriveClient(
             provider,
         ).fetchFile(tokens.accessToken, body)
+        driveStream = stream
+        // T-5467: `mimeType` is the PROVIDER's type (the client's claim only
+        // fills in when the provider reports none), so re-gate it against
+        // allowedTypes and run the same onBeforeUpload admission as the upload
+        // routes, on the real name/type/size. Reject BEFORE any bytes are
+        // consumed, and cancel the open drive stream so the connection is freed.
+        const rejected = !matchesAllowedType(mimeType, config.allowedTypes)
+            ? res.json({ error: 'File type not allowed' }, 415)
+            : size > maxBytes
+              ? // The provider's own size already breaks the (client or server)
+                // cap: refuse before streaming, so nothing is stored.
+                res.json({ error: 'File too large' }, 413)
+              : client.accept !== undefined &&
+                  !matchesAccept(client.accept, fileName, mimeType)
+                ? res.json({ error: 'File type not allowed' }, 415)
+                : await runBeforeUploadHook(
+                      config,
+                      {
+                          name: fileName,
+                          size,
+                          type: mimeType,
+                          ...(body.metadata !== undefined
+                              ? { metadata: body.metadata }
+                              : {}),
+                      },
+                      req,
+                      res,
+                  )
+        if (rejected) {
+            releaseStream(driveStream)
+            return rejected
+        }
         // Resolved AFTER the drive reports the real name/type/size, so a
         // resolver can route on what is actually being transferred rather than
         // on the client's claim (#337).
@@ -171,7 +308,7 @@ export async function handleFileTransfer(
             // Enforce maxFileSize against the ACTUAL streamed bytes, and route
             // an abort-cleanup failure through onError instead of swallowing it
             // (F-743 / F-744).
-            maxBytes: config.maxFileSize,
+            maxBytes: Number.isFinite(maxBytes) ? maxBytes : undefined,
             onError: config.onError,
             requestId: res.requestId,
             downloadUrlExpiresIn: config.downloadUrlExpiresIn,
@@ -191,6 +328,7 @@ export async function handleFileTransfer(
         )
         return res.json({ provider, ...result }, 200)
     } catch (err) {
+        releaseStream(driveStream)
         if (err instanceof UpupNetworkError && err.status === 401) {
             await deleteTokens(config.tokenStore, userId, provider)
             return res.json({ reauth: true, provider }, 401)

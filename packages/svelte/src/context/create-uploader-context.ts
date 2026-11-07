@@ -6,6 +6,7 @@ import {
     createUploaderController,
     type UploaderControllerOptions,
     type CloudProvider,
+    type UploaderCallbacks,
 } from '@useupup/core/internal'
 import type { Component } from 'svelte'
 import type { UploaderProps } from '../shared/types'
@@ -30,7 +31,15 @@ const DRIVE_SOURCE_LABEL_KEY: Record<CloudProvider, keyof UiTranslations> = {
     box: 'box',
 }
 
-export function createUploaderContext(props: UploaderProps): IUploaderContext {
+/** The built context plus the hook the component calls from an effect to keep
+ *  the controller's callbacks in step with the current props. */
+export type UploaderContextHandle = IUploaderContext & {
+    syncCallbacks: () => void
+}
+
+export function createUploaderContext(
+    props: UploaderProps,
+): UploaderContextHandle {
     // ── Destructure props with defaults ──────────────────────────
     const {
         allowedFileTypes: acceptProp = '*',
@@ -58,34 +67,12 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         // network awareness applies; only an explicit `false` opts out.
         networkAware,
         sources,
-        onError: errorHandler,
-        onWarn: warningHandler,
         icons = {},
         i18n,
-        onIntegrationClick = () => {},
-        onFileClick = () => {},
-        onFileRemoved: onFileRemovedProp,
-        onStatusChange,
-        onFilesDragOver = () => {},
-        onFilesDragLeave = () => {},
-        onFilesDrop = () => {},
-        onFileTypeMismatch = () => {},
-        onBeforeFileAdded,
-        onRestrictionFailed,
         enablePaste = false,
         autoUpload = false,
         maxConcurrentUploads,
         imageEditor: imageEditorProp,
-        onUploadStart = () => {},
-        onFileUploadStart = () => {},
-        onFileUploadProgress = () => {},
-        onFilesUploadProgress = () => {},
-        onFileUploadComplete = () => {},
-        onFilesUploadComplete = () => {},
-        onUploadComplete = () => {},
-        onFilesSelected = () => {},
-        onDoneClicked = () => {},
-        onPrepareFiles,
         provider,
         mode: modeProp,
         uploadEndpoint,
@@ -96,17 +83,40 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         maxRetries,
         resumable,
         processingEndpoint,
-        onFileProcessed,
         processingTimeout,
     } = props
 
+    // Host callbacks are read from `props` when they fire, never copied at
+    // setup: the destructure above would freeze the first value, so a handler
+    // that arrives or changes after mount would never be heard.
     function onError(message: string) {
-        errorHandler?.(message)
+        props.onError?.(message)
     }
 
     function onWarn(message: string) {
-        warningHandler?.(message)
+        props.onWarn?.(message)
     }
+
+    const noop = () => {}
+    const currentCallbacks = (): UploaderCallbacks => ({
+        onError,
+        onWarn,
+        onUploadStart: props.onUploadStart ?? noop,
+        onFileUploadStart: props.onFileUploadStart ?? noop,
+        onFileUploadProgress: props.onFileUploadProgress ?? noop,
+        onFilesUploadProgress: props.onFilesUploadProgress ?? noop,
+        onFileUploadComplete: props.onFileUploadComplete ?? noop,
+        onFilesUploadComplete: props.onFilesUploadComplete ?? noop,
+        onUploadComplete: props.onUploadComplete ?? noop,
+        onFilesSelected: props.onFilesSelected ?? noop,
+        onDoneClicked: props.onDoneClicked ?? noop,
+        onPrepareFiles: props.onPrepareFiles,
+        onFileRemoved: props.onFileRemoved,
+        onStatusChange: props.onStatusChange,
+        onFileTypeMismatch: props.onFileTypeMismatch ?? noop,
+        onRestrictionFailed: props.onRestrictionFailed,
+        autoUpload: props.autoUpload,
+    })
 
     // ── Build factory-compatible options object ──────────────────
     // UploaderProps.allowedFileTypes is string | string[] | undefined;
@@ -152,23 +162,10 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
         maxRetries,
         resumable,
         i18n,
-        onBeforeFileAdded,
-        onError: errorHandler,
-        onWarn: warningHandler,
-        onUploadStart,
-        onFileUploadStart,
-        onFileUploadProgress,
-        onFilesUploadProgress,
-        onFileUploadComplete,
-        onFilesUploadComplete,
-        onUploadComplete,
-        onFilesSelected,
-        onDoneClicked,
-        onPrepareFiles,
-        onFileRemoved: onFileRemovedProp,
-        onStatusChange,
-        onFileTypeMismatch,
-        onRestrictionFailed,
+        // Core keeps this for good, so hand it a stable wrapper that asks the
+        // current prop each time. No handler set answers undefined, which core
+        // treats as "keep the file", the same as having no hook at all.
+        onBeforeFileAdded: file => props.onBeforeFileAdded?.(file),
     }
 
     // ── Normalize options (pure) ─────────────────────────────────
@@ -181,7 +178,11 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
     // ── SSE processing ──────────────────────────────────────────
     const { connectSSE } = useSSEProcessing({
         processingEndpoint,
-        onFileProcessed,
+        // Read when a stream opens and again when its message lands, so a
+        // handler that arrives or changes after mount is the one that hears it.
+        get onFileProcessed() {
+            return props.onFileProcessed
+        },
         onError: err => {
             onError(err.message)
         },
@@ -197,25 +198,12 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             },
         },
     )
-    controller.updateCallbacks({
-        onError,
-        onWarn,
-        onUploadStart,
-        onFileUploadStart,
-        onFileUploadProgress,
-        onFilesUploadProgress,
-        onFileUploadComplete,
-        onFilesUploadComplete,
-        onUploadComplete,
-        onFilesSelected,
-        onDoneClicked,
-        onPrepareFiles,
-        onFileRemoved: onFileRemovedProp,
-        onStatusChange,
-        onFileTypeMismatch,
-        onRestrictionFailed,
-        autoUpload,
-    })
+    controller.updateCallbacks(currentCallbacks())
+    // Run from a component effect (which tracks the props read here) so the
+    // controller's callback refs follow later prop changes.
+    const syncCallbacks = () => {
+        controller.updateCallbacks(currentCallbacks())
+    }
 
     // ── Subscribe to orchestrator state (toReadable handles sub/unsub) ──
     const orchState = toReadable(controller.orchestrator)
@@ -278,6 +266,7 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
 
     // ── Assemble IUploaderContext ────────────────────────────────────
     return {
+        syncCallbacks,
         core: upload.core,
         orchestrator: controller.orchestrator,
         mode: resolved.mode,
@@ -402,11 +391,21 @@ export function createUploaderContext(props: UploaderProps): IUploaderContext {
             maxRetries,
             resumable,
             onError,
-            onIntegrationClick,
-            onFileClick,
-            onFilesDragOver,
-            onFilesDragLeave,
-            onFilesDrop,
+            onIntegrationClick: (sourceId: string) => {
+                props.onIntegrationClick?.(sourceId)
+            },
+            onFileClick: (file: UploadFile) => {
+                props.onFileClick?.(file)
+            },
+            onFilesDragOver: (files: File[]) => {
+                props.onFilesDragOver?.(files)
+            },
+            onFilesDragLeave: (files: File[]) => {
+                props.onFilesDragLeave?.(files)
+            },
+            onFilesDrop: (files: File[]) => {
+                props.onFilesDrop?.(files)
+            },
             onWarn,
             enablePaste,
             sources: resolved.sources,

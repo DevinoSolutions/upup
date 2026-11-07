@@ -16,11 +16,11 @@
     },
     "devDependencies": {
         "@useupup/storybook-config": "workspace:*",
-        "storybook": "^10.6.1",
-        "@storybook/vue3-vite": "^10.6.1",
-        "@storybook/addon-docs": "^10.6.1",
-        "@storybook/addon-a11y": "^10.6.1",
-        "@storybook/addon-themes": "^10.6.1",
+        "storybook": "^10.6.2",
+        "@storybook/vue3-vite": "^10.6.2",
+        "@storybook/addon-docs": "^10.6.2",
+        "@storybook/addon-a11y": "^10.6.2",
+        "@storybook/addon-themes": "^10.6.2",
         "msw": "^2.7.0",
         "msw-storybook-addon": "^2.0.4",
         "@tailwindcss/forms": "^0.5.7",
@@ -31,7 +31,7 @@
         "typescript": "^5.3.2",
         "vite": "^7",
         "vue-tsc": "^2.0.0",
-        "vitest": "^4.1.11"
+        "vitest": "^4.1.12"
     },
     "msw": {
         "workerDirectory": [

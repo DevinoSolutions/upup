@@ -17,11 +17,11 @@
     },
     "devDependencies": {
         "@useupup/storybook-config": "workspace:*",
-        "storybook": "^10.6.1",
-        "@storybook/react-vite": "^10.6.1",
-        "@storybook/addon-docs": "^10.6.1",
-        "@storybook/addon-a11y": "^10.6.1",
-        "@storybook/addon-themes": "^10.6.1",
+        "storybook": "^10.6.2",
+        "@storybook/react-vite": "^10.6.2",
+        "@storybook/addon-docs": "^10.6.2",
+        "@storybook/addon-a11y": "^10.6.2",
+        "@storybook/addon-themes": "^10.6.2",
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "msw": "^2.7.0",
@@ -32,7 +32,7 @@
         "postcss": "^8.5.2",
         "tailwindcss": "^3.4.17",
         "typescript": "^5.3.2",
-        "vitest": "^4.1.11"
+        "vitest": "^4.1.12"
     },
     "msw": {
         "workerDirectory": [

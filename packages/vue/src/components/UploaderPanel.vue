@@ -83,7 +83,13 @@ watch([sourceOverlayOpen, activeSource], () => {
         if (!overlayEl) return
         if (!triggerEl && document.activeElement instanceof HTMLElement)
             triggerEl = document.activeElement
-        overlayEl.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+        // No enabled control (every tile disabled): the dialog itself
+        // (tabindex -1) takes focus so it still lands inside the sheet.
+        const target =
+            overlayEl.querySelector<HTMLElement>(
+                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+            ) ?? overlayEl
+        target.focus()
     })
 })
 watch([sourceOverlayOpen, sourceOverlayClosing, activeSource], () => {
@@ -354,9 +360,10 @@ function onOverlayKeydown(e: KeyboardEvent) {
                 :role="sourceOverlayClosing ? undefined : 'dialog'"
                 :aria-modal="sourceOverlayClosing ? undefined : 'true'"
                 :aria-label="tr.addingMoreFiles"
+                tabindex="-1"
                 :class="
                     cn(
-                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
                         sourceOverlayClosing
                             ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                             : 'upup-fx-overlay-slide',
@@ -448,14 +455,14 @@ function onOverlayKeydown(e: KeyboardEvent) {
                     <img
                         v-if="dark"
                         :src="devinoDark"
-                        :width="61"
+                        :width="43"
                         :height="13"
                         alt="logo-dark"
                     />
                     <img
                         v-else
                         :src="devinoLight"
-                        :width="61"
+                        :width="43"
                         :height="13"
                         alt="logo-light"
                     />

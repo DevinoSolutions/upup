@@ -187,7 +187,7 @@ function FeatureRow({ row, index }: { row: HeroRow; index: number }) {
                         // WCAG 2.5.3: the accessible name must contain the
                         // visible text ("See it live"), so it leads.
                         aria-label={`See it live — ${row.title}`}
-                        className="group mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:text-blue-400"
+                        className="group mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold md:mt-5 md:min-h-0 text-blue-600 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-transparent dark:text-blue-400"
                     >
                         See it live
                         <FaArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />

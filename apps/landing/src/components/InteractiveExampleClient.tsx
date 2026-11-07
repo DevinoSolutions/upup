@@ -5,18 +5,22 @@ import {
     InteractiveExample,
     type InteractiveExampleProps,
     type AiFeedbackEvent,
+    type AssistantErrorInfo,
 } from '@useupup/interactive-example'
 import { captureClientEvent } from '@/lib/analytics/capture.client'
+import { reportAiFailure } from '@/lib/analytics/sentry'
 import { whenPostHogReady } from '@/lib/analytics/posthog-client'
 
 /**
- * Client wrapper that injects the two client-only pieces the Ask-AI panel needs
+ * Client wrapper that injects the client-only pieces the Ask-AI panel needs
  * into `aiAssistant`:
  *
  *   - `posthogDistinctId` — the visitor's PostHog distinct id, so an AI trace's
  *     distinct id matches whoever later rates the response.
  *   - `onAiFeedback` — the sink that forwards thumbs ratings / comments to
  *     PostHog via `posthog.capture`.
+ *   - `onAssistantError` — the sink that reports a turn ending in the visible
+ *     error state to Sentry (a no-op when Sentry is not initialised).
  *
  * Both live here rather than in the server prop builder because a function prop
  * can't cross the RSC boundary and `posthog.get_distinct_id()` only exists on
@@ -48,6 +52,10 @@ export function InteractiveExampleClient(props: InteractiveExampleProps) {
         captureClientEvent(event.name, event.properties)
     }, [])
 
+    const onAssistantError = useCallback((info: AssistantErrorInfo) => {
+        reportAiFailure(info)
+    }, [])
+
     return (
         <InteractiveExample
             {...props}
@@ -55,6 +63,7 @@ export function InteractiveExampleClient(props: InteractiveExampleProps) {
                 ...props.aiAssistant,
                 posthogDistinctId: distinctId,
                 onAiFeedback,
+                onAssistantError,
             }}
         />
     )

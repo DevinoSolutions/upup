@@ -12,9 +12,11 @@
 import { test, expect } from '@playwright/test'
 import { FRAMEWORKS, storyUrl } from './framework-matrix'
 
-// Mirrors the 420s webServer bind ceiling in playwright-shared.ts: costs
-// nothing warm, only prevents a premature cold-start failure.
-const WARMUP_BUDGET_MS = 420_000
+// Mirrors the 900s webServer bind ceiling in playwright-shared.ts (raised from
+// 420s after cold-runner and loaded-dev-box boots overran it): costs nothing
+// warm, only prevents a premature cold-start failure. This project overrides
+// the 90s per-test timeout via test.setTimeout and no globalTimeout is set.
+const WARMUP_BUDGET_MS = 900_000
 
 test('warm up all six storybooks (first-request story compile)', async ({
     browser,

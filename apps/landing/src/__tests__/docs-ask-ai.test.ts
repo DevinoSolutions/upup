@@ -1,13 +1,30 @@
+import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
-import { MessageBody, parseBlocks } from '@/components/docs/DocsAskAi'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MessageBody } from '@/components/docs/DocsAskAi'
+import type { DocsChatMessage } from '@/lib/docs/use-docs-chat'
 
 // The Ask-AI answer renderer is a hand-rolled SAFE markdown-ish pipeline: every
 // token becomes a React text node (NO innerHTML anywhere), so these tests render
 // MessageBody to static markup and assert on the produced HTML. renderToStaticMarkup
-// runs in the node test env without a DOM.
+// runs in the node test env without a DOM. Plain text is split into one span per
+// word (the ease-in unit), so sentence-level assertions go through textOf().
 function render(content: string): string {
-    return renderToStaticMarkup(MessageBody({ content }))
+    return renderToStaticMarkup(createElement(MessageBody, { content }))
+}
+
+// Drops every tag by scanning characters instead of a tag regex. The input is
+// React's own escaped static markup, so this is a text extractor for assertions,
+// not a sanitizer (and CodeQL no longer reads it as one).
+function textOf(html: string): string {
+    let out = ''
+    let inTag = false
+    for (const ch of html) {
+        if (ch === '<') inTag = true
+        else if (ch === '>') inTag = false
+        else if (!inTag) out += ch
+    }
+    return out
 }
 
 describe('MessageBody inline rendering', () => {
@@ -37,7 +54,7 @@ describe('MessageBody inline rendering', () => {
 
     it('renders a plain paragraph untouched (no list/bold markup)', () => {
         const html = render('Just a normal sentence about uploads.')
-        expect(html).toContain('Just a normal sentence about uploads.')
+        expect(textOf(html)).toContain('Just a normal sentence about uploads.')
         expect(html).toContain('<p')
         expect(html).not.toContain('<strong')
         expect(html).not.toContain('<ol')
@@ -53,10 +70,10 @@ describe('MessageBody block rendering', () => {
         expect(html).toContain('<ol')
         const liCount = (html.match(/<li/g) ?? []).length
         expect(liCount).toBe(3)
-        expect(html).toContain('Install the package')
-        expect(html).toContain('Render it')
+        expect(textOf(html)).toContain('Install the package')
+        expect(textOf(html)).toContain('Render it')
         // The intro line stays a paragraph, not swallowed into the list.
-        expect(html).toContain('Steps:')
+        expect(textOf(html)).toContain('Steps:')
         // Numbers are structural (<ol>), not literal text.
         expect(html).not.toContain('1. Install')
     })
@@ -101,25 +118,87 @@ describe('MessageBody fenced code blocks', () => {
     })
 })
 
-describe('parseBlocks', () => {
+describe('MessageBody block grouping', () => {
+    // Re-pinned from the retired parseBlocks unit tests: the same grouping
+    // intent, asserted through the shared parser's rendered structure.
+    const tags = (html: string) =>
+        Array.from(html.matchAll(/<(p|ol|ul)[ >]/g), m => m[1])
+
     it('groups ordered, unordered, and paragraph runs', () => {
-        const blocks = parseBlocks(
-            'Intro line\n1. one\n2. two\n\n- a\n- b\nOutro',
-        )
-        expect(blocks.map(b => b.type)).toEqual(['p', 'ol', 'ul', 'p'])
-        const ol = blocks[1]
-        const ul = blocks[2]
-        expect(ol.type === 'ol' && ol.items).toEqual(['one', 'two'])
-        expect(ul.type === 'ul' && ul.items).toEqual(['a', 'b'])
+        const html = render('Intro line\n1. one\n2. two\n\n- a\n- b\nOutro')
+        expect(tags(html)).toEqual(['p', 'ol', 'ul', 'p'])
+        expect((html.match(/<li/g) ?? []).length).toBe(4)
     })
 
     it('treats `1)` and `*` markers as list items', () => {
-        const blocks = parseBlocks('1) first\n* bullet')
-        expect(blocks.map(b => b.type)).toEqual(['ol', 'ul'])
+        const html = render('1) first\n* bullet')
+        expect(tags(html)).toEqual(['ol', 'ul'])
     })
 
-    it('returns an empty array for blank input', () => {
-        expect(parseBlocks('')).toEqual([])
-        expect(parseBlocks('\n\n')).toEqual([])
+    it('renders nothing for blank input', () => {
+        expect(render('')).toBe('')
+        expect(render('\n\n')).toBe('')
+    })
+
+    it('renders a pipe table as a focusable, scrollable region', () => {
+        const html = render('| a | b |\n| - | - |\n| 1 | 2 |')
+        expect(html).toContain('<table')
+        expect(html).toContain('overflow-x-auto')
+        expect(html).toContain('tabindex="0"')
+        expect(html).toContain('aria-label="Table"')
+    })
+})
+
+describe('DocsAskAi transcript in session replays', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs()
+    })
+
+    // clientEnv is read once at module load, so the drawer is imported after
+    // the Ask-AI base URL is stubbed (an unconfigured drawer has no transcript).
+    // The drawer uses hooks, so it is rendered through createElement rather
+    // than called directly like MessageBody above.
+    async function renderDrawer(messages: DocsChatMessage[]): Promise<string> {
+        vi.resetModules()
+        vi.stubEnv('NEXT_PUBLIC_MASTRA_BASE_URL', 'https://mastra.test')
+        const [{ createElement }, server, { DocsAskAi }] = await Promise.all([
+            import('react'),
+            import('react-dom/server'),
+            import('@/components/docs/DocsAskAi'),
+        ])
+        return server.renderToStaticMarkup(
+            createElement(DocsAskAi, {
+                open: true,
+                onClose: () => {},
+                chat: {
+                    messages,
+                    pending: false,
+                    send: async () => {},
+                    clear: () => {},
+                },
+            }),
+        )
+    }
+
+    it("renders the visitor's question, the answer and a failed turn inside a data-ph-mask element", async () => {
+        const html = await renderDrawer([
+            { id: 'q', role: 'user', content: 'my private question' },
+            { id: 'a', role: 'assistant', content: 'an answer quoting it' },
+            { id: 'q2', role: 'user', content: 'a second question' },
+            {
+                id: 'e',
+                role: 'assistant',
+                content: 'an error quoting it',
+                error: true,
+            },
+        ])
+        const transcript = /<ul[^>]*data-ph-mask[^>]*>([\s\S]*)<\/ul>/.exec(
+            html,
+        )
+        expect(transcript).not.toBeNull()
+        expect(transcript![1]).toContain('my private question')
+        expect(textOf(transcript![1])).toContain('an answer quoting it')
+        expect(transcript![1]).toContain('an error quoting it')
+        expect(transcript![1]).toContain('Retry')
     })
 })

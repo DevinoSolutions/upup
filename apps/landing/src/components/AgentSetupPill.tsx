@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Check, Copy } from 'lucide-react'
+import { CopyIconSwap } from '@/components/copy-icon-swap'
 import { AgentIcon } from '@/components/AgentIcon'
 import {
     AGENTS,
@@ -72,17 +72,11 @@ export function AgentSetupPill({
                     >
                         Onboard your agent to {APP_NAME}
                     </span>
-                    {copied ? (
-                        <Check
-                            className="h-3.5 w-3.5 shrink-0 text-green-600 dark:text-green-400"
-                            aria-hidden
-                        />
-                    ) : (
-                        <Copy
-                            className="h-3.5 w-3.5 shrink-0 text-gray-500 dark:text-gray-400"
-                            aria-hidden
-                        />
-                    )}
+                    <CopyIconSwap
+                        copied={copied}
+                        copyClassName="text-gray-500 dark:text-gray-400"
+                        checkClassName="text-green-600 dark:text-green-400"
+                    />
                 </button>
                 <span
                     className={`shrink-0 bg-black/10 dark:bg-white/15 ${

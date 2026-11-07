@@ -1,4 +1,5 @@
 import type { UploadFile } from '../types/upload-file'
+import type { UpupValidationError } from '../errors'
 import type { UploadStatus } from '../types/upload-status'
 import type { FileSource } from '../types/file-source'
 import type { FilesProgressMap } from '../file-utils'
@@ -43,6 +44,9 @@ export interface OrchestratorCallbacks {
         ((completedFiles: number, totalFiles: number) => void) | undefined
     onFilesUploadComplete?: ((files: UploadFile[]) => void) | undefined
     onFileRemoved?: ((file: UploadFile) => void) | undefined
+    /** Called once per file the orchestrator's own re-add (the
+     *  `onPrepareFiles` swap) refuses. */
+    onFileRefused?: ((error: UpupValidationError) => void) | undefined
     onFilesSelected?: ((files: UploadFile[]) => void) | undefined
     onFileDrop?: ((files: File[]) => void) | undefined
     onDoneClicked?: (() => void) | undefined

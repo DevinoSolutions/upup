@@ -10,6 +10,7 @@
 import {
     UpupErrorCode,
     UpupError,
+    UpupStorageError,
     type MultipartResumeResponse,
 } from '@useupup/core'
 import type {
@@ -155,20 +156,32 @@ async function enforceTokenOwner(
     return null
 }
 
+/** ASCII-only case fold: `toLowerCase()` also folds non-ASCII lookalikes (the
+ *  Kelvin sign U+212A becomes "k"), which must not match an ASCII allowlist. */
+const asciiLower = (s: string): string =>
+    s.replace(/[A-Z]/g, c => c.toLowerCase())
+
 /** The single allowed-types policy, shared by the presign/multipart path and
  *  the drive-transfer path (F-743). No allowlist -> everything passes; an
  *  `image/*` entry honours the wildcard; an absent/empty type does NOT match a
  *  non-empty allowlist (callers pass `mimeType ?? ''` so a missing type is
- *  rejected identically on both paths, never bypassed). */
+ *  rejected identically on both paths, never bypassed). Matching is
+ *  case-insensitive (ASCII) on both sides (T-7540); a non-string type is a
+ *  non-match. */
 export function matchesAllowedType(
     type: string,
     allowedTypes?: string[],
 ): boolean {
     if (!allowedTypes?.length) return true
-    return allowedTypes.some(allowed => {
-        if (allowed === type) return true
+    // The drive route hands over an unchecked `body.mimeType` cast.
+    if (typeof type !== 'string') return false
+    // MIME types are case-insensitive (RFC 2045): fold both sides.
+    const mime = asciiLower(type)
+    return allowedTypes.some(entry => {
+        const allowed = asciiLower(entry)
+        if (allowed === mime) return true
         if (allowed.endsWith('/*')) {
-            return type.startsWith(`${allowed.slice(0, -2)}/`)
+            return mime.startsWith(`${allowed.slice(0, -2)}/`)
         }
         return false
     })
@@ -185,7 +198,7 @@ async function validateUploadMetadata(
         body.name.length === 0 ||
         typeof body.type !== 'string' ||
         typeof body.size !== 'number' ||
-        !Number.isFinite(body.size) ||
+        !Number.isInteger(body.size) ||
         body.size < 0
     ) {
         return res.json(
@@ -202,10 +215,22 @@ async function validateUploadMetadata(
         return res.json({ error: 'File type not allowed' }, 415)
     }
 
+    return runBeforeUploadHook(config, body, req, res)
+}
+
+/** The `hooks.onBeforeUpload` admission gate, shared by the upload routes and
+ *  the drive-transfer path (T-5467 — the transfer path used to skip it). `null`
+ *  means admitted; otherwise the 403 to return. */
+export async function runBeforeUploadHook(
+    config: UpupServerConfig,
+    file: FileMetadata,
+    req: Request,
+    res: Responder,
+): Promise<Response | null> {
     if (config.hooks?.onBeforeUpload) {
         let allowed: boolean
         try {
-            allowed = await config.hooks.onBeforeUpload(body, req)
+            allowed = await config.hooks.onBeforeUpload(file, req)
         } catch (error) {
             // upup-catch: an UpupError is the integrator DELIBERATELY speaking to
             // the client — serialize its message + code into the 403 so a quota
@@ -411,6 +436,9 @@ export async function handlePresign(
     }
 }
 
+/** S3's per-part ceiling (5 GiB); a client-chosen chunk size may not exceed it. */
+const MAX_PART_SIZE = 5 * 1024 * 1024 * 1024
+
 export async function handleMultipartInit(
     req: Request,
     config: UpupServerConfig,
@@ -436,6 +464,31 @@ export async function handleMultipartInit(
             res,
         )
         if (validationError) return validationError
+
+        // `chunkSizeBytes` is client input and decides the part size the token
+        // binds. Anything that is not a finite positive integer within S3's
+        // part range is refused outright: a fractional or absurd value used to
+        // yield a non-integer part size, which minted a token with no `ps` and
+        // so switched per-part length signing off (T-5492 review). Integers
+        // below the 5 MiB floor are still silently floored by computePartSize
+        // (documented behaviour); null/absent means the server default.
+        const chunk = body.chunkSizeBytes
+        if (
+            chunk !== undefined &&
+            chunk !== null &&
+            (typeof chunk !== 'number' ||
+                !Number.isInteger(chunk) ||
+                chunk <= 0 ||
+                chunk > MAX_PART_SIZE)
+        ) {
+            return res.json(
+                {
+                    error: 'Invalid chunkSizeBytes',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
+            )
+        }
 
         const userId = await resolveUserId(config, req)
         if (userId === null) return res.json({ error: 'Unauthenticated' }, 401)
@@ -475,8 +528,18 @@ export async function handleMultipartInit(
             body.type,
             body.size,
             undefined,
-            body.chunkSizeBytes,
+            chunk ?? undefined,
         )
+        // Every token carries the part size, no exceptions: sign-part derives
+        // each part's signed length from it. A provider that cannot report a
+        // usable one is a server fault, never a reason to mint a token without.
+        if (!Number.isInteger(result.partSize) || result.partSize <= 0) {
+            throw new UpupStorageError(
+                `multipart init produced an unusable part size: ${String(result.partSize)}`,
+                storage.type,
+                'multipart-init',
+            )
+        }
         assertUploadTokenSecret(config.uploadTokenSecret)
         // Bind the resolved destination into the SIGNED token so every
         // continuation provably lands in this bucket (#337). Omitted entirely
@@ -495,6 +558,9 @@ export async function handleMultipartInit(
             uid: owner,
             smin: 0,
             smax: body.size,
+            // The server-chosen part size, so sign-part can derive each part's
+            // exact length from signed values only (T-5492).
+            ps: result.partSize,
             ...(sid !== undefined ? { sid } : {}),
             exp: issuedAt + DEFAULT_UPLOAD_TOKEN_TTL_SECONDS,
             iat: issuedAt,
@@ -574,11 +640,7 @@ export async function handleMultipartResume(
         if (payload instanceof Response) return payload
 
         const nowSeconds = Math.floor(Date.now() / 1000)
-        // Tokens minted before `iat` existed still resume: their init time is
-        // recoverable from the expiry, since init is the only issuer and always
-        // used the same TTL.
-        const issuedAt =
-            payload.iat ?? payload.exp - DEFAULT_UPLOAD_TOKEN_TTL_SECONDS
+        const issuedAt = payload.iat
         const windowSeconds =
             config.multipartResumeWindowSeconds ??
             DEFAULT_MULTIPART_RESUME_WINDOW_SECONDS
@@ -647,6 +709,7 @@ export async function handleMultipartResume(
             uid: payload.uid,
             smin: payload.smin,
             smax: payload.smax,
+            ps: payload.ps,
             ...(payload.sid !== undefined ? { sid: payload.sid } : {}),
             // Clamp to the resume window, not a fresh full TTL. The window is
             // the operator's stated cap on how long a leaked token stays
@@ -676,6 +739,24 @@ export async function handleMultipartResume(
             error,
         )
     }
+}
+
+/** Exact byte length of part `partNumber` of a `size`-byte file cut into
+ *  `partSize` parts (every part full except the final remainder), or `null`
+ *  when the part number is not one the file has. */
+function expectedPartLength(
+    size: number,
+    partSize: number,
+    partNumber: unknown,
+): number | null {
+    if (typeof partNumber !== 'number' || !Number.isInteger(partNumber)) {
+        return null
+    }
+    const totalParts = Math.max(1, Math.ceil(size / partSize))
+    if (partNumber < 1 || partNumber > totalParts) return null
+    return partNumber < totalParts
+        ? partSize
+        : size - (totalParts - 1) * partSize
 }
 
 export async function handleMultipartSignPart(
@@ -717,11 +798,32 @@ export async function handleMultipartSignPart(
             payload.sid,
         )
         if (storage instanceof Response) return storage
+        // T-5492: the token binds the part size (verifyUploadToken refuses one
+        // that does not), so the part number must be one the file actually has
+        // and the URL signs that part's exact length, so storage rejects any
+        // other body. Without this the envelope was only checked at complete,
+        // which an upload that never completes escapes.
+        const partLength = expectedPartLength(
+            payload.smax,
+            payload.ps,
+            body.partNumber,
+        )
+        if (partLength === null) {
+            return res.json(
+                {
+                    error: 'Invalid part number',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
+            )
+        }
         const result = await generatePresignedPartUrl(
             storage,
             payload.k,
             payload.u,
             body.partNumber,
+            undefined,
+            partLength,
         )
         const rewritten = await applyPresignResponseHook(config, result, {
             req,
@@ -742,6 +844,23 @@ export async function handleMultipartSignPart(
             error,
         )
     }
+}
+
+function isCompletedPartList(
+    parts: unknown,
+): parts is Array<{ partNumber: number; eTag: string }> {
+    return (
+        Array.isArray(parts) &&
+        parts.every(
+            (part: { partNumber?: unknown; eTag?: unknown } | null) =>
+                typeof part === 'object' &&
+                part !== null &&
+                typeof part.partNumber === 'number' &&
+                Number.isInteger(part.partNumber) &&
+                part.partNumber >= 1 &&
+                typeof part.eTag === 'string',
+        )
+    )
 }
 
 export async function handleMultipartComplete(
@@ -773,6 +892,18 @@ export async function handleMultipartComplete(
             req.method,
         )
         if (owned) return owned
+
+        // Shape check AFTER the trust checks (a forged token stays 403) and before
+        // any storage call: a malformed list is the client's error, not a 500 from S3.
+        if (!isCompletedPartList(body.parts)) {
+            return res.json(
+                {
+                    error: 'parts must be an array of { partNumber, eTag }',
+                    code: UpupErrorCode.BAD_REQUEST,
+                },
+                400,
+            )
+        }
 
         const storage = await resolveBoundStorageOrFail(
             config,

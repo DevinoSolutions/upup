@@ -49,7 +49,12 @@ function MobileDemoContent() {
     const allowPreview = searchParams.get('allowPreview') !== 'false'
     const shouldCompress = searchParams.get('shouldCompress') === 'true'
     const imageEditor = searchParams.get('imageEditor') === 'true'
-    const fileSizeLimit = parseInt(searchParams.get('fileSizeLimit') || '999')
+    // The demo API caps files at 100 MiB (api/upup route DEMO_MAX_FILE_SIZE), so
+    // neither the default nor a URL-supplied value may promise more than that.
+    const fileSizeLimit = Math.min(
+        parseInt(searchParams.get('fileSizeLimit') || '100') || 100,
+        100,
+    )
     const darkMode = searchParams.get('darkMode') === 'true'
     const autoRetryEnabled = searchParams.get('autoRetryEnabled') === 'true'
     const autoRetryCount = parseInt(searchParams.get('autoRetryCount') || '3')

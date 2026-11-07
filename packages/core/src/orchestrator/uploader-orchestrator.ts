@@ -10,7 +10,8 @@ import {
     revokeAndReplace,
 } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
-import { UpupError } from '../errors'
+import { UpupError, UpupValidationError } from '../errors'
+import { UpupUploadBatchError } from '../upload-manager'
 import { computeSpeedEta, type SpeedSample } from './upload-speed'
 
 export class UploaderOrchestrator {
@@ -20,6 +21,9 @@ export class UploaderOrchestrator {
     private callbacks: OrchestratorCallbacks
     private unsubs: (() => void)[] = []
     private disposed = false
+    /** Files whose own failure already reached `onError` in the current run, so
+     *  the run-level batch summary that follows is not reported a second time. */
+    private reportedFailureIds = new Set<string>()
 
     constructor(core: UpupCore, callbacks: OrchestratorCallbacks) {
         this.core = core
@@ -105,7 +109,16 @@ export class UploaderOrchestrator {
         // If onPrepareFiles returned different files, replace them in core
         if (prepared !== currentFiles) {
             this.core.removeAll()
-            await this.core.addFiles(prepared)
+            try {
+                await this.core.addFiles(prepared, undefined, {
+                    onRefused: this.callbacks.onFileRefused,
+                })
+            } catch (error) {
+                // Every prepared file was refused and each one already reached
+                // `onFileRefused`: nothing is left to upload.
+                if (!(error instanceof UpupValidationError)) throw error
+                return undefined
+            }
         }
 
         return await this.core.upload()
@@ -301,6 +314,7 @@ export class UploaderOrchestrator {
         // ── upload-start (callback only; uploadStatus is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-start', () => {
+                this.reportedFailureIds.clear()
                 this.callbacks.onUploadStart?.()
             }),
         )
@@ -335,8 +349,11 @@ export class UploaderOrchestrator {
                 // Image editor auto-open
                 const editorOpts = this.callbacks.imageEditorOptions
                 if (editorOpts?.enabled) {
-                    const images = added.filter(file =>
-                        file.type.startsWith('image/'),
+                    // Completed rows (key set, e.g. a server-mode drive transfer)
+                    // are zero-byte stand-ins: nothing to edit.
+                    const images = added.filter(
+                        file =>
+                            file.key == null && file.type.startsWith('image/'),
                     )
                     if (
                         editorOpts.autoOpen === 'single' &&
@@ -351,7 +368,12 @@ export class UploaderOrchestrator {
                 }
 
                 // Auto-upload
-                if (this.callbacks.autoUpload) {
+                // Completed rows have nothing to send; a run would only flicker
+                // PROCESSING and fire a spurious onUploadStart.
+                if (
+                    this.callbacks.autoUpload &&
+                    added.some(file => file.key == null)
+                ) {
                     this.core.emit('auto-upload', { count: added.length })
                     // Guard the deferred run: an unmount that races this 0-ms timer must not
                     // hit the now-terminal core.upload() (F-148). Swallow if it still does.
@@ -481,6 +503,21 @@ export class UploaderOrchestrator {
                         uploadError: message,
                         uploadErrorCode: code,
                     })
+                    // One failure, one onError. A file's own error is reported
+                    // as it happens; the run-level event that follows carries
+                    // the same failures as a batch summary, so it only reaches
+                    // onError when it tells the host something new (a failure
+                    // with no per-file report, e.g. a missing upload target).
+                    if (payload.file) {
+                        this.reportedFailureIds.add(payload.file.id)
+                    } else if (
+                        payload.error instanceof UpupUploadBatchError &&
+                        payload.error.errors.every(({ file }) =>
+                            this.reportedFailureIds.has(file.id),
+                        )
+                    ) {
+                        return
+                    }
                     this.callbacks.onError?.(message)
                 },
             ),

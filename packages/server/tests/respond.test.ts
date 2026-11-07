@@ -52,6 +52,20 @@ describe('createResponder — CORS + request id baked into every response', () =
         )
     })
 
+    it('redirect() and html() accept extra headers alongside the baked-in ones', () => {
+        const res = createResponder(req(), config)
+        const r = res.redirect('/x', 302, { 'Set-Cookie': 'a=b; Path=/' })
+        expect(r.headers.get('Set-Cookie')).toBe('a=b; Path=/')
+        expect(r.headers.get('Location')).toBe('/x')
+        expect(r.headers.get('x-upup-request-id')).toBeTruthy()
+        const h = res.html('<p>', 200, { 'Set-Cookie': 'c=d; Path=/' })
+        expect(h.headers.get('Set-Cookie')).toBe('c=d; Path=/')
+        expect(h.headers.get('Content-Type')).toBe('text/html; charset=utf-8')
+        expect(h.headers.get('Access-Control-Allow-Origin')).toBe(
+            'https://app.test',
+        )
+    })
+
     it('noContent() is a 204 carrying the CORS headers', () => {
         const res = createResponder(req(), config)
         const out = res.noContent()

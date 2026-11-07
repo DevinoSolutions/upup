@@ -1,22 +1,27 @@
 version: 2
 updates:
     # Published surface + workspace deps. `npm` ecosystem reads pnpm-lock.yaml (v9).
+    # Every directory with a package.json is listed (sdk/ is the parked npm name
+    # reservation, not a workspace package). dev is the integration branch.
     - package-ecosystem: 'npm'
       directories:
           - '/'
+          - '/apps/*'
           - '/packages/*'
+          - '/sdk'
+      target-branch: 'dev'
       schedule:
           interval: 'weekly'
           day: 'monday'
-      open-pull-requests-limit: 5
+      open-pull-requests-limit: 10
+      cooldown:
+          default-days: 2
       groups:
-          production-dependencies: # prioritise the shipped prod deps, one PR
+          security: # security updates ignore cooldown and group separately
+              applies-to: security-updates
+              patterns: ['*']
+          minor-and-patch:
               applies-to: version-updates
-              dependency-type: 'production'
-              update-types: ['minor', 'patch']
-          development-dependencies:
-              applies-to: version-updates
-              dependency-type: 'development'
               update-types: ['minor', 'patch']
       ignore:
           # Majors are DEFERRED (F-189: Angular 19->22, Storybook 9->10, Tailwind
@@ -25,6 +30,7 @@ updates:
             update-types: ['version-update:semver-major']
     - package-ecosystem: 'github-actions'
       directory: '/'
+      target-branch: 'dev'
       schedule:
           interval: 'weekly'
       groups:
@@ -37,3 +43,11 @@ updates:
           # move in one deliberate change, never as a grouped action bump.
           - dependency-name: 'changesets/action'
             update-types: ['version-update:semver-major']
+    - package-ecosystem: 'docker'
+      directory: '/deploy/site'
+      target-branch: 'dev'
+      schedule:
+          interval: 'weekly'
+      groups:
+          docker:
+              patterns: ['*']

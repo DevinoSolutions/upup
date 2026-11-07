@@ -133,6 +133,35 @@ describe('writeWebResponse', () => {
         expect(setHeaderCalls).not.toContain('content-length')
     })
 
+    it('emits every Set-Cookie value instead of letting the last one win', async () => {
+        const headers: Record<string, string> = {}
+        const cookies: string[] = []
+        const sink = {
+            status: vi.fn<NodeResponseSink['status']>(),
+            setHeader: vi.fn((k: string, v: string) => {
+                headers[k.toLowerCase()] = v
+            }),
+            appendHeader: vi.fn((k: string, v: string) => {
+                if (k.toLowerCase() === 'set-cookie') cookies.push(v)
+            }),
+            send: vi.fn<NodeResponseSink['send']>(),
+        }
+        const webRes = new Response('ok', { status: 200 })
+        webRes.headers.append('Set-Cookie', 'a=1; Path=/')
+        webRes.headers.append('Set-Cookie', 'b=2; Path=/; HttpOnly')
+        await writeWebResponse(sink, webRes)
+        expect(cookies).toEqual(['a=1; Path=/', 'b=2; Path=/; HttpOnly'])
+        expect(headers['set-cookie']).toBeUndefined()
+    })
+
+    it('without appendHeader, still sets a lone Set-Cookie via setHeader', async () => {
+        const sink = makeSink()
+        const webRes = new Response('ok', { status: 200 })
+        webRes.headers.append('Set-Cookie', 'a=1; Path=/')
+        await writeWebResponse(sink, webRes)
+        expect(sink.setHeader).toHaveBeenCalledWith('set-cookie', 'a=1; Path=/')
+    })
+
     it('sends the body as a lossless Buffer, not a .text() string', async () => {
         const sink = makeSink()
         const payload = JSON.stringify({ key: 'value', num: 42 })

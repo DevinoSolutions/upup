@@ -2,7 +2,7 @@ import type {
     InteractiveExampleProps,
     UpupConfig,
 } from '@useupup/interactive-example'
-import { clientEnv } from './env'
+import { clientEnv } from './client/env'
 import { APP_ID } from './analytics/contract'
 
 type CloudDrives = NonNullable<UpupConfig['cloudDrives']>

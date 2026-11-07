@@ -6,3 +6,5 @@ find the full documentation for it [in our repository](https://github.com/change
 
 We have a quick list of common questions to get you started engaging with this project in
 [our documentation](https://github.com/changesets/changesets/blob/main/docs/common-questions.md)
+
+A `major` bump needs a line `<!-- major-allow: <reason> -->` plus a real summary: the nine `@useupup/*` packages are one fixed group, so a single major moves all of them. `scripts/ci/changeset-frontmatter.test.mjs` (run by `test:scripts`) enforces this and validates every changeset with the real changesets parser.

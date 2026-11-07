@@ -42,7 +42,8 @@ export interface UploaderCallbacks extends OrchestratorCallbacks {
                   | 'TYPE_MISMATCH'
                   | 'FILE_TOO_LARGE'
                   | 'FILE_TOO_SMALL'
-                  | 'LIMIT_EXCEEDED',
+                  | 'LIMIT_EXCEEDED'
+                  | 'TOTAL_SIZE_EXCEEDED',
           ) => void)
         | undefined
     onDoneClicked?: (() => void) | undefined

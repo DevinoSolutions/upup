@@ -47,10 +47,11 @@ function mockReq(opts: {
 
 interface MockRes {
     statusCode: number
-    headers: Record<string, string>
+    headers: Record<string, string | string[]>
     body: unknown
     status: ReturnType<typeof vi.fn>
     setHeader: ReturnType<typeof vi.fn>
+    getHeader: ReturnType<typeof vi.fn>
     send: ReturnType<typeof vi.fn>
     json: ReturnType<typeof vi.fn>
     end: ReturnType<typeof vi.fn>
@@ -65,8 +66,16 @@ function mockRes(): MockRes & NextApiResponse {
             this.statusCode = c
             return this
         }),
-        setHeader: vi.fn(function (this: MockRes, k: string, v: string) {
+        // Replacing, like Node's real setHeader.
+        setHeader: vi.fn(function (
+            this: MockRes,
+            k: string,
+            v: string | string[],
+        ) {
             this.headers[k.toLowerCase()] = v
+        }),
+        getHeader: vi.fn(function (this: MockRes, k: string) {
+            return this.headers[k.toLowerCase()]
         }),
         send: vi.fn(function (this: MockRes, b: unknown) {
             this.body = b
@@ -168,6 +177,40 @@ describe('createUpupPagesHandler', () => {
         )
         expect(res.statusCode).toBe(302)
         expect(res.headers['location']).toBe('https://accounts.google.com/o')
+    })
+
+    // T-5698: Node's setHeader REPLACES, and Headers.forEach comma-joins, so a
+    // response with several Set-Cookie headers lost all but one on this adapter.
+    it('delivers every Set-Cookie value as a list instead of collapsing to one', async () => {
+        respond = async () => {
+            const r = new Response('{}', { status: 200 })
+            r.headers.append('Set-Cookie', 'a=1; Path=/; HttpOnly')
+            r.headers.append('Set-Cookie', '__Host-b=2; Path=/; Secure')
+            return r
+        }
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
+        const res = mockRes()
+        await handler(mockReq({ method: 'GET', url: '/api/upup-pages/x' }), res)
+        expect(res.headers['set-cookie']).toEqual([
+            'a=1; Path=/; HttpOnly',
+            '__Host-b=2; Path=/; Secure',
+        ])
+    })
+
+    it('keeps a Set-Cookie another layer already put on the response', async () => {
+        respond = async () => {
+            const r = new Response('{}', { status: 200 })
+            r.headers.append('Set-Cookie', 'ours=1; Path=/')
+            return r
+        }
+        const handler = createUpupPagesHandler({} as UpupServerConfig)
+        const res = mockRes()
+        res.setHeader('Set-Cookie', 'theirs=9; Path=/')
+        await handler(mockReq({ method: 'GET', url: '/api/upup-pages/x' }), res)
+        expect(res.headers['set-cookie']).toEqual([
+            'theirs=9; Path=/',
+            'ours=1; Path=/',
+        ])
     })
 
     it('maps a thrown error to a 500 JSON response', async () => {

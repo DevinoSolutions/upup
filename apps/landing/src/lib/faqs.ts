@@ -171,7 +171,7 @@ export const frameworkFaqs: Record<FrameworkId, Faq[]> = {
         },
         {
             question:
-                'Is there a free JavaScript file upload library with drag and drop?',
+                'Is there a free JavaScript file uploader library with drag and drop?',
             answer: 'Yes. @useupup/vanilla is MIT-licensed and free for commercial use. It renders a complete uploader with a drag-and-drop dropzone, a file picker, previews, progress bars, cloud-drive imports, and camera and screen capture into any page.',
         },
         {

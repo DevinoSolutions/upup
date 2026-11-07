@@ -35,6 +35,23 @@ function makeFiles(...names: string[]) {
 }
 
 describe('useUpload', () => {
+    it('exposes retryUpload and forwards the file ID', async () => {
+        const retryUpload = vi.fn().mockResolvedValue([])
+
+        const result = useUpload({
+            upload: makeUploadCtx({ retryUpload }),
+            files: new Map(),
+            setFiles: vi.fn(),
+            replaceFiles: vi.fn(),
+            uploadFiles: vi.fn(),
+            resetState: vi.fn(),
+        } as unknown as Parameters<typeof useUpload>[0])
+
+        await result.retryUpload('file-1')
+
+        expect(retryUpload).toHaveBeenCalledWith('file-1')
+    })
+
     it('maps startUpload to upload', () => {
         const fn = vi.fn()
         const result = useUpload({

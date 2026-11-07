@@ -74,6 +74,44 @@ const SENTRY_ENVELOPE_URL = sentryEnvelopeUrl(
     process.env.NEXT_PUBLIC_SENTRY_DSN,
 )
 
+// The home page's Markdown twin (fleet agent-surface contract, GetItDone
+// T-5785): src/app/index.md/route.ts, built by src/lib/home-markdown.ts. Two
+// doors lead to it: /index.md itself (`/` cannot take a `.md` suffix), and `/`
+// asked for with `Accept: text/markdown`, a beforeFiles rewrite because the
+// HTML page always matches first otherwise. That Markdown answer carries
+// `Vary: Accept` and `private, no-store` (set by the route), so no shared
+// cache can hand it to a browser. Must equal HOME_MARKDOWN_PATH in
+// src/lib/home-page.ts (src/__tests__/agent-surface.test.ts pins both).
+const HOME_MARKDOWN_PATH = '/index.md'
+
+// A request that prefers Markdown: `text/markdown` is listed and no
+// `text/html` comes before it. Next anchors the value (^...$) and matches the
+// raw header. A browser (which lists text/html first, or sends only */*)
+// never matches, and neither does `text/html, text/markdown;q=0.1`, which
+// asks for HTML. q-values are not weighed: an agent that wants Markdown lists
+// it first. Same rule as the Postify and devino.ca twins.
+const ACCEPTS_MARKDOWN = {
+    type: 'header',
+    key: 'accept',
+    value: '(?:(?!text/html).)*text/markdown.*',
+}
+
+// The HTML home page names its Markdown twin in a Link header too, for a
+// client that reads headers and not markup (the page's <link rel="alternate">
+// says the same). `missing`, so the Markdown answer at the same URL carries
+// only its own canonical Link. Next keeps only the LAST rule that sets a key,
+// so this must stay the only rule setting Link on `/`.
+const HOME_MARKDOWN_LINK_HEADER = {
+    source: '/',
+    missing: [ACCEPTS_MARKDOWN],
+    headers: [
+        {
+            key: 'Link',
+            value: `<${HOME_MARKDOWN_PATH}>; rel="alternate"; type="text/markdown"`,
+        },
+    ],
+}
+
 const nextConfig = {
     reactStrictMode: true,
     pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
@@ -88,76 +126,93 @@ const nextConfig = {
         root: repoRoot,
     },
     async rewrites() {
-        // llms.txt / llms-full.txt: served from a dedicated docs-llms route
-        // group so the catch-all `/docs/[[...slug]]` fumadocs route never
-        // sees them. The llms.txt convention's canonical location is the site
-        // root, so those two are rewritten there too, alongside the /docs/
-        // copies referenced from within the docs themselves.
-        return [
-            { source: '/docs/llms.txt', destination: '/docs-llms/llms.txt' },
-            {
-                source: '/docs/llms-full.txt',
-                destination: '/docs-llms/llms-full.txt',
-            },
-            { source: '/llms.txt', destination: '/docs-llms/llms.txt' },
-            {
-                source: '/llms-full.txt',
-                destination: '/docs-llms/llms-full.txt',
-            },
-            // `/docs/<slug>.md` — the markdown-twin URL shape agents guess
-            // first (the convention other uploader docs sites serve) — answers
-            // with the same bytes as the canonical `/docs-md/<slug>/` route.
-            // A rewrite, not a redirect: the URL an agent asked for returns the
-            // markdown directly, and the twin's `Link: rel="canonical"` header
-            // still points search engines at the HTML page. trailingSlash never
-            // touches these (Next does not slash a path whose last segment has
-            // an extension), so this is a single 200 with no 308 hop. The
-            // final segment excludes dots so `/docs/llms.txt`-style file paths
-            // can never match. `/docs.md` is the docs root's twin.
-            {
-                source: '/docs/:slug((?:[^/]+/)*[^/.]+).md',
-                destination: '/docs-md/:slug/',
-            },
-            { source: '/docs.md', destination: '/docs-md/' },
-            // PostHog. Each opaque segment maps back to its PostHog path, and
-            // the query string is forwarded as is. Two rules per segment: the
-            // bare endpoint (`/e/`, `/flags/`, …) gets a literal destination,
-            // because an empty `:path*` renders without PostHog's trailing
-            // slash; files under /static/ and /array/ take the `:path+` rule.
-            // Every posthog-js path either ends in a slash or has a file
-            // extension, so trailingSlash never 308s one of these (a 308 would
-            // turn a capture POST into a dropped event). Unrenamed paths take
-            // the catch-alls last; PostHog's REST paths all end in a slash,
-            // so the `/api/` one restores it.
-            ...TELEMETRY_ROUTES.flatMap(([posthogPrefix, opaquePrefix]) => [
+        // beforeFiles: `/` asked for as Markdown goes to the home page's twin
+        // (see HOME_MARKDOWN_PATH above). /index.md itself is a real route and
+        // needs no rule; any other root `.md` path stays a 404.
+        //
+        // afterFiles: llms.txt / llms-full.txt: served from a dedicated
+        // docs-llms route group so the catch-all `/docs/[[...slug]]` fumadocs
+        // route never sees them. The llms.txt convention's canonical location
+        // is the site root, so those two are rewritten there too, alongside
+        // the /docs/ copies referenced from within the docs themselves.
+        return {
+            beforeFiles: [
                 {
-                    source: `${TELEMETRY_PATH}${opaquePrefix.slice(0, -1)}`,
-                    destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}`,
+                    source: '/',
+                    has: [ACCEPTS_MARKDOWN],
+                    destination: HOME_MARKDOWN_PATH,
+                },
+            ],
+            afterFiles: [
+                {
+                    source: '/docs/llms.txt',
+                    destination: '/docs-llms/llms.txt',
                 },
                 {
-                    source: `${TELEMETRY_PATH}${opaquePrefix}:path+`,
-                    destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}:path+`,
+                    source: '/docs/llms-full.txt',
+                    destination: '/docs-llms/llms-full.txt',
                 },
-            ]),
-            // Sentry envelopes. Before the catch-alls, which would otherwise
-            // send them to PostHog.
-            ...(SENTRY_ENVELOPE_URL
-                ? [
-                      {
-                          source: `${TELEMETRY_PATH}/x`,
-                          destination: SENTRY_ENVELOPE_URL,
-                      },
-                  ]
-                : []),
-            {
-                source: `${TELEMETRY_PATH}/api/:path+`,
-                destination: `${POSTHOG_PROXY_TARGET}/api/:path+/`,
-            },
-            {
-                source: `${TELEMETRY_PATH}/:path+`,
-                destination: `${POSTHOG_PROXY_TARGET}/:path+`,
-            },
-        ]
+                { source: '/llms.txt', destination: '/docs-llms/llms.txt' },
+                {
+                    source: '/llms-full.txt',
+                    destination: '/docs-llms/llms-full.txt',
+                },
+                // `/docs/<slug>.md` — the markdown-twin URL shape agents guess
+                // first (the convention other uploader docs sites serve) — answers
+                // with the same bytes as the canonical `/docs-md/<slug>/` route.
+                // A rewrite, not a redirect: the URL an agent asked for returns the
+                // markdown directly, and the twin's `Link: rel="canonical"` header
+                // still points search engines at the HTML page. trailingSlash never
+                // touches these (Next does not slash a path whose last segment has
+                // an extension), so this is a single 200 with no 308 hop. The
+                // final segment excludes dots so `/docs/llms.txt`-style file paths
+                // can never match. `/docs.md` is the docs root's twin.
+                {
+                    source: '/docs/:slug((?:[^/]+/)*[^/.]+).md',
+                    destination: '/docs-md/:slug/',
+                },
+                { source: '/docs.md', destination: '/docs-md/' },
+                // PostHog. Each opaque segment maps back to its PostHog path, and
+                // the query string is forwarded as is. Two rules per segment: the
+                // bare endpoint (`/e/`, `/flags/`, …) gets a literal destination,
+                // because an empty `:path*` renders without PostHog's trailing
+                // slash; files under /static/ and /array/ take the `:path+` rule.
+                // Every posthog-js path either ends in a slash or has a file
+                // extension, so trailingSlash never 308s one of these (a 308 would
+                // turn a capture POST into a dropped event). Unrenamed paths take
+                // the catch-alls last; PostHog's REST paths all end in a slash,
+                // so the `/api/` one restores it.
+                ...TELEMETRY_ROUTES.flatMap(([posthogPrefix, opaquePrefix]) => [
+                    {
+                        source: `${TELEMETRY_PATH}${opaquePrefix.slice(0, -1)}`,
+                        destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}`,
+                    },
+                    {
+                        source: `${TELEMETRY_PATH}${opaquePrefix}:path+`,
+                        destination: `${POSTHOG_PROXY_TARGET}${posthogPrefix}:path+`,
+                    },
+                ]),
+                // Sentry envelopes. Before the catch-alls, which would otherwise
+                // send them to PostHog.
+                ...(SENTRY_ENVELOPE_URL
+                    ? [
+                          {
+                              source: `${TELEMETRY_PATH}/x`,
+                              destination: SENTRY_ENVELOPE_URL,
+                          },
+                      ]
+                    : []),
+                {
+                    source: `${TELEMETRY_PATH}/api/:path+`,
+                    destination: `${POSTHOG_PROXY_TARGET}/api/:path+/`,
+                },
+                {
+                    source: `${TELEMETRY_PATH}/:path+`,
+                    destination: `${POSTHOG_PROXY_TARGET}/:path+`,
+                },
+            ],
+            fallback: [],
+        }
     },
     // The legacy Docusaurus app (apps/docs) that used to serve /documentation
     // is gone; every old URL permanently redirects into the new /docs surface
@@ -507,6 +562,9 @@ const nextConfig = {
     // what actually keeps a URL discovered some other way out of the index.
     // They get no HSTS — a preload directive from a preview host is a
     // liability, not a protection.
+    //
+    // BOTH: the home page's Link to its Markdown twin (see
+    // HOME_MARKDOWN_LINK_HEADER above).
     async headers() {
         if (IS_PRODUCTION_SITE) {
             return [
@@ -519,6 +577,7 @@ const nextConfig = {
                         },
                     ],
                 },
+                HOME_MARKDOWN_LINK_HEADER,
             ]
         }
         return [
@@ -526,6 +585,7 @@ const nextConfig = {
                 source: '/:path*',
                 headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
             },
+            HOME_MARKDOWN_LINK_HEADER,
         ]
     },
 }

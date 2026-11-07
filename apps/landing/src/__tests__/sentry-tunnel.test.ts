@@ -8,10 +8,11 @@ import { getPathMatch } from 'next/dist/shared/lib/router/utils/path-match'
 import { prepareDestination } from 'next/dist/shared/lib/router/utils/prepare-destination'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
+    POSTHOG_REPLAY_SAMPLE_RATE,
     REPLAY_BLOCK_SELECTORS,
     REPLAY_MASK_SELECTORS,
     REPLAY_ON_ERROR_SAMPLE_RATE,
-    REPLAY_SESSION_SAMPLE_RATE,
+    SENTRY_REPLAY_SAMPLE_RATE,
 } from '@/lib/analytics/replay'
 import {
     SENTRY_TUNNEL_PATH,
@@ -153,7 +154,7 @@ describe('bootSentry', () => {
         bootSentry()
     }
 
-    it('starts Sentry through the tunnel with the shared replay settings', async () => {
+    it('starts Sentry through the tunnel with its replay settings', async () => {
         await boot({ NEXT_PUBLIC_SENTRY_DSN: DSN })
         // The SDK arrives through a dynamic import.
         await vi.waitFor(() => expect(sentry.init).toHaveBeenCalledTimes(1))
@@ -186,8 +187,12 @@ describe('bootSentry', () => {
 })
 
 describe('session replay settings', () => {
-    it('records one session in ten, and every session that hits an error', () => {
-        expect(REPLAY_SESSION_SAMPLE_RATE).toBe(0.1)
+    it('records one session in ten in both PostHog and Sentry', () => {
+        expect(POSTHOG_REPLAY_SAMPLE_RATE).toBe(0.1)
+        expect(SENTRY_REPLAY_SAMPLE_RATE).toBe(0.1)
+    })
+
+    it('keeps the replay of every Sentry session that hits an error', () => {
         expect(REPLAY_ON_ERROR_SAMPLE_RATE).toBe(1)
     })
 
