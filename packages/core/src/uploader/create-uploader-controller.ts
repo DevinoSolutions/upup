@@ -8,6 +8,7 @@ import { DropboxPlugin } from '../drives/dropbox-plugin'
 import { BoxPlugin } from '../drives/box-plugin'
 import { OneDrivePlugin } from '../drives/one-drive-plugin'
 import { revokeFileUrl } from '../utils/file-helpers'
+import { UpupErrorCode, UpupValidationError } from '../errors'
 import type { UploadFile } from '../types/upload-file'
 import type {
     CreateUploaderControllerParams,
@@ -16,6 +17,20 @@ import type {
     UploaderController,
     UploaderHostHooks,
 } from './types'
+
+type RestrictionReason = NonNullable<
+    Parameters<NonNullable<UploaderCallbacks['onRestrictionFailed']>>[1]
+>
+
+/** The `onRestrictionFailed` reasons a refusal can carry; a reason outside
+ *  this set (`DUPLICATE`, `BEFORE_FILE_ADDED_REJECTED`) has no callback slot. */
+const RESTRICTION_REASONS: Partial<Record<string, RestrictionReason>> = {
+    [UpupErrorCode.TYPE_MISMATCH]: 'TYPE_MISMATCH',
+    [UpupErrorCode.FILE_TOO_LARGE]: 'FILE_TOO_LARGE',
+    [UpupErrorCode.FILE_TOO_SMALL]: 'FILE_TOO_SMALL',
+    [UpupErrorCode.LIMIT_EXCEEDED]: 'LIMIT_EXCEEDED',
+    [UpupErrorCode.TOTAL_SIZE_EXCEEDED]: 'TOTAL_SIZE_EXCEEDED',
+}
 
 export function createUploaderController(
     { core, options, normalized }: CreateUploaderControllerParams,
@@ -170,8 +185,29 @@ export function createUploaderController(
     const commands: UploaderCommands = {
         async handleSetSelectedFiles(newFiles: File[]) {
             const before = core.files.size
+            // Each refusal is reported once: core hands them over per file as it
+            // finds them, and the rejection of an all-refused batch (or a core
+            // that only rejects) is folded in without reporting the same
+            // error twice.
+            const reported = new Set<UpupValidationError>()
+            const reportRefusal = (error: UpupValidationError) => {
+                if (reported.has(error)) return
+                reported.add(error)
+                onError(error.message)
+                if (error.reason === UpupErrorCode.TYPE_MISMATCH) {
+                    callbackRefs.onFileTypeMismatch?.(
+                        error.file,
+                        resolved.allowedFileTypes,
+                    )
+                }
+                const reason = RESTRICTION_REASONS[error.reason]
+                if (reason)
+                    callbackRefs.onRestrictionFailed?.(error.file, reason)
+            }
             try {
-                await core.addFiles(newFiles)
+                await core.addFiles(newFiles, undefined, {
+                    onRefused: reportRefusal,
+                })
                 // Close the add-more overlay once files actually merge in, but
                 // ONLY on the device-pick / drop path — those add files with no
                 // active source. Camera / screen-capture / drive add files WHILE
@@ -186,37 +222,12 @@ export function createUploaderController(
                     transientUi.closeSourceOverlay()
                 }
             } catch (error) {
-                const message =
-                    error instanceof Error ? error.message : String(error)
-                onError(message)
-                const first = newFiles[0]
-                if (first) {
-                    const m = message.toLowerCase()
-                    if (m.includes('type')) {
-                        callbackRefs.onFileTypeMismatch?.(
-                            first,
-                            resolved.allowedFileTypes,
-                        )
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'TYPE_MISMATCH',
-                        )
-                    } else if (m.includes('limit')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'LIMIT_EXCEEDED',
-                        )
-                    } else if (m.includes('below')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'FILE_TOO_SMALL',
-                        )
-                    } else if (m.includes('size')) {
-                        callbackRefs.onRestrictionFailed?.(
-                            first,
-                            'FILE_TOO_LARGE',
-                        )
-                    }
+                if (error instanceof UpupValidationError) {
+                    reportRefusal(error)
+                } else {
+                    onError(
+                        error instanceof Error ? error.message : String(error),
+                    )
                 }
             }
         },
@@ -240,7 +251,11 @@ export function createUploaderController(
             filesArray().forEach(f => {
                 revokeFileUrl(f)
             })
-            void core.setFiles(newFiles as File[])
+            // A refusal already reached `restriction-failed`; anything else
+            // is a real failure and stays an unhandled rejection, as before.
+            core.setFiles(newFiles as File[]).catch((error: unknown) => {
+                if (!(error instanceof UpupValidationError)) throw error
+            })
         },
         startUpload() {
             return orchestrator.startUpload()

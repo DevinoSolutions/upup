@@ -11,6 +11,7 @@ import {
 } from '../utils/image-helpers'
 import type { UploadResult } from '../contracts-strategies'
 import { UpupError } from '../errors'
+import { UpupUploadBatchError } from '../upload-manager'
 import { computeSpeedEta, type SpeedSample } from './upload-speed'
 
 export class UploaderOrchestrator {
@@ -20,6 +21,9 @@ export class UploaderOrchestrator {
     private callbacks: OrchestratorCallbacks
     private unsubs: (() => void)[] = []
     private disposed = false
+    /** Files whose own failure already reached `onError` in the current run, so
+     *  the run-level batch summary that follows is not reported a second time. */
+    private reportedFailureIds = new Set<string>()
 
     constructor(core: UpupCore, callbacks: OrchestratorCallbacks) {
         this.core = core
@@ -301,6 +305,7 @@ export class UploaderOrchestrator {
         // ── upload-start (callback only; uploadStatus is projected from state-change) ──
         this.unsubs.push(
             this.core.on('upload-start', () => {
+                this.reportedFailureIds.clear()
                 this.callbacks.onUploadStart?.()
             }),
         )
@@ -489,6 +494,21 @@ export class UploaderOrchestrator {
                         uploadError: message,
                         uploadErrorCode: code,
                     })
+                    // One failure, one onError. A file's own error is reported
+                    // as it happens; the run-level event that follows carries
+                    // the same failures as a batch summary, so it only reaches
+                    // onError when it tells the host something new (a failure
+                    // with no per-file report, e.g. a missing upload target).
+                    if (payload.file) {
+                        this.reportedFailureIds.add(payload.file.id)
+                    } else if (
+                        payload.error instanceof UpupUploadBatchError &&
+                        payload.error.errors.every(({ file }) =>
+                            this.reportedFailureIds.has(file.id),
+                        )
+                    ) {
+                        return
+                    }
                     this.callbacks.onError?.(message)
                 },
             ),

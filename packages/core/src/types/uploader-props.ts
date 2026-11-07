@@ -208,7 +208,8 @@ export type UploaderBaseProps = {
                   | 'TYPE_MISMATCH'
                   | 'FILE_TOO_LARGE'
                   | 'FILE_TOO_SMALL'
-                  | 'LIMIT_EXCEEDED',
+                  | 'LIMIT_EXCEEDED'
+                  | 'TOTAL_SIZE_EXCEEDED',
           ) => void)
         | undefined
     /** v2: Enable clipboard paste uploads (Ctrl+V / Cmd+V). Default false. */
