@@ -216,6 +216,9 @@ function revokeObjectUrl(file?: UploadFile): void {
 export class FileManager {
     private files = new Map<string, UploadFile>()
     private options: FileManagerOptions
+    // Tail of the admission queue: each batch is judged against the selection
+    // the previous batch left behind, never a snapshot taken before an await.
+    private admission: Promise<unknown> = Promise.resolve()
 
     constructor(options: FileManagerOptions) {
         this.options = options
@@ -401,21 +404,24 @@ export class FileManager {
      * size) refuse a file on its own. The batch-level caps (`limit`,
      * `maxTotalFileSize`) are judged on what is left, all together: when that
      * remainder would break one, it is refused as a unit with ONE violation
-     * (as before). Pure: it does not touch `this.files`.
+     * (as before). Does not touch `this.files` beyond memoizing content
+     * hashes. `existing` is a getter: the hash pass reads it once up front,
+     * the batch-cap check reads it again after the awaits so a selection
+     * change made meanwhile is never judged against a stale copy.
      */
     private async admit(
         nativeFiles: File[],
-        existing: UploadFile[],
+        existing: () => UploadFile[],
     ): Promise<{
         accepted: Array<{ file: File; hash?: string }>
         refused: UpupValidationError[]
     }> {
         const { passed, refused } = await this.screenFiles(nativeFiles)
-        const deduped = await this.deduplicateByContent(passed, existing)
+        const deduped = await this.deduplicateByContent(passed, existing())
         try {
             this.assertBatchFits(
                 deduped.map(item => item.file),
-                existing,
+                existing(),
                 nativeFiles[0],
             )
         } catch (error) {
@@ -437,18 +443,34 @@ export class FileManager {
     }
 
     /**
-     * Append the acceptable files of a batch and report the rest. Never throws
-     * for a refusal — the caller decides what a refusal means.
+     * Run an admission (judge + insert) after every earlier one has settled.
+     * A batch that throws does not wedge the queue: the next one still runs.
      */
-    async admitFiles(nativeFiles: File[]): Promise<AdmitOutcome> {
-        const { accepted, refused } = await this.admit(nativeFiles, [
-            ...this.files.values(),
-        ])
-        const added = this.toUploadFiles(accepted)
-        for (const file of added) {
-            this.files.set(file.id, file)
-        }
-        return { accepted: added, refused }
+    private serializeAdmission<T>(task: () => Promise<T>): Promise<T> {
+        const run = this.admission.then(task)
+        this.admission = run.then(
+            () => undefined,
+            () => undefined,
+        )
+        return run
+    }
+
+    /**
+     * Append the acceptable files of a batch and report the rest. Never throws
+     * for a refusal — the caller decides what a refusal means. Overlapping
+     * calls are admitted one at a time, in call order.
+     */
+    admitFiles(nativeFiles: File[]): Promise<AdmitOutcome> {
+        return this.serializeAdmission(async () => {
+            const { accepted, refused } = await this.admit(nativeFiles, () => [
+                ...this.files.values(),
+            ])
+            const added = this.toUploadFiles(accepted)
+            for (const file of added) {
+                this.files.set(file.id, file)
+            }
+            return { accepted: added, refused }
+        })
     }
 
     /** Strict form of `admitFiles`: throws the first refusal when NOTHING in
@@ -593,20 +615,25 @@ export class FileManager {
      * rest. When EVERY file is refused the current selection is left untouched
      * (an empty batch still clears it).
      */
-    async admitFileSet(nativeFiles: File[]): Promise<AdmitOutcome> {
-        const { accepted, refused } = await this.admit(nativeFiles, [])
-        if (accepted.length === 0 && refused.length > 0) {
-            return { accepted: [], refused }
-        }
-        const next = this.toUploadFiles(accepted)
-        for (const file of this.files.values()) {
-            revokeObjectUrl(file)
-        }
-        this.files.clear()
-        for (const file of next) {
-            this.files.set(file.id, file)
-        }
-        return { accepted: next, refused }
+    admitFileSet(nativeFiles: File[]): Promise<AdmitOutcome> {
+        return this.serializeAdmission(async () => {
+            const { accepted, refused } = await this.admit(
+                nativeFiles,
+                () => [],
+            )
+            if (accepted.length === 0 && refused.length > 0) {
+                return { accepted: [], refused }
+            }
+            const next = this.toUploadFiles(accepted)
+            for (const file of this.files.values()) {
+                revokeObjectUrl(file)
+            }
+            this.files.clear()
+            for (const file of next) {
+                this.files.set(file.id, file)
+            }
+            return { accepted: next, refused }
+        })
     }
 
     /** Strict form of `admitFileSet`: throws the first refusal when nothing
