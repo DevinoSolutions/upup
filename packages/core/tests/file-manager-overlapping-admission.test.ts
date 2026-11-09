@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { FileManager } from '../src/file-manager'
 import { UpupErrorCode } from '../src/errors'
+import { FileSource } from '../src/types/file-source'
 
 const makeFile = (name: string, size = 10, fill = 'x') =>
     new File([fill.repeat(size)], name, { type: 'text/plain' })
@@ -94,16 +95,28 @@ describe('FileManager overlapping admission', () => {
         ])
     })
 
-    it('judges a setFiles batch queued behind addFiles against the replaced selection', async () => {
-        const manager = new FileManager({ limit: 1 })
+    it('counts a transferred file that lands while a batch is being hashed against limit', async () => {
+        const manager = new FileManager({
+            limit: 1,
+            contentDeduplication: true,
+        })
 
-        await Promise.all([
-            manager.admitFiles([makeFile('a.txt')]),
-            manager.admitFileSet([makeFile('b.txt')]),
+        const pending = manager.admitFiles([makeFile('a.txt')])
+        manager.addCompleted({
+            name: 'drive.txt',
+            size: 1,
+            type: 'text/plain',
+            key: 'drive-key',
+            source: FileSource.GOOGLE_DRIVE,
+        })
+        const outcome = await pending
+
+        expect(outcome.accepted).toEqual([])
+        expect(outcome.refused.map(e => e.code)).toEqual([
+            UpupErrorCode.LIMIT_EXCEEDED,
         ])
-
         expect([...manager.getFiles().values()].map(f => f.name)).toEqual([
-            'b.txt',
+            'drive.txt',
         ])
     })
 })
