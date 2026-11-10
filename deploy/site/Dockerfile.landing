@@ -11,7 +11,7 @@
 # the built workspace present. We therefore run the final stage from the build
 # stage (node_modules + .next intact) — correctness over image size, as briefed.
 
-FROM node:20.20.2-slim AS base
+FROM node:26.13.0-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH="$PNPM_HOME:$PATH"
 ENV NEXT_TELEMETRY_DISABLED=1
