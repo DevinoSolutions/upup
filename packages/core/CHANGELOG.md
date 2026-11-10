@@ -1,5 +1,47 @@
 # @useupup/core
 
+## 3.4.0
+
+### Minor Changes
+
+- [#651](https://github.com/DevinoSolutions/upup/pull/651) [`6138e55`](https://github.com/DevinoSolutions/upup/commit/6138e55e79901c2a1ae2ec0d39b5f1d66fb54c78) Thanks [@AminDhouib](https://github.com/AminDhouib)! - A server-mode drive transfer no longer stores a file the uploader would then refuse. The UI sends the uploader's `maxFileSize` and accepted types (`restrictions`) with `POST /files/:provider/transfer`, and `@useupup/server` applies them as an additional tightening only: effective cap = min(server cap, client cap), the provider-reported size and type are checked before streaming (`413` / `415`, nothing stored), and a client value can never loosen the server policy. Size and type violations are now refused before anything is stored, so they leave no orphan object. Also: the batch report counts only files that really registered (never an empty list), and angular reports the finished selection after `onBack`, like the other frameworks.
+
+- [#693](https://github.com/DevinoSolutions/upup/pull/693) [`eb4fadf`](https://github.com/DevinoSolutions/upup/commit/eb4fadfd8090f6f780fda5d93f9bee6410dea957) Thanks [@AminDhouib](https://github.com/AminDhouib)! - A refused file is now reported with the reason core gave it, once, and no longer costs the rest of its batch.
+
+    - `onRestrictionFailed` receives `UpupValidationError.reason` instead of a reason guessed from the message text, so a file named `Unlimited_CV.pdf` that is too large reports `FILE_TOO_LARGE` (not `LIMIT_EXCEEDED`) and an over-total batch reports the new `'TOTAL_SIZE_EXCEEDED'` (previously `FILE_TOO_LARGE`). `onFileTypeMismatch`, `onRestrictionFailed` and `onError` fire once per refused file, each with that file. **That means `onError` now fires once per refused file**: a drop of three refused files calls `onError` three times with three messages (an app that shows a toast per call shows three toasts), where it used to fire once for the whole batch.
+    - `core.setFiles()` now emits `restriction-failed` for a refusal, and `core.addFiles()` / `core.setFiles()` emit it for refusals only: an ordinary error (a throwing `onBeforeFileAdded`) no longer masquerades as a restriction failure.
+    - One failed upload calls `onError` once. The batch summary that follows the per-file error ("1 file upload(s) failed") no longer reaches `onError` when every file in it was already reported. The raw `upload-error` event keeps its documented two emissions.
+    - Refusals are reported the same way on every route that admits files: the picker and drop, the `uploadFiles` and `replaceFiles` ref commands, and the re-add that follows `onPrepareFiles`. `uploadFiles` uploads the acceptable files and reports each refused one; `replaceFiles` keeps the current selection and its previews when every file is refused. `core.setFiles()` takes the same optional `hooks` argument as `addFiles()`, and a host callback that throws inside `hooks.onRefused` no longer rejects an add that already committed files (it is warned about in development and the remaining refusals are still reported).
+    - A mixed batch (say `.zip`, `.exe` and a valid `.png` dropped together) queues the acceptable files and reports each refused one separately, in `addFiles` and `setFiles` alike. Type and size are judged per file; the count limit and `maxTotalFileSize` still judge the acceptable remainder as a unit, exactly as before. `addFiles` / `setFiles` still reject, with the first refusal, when **every** file in the batch is refused; a batch with at least one acceptable file now resolves instead of rejecting.
+
+    This is a minor, not a major: no export, option or event was removed, and the one observable change (a partly acceptable batch now resolves) fixes a whole-batch rejection that dropped valid files. The `onRestrictionFailed` reason union gains `'TOTAL_SIZE_EXCEEDED'`, `UpupCore.addFiles` takes an optional third `hooks` argument (`{ onRefused }`) and `UpupCore.setFiles` an optional second one, and the `AddFilesHooks` type is exported from `@useupup/core`.
+
+    One type-level consequence worth knowing: an app that annotates the `onRestrictionFailed` callback's `reason` parameter with the old four-value union (`'TYPE_MISMATCH' | 'FILE_TOO_LARGE' | 'FILE_TOO_SMALL' | 'LIMIT_EXCEEDED'`) now gets a type error under `strictFunctionTypes`, because the callback can receive `'TOTAL_SIZE_EXCEEDED'`. Widen the annotation (or drop it and let it infer) to fix it.
+
+- [#647](https://github.com/DevinoSolutions/upup/pull/647) [`b43d7e1`](https://github.com/DevinoSolutions/upup/commit/b43d7e10ca65a4baf3c150b1a4c2c94989cb4f95) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Server-mode cloud-drive transfers now show up as a completed file row ("Upload complete") instead of resetting to the empty dropzone, and the server-mode drive view gains the same Log out control as client mode. New `POST /files/:provider/logout` route on `@useupup/server` drops only the caller's stored tokens for that provider.
+
+    `UpupCore.addTransferredFile` is a deliberate public method: it registers an already-stored file (a server-mode drive transfer) as a completed row, honouring the same `limit` / size / type / duplicate restrictions as `addFiles` and emitting `upload-success` per file. The drive view reports each finished selection once with `upload-all-complete` (the completed files, the same payload a normal run passes), so `onUploadComplete` fires once per transferred batch. An unknown listed size/type is not treated as a violation; if the real stored size/type then breaks a restriction the row is refused and the view shows the reason (size and type are refused by the server before storing, so a stored object can still be left behind by rules the server never sees, such as a below-minimum file size or maxTotalFileSize (an unknown listed size passes the pre-flight check), or by a maxFiles or duplicate conflict that arises while the transfer is in flight). `UpupCore.checkTransferredFile` runs those checks without registering anything (the drive view uses it to refuse a file before the server round-trip).
+
+### Patch Changes
+
+- [#629](https://github.com/DevinoSolutions/upup/pull/629) [`ff775a4`](https://github.com/DevinoSolutions/upup/commit/ff775a421c8b35bc244f4bea76346557bff4d884) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Removing the last file one at a time (or calling `setFiles([])`) now clears the crash-recovery snapshot, like `removeAll()` already did. Previously the discarded file came back, paused, on the next reload.
+
+- [#602](https://github.com/DevinoSolutions/upup/pull/602) [`a26732a`](https://github.com/DevinoSolutions/upup/commit/a26732ae8d5835c6d25ecebdf4a96c960319b0ac) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Calmer, reduced-motion-safe uploader motion. The add-more overlay slides in
+  250ms (was 350ms), and core's overlay close timer follows it, so the closing
+  overlay unmounts as soon as its slide ends; the success check draws in 300ms (was 400ms); the success
+  pop no longer overshoots; the recording dot pulses by opacity only; hover
+  effects (lift, icon nudge, button sheen, remove tint) only apply on devices that
+  really hover, the button sheen sweeps in 150ms, the remove button no longer
+  rotates, and the lift no longer tweens its shadow. With `animations={false}` or
+  `prefers-reduced-motion: reduce`, transitions, the pulsing record and
+  drive-loading buttons and the progress-bar width tween are now off too (the bar
+  still shows its value), while loading spinners keep spinning. No new, renamed or removed classes, tokens,
+  props or markup; only existing token values and the keyframe and transition rules behind them changed.
+
+- [#694](https://github.com/DevinoSolutions/upup/pull/694) [`023276e`](https://github.com/DevinoSolutions/upup/commit/023276e205bd094c44871b3ef6a91191c6bc46a7) Thanks [@AminDhouib](https://github.com/AminDhouib)! - `onError` now reaches hosts that set or change it after mount, including for refused files.
+
+- [#697](https://github.com/DevinoSolutions/upup/pull/697) [`c20db76`](https://github.com/DevinoSolutions/upup/commit/c20db7659e639a7ff50cca0eee010daaa560455c) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Overlapping `addFiles()` / `setFiles()` calls are now admitted one at a time, so each batch is judged against the selection the previous one left behind. Previously two calls fired without awaiting each other both passed `maxFiles` / `maxTotalFileSize` checks against the same stale selection and could exceed them, or admit identical content twice with `contentDeduplication` on.
+
 ## 3.3.5
 
 ## 3.3.4

@@ -1,5 +1,32 @@
 # @useupup/next
 
+## 3.4.0
+
+### Minor Changes
+
+- [#643](https://github.com/DevinoSolutions/upup/pull/643) [`7d9fb8f`](https://github.com/DevinoSolutions/upup/commit/7d9fb8fa9736413aee197b49724d015b094efbcb) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Server hardening. `Vary: Origin` is now sent on every response whenever `cors` is configured, including replies to a disallowed or missing origin, so a shared cache cannot hand a header-less reply to an allowed origin. `/multipart/complete` answers 400 (not 500) when `parts` is not an array of `{ partNumber, eTag }`; the check runs after the token checks, so a forged token is still 403. `/presign` and `/multipart/init` now require `size` to be an integer.
+
+### Patch Changes
+
+- [#602](https://github.com/DevinoSolutions/upup/pull/602) [`a26732a`](https://github.com/DevinoSolutions/upup/commit/a26732ae8d5835c6d25ecebdf4a96c960319b0ac) Thanks [@AminDhouib](https://github.com/AminDhouib)! - Calmer, reduced-motion-safe uploader motion. The add-more overlay slides in
+  250ms (was 350ms), and core's overlay close timer follows it, so the closing
+  overlay unmounts as soon as its slide ends; the success check draws in 300ms (was 400ms); the success
+  pop no longer overshoots; the recording dot pulses by opacity only; hover
+  effects (lift, icon nudge, button sheen, remove tint) only apply on devices that
+  really hover, the button sheen sweeps in 150ms, the remove button no longer
+  rotates, and the lift no longer tweens its shadow. With `animations={false}` or
+  `prefers-reduced-motion: reduce`, transitions, the pulsing record and
+  drive-loading buttons and the progress-bar width tween are now off too (the bar
+  still shows its value), while loading spinners keep spinning. No new, renamed or removed classes, tokens,
+  props or markup; only existing token values and the keyframe and transition rules behind them changed.
+
+- [#623](https://github.com/DevinoSolutions/upup/pull/623) [`3b67b9d`](https://github.com/DevinoSolutions/upup/commit/3b67b9d8d3bfa3d1f3d9b292b94d8dbc9d55853b) Thanks [@AminDhouib](https://github.com/AminDhouib)! - OAuth and input hardening. The OAuth nonce cookie is now `__Host-upup_oauth_<provider>` (Path=/, Secure, no Domain) over https, so a sibling subdomain cannot toss it; plain http keeps the old name and `/cb` path. `/cb` accepts a match from any same-named cookie, and clears the nonce cookie on every exit, not only success. The Fastify and Next Pages adapters now deliver several `Set-Cookie` headers instead of keeping only the last. A JSON body that is not an object is a 400 instead of a 500, an upload token with extra segments is rejected, the `/health` storage probe cache is per destination, and the token-exchange and refresh calls have a timeout and refuse a response with no `access_token`.
+
+- Updated dependencies [[`ff775a4`](https://github.com/DevinoSolutions/upup/commit/ff775a421c8b35bc244f4bea76346557bff4d884), [`abfc47d`](https://github.com/DevinoSolutions/upup/commit/abfc47dbf37671bea5b330d7c84e66eac9c13b7a), [`852fcec`](https://github.com/DevinoSolutions/upup/commit/852fcec88e97e49e305d6489fd6cf2d7170cc3e5), [`6138e55`](https://github.com/DevinoSolutions/upup/commit/6138e55e79901c2a1ae2ec0d39b5f1d66fb54c78), [`cc4d305`](https://github.com/DevinoSolutions/upup/commit/cc4d30563da38aeb2e259e3b2216421227c95814), [`a26732a`](https://github.com/DevinoSolutions/upup/commit/a26732ae8d5835c6d25ecebdf4a96c960319b0ac), [`4aa7b00`](https://github.com/DevinoSolutions/upup/commit/4aa7b00425dafea763dea0eabb84884f89b7e323), [`81ad969`](https://github.com/DevinoSolutions/upup/commit/81ad969ede8f3c7cc39d26e9829616b7c818c4a1), [`023276e`](https://github.com/DevinoSolutions/upup/commit/023276e205bd094c44871b3ef6a91191c6bc46a7), [`eb4fadf`](https://github.com/DevinoSolutions/upup/commit/eb4fadfd8090f6f780fda5d93f9bee6410dea957), [`ed926a1`](https://github.com/DevinoSolutions/upup/commit/ed926a17b31f63f4fb221d3b35ad03732bd004a7), [`c20db76`](https://github.com/DevinoSolutions/upup/commit/c20db7659e639a7ff50cca0eee010daaa560455c), [`b43d7e1`](https://github.com/DevinoSolutions/upup/commit/b43d7e10ca65a4baf3c150b1a4c2c94989cb4f95), [`3b67b9d`](https://github.com/DevinoSolutions/upup/commit/3b67b9d8d3bfa3d1f3d9b292b94d8dbc9d55853b), [`4b19826`](https://github.com/DevinoSolutions/upup/commit/4b1982686af1aca8a886641b0f38cb6ebf31f421), [`7d9fb8f`](https://github.com/DevinoSolutions/upup/commit/7d9fb8fa9736413aee197b49724d015b094efbcb), [`444ab01`](https://github.com/DevinoSolutions/upup/commit/444ab0169cd7a0f71d3a02f7ce65e9691f11cefa), [`8527750`](https://github.com/DevinoSolutions/upup/commit/85277507e78678c5df100ab5fa18ac9f4c4a7bae), [`ceec02f`](https://github.com/DevinoSolutions/upup/commit/ceec02f6126ab69b6e21a38438e608ede4683793)]:
+    - @useupup/core@3.4.0
+    - @useupup/react@3.4.0
+    - @useupup/server@3.4.0
+
 ## 3.3.5
 
 ### Patch Changes
