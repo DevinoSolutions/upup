@@ -63,7 +63,9 @@ export default function UploaderPanel(): React.ReactElement | null {
     // On open (or an inner view swap) pull focus into the overlay so keyboard/SR
     // users don't land on the inert list underneath, capturing the element that
     // triggered it. Skips the closing phase (open/activeSource both false there)
-    // so the departing overlay never steals focus back.
+    // so the departing overlay never steals focus back. The decorative sheet grip
+    // is the first button in the sheet but is not a landing target (its focus
+    // ring would paint over the view title), so it is excluded from the lookup.
     const overlayRef = useRef<HTMLDivElement>(null)
     const triggerRef = useRef<HTMLElement | null>(null)
     // Sheet swipe-to-dismiss state (refs — dragging must not re-render).
@@ -78,7 +80,13 @@ export default function UploaderPanel(): React.ReactElement | null {
             document.activeElement instanceof HTMLElement
         )
             triggerRef.current = document.activeElement
-        overlayEl.querySelector<HTMLElement>('button:not([disabled])')?.focus()
+        // No enabled control (every tile disabled): the dialog itself
+        // (tabIndex -1) takes focus so it still lands inside the sheet.
+        const target =
+            overlayEl.querySelector<HTMLElement>(
+                'button:not([disabled]):not([data-upup-slot="sheet-grip"])',
+            ) ?? overlayEl
+        target.focus()
     }, [sourceOverlayOpen, activeSource])
     // When the overlay fully settles closed (past the reverse slide), restore
     // focus to the trigger if it's still in the document.
@@ -311,12 +319,13 @@ export default function UploaderPanel(): React.ReactElement | null {
                     role={sourceOverlayClosing ? undefined : 'dialog'}
                     aria-modal={sourceOverlayClosing ? undefined : 'true'}
                     aria-label={tr.addingMoreFiles}
+                    tabIndex={-1}
                     onKeyDown={e => {
                         if (e.key === 'Escape' && !sourceOverlayClosing)
                             closeSourceOverlay()
                     }}
                     className={cn(
-                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md',
+                        'upup-absolute upup-inset-x-3 upup-bottom-3 upup-top-11 upup-z-20 upup-flex upup-flex-col upup-overflow-hidden upup-rounded-2xl upup-ring-1 upup-ring-inset upup-backdrop-blur-md upup-pt-8',
                         sourceOverlayClosing
                             ? 'upup-fx-overlay-close-slide upup-pointer-events-none'
                             : 'upup-fx-overlay-slide',
@@ -426,14 +435,14 @@ export default function UploaderPanel(): React.ReactElement | null {
                         {dark ? (
                             <img
                                 src={devinoDark}
-                                width={61}
+                                width={43}
                                 height={13}
                                 alt="logo-dark"
                             />
                         ) : (
                             <img
                                 src={devinoLight}
-                                width={61}
+                                width={43}
                                 height={13}
                                 alt="logo-light"
                             />

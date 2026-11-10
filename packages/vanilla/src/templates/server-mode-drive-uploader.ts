@@ -6,6 +6,7 @@ import type { ServerModeProvider, ServerDriveFile } from '@useupup/core'
 export type { ServerModeProvider, ServerDriveFile }
 import type { UploaderContext } from '../lib/types'
 import { sourceViewContainer } from './shared/source-view-container'
+import { renderHeaderExtra } from '../context/source-view-header-extra'
 import { driveAuthFallback } from './shared/drive-auth-fallback'
 
 const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
@@ -27,6 +28,9 @@ interface ServerDriveCell {
     // controller's list/folder/search state — mirrors angular's Angular-only signals.
     selected: Set<string>
     transferring: boolean
+    // A failed transfer stays in the view: shown in the drive-error slot (like
+    // a list error) with the file list kept for a retry.
+    transferError: { message: string; code?: string | undefined } | null
     inited: boolean
 }
 
@@ -50,6 +54,7 @@ function cell(
         const controller = new ServerModeDriveController({
             provider,
             serverUrl: () => ctx.serverUrl,
+            core: () => ctx.core,
         })
         c = {
             controller,
@@ -59,6 +64,7 @@ function cell(
             }),
             selected: new Set(),
             transferring: false,
+            transferError: null,
             inited: false,
         }
         m.set(provider, c)
@@ -108,6 +114,42 @@ export function serverModeDriveUploader(
     const files: ServerDriveFile[] =
         snap.state.status === 'ready' ? snap.state.files : []
 
+    // Account controls live in the SourceView header row (portal), exactly like
+    // the client-mode drive header: Log out + hairline, only once the list is
+    // showing. Any other state clears whatever was teleported there before.
+    if (isLoading || snap.state.status === 'reauth') {
+        renderHeaderExtra(ctx, nothing)
+    } else {
+        const slot = ctx.theme.getSnapshot().slotOverrides
+        renderHeaderExtra(
+            ctx,
+            html`<button
+                    class=${cn(
+                        'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                        {
+                            'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]':
+                                isDark,
+                        },
+                        slot.driveLogoutButton,
+                    )}
+                    @click=${() => {
+                        void controller.signOut().then(ok => {
+                            if (ok) ctx.setActiveSource(undefined)
+                        })
+                    }}
+                >
+                    ${ctx.translations.logOut}
+                </button>
+                <span
+                    aria-hidden="true"
+                    class=${cn(
+                        'upup-h-4 upup-w-px',
+                        isDark ? 'upup-bg-white/15' : 'upup-bg-black/15',
+                    )}
+                ></span>`,
+        )
+    }
+
     if (snap.state.status === 'reauth') {
         return driveAuthFallback(ctx, {
             providerName: PROVIDER_LABEL[provider],
@@ -122,8 +164,16 @@ export function serverModeDriveUploader(
         else c.selected.add(id)
         ctx.invalidate()
     }
+    // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+    const navigate = (opts: { folderId?: string; search?: string }) => {
+        c.transferError = null
+        return controller.list(opts)
+    }
+    const shownError =
+        snap.state.status === 'error' ? snap.state : c.transferError
     const handleTransfer = async () => {
         c.transferring = true
+        c.transferError = null
         ctx.invalidate()
         try {
             for (const file of files.filter(f => c.selected.has(f.id))) {
@@ -132,10 +182,15 @@ export function serverModeDriveUploader(
                     controller.startAuth()
                     return
                 }
+                if (result.status === 'error') {
+                    c.transferError = result
+                    return
+                }
+                c.selected.delete(file.id)
             }
-            c.selected = new Set()
             onBack?.()
         } finally {
+            controller.finishTransfers() // report the finished selection once (any exit path)
             c.transferring = false
             ctx.invalidate()
         }
@@ -167,7 +222,7 @@ export function serverModeDriveUploader(
                 }}
                 @keydown=${(e: KeyboardEvent) => {
                     if (e.key === 'Enter')
-                        void controller.list({
+                        void navigate({
                             search: (e.target as HTMLInputElement).value,
                         })
                 }}
@@ -182,7 +237,7 @@ export function serverModeDriveUploader(
         </div>
         <div class="upup-overflow-auto upup-p-2">
             ${
-                snap.state.status === 'error'
+                shownError
                     ? html`<p
                           data-testid="upup-drive-error"
                           data-upup-slot="drive-error"
@@ -195,12 +250,15 @@ export function serverModeDriveUploader(
                           )}
                       >
                           ${
-                              snap.state.code
+                              shownError.code
                                   ? ctx.translator(
-                                        `errors.${errorCodeToMessageKey(snap.state.code)}`,
-                                        { code: snap.state.code },
+                                        `errors.${errorCodeToMessageKey(shownError.code)}`,
+                                        {
+                                            code: shownError.code,
+                                            message: shownError.message,
+                                        },
                                     )
-                                  : snap.state.message
+                                  : shownError.message
                           }
                       </p>`
                     : nothing
@@ -224,7 +282,7 @@ export function serverModeDriveUploader(
                         )}
                         @click=${() => {
                             file.isFolder
-                                ? void controller.list({
+                                ? void navigate({
                                       folderId: file.id,
                                   })
                                 : toggle(file.id)
@@ -292,7 +350,10 @@ export function serverModeDriveUploader(
             <button
                 type="button"
                 class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-                @click=${() => onBack?.()}
+                @click=${() => {
+                    c.transferError = null
+                    onBack?.()
+                }}
             >
                 Cancel
             </button>

@@ -1,7 +1,9 @@
 name: Nightly
 
+# Workflow-wide: read-only. id-token: write is granted ONLY to the jobs that
+# upload to Devino MinIO (see their own permissions blocks): the MinIO policy
+# is org-wide, so no other job may be able to mint an OIDC token.
 permissions:
-    id-token: write
     contents: read
 
 # Deep suites too slow or too external for every PR: the full e2e gate plus
@@ -23,11 +25,27 @@ on:
         - cron: '17 3 * * *' # 03:17 UTC daily
     workflow_dispatch:
 
+# One nightly at a time, queued rather than cancelled: the 03:17 cron and a
+# manual dispatch share the group, so an overlap waits its turn instead of two
+# runs fighting over the nightly-failure tracking issue. cancel-in-progress is
+# false -- killing a half-finished full e2e would lose the night's signal and
+# could leave the Nightly-Status issue update undone. (GitHub keeps at most one
+# pending run per group, so a backlog can never build up behind a slow run.)
+concurrency:
+    group: nightly
+    cancel-in-progress: false
+
 jobs:
     E2E-Full:
         name: Full E2E + a11y sweep (Playwright + MinIO)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -123,25 +141,28 @@ jobs:
             # Visual layer: same capture set as e2e.yml (parity mount/populated
             # states x6 frameworks, real-upload success x6, deep-react product
             # states) — nightly's copy is the unrouted full-breadth run and the
-            # future snapvisor.io baseline feed.
+            # future snapvisor.io baseline feed. Failure-only, like e2e.yml, and
+            # stored on Devino MinIO (DevinoSolutions/artifact/upload) rather
+            # than GitHub artifacts: that storage is blocked until the org's
+            # billing cycle resets.
             - name: Upload visual product-state screenshots
-              if: always()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
                   if-no-files-found: warn
-                  retention-days: 14
+                  retention-days: 1
 
             - name: Upload Playwright traces and reports
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-playwright-artifacts
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 2
 
     Storybook-Builds:
         name: Static storybook builds (all six frameworks)
@@ -387,6 +408,12 @@ jobs:
         name: Lighthouse (landing SEO + Best Practices + mobile perf ratchet)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -422,16 +449,44 @@ jobs:
             - name: Lighthouse mobile performance ratchet (warn-only)
               run: pnpm --filter @useupup/landing run lighthouse:mobile
 
+            # Scores go to the run summary on every run (the artifact below is
+            # failure-only now). Reads the lhci filesystem manifests; a missing
+            # or unparsable manifest is skipped and the step can never fail.
+            - name: Lighthouse summary
+              if: ${{ !cancelled() }}
+              working-directory: apps/landing
+              run: |
+                  {
+                    echo "### Lighthouse (representative run per URL)"
+                    node -e '
+                      const fs = require("fs");
+                      let rows = 0;
+                      for (const d of [".lighthouseci-reports", ".lighthouseci-mobile-reports"]) {
+                        try {
+                          const m = JSON.parse(fs.readFileSync(d + "/manifest.json", "utf8"));
+                          console.log("");
+                          console.log("**" + d + "**");
+                          for (const r of m.filter((x) => x.isRepresentativeRun)) {
+                            const s = Object.entries(r.summary).map(([k, v]) => k + " " + Math.round(v * 100)).join(", ");
+                            console.log("- " + r.url + ": " + s);
+                            rows++;
+                          }
+                        } catch {}
+                      }
+                      if (!rows) console.log("No Lighthouse manifest found.");
+                    '
+                  } >> "$GITHUB_STEP_SUMMARY" || true
+
             - name: Upload Lighthouse reports
-              if: always()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-lighthouse-reports
                   path: |
                       apps/landing/.lighthouseci-reports/
                       apps/landing/.lighthouseci-mobile-reports/
                   if-no-files-found: warn
-                  retention-days: 14
+                  retention-days: 1
 
     # Rollup aggregator, mirroring Status Check / E2E Status Check. Not a
     # branch-protection input (nightly has no PR) — it exists so one signal
@@ -441,6 +496,12 @@ jobs:
         name: Landing feedback e2e + PostHog ingestion (capture token; explicit skip without it)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -541,14 +602,14 @@ jobs:
               run: pnpm run e2e:landing
 
             - name: Upload Playwright report
-              if: failure() && steps.creds.outputs.present == 'true'
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && steps.creds.outputs.present == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 2
 
     # Read-only checks against the DEPLOYED site: each of the four drive
     # sign-ins (homepage demo popups + server-mode start routes) must reach the
@@ -560,6 +621,12 @@ jobs:
         name: Live drive sign-in checks (useupup.com)
         runs-on: ubuntu-latest
         timeout-minutes: 20
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -588,14 +655,14 @@ jobs:
               run: pnpm --filter @useupup/e2e-test test:e2e:live
 
             - name: Upload Playwright report
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: live-drive-login-playwright-artifacts
                   path: |
                       apps/e2e-test/playwright-report/
                       apps/e2e-test/test-results/
-                  retention-days: 14
+                  retention-days: 2
 
     Nightly-Status:
         name: Nightly Status Check

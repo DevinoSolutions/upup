@@ -22,6 +22,7 @@ export type UploaderRef = {
         loading: boolean
         progress: number
         upload(): Promise<UploadFile[] | undefined>
+        retryUpload(fileId?: string): Promise<UploadFile[] | undefined>
         resetState(): void
         uploadFiles(
             files: File[] | UploadFile[],

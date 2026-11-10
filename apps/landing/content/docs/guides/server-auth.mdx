@@ -123,9 +123,9 @@ The token binds:
 - **`uid`** — the resolved user id (or `null` for an anonymous upload).
 - **`smin` / `smax`** — the allowed total-size envelope, in bytes.
 - **`exp`** — expiry, epoch seconds. Default TTL is one hour.
-- **`iat`** — the issue time of the **original** `init`, epoch seconds. Absent
-  on tokens minted before cross-reload resume shipped; `resume` then derives it
-  from `exp`, since `init` is the only issuer and has always used the same TTL.
+- **`iat`** — the issue time of the **original** `init`, epoch seconds. Required:
+  a token without it is refused with `403 {code: 'malformed'}`, as is one
+  without `ps`, the signed part size.
 
 It is signed with HMAC-SHA-256 over the payload using your
 `uploadTokenSecret`, via Web Crypto (so it works on Node 20+, edge runtimes,

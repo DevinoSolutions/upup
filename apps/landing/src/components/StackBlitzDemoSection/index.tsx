@@ -318,10 +318,16 @@ export default function StackBlitzDemoSection() {
         if (!showFullscreenWarning) return
         cancelButtonRef.current?.focus()
         function onKeyDown(e: KeyboardEvent) {
-            if (e.key === 'Escape') cancelFullscreenChange()
+            if (e.key !== 'Escape' || e.defaultPrevented) return
+            // Consume the key so a layer underneath (the navbar's mobile menu)
+            // stays open.
+            e.preventDefault()
+            cancelFullscreenChange()
         }
-        document.addEventListener('keydown', onKeyDown)
-        return () => document.removeEventListener('keydown', onKeyDown)
+        // Capture phase: a bubble listener registered earlier (the navbar's
+        // mobile-menu Escape) would otherwise run first and close both layers.
+        document.addEventListener('keydown', onKeyDown, true)
+        return () => document.removeEventListener('keydown', onKeyDown, true)
     }, [showFullscreenWarning, cancelFullscreenChange])
 
     return (
@@ -406,7 +412,7 @@ export default function StackBlitzDemoSection() {
                             <Link
                                 target="_blank"
                                 href="/docs/"
-                                className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-all duration-200"
+                                className="group inline-flex items-center gap-2 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors duration-200"
                             >
                                 <Code className="w-5 h-5" />
                                 View Documentation

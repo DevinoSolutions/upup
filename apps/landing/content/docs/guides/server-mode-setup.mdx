@@ -1,6 +1,6 @@
 ---
-title: Secure S3 File Upload Server for Node.js and Next.js
-description: Set up a secure S3 file upload server for Node.js with Express, Fastify, Hono or Next.js. It signs each upload; the browser PUTs the file to the bucket.
+title: S3 Upload Server for Node.js, Express & Next.js
+description: Build a secure S3 upload server in Node.js with Express, Fastify, Hono or Next.js. Signed uploads, drive OAuth, Redis token store. 15-30 min setup.
 ---
 
 This guide sets up upup server mode (`mode="server"`): a secure S3 file
@@ -78,7 +78,7 @@ export const POST = handler
 
 The handler routes on path suffix: `/presign`, `/multipart/*`,
 `/auth/:provider`, `/auth/:provider/cb`, `/files/:provider`,
-`/files/:provider/transfer`, `/health`. All paths are relative to the
+`/files/:provider/transfer`, `/files/:provider/logout`, `/health`. All paths are relative to the
 folder you mount it at.
 
 Running Express, Fastify, Hono, the Pages Router, or a bare Node server
@@ -218,6 +218,29 @@ shows the happy path; steps 4 and 5 below cover finishing and recovering:
     with a 1–7 day expiry. Every S3-compatible provider supports it, MinIO
     included. See
     [Cross-reload resume](/docs/resumable-uploads/#cross-reload-resume).
+
+    This is also the backstop for uploads that are started and never
+    completed. The signed part URLs pin every part to its exact expected
+    length, so such an upload cannot hold more than the size declared at
+    `init` (which `maxFileSize` already capped), but the stored parts are only
+    reclaimed by this rule or by an explicit abort.
+
+    ```json
+    {
+        "Rules": [
+            {
+                "ID": "abort-incomplete-multipart-uploads",
+                "Status": "Enabled",
+                "Filter": { "Prefix": "" },
+                "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 7 }
+            }
+        ]
+    }
+    ```
+
+    Apply it with `aws s3api put-bucket-lifecycle-configuration --bucket
+    <bucket> --lifecycle-configuration file://rule.json` (add `--endpoint-url`
+    for MinIO, R2 and other S3-compatible stores).
 
 </Callout>
 
@@ -383,14 +406,17 @@ billing, or webhooks on top of them — the gaps are structural, not bugs:
 | `POST /multipart/init`           | yes              | yes                 | no               | no                 |
 | `POST /multipart/sign-part`      | no               | yes                 | no               | no                 |
 | `POST /multipart/complete`       | no               | no                  | yes              | yes                |
-| `POST /files/:provider/transfer` | no               | no                  | yes              | no                 |
+| `POST /files/:provider/transfer` | yes              | no                  | yes              | no                 |
 
 - **`onBeforeUpload` is an admission gate, not a completion signal.** It runs
   during metadata validation on `/presign` and `/multipart/init`, after the
   `maxFileSize` and `allowedTypes` checks. Returning `false` responds
   `403 Upload rejected` and nothing is presigned. To explain the rejection,
   **throw an `UpupError`** instead — see
-  [Explaining a rejection](#explaining-a-rejection) below.
+  [Explaining a rejection](#explaining-a-rejection) below. It also gates
+  `POST /files/:provider/transfer`, where the file it receives carries the
+  type, name and size the **provider** reported (not the client's claim),
+  and a rejection happens before any bytes are written to storage.
 - **`onPresignResponse` is the only hook that can change a response body.** It
   sees the three presign-side payloads and nothing else — see
   [Rewriting presign responses](#rewriting-presign-responses).
@@ -768,6 +794,7 @@ policy across the upload and drive-transfer paths:
 
 - Omitted or empty → every type passes.
 - An `image/*` entry honours the wildcard.
+- Matching is case-insensitive (ASCII): `IMAGE/PNG` matches `image/png`.
 - An absent or empty type does **not** match a non-empty allowlist. A file
   with no declared MIME type is rejected, never silently waved through.
 

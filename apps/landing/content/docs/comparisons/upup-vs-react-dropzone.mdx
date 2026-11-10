@@ -1,6 +1,13 @@
 ---
 title: upup vs react-dropzone
 description: An honest, factual comparison of upup and react-dropzone — a headless drag-and-drop primitive versus a full file uploader — so you can pick the right scope.
+faq:
+    - q: 'What is the difference between upup and react-dropzone?'
+      a: 'react-dropzone is a drag-and-drop file-selection primitive for React. It hands you the selected File objects and leaves the upload, UI and progress to you. upup is a full uploader with a headless core, native UI for six frameworks and an optional server.'
+    - q: 'Does react-dropzone upload files?'
+      a: 'No. It only handles selecting and dropping files. You implement the upload to your own backend yourself.'
+    - q: 'When should I choose react-dropzone over upup?'
+      a: 'Choose react-dropzone when you only need a drag-and-drop zone in React and will build the upload, UI and progress yourself. Choose upup when you want the whole flow, including previews, cloud drives, camera, resumable uploads and a server.'
 ---
 
 react-dropzone is a small, focused React hook (`useDropzone`) — with a matching
@@ -43,3 +50,17 @@ start with the primitive and later need the whole flow.
 - You need more than React: Vue, Svelte, Angular, Vanilla JS, and Preact, all
   sharing one DOM contract.
 - You'd rather configure a complete uploader than build one from a primitive.
+
+## FAQ
+
+### What is the difference between upup and react-dropzone?
+
+react-dropzone is a drag-and-drop file-selection primitive for React. It hands you the selected File objects and leaves the upload, UI and progress to you. upup is a full uploader with a headless core, native UI for six frameworks and an optional server.
+
+### Does react-dropzone upload files?
+
+No. It only handles selecting and dropping files. You implement the upload to your own backend yourself.
+
+### When should I choose react-dropzone over upup?
+
+Choose react-dropzone when you only need a drag-and-drop zone in React and will build the upload, UI and progress yourself. Choose upup when you want the whole flow, including previews, cloud drives, camera, resumable uploads and a server.

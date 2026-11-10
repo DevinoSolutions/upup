@@ -81,6 +81,19 @@ describe('createTransientUiState', () => {
         expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
     })
 
+    it('default overlayMs is 250, in lockstep with --upup-fx-overlay', () => {
+        const s = createTransientUiState({
+            motion: () => 'on',
+            reallyRemove: () => {},
+        })
+        s.openSourceOverlay()
+        s.closeSourceOverlay()
+        vi.advanceTimersByTime(249)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(true)
+        vi.advanceTimersByTime(1)
+        expect(s.getSnapshot().sourceOverlayClosing).toBe(false)
+    })
+
     it('close is INSTANT (no closing phase) when motion is off', () => {
         const s = createTransientUiState({
             motion: () => 'off',

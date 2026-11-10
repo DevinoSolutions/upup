@@ -56,15 +56,15 @@ Ad-hoc MinIO-dependent invocations must go through the root scripts (they wrap
 
 ## CI: what runs when
 
-**Every PR (main.yml — never routed):** prettier → test-quality guard →
+**Every PR (main.yml — gated only by the docs-only rule below):** prettier → test-quality guard →
 script self-tests → all unit suites → coverage ratchets → env/vocab checks →
-typecheck → build → size → prod dependency audit → lint/oxlint/knip, rolled
+typecheck → build (+ size + docs snippet typecheck) → prod dependency audit → lint/oxlint/knip, rolled
 up by the required **Status Check**.
 
 **Every PR (e2e.yml — routed):** `Resolve-Affected` classifies the diff with
 `scripts/ci/resolve-affected-tests.mjs` and heavy jobs run only when needed.
 The impact map is code, exported for unit tests. Precedence per file:
-UNIVERSAL config > docs/markdown (light) > targeted package rules > light
+UNIVERSAL config > docs-only (light) > targeted package rules > light
 directories > **fail-open (unmatched paths run everything)**. Summary:
 
 | Changed path                                                                                                     | e2e | minio | smoke |
@@ -76,21 +76,51 @@ directories > **fail-open (unmatched paths run everything)**. Summary:
 | `docker-compose.yml`, `local-dev/**`, e2e/env scripts                                                            | ✓   | ✓     |       |
 | smoke consumer script, `scripts/lib/**`                                                                          |     |       | ✓     |
 | root manifests, lockfile, turbo, workflows, any `tsconfig*`/`vitest`/`vite`/`playwright` config, `scripts/ci/**` | ✓   | ✓     | ✓     |
-| markdown anywhere, `docs/**`, landing/docs/playground/next-example apps, interactive-example, mastra             |     |       |       |
+| `docs/**`, root-level `*.md`, landing/docs/playground/next-example apps, interactive-example, mastra             |     |       |       |
 | **anything unmatched**                                                                                           | ✓   | ✓     | ✓     |
+
+**One docs-only rule, two routers that ask different questions.** main.yml's
+`Changes` job asks "skip the static gates?", and the e2e resolver asks "which
+runtime suites?".
+
+- **Docs-only verdict (shared).** A path under `docs/` or a markdown file
+  directly in the repo root is docs-only, defined exactly once in
+  `scripts/ci/docs-only.mjs`. main.yml's `Changes` job pipes the PR's changed
+  files to that script (exit 0 = every file is docs-only, so `code=false` and
+  the heavy main.yml jobs skip), and the resolver's `docs-only` rule is the same
+  predicate. `scripts/ci/docs-only.test.mjs` (in `test:scripts`) pins a fixture
+  list against both and fails if the `Changes` step is anything but that CLI
+  call. The rule is narrow on purpose: markdown deeper in the tree is NOT
+  docs-only for main.yml, because `vocab:check` scans `.md` under
+  packages/apps/scripts/.github. A PR that only touches `.changeset/*.md` or a
+  package README therefore still runs main.yml.
+- **Runtime neutrality (resolver only).** Nested markdown never triggers a
+  runtime suite: the resolver's separate `markdown-no-runtime` rule gives any
+  `*.md` no suites, so a changeset or a package README adds nothing to the e2e
+  run. Non-markdown files (e.g. `.changeset/config.json`) route as before and
+  fail open.
 
 The required **E2E Status Check** rollup fails on any skip the resolver did
 not sanction (and on a failed resolver), so routing cannot hide required
 coverage. Branch protection must require BOTH rollups (F-780).
 `workflow_dispatch` forces every suite (`--all`).
 
-The E2E job uploads two artifacts: `e2e-visual-screenshots` (**always** — the
-visual layer's PNGs, see "Visual screenshots" below) and
-`e2e-playwright-artifacts` (traces + reports, failure only).
+The E2E job uploads two artifacts, both on failure only: `e2e-visual-screenshots`
+(the visual layer's PNGs, see "Visual screenshots" below; 1-day retention) and
+`e2e-playwright-artifacts` (traces + reports). They are stored on Devino MinIO via
+`DevinoSolutions/artifact/upload` (bucket `gh-artifacts`, path
+`<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary; fetch it with `mc` or
+minio-console.devino.ca), not on GitHub:
+the org's GitHub artifact storage is hard-blocked until the billing cycle resets.
+The upload authenticates with the job's OIDC token, which fork PRs do not get, so
+fork PRs skip it. Jobs never pass files to each other through artifacts either
+(Build runs size-limit and the snippet typecheck itself) and every upload sets
+`retention-days` 2 or less (the action rounds up to 1/3/5/7/14/30/90, so a 2 is
+stored for 3 days).
 
 **Nightly (nightly.yml, 03:17 UTC + manual):** full e2e + MinIO suites +
-a11y/overflow sweep (with `nightly-visual-screenshots` uploaded always and
-Playwright trace/report artifacts on failure),
+a11y/overflow sweep (with `nightly-visual-screenshots` and the Playwright trace/report
+artifacts uploaded to Devino MinIO on failure only; Lighthouse scores go to the run summary),
 static builds of all six storybooks, package smoke, the mastra LLM evals, and
 the cloud-drive live integration suites — the `Drive-Sandbox` job runs both the
 vitest client-direct suite and a Playwright HTTP-surface layer (all four
@@ -139,8 +169,11 @@ The e2e suites freeze named product states as PNGs via
 (`captureProductStateScreenshot`). This is the geometry/paint complement to
 the DOM parity harness, and the input for **snapvisor.io** — our Argos-style
 visual-diff service — once its uploader is wired into CI. Until then the PNGs
-ship as plain workflow artifacts (`e2e-visual-screenshots` on PRs,
-`nightly-visual-screenshots` on nightly) and are reviewed by humans.
+ship on failure only (`e2e-visual-screenshots` on PRs, `nightly-visual-screenshots`
+on nightly) to Devino MinIO (bucket `gh-artifacts`, path
+`<owner>/<repo>/<run_id>/<name>.tgz`, its s3:// location printed in the job summary; fetch it with `mc` or
+minio-console.devino.ca; fork PRs skip
+the upload) and are reviewed by humans.
 
 **Naming contract** (snapvisor will key diffs on these paths — treat renames
 like fixture changes, not refactors):
@@ -285,7 +318,9 @@ by all Devino apps' automated tests; synthetic data only, never production).
 
 ## Debugging Playwright failures
 
-- Nightly uploads `playwright-report/` + `test-results/` artifacts on failure;
+- Nightly uploads `playwright-report/` + `test-results/` artifacts on failure
+  (to Devino MinIO `gh-artifacts`, its s3:// location printed in the job summary; fetch it with `mc` or
+  minio-console.devino.ca);
   locally, `pnpm --filter @useupup/e2e-test exec playwright show-report`.
 - Traces are `on-first-retry`; view with
   `pnpm --filter @useupup/e2e-test exec playwright show-trace <trace.zip>`.
@@ -293,4 +328,4 @@ by all Devino apps' automated tests; synthetic data only, never production).
   only raw exit codes (see CLAUDE.md "Machine-local notes").
 - Flakes: re-run the failing test isolated before suspecting your change
   (CLAUDE.md "Flake protocol"); cross-framework storybook boot is legitimately
-  slow (420 s webServer timeout) — don't kill it.
+  slow (900 s webServer timeout, see CLAUDE.md "E2E") — don't kill it.

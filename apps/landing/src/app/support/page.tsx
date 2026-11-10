@@ -6,11 +6,12 @@ import { ICON_CHIP } from '@/components/ui/recipes'
 import SupportForm from './SupportForm'
 import { DISCORD_INVITE_URL } from '@/lib/community-links'
 import { canonicalUrl } from '@/lib/site-url'
+import { SUPPORT_REPLY_PROMISE } from '@/lib/support/reply-time'
 
 export const metadata: Metadata = {
     title: 'Support — upup',
     description:
-        'Report a problem, request a feature, or ask a question about upup. Your message reaches the team directly.',
+        'Report a problem, request a feature, or ask a question about upup. A human replies within 1 business day.',
     alternates: { canonical: canonicalUrl('support') },
 }
 
@@ -31,7 +32,7 @@ export default function SupportPage() {
                             Get <span className={GRADIENT_TEXT}>support</span>
                         </>
                     }
-                    subtitle="Tell us what's going on — a bug, a feature idea, or a question. It all reaches the team."
+                    subtitle={`${SUPPORT_REPLY_PROMISE} A bug, a feature idea, or a question: it all reaches the team.`}
                 />
                 <div className="mx-auto w-full max-w-2xl">
                     <SupportForm />

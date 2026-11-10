@@ -235,6 +235,27 @@ test.describe('seo surfaces', () => {
         expect(missing, 'covered pages missing from the sitemap').toEqual([])
     })
 
+    // The unit suite pins sitemap()'s return value; this pins what the route
+    // actually serializes (T-5788 / #636 per-page lastmod, d167f727 comments).
+    test('sitemap.xml serves a real per-page lastmod on every URL and carries no XML comments', async ({
+        request,
+    }) => {
+        const body = await (await request.get('/sitemap.xml')).text()
+        const urls = [...body.matchAll(/<loc>[^<]+<\/loc>/g)]
+        const lastmods = [...body.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)].map(
+            match => match[1],
+        )
+        expect(urls.length, 'sitemap URLs').toBeGreaterThan(0)
+        expect(lastmods, 'one lastmod per URL').toHaveLength(urls.length)
+        for (const lastmod of lastmods)
+            expect(lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+        expect(
+            new Set(lastmods).size,
+            'distinct lastmod values, not one deploy-time stamp',
+        ).toBeGreaterThan(1)
+        expect(body).not.toContain('<!--')
+    })
+
     // The drive sign-in popups land on these paths with a one-time code. They
     // used to render the site's 404; now each is a real, never-indexed page
     // that stays out of the sitemap.

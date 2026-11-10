@@ -121,7 +121,10 @@ their `relativePath`.
 ## Camera
 
 The `camera` view mounts a live webcam preview via `getUserMedia`. The browser
-owns the permission prompt — upup does not pre-check it.
+owns the permission prompt — upup does not pre-check it. Capturing images is a
+common reason to pick a library; the
+[JavaScript image upload library comparison](/docs/comparisons/best-javascript-image-upload-libraries/)
+covers the alternatives.
 
 The flow is capture-then-confirm: **Capture** freezes a still from the stream and
 shows it as a preview with a small delete button to retake, and **Add image**

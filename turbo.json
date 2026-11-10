@@ -50,13 +50,16 @@
             "dependsOn": ["^build"]
         },
         "test": {
-            "dependsOn": ["^test", "^build"]
+            "dependsOn": ["^build"]
         },
         "@useupup/vanilla#test": {
-            "dependsOn": ["^test", "^build", "build"]
+            "dependsOn": ["^build", "build"]
         },
         "@useupup/preact#test": {
-            "dependsOn": ["^test", "^build", "build"]
+            "dependsOn": ["^build", "build"]
+        },
+        "@useupup/next#test": {
+            "dependsOn": ["^build", "build"]
         },
         "test:coverage": {
             "dependsOn": ["^build"]
@@ -65,6 +68,9 @@
             "dependsOn": ["^build", "build"]
         },
         "@useupup/preact#test:coverage": {
+            "dependsOn": ["^build", "build"]
+        },
+        "@useupup/next#test:coverage": {
             "dependsOn": ["^build", "build"]
         },
         "typecheck": {

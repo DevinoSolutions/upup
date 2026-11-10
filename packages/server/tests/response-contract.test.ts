@@ -28,4 +28,25 @@ describe('response contract (F-108 / F-715)', () => {
             .filter(file => file !== 'respond.ts')
         expect(offenders).toEqual([])
     })
+
+    // T-6087: provider failures are mapped per cause. A rejection the client
+    // must fix is DEPENDENCY_REJECTED_STATUS (424); a transient or upstream
+    // failure is UPSTREAM_UNAVAILABLE_STATUS (502). Every 502/504 in src/ goes
+    // through that one named constant, so a new bare 502 is a deliberate choice.
+    it('the only 502/504 literal in src/ is the UPSTREAM_UNAVAILABLE_STATUS declaration', () => {
+        const stripComments = (text: string) =>
+            text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+        const hits = walk(SRC).flatMap(file =>
+            stripComments(readFileSync(file, 'utf8'))
+                .split(/\r?\n/)
+                .filter(line => /\b50[24]\b/.test(line))
+                .map(
+                    line =>
+                        `${relative(SRC, file).replace(/\\/g, '/')}: ${line.trim()}`,
+                ),
+        )
+        expect(hits).toEqual([
+            'respond.ts: export const UPSTREAM_UNAVAILABLE_STATUS = 502',
+        ])
+    })
 })

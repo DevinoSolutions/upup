@@ -6,6 +6,61 @@ import { expect, test } from '@playwright/test'
 // search) renders real content, and the llms.txt convention path is served.
 
 test.describe('docs', () => {
+    test.describe('reduced motion', () => {
+        test.use({ reducedMotion: 'reduce' })
+
+        test('opening Ask AI moves focus into the composer', async ({
+            page,
+        }) => {
+            await page.goto('/docs/getting-started/')
+            const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
+            const drawer = page.getByTestId('docs-ask-ai-drawer')
+            await expect(async () => {
+                await trigger.click()
+                await expect(drawer).toBeVisible({ timeout: 2000 })
+            }).toPass()
+            // The global reduced-motion net must not turn the drawer's
+            // implicit `transition-property: all` into a visibility
+            // transition, or the open-time focus() hits a hidden element.
+            await expect(drawer.getByTestId('docs-ask-ai-input')).toBeFocused()
+        })
+
+        test('keyboard Send keeps focus in the composer so Escape still closes', async ({
+            page,
+        }) => {
+            await page.route('**/api/agents/docs-agent/stream', route =>
+                route.fulfill({ status: 404, body: '' }),
+            )
+            await page.route('**/api/agents/docs-agent/generate', route =>
+                route.fulfill({
+                    contentType: 'application/json',
+                    body: JSON.stringify({ text: 'Use the tus strategy.' }),
+                }),
+            )
+            await page.goto('/docs/getting-started/')
+            const trigger = page.getByTestId('docs-ask-ai-trigger-desktop')
+            const drawer = page.getByTestId('docs-ask-ai-drawer')
+            await expect(async () => {
+                await trigger.click()
+                await expect(drawer).toBeVisible({ timeout: 2000 })
+            }).toPass()
+            const input = drawer.getByTestId('docs-ask-ai-input')
+            await expect(input).toBeFocused()
+            await input.fill('resumable uploads?')
+            // Tab from the composer to Send and activate it from the keyboard.
+            // Submitting disables Send; Chrome drops focus from a focused
+            // button that disables, which strands the user outside the aside
+            // so Escape never reaches its handler. Focus must stay in the
+            // composer.
+            await page.keyboard.press('Tab')
+            await expect(drawer.getByTestId('docs-ask-ai-send')).toBeFocused()
+            await page.keyboard.press('Enter')
+            await expect(input).toBeFocused()
+            await page.keyboard.press('Escape')
+            await expect(drawer).toBeHidden()
+        })
+    })
+
     test('legacy documentation URL permanently redirects to docs', async ({
         request,
     }) => {
@@ -209,6 +264,10 @@ test.describe('docs', () => {
             await trigger.click()
             await expect(drawer).toBeVisible({ timeout: 2000 })
         }).toPass()
+        // Opening moves focus into the composer. jsdom cannot see this: a
+        // transitioned hidden -> visible on open keeps the drawer `hidden`
+        // for a frame and the focus() silently fails.
+        await expect(drawer.getByTestId('docs-ask-ai-input')).toBeFocused()
         await drawer.getByTestId('docs-ask-ai-input').fill('resumable uploads?')
         await drawer.getByTestId('docs-ask-ai-send').click()
         const citation = drawer.getByRole('link', {

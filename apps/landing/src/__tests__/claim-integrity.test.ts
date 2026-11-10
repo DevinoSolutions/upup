@@ -27,6 +27,16 @@ const COPY_SOURCES: Record<string, string> = {
         '../components/FeatureShowcase/index.tsx',
     'src/components/HomepageFeatures/index.tsx':
         '../components/HomepageFeatures/index.tsx',
+    'src/components/HomepageFeatures/EmailModal.tsx':
+        '../components/HomepageFeatures/EmailModal.tsx',
+    'src/components/HomepageFeatures/SupportedWall.tsx':
+        '../components/HomepageFeatures/SupportedWall.tsx',
+    'src/components/HomepageFeatures/PlannedStrip.tsx':
+        '../components/HomepageFeatures/PlannedStrip.tsx',
+    'src/components/HomepageFeatures/fileTypes.tsx':
+        '../components/HomepageFeatures/fileTypes.tsx',
+    'src/components/HomepageFeatures/providers.ts':
+        '../components/HomepageFeatures/providers.ts',
     'src/app/privacy/page.tsx': '../app/privacy/page.tsx',
     'src/components/FrameworkGuide/index.tsx':
         '../components/FrameworkGuide/index.tsx',

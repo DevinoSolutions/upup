@@ -20,14 +20,14 @@ const ThemeToggler = ({
             aria-label={
                 isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
             }
-            className="flex items-center justify-center rounded-full transition-all duration-300"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full lg:min-h-0 lg:min-w-0 transition-colors duration-fast"
             onClick={switchTheme}
         >
             <m.div
                 key={isDarkMode ? 'moon-icon' : 'sun-icon'}
-                initial={{ rotate: 180, scale: 0.8, opacity: 0.5 }}
-                animate={{ rotate: 0, scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15 }}
             >
                 {isDarkMode ? (
                     <MdOutlineLightMode className={lightModeClassName} />

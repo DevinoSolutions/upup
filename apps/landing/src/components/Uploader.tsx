@@ -131,6 +131,11 @@ export default function Uploader({
                 maxFileSize={{ size: fileSizeLimit, unit: 'MB' }}
                 maxRetries={maxRetries}
                 resumable={{ protocol: 'multipart' }}
+                // Multipart is on, so a >5 MiB file leaves a server-side upload
+                // and an `upup_mp_*` session behind when the tab reloads.
+                // crashRecovery restores the file itself, so the visitor can
+                // resume it or remove it (removal aborts the upload).
+                crashRecovery
                 i18n={locale ? { locale } : undefined}
                 onFilesUploadComplete={files => {
                     console.log('Files uploaded successfully:', files)

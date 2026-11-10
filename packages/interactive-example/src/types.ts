@@ -90,6 +90,21 @@ export interface AiFeedbackEvent {
     properties: Record<string, string>
 }
 
+/**
+ * One AI assistant turn that ended in the visible "AI assistant is unavailable"
+ * state. Handed to the host's `onAssistantError` so it can report the failure
+ * (e.g. to an error tracker); the package itself never imports one. It carries
+ * only the path, the agent id and a short reason: never the visitor's prompt.
+ */
+export interface AssistantErrorInfo {
+    path: 'playground-chat'
+    agentId: string
+    /** `upstream-error`: the agent/stream/network failed. `empty-reply`: it finished with no text. */
+    kind: 'upstream-error' | 'empty-reply'
+    /** The upstream error text, when there is one (absent for an empty reply). */
+    message?: string
+}
+
 export type InteractiveExampleProps = {
     defaultExpanded?: CategoryId[]
     showCodeTab?: boolean
@@ -130,5 +145,11 @@ export type InteractiveExampleProps = {
          * the thumbs UI is not rendered.
          */
         onAiFeedback?: (event: AiFeedbackEvent) => void
+        /**
+         * Called once per assistant turn that ends in the visible error state
+         * (upstream error, or a reply with no text). The host forwards it to
+         * its error tracker. Absent -> failures are not reported.
+         */
+        onAssistantError?: (info: AssistantErrorInfo) => void
     }
 }

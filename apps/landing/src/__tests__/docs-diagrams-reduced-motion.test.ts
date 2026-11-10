@@ -22,13 +22,13 @@ const motionState = vi.hoisted(() => ({
     pathProps: [] as PathProps[],
 }))
 
-// Only two seams are replaced: the preference hook, and `motion.path`, which
+// Only two seams are replaced: the preference hook, and `m.path`, which
 // records the props each primitive hands framer-motion before rendering the
 // real element — so the markup below is framer-motion's own SSR output.
 vi.mock('framer-motion', async importOriginal => {
     const actual = await importOriginal<typeof import('framer-motion')>()
     const { createElement: h } = await import('react')
-    const RealPath = actual.motion.path as unknown as (
+    const RealPath = actual.m.path as unknown as (
         props: PathProps,
     ) => ReactElement
     const RecordedPath = (props: PathProps) => {
@@ -38,7 +38,7 @@ vi.mock('framer-motion', async importOriginal => {
     return {
         ...actual,
         useReducedMotion: () => motionState.reduce,
-        motion: new Proxy(actual.motion, {
+        m: new Proxy(actual.m, {
             get: (target, key, receiver) =>
                 key === 'path'
                     ? RecordedPath
@@ -72,7 +72,7 @@ function renderDiagram(reduce: boolean | null) {
     const recorded = motionState.pathProps
     const find = (match: (props: PathProps) => boolean): PathProps => {
         const props = recorded.find(match)
-        if (!props) throw new Error('motion.path was not rendered')
+        if (!props) throw new Error('m.path was not rendered')
         return props
     }
     return {

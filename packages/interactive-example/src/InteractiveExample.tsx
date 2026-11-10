@@ -179,6 +179,7 @@ function Shell({
                     appId={aiAssistant?.appId}
                     posthogDistinctId={aiAssistant?.posthogDistinctId}
                     onAiFeedback={aiAssistant?.onAiFeedback}
+                    onAssistantError={aiAssistant?.onAssistantError}
                 />
             )}
         </div>

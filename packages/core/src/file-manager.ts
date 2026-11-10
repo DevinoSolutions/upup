@@ -30,6 +30,13 @@ export interface FileManagerOptions {
         | undefined
 }
 
+/** What happened to an incoming batch: who joined, who was refused and why. */
+export interface AdmitOutcome {
+    accepted: UploadFile[]
+    /** One violation per refusal, each naming a file and its reason. */
+    refused: UpupValidationError[]
+}
+
 let fileIdCounter = 0
 
 function generateFileId(): string {
@@ -106,6 +113,30 @@ function contentHashPatch(file: UploadFile, hash: string): Partial<UploadFile> {
         metadata: { ...file.metadata, originalContentHash: hash },
     }
     return patch
+}
+
+export interface TransferredFileInfo {
+    name: string
+    size: number
+    type: string
+    key: string
+    url?: string | undefined
+    source: FileSource
+    // `google-drive:<id>`, for duplicate checks.
+    driveId?: string | undefined
+}
+
+// Zero-byte File reporting the real size (own non-enumerable slot).
+function completedBase(
+    info: Pick<TransferredFileInfo, 'name' | 'size' | 'type'>,
+): File {
+    const base = new File([], info.name, { type: info.type })
+    Object.defineProperty(base, 'size', {
+        value: info.size,
+        configurable: true,
+        enumerable: false,
+    })
+    return base
 }
 
 function nativeToUploadFile(
@@ -185,6 +216,8 @@ function revokeObjectUrl(file?: UploadFile): void {
 export class FileManager {
     private files = new Map<string, UploadFile>()
     private options: FileManagerOptions
+    // Tail of the admission queue (see `admit`).
+    private admission: Promise<unknown> = Promise.resolve()
 
     constructor(options: FileManagerOptions) {
         this.options = options
@@ -228,24 +261,26 @@ export class FileManager {
         // relativePath is defined non-enumerable (nativeToUploadFile) so it is
         // copied explicitly, exactly as cloneUploadFile does. Then the patch wins.
         Object.assign(next, prev, { relativePath: prev.relativePath }, patch)
+        // addCompleted's real size is a non-enumerable own slot; carry it over.
+        const remoteSize = Object.getOwnPropertyDescriptor(prev, 'size')
+        if (remoteSize) Object.defineProperty(next, 'size', remoteSize)
         const updated = next as UploadFile
         this.files.set(id, updated)
         return updated
     }
 
-    private validateFile(file: File): void {
-        const [violation] = validateFileRestrictions(file, this.options)
-        if (violation) {
-            throw new UpupValidationError(
-                violation.message,
-                violation.code,
-                file,
-            )
-        }
-    }
-
-    private async collectAcceptedFiles(nativeFiles: File[]): Promise<File[]> {
-        const accepted: File[] = []
+    /**
+     * The per-file gate: the `onBeforeFileAdded` hook (`false` drops the file
+     * silently, a File substitutes it), then the type / size restrictions. A
+     * file that fails a restriction is REFUSED — handed back as an
+     * `UpupValidationError` rather than thrown, so one bad file never costs
+     * the rest of its batch their place (T-15015).
+     */
+    private async screenFiles(
+        nativeFiles: File[],
+    ): Promise<{ passed: File[]; refused: UpupValidationError[] }> {
+        const passed: File[] = []
+        const refused: UpupValidationError[] = []
         for (const nativeFile of nativeFiles) {
             let candidate = nativeFile
             if (this.options.onBeforeFileAdded) {
@@ -256,10 +291,23 @@ export class FileManager {
                 }
             }
 
-            this.validateFile(candidate)
-            accepted.push(candidate)
+            const [violation] = validateFileRestrictions(
+                candidate,
+                this.options,
+            )
+            if (violation) {
+                refused.push(
+                    new UpupValidationError(
+                        violation.message,
+                        violation.code,
+                        candidate,
+                    ),
+                )
+                continue
+            }
+            passed.push(candidate)
         }
-        return accepted
+        return { passed, refused }
     }
 
     private async deduplicateByContent(
@@ -349,26 +397,76 @@ export class FileManager {
         }
     }
 
-    async addFiles(nativeFiles: File[]): Promise<UploadFile[]> {
-        const acceptedNativeFiles = await this.collectAcceptedFiles(nativeFiles)
-        const dedupedFiles = await this.deduplicateByContent(
-            acceptedNativeFiles,
-            this.files.values(),
-        )
-        this.assertBatchFits(
-            dedupedFiles.map(item => item.file),
-            this.files.values(),
-            nativeFiles[0],
-        )
-        const accepted = dedupedFiles.map(({ file, hash }) => {
+    /**
+     * Sort an incoming batch into the files that may join the selection and
+     * the files refused, then `commit` the accepted ones. Per-file
+     * restrictions (type, size) and the `onBeforeFileAdded` hook refuse a
+     * file on its own and run first, outside the queue: a slow or hung hook
+     * must not stall other batches. The batch-level caps (`limit`,
+     * `maxTotalFileSize`) are judged on what is left, all together: when that
+     * remainder would break one, it is refused as a unit with ONE violation.
+     * Dedup, the cap check and `commit` run one batch at a time, the cap
+     * check and `commit` in one synchronous step.
+     */
+    private async admit(
+        nativeFiles: File[],
+        existing: () => UploadFile[],
+        commit: (added: UploadFile[], refused: UpupValidationError[]) => void,
+    ): Promise<AdmitOutcome> {
+        const { passed, refused } = await this.screenFiles(nativeFiles)
+        const run = this.admission.then(async () => {
+            const deduped = await this.deduplicateByContent(passed, existing())
+            try {
+                this.assertBatchFits(
+                    deduped.map(item => item.file),
+                    existing(),
+                    nativeFiles[0],
+                )
+            } catch (error) {
+                // Only a batch-cap violation is a refusal; anything else is a
+                // genuine failure and keeps propagating.
+                if (!(error instanceof UpupValidationError)) throw error
+                return { accepted: [], refused: [...refused, error] }
+            }
+            const accepted = this.toUploadFiles(deduped)
+            commit(accepted, refused)
+            return { accepted, refused }
+        })
+        this.admission = run.catch(() => {})
+        return run
+    }
+
+    private toUploadFiles(
+        admitted: Array<{ file: File; hash?: string }>,
+    ): UploadFile[] {
+        return admitted.map(({ file, hash }) => {
             const uploadFile = nativeToUploadFile(file)
             return hash ? applyContentHash(uploadFile, hash) : uploadFile
         })
+    }
 
-        for (const file of accepted) {
-            this.files.set(file.id, file)
-        }
+    /**
+     * Append the acceptable files of a batch and report the rest. Never throws
+     * for a refusal — the caller decides what a refusal means. Overlapping
+     * calls are admitted one at a time, in hook-completion order.
+     */
+    admitFiles(nativeFiles: File[]): Promise<AdmitOutcome> {
+        return this.admit(
+            nativeFiles,
+            () => [...this.files.values()],
+            added => {
+                for (const file of added) this.files.set(file.id, file)
+            },
+        )
+    }
 
+    /** Strict form of `admitFiles`: throws the first refusal when NOTHING in
+     *  the batch was accepted; a batch with at least one acceptable file
+     *  resolves with those files. */
+    async addFiles(nativeFiles: File[]): Promise<UploadFile[]> {
+        const { accepted, refused } = await this.admitFiles(nativeFiles)
+        const [first] = refused
+        if (first && accepted.length === 0) throw first
         return accepted
     }
 
@@ -409,6 +507,81 @@ export class FileManager {
         this.files.clear()
     }
 
+    // addFiles' restrictions for an already-stored file; unknown size/type are skipped.
+    checkCompleted(
+        info: Omit<TransferredFileInfo, 'key' | 'source' | 'size' | 'type'> & {
+            size?: number | undefined
+            type?: string | undefined
+        },
+    ): UpupValidationError | null {
+        const probe = completedBase({
+            name: info.name,
+            size: info.size ?? 0,
+            type: info.type ?? '',
+        })
+        const existing = [...this.files.values()]
+        const opts = this.options
+        const dupMessage = `File "${info.name}" was already added`
+        const isDup =
+            opts.contentDeduplication &&
+            info.driveId !== undefined &&
+            existing.some(
+                f =>
+                    (f.metadata as Record<string, unknown> | undefined)
+                        ?.driveFileId === info.driveId,
+            )
+        const [violation] = isDup
+            ? [{ code: UpupErrorCode.DUPLICATE as const, message: dupMessage }]
+            : validateFileRestrictions(probe, {
+                  ...opts,
+                  // A type-less file only gets the extension check, and only
+                  // when accept lists nothing but extensions (else: unknown).
+                  allowedFileTypes:
+                      info.type ||
+                      opts.allowedFileTypes
+                          ?.split(',')
+                          .every(t => t.trim().startsWith('.'))
+                          ? opts.allowedFileTypes
+                          : undefined,
+                  ...(info.size === undefined && {
+                      maxFileSize: undefined,
+                      minFileSize: undefined,
+                  }),
+              })
+        if (violation)
+            return new UpupValidationError(
+                violation.message,
+                violation.code,
+                probe,
+            )
+        try {
+            this.assertBatchFits([probe], existing)
+        } catch (err) {
+            // upup-catch: the violation is returned; core emits it.
+            return err as UpupValidationError
+        }
+        return null
+    }
+
+    // Register an already-stored file as a SUCCESSFUL row; upload() skips it (F-810).
+    addCompleted(info: TransferredFileInfo): UploadFile {
+        const file = Object.assign(completedBase(info), {
+            id: generateFileId(),
+            source: info.source,
+            status: UploadStatus.SUCCESSFUL,
+            key: info.key,
+            metadata: {
+                originalSize: info.size,
+                ...(info.driveId !== undefined
+                    ? { driveFileId: info.driveId }
+                    : {}),
+            },
+            ...(info.url !== undefined ? { url: info.url } : {}),
+        }) as UploadFile
+        this.files.set(file.id, file)
+        return file
+    }
+
     /** Bulk-apply pipeline-produced files (already UploadFile with status/key set). */
     applyProcessed(files: UploadFile[]): void {
         for (const file of files) {
@@ -424,28 +597,30 @@ export class FileManager {
         }
     }
 
+    /**
+     * Replace the selection with the acceptable files of a batch and report the
+     * rest. When EVERY file is refused the current selection is left untouched
+     * (an empty batch still clears it).
+     */
+    admitFileSet(nativeFiles: File[]): Promise<AdmitOutcome> {
+        return this.admit(
+            nativeFiles,
+            () => [],
+            (next, refused) => {
+                if (next.length === 0 && refused.length > 0) return
+                for (const file of this.files.values()) revokeObjectUrl(file)
+                this.files.clear()
+                for (const file of next) this.files.set(file.id, file)
+            },
+        )
+    }
+
+    /** Strict form of `admitFileSet`: throws the first refusal when nothing
+     *  in the batch was accepted. */
     async setFiles(nativeFiles: File[]): Promise<UploadFile[]> {
-        const acceptedNativeFiles = await this.collectAcceptedFiles(nativeFiles)
-        const dedupedFiles = await this.deduplicateByContent(
-            acceptedNativeFiles,
-            [],
-        )
-        this.assertBatchFits(
-            dedupedFiles.map(item => item.file),
-            [],
-            nativeFiles[0],
-        )
-        const accepted = dedupedFiles.map(({ file, hash }) => {
-            const uploadFile = nativeToUploadFile(file)
-            return hash ? applyContentHash(uploadFile, hash) : uploadFile
-        })
-        for (const file of this.files.values()) {
-            revokeObjectUrl(file)
-        }
-        this.files.clear()
-        for (const file of accepted) {
-            this.files.set(file.id, file)
-        }
+        const { accepted, refused } = await this.admitFileSet(nativeFiles)
+        const [first] = refused
+        if (first && accepted.length === 0) throw first
         return accepted
     }
 

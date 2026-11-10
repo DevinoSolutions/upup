@@ -43,7 +43,7 @@ an individual is officially representing the community in public spaces.
 
 Instances of abusive, harassing, or otherwise unacceptable behaviour may be
 reported to the community leaders responsible for enforcement at
-[hello@devino.com](mailto:hello@devino.com).
+[aladdin@devino.ca](mailto:aladdin@devino.ca).
 All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution

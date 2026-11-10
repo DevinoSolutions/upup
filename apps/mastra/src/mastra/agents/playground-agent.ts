@@ -1,10 +1,20 @@
 import { Agent } from '@mastra/core/agent'
 import { env } from '../../lib/env.js'
 import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
+import { reportModelFailure } from '../../lib/model-failure.js'
 import { applyConfigPatch } from '../tools/applyConfigPatch.js'
 import { renderSchemaForPrompt } from '../schema/upup-config.schema.js'
 
 const SCHEMA_BLOCK = renderSchemaForPrompt()
+
+/**
+ * Mastra's default step budget, written down so a framework upgrade cannot
+ * raise it unseen: one apply-config-patch call plus the answer fits with room
+ * for a retry of a rejected patch. Every step is one model request.
+ */
+const PLAYGROUND_AGENT_MAX_STEPS = 5
+
+const modelDefaults = agentDefaultOptions(env)
 
 /**
  * The playground agent.
@@ -55,6 +65,14 @@ Tone: terse, helpful, no emoji, no marketing language. You are a config tool wit
 a chat interface — not a chatbot.
     `.trim(),
     model: agentModel(env),
-    ...agentDefaultOptions(env),
+    // Merge into the model-specific defaults (providerOptions), never replace them.
+    defaultOptions: {
+        ...('defaultOptions' in modelDefaults
+            ? modelDefaults.defaultOptions
+            : {}),
+        maxSteps: PLAYGROUND_AGENT_MAX_STEPS,
+        // Mastra's stream hook for a failed model call; see lib/model-failure.ts.
+        onError: reportModelFailure('playground-agent'),
+    },
     tools: { applyConfigPatch },
 })

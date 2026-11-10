@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core/agent'
 import { env } from '../../lib/env.js'
 import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
+import { reportModelFailure } from '../../lib/model-failure.js'
 import { searchDocs } from '../tools/search-docs.js'
 
 /**
@@ -43,6 +44,8 @@ Rules:
             ? modelDefaults.defaultOptions
             : {}),
         maxSteps: DOCS_AGENT_MAX_STEPS,
+        // Mastra's stream hook for a failed model call; see lib/model-failure.ts.
+        onError: reportModelFailure('docs-agent'),
     },
     tools: { searchDocs },
 })

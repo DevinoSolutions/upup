@@ -3,8 +3,10 @@ import { ref, computed } from 'vue'
 import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
 } from '../context/uploader-context'
+import { useSourceViewHeaderExtra } from '../context/source-view-header-extra'
 import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -31,21 +33,56 @@ const PROVIDER_LABEL: Record<ServerModeProvider, string> = {
 const resolvedSlot = computed(() => props.dataUpupSlot ?? `drive-browser-${props.provider}`)
 
 const { icons } = useUploaderOptions()
-const { isDark: dark } = useUploaderTheme()
-const { translator } = useUploaderI18n()
-const { state, search, setSearch, refresh, transfer, startAuth } =
+const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
+const { translator, translations: tr } = useUploaderI18n()
+const { setActiveSource } = useUploaderSource()
+const headerExtraHostRef = useSourceViewHeaderExtra()
+const headerExtraHost = computed(() => headerExtraHostRef?.value ?? null)
+const {
+    state,
+    search,
+    setSearch,
+    refresh,
+    transfer,
+    startAuth,
+    signOut,
+    finishTransfers,
+} =
     useServerModeDrive(props.provider)
 
+function onLogout() {
+    void signOut().then(ok => {
+        if (ok) setActiveSource(undefined)
+    })
+}
+
+// A failed transfer stays in this view: its message shows in the same
+// drive-error slot as a list error and the file list is kept for a retry.
+const transferError = ref<{ message: string; code?: string | undefined } | null>(null)
+const shownError = computed(() =>
+    state.value.status === 'error' ? state.value : transferError.value,
+)
 const errorText = computed(() => {
-    if (state.value.status !== 'error') return ''
-    return state.value.code && translator
-        ? translator(`errors.${errorCodeToMessageKey(state.value.code)}`, {
-              code: state.value.code,
+    const e = shownError.value
+    if (!e) return ''
+    return e.code && translator
+        ? translator(`errors.${errorCodeToMessageKey(e.code)}`, {
+              code: e.code,
+              message: e.message,
           })
-        : state.value.message
+        : e.message
 })
 const selected = ref<Set<string>>(new Set())
 const transferring = ref(false)
+// Leaving the current listing (folder, search) or the view clears a stale transfer error.
+function navigate(opts: { folderId?: string; search?: string }) {
+    transferError.value = null
+    return refresh(opts)
+}
+function cancel() {
+    transferError.value = null
+    props.onBack?.()
+}
 
 const isLoading = computed(() =>
     state.value.status === 'loading' || state.value.status === 'idle',
@@ -63,6 +100,7 @@ function toggle(id: string) {
 
 async function handleTransfer() {
     transferring.value = true
+    transferError.value = null
     try {
         for (const file of files.value.filter(f => selected.value.has(f.id))) {
             const result = await transfer(file)
@@ -70,10 +108,15 @@ async function handleTransfer() {
                 startAuth()
                 return
             }
+            if (result.status === 'error') {
+                transferError.value = result
+                return
+            }
+            toggle(file.id)
         }
-        selected.value = new Set()
         props.onBack?.()
     } finally {
+        finishTransfers() // report the finished selection once (any exit path)
         transferring.value = false
     }
 }
@@ -99,6 +142,31 @@ function formatBytes(bytes: number): string {
     >
         <component :is="icons.LoaderIcon" v-if="isLoading" />
         <template v-else>
+            <Teleport v-if="headerExtraHost" :to="headerExtraHost">
+                <button
+                    :class="
+                        cn(
+                            'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+                            {
+                                'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': dark,
+                            },
+                            slotClasses.driveLogoutButton,
+                        )
+                    "
+                    @click="onLogout"
+                >
+                    {{ tr.logOut }}
+                </button>
+                <span
+                    aria-hidden="true"
+                    :class="
+                        cn(
+                            'upup-h-4 upup-w-px',
+                            dark ? 'upup-bg-white/15' : 'upup-bg-black/15',
+                        )
+                    "
+                />
+            </Teleport>
             <div
                 data-testid="upup-server-drive-browser"
                 class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -121,7 +189,7 @@ function formatBytes(bytes: number): string {
                         aria-label="Search"
                         :value="search"
                         @input="setSearch(($event.target as HTMLInputElement).value)"
-                        @keydown.enter="refresh({ search: ($event.target as HTMLInputElement).value })"
+                        @keydown.enter="navigate({ search: ($event.target as HTMLInputElement).value })"
                         placeholder="Search…"
                         :class="cn(
                             'upup-ml-auto upup-rounded upup-border upup-px-2 upup-py-1 upup-text-xs',
@@ -133,7 +201,7 @@ function formatBytes(bytes: number): string {
                 </div>
                 <div class="upup-overflow-auto upup-p-2">
                     <p
-                        v-if="state.status === 'error'"
+                        v-if="shownError"
                         data-testid="upup-drive-error"
                         data-upup-slot="drive-error"
                         role="alert"
@@ -158,7 +226,7 @@ function formatBytes(bytes: number): string {
                                   ? 'upup-bg-white/[0.04] upup-text-[#e2e8f0] upup-ring-white/[0.06] hover:upup-bg-white/[0.07]'
                                   : 'upup-bg-black/[0.03] upup-text-gray-800 upup-ring-black/[0.06] hover:upup-bg-black/[0.05]',
                         )"
-                        @click="file.isFolder ? refresh({ folderId: file.id }) : toggle(file.id)"
+                        @click="file.isFolder ? navigate({ folderId: file.id }) : toggle(file.id)"
                     >
                         <span
                             class="upup-flex upup-h-[30px] upup-w-[30px] upup-flex-none upup-items-center upup-justify-center upup-rounded-[8px] upup-bg-white/[0.05]"
@@ -210,7 +278,7 @@ function formatBytes(bytes: number): string {
                     <button
                         type="button"
                         class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-                        @click="props.onBack?.()"
+                        @click="cancel()"
                     >
                         Cancel
                     </button>

@@ -6,8 +6,13 @@ import { cn } from '@useupup/core/internal'
   import {
     useUploaderI18n,
     useUploaderOptions,
+    useUploaderSource,
     useUploaderTheme,
   } from '../context/uploader-context'
+  import {
+    useSourceViewHeaderExtra,
+    portal,
+  } from '../context/source-view-header-extra'
   import {
     useServerModeDrive,
     type ServerDriveFile,
@@ -36,25 +41,60 @@ import { cn } from '@useupup/core/internal'
   // provider and dataUpupSlot are static props (set once at call sites — never changed).
   // untrack() tells Svelte we intentionally read their initial values outside reactive context.
   const resolvedSlot = untrack(() => dataUpupSlot ?? `drive-browser-${provider}`)
-  const { state, search, setSearch, refresh, transfer, startAuth } =
+  const {
+    state,
+    search,
+    setSearch,
+    refresh,
+    transfer,
+    startAuth,
+    signOut,
+    finishTransfers,
+  } =
     untrack(() => useServerModeDrive(provider))
 
-  const { isDark: dark } = useUploaderTheme()
+  const { isDark: dark, slotOverrides: slotClasses } = useUploaderTheme()
   const { icons } = useUploaderOptions()
-  const { translator } = useUploaderI18n()
-  const Loader = icons.LoaderIcon
+  const { translator, translations: tr } = useUploaderI18n()
+  const { setActiveSource } = useUploaderSource()
+  const headerExtraStore =
+    useSourceViewHeaderExtra() ?? writable<HTMLElement | null>(null)
 
-  const errorText = derived(state, ($state) => {
-    if ($state.status !== 'error') return ''
-    return $state.code && translator
-      ? translator(`errors.${errorCodeToMessageKey($state.code)}`, {
-          code: $state.code,
-        })
-      : $state.message
-  })
+  function onLogout() {
+    void signOut().then((ok) => {
+      if (ok) setActiveSource(undefined)
+    })
+  }
+  const Loader = icons.LoaderIcon
 
   const selected = writable<Set<string>>(new Set())
   const transferring = writable(false)
+  // Leaving the current listing (folder, search) or the view clears a stale transfer error.
+  function navigate(opts: { folderId?: string; search?: string }) {
+    transferError.set(null)
+    return refresh(opts)
+  }
+  function cancel() {
+    transferError.set(null)
+    onBack?.()
+  }
+  // A failed transfer stays in this view: its message shows in the same
+  // drive-error slot as a list error and the file list is kept for a retry.
+  const transferError = writable<{ message: string; code?: string | undefined } | null>(null)
+  const shownError = derived(
+    [state, transferError],
+    ([$state, $transferError]) =>
+      $state.status === 'error' ? $state : $transferError,
+  )
+  const errorText = derived(shownError, ($e) => {
+    if (!$e) return ''
+    return $e.code && translator
+      ? translator(`errors.${errorCodeToMessageKey($e.code)}`, {
+          code: $e.code,
+          message: $e.message,
+        })
+      : $e.message
+  })
 
   const isLoading = derived(state, ($state) =>
     $state.status === 'loading' || $state.status === 'idle',
@@ -74,6 +114,7 @@ import { cn } from '@useupup/core/internal'
 
   async function handleTransfer() {
     transferring.set(true)
+    transferError.set(null)
     try {
       for (const file of $files.filter((f) => $selected.has(f.id))) {
         const result = await transfer(file)
@@ -81,10 +122,15 @@ import { cn } from '@useupup/core/internal'
           startAuth()
           return
         }
+        if (result.status === 'error') {
+          transferError.set(result)
+          return
+        }
+        toggle(file.id)
       }
-      selected.set(new Set())
       onBack?.()
     } finally {
+      finishTransfers() // report the finished selection once (any exit path)
       transferring.set(false)
     }
   }
@@ -110,6 +156,24 @@ import { cn } from '@useupup/core/internal'
     {#if $isLoading}
       <Loader />
     {:else}
+      {#if $headerExtraStore}
+        <div style="display: contents" use:portal={$headerExtraStore}>
+          <button
+            class={cn(
+              'upup-hover:upup-underline upup-text-xs upup-font-medium upup-text-[#0284c7]',
+              { 'upup-text-[#38bdf8] dark:upup-text-[#38bdf8]': $dark },
+              $slotClasses.driveLogoutButton,
+            )}
+            onclick={onLogout}
+          >
+            {tr.logOut}
+          </button>
+          <span
+            aria-hidden="true"
+            class={cn('upup-h-4 upup-w-px', $dark ? 'upup-bg-white/15' : 'upup-bg-black/15')}
+          ></span>
+        </div>
+      {/if}
       <div
         data-testid="upup-server-drive-browser"
         class="upup-grid upup-h-full upup-w-full upup-grid-rows-[auto,1fr,auto] upup-overflow-auto"
@@ -134,7 +198,7 @@ import { cn } from '@useupup/core/internal'
             oninput={(e) => setSearch((e.target as HTMLInputElement).value)}
             onkeydown={(e) => {
               if (e.key === 'Enter') {
-                void refresh({ search: (e.target as HTMLInputElement).value })
+                void navigate({ search: (e.target as HTMLInputElement).value })
               }
             }}
             placeholder="Search…"
@@ -147,7 +211,7 @@ import { cn } from '@useupup/core/internal'
           />
         </div>
         <div class="upup-overflow-auto upup-p-2">
-          {#if $state.status === 'error'}
+          {#if $shownError}
             <p
               data-testid="upup-drive-error"
               data-upup-slot="drive-error"
@@ -175,7 +239,7 @@ import { cn } from '@useupup/core/internal'
               )}
               onclick={() =>
                 file.isFolder
-                  ? void refresh({ folderId: file.id })
+                  ? void navigate({ folderId: file.id })
                   : toggle(file.id)}
             >
               <span
@@ -229,7 +293,7 @@ import { cn } from '@useupup/core/internal'
           <button
             type="button"
             class="upup-text-sm upup-opacity-70 hover:upup-opacity-100"
-            onclick={() => onBack?.()}
+            onclick={cancel}
           >
             Cancel
           </button>

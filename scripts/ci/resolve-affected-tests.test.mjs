@@ -751,3 +751,106 @@ test('the CLI computes an affected set from real git history so the git-diff pat
         rmSync(repo, { recursive: true, force: true, maxRetries: 3 })
     }
 })
+
+// ── Markdown has no runtime surface (pinned equal to the pre-T-10020 behavior) ──
+
+const NO_SUITES = {
+    e2e: false,
+    minio: false,
+    smoke: false,
+    docsE2e: false,
+    storybook: false,
+}
+
+test('a changeset entry alone runs no suite because markdown has no runtime surface', () => {
+    const result = resolveAffected(['.changeset/foo.md'])
+    assert.deepEqual(result.suites, NO_SUITES)
+    assert.equal(resolveFile('.changeset/foo.md').tier, 'light-doc')
+})
+
+test('a changeset entry beside landing source leaves docsE2e as the only suite so carrying a changeset never widens the run', () => {
+    const result = resolveAffected([
+        'apps/landing/src/app/docs/page.tsx',
+        '.changeset/foo.md',
+    ])
+    assert.deepEqual(result.suites, { ...NO_SUITES, docsE2e: true })
+})
+
+test('a changeset entry beside server source runs exactly the suites the server source runs alone', () => {
+    const alone = resolveAffected(['packages/server/src/handler.ts'])
+    const withChangeset = resolveAffected([
+        'packages/server/src/handler.ts',
+        '.changeset/foo.md',
+    ])
+    assert.deepEqual(withChangeset.suites, alone.suites)
+    assert.deepEqual(withChangeset.suites, {
+        e2e: true,
+        minio: true,
+        smoke: true,
+        docsE2e: true,
+        storybook: false,
+    })
+})
+
+test('a package README runs no suite because nested markdown is runtime-neutral even though main.yml does not call it docs-only', () => {
+    assert.deepEqual(
+        resolveAffected(['packages/core/README.md']).suites,
+        NO_SUITES,
+    )
+    assert.equal(resolveFile('packages/core/README.md').tier, 'light-doc')
+})
+
+test('a changeset config.json is not markdown so it still fails open to every suite', () => {
+    const result = resolveAffected(['.changeset/config.json'])
+    assert.deepEqual(result.unmatched, ['.changeset/config.json'])
+    assert.deepEqual(result.suites, {
+        e2e: true,
+        minio: true,
+        smoke: true,
+        docsE2e: true,
+        storybook: true,
+    })
+})
+
+const ALL_SUITES = ['e2e', 'minio', 'smoke', 'docsE2e', 'storybook']
+
+// Paths that merely END in "md" are not markdown: the markdown rule must
+// match a literal ".md" (an unescaped dot once made these skip every suite).
+const NOT_MARKDOWN_CASES = [
+    {
+        path: 'packages/core/src/cmd',
+        tier: 'targeted',
+        suites: ALL_SUITES,
+    },
+    {
+        path: 'packages/core/src/foo-md',
+        tier: 'targeted',
+        suites: ALL_SUITES,
+    },
+    {
+        path: 'apps/e2e-test/run.cmd',
+        tier: 'targeted',
+        suites: ['e2e', 'minio'],
+    },
+    {
+        path: 'scripts/run.cmd',
+        tier: 'fail-open',
+        suites: ALL_SUITES,
+    },
+]
+
+for (const testCase of NOT_MARKDOWN_CASES) {
+    test(`${testCase.path} is not markdown so it routes by its directory exactly as before`, () => {
+        const resolved = resolveFile(testCase.path)
+        assert.notEqual(resolved.tier, 'light-doc')
+        assert.equal(resolved.tier, testCase.tier)
+        assert.deepEqual(resolved.suites, testCase.suites)
+    })
+}
+
+test('the LIGHT_DOC tier is the shared docs-only predicate plus one resolver-only markdown rule', () => {
+    const names = IMPACT_RULES.filter(r => r.tier === 'light-doc').map(
+        r => r.name,
+    )
+    assert.deepEqual(names, ['docs-only', 'markdown-no-runtime'])
+})

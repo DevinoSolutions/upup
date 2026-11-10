@@ -3,7 +3,9 @@ import { ThumbsUp, ThumbsDown, X } from 'lucide-react'
 import { ConfigContext } from '../state/ConfigContext'
 import { useMastraChat, randomHex, type ChatMessage } from './useMastraChat'
 import { PROMPT_SEEDS } from './promptSeeds'
-import type { AiFeedbackEvent } from '../types'
+import { MarkdownMessage } from './MarkdownMessage'
+import { StepTrail } from './StepTrail'
+import type { AiFeedbackEvent, AssistantErrorInfo } from '../types'
 
 type AssistantPanelProps = {
     /** Where the Mastra dev/prod server lives. Default: localhost dev. */
@@ -16,6 +18,8 @@ type AssistantPanelProps = {
     posthogDistinctId?: string | undefined
     /** Host sink for thumbs ratings / comments. Absent -> no thumbs rendered. */
     onAiFeedback?: ((event: AiFeedbackEvent) => void) | undefined
+    /** Host sink for turns that end in the error state. Absent -> not reported. */
+    onAssistantError?: ((info: AssistantErrorInfo) => void) | undefined
 }
 
 /** The model behind the agent, reported on feedback events for slicing. */
@@ -175,6 +179,7 @@ export function AssistantPanel({
     appId = 'upup',
     posthogDistinctId,
     onAiFeedback,
+    onAssistantError,
 }: AssistantPanelProps) {
     const ctx = useContext(ConfigContext)
     const [input, setInput] = useState('')
@@ -187,6 +192,7 @@ export function AssistantPanel({
             agentId,
             appId,
             distinctId: posthogDistinctId,
+            onAssistantError,
             onPatch: event => {
                 ctx?.setConfigPatch(event.patch)
             },
@@ -198,15 +204,19 @@ export function AssistantPanel({
         if (el) el.scrollTop = el.scrollHeight
     }, [messages])
 
+    // While a turn streams the composer stays focusable (readOnly, not
+    // disabled: disabling the focused textarea drops focus to <body>), so
+    // every send path refuses here instead, keeping the draft.
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         const value = input.trim()
-        if (!value) return
+        if (!value || isPending) return
         setInput('')
         void send(value)
     }
 
     function handleSeed(seed: string) {
+        if (isPending) return
         setInput('')
         void send(seed)
     }
@@ -260,10 +270,28 @@ export function AssistantPanel({
                             key={m.id}
                             className={`upup-ie-ai-msg upup-ie-ai-msg-${m.role}`}
                         >
+                            {m.role === 'assistant' && !!m.steps?.length && (
+                                <StepTrail
+                                    steps={m.steps}
+                                    pending={!!m.pending}
+                                />
+                            )}
                             <div className="upup-ie-ai-msg-text">
-                                {m.text}
+                                {m.role === 'assistant' ? (
+                                    <MarkdownMessage
+                                        text={m.text}
+                                        streaming={!!m.pending}
+                                    />
+                                ) : (
+                                    m.text
+                                )}
                                 {m.pending && (
-                                    <span className="upup-ie-ai-cursor">▍</span>
+                                    <span
+                                        className="upup-ie-ai-cursor"
+                                        aria-hidden="true"
+                                    >
+                                        ▍
+                                    </span>
                                 )}
                             </div>
                             {m.patches?.map((p, i) => (
@@ -288,7 +316,11 @@ export function AssistantPanel({
                 )}
             </div>
 
-            {error && <div className="upup-ie-ai-error">{error}</div>}
+            {error && (
+                <div className="upup-ie-ai-error" role="alert">
+                    {error}
+                </div>
+            )}
 
             <form className="upup-ie-ai-input" onSubmit={handleSubmit}>
                 <textarea
@@ -307,12 +339,15 @@ export function AssistantPanel({
                     placeholder={
                         isPending ? 'Working…' : 'Describe your upload setup'
                     }
-                    disabled={isPending}
+                    readOnly={isPending}
+                    aria-disabled={isPending}
                     aria-label="Message"
                 />
+                {/* aria-disabled, not disabled, for the same focus reason;
+                    handleSubmit refuses an empty or mid-stream send. */}
                 <button
                     type="submit"
-                    disabled={isPending || !input.trim()}
+                    aria-disabled={isPending || !input.trim()}
                     aria-label="Send"
                 >
                     ▶

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createUpupMiddleware } from '../src/express'
+import { InMemoryTokenStore } from '../src/tokenStore'
 import { createUpupPlugin } from '../src/fastify'
 import { createUpupRoutes } from '../src/hono'
 import { createUpupNextHandler } from '../src/next'
@@ -108,6 +109,53 @@ describe('Express adapter', () => {
         expect(Object.keys(headers).map(k => k.toLowerCase())).not.toContain(
             'content-length',
         )
+    })
+})
+
+describe('Express adapter — OAuth nonce cookie (T-5463)', () => {
+    it('delivers the redirect Set-Cookie through res.append, not a replacing setHeader', async () => {
+        const middleware = createUpupMiddleware({
+            ...config,
+            tokenStore: new InMemoryTokenStore(),
+            allowAnonymous: true,
+            providers: { dropbox: { appKey: 'k', appSecret: 's' } },
+        })
+        const appended: Array<[string, string]> = []
+        const set: Array<[string, string]> = []
+        let capturedStatus = 0
+        const res = {
+            status(c: number) {
+                capturedStatus = c
+                return res
+            },
+            setHeader(k: string, v: string) {
+                set.push([k.toLowerCase(), v])
+                return res
+            },
+            append(k: string, v: string) {
+                appended.push([k.toLowerCase(), v])
+                return res
+            },
+            send() {},
+        }
+        await middleware(
+            {
+                protocol: 'http',
+                get: () => 'localhost',
+                originalUrl: '/api/upup/auth/dropbox',
+                method: 'GET',
+                headers: {},
+                body: undefined,
+            },
+            res,
+            () => {},
+        )
+        expect(capturedStatus).toBe(302)
+        const cookies = appended.filter(([k]) => k === 'set-cookie')
+        expect(cookies).toHaveLength(1)
+        expect(cookies[0]![1]).toContain('upup_oauth_dropbox=')
+        expect(cookies[0]![1]).toContain('Path=/api/upup/auth/dropbox/cb')
+        expect(set.map(([k]) => k)).not.toContain('set-cookie')
     })
 })
 

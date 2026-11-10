@@ -47,6 +47,13 @@ export interface FrameworkMeta {
     /** The image editor is a real-React island — React/Preact only. */
     hasImageEditor: boolean
     /**
+     * Optional `<title>` lead phrase (before the " | upup" suffix) for a
+     * framework whose query language differs from its display name — vanilla
+     * ranks on "javascript file uploader", not "vanilla js file uploader".
+     * Absent, the page title is "<name> File Uploader – Open-Source Drag & Drop".
+     */
+    metaTitle?: string
+    /**
      * The page's meta description — query-led ("<name> file uploader", "free",
      * "open-source", "drag and drop", "npm install <pkg>") and held to
      * 120–155 chars by src/__tests__/seo-copy-budgets.test.ts.
@@ -163,8 +170,9 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsFile: 'angular.ts',
         docsLang: 'ts',
         hasImageEditor: false,
+        metaTitle: 'Angular File Uploader – Drag & Drop Upload Component',
         tagline:
-            'Free, open-source Angular file uploader with drag and drop, cloud drives and resumable uploads to any S3 storage — npm install @useupup/angular.',
+            'Free, open-source Angular file upload library and ng2-file-upload alternative with drag and drop, cloud drives and S3 uploads. npm install @useupup/angular.',
         Icon: SiAngular,
         brand: '#DD0031',
     },
@@ -177,8 +185,9 @@ export const FRAMEWORKS: Record<FrameworkId, FrameworkMeta> = {
         docsFile: 'vanilla.ts',
         docsLang: 'ts',
         hasImageEditor: false,
+        metaTitle: 'JavaScript File Uploader Library (Vanilla JS)',
         tagline:
-            'Free, open-source file uploader for plain JavaScript and TypeScript — drag and drop, cloud drives, resumable S3 uploads. npm install @useupup/vanilla.',
+            'Free, open-source JavaScript file uploader library with drag and drop, cloud drives and resumable S3 uploads. npm install @useupup/vanilla.',
         Icon: SiJavascript,
         brand: '#F7DF1E',
     },

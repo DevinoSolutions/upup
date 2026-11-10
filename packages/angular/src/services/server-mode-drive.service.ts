@@ -38,22 +38,36 @@ export class ServerModeDriveService {
     // ── Selection + transfer UI state — Angular-only (consumer concern) ──
     readonly selected = signal<Set<string>>(new Set())
     readonly isTransferring = signal<boolean>(false)
+    // A failed transfer stays in the view: its message shows in the drive-error
+    // slot (like a list error) and the file list is kept for a retry.
+    readonly transferError = signal<{
+        message: string
+        code?: string | undefined
+    } | null>(null)
 
     init(provider: ServerModeProvider): void {
         this.provider = provider
         this.controller = new ServerModeDriveController({
             provider,
             serverUrl: () => this.store.serverUrl,
+            core: () => this.store.core,
         })
         this.bridge = toSignalStore(this.controller)
         this.controller.init()
     }
 
     list(opts?: { folderId?: string; search?: string }): Promise<void> {
+        this.transferError.set(null)
         return this.controller.list(opts)
     }
     startAuth(): void {
         this.controller.startAuth()
+    }
+    finishTransfers(): void {
+        this.controller.finishTransfers()
+    }
+    signOut(): Promise<boolean> {
+        return this.controller.signOut()
     }
     setFolderId(id: string | undefined): void {
         this.controller.setFolderId(id)
@@ -72,30 +86,33 @@ export class ServerModeDriveService {
         this.selected.set(next)
     }
 
-    async transfer(): Promise<void> {
+    /** Resolves true when every selected file transferred (the caller leaves the view). */
+    async transfer(): Promise<boolean> {
         const state = this.listState()
-        if (state.status !== 'ready') return
+        if (state.status !== 'ready') return false
         const toTransfer = state.files.filter(f => this.selected().has(f.id))
-        if (!toTransfer.length) return
+        if (!toTransfer.length) return false
 
         this.isTransferring.set(true)
+        this.transferError.set(null)
         try {
             for (const file of toTransfer) {
                 const r = await this.controller.transfer(file)
                 if (r.status === 'reauth') {
                     this.controller.requestReauth()
-                    return
+                    return false
                 }
                 if (r.status === 'error') {
-                    this.controller.setError(r.message)
-                    return
+                    this.transferError.set(r)
+                    return false
                 }
                 const result = r.result as { file?: File }
                 if (result.file) {
                     void this.store.handleSetSelectedFiles([result.file])
                 }
+                this.toggleSelected(file.id)
             }
-            this.selected.set(new Set())
+            return true
         } finally {
             this.isTransferring.set(false)
         }
