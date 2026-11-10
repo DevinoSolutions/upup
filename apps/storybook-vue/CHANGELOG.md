@@ -1,5 +1,13 @@
 # @useupup/storybook-vue
 
+## 0.1.10
+
+### Patch Changes
+
+- Updated dependencies [[`ff775a4`](https://github.com/DevinoSolutions/upup/commit/ff775a421c8b35bc244f4bea76346557bff4d884), [`abfc47d`](https://github.com/DevinoSolutions/upup/commit/abfc47dbf37671bea5b330d7c84e66eac9c13b7a), [`6138e55`](https://github.com/DevinoSolutions/upup/commit/6138e55e79901c2a1ae2ec0d39b5f1d66fb54c78), [`a26732a`](https://github.com/DevinoSolutions/upup/commit/a26732ae8d5835c6d25ecebdf4a96c960319b0ac), [`4aa7b00`](https://github.com/DevinoSolutions/upup/commit/4aa7b00425dafea763dea0eabb84884f89b7e323), [`fb7e093`](https://github.com/DevinoSolutions/upup/commit/fb7e0931cba5b3d4c313b09e69115fb0ad99b1ad), [`023276e`](https://github.com/DevinoSolutions/upup/commit/023276e205bd094c44871b3ef6a91191c6bc46a7), [`eb4fadf`](https://github.com/DevinoSolutions/upup/commit/eb4fadfd8090f6f780fda5d93f9bee6410dea957), [`c20db76`](https://github.com/DevinoSolutions/upup/commit/c20db7659e639a7ff50cca0eee010daaa560455c), [`b43d7e1`](https://github.com/DevinoSolutions/upup/commit/b43d7e10ca65a4baf3c150b1a4c2c94989cb4f95), [`8527750`](https://github.com/DevinoSolutions/upup/commit/85277507e78678c5df100ab5fa18ac9f4c4a7bae), [`ceec02f`](https://github.com/DevinoSolutions/upup/commit/ceec02f6126ab69b6e21a38438e608ede4683793)]:
+    - @useupup/core@3.4.0
+    - @useupup/vue@3.4.0
+
 ## 0.1.9
 
 ### Patch Changes

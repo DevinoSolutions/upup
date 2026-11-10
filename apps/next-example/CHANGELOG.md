@@ -1,5 +1,12 @@
 # @useupup/next-example
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [[`a26732a`](https://github.com/DevinoSolutions/upup/commit/a26732ae8d5835c6d25ecebdf4a96c960319b0ac), [`3b67b9d`](https://github.com/DevinoSolutions/upup/commit/3b67b9d8d3bfa3d1f3d9b292b94d8dbc9d55853b), [`7d9fb8f`](https://github.com/DevinoSolutions/upup/commit/7d9fb8fa9736413aee197b49724d015b094efbcb)]:
+    - @useupup/next@3.4.0
+
 ## 0.0.9
 
 ### Patch Changes
