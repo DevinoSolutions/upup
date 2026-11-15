@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent'
 import { env } from '../../lib/env.js'
 import { agentDefaultOptions, agentModel } from '../../lib/agent-model.js'
 import { reportModelFailure } from '../../lib/model-failure.js'
+import { FoldConversationHistory } from '../processors/fold-conversation-history.js'
 import { searchDocs } from '../tools/search-docs.js'
 
 /**
@@ -47,5 +48,8 @@ Rules:
         // Mastra's stream hook for a failed model call; see lib/model-failure.ts.
         onError: reportModelFailure('docs-agent'),
     },
+    // A follow-up question reaches the model as one user message carrying the
+    // earlier turns; see processors/fold-conversation-history.ts (T-17623).
+    inputProcessors: [new FoldConversationHistory()],
     tools: { searchDocs },
 })
