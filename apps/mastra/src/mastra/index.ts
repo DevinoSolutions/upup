@@ -9,6 +9,7 @@ import { noindexMiddleware } from './middleware/noindex.js'
 import { authMiddleware } from './middleware/auth.js'
 import { rateLimitMiddleware } from './middleware/rate-limit.js'
 import { dailyBudgetMiddleware } from './middleware/daily-budget.js'
+import { clientInputGuard } from './middleware/client-input-guard.js'
 import { healthzRoute } from './routes/healthz.js'
 import { schemaRoute } from './routes/schema.js'
 
@@ -21,6 +22,7 @@ import { schemaRoute } from './routes/schema.js'
  *   - Origin-token auth (off in dev, on when ORIGIN_TOKEN_SECRET is set)
  *   - Per-IP rate limiter (token bucket, in-memory)
  *   - Daily request budget (in-memory, resets UTC midnight)
+ *   - Client-input allow-list on /api/agents/*: user/assistant text only (T-17955)
  *   - Custom routes: /healthz, /schema
  *   - PostHog AI-tracing export (dataset-gated; off when no key — see
  *     ../lib/observability.ts). `environment` tags every trace with the
@@ -49,6 +51,10 @@ export const mastra = new Mastra({
             // Auth runs last so health checks pass even when token is missing —
             // and so the cheaper rejections (rate / budget) short-circuit first.
             { handler: authMiddleware() as any, path: '/api/agents/*' },
+            // After auth: body inspection only for callers that got past it. Mastra
+            // forwards the request body to the agent as options, so this is the
+            // allow-list that keeps client system roles / instructions out (T-17955).
+            { handler: clientInputGuard() as any, path: '/api/agents/*' },
         ],
         apiRoutes: [healthzRoute, schemaRoute],
     },
