@@ -937,6 +937,19 @@ export class UpupCore {
                 this._status = allComplete
                     ? UploadStatus.SUCCESSFUL
                     : UploadStatus.IDLE
+                // A run that finishes here is as complete as one that
+                // finishes in runUpload or runRetry, and consumers learn a
+                // run is over (and read the keys) from upload-all-complete.
+                // Without it an upload resumed after an offline drop or a
+                // pause stored its bytes and reported nothing.
+                if (allComplete) {
+                    this.emitter.emit('upload-all-complete', [
+                        ...this.files.values(),
+                    ])
+                    this.queueCrashRecoveryClear().catch(
+                        this.warnCrashRecoveryFailure('clear'),
+                    )
+                }
                 this.emitter.emit('state-change', { status: this._status })
             })
                 .catch((err: unknown) => {
