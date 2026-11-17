@@ -85,8 +85,9 @@ failed attempt up to `maxRetries` times except three cases, which fail
 immediately:
 
 - the upload was aborted,
-- the failure is an `UpupNetworkError` with a 4xx status (a client error — a
-  retry would fail identically),
+- the failure is any `UpupError` with a 4xx status other than 408 or 429 (a
+  refusal, such as a 403 from the server's `onBeforeUpload` hook — a retry
+  would fail identically),
 - the failure is an `UpupNetworkError` with status `0`, which is how a rejecting
   `isSuccessfulCall` is reported.
 

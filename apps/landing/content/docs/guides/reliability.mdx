@@ -57,7 +57,8 @@ upup does not retry things that cannot plausibly succeed on a second try:
 | ---------------------------------------------- | -------- | ------------------------------------------------------------ |
 | Network failure with no HTTP status            | Yes      | Connection reset, DNS, CORS-level failure                    |
 | HTTP 5xx from storage                          | Yes      | Server-side transient                                        |
-| HTTP 4xx from storage                          | **No**   | Expired signature, denied, malformed — resending fails again |
+| HTTP 4xx from storage or your server           | **No**   | Expired signature, denied, malformed — resending fails again |
+| HTTP 408 or 429                                | Yes      | The server asked for another attempt                         |
 | Any non-network error thrown by the pipeline   | Yes      | Treated as potentially transient                             |
 | The upload was aborted (`cancel()`, `pause()`) | **No**   | Aborting is intentional                                      |
 | `isSuccessfulCall` returned `false`            | **No**   | Your predicate made a deliberate ruling                      |
