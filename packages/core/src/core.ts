@@ -519,7 +519,12 @@ export class UpupCore {
             'thumbnailGenerator',
             'checksumVerification',
         ] as const
-        const pipelineFlagChanged = PIPELINE_FLAGS.some(k => k in partial)
+        // Compare values, not presence: framework packages pass the whole
+        // options object on every re-render, so a flag being present in the
+        // partial says nothing about whether it changed.
+        const pipelineFlagChanged = PIPELINE_FLAGS.some(
+            k => k in partial && partial[k] !== this.options[k],
+        )
         Object.assign(this.options, partial)
 
         this.fileManager.updateOptions(this.fileManagerOptions())
@@ -747,13 +752,18 @@ export class UpupCore {
                 }
             }
 
-            if (this.pipelineEngine) {
+            // This run keeps the engine it starts with. updateOptions() can
+            // clear `this.pipelineEngine` during the awaits below (a pipeline
+            // flag changed), and reading the field again after them crashed
+            // the run on null.
+            const engine = this.pipelineEngine
+            if (engine) {
                 const translator = createTranslator({
                     bundle: resolveLocaleBundle(this.options.locale) ?? enUS,
                     fallback: enUS,
                 })
                 const provider = await this.maybeCreateWorkerProvider(
-                    this.pipelineEngine.stepCount,
+                    engine.stepCount,
                 )
                 this.workerProvider = provider
                 try {
@@ -781,7 +791,7 @@ export class UpupCore {
                     // Only process files that still need uploading — re-running
                     // upload() after a partial/complete run must not re-process
                     // (or below, re-PUT) files that already succeeded (F-810).
-                    const processed = await this.pipelineEngine.processAll(
+                    const processed = await engine.processAll(
                         [...this.files.values()].filter(f => f.key == null),
                         context,
                     )
