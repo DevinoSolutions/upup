@@ -109,6 +109,21 @@ export interface CreateUploaderOptions extends Omit<
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onWarn?: (message: string) => void
+    /** Called once per file refused for its type, with the current accept list — same as the other frameworks. */
+    onFileTypeMismatch?:
+        ((file: File, acceptedTypes: string) => void) | undefined
+    /** Called once per refused file with the structured reason (type, size, limit) — same as the other frameworks. */
+    onRestrictionFailed?:
+        | ((
+              file: File,
+              reason:
+                  | 'TYPE_MISMATCH'
+                  | 'FILE_TOO_LARGE'
+                  | 'FILE_TOO_SMALL'
+                  | 'LIMIT_EXCEEDED'
+                  | 'TOTAL_SIZE_EXCEEDED',
+          ) => void)
+        | undefined
     enablePaste?: boolean
 }
 

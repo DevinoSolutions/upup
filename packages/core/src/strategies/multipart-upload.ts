@@ -140,6 +140,22 @@ function partStallError(partNumber: number, timeoutMs: number): UpupError {
     )
 }
 
+/** A part PUT that storage accepted but whose `ETag` response header the page
+ *  cannot read. `complete` needs the ETag storage returned for every part, and
+ *  a browser hides the header unless the bucket's CORS rule exposes it. There
+ *  is no honest substitute: a made-up value fails `complete` with an unrelated
+ *  storage error, or assembles an object nothing verified. Not retryable — the
+ *  bucket setting does not change between attempts. */
+function missingETagError(partNumber: number): UpupStorageError {
+    const err = new UpupStorageError(
+        `Part ${partNumber} was uploaded but its ETag response header is not readable. Add "ETag" to ExposeHeaders in the bucket's CORS configuration (Access-Control-Expose-Headers: ETag); multipart uploads cannot complete without it.`,
+        'server',
+        'upload',
+    )
+    err.code = UpupErrorCode.CORS_ERROR
+    return err
+}
+
 /** A failure a later attempt could survive. Definitive rejections (a 4xx other
  *  than 429) are a verdict, not weather — retrying them only hides bugs. */
 function isRetryablePartFailure(error: unknown): boolean {
@@ -413,7 +429,9 @@ export class MultipartUpload implements UploadStrategy {
      * was built for — one that has genuinely stopped moving bytes — without
      * penalizing the slow one. Mirrors the XHR PUT in direct-upload.ts.
      *
-     * Resolves with the part's ETag. Rejects with: the retryable stall on
+     * Resolves with the part's ETag, as storage returned it. Rejects with: a
+     * non-retryable `CORS_ERROR` when a 2xx carries no readable `ETag` header
+     * (`missingETagError`); the retryable stall on
      * inactivity (`partStallError`) — covering both the slice READ and the PUT;
      * a retryable `UPLOAD_FAILED` when the slice read itself rejects;
      * `UpupNetworkError('Upload aborted')` when
@@ -529,8 +547,11 @@ export class MultipartUpload implements UploadStrategy {
             xhr.addEventListener('load', () => {
                 cleanup()
                 if (xhr.status >= 200 && xhr.status < 300) {
-                    const eTag =
-                        xhr.getResponseHeader('ETag') ?? `"part-${partNumber}"`
+                    const eTag = xhr.getResponseHeader('ETag')
+                    if (!eTag) {
+                        reject(missingETagError(partNumber))
+                        return
+                    }
                     resolve(eTag)
                     return
                 }

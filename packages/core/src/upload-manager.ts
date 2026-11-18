@@ -1,4 +1,6 @@
 import {
+    UpupError,
+    UpupErrorCode,
     UpupNetworkError,
     type CredentialStrategy,
     type UploadStrategy,
@@ -13,6 +15,31 @@ export class UpupUploadBatchError extends Error {
         this.name = 'UpupUploadBatchError'
         this.errors = errors
     }
+}
+
+/**
+ * A failure that is an answer, not weather: sending the same request again
+ * gets the same result, so it is reported at once instead of after the retry
+ * budget is spent.
+ *
+ * - Any 4xx except 408 (Request Timeout) and 429 (Too Many Requests), on any
+ *   `UpupError` class. Server mode reports /presign and /multipart/init
+ *   refusals as `UpupStorageError`, so checking `UpupNetworkError` alone let a
+ *   403 from the server's `onBeforeUpload` hook be sent four times.
+ * - `CORS_ERROR`: the bucket's CORS configuration does not change between
+ *   attempts (a multipart part whose `ETag` header is not exposed).
+ */
+function isDefinitiveRefusal(error: unknown): boolean {
+    if (!(error instanceof UpupError)) return false
+    if (error.code === (UpupErrorCode.CORS_ERROR as string)) return true
+    const { status } = error
+    return (
+        status !== undefined &&
+        status >= 400 &&
+        status < 500 &&
+        status !== 408 &&
+        status !== 429
+    )
 }
 
 export interface UploadManagerOptions {
@@ -189,18 +216,12 @@ export class UploadManager {
                     throw err
                 }
 
-                const isNetwork = err instanceof UpupNetworkError
-                // Don't retry on client errors (4xx) or non-network errors
-                if (
-                    isNetwork &&
-                    err.status !== undefined &&
-                    err.status >= 400 &&
-                    err.status < 500
-                ) {
+                // Don't retry a refusal (4xx other than 408/429, bucket CORS)
+                if (isDefinitiveRefusal(err)) {
                     throw err
                 }
                 // isSuccessfulCall failure — don't retry by default
-                if (isNetwork && err.status === 0) {
+                if (err instanceof UpupNetworkError && err.status === 0) {
                     throw err
                 }
 

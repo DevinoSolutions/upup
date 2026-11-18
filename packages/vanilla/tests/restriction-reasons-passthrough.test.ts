@@ -9,8 +9,8 @@ import { buildUploaderContext } from '../src/context'
 const makeFile = (name: string, bytes: number, type: string) =>
     new File(['x'.repeat(bytes)], name, { type })
 
-// The vanilla options carry no `onRestrictionFailed` callback (documented), so
-// the structured reason is observed where vanilla consumers get it: the core
+// Alongside the `onRestrictionFailed` callback (covered at the bottom of this
+// file), the structured reason is also observable on the core
 // `restriction-failed` event the shared controller leaves intact.
 function observeRefusals(core: UpupCore) {
     const seen: UpupValidationError[] = []
@@ -80,6 +80,60 @@ describe('a mixed drop in the vanilla uploader', () => {
             ['File type "application/zip" is not accepted'],
             ['File type "application/x-msdownload" is not accepted'],
         ])
+        destroy()
+    })
+})
+
+describe('the vanilla uploader options accept the refusal callbacks', () => {
+    it('calls onRestrictionFailed with the file and its reason for each refusal in a mixed drop', async () => {
+        const onRestrictionFailed = vi.fn()
+        const { ctx, destroy } = buildUploaderContext(
+            { allowedFileTypes: 'image/*', onRestrictionFailed },
+            () => {},
+        )
+        const zip = makeFile('bundle.zip', 4, 'application/zip')
+
+        await ctx.setFiles([zip, makeFile('photo.png', 4, 'image/png')])
+
+        expect(onRestrictionFailed.mock.calls).toEqual([
+            [zip, UpupErrorCode.TYPE_MISMATCH],
+        ])
+        destroy()
+    })
+
+    it('calls onFileTypeMismatch with the refused file and the accept list', async () => {
+        const onFileTypeMismatch = vi.fn()
+        const { ctx, destroy } = buildUploaderContext(
+            { allowedFileTypes: 'image/*', onFileTypeMismatch },
+            () => {},
+        )
+        const zip = makeFile('bundle.zip', 4, 'application/zip')
+
+        await ctx.setFiles([zip])
+
+        expect(onFileTypeMismatch.mock.calls).toEqual([[zip, 'image/*']])
+        destroy()
+    })
+
+    it('reports a size refusal to onRestrictionFailed but not to onFileTypeMismatch', async () => {
+        const onRestrictionFailed = vi.fn()
+        const onFileTypeMismatch = vi.fn()
+        const { ctx, destroy } = buildUploaderContext(
+            {
+                maxFileSize: { size: 1, unit: 'KB' },
+                onRestrictionFailed,
+                onFileTypeMismatch,
+            },
+            () => {},
+        )
+        const big = makeFile('big.pdf', 2048, 'application/pdf')
+
+        await ctx.setFiles([big])
+
+        expect(onRestrictionFailed.mock.calls).toEqual([
+            [big, UpupErrorCode.FILE_TOO_LARGE],
+        ])
+        expect(onFileTypeMismatch).not.toHaveBeenCalled()
         destroy()
     })
 })

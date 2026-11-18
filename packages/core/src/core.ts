@@ -57,20 +57,48 @@ export type {
 /** Per-call observers for `UpupCore.addFiles` and `UpupCore.setFiles`. */
 export interface AddFilesHooks {
     /** Called once for each refused file, in the order they were found. A
-     *  throw is caught and warned about (dev only): the host's callback must
-     *  not turn an add that already committed files into a rejection. */
+     *  throw never rejects the add (files may already be committed) and never
+     *  starves the remaining refusals: it is reported through `reportError`
+     *  (reaching `window.onerror` / error reporters) in a browser or worker
+     *  scope, else `console.error`, in every environment. */
     onRefused?: ((error: UpupValidationError) => void) | undefined
 }
 
-/** Dev-only, like the crash-recovery warnings: a throwing host hook is
- *  surfaced, never allowed to fail the add that already succeeded. */
-function warnRefusalHookFailure(err: unknown): void {
-    if (
-        typeof process !== 'undefined' &&
-        process.env.NODE_ENV !== 'production'
-    ) {
-        console.warn('[upup] a refusal hook threw', err)
+/** `reportError` exists in browsers and workers, where it reaches
+ *  `window.onerror` / error reporters. Deno and Bun also expose it but may
+ *  treat the resulting unhandled error event as fatal, so it is only trusted
+ *  in a browser or worker scope. */
+function canReportError(): boolean {
+    const scope = globalThis as {
+        window?: unknown
+        WorkerGlobalScope?: unknown
+        reportError?: unknown
     }
+    return (
+        typeof scope.reportError === 'function' &&
+        (typeof scope.window !== 'undefined' ||
+            typeof scope.WorkerGlobalScope !== 'undefined')
+    )
+}
+
+/** A throwing host hook must not fail the add that already succeeded, but its
+ *  bug must not vanish in production either. In a browser or worker scope it
+ *  goes through `reportError` (no unwinding of the add); elsewhere (Node, SSR,
+ *  Deno, Bun), or if `reportError` itself throws, it falls back to
+ *  `console.error` — never an uncaught rethrow, which would be an
+ *  uncaughtException there. Neither path may throw out of this function. */
+function surfaceRefusalHookFailure(err: unknown): void {
+    if (canReportError()) {
+        try {
+            globalThis.reportError(err)
+            return
+        } catch {
+            // upup-catch: reportError is the reporter of last resort; fall
+            // through to console.error so the add and the remaining refusals
+            // are never affected.
+        }
+    }
+    console.error('[upup] a refusal hook threw', err)
 }
 
 export class UpupCore {
@@ -420,7 +448,7 @@ export class UpupCore {
                 // upup-catch: the hook is host code and runs AFTER the accepted
                 // files were committed — a throw must neither reject the add
                 // nor starve the remaining refusals of their report.
-                warnRefusalHookFailure(hookError)
+                surfaceRefusalHookFailure(hookError)
             }
         }
     }
@@ -519,7 +547,12 @@ export class UpupCore {
             'thumbnailGenerator',
             'checksumVerification',
         ] as const
-        const pipelineFlagChanged = PIPELINE_FLAGS.some(k => k in partial)
+        // Compare values, not presence: framework packages pass the whole
+        // options object on every re-render, so a flag being present in the
+        // partial says nothing about whether it changed.
+        const pipelineFlagChanged = PIPELINE_FLAGS.some(
+            k => k in partial && partial[k] !== this.options[k],
+        )
         Object.assign(this.options, partial)
 
         this.fileManager.updateOptions(this.fileManagerOptions())
@@ -747,13 +780,18 @@ export class UpupCore {
                 }
             }
 
-            if (this.pipelineEngine) {
+            // This run keeps the engine it starts with. updateOptions() can
+            // clear `this.pipelineEngine` during the awaits below (a pipeline
+            // flag changed), and reading the field again after them crashed
+            // the run on null.
+            const engine = this.pipelineEngine
+            if (engine) {
                 const translator = createTranslator({
                     bundle: resolveLocaleBundle(this.options.locale) ?? enUS,
                     fallback: enUS,
                 })
                 const provider = await this.maybeCreateWorkerProvider(
-                    this.pipelineEngine.stepCount,
+                    engine.stepCount,
                 )
                 this.workerProvider = provider
                 try {
@@ -781,7 +819,7 @@ export class UpupCore {
                     // Only process files that still need uploading — re-running
                     // upload() after a partial/complete run must not re-process
                     // (or below, re-PUT) files that already succeeded (F-810).
-                    const processed = await this.pipelineEngine.processAll(
+                    const processed = await engine.processAll(
                         [...this.files.values()].filter(f => f.key == null),
                         context,
                     )
@@ -937,6 +975,19 @@ export class UpupCore {
                 this._status = allComplete
                     ? UploadStatus.SUCCESSFUL
                     : UploadStatus.IDLE
+                // A run that finishes here is as complete as one that
+                // finishes in runUpload or runRetry, and consumers learn a
+                // run is over (and read the keys) from upload-all-complete.
+                // Without it an upload resumed after an offline drop or a
+                // pause stored its bytes and reported nothing.
+                if (allComplete) {
+                    this.emitter.emit('upload-all-complete', [
+                        ...this.files.values(),
+                    ])
+                    this.queueCrashRecoveryClear().catch(
+                        this.warnCrashRecoveryFailure('clear'),
+                    )
+                }
                 this.emitter.emit('state-change', { status: this._status })
             })
                 .catch((err: unknown) => {
