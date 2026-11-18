@@ -9,6 +9,7 @@ import { noindexMiddleware } from './middleware/noindex.js'
 import { authMiddleware } from './middleware/auth.js'
 import { rateLimitMiddleware } from './middleware/rate-limit.js'
 import { dailyBudgetMiddleware } from './middleware/daily-budget.js'
+import { clientInputGuard } from './middleware/client-input-guard.js'
 import { healthzRoute } from './routes/healthz.js'
 import { schemaRoute } from './routes/schema.js'
 
@@ -21,6 +22,8 @@ import { schemaRoute } from './routes/schema.js'
  *   - Origin-token auth (off in dev, on when ORIGIN_TOKEN_SECRET is set)
  *   - Per-IP rate limiter (token bucket, in-memory)
  *   - Daily request budget (in-memory, resets UTC midnight)
+ *   - Default-deny client-input guard on the whole server: GET/OPTIONS pass, the
+ *     only POSTs are agents' generate/stream with user/assistant text (T-17955)
  *   - Custom routes: /healthz, /schema
  *   - PostHog AI-tracing export (dataset-gated; off when no key — see
  *     ../lib/observability.ts). `environment` tags every trace with the
@@ -49,6 +52,11 @@ export const mastra = new Mastra({
             // Auth runs last so health checks pass even when token is missing —
             // and so the cheaper rejections (rate / budget) short-circuit first.
             { handler: authMiddleware() as any, path: '/api/agents/*' },
+            // Last, on EVERY path: Mastra's built-in server has ~240 write routes
+            // (v1/responses, a2a, stored/*, model swap, ...) and the agent routes
+            // forward the request body to the agent as options. Default-deny
+            // everything but the two chat POSTs, with a validated body (T-17955).
+            { handler: clientInputGuard() as any, path: '/*' },
         ],
         apiRoutes: [healthzRoute, schemaRoute],
     },
