@@ -57,20 +57,24 @@ export type {
 /** Per-call observers for `UpupCore.addFiles` and `UpupCore.setFiles`. */
 export interface AddFilesHooks {
     /** Called once for each refused file, in the order they were found. A
-     *  throw is caught and warned about (dev only): the host's callback must
-     *  not turn an add that already committed files into a rejection. */
+     *  throw never rejects the add (files may already be committed) and never
+     *  starves the remaining refusals: it is reported through `reportError`
+     *  (reaching `window.onerror` / error reporters) where available, else
+     *  `console.error`, in every environment. */
     onRefused?: ((error: UpupValidationError) => void) | undefined
 }
 
-/** Dev-only, like the crash-recovery warnings: a throwing host hook is
- *  surfaced, never allowed to fail the add that already succeeded. */
-function warnRefusalHookFailure(err: unknown): void {
-    if (
-        typeof process !== 'undefined' &&
-        process.env.NODE_ENV !== 'production'
-    ) {
-        console.warn('[upup] a refusal hook threw', err)
+/** A throwing host hook must not fail the add that already succeeded, but its
+ *  bug must not vanish in production either. Browsers have `reportError`,
+ *  which reaches `window.onerror` / error reporters without unwinding the add;
+ *  elsewhere (Node, SSR) fall back to `console.error` — never an uncaught
+ *  rethrow, which would be an uncaughtException there. */
+function surfaceRefusalHookFailure(err: unknown): void {
+    if (typeof globalThis.reportError === 'function') {
+        globalThis.reportError(err)
+        return
     }
+    console.error('[upup] a refusal hook threw', err)
 }
 
 export class UpupCore {
@@ -420,7 +424,7 @@ export class UpupCore {
                 // upup-catch: the hook is host code and runs AFTER the accepted
                 // files were committed — a throw must neither reject the add
                 // nor starve the remaining refusals of their report.
-                warnRefusalHookFailure(hookError)
+                surfaceRefusalHookFailure(hookError)
             }
         }
     }

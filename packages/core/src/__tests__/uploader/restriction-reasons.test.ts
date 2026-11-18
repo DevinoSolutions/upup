@@ -87,6 +87,24 @@ describe('the visual uploader passes the refusal reason through', () => {
         core.destroy()
     })
 
+    it('hands onFileTypeMismatch the accept list core enforced after allowedFileTypes changes post-mount', async () => {
+        const onFileTypeMismatch = vi.fn()
+        // Mounted with no type restriction, as the host's first render does.
+        const { controller, core } = build({ onFileTypeMismatch })
+        // The host later narrows the accept list; React syncs this through
+        // core.updateOptions on every props change.
+        core.updateOptions({ allowedFileTypes: 'image/*' })
+        const pdf = makeFile('doc.pdf', 8, 'application/pdf')
+
+        await controller.commands.handleSetSelectedFiles([pdf])
+
+        expect(core.files.size).toBe(0)
+        expect(onFileTypeMismatch).toHaveBeenCalledTimes(1)
+        expect(onFileTypeMismatch).toHaveBeenCalledWith(pdf, 'image/*')
+        controller.destroy()
+        core.destroy()
+    })
+
     it('reads the reason off a rejected UpupValidationError, never off its message text', async () => {
         const onRestrictionFailed = vi.fn()
         const onError = vi.fn()

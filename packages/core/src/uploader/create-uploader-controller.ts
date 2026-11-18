@@ -51,9 +51,12 @@ export function createUploaderController(
     const reportRefusal = (error: UpupValidationError) => {
         onError(error.message)
         if (error.reason === UpupErrorCode.TYPE_MISMATCH) {
+            // The accept list core ENFORCED for this refusal: core.options is
+            // kept live by the host (React syncs it on every props change),
+            // while `resolved` is frozen at creation and goes stale (T-16244).
             callbackRefs.onFileTypeMismatch?.(
                 error.file,
-                resolved.allowedFileTypes,
+                core.options.allowedFileTypes ?? resolved.allowedFileTypes,
             )
         }
         const reason = RESTRICTION_REASONS[error.reason]
