@@ -198,7 +198,7 @@ describe('a throwing refusal hook never fails the add that already succeeded', (
     it('uses reportError in a worker scope, where there is no window', async () => {
         const reportError = vi.fn()
         vi.stubGlobal('reportError', reportError)
-        vi.stubGlobal('WorkerGlobalScope', class {})
+        vi.stubGlobal('WorkerGlobalScope', function WorkerGlobalScope() {})
         const core = new UpupCore({ allowedFileTypes: 'image/*' })
         const hookError = new Error('host toast blew up')
 
