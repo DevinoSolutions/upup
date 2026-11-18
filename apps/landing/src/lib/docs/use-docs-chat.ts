@@ -92,15 +92,16 @@ function refusalMessage(
 }
 
 /**
- * Whether a stream refusal is worth a second request to /generate. A 4xx
- * (guard, rate limit, bad request) and the daily-budget 503 are answers about
- * the REQUEST, and /generate would get the same one, so those fail fast. Every
- * other failure (network error, any other 5xx including a plain 503, empty
- * stream, error chunk) may be transient and still falls back.
+ * Whether a stream refusal ends the turn without a second request to
+ * /generate. Only the deliberate refusals we have wording for (400/413 guard,
+ * 429 rate limit, daily-budget 503) are answers about the REQUEST that
+ * /generate would repeat, so those fail fast. Everything else still falls
+ * back: a network error, any 5xx including a plain 503, an empty stream, an
+ * error chunk, and any other 4xx (a 404 means the stream route is missing on
+ * that server, which is exactly what the /generate fallback is for).
  */
 function refusedByServer(status: number | null, dailyBudget: boolean): boolean {
-    if (status === null) return false
-    return (status >= 400 && status < 500) || (status === 503 && dailyBudget)
+    return refusalMessage(status, dailyBudget) !== null
 }
 
 /** Why a `/generate` attempt produced no answer. */

@@ -312,12 +312,12 @@ describe('docs Ask AI refusals fail fast', () => {
         )
     })
 
-    it('does not fall back on another 4xx, and shows the generic bubble', async () => {
+    it('keeps the /generate fallback on a 4xx it has no wording for (a missing stream route)', async () => {
         const calls = stubFetch(() => json({ error: 'not_found' }, 404))
 
         await sendText('a question')
 
-        expect(calls).toHaveLength(1)
+        expect(calls).toHaveLength(2)
         expect(last().error).toBe(true)
         expect(last().content).toBe(
             'Something went wrong answering that. Try again.',
