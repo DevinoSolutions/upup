@@ -87,7 +87,7 @@ describe('the visual uploader passes the refusal reason through', () => {
         core.destroy()
     })
 
-    it('hands onFileTypeMismatch the accept list core enforced after allowedFileTypes changes post-mount', async () => {
+    it('hands onFileTypeMismatch the current accept list after allowedFileTypes changes post-mount', async () => {
         const onFileTypeMismatch = vi.fn()
         // Mounted with no type restriction, as the host's first render does.
         const { controller, core } = build({ onFileTypeMismatch })

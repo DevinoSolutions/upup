@@ -109,7 +109,7 @@ export interface CreateUploaderOptions extends Omit<
     onFilesDragLeave?: (files: File[]) => void
     onFilesDrop?: (files: File[]) => void
     onWarn?: (message: string) => void
-    /** Called once per file refused for its type, with the accept list core enforced — same as the other frameworks. */
+    /** Called once per file refused for its type, with the current accept list — same as the other frameworks. */
     onFileTypeMismatch?:
         ((file: File, acceptedTypes: string) => void) | undefined
     /** Called once per refused file with the structured reason (type, size, limit) — same as the other frameworks. */

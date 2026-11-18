@@ -11,12 +11,25 @@ afterEach(() => {
     vi.unstubAllEnvs()
 })
 
-/** Stand-in for a browser: `globalThis.reportError` exists, so core reports a
- *  throwing host hook through it (reaching window.onerror / Sentry). */
-function stubReportError() {
-    const reportError = vi.fn()
+/** Stand-in for a browser: `window` and `globalThis.reportError` exist, so core
+ *  reports a throwing host hook through it (reaching window.onerror / Sentry).
+ *  Pass an implementation to make `reportError` itself misbehave. */
+function stubReportError(implementation?: (err: unknown) => void) {
+    const reportError = vi.fn(implementation)
+    vi.stubGlobal('window', {})
     vi.stubGlobal('reportError', reportError)
     return reportError
+}
+
+/** Stand-in for Deno / Bun: `reportError` exists but there is no browser or
+ *  worker scope, so core must not call it (it may treat the event as fatal). */
+function stubReportErrorWithoutBrowserScope() {
+    const reportError = vi.fn()
+    vi.stubGlobal('reportError', reportError)
+    return {
+        reportError,
+        consoleError: vi.spyOn(console, 'error').mockImplementation(() => {}),
+    }
 }
 
 /** Stand-in for Node / SSR: no `reportError`, so core falls back to
@@ -148,6 +161,94 @@ describe('a throwing refusal hook never fails the add that already succeeded', (
 
         expect([...core.files.values()].map(f => f.name)).toEqual(['ok.png'])
         expect(consoleError).toHaveBeenCalledTimes(1)
+        expect(consoleError).toHaveBeenCalledWith(
+            expect.stringContaining('refusal hook'),
+            hookError,
+        )
+        core.destroy()
+    })
+
+    it('does not call reportError outside a browser or worker scope, and uses console.error instead', async () => {
+        const { reportError, consoleError } =
+            stubReportErrorWithoutBrowserScope()
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+        const hookError = new Error('host toast blew up')
+
+        await expect(
+            core.addFiles(
+                [makeFile('a.zip', 8, 'application/zip'), makeFile('ok.png')],
+                undefined,
+                {
+                    onRefused: () => {
+                        throw hookError
+                    },
+                },
+            ),
+        ).resolves.toBeUndefined()
+
+        expect(reportError).not.toHaveBeenCalled()
+        expect(consoleError).toHaveBeenCalledTimes(1)
+        expect(consoleError).toHaveBeenCalledWith(
+            expect.stringContaining('refusal hook'),
+            hookError,
+        )
+        core.destroy()
+    })
+
+    it('uses reportError in a worker scope, where there is no window', async () => {
+        const reportError = vi.fn()
+        vi.stubGlobal('reportError', reportError)
+        vi.stubGlobal('WorkerGlobalScope', class {})
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+        const hookError = new Error('host toast blew up')
+
+        await core.addFiles(
+            [makeFile('a.zip', 8, 'application/zip'), makeFile('ok.png')],
+            undefined,
+            {
+                onRefused: () => {
+                    throw hookError
+                },
+            },
+        )
+
+        expect(reportError).toHaveBeenCalledWith(hookError)
+        core.destroy()
+    })
+
+    it('survives reportError itself throwing: the add resolves, console.error hears it and later refusals are still reported', async () => {
+        stubReportError(() => {
+            throw new Error('reporter exploded')
+        })
+        const consoleError = vi
+            .spyOn(console, 'error')
+            .mockImplementation(() => {})
+        const core = new UpupCore({ allowedFileTypes: 'image/*' })
+        const events: string[] = []
+        core.on('restriction-failed', ({ error }) => {
+            events.push((error as UpupValidationError).file.name)
+        })
+        const hookError = new Error('host toast blew up')
+        const onRefused = vi.fn(() => {
+            throw hookError
+        })
+
+        await expect(
+            core.addFiles(
+                [
+                    makeFile('a.zip', 8, 'application/zip'),
+                    makeFile('ok.png'),
+                    makeFile('b.exe', 8, 'application/x-msdownload'),
+                ],
+                undefined,
+                { onRefused },
+            ),
+        ).resolves.toBeUndefined()
+
+        expect([...core.files.values()].map(f => f.name)).toEqual(['ok.png'])
+        expect(onRefused).toHaveBeenCalledTimes(2)
+        expect(events).toEqual(['a.zip', 'b.exe'])
+        expect(consoleError).toHaveBeenCalledTimes(2)
         expect(consoleError).toHaveBeenCalledWith(
             expect.stringContaining('refusal hook'),
             hookError,

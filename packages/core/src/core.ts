@@ -59,20 +59,44 @@ export interface AddFilesHooks {
     /** Called once for each refused file, in the order they were found. A
      *  throw never rejects the add (files may already be committed) and never
      *  starves the remaining refusals: it is reported through `reportError`
-     *  (reaching `window.onerror` / error reporters) where available, else
-     *  `console.error`, in every environment. */
+     *  (reaching `window.onerror` / error reporters) in a browser or worker
+     *  scope, else `console.error`, in every environment. */
     onRefused?: ((error: UpupValidationError) => void) | undefined
 }
 
+/** `reportError` exists in browsers and workers, where it reaches
+ *  `window.onerror` / error reporters. Deno and Bun also expose it but may
+ *  treat the resulting unhandled error event as fatal, so it is only trusted
+ *  in a browser or worker scope. */
+function canReportError(): boolean {
+    const scope = globalThis as {
+        window?: unknown
+        WorkerGlobalScope?: unknown
+        reportError?: unknown
+    }
+    return (
+        typeof scope.reportError === 'function' &&
+        (typeof scope.window !== 'undefined' ||
+            typeof scope.WorkerGlobalScope !== 'undefined')
+    )
+}
+
 /** A throwing host hook must not fail the add that already succeeded, but its
- *  bug must not vanish in production either. Browsers have `reportError`,
- *  which reaches `window.onerror` / error reporters without unwinding the add;
- *  elsewhere (Node, SSR) fall back to `console.error` — never an uncaught
- *  rethrow, which would be an uncaughtException there. */
+ *  bug must not vanish in production either. In a browser or worker scope it
+ *  goes through `reportError` (no unwinding of the add); elsewhere (Node, SSR,
+ *  Deno, Bun), or if `reportError` itself throws, it falls back to
+ *  `console.error` — never an uncaught rethrow, which would be an
+ *  uncaughtException there. Neither path may throw out of this function. */
 function surfaceRefusalHookFailure(err: unknown): void {
-    if (typeof globalThis.reportError === 'function') {
-        globalThis.reportError(err)
-        return
+    if (canReportError()) {
+        try {
+            globalThis.reportError(err)
+            return
+        } catch {
+            // upup-catch: reportError is the reporter of last resort; fall
+            // through to console.error so the add and the remaining refusals
+            // are never affected.
+        }
     }
     console.error('[upup] a refusal hook threw', err)
 }
