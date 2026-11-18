@@ -852,20 +852,27 @@ describe('useMastraChat failure visibility', () => {
     // The SDK's MastraClientError carries the HTTP status of a refused
     // request; the server's guard answers 429 / 503 / 400 / 413 with a
     // human-readable JSON body and the visitor is told what actually happened.
-    const httpError = (status: number) =>
-        Object.assign(new Error(`HTTP error! status: ${status}`), { status })
+    const httpError = (status: number, body?: unknown) =>
+        Object.assign(new Error(`HTTP error! status: ${status}`), {
+            status,
+            body,
+        })
+    // The body mastra's daily-budget middleware answers a 503 with.
+    const DAILY_BUDGET_BODY = {
+        error: 'Daily request budget reached. The AI assistant is taking a break.',
+    }
 
     it.each([
-        [429, 'Too many messages', 'Wait a moment'],
-        [503, 'daily limit', 'tomorrow'],
-        [400, 'too long', 'new chat'],
-        [413, 'too long', 'new chat'],
+        [429, undefined, 'Too many messages', 'Wait a moment'],
+        [503, DAILY_BUDGET_BODY, 'daily limit', 'tomorrow'],
+        [400, undefined, 'too long', 'Shorten it and try again'],
+        [413, undefined, 'too long', 'Shorten it and try again'],
     ])(
         'tells visitors a specific line for HTTP %i, not the generic unreachable one',
-        async (status, ...needles) => {
+        async (status, body, ...needles) => {
             vi.stubGlobal('location', { hostname: 'useupup.com' })
             try {
-                sdk.streamError = httpError(status)
+                sdk.streamError = httpError(status, body)
                 const { result, onAssistantError } = setup()
 
                 await act(async () => result.current.send(PROMPT))
@@ -874,6 +881,9 @@ describe('useMastraChat failure visibility', () => {
                 expect(turn?.error).toBe(true)
                 for (const n of needles) expect(turn?.text).toContain(n)
                 expect(turn?.text).not.toContain('could not be reached')
+                // This hook sends only the new message, so a chat reset
+                // would not help and is never suggested.
+                expect(turn?.text).not.toContain('new chat')
                 expect(turn?.text).not.toContain('pnpm')
                 expect(sdk.streamCalls).toBe(1)
                 expect(onAssistantError).toHaveBeenCalledTimes(1)
@@ -883,15 +893,21 @@ describe('useMastraChat failure visibility', () => {
         },
     )
 
-    it.each([500, undefined])(
-        'keeps the generic unreachable reason for status %s and network errors',
-        async status => {
+    it.each([
+        ['a 500', httpError(500)],
+        ['a 503 with no body', httpError(503)],
+        ['a 503 from a proxy', httpError(503, '<h1>Service Unavailable</h1>')],
+        [
+            'a 503 with another JSON error',
+            httpError(503, { error: 'redeploying' }),
+        ],
+        ['a network error', new TypeError('Failed to fetch')],
+    ])(
+        'keeps the generic unreachable reason for %s',
+        async (_name, failure) => {
             vi.stubGlobal('location', { hostname: 'useupup.com' })
             try {
-                sdk.streamError =
-                    status === undefined
-                        ? new TypeError('Failed to fetch')
-                        : httpError(status)
+                sdk.streamError = failure
                 const { result } = setup()
 
                 await act(async () => result.current.send(PROMPT))

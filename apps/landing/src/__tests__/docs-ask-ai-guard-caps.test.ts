@@ -14,6 +14,7 @@ vi.mock('@/lib/analytics/sentry', () => ({ reportAiFailure }))
 
 import { DocsAskAi } from '@/components/docs/DocsAskAi'
 import {
+    DOCS_CHAT_MAX_BODY_BYTES,
     DOCS_CHAT_MAX_MESSAGE_CHARS,
     DOCS_CHAT_MAX_MESSAGES,
     useDocsChat,
@@ -104,6 +105,8 @@ describe('docs Ask AI request caps', () => {
     it('keeps the thread limit under the server caps', () => {
         expect(DOCS_CHAT_MAX_MESSAGES).toBe(20)
         expect(DOCS_CHAT_MAX_MESSAGE_CHARS).toBe(16_000)
+        // Under the server's 262,144-byte body cap.
+        expect(DOCS_CHAT_MAX_BODY_BYTES).toBe(240 * 1024)
     })
 
     it('sends only the last 20 messages of a 30-message thread, newest last, while the UI keeps the whole thread', async () => {
@@ -119,14 +122,17 @@ describe('docs Ask AI request caps', () => {
         await sendText('newest')
 
         const sent = calls[calls.length - 1]!.body.messages
-        expect(sent).toHaveLength(DOCS_CHAT_MAX_MESSAGES)
+        expect(sent.length).toBeLessThanOrEqual(DOCS_CHAT_MAX_MESSAGES)
         expect(sent[sent.length - 1]).toEqual({
             role: 'user',
             content: 'newest',
         })
         // The window is the tail of the thread, dropped from the front:
         // 31 messages in history, so the first 11 are left out and the
-        // window opens on message 12 (the 6th turn's reply, "reply").
+        // window would open on message 12, the 6th turn's reply. The thread
+        // sent starts on a user turn, so that leading reply is dropped too.
+        expect(sent).toHaveLength(DOCS_CHAT_MAX_MESSAGES - 1)
+        expect(sent[0]).toEqual({ role: 'user', content: 'q7' })
         expect(sent.slice(-3)).toEqual([
             { role: 'user', content: 'q15' },
             { role: 'assistant', content: 'reply' },
@@ -136,6 +142,41 @@ describe('docs Ask AI request caps', () => {
         // Nothing was removed from what the visitor sees.
         expect(chat.messages).toHaveLength(32)
         expect(chat.messages[0]!.content).toBe('q1')
+    })
+
+    it('clips an over-long assistant reply in history to the per-message cap and still makes the request', async () => {
+        const calls = stubFetch(() => sseResponse(delta('x'.repeat(20_000))))
+        await sendText('first')
+        expect(last().content).toHaveLength(20_000)
+
+        await sendText('second')
+
+        expect(calls).toHaveLength(2)
+        const sent = calls[1]!.body.messages
+        expect(sent.map(m => m.role)).toEqual(['user', 'assistant', 'user'])
+        expect(sent[1]!.content).toHaveLength(DOCS_CHAT_MAX_MESSAGE_CHARS)
+        // The UI keeps the whole reply.
+        expect(chat.messages[1]!.content).toHaveLength(20_000)
+    })
+
+    it('drops messages from the front until the body fits the byte budget, keeping the newest user message', async () => {
+        const calls = stubFetch(() =>
+            sseResponse(delta('y'.repeat(DOCS_CHAT_MAX_MESSAGE_CHARS))),
+        )
+        for (let n = 1; n <= 12; n++) await sendText(`q${n}`)
+
+        await sendText('newest')
+
+        const body = calls[calls.length - 1]!.body
+        const bytes = new TextEncoder().encode(JSON.stringify(body)).length
+        expect(bytes).toBeLessThanOrEqual(DOCS_CHAT_MAX_BODY_BYTES)
+        // 20 full-size messages would be ~320 KB: fewer are sent.
+        expect(body.messages.length).toBeLessThan(DOCS_CHAT_MAX_MESSAGES)
+        expect(body.messages[0]!.role).toBe('user')
+        expect(body.messages[body.messages.length - 1]).toEqual({
+            role: 'user',
+            content: 'newest',
+        })
     })
 
     it('sends a short thread whole', async () => {
@@ -182,7 +223,6 @@ describe('docs Ask AI refusals fail fast', () => {
         [400, 'too long', 'new chat'],
         [413, 'too long', 'new chat'],
         [429, 'Too many messages', 'Wait a moment'],
-        [503, 'daily limit', 'tomorrow'],
     ])(
         'HTTP %i on the stream makes exactly one request and shows the specific message',
         async (status, ...needles) => {
@@ -213,6 +253,65 @@ describe('docs Ask AI refusals fail fast', () => {
         },
     )
 
+    it('treats a 503 carrying the daily-budget body as the daily limit: one request, specific message', async () => {
+        const calls = stubFetch(url =>
+            url.endsWith('/stream')
+                ? json(
+                      {
+                          error: 'Daily request budget reached. The AI assistant is taking a break.',
+                      },
+                      503,
+                  )
+                : json({ text: 'must never be requested' }),
+        )
+
+        await sendText('a question')
+
+        expect(calls).toHaveLength(1)
+        expect(last().error).toBe(true)
+        expect(last().content).toContain('daily limit')
+        expect(last().content).toContain('tomorrow')
+        expect(reportAiFailure).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+        ['an empty body', () => new Response('', { status: 503 })],
+        [
+            'a proxy HTML page',
+            () => new Response('<h1>Service Unavailable</h1>', { status: 503 }),
+        ],
+        ['another JSON error', () => json({ error: 'redeploying' }, 503)],
+    ])(
+        'a 503 with %s is not the daily limit: it keeps the /generate fallback',
+        async (_name, makeResponse) => {
+            const calls = stubFetch(url =>
+                url.endsWith('/stream')
+                    ? makeResponse()
+                    : json({ text: 'Rescued answer.' }),
+            )
+
+            await sendText('a question')
+
+            expect(calls.map(c => c.url.split('/').pop())).toEqual([
+                'stream',
+                'generate',
+            ])
+            expect(last().content).toBe('Rescued answer.')
+            expect(last().error).toBeUndefined()
+        },
+    )
+
+    it('shows the generic bubble, not the daily limit, when a non-budget 503 also fails on /generate', async () => {
+        stubFetch(() => json({ error: 'redeploying' }, 503))
+
+        await sendText('a question')
+
+        expect(last().error).toBe(true)
+        expect(last().content).toBe(
+            'Something went wrong answering that. Try again.',
+        )
+    })
+
     it('does not fall back on another 4xx, and shows the generic bubble', async () => {
         const calls = stubFetch(() => json({ error: 'not_found' }, 404))
 
@@ -223,6 +322,44 @@ describe('docs Ask AI refusals fail fast', () => {
         expect(last().content).toBe(
             'Something went wrong answering that. Try again.',
         )
+    })
+})
+
+describe('docs Ask AI failure announcement', () => {
+    it('announces the error bubble text to screen readers, not a fixed phrase', () => {
+        const el = document.createElement('div')
+        document.body.append(el)
+        const r = createRoot(el)
+        const reason = 'Too many messages in a short time. Wait a moment.'
+        act(() =>
+            r.render(
+                createElement(DocsAskAi, {
+                    open: true,
+                    onClose: vi.fn(),
+                    chat: {
+                        messages: [
+                            { id: 'm1', role: 'user', content: 'a question' },
+                            {
+                                id: 'm2',
+                                role: 'assistant',
+                                content: reason,
+                                error: true,
+                            },
+                        ],
+                        pending: false,
+                        send: vi.fn(),
+                        clear: vi.fn(),
+                    } as unknown as ReturnType<typeof useDocsChat>,
+                }),
+            ),
+        )
+        const live = el.querySelector(
+            '[data-testid="docs-ask-ai-announcement"]',
+        )
+        expect(live?.textContent).toContain('The answer failed.')
+        expect(live?.textContent).toContain(reason)
+        act(() => r.unmount())
+        el.remove()
     })
 })
 

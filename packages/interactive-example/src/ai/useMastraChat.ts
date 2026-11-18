@@ -65,21 +65,36 @@ function httpStatus(e: unknown): number | undefined {
 }
 
 /**
+ * True for the 503 body mastra's daily-budget middleware sends
+ * (apps/mastra/src/mastra/middleware/daily-budget.ts: "Daily request budget
+ * reached. ..."), read from the SDK error's parsed `body`. Any other 503 (a
+ * proxy, a redeploy) is not the daily limit.
+ */
+function isDailyBudget(e: unknown): boolean {
+    const error = (e as { body?: { error?: unknown } | null } | null)?.body
+        ?.error
+    return typeof error === 'string' && error.startsWith('Daily request budget')
+}
+
+/**
  * A whole visitor-facing line for the refusals the server's input guard and
  * limiter send on purpose (a fixed phrase per status, never upstream text), or
  * null for anything else, which keeps the generic "unavailable" line. 429 is
- * the rate limit, 503 the daily budget, 400/413 an over-long message (the
- * server caps a message at 16,000 characters).
+ * the rate limit, 503 WITH the daily-budget body the daily limit, 400/413 an
+ * over-long message (the server caps a message at 16,000 characters). This hook
+ * sends only the new message, so a chat reset is not suggested.
  */
 function visitorRefusal(e: unknown): string | null {
     switch (httpStatus(e)) {
         case 429:
             return 'Too many messages in a short time. Wait a moment, then try again.'
         case 503:
-            return 'The assistant has hit its daily limit. Try again tomorrow.'
+            return isDailyBudget(e)
+                ? 'The assistant has hit its daily limit. Try again tomorrow.'
+                : null
         case 400:
         case 413:
-            return 'That message is too long. Shorten it, or start a new chat.'
+            return 'That message is too long. Shorten it and try again.'
         default:
             return null
     }

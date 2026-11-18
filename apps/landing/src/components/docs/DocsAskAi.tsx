@@ -455,7 +455,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
     const announcement =
         !pending && last && last.role === 'assistant' && !last.streaming
             ? last.error
-                ? 'The answer failed.'
+                ? `The answer failed. ${last.content}`
                 : `Answer ready${
                       last.steps?.length
                           ? ` after ${stepSummary(last.steps)}`
