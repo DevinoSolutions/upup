@@ -12,6 +12,52 @@ import { scrubFailureMessage } from '@useupup/interactive-example/ai/scrubFailur
 
 const DOCS_AGENT_ID = 'docs-agent'
 
+/**
+ * Limits of the Mastra server's client-input guard
+ * (apps/mastra/src/mastra/middleware/client-input-guard.ts): a chat body with
+ * more than 50 messages, or any message over 16,000 characters, is refused with
+ * HTTP 400. The docs panel sends only the most recent messages (the UI still
+ * shows the whole thread), so a long conversation always passes, and caps the
+ * composer at the per-message limit. Keep the window well under the server's 50.
+ */
+export const DOCS_CHAT_MAX_MESSAGES = 20
+export const DOCS_CHAT_MAX_MESSAGE_CHARS = 16_000
+
+const GENERIC_FAILURE = 'Something went wrong answering that. Try again.'
+
+/**
+ * What the visitor is told when the server deliberately refuses the request:
+ * 429 is the rate limit, 503 the daily budget, 400/413 an over-long message.
+ * Fixed copy per status, never the server's text. Null means "not a refusal we
+ * have wording for" and the generic bubble stays.
+ */
+function refusalMessage(status: number | null): string | null {
+    switch (status) {
+        case 429:
+            return 'Too many messages in a short time. Wait a moment, then try again.'
+        case 503:
+            return 'The assistant has hit its daily limit. Try again tomorrow.'
+        case 400:
+        case 413:
+            return 'That message is too long. Shorten it, or clear the conversation and start a new chat.'
+        default:
+            return null
+    }
+}
+
+/**
+ * Whether a stream refusal is worth a second request to /generate. A 4xx
+ * (guard, rate limit, bad request) and a 503 (daily budget) are answers about
+ * the REQUEST, and /generate would get the same one, so those fail fast. Every
+ * other failure (network error, other 5xx, empty stream, error chunk) may be
+ * transient and still falls back.
+ */
+function refusedByServer(status: number | null): boolean {
+    return (
+        status !== null && ((status >= 400 && status < 500) || status === 503)
+    )
+}
+
 /** Why a `/generate` attempt produced no answer. */
 type GenerateOutcome =
     | { ok: true }
@@ -154,6 +200,7 @@ export function useDocsChat() {
             const wireMessages = history
                 .filter(m => !m.error)
                 .map(m => ({ role: m.role, content: m.content }))
+                .slice(-DOCS_CHAT_MAX_MESSAGES)
 
             const controller = new AbortController()
             abortRef.current = controller
@@ -165,9 +212,9 @@ export function useDocsChat() {
                     ),
                 )
 
-            const finishError = () =>
+            const finishError = (content = GENERIC_FAILURE) =>
                 setAssistant({
-                    content: 'Something went wrong answering that. Try again.',
+                    content,
                     error: true,
                     streaming: false,
                     steps: settleSteps(steps),
@@ -248,6 +295,9 @@ export function useDocsChat() {
                 // Why the stream path failed, kept so the failure is reported
                 // even when the answer is rescued below.
                 let streamFailure: string | null = null
+                // HTTP status of a refused stream request (null when it was
+                // never refused: network error, or a 200 stream).
+                let streamStatus: number | null = null
                 // Mastra reports an upstream failure as an `error` chunk inside
                 // an HTTP 200 stream. Whatever text arrived before it is a cut-off
                 // answer, not a finished one, so it must not pass as complete.
@@ -318,6 +368,7 @@ export function useDocsChat() {
                     )
                     if (!res.ok || !res.body)
                         streamFailure = `stream HTTP ${res.status}`
+                    if (!res.ok) streamStatus = res.status
                     if (res.ok && res.body) {
                         opened = true
                         const reader = res.body.getReader()
@@ -368,8 +419,15 @@ export function useDocsChat() {
                     })
                     if (streamFailure !== null)
                         report('stream-failed', streamFailure)
+                } else if (refusedByServer(streamStatus)) {
+                    // The server refused the request itself (guard, rate
+                    // limit, daily budget): /generate would get the same
+                    // answer, so end the turn with the specific message and
+                    // send nothing more.
+                    finishError(refusalMessage(streamStatus) ?? GENERIC_FAILURE)
+                    report('upstream-error', streamFailure ?? undefined)
                 } else {
-                    // Stream never opened (non-200 / network), opened but
+                    // Stream never opened (network / 5xx), opened but
                     // produced no text, or ended on an error chunk — fall back
                     // to /generate.
                     if (opened && streamFailure === null)

@@ -22,6 +22,7 @@ const sdk = vi.hoisted(() => ({
     streamCalls: 0,
     generateCalls: 0,
     options: [] as StreamOptions[],
+    streamError: null as unknown,
 }))
 
 const abortError = () => new DOMException('The user aborted.', 'AbortError')
@@ -37,6 +38,7 @@ vi.mock('@mastra/client-js', () => ({
                 stream: async (_message: string, options: StreamOptions) => {
                     sdk.streamCalls++
                     sdk.options.push(options)
+                    if (sdk.streamError) throw sdk.streamError
                     const signal = options.abortSignal
                     const aborted = new Promise<never>((_, reject) =>
                         signal?.addEventListener('abort', () =>
@@ -125,6 +127,7 @@ beforeEach(() => {
     sdk.streamCalls = 0
     sdk.generateCalls = 0
     sdk.options = []
+    sdk.streamError = null
 })
 
 describe('useMastraChat streaming', () => {
@@ -839,6 +842,62 @@ describe('useMastraChat failure visibility', () => {
                     expect(text).not.toContain(leak)
                 expect(onAssistantError.mock.calls[0]![0].message).toContain(
                     'mastra',
+                )
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        },
+    )
+
+    // The SDK's MastraClientError carries the HTTP status of a refused
+    // request; the server's guard answers 429 / 503 / 400 / 413 with a
+    // human-readable JSON body and the visitor is told what actually happened.
+    const httpError = (status: number) =>
+        Object.assign(new Error(`HTTP error! status: ${status}`), { status })
+
+    it.each([
+        [429, 'Too many messages', 'Wait a moment'],
+        [503, 'daily limit', 'tomorrow'],
+        [400, 'too long', 'new chat'],
+        [413, 'too long', 'new chat'],
+    ])(
+        'tells visitors a specific line for HTTP %i, not the generic unreachable one',
+        async (status, ...needles) => {
+            vi.stubGlobal('location', { hostname: 'useupup.com' })
+            try {
+                sdk.streamError = httpError(status)
+                const { result, onAssistantError } = setup()
+
+                await act(async () => result.current.send(PROMPT))
+
+                const turn = result.current.messages[1]
+                expect(turn?.error).toBe(true)
+                for (const n of needles) expect(turn?.text).toContain(n)
+                expect(turn?.text).not.toContain('could not be reached')
+                expect(turn?.text).not.toContain('pnpm')
+                expect(sdk.streamCalls).toBe(1)
+                expect(onAssistantError).toHaveBeenCalledTimes(1)
+            } finally {
+                vi.unstubAllGlobals()
+            }
+        },
+    )
+
+    it.each([500, undefined])(
+        'keeps the generic unreachable reason for status %s and network errors',
+        async status => {
+            vi.stubGlobal('location', { hostname: 'useupup.com' })
+            try {
+                sdk.streamError =
+                    status === undefined
+                        ? new TypeError('Failed to fetch')
+                        : httpError(status)
+                const { result } = setup()
+
+                await act(async () => result.current.send(PROMPT))
+
+                expect(result.current.messages[1]?.text).toContain(
+                    'AI assistant is unavailable (the assistant service could not be reached). Please try again in a moment.',
                 )
             } finally {
                 vi.unstubAllGlobals()
