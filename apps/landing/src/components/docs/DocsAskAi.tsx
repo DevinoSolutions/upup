@@ -28,7 +28,11 @@ import {
     type Block,
     type Inline,
 } from '@useupup/interactive-example/ai/markdownStream'
-import type { useDocsChat, DocsChatMessage } from '@/lib/docs/use-docs-chat'
+import {
+    DOCS_CHAT_MAX_MESSAGE_CHARS,
+    type useDocsChat,
+    type DocsChatMessage,
+} from '@/lib/docs/use-docs-chat'
 import { DocsAskAiStepTrail, stepSummary } from './DocsAskAiStepTrail'
 
 const EXAMPLE_QUESTIONS = [
@@ -451,7 +455,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
     const announcement =
         !pending && last && last.role === 'assistant' && !last.streaming
             ? last.error
-                ? 'The answer failed.'
+                ? `The answer failed. ${last.content}`
                 : `Answer ready${
                       last.steps?.length
                           ? ` after ${stepSummary(last.steps)}`
@@ -747,6 +751,7 @@ export function DocsAskAi({ open, onClose, chat }: DocsAskAiProps) {
                                 ref={textareaRef}
                                 data-testid="docs-ask-ai-input"
                                 rows={1}
+                                maxLength={DOCS_CHAT_MAX_MESSAGE_CHARS}
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
                                 onKeyDown={e => {
