@@ -10,10 +10,10 @@ We love your input! We want to make contributing to Upup as easy and transparent
 
 ## Development Process
 
-1. Fork the repo and create your branch from **`v2-clean`** — the active v2
-   development line. (`master` is the pre-v2 single-package release; the package
-   layout this project documents lives on `v2-clean`, which is intentionally
-   unmerged.)
+1. Fork the repo, create your branch from **`dev`** — the integration branch —
+   and open your pull request against `dev`. (`master` is the release branch:
+   `dev` is promoted to it by the maintainers, so don't target `master` directly.
+   `v2-clean` is an old line that is no longer updated.)
 2. Use the pinned Node version — this repo ships a `.nvmrc` (Node 20.20.2), so
    run `nvm use` — then install with `pnpm install`. This is a pnpm workspace
    (corepack pins `pnpm@10.11.0`); other package managers will not resolve the
