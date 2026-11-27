@@ -792,7 +792,11 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   `DEV_NEXT_PUBLIC_*` (everything else), all public client values
   (`NEXT_PUBLIC_BASE_URL` required); when one changes in the Dokploy
   Environment tab, change the matching `PROD_`/`DEV_` variable too, or the next
-  build keeps the old value. Runtime secrets stay in Dokploy. Environments
+  build keeps the old value. The workflow passes each variable as its own
+  `${{ vars.X }}` env reference (never `toJSON(vars)` — step env is printed in
+  the public log, so a whole-context dump leaks every repo variable); adding a
+  build arg means adding its `PROD_`/`DEV_` env lines in BOTH Collect steps.
+  Runtime secrets stay in Dokploy. Environments
   restrict deployment branches (production: master, development: dev); Dokploy
   re-reads that policy at every release. The compose file is unchanged and
   still builds locally with `docker compose up --build`. A release is ignored

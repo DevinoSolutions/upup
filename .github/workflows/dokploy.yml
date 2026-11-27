@@ -97,8 +97,42 @@ jobs:
               env:
                   NAMES: ${{ matrix.build_args }}
                   REF: ${{ github.ref }}
-                  # Repository variables only (PROD_* / DEV_*); the script below picks the set of the branch. Public client values, not secrets.
-                  VARS_JSON: ${{ toJSON(vars) }}
+                  # Only the named repository variables (PROD_* / DEV_*) this build reads, one reference each; the script below
+                  # picks the set of the branch. Never pass the whole `vars` context to a step as JSON: GitHub prints step env in the public log.
+                  PROD_NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_NEXT_PUBLIC_BASE_URL }}
+                  PROD_NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.PROD_NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+                  PROD_NEXT_PUBLIC_GOOGLE_API_KEY: ${{ vars.PROD_NEXT_PUBLIC_GOOGLE_API_KEY }}
+                  PROD_NEXT_PUBLIC_GOOGLE_APP_ID: ${{ vars.PROD_NEXT_PUBLIC_GOOGLE_APP_ID }}
+                  PROD_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${{ vars.PROD_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID }}
+                  PROD_NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${{ vars.PROD_NEXT_PUBLIC_DROPBOX_CLIENT_ID }}
+                  PROD_NEXT_PUBLIC_BOX_CLIENT_ID: ${{ vars.PROD_NEXT_PUBLIC_BOX_CLIENT_ID }}
+                  PROD_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.PROD_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+                  PROD_NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.PROD_NEXT_PUBLIC_POSTHOG_KEY }}
+                  PROD_NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.PROD_NEXT_PUBLIC_POSTHOG_HOST }}
+                  PROD_NEXT_PUBLIC_POSTHOG_DATASET: ${{ vars.PROD_NEXT_PUBLIC_POSTHOG_DATASET }}
+                  PROD_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${{ vars.PROD_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST }}
+                  PROD_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ vars.PROD_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+                  PROD_NEXT_PUBLIC_MASTRA_BASE_URL: ${{ vars.PROD_NEXT_PUBLIC_MASTRA_BASE_URL }}
+                  PROD_NEXT_PUBLIC_SENTRY_DSN: ${{ vars.PROD_NEXT_PUBLIC_SENTRY_DSN }}
+                  PROD_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${{ vars.PROD_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT }}
+                  PROD_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${{ vars.PROD_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE }}
+                  DEV_NEXT_PUBLIC_BASE_URL: ${{ vars.DEV_NEXT_PUBLIC_BASE_URL }}
+                  DEV_NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_GOOGLE_API_KEY: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_API_KEY }}
+                  DEV_NEXT_PUBLIC_GOOGLE_APP_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_APP_ID }}
+                  DEV_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_DROPBOX_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_BOX_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_BOX_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+                  DEV_NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_KEY }}
+                  DEV_NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_HOST }}
+                  DEV_NEXT_PUBLIC_POSTHOG_DATASET: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_DATASET }}
+                  DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST }}
+                  DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+                  DEV_NEXT_PUBLIC_MASTRA_BASE_URL: ${{ vars.DEV_NEXT_PUBLIC_MASTRA_BASE_URL }}
+                  DEV_NEXT_PUBLIC_SENTRY_DSN: ${{ vars.DEV_NEXT_PUBLIC_SENTRY_DSN }}
+                  DEV_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${{ vars.DEV_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT }}
+                  DEV_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${{ vars.DEV_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE }}
               run: |
                   set -euo pipefail
                   prefix=DEV_
@@ -107,7 +141,8 @@ jobs:
                   {
                     echo 'build-args<<EOF_BUILD_ARGS'
                     for name in ${NAMES}; do
-                      value="$(printf '%s' "${VARS_JSON}" | jq -r --arg key "${prefix}${name}" '.[$key] // ""')"
+                      key="${prefix}${name}"
+                      value="${!key-}"
                       case "${value}" in *$'\n'*|*$'\r'*) echo "::error::variable ${prefix}${name} is not a single line" >&2; exit 1 ;; esac
                       if [ "${name}" = "NEXT_PUBLIC_BASE_URL" ] && [ -z "${value}" ]; then
                         echo "::error::the repository variable ${prefix}NEXT_PUBLIC_BASE_URL is not defined" >&2; exit 1
@@ -218,14 +253,32 @@ jobs:
               id: args
               env:
                   NAMES: ${{ matrix.build_args }}
-                  # The DEV_* repository variables (public client values). The values do not matter for the check, only that the image builds.
-                  VARS_JSON: ${{ toJSON(vars) }}
+                  # Only the named DEV_* repository variables this build reads, one reference each (never the whole `vars` context as JSON: GitHub
+                  # prints step env in the public log). The values do not matter for the check, only that the image builds.
+                  DEV_NEXT_PUBLIC_BASE_URL: ${{ vars.DEV_NEXT_PUBLIC_BASE_URL }}
+                  DEV_NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_GOOGLE_API_KEY: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_API_KEY }}
+                  DEV_NEXT_PUBLIC_GOOGLE_APP_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_APP_ID }}
+                  DEV_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_ONEDRIVE_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_DROPBOX_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_DROPBOX_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_BOX_CLIENT_ID: ${{ vars.DEV_NEXT_PUBLIC_BOX_CLIENT_ID }}
+                  DEV_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.DEV_NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+                  DEV_NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_KEY }}
+                  DEV_NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_HOST }}
+                  DEV_NEXT_PUBLIC_POSTHOG_DATASET: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_DATASET }}
+                  DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_HOST }}
+                  DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN: ${{ vars.DEV_NEXT_PUBLIC_POSTHOG_E2E_TEST_PROJECT_CAPTURE_TOKEN }}
+                  DEV_NEXT_PUBLIC_MASTRA_BASE_URL: ${{ vars.DEV_NEXT_PUBLIC_MASTRA_BASE_URL }}
+                  DEV_NEXT_PUBLIC_SENTRY_DSN: ${{ vars.DEV_NEXT_PUBLIC_SENTRY_DSN }}
+                  DEV_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT: ${{ vars.DEV_NEXT_PUBLIC_UPUP_UPLOAD_ENDPOINT }}
+                  DEV_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE: ${{ vars.DEV_NEXT_PUBLIC_UPUP_USE_REAL_STORAGE }}
               run: |
                   set -euo pipefail
                   {
                     echo 'build-args<<EOF_BUILD_ARGS'
                     for name in ${NAMES}; do
-                      value="$(printf '%s' "${VARS_JSON}" | jq -r --arg key "DEV_${name}" '.[$key] // ""')"
+                      key="DEV_${name}"
+                      value="${!key-}"
                       case "${value}" in *$'\n'*|*$'\r'*) echo "::error::variable DEV_${name} is not a single line" >&2; exit 1 ;; esac
                       if [ "${name}" = "NEXT_PUBLIC_BASE_URL" ] && [ -z "${value}" ]; then
                         echo "::error::the repository variable DEV_NEXT_PUBLIC_BASE_URL is not defined" >&2; exit 1
