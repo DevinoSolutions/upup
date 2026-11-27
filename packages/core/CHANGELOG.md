@@ -1,5 +1,11 @@
 # @useupup/core
 
+## 3.4.1
+
+### Patch Changes
+
+- [#688](https://github.com/DevinoSolutions/upup/pull/688) [`4ca57d8`](https://github.com/DevinoSolutions/upup/commit/4ca57d8e02ed5213c62d6529006218645b38a084) Thanks [@AminDhouib](https://github.com/AminDhouib)! - The OneDrive, Dropbox and Box sign-in popup now opens inside the click that asked for it, so Edge and other strict popup blockers stop reporting "Popup was blocked by the browser". `authenticateViaPopup()` used to `await getAuthUrl()` (the PKCE digest) before `window.open`, which put the open outside the user gesture. It now opens a blank window synchronously, then points it at the provider once the URL is built. If building the URL fails the blank window is closed and the error is rethrown, and an unconfigured `clientId` is refused before any window opens.
+
 ## 3.4.0
 
 ### Minor Changes
