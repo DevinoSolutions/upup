@@ -100,6 +100,26 @@ const mockSessionStorage = {
 }
 
 /**
+ * A PKCE digest that stays pending until the test settles it, so a test can
+ * observe what has happened while the auth URL is still being built.
+ */
+function stubPendingDigest(): { settle?: (buf: ArrayBuffer) => void } {
+    const digest: { settle?: (buf: ArrayBuffer) => void } = {}
+    vi.stubGlobal('crypto', {
+        getRandomValues: (arr: Uint8Array) => arr,
+        subtle: {
+            digest: vi.fn(
+                () =>
+                    new Promise<ArrayBuffer>(resolve => {
+                        digest.settle = resolve
+                    }),
+            ),
+        },
+    })
+    return digest
+}
+
+/**
  * Install a fake popup window and return it. `href` seeds `location.href`, which
  * is what the auth poll reads each tick — omit it for a window that never
  * navigates (the user-closes-it path).
@@ -107,12 +127,27 @@ const mockSessionStorage = {
 function stubPopupWindow(href?: string): {
     closed: boolean
     close: ReturnType<typeof vi.fn>
-    location: { href?: string }
+    location: { href: string | undefined }
+    /** Every URL the plugin pointed the popup at, in order. */
+    navigations: string[]
 } {
+    const navigations: string[] = []
     const fakeWindow = {
         closed: false,
         close: vi.fn(),
-        location: href !== undefined ? { href } : {},
+        navigations,
+        // The plugin now opens the popup blank and assigns the provider URL
+        // afterwards. A real window then navigates on its own, so `href` stays
+        // whatever the test says the popup has reached: the assignment is
+        // recorded, never reflected back.
+        location: {
+            get href(): string | undefined {
+                return href
+            },
+            set href(next: string | undefined) {
+                if (next !== undefined) navigations.push(next)
+            },
+        },
     }
     vi.stubGlobal('window', {
         location: { origin: 'https://example.com' },
@@ -546,6 +581,91 @@ describe('PopupOAuthPlugin (base skeleton)', () => {
             const errors = authErrors()
             expect(errors).toHaveLength(1)
             expect(errors[0]!.error.code).toBe('AUTH_POPUP_BLOCKED')
+        })
+
+        it('opens the popup synchronously, before the PKCE digest settles, so the open is still inside the click that asked for it (uNotes T-12111)', async () => {
+            const fakeWindow = stubPopupWindow()
+            const digest = stubPendingDigest()
+            const open = vi.mocked(window.open)
+
+            const promise = plugin.authenticateViaPopup()
+
+            // No await has run yet: the digest is still pending, the URL does
+            // not exist, and the window is already open.
+            expect(open).toHaveBeenCalledTimes(1)
+            expect(open.mock.calls[0]![0]).toBe('about:blank')
+            expect(open.mock.calls[0]![1]).toBe('UpupFakeAuth')
+            expect(fakeWindow.navigations).toHaveLength(0)
+
+            await vi.waitFor(() => expect(digest.settle).toBeDefined())
+            digest.settle?.(new ArrayBuffer(32))
+            await vi.waitFor(() =>
+                expect(fakeWindow.navigations).toHaveLength(1),
+            )
+            expect(fakeWindow.navigations[0]).toContain(
+                'https://auth.example.com/authorize?',
+            )
+            expect(open).toHaveBeenCalledTimes(1)
+
+            // The poll is now running; sign-out stops it. The promise settles
+            // only on a redirect or a closed window, so it is not awaited.
+            plugin.signOut()
+            void promise
+        })
+
+        it('closes the blank popup and rethrows when the auth URL cannot be built, instead of leaving an empty window behind', async () => {
+            const fakeWindow = stubPopupWindow()
+            vi.spyOn(plugin, 'getAuthUrl').mockRejectedValue(
+                new Error('digest failed'),
+            )
+
+            await expect(plugin.authenticateViaPopup()).rejects.toThrow(
+                'digest failed',
+            )
+
+            expect(fakeWindow.close).toHaveBeenCalledTimes(1)
+            expect(fakeWindow.navigations).toHaveLength(0)
+        })
+
+        it('does not build a PKCE challenge when the browser refuses the window', async () => {
+            vi.stubGlobal('window', {
+                location: { origin: 'https://example.com' },
+                open: vi.fn(() => null),
+                screenX: 0,
+                screenY: 0,
+            })
+            const getAuthUrl = vi.spyOn(plugin, 'getAuthUrl')
+
+            await expect(plugin.authenticateViaPopup()).rejects.toThrow(
+                'Popup was blocked by the browser',
+            )
+
+            expect(getAuthUrl).not.toHaveBeenCalled()
+        })
+
+        it('opens no window at all for an unconfigured provider, so a missing client id never flashes a blank popup', async () => {
+            stubPopupWindow()
+            const bare = new FakePopupPlugin()
+            bare.init(emitter)
+
+            await expect(bare.authenticateViaPopup()).rejects.toThrow(
+                'client_id',
+            )
+
+            expect(window.open).not.toHaveBeenCalled()
+        })
+
+        it('does not point a popup at the provider after sign-out closed it mid-build', async () => {
+            const fakeWindow = stubPopupWindow()
+            const digest = stubPendingDigest()
+
+            const promise = plugin.authenticateViaPopup()
+            plugin.signOut()
+            await vi.waitFor(() => expect(fakeWindow.close).toHaveBeenCalled())
+            digest.settle?.(new ArrayBuffer(32))
+            await promise
+
+            expect(fakeWindow.navigations).toHaveLength(0)
         })
 
         it('completes the code exchange when a spec-legal redirect puts the code in the FRAGMENT, which the poll would otherwise never see', async () => {

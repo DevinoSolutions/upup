@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { fireEvent, render } from '@testing-library/react'
 import DriveAuthFallback from '../src/components/shared/DriveAuthFallback'
 import { driveErrorText } from '@useupup/core/internal'
 import type { DriveBrowserError, UiTranslations } from '@useupup/core'
@@ -27,6 +27,33 @@ describe('DriveAuthFallback — a declined consent is not reported as a popup bl
         render(<DriveAuthFallback providerName="OneDrive" onRetry={onRetry} />)
 
         expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    it('calls onRetry inside the Sign in button click itself, not from an effect, so the popup it opens is requested by the person (uNotes T-12111)', () => {
+        // `window.event` is the event being dispatched: set inside a handler,
+        // undefined inside an effect. It is how the test tells the two apart.
+        let dispatching: string | undefined
+        const onRetry = vi.fn(() => {
+            dispatching = window.event?.type
+        })
+        const { getByRole } = render(
+            <DriveAuthFallback
+                providerName="OneDrive"
+                onRetry={onRetry}
+                error={{
+                    message: 'Popup was blocked by the browser',
+                    messageKey: 'popupBlocked',
+                }}
+            />,
+        )
+        // The error suppresses the on-mount attempt, so any call below comes
+        // from the click handler.
+        expect(onRetry).not.toHaveBeenCalled()
+
+        fireEvent.click(getByRole('button'))
+
+        expect(onRetry).toHaveBeenCalledTimes(1)
+        expect(dispatching).toBe('click')
     })
 
     it('does NOT auto-trigger sign-in when an error is passed, so the second activation-less window.open that produced the false popup-blocked report never happens', () => {
