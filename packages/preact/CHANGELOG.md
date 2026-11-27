@@ -1,5 +1,13 @@
 # @useupup/preact
 
+## 3.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`b5c627c`](https://github.com/DevinoSolutions/upup/commit/b5c627c210f8bf06f9daf21972bd90a5820ec477), [`4ca57d8`](https://github.com/DevinoSolutions/upup/commit/4ca57d8e02ed5213c62d6529006218645b38a084)]:
+    - @useupup/react@3.4.1
+    - @useupup/core@3.4.1
+
 ## 3.4.0
 
 ### Minor Changes
