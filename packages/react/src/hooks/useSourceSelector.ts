@@ -1,4 +1,4 @@
-import { ChangeEventHandler, useCallback, useMemo } from 'react'
+import { ChangeEventHandler, useCallback, useEffect, useMemo } from 'react'
 import { FileSource } from '@useupup/core'
 import {
     useUploaderFiles,
@@ -7,7 +7,11 @@ import {
     useUploaderRuntime,
     useUploaderSource,
 } from '../context/UploaderContext'
-import { uploadSourceObject } from '../lib/constants'
+import {
+    IDLE_PRELOAD_SOURCES,
+    preloadSource,
+    uploadSourceObject,
+} from '../lib/constants'
 
 type ChosenSource =
     (typeof uploadSourceObject)[keyof typeof uploadSourceObject] & {
@@ -17,13 +21,15 @@ type ChosenSource =
 export default function useSourceSelector(): {
     chosenSources: ChosenSource[]
     handleSourceClick: (sourceId: FileSource) => void
+    /** Pointer/focus on a tile: start fetching that source's view chunk. */
+    handleSourceIntent: (sourceId: FileSource) => void
     handleInputFileChange: ChangeEventHandler<HTMLInputElement>
 } {
     const { core, openFilePicker } = useUploaderRuntime()
     const { setActiveSource } = useUploaderSource()
     const { setFiles } = useUploaderFiles()
     const { translations } = useUploaderI18n()
-    const { sources, onIntegrationClick } = useUploaderOptions()
+    const { sources, onIntegrationClick, mini } = useUploaderOptions()
 
     const chosenSources = useMemo(
         () =>
@@ -35,6 +41,34 @@ export default function useSourceSelector(): {
                 })),
         [sources, translations],
     )
+
+    // Warm the popup-drive chunks once the selector is on screen, after first
+    // paint, so the first tile click mounts the view without suspending and its
+    // sign-in popup opens inside the click. Only configured sources are fetched.
+    useEffect(() => {
+        if (mini) return
+        const wanted = chosenSources
+            .map(item => item.id)
+            .filter(id => IDLE_PRELOAD_SOURCES.includes(id))
+        if (wanted.length === 0) return
+        const run = () => {
+            wanted.forEach(preloadSource)
+        }
+        if (typeof window.requestIdleCallback === 'function') {
+            const handle = window.requestIdleCallback(run, { timeout: 2000 })
+            return () => {
+                window.cancelIdleCallback(handle)
+            }
+        }
+        const handle = window.setTimeout(run, 1)
+        return () => {
+            window.clearTimeout(handle)
+        }
+    }, [chosenSources, mini])
+
+    const handleSourceIntent = useCallback((sourceId: FileSource) => {
+        preloadSource(sourceId)
+    }, [])
 
     const handleSourceClick = useCallback(
         (sourceId: FileSource) => {
@@ -58,6 +92,7 @@ export default function useSourceSelector(): {
     return {
         chosenSources,
         handleSourceClick,
+        handleSourceIntent,
         handleInputFileChange,
     }
 }
