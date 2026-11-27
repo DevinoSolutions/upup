@@ -1,5 +1,12 @@
 # @useupup/angular
 
+## 3.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`4ca57d8`](https://github.com/DevinoSolutions/upup/commit/4ca57d8e02ed5213c62d6529006218645b38a084)]:
+    - @useupup/core@3.4.1
+
 ## 3.4.0
 
 ### Minor Changes
