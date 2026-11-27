@@ -12,6 +12,98 @@ import { scrubFailureMessage } from '@useupup/interactive-example/ai/scrubFailur
 
 const DOCS_AGENT_ID = 'docs-agent'
 
+/**
+ * Limits of the Mastra server's client-input guard
+ * (apps/mastra/src/mastra/middleware/client-input-guard.ts): a chat body with
+ * more than 50 messages, any message (assistant replies included) over 16,000
+ * characters, or a body over 262,144 bytes, is refused with HTTP 400/413. The
+ * docs panel sends only the most recent messages (the UI still shows the whole
+ * thread), clips each to the per-message cap, and drops the oldest until the
+ * body fits a byte budget with headroom, so a long conversation always passes.
+ * It also caps the composer at the per-message limit. Keep the window well
+ * under the server's 50.
+ */
+export const DOCS_CHAT_MAX_MESSAGES = 20
+export const DOCS_CHAT_MAX_MESSAGE_CHARS = 16_000
+export const DOCS_CHAT_MAX_BODY_BYTES = 240 * 1024
+
+type WireMessage = { role: DocsChatMessage['role']; content: string }
+
+/**
+ * The request messages for a turn: error bubbles out (UI-only), each message
+ * clipped to the per-message cap, the last DOCS_CHAT_MAX_MESSAGES kept, then
+ * the oldest dropped until the serialised body fits DOCS_CHAT_MAX_BODY_BYTES
+ * (the newest message always stays), and any leading assistant turns dropped
+ * so the thread starts on a user turn.
+ */
+function buildWireMessages(history: DocsChatMessage[]): WireMessage[] {
+    const wire: WireMessage[] = history
+        .filter(m => !m.error)
+        .map(m => ({
+            role: m.role,
+            content: m.content.slice(0, DOCS_CHAT_MAX_MESSAGE_CHARS),
+        }))
+        .slice(-DOCS_CHAT_MAX_MESSAGES)
+    const encoder = new TextEncoder()
+    const bodyBytes = () =>
+        encoder.encode(JSON.stringify({ messages: wire })).length
+    while (wire.length > 1 && bodyBytes() > DOCS_CHAT_MAX_BODY_BYTES)
+        wire.shift()
+    while (wire.length > 1 && wire[0]!.role === 'assistant') wire.shift()
+    return wire
+}
+
+const GENERIC_FAILURE = 'Something went wrong answering that. Try again.'
+
+/**
+ * True for the 503 body mastra's daily-budget middleware sends
+ * (apps/mastra/src/mastra/middleware/daily-budget.ts: "Daily request budget
+ * reached. ..."). Any other 503 (a proxy, a redeploy) is not the daily limit.
+ */
+function isDailyBudgetBody(body: unknown): boolean {
+    const error = (body as { error?: unknown } | null | undefined)?.error
+    return typeof error === 'string' && error.startsWith('Daily request budget')
+}
+
+/**
+ * What the visitor is told when the server deliberately refuses the request:
+ * 429 is the rate limit, 503 WITH the daily-budget body the daily limit,
+ * 400/413 an over-long message. Fixed copy per status, never the server's
+ * text. Null means "not a refusal we have wording for" and the generic bubble
+ * stays.
+ */
+function refusalMessage(
+    status: number | null,
+    dailyBudget: boolean,
+): string | null {
+    switch (status) {
+        case 429:
+            return 'Too many messages in a short time. Wait a moment, then try again.'
+        case 503:
+            return dailyBudget
+                ? 'The assistant has hit its daily limit. Try again tomorrow.'
+                : null
+        case 400:
+        case 413:
+            return 'That message is too long. Shorten it, or clear the conversation and start a new chat.'
+        default:
+            return null
+    }
+}
+
+/**
+ * Whether a stream refusal ends the turn without a second request to
+ * /generate. Only the deliberate refusals we have wording for (400/413 guard,
+ * 429 rate limit, daily-budget 503) are answers about the REQUEST that
+ * /generate would repeat, so those fail fast. Everything else still falls
+ * back: a network error, any 5xx including a plain 503, an empty stream, an
+ * error chunk, and any other 4xx (a 404 means the stream route is missing on
+ * that server, which is exactly what the /generate fallback is for).
+ */
+function refusedByServer(status: number | null, dailyBudget: boolean): boolean {
+    return refusalMessage(status, dailyBudget) !== null
+}
+
 /** Why a `/generate` attempt produced no answer. */
 type GenerateOutcome =
     | { ok: true }
@@ -151,9 +243,7 @@ export function useDocsChat() {
             // Error bubbles are UI-only — replaying "Something went wrong" to the
             // agent as a real assistant turn degrades every follow-up after a
             // failure, so they're filtered out of the wire payload.
-            const wireMessages = history
-                .filter(m => !m.error)
-                .map(m => ({ role: m.role, content: m.content }))
+            const wireMessages = buildWireMessages(history)
 
             const controller = new AbortController()
             abortRef.current = controller
@@ -165,9 +255,9 @@ export function useDocsChat() {
                     ),
                 )
 
-            const finishError = () =>
+            const finishError = (content = GENERIC_FAILURE) =>
                 setAssistant({
-                    content: 'Something went wrong answering that. Try again.',
+                    content,
                     error: true,
                     streaming: false,
                     steps: settleSteps(steps),
@@ -248,6 +338,11 @@ export function useDocsChat() {
                 // Why the stream path failed, kept so the failure is reported
                 // even when the answer is rescued below.
                 let streamFailure: string | null = null
+                // HTTP status of a refused stream request (null when it was
+                // never refused: network error, or a 200 stream).
+                let streamStatus: number | null = null
+                // True when that refusal was the daily-budget 503.
+                let streamDailyBudget = false
                 // Mastra reports an upstream failure as an `error` chunk inside
                 // an HTTP 200 stream. Whatever text arrived before it is a cut-off
                 // answer, not a finished one, so it must not pass as complete.
@@ -318,6 +413,16 @@ export function useDocsChat() {
                     )
                     if (!res.ok || !res.body)
                         streamFailure = `stream HTTP ${res.status}`
+                    if (!res.ok) {
+                        streamStatus = res.status
+                        if (res.status === 503)
+                            streamDailyBudget = isDailyBudgetBody(
+                                await res
+                                    .clone()
+                                    .json()
+                                    .catch(() => null),
+                            )
+                    }
                     if (res.ok && res.body) {
                         opened = true
                         const reader = res.body.getReader()
@@ -368,8 +473,18 @@ export function useDocsChat() {
                     })
                     if (streamFailure !== null)
                         report('stream-failed', streamFailure)
+                } else if (refusedByServer(streamStatus, streamDailyBudget)) {
+                    // The server refused the request itself (guard, rate
+                    // limit, daily budget): /generate would get the same
+                    // answer, so end the turn with the specific message and
+                    // send nothing more.
+                    finishError(
+                        refusalMessage(streamStatus, streamDailyBudget) ??
+                            GENERIC_FAILURE,
+                    )
+                    report('upstream-error', streamFailure ?? undefined)
                 } else {
-                    // Stream never opened (non-200 / network), opened but
+                    // Stream never opened (network / 5xx), opened but
                     // produced no text, or ended on an error chunk — fall back
                     // to /generate.
                     if (opened && streamFailure === null)

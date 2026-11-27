@@ -77,15 +77,18 @@ describe('UpupCore.addFiles — maxTotalFileSize', () => {
 // addFiles with accept filtering
 // ─────────────────────────────────────────────
 describe('UpupCore.addFiles — mixed valid/invalid in batch', () => {
-    it('rejects entire batch when one file is invalid', async () => {
+    it('keeps the valid file and reports the invalid one when a batch mixes both', async () => {
         const core = new UpupCore({ allowedFileTypes: 'text/plain' })
-        // Adding a mix — behavior depends on implementation
-        await expect(
-            core.addFiles([
-                makeFile('ok.txt', 10, 'text/plain'),
-                makeFile('bad.png', 10, 'image/png'),
-            ]),
-        ).rejects.toThrow()
+        const refused = vi.fn()
+        core.on('restriction-failed', refused)
+
+        await core.addFiles([
+            makeFile('ok.txt', 10, 'text/plain'),
+            makeFile('bad.png', 10, 'image/png'),
+        ])
+
+        expect([...core.files.values()].map(f => f.name)).toEqual(['ok.txt'])
+        expect(refused).toHaveBeenCalledTimes(1)
         core.destroy()
     })
 

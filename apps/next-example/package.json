@@ -1,6 +1,6 @@
 {
     "name": "@useupup/next-example",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "private": true,
     "scripts": {
         "dev": "dotenv -e ../../local-dev/.env.minio -- next dev -p 53070",
@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "@useupup/next": "workspace:*",
-        "next": "16.4.2",
+        "next": "16.4.5",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "zod": "^4.6.6"

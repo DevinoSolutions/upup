@@ -16,13 +16,15 @@ type Options = {
  * EventSource at `${processingEndpoint}?key=${file.key}`. The first message
  * received is parsed as JSON and forwarded to `onFileProcessed`. The
  * connection is closed automatically on message, error, or timeout.
+ *
+ * `onFileProcessed` is read from `options` each time it is needed, never
+ * copied at setup, so a caller can hand in a getter and a handler that arrives
+ * or changes after mount (even while a stream is open) is the one that hears it.
  */
-export function useSSEProcessing({
-    processingEndpoint,
-    onFileProcessed,
-    onError,
-    processingTimeout = 60_000,
-}: Options): { connectSSE: (file: UploadFile) => void } {
+export function useSSEProcessing(options: Options): {
+    connectSSE: (file: UploadFile) => void
+} {
+    const { processingEndpoint, onError, processingTimeout = 60_000 } = options
     const processor = new SSEProcessor()
 
     onUnmounted(() => {
@@ -31,13 +33,13 @@ export function useSSEProcessing({
 
     function connectSSE(file: UploadFile) {
         const key = file.key
-        if (!processingEndpoint || !onFileProcessed || !key) return
+        if (!processingEndpoint || !options.onFileProcessed || !key) return
 
         processor.subscribe(
             key,
             processingEndpoint,
             (data: Record<string, unknown>) => {
-                onFileProcessed(file, data)
+                options.onFileProcessed?.(file, data)
             },
             (error: Error) => onError?.(error),
             processingTimeout,

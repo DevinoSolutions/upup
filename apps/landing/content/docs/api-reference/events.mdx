@@ -88,10 +88,12 @@ between states:
 > **One failed file emits `upload-error` twice.** The per-file emission fires
 > first (with `file`), then the batch rejects and the terminal handler emits a
 > second time (without `file`, carrying an aggregate
-> `UpupUploadBatchError`). Anything bound to `upload-error` — including the
-> `onError` prop — therefore runs **twice** for a single failure. Deduplicate on
-> `file` being present if you only want the per-file signal, and treat the
-> `file`-less emission as "the run is over".
+> `UpupUploadBatchError`). A listener bound to the raw event therefore runs
+> **twice** for a single failure — deduplicate on `file` being present if you
+> only want the per-file signal, and treat the `file`-less emission as "the run
+> is over". The built-in UI's `onError` prop does that for you: it fires once per
+> failed file, and the aggregate summary only reaches it when it carries a
+> failure no per-file emission reported (for example a missing upload target).
 
 > **Vanilla only:** `@useupup/vanilla` also emits `upload-error` when a link
 > import fails, so a URL-fetch failure reaches the same channel as an upload
@@ -104,12 +106,12 @@ between states:
 | -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `files-added`        | `UploadFile[]`          | One or more files pass validation and enter core state (only fires when at least one was accepted).                                                                                                                              |
 | `file-removed`       | `UploadFile`            | A single file is removed via `removeFile(id)`.                                                                                                                                                                                   |
-| `file-rejected`      | `{ count: number }`     | Some of an `addFiles` batch were filtered out — `count` is how many. The accepted remainder still lands.                                                                                                                         |
+| `file-rejected`      | `{ count: number }`     | Some of an `addFiles` batch were dropped silently (an `onBeforeFileAdded` veto or a content duplicate) — `count` is how many. Refused files report through `restriction-failed` instead. The accepted remainder still lands.                                                                                                                         |
 | `file-replaced`      | `{ file: UploadFile }`  | A file's content is swapped in place, keeping its id (the image editor's save path).                                                                                                                                             |
 | `files-cleared`      | `{}`                    | `removeAll()` empties the list and clears any crash-recovery snapshot.                                                                                                                                                           |
 | `files-set`          | `{ count: number }`     | `setFiles()` replaces the whole selection; `count` is the resulting size.                                                                                                                                                        |
 | `files-reordered`    | `{ fileIds: string[] }` | `reorderFiles()` changes the display order; `fileIds` is the new order.                                                                                                                                                          |
-| `restriction-failed` | `{ error: unknown }`    | `addFiles()` throws instead of filtering — a hard validation failure (type, size, count). The error is rethrown to the caller. Nothing in upup subscribes to this event; the built-in UI reacts by catching the rethrow instead. |
+| `restriction-failed` | `{ error: unknown }`    | A file was refused by `addFiles()` or `setFiles()` — one emission per refused file, carrying an `UpupValidationError` whose `reason` and `file` say why and which. Ordinary errors (a throwing `onBeforeFileAdded`, a call after `destroy()`) never emit it. The acceptable files of the same batch still land; only when **every** file is refused does the call also reject, with the first refusal, after the event. |
 
 ## Plugins and options
 
@@ -231,7 +233,7 @@ guarantees, or a listener outside the component.
 | `onFilesDragLeave`      | `(files: File[]) => void`                                                                                   | `drag-leave` — `files` is effectively always `[]` (see below)                                                                              |
 | `onFilesDrop`           | `(files: File[]) => void`                                                                                   | `drop` (called just before the event)                                                                                                      |
 | `onFileTypeMismatch`    | `(file: File, acceptedTypes: string) => void`                                                               | No event — the built-in UI's rejection path only (see below)                                                                               |
-| `onRestrictionFailed`   | `(file: File, reason: 'TYPE_MISMATCH' \| 'FILE_TOO_LARGE' \| 'FILE_TOO_SMALL' \| 'LIMIT_EXCEEDED') => void` | No event — the built-in UI's rejection path only (see below)                                                                               |
+| `onRestrictionFailed`   | `(file: File, reason: 'TYPE_MISMATCH' \| 'FILE_TOO_LARGE' \| 'FILE_TOO_SMALL' \| 'LIMIT_EXCEEDED' \| 'TOTAL_SIZE_EXCEEDED') => void` | Fed from the built-in UI's file picks, once per refused file (see below)                                                                   |
 | `onBeforeFileAdded`     | `(file: File) => boolean \| File \| undefined \| Promise<boolean \| File \| undefined>`                     | No event — an async filter run per file before it is added. Return `false` to reject, a `File` to substitute, `true`/`undefined` to accept |
 | `onError`               | `(errorMessage: string) => void`                                                                            | `upload-error`, plus validation failures from `addFiles()`; delivers a message string                                                      |
 | `onWarn`                | `(warningMessage: string) => void`                                                                          | No event of its own — non-fatal notices such as an ignored folder drop (which also emits `folder-drop-blocked`)                            |
@@ -242,17 +244,18 @@ guarantees, or a listener outside the component.
 
 ### Caveats worth knowing
 
-**The rejection callbacks are UI-path only, and the reason is guessed from text.**
-`onFileTypeMismatch` and `onRestrictionFailed` are _not_ wired to
-`restriction-failed`. The built-in UI wraps its `addFiles` call in a try/catch
-and classifies the thrown error by substring-matching its **message** —
-`'type'`, `'limit'`, `'below'`, `'size'` — to pick the reason code. Two
-consequences: calling `core.addFiles()` yourself emits `restriction-failed` but
-invokes neither callback, and the reason code is a heuristic over
-human-readable text rather than a structured field. For robust handling,
-subscribe to `restriction-failed` and inspect the error yourself. Both callbacks
-fire for a type mismatch; `onRestrictionFailed` alone covers the size and count
-cases.
+**The rejection callbacks are UI-path only, but the reason is structured.**
+`onFileTypeMismatch` and `onRestrictionFailed` fire for files picked, dropped or
+pasted through the built-in UI, once per refused file: `onError` gets that file's
+message, `onRestrictionFailed` gets the file and the `UpupValidationError.reason`
+core attached to it, and `onFileTypeMismatch` fires as well for a type mismatch.
+The reason is never inferred from the message text. Calling `core.addFiles()`
+yourself invokes neither callback — subscribe to `restriction-failed` and read
+`error.reason` and `error.file` instead. A mixed drop (say a `.zip`, an `.exe`
+and a valid `.png`) queues the `.png` and reports the other two separately. The count
+limit and `maxTotalFileSize` still judge the acceptable remainder as a unit: if
+those files together would break either, they are refused together with one
+error, naming the first of them.
 
 **Drag callbacks never receive files.** `onFilesDragOver` and `onFilesDragLeave`
 are handed `e.dataTransfer.files`, which browsers keep empty during a drag

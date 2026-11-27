@@ -54,6 +54,53 @@ export type {
     UploadOptions,
 } from './options/types'
 
+/** Per-call observers for `UpupCore.addFiles` and `UpupCore.setFiles`. */
+export interface AddFilesHooks {
+    /** Called once for each refused file, in the order they were found. A
+     *  throw never rejects the add (files may already be committed) and never
+     *  starves the remaining refusals: it is reported through `reportError`
+     *  (reaching `window.onerror` / error reporters) in a browser or worker
+     *  scope, else `console.error`, in every environment. */
+    onRefused?: ((error: UpupValidationError) => void) | undefined
+}
+
+/** `reportError` exists in browsers and workers, where it reaches
+ *  `window.onerror` / error reporters. Deno and Bun also expose it but may
+ *  treat the resulting unhandled error event as fatal, so it is only trusted
+ *  in a browser or worker scope. */
+function canReportError(): boolean {
+    const scope = globalThis as {
+        window?: unknown
+        WorkerGlobalScope?: unknown
+        reportError?: unknown
+    }
+    return (
+        typeof scope.reportError === 'function' &&
+        (typeof scope.window !== 'undefined' ||
+            typeof scope.WorkerGlobalScope !== 'undefined')
+    )
+}
+
+/** A throwing host hook must not fail the add that already succeeded, but its
+ *  bug must not vanish in production either. In a browser or worker scope it
+ *  goes through `reportError` (no unwinding of the add); elsewhere (Node, SSR,
+ *  Deno, Bun), or if `reportError` itself throws, it falls back to
+ *  `console.error` — never an uncaught rethrow, which would be an
+ *  uncaughtException there. Neither path may throw out of this function. */
+function surfaceRefusalHookFailure(err: unknown): void {
+    if (canReportError()) {
+        try {
+            globalThis.reportError(err)
+            return
+        } catch {
+            // upup-catch: reportError is the reporter of last resort; fall
+            // through to console.error so the add and the remaining refusals
+            // are never affected.
+        }
+    }
+    console.error('[upup] a refusal hook threw', err)
+}
+
 export class UpupCore {
     private emitter = new EventEmitter<CoreEvents>()
     private pluginManager = new PluginManager()
@@ -329,50 +376,80 @@ export class UpupCore {
         return file
     }
 
+    /**
+     * Add files to the selection. Every file is judged on its own: the
+     * acceptable ones join, and each refused one is reported through its own
+     * `restriction-failed` event (an `UpupValidationError` carrying the file
+     * and the reason). A batch with at least one acceptable file resolves; a
+     * batch where EVERY file was refused rejects with the first refusal, after
+     * its event, so a direct `await core.addFiles(...)` caller can narrow on it.
+     * `hooks.onRefused` sees the same refusals scoped to THIS call.
+     */
     async addFiles(
         files: File[],
         overrides?: Partial<UploadOptions>,
+        hooks?: AddFilesHooks,
     ): Promise<void> {
         if (this.destroyed)
             throw new UpupError(
                 'UpupCore: addFiles() after destroy()',
                 UpupErrorCode.BAD_REQUEST,
             )
-        try {
-            const added = await this.fileManager.addFiles(files)
-            if (added.length > 0) {
-                if (overrides) {
-                    for (const file of added) {
-                        this.fileOverrides.set(file.id, overrides)
-                    }
-                }
-                this.emitter.emit('files-added', added)
-                // Continue-after-upload (F-810): once a run reached a terminal
-                // status, adding fresh still-pending files must return the run
-                // to IDLE so the upload CTA reappears. The already-completed
-                // files keep their SUCCESSFUL status/key — the next upload()
-                // only re-sends the pending ones (see runUpload).
-                const wasTerminal =
-                    this._status === UploadStatus.SUCCESSFUL ||
-                    this._status === UploadStatus.FAILED
-                if (wasTerminal && added.some(f => f.key == null)) {
-                    this._status = UploadStatus.IDLE
-                    this._error = null
-                    this.emitter.emit('state-change', {
-                        files: this.files,
-                        status: this._status,
-                    })
-                } else {
-                    this.emitter.emit('state-change', { files: this.files })
+        const { accepted: added, refused } =
+            await this.fileManager.admitFiles(files)
+        if (added.length > 0) {
+            if (overrides) {
+                for (const file of added) {
+                    this.fileOverrides.set(file.id, overrides)
                 }
             }
-            const rejectedCount = files.length - added.length
-            if (rejectedCount > 0) {
-                this.emitter.emit('file-rejected', { count: rejectedCount })
+            this.emitter.emit('files-added', added)
+            // Continue-after-upload (F-810): once a run reached a terminal
+            // status, adding fresh still-pending files must return the run
+            // to IDLE so the upload CTA reappears. The already-completed
+            // files keep their SUCCESSFUL status/key — the next upload()
+            // only re-sends the pending ones (see runUpload).
+            const wasTerminal =
+                this._status === UploadStatus.SUCCESSFUL ||
+                this._status === UploadStatus.FAILED
+            if (wasTerminal && added.some(f => f.key == null)) {
+                this._status = UploadStatus.IDLE
+                this._error = null
+                this.emitter.emit('state-change', {
+                    files: this.files,
+                    status: this._status,
+                })
+            } else {
+                this.emitter.emit('state-change', { files: this.files })
             }
-        } catch (error) {
+        }
+        this.reportRefusals(refused, hooks)
+        // Silently dropped (onBeforeFileAdded -> false, content duplicate):
+        // not refusals, so they keep the aggregate count only.
+        const droppedCount = files.length - added.length - refused.length
+        if (droppedCount > 0) {
+            this.emitter.emit('file-rejected', { count: droppedCount })
+        }
+        const [first] = refused
+        if (first && added.length === 0) throw first
+    }
+
+    /** One `restriction-failed` per refused file — refusals only, never an
+     *  ordinary error — plus the caller's per-call hook. */
+    private reportRefusals(
+        refused: UpupValidationError[],
+        hooks?: AddFilesHooks,
+    ): void {
+        for (const error of refused) {
             this.emitter.emit('restriction-failed', { error })
-            throw error
+            try {
+                hooks?.onRefused?.(error)
+            } catch (hookError) {
+                // upup-catch: the hook is host code and runs AFTER the accepted
+                // files were committed — a throw must neither reject the add
+                // nor starve the remaining refusals of their report.
+                surfaceRefusalHookFailure(hookError)
+            }
         }
     }
 
@@ -440,13 +517,21 @@ export class UpupCore {
         this.emitter.emit('files-cleared', {})
     }
 
-    async setFiles(files: File[]): Promise<void> {
+    /**
+     * Replace the selection. Refusals are judged and reported exactly like
+     * `addFiles` (including `hooks.onRefused`); when EVERY file is refused the
+     * current selection is kept and the first refusal rejects.
+     */
+    async setFiles(files: File[], hooks?: AddFilesHooks): Promise<void> {
         if (this.destroyed)
             throw new UpupError(
                 'UpupCore: setFiles() after destroy()',
                 UpupErrorCode.BAD_REQUEST,
             )
-        await this.fileManager.setFiles(files)
+        const { accepted, refused } = await this.fileManager.admitFileSet(files)
+        this.reportRefusals(refused, hooks)
+        const [first] = refused
+        if (first && accepted.length === 0) throw first
         this.clearCrashRecoveryIfEmpty()
         this.emitter.emit('state-change', { files: this.files })
         this.emitter.emit('files-set', { count: this.files.size })
@@ -462,7 +547,12 @@ export class UpupCore {
             'thumbnailGenerator',
             'checksumVerification',
         ] as const
-        const pipelineFlagChanged = PIPELINE_FLAGS.some(k => k in partial)
+        // Compare values, not presence: framework packages pass the whole
+        // options object on every re-render, so a flag being present in the
+        // partial says nothing about whether it changed.
+        const pipelineFlagChanged = PIPELINE_FLAGS.some(
+            k => k in partial && partial[k] !== this.options[k],
+        )
         Object.assign(this.options, partial)
 
         this.fileManager.updateOptions(this.fileManagerOptions())
@@ -690,13 +780,18 @@ export class UpupCore {
                 }
             }
 
-            if (this.pipelineEngine) {
+            // This run keeps the engine it starts with. updateOptions() can
+            // clear `this.pipelineEngine` during the awaits below (a pipeline
+            // flag changed), and reading the field again after them crashed
+            // the run on null.
+            const engine = this.pipelineEngine
+            if (engine) {
                 const translator = createTranslator({
                     bundle: resolveLocaleBundle(this.options.locale) ?? enUS,
                     fallback: enUS,
                 })
                 const provider = await this.maybeCreateWorkerProvider(
-                    this.pipelineEngine.stepCount,
+                    engine.stepCount,
                 )
                 this.workerProvider = provider
                 try {
@@ -724,7 +819,7 @@ export class UpupCore {
                     // Only process files that still need uploading — re-running
                     // upload() after a partial/complete run must not re-process
                     // (or below, re-PUT) files that already succeeded (F-810).
-                    const processed = await this.pipelineEngine.processAll(
+                    const processed = await engine.processAll(
                         [...this.files.values()].filter(f => f.key == null),
                         context,
                     )
@@ -880,6 +975,19 @@ export class UpupCore {
                 this._status = allComplete
                     ? UploadStatus.SUCCESSFUL
                     : UploadStatus.IDLE
+                // A run that finishes here is as complete as one that
+                // finishes in runUpload or runRetry, and consumers learn a
+                // run is over (and read the keys) from upload-all-complete.
+                // Without it an upload resumed after an offline drop or a
+                // pause stored its bytes and reported nothing.
+                if (allComplete) {
+                    this.emitter.emit('upload-all-complete', [
+                        ...this.files.values(),
+                    ])
+                    this.queueCrashRecoveryClear().catch(
+                        this.warnCrashRecoveryFailure('clear'),
+                    )
+                }
                 this.emitter.emit('state-change', { status: this._status })
             })
                 .catch((err: unknown) => {

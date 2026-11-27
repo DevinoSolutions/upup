@@ -182,6 +182,21 @@ const nextConfig = {
                 // turn a capture POST into a dropped event). Unrenamed paths take
                 // the catch-alls last; PostHog's REST paths all end in a slash,
                 // so the `/api/` one restores it.
+                // Versioned asset paths. posthog-js >= 1.43x defaults
+                // `strict_script_versioning` to "fallback": a lazy script (the
+                // session recorder, surveys, ...) is first requested at
+                // `/static/<version>/<name>.js`, which the PostHog instance does
+                // not serve (it 302s to its login page, so the browser logs a 404
+                // and then retries the unversioned `/static/<name>.js?v=<version>`).
+                // Dropping the version segment serves the same file the fallback
+                // loads, in one request and with no console error. A pattern, not a
+                // pinned version, so it survives posthog-js bumps; the group is
+                // unnamed so Next does not append it to the upstream query.
+                // Before the generic `/a/` rule below, which would keep it.
+                {
+                    source: `${TELEMETRY_PATH}/a/(\\d+\\.\\d+\\.\\d+[^/]*)/:path+`,
+                    destination: `${POSTHOG_PROXY_TARGET}/static/:path+`,
+                },
                 ...TELEMETRY_ROUTES.flatMap(([posthogPrefix, opaquePrefix]) => [
                     {
                         source: `${TELEMETRY_PATH}${opaquePrefix.slice(0, -1)}`,

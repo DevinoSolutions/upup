@@ -16,6 +16,9 @@ import {
     UploadStatus,
     FileSource,
     UpupCore,
+    UpupErrorCode,
+    UpupValidationError,
+    type RestrictionFailedReason,
     GoogleDrivePlugin,
 } from '@useupup/core'
 import { UpupStore } from './upup-store.service'
@@ -517,84 +520,113 @@ describe('UpupStore', () => {
         })
     })
 
-    // ── Restriction ladder ───────────────────────────────────────
-    // Locks each branch of handleSetSelectedFiles. The method awaits
-    // this.upload.addFiles(); we reject it with messages containing the
-    // trigger substrings and assert the keyword heuristic maps to the
-    // correct reason. The 'below'-before-'size' test guards branch ORDER.
+    // ── Restriction reasons ──────────────────────────────────────
+    // handleSetSelectedFiles hands the structured reason of each refusal
+    // (UpupValidationError.reason) to onRestrictionFailed — it never guesses a
+    // reason by substring-matching the message text (T-15015).
 
-    describe('restriction ladder', () => {
+    describe('restriction reasons', () => {
         const txt = () => new File([], 'x.txt', { type: 'text/plain' })
+        // A message crammed with every old trigger word proves the reason is
+        // read from the error, not from the text.
+        const refusal = (reason: UpupErrorCode, file: File) =>
+            new UpupValidationError(
+                'type limit below size',
+                reason as RestrictionFailedReason,
+                file,
+            )
 
-        it('type error → TYPE_MISMATCH + onFileTypeMismatch', async () => {
-            const onRestrictionFailed = vi.fn()
+        it.each([
+            UpupErrorCode.TYPE_MISMATCH,
+            UpupErrorCode.FILE_TOO_LARGE,
+            UpupErrorCode.FILE_TOO_SMALL,
+            UpupErrorCode.LIMIT_EXCEEDED,
+            UpupErrorCode.TOTAL_SIZE_EXCEEDED,
+        ])(
+            'a %s refusal reaches onRestrictionFailed as that reason',
+            async reason => {
+                const onRestrictionFailed = vi.fn()
+                const onError = vi.fn()
+                const s = new UpupStore()
+                s.setConfig({ onRestrictionFailed, onError })
+                s.init()
+                const file = txt()
+                vi.spyOn(s.core, 'addFiles').mockRejectedValue(
+                    refusal(reason, file),
+                )
+                await s.handleSetSelectedFiles([file])
+                expect(onRestrictionFailed).toHaveBeenCalledTimes(1)
+                expect(onRestrictionFailed).toHaveBeenCalledWith(file, reason)
+                expect(onError).toHaveBeenCalledTimes(1)
+                s.destroy()
+            },
+        )
+
+        it('a type refusal also calls onFileTypeMismatch; other reasons do not', async () => {
             const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
+            s.setConfig({ onFileTypeMismatch, allowedFileTypes: 'image/*' })
             s.init()
-            vi.spyOn(s.core, 'addFiles').mockRejectedValue(
-                new Error('File type not allowed'),
+            const file = txt()
+            const addFiles = vi.spyOn(s.core, 'addFiles')
+            addFiles.mockRejectedValueOnce(
+                refusal(UpupErrorCode.TYPE_MISMATCH, file),
             )
-            await s.handleSetSelectedFiles([txt()])
-            expect(onFileTypeMismatch).toHaveBeenCalled()
-            expect(onRestrictionFailed).toHaveBeenCalledWith(
-                expect.any(File),
-                'TYPE_MISMATCH',
-            )
-            s.destroy()
-        })
+            await s.handleSetSelectedFiles([file])
+            expect(onFileTypeMismatch).toHaveBeenCalledWith(file, 'image/*')
 
-        it('limit error → LIMIT_EXCEEDED (no onFileTypeMismatch)', async () => {
-            const onRestrictionFailed = vi.fn()
-            const onFileTypeMismatch = vi.fn()
-            const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
-            s.init()
-            vi.spyOn(s.core, 'addFiles').mockRejectedValue(
-                new Error('Number of files exceeds limit'),
+            onFileTypeMismatch.mockClear()
+            addFiles.mockRejectedValueOnce(
+                refusal(UpupErrorCode.FILE_TOO_LARGE, file),
             )
-            await s.handleSetSelectedFiles([txt()])
-            expect(onRestrictionFailed).toHaveBeenCalledWith(
-                expect.any(File),
-                'LIMIT_EXCEEDED',
-            )
+            await s.handleSetSelectedFiles([file])
             expect(onFileTypeMismatch).not.toHaveBeenCalled()
             s.destroy()
         })
 
-        it("below error → FILE_TOO_SMALL (branch order: 'below' before 'size')", async () => {
+        it('an ordinary failure goes to onError only, never to a guessed reason', async () => {
             const onRestrictionFailed = vi.fn()
-            const onFileTypeMismatch = vi.fn()
+            const onError = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
+            s.setConfig({ onRestrictionFailed, onError })
             s.init()
             vi.spyOn(s.core, 'addFiles').mockRejectedValue(
-                new Error('File is below the minimum size'),
+                new Error('type limit below size'),
             )
             await s.handleSetSelectedFiles([txt()])
-            expect(onRestrictionFailed).toHaveBeenCalledWith(
-                expect.any(File),
-                'FILE_TOO_SMALL',
-            )
-            expect(onFileTypeMismatch).not.toHaveBeenCalled()
+            expect(onError).toHaveBeenCalledWith('type limit below size')
+            expect(onRestrictionFailed).not.toHaveBeenCalled()
             s.destroy()
         })
 
-        it('size error → FILE_TOO_LARGE (no onFileTypeMismatch)', async () => {
+        it('a mixed drop queues the png and reports the zip and the exe once each', async () => {
+            const onError = vi.fn()
             const onRestrictionFailed = vi.fn()
-            const onFileTypeMismatch = vi.fn()
             const s = new UpupStore()
-            s.setConfig({ onRestrictionFailed, onFileTypeMismatch })
+            s.setConfig({
+                allowedFileTypes: 'image/*',
+                onError,
+                onRestrictionFailed,
+            })
             s.init()
-            vi.spyOn(s.core, 'addFiles').mockRejectedValue(
-                new Error('File exceeds the maximum size'),
-            )
-            await s.handleSetSelectedFiles([txt()])
-            expect(onRestrictionFailed).toHaveBeenCalledWith(
-                expect.any(File),
-                'FILE_TOO_LARGE',
-            )
-            expect(onFileTypeMismatch).not.toHaveBeenCalled()
+            const zip = new File(['x'], 'bundle.zip', {
+                type: 'application/zip',
+            })
+            const exe = new File(['x'], 'setup.exe', {
+                type: 'application/x-msdownload',
+            })
+            const png = new File(['x'], 'photo.png', { type: 'image/png' })
+
+            await s.handleSetSelectedFiles([zip, exe, png])
+
+            expect([...s.core.files.values()].map(f => f.name)).toEqual([
+                'photo.png',
+            ])
+            expect(onError).toHaveBeenCalledTimes(2)
+            expect(onRestrictionFailed.mock.calls).toEqual([
+                [zip, 'TYPE_MISMATCH'],
+                [exe, 'TYPE_MISMATCH'],
+            ])
             s.destroy()
         })
     })

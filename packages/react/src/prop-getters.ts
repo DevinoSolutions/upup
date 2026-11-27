@@ -37,9 +37,10 @@ function composeEventHandlers<E>(
 /**
  * Detach a fire-and-forget promise from the unhandled-rejection channel (#342).
  *
- * `core.addFiles()` emits `restriction-failed` and THEN rethrows — the rethrow
- * is deliberate, so a direct `await core.addFiles()` caller can narrow on the
- * error. But a DOM callback has nobody to rethrow to, so an ordinary restriction
+ * `core.addFiles()` emits `restriction-failed` per refused file and, when EVERY
+ * file in the batch was refused, THEN rethrows — the rethrow is deliberate, so a
+ * direct `await core.addFiles()` caller can narrow on the error. But a DOM
+ * callback has nobody to rethrow to, so an ordinary restriction
  * failure (wrong type, too large, over the limit) used to surface a second time
  * as an unhandled rejection and pollute error reporting. Dropping it here loses
  * nothing: the event bus already carried the identical error before the throw.

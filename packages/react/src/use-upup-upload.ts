@@ -138,7 +138,7 @@ export function useUpupUpload(
             //
             // The .catch honors DragDropDeps.setFiles' void contract (#342):
             // the controller fires this drop/paste path without awaiting, and
-            // core.addFiles rethrows restriction failures AFTER emitting
+            // core.addFiles rethrows an all-refused batch AFTER emitting
             // `restriction-failed`. Every other framework satisfies the same
             // contract via handleSetSelectedFiles, which try/catches; this
             // headless dep is the one that reached core.addFiles bare.

@@ -1,7 +1,9 @@
 name: Nightly
 
+# Workflow-wide: read-only. id-token: write is granted ONLY to the jobs that
+# upload to Devino MinIO (see their own permissions blocks): the MinIO policy
+# is org-wide, so no other job may be able to mint an OIDC token.
 permissions:
-    id-token: write
     contents: read
 
 # Deep suites too slow or too external for every PR: the full e2e gate plus
@@ -38,6 +40,12 @@ jobs:
         name: Full E2E + a11y sweep (Playwright + MinIO)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -133,12 +141,13 @@ jobs:
             # Visual layer: same capture set as e2e.yml (parity mount/populated
             # states x6 frameworks, real-upload success x6, deep-react product
             # states) — nightly's copy is the unrouted full-breadth run and the
-            # future snapvisor.io baseline feed. Failure-only, like e2e.yml: the
-            # org artifact quota was exhausted in October 2026 and a blocked
-            # upload fails its step.
+            # future snapvisor.io baseline feed. Failure-only, like e2e.yml, and
+            # stored on Devino MinIO (DevinoSolutions/artifact/upload) rather
+            # than GitHub artifacts: that storage is blocked until the org's
+            # billing cycle resets.
             - name: Upload visual product-state screenshots
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-visual-screenshots
                   path: apps/e2e-test/screenshots/
@@ -146,8 +155,8 @@ jobs:
                   retention-days: 1
 
             - name: Upload Playwright traces and reports
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-playwright-artifacts
                   path: |
@@ -399,6 +408,12 @@ jobs:
         name: Lighthouse (landing SEO + Best Practices + mobile perf ratchet)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -463,8 +478,8 @@ jobs:
                   } >> "$GITHUB_STEP_SUMMARY" || true
 
             - name: Upload Lighthouse reports
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: nightly-lighthouse-reports
                   path: |
@@ -481,6 +496,12 @@ jobs:
         name: Landing feedback e2e + PostHog ingestion (capture token; explicit skip without it)
         runs-on: ubuntu-latest
         timeout-minutes: 45
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -581,8 +602,8 @@ jobs:
               run: pnpm run e2e:landing
 
             - name: Upload Playwright report
-              if: failure() && steps.creds.outputs.present == 'true'
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && steps.creds.outputs.present == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: landing-feedback-playwright-artifacts
                   path: |
@@ -600,6 +621,12 @@ jobs:
         name: Live drive sign-in checks (useupup.com)
         runs-on: ubuntu-latest
         timeout-minutes: 20
+        # id-token:write mints the OIDC token the Devino artifact upload
+        # authenticates with. Job-level permissions REPLACE the workflow's,
+        # so contents:read is restated.
+        permissions:
+            id-token: write
+            contents: read
         steps:
             - name: Checkout the repository
               uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -628,8 +655,8 @@ jobs:
               run: pnpm --filter @useupup/e2e-test test:e2e:live
 
             - name: Upload Playwright report
-              if: failure()
-              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              if: failure() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+              uses: DevinoSolutions/artifact/upload@67676f30bcd9a876562aafa007f19c2eb2fe148d # v1.2.2
               with:
                   name: live-drive-login-playwright-artifacts
                   path: |

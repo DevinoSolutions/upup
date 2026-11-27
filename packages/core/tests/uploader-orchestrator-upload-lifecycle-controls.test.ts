@@ -72,7 +72,11 @@ describe('UploaderOrchestrator', () => {
             vi.mocked(core.addFiles).mockResolvedValue(undefined)
             const prepared = [new File(['prepared'], 'prepared.txt')]
             const onPrepareFiles = vi.fn().mockResolvedValue(prepared)
-            const orch = new UploaderOrchestrator(core, { onPrepareFiles })
+            const onFileRefused = vi.fn()
+            const orch = new UploaderOrchestrator(core, {
+                onPrepareFiles,
+                onFileRefused,
+            })
             setOrchState(orch, {
                 files: new Map([
                     ['f1', createUploadFile({ name: 'a.txt', id: 'f1' })],
@@ -83,7 +87,10 @@ describe('UploaderOrchestrator', () => {
 
             expect(onPrepareFiles).toHaveBeenCalledTimes(1)
             expect(core.removeAll).toHaveBeenCalled()
-            expect(core.addFiles).toHaveBeenCalledWith(prepared)
+            // The re-add hands its per-file refusals to the host's reporter.
+            expect(core.addFiles).toHaveBeenCalledWith(prepared, undefined, {
+                onRefused: onFileRefused,
+            })
         })
 
         it('does not replace files if onPrepareFiles returns same array', async () => {

@@ -22,6 +22,7 @@
     },
     "devDependencies": {
         "@hono/node-server": "^1.19.15",
+        "@mastra/deployer": "1.75.0",
         "@types/node": "^20.11.0",
         "@useupup/core": "workspace:*",
         "mastra": "^1.18.1",

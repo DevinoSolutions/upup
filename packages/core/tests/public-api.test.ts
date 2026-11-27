@@ -16,10 +16,11 @@ import type * as coreInternal from '@useupup/core/internal'
 
 // Positive: every KEEP-public type is reachable from '@useupup/core'. One line
 // per symbol in the reviewed audit/tmp/p18-sets.json `keepPublic.types` set
-// (74 symbols) -- if a future edit accidentally drops one from the barrel,
+// (75 symbols) -- if a future edit accidentally drops one from the barrel,
 // this fails to compile (per the manual-tsc caveat above).
 // eslint-disable @typescript-eslint/no-unused-vars
 type _Check_AcceptPreset = core.AcceptPreset
+type _Check_AddFilesHooks = core.AddFilesHooks
 type _Check_AcceptPresetDefinition = core.AcceptPresetDefinition
 type _Check_BoxConfig = core.BoxConfig
 type _Check_CloudDrivesConfig = core.CloudDrivesConfig
