@@ -1,6 +1,5 @@
 import type { Translations } from '@useupup/core'
 import { FileSource } from '@useupup/core'
-import { lazy } from 'react'
 import {
     AudioIcon,
     BoxIcon,
@@ -13,18 +12,27 @@ import {
     ScreenCaptureIcon,
 } from '../components/Icons'
 import UrlUploader from '../components/UrlUploader'
+import { preloadableLazy } from './preloadable-lazy'
 
 export { sourceNameKeys } from '@useupup/core/internal'
 
-const AudioUploader = lazy(() => import('../components/AudioUploader'))
-const BoxUploader = lazy(() => import('../components/BoxUploader'))
-const CameraUploader = lazy(() => import('../components/CameraUploader'))
-const DropboxUploader = lazy(() => import('../components/DropboxUploader'))
-const GoogleDriveUploader = lazy(
+const AudioUploader = preloadableLazy(
+    () => import('../components/AudioUploader'),
+)
+const BoxUploader = preloadableLazy(() => import('../components/BoxUploader'))
+const CameraUploader = preloadableLazy(
+    () => import('../components/CameraUploader'),
+)
+const DropboxUploader = preloadableLazy(
+    () => import('../components/DropboxUploader'),
+)
+const GoogleDriveUploader = preloadableLazy(
     () => import('../components/GoogleDriveUploader'),
 )
-const OneDriveUploader = lazy(() => import('../components/OneDriveUploader'))
-const ScreenCaptureUploader = lazy(
+const OneDriveUploader = preloadableLazy(
+    () => import('../components/OneDriveUploader'),
+)
+const ScreenCaptureUploader = preloadableLazy(
     () => import('../components/ScreenCaptureUploader'),
 )
 
@@ -83,4 +91,29 @@ export const uploadSourceObject = {
         Icon: ScreenCaptureIcon,
         Component: ScreenCaptureUploader,
     },
+}
+
+/**
+ * Sources whose sign-in opens a popup straight from the view's mount effect, so
+ * the first click has to mount the view without suspending (a popup opened in a
+ * later task is refused by strict blockers). Their chunks are warmed as soon as
+ * the source selector is on screen; the other lazy sources only on pointer or
+ * focus intent, to keep idle bandwidth for sources the person may never open.
+ */
+export const IDLE_PRELOAD_SOURCES: readonly FileSource[] = [
+    FileSource.ONE_DRIVE,
+    FileSource.DROPBOX,
+    FileSource.BOX,
+]
+
+/** Start fetching a source's view chunk. A no-op for sources that ship in the main entry. */
+export function preloadSource(id: FileSource): void {
+    const Component: unknown = uploadSourceObject[id].Component
+    if (
+        typeof Component === 'function' &&
+        'preload' in Component &&
+        typeof Component.preload === 'function'
+    ) {
+        void (Component.preload as () => Promise<void>)()
+    }
 }

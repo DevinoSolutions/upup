@@ -59,8 +59,12 @@ export default function SourceSelector(): React.ReactElement | null {
     const showFilesLimit = limit > 1
     const showSizeLimit = !!(maxFileSize?.size && maxFileSize?.unit)
     const hasLimitsCaption = !!typeConstraint || showFilesLimit || showSizeLimit
-    const { chosenSources, handleSourceClick, handleInputFileChange } =
-        useSourceSelector()
+    const {
+        chosenSources,
+        handleSourceClick,
+        handleSourceIntent,
+        handleInputFileChange,
+    } = useSourceSelector()
     const compact = chosenSources.length > COMPACT_SOURCE_THRESHOLD
 
     const handleBrowseFilesClick = useCallback(() => {
@@ -244,6 +248,12 @@ export default function SourceSelector(): React.ReactElement | null {
                                         : 'upup-fx-hover-lift upup-fx-press upup-fx-icon-nudge upup-group upup-flex upup-w-[66px] upup-cursor-pointer upup-flex-col upup-items-center upup-gap-[9px] upup-rounded-[14px] focus-visible:upup-outline-none focus-visible:upup-ring-2 focus-visible:upup-ring-[#38bdf8] hover:upup-shadow-none',
                                     slotClasses.sourceButton,
                                 )}
+                                onPointerEnter={() => {
+                                    handleSourceIntent(id)
+                                }}
+                                onFocus={() => {
+                                    handleSourceIntent(id)
+                                }}
                                 onClick={() => {
                                     handleSourceClick(id)
                                 }}
