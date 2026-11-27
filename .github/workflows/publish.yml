@@ -109,9 +109,19 @@ jobs:
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
               run: pnpm run typecheck
 
-            - name: Unit suites (all packages)
+            # Same two passes as main.yml, so the gate runs the suites the way the
+            # PR that produced this commit proved them. One `pnpm run test` starts
+            # all 24 workspace suites at once; on a hosted runner the app suites
+            # then starve past vitest's 5 s per-test timeout (3.4.0's release run
+            # failed three times, on a different test each time). The filter list
+            # must stay the nine publishable packages, as in main.yml.
+            - name: Unit suites + coverage floors (9 publishable packages)
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
-              run: pnpm run test
+              run: pnpm run test:coverage
+
+            - name: Unit suites (private packages and apps)
+              if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
+              run: pnpm exec turbo run test --continue --filter='!@useupup/core' --filter='!@useupup/server' --filter='!@useupup/react' --filter='!@useupup/vue' --filter='!@useupup/svelte' --filter='!@useupup/vanilla' --filter='!@useupup/angular' --filter='!@useupup/preact' --filter='!@useupup/next'
 
             - name: Build (turbo)
               if: github.ref == 'refs/heads/master' && steps.changesets.outputs.hasChangesets == 'false' && steps.package_meta.outputs.any_needs_publish == 'true'
