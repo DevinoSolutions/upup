@@ -634,7 +634,10 @@ DrivePlugin`. All three popup providers now persist a token-expiry key and refre
   nine publishable packages' suites with their per-package v8 **anti-regression
   ratchets**, then a `turbo run test --filter='!…'` step runs the remaining
   private package/app suites (it excludes the nine by name — a NEW publishable
-  package must be added to both that filter and `test:coverage`). The old
+  package must be added to both that filter and `test:coverage`, and to the
+  same filter in `publish.yml`, whose pre-publish gate runs the same two
+  steps: one `pnpm run test` there started all 24 suites at once and timed
+  app tests out on the release runner, 2026-11-27). The old
   separate `pnpm run test` step ran the nine twice. Ratchets — NOT a uniform bar: each
   threshold is hand-tuned ~3 pts below that package's measured coverage and they
   span ~12%–97% (svelte/preact floors are near-vacuous), so the gate's real
