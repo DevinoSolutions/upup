@@ -662,9 +662,12 @@ for (const provider of PROVIDERS) {
 // A SECOND server, same seeded store, configured maxFileSize 1 MiB +
 // allowedTypes ['text/plain'], must: (a) 413 an over-declared size before any
 // drive call, (b) 415 a disallowed mimeType before any drive call, and (c) —
-// when the declared size is OMITTED so the cheap gate can't fire — let the
-// AUTHORITATIVE streamed-byte cap inside transferDriveFileToS3 abort the real
-// 6 MiB transfer mid-stream (error, no object persisted, no lingering MPU).
+// when the declared size is OMITTED so the cheap gate can't fire — 413 the real
+// 6 MiB file on the size the PROVIDER reports, before a byte is streamed (no
+// object persisted, no lingering MPU). The streamed-byte cap inside
+// transferDriveFileToS3 (F-743) only fires when a provider under-reports the
+// size, which a real sandbox file never does; it is pinned by the unit tests in
+// packages/server/tests/transfer.test.ts.
 // Box only: CCG mint, no rotating token, cheapest of the four.
 const POLICY_PROVIDER = 'box' as const
 // The describe TITLE below stays the literal 'box' — test titles should be
@@ -711,14 +714,16 @@ test.describe('server-mode policy boundary through the real routes — box', () 
         expect(res.status()).toBe(415)
     })
 
-    test('streamed bytes over maxFileSize abort the transfer: error status, no object persisted, no lingering multipart upload', async ({
+    test('a provider-reported size over maxFileSize is rejected 413 before streaming: no object persisted, no lingering multipart upload', async ({
         request,
     }) => {
         test.setTimeout(240_000)
         // Use the real >5 MiB fixture but OMIT the declared size, so the cheap
-        // 413 gate cannot fire — only the authoritative streamed-byte cap inside
-        // transferDriveFileToS3 can reject it (F-743). Declared mimeType lies
-        // "text/plain" to pass the 415 gate; the cap is the subject here.
+        // pre-fetch 413 gate cannot fire. The route then fetches the file and
+        // checks the size Box reports against maxFileSize before streaming
+        // (T-7058, drive-routes.ts handleFileTransfer), so the rejection is a
+        // 413, not the streamed-byte cap's 500. Declared mimeType lies
+        // "text/plain" to pass the 415 gate; the size cap is the subject here.
         const root = await listFilesAt(request, policyBaseURL, POLICY_PROVIDER)
         const folder = root.find(f => f.name === SANDBOX_FOLDER)
         expect(folder).toBeDefined()
@@ -746,16 +751,15 @@ test.describe('server-mode policy boundary through the real routes — box', () 
                     fileName: LARGE_FIXTURE_NAME,
                     mimeType: 'text/plain',
                 },
-                // The server accumulates the first full 5 MiB part from Box before
-                // the streamed-byte cap trips; Playwright's default 30s per-request
-                // cap is NOT raised by test.setTimeout — match the multipart test's
-                // explicit override.
+                // Kept generous in case a regression falls through to the
+                // streamed path, which buffers a full 5 MiB part from Box first;
+                // Playwright's default 30s per-request cap is NOT raised by
+                // test.setTimeout.
                 timeout: 180_000,
             },
         )
-        // Authoritative-cap rejection surfaces as the route's 500 STORAGE_ERROR
-        // (drive-routes.ts:177-190) — pinned shape, not a bug.
-        expect(res.status()).toBe(500)
+        expect(res.status()).toBe(413)
+        expect(await res.json()).toEqual({ error: 'File too large' })
         expect(await countObjectsWithSuffix(`-${LARGE_FIXTURE_NAME}`)).toBe(
             objectsBefore,
         )
