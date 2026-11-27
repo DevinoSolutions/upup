@@ -39,10 +39,26 @@ const POSTHOG_REQUESTS = [
     '/flags/?v=2&config=true&ip=0&_=1700000000000&ver=1.433.6',
     '/static/array.js',
     '/static/recorder.js?v=1.433.6',
-    '/static/1.433.6/surveys.js',
     `/array/${TOKEN}/config.js`,
     `/array/${TOKEN}/config`,
     `/api/surveys/?token=${TOKEN}`,
+]
+
+// Lazy scripts requested at a versioned path. posthog-js >= 1.43x defaults
+// `strict_script_versioning` to "fallback": it asks for
+// `/static/<version>/<name>.js` first, and the PostHog instance serves no such
+// path (it 302s to its login page, so the browser logs a 404 on every page
+// view before the unversioned retry). The proxy drops the version segment.
+// Versions are deliberately varied: the rule is a pattern, not a pinned bump.
+const VERSIONED_ASSET_REQUESTS: ReadonlyArray<readonly [string, string]> = [
+    ['/static/1.438.2/posthog-recorder.js', '/static/posthog-recorder.js'],
+    ['/static/1.438.2/lazy-recorder.js', '/static/lazy-recorder.js'],
+    ['/static/1.433.6/surveys.js', '/static/surveys.js'],
+    ['/static/2.0.0/posthog-recorder.js', '/static/posthog-recorder.js'],
+    [
+        '/static/1.500.0-beta.1/exception-autocapture.js',
+        '/static/exception-autocapture.js',
+    ],
 ]
 
 // PostHog's name and its well-known path prefixes. The public lists already
@@ -130,6 +146,30 @@ describe('first-party PostHog path', () => {
             expect(target).toBe(`${POSTHOG}${posthogPath}`)
         },
     )
+
+    it.each(VERSIONED_ASSET_REQUESTS)(
+        'forwards the versioned asset %s to the unversioned %s',
+        (posthogPath, upstreamPath) => {
+            const url = browserUrl(posthogPath)
+            expect(url.pathname).toContain('/a/')
+            expect(rewriteTarget(production, url)).toBe(
+                `${POSTHOG}${upstreamPath}`,
+            )
+        },
+    )
+
+    it('keeps the unversioned asset URL with its ?v= query working', () => {
+        const target = rewriteTarget(
+            production,
+            browserUrl('/static/posthog-recorder.js?v=1.438.2'),
+        )
+        expect(target).toBe(`${POSTHOG}/static/posthog-recorder.js?v=1.438.2`)
+    })
+
+    it('does not mistake a numeric file name for a version segment', () => {
+        const target = rewriteTarget(production, browserUrl('/static/123/x.js'))
+        expect(target).toBe(`${POSTHOG}/static/123/x.js`)
+    })
 
     it('forwards to the e2e project host on the e2e dataset', () => {
         const target = rewriteTarget(e2e, browserUrl('/i/v0/e/?ver=1.433.6'))
